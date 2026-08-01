@@ -309,3 +309,16 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/chatgpt-review-2026-08-01-pr1-final-review.md`
   - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 12:55 EDT
+
+- Action: 将 ChatGPT 与 Codex 的分阶段 PR 审核协作方法固化为独立协议。
+- How: 新增 `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md`，定义人类、ChatGPT、Codex、GitHub 四个角色，总纲冻结、Phase 执行、PR 反复审核、放行门、handoff、反馈留痕和防止越界执行的规则；并从 `ChatGPT-Codex-talk.md`、`AGENTS.md` 和 `LINKS.md` 建立引用。
+- Result: “深度讨论总纲 -> Codex 分阶段执行 -> 每阶段 PR 审核 -> 按反馈修订 -> APPROVE 后进入下一 Phase”的工作模式成为可追溯的仓库规范。本次文档扩展改变了 PR 内容，需重新审核后才算完成。
+- Files affected:
+  - `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md`
+  - `ChatGPT-Codex-talk.md`
+  - `AGENTS.md`
+  - `LINKS.md`
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`

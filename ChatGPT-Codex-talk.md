@@ -3,6 +3,8 @@
 本文件定义 StelligenOS 里 ChatGPT/Codex 的默认协作方式。
 如果没有新的覆盖性说明，就按本文执行。
 
+完整的“人类与 ChatGPT 制定总纲、Codex 分阶段执行、每阶段通过 PR 反复审核后放行”的方法见 [分阶段 PR 审核协作协议](./docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md)。
+
 ## 1. 总原则
 
 - 我负责执行。

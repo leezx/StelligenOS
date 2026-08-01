@@ -24,6 +24,7 @@
 - Reworked the interaction protocol into a PR-centered review workflow and synced the repo-facing guidance in `AGENTS.md` and `HANDOFF.md`.
 - 固化 GitHub 中间层协作方式，新增 `docs/handoff/` 交接模板和本任务 handoff，并将同步脚本改为显式文件清单暂存，禁止全量暂存。
 - 按 GPT Feedback v4 修复同步脚本的未跟踪文件和非空暂存区风险，新增 A-D 行为测试，并将 Phase 0.5 审核清单改为中文。
+- 将人类与 ChatGPT 制定总纲、Codex 分阶段执行、GitHub PR 审核放行的协作模式固化为 `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md`。
 
 ## Next
 
