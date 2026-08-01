@@ -1,0 +1,12 @@
+contract:
+  contract_id: end_to_end_closure
+  contract_version: "0.1.0"
+  demonstration_asset_ref: external:demo/tweakr
+  stages: [Opportunity Generation, Opportunity Validation, Asset Generation, Asset Development]
+  inputs: [demo_asset_ref, stage_input_refs, decision_refs, run_context_ref]
+  outputs: [completed_stage_refs, unresolved_risk_refs, final_decision_ref]
+  boundary:
+    asset_and_stage_records: external_only
+    repository_persistence: forbidden
+    synthetic_or_real_business_data: forbidden
+    automatic_stage_promotion: forbidden
