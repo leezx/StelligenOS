@@ -5,8 +5,8 @@
 - 任务编号：`task_20260801_phase5-binder-adc-routes`
 - 分支：`task_20260801_phase5-binder-adc-routes`
 - Base：Phase 4 合并后的 `main` at `d2f8c09`
-- PR：待创建
-- 状态：本地实现完成，等待创建 PR 和 ChatGPT 审核
+- PR：[#6](https://github.com/leezx/StelligenOS/pull/6)
+- 状态：草稿 PR 已创建，等待 ChatGPT 审核
 
 ## 范围
 
