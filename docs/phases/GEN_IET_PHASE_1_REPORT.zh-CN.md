@@ -2,7 +2,7 @@
 
 - 基线：Phase 0 已获 ChatGPT `APPROVE`
 - 分支：`task_20260801_gen-iet-phase1-contracts`
-- 状态：`COMPLETED_PENDING_REVIEW`
+- 状态：`APPROVED_PHASE_1`
 - Gate 变更：`NO_GATE_CHANGE`
 
 ## 本阶段完成
@@ -40,4 +40,4 @@
 
 ## 审核停止点
 
-请 ChatGPT 只审核本 Phase 1 PR 的合同、边界和测试；在明确批准前，不进入执行适配或真实资产生成阶段。
+Phase 1 已获得 ChatGPT 明确批准。执行适配必须从独立分支开始，并重新创建 PR 审核；本阶段批准不涵盖真实资产生成或数据处理。
