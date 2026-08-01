@@ -1,0 +1,45 @@
+manifest_version: "1.0.0"
+module_id: gen_indication_endpoint_target
+phase: 1
+status: completed_pending_review
+parent_phase: 0
+parent_approval: logs/chatgpt-review-2026-08-01-gen-iet-phase0.md
+gate_change_declaration: NO_GATE_CHANGE
+
+scope:
+  implementation_type: data_free_contracts
+  execution_enabled: false
+  persistence_enabled: false
+  external_reference_prefix: "external:"
+  contracts:
+    - OpportunitySearchScope
+    - ClinicalFrame
+    - TargetCandidate
+    - CandidateFilterResult
+    - EvidenceRecord
+    - AdversarialReview
+    - TargetOpportunityHandoff
+
+explicitly_not_implemented:
+  - candidate_generation
+  - evidence_collection
+  - rule_evaluation
+  - model_evaluation
+  - gate_evaluation
+  - ranking
+  - p_chain_execution
+  - c_chain_execution
+  - database
+  - cache
+  - result_persistence
+  - runner
+  - new_gate
+
+validation:
+  tests: 51
+  repository_boundary: passed
+  git_diff_check: passed
+
+decision:
+  requires_chatgpt_review: true
+  proceed_to_execution_phase: false

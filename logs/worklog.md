@@ -1052,3 +1052,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/phases/GEN_IET_PHASE_0_REVIEW_CHECKLIST.zh-CN.md`
   - `docs/handoff/2026-08-01-gen-iet-phase-0.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 18:20 EDT
+
+- Action: 进入 ChatGPT 已批准的 Phase 1，建立 `gen_indication_endpoint_target` data-free 合同包。
+- How: 在独立分支新增 Scope、ClinicalFrame、TargetCandidate、非 Gate CandidateFilterResult、EvidenceRecord、AdversarialReview 和 T12 handoff；通过枚举和构造校验保留 unknown/not-evaluated 语义，所有跨边界运行/来源/结果引用要求 `external:`。
+- Result: 51 个 unittest 通过；repository boundary 和 `git diff --check` 通过；未新增 Gate、数据、数据库、cache、result、weights、runner 或真实生成逻辑。新增 Phase 1 报告、manifest 和 handoff，等待 ChatGPT PR 审核。
+- Files affected:
+  - `genmodules/gen_indication_endpoint_target/`
+  - `tests/test_gen_indication_endpoint_target.py`
+  - `docs/phases/GEN_IET_PHASE_1_REPORT.zh-CN.md`
+  - `manifests/gen_iet_phase_1_manifest.yaml`
+  - `docs/handoff/2026-08-01-gen-iet-phase-1.zh-CN.md`
+  - `genmodules/README.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
