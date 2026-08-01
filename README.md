@@ -16,7 +16,8 @@ StelligenOS 是一个 biotechnology asset operating system 的实现仓库。
 
 - Phase 0 已完成
 - Phase 0.5 已完成
-- Phase 1 已建立最小实现骨架，等待 PR 审核
+- Phase 1 已完成并合并
+- Phase 2 已建立核心对象、状态机和外部 Knowledge Ledger 边界，等待 PR 审核
 
 ## 关键入口
 
@@ -36,3 +37,4 @@ StelligenOS 是一个 biotechnology asset operating system 的实现仓库。
 - `scripts/git_sync.sh`
 - `src/README.md`
 - `docs/phases/PHASE_1_REPORT.zh-CN.md`
+- `docs/phases/PHASE_2_REPORT.zh-CN.md`

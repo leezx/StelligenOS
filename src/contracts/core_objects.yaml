@@ -1,0 +1,18 @@
+version: "1.0"
+name: stelligenos-core-objects
+description: Architecture-level object type registry; contains no object records.
+objects:
+  - Opportunity
+  - TargetHypothesis
+  - BinderCandidate
+  - ADCConstruct
+  - LeadSeries
+  - DevelopmentCandidate
+  - Asset
+rules:
+  identity:
+    required:
+      - object_type
+      - object_id
+      - schema_version
+  persistence: external-only

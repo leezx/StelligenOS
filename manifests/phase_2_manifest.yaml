@@ -1,0 +1,17 @@
+phase: phase_2
+status: review_pending
+scope: core_objects_lifecycle_and_external_knowledge_ledger_port
+repository_boundary: software_only_external_data
+data_added: false
+persistence_added: false
+runtime_business_logic_added: false
+tests:
+  - python3 -m unittest discover -s tests -p 'test_phase2_contracts.py' -v
+  - ./scripts/verify_repository_boundary.sh
+  - git diff --check
+artifacts:
+  - src/objects/core.py
+  - src/contracts/core_objects.yaml
+  - src/contracts/lifecycle_transitions.yaml
+  - src/lifecycle/state_machine.py
+  - src/cross_cutting/knowledge_ledger.py
