@@ -378,3 +378,61 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/chatgpt-review-2026-08-01-phase-gate-final.md`
   - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 12:55 EDT
+
+- Action: 从已合并的 Phase 0 基线 `main` 创建 Phase 1 临时任务工作树并实施最小实现骨架。
+- How: 在独立工作树 `/private/tmp/StelligenOS-phase1` 创建分支 `task_20260801_phase1-skeleton`；只新增 `src/` 下六个架构层级的职责说明、Phase 1 report、review checklist、manifest、handoff 和审核日志；没有引入运行时业务逻辑、数据库或数据层。
+- Result: 首次提交 `2d5e810`，并创建 GitHub PR #2；本地仓库边界检查和 `git diff --check` 通过。
+- Files affected:
+  - `README.md`
+  - `src/`
+  - `docs/phases/PHASE_1_REPORT.zh-CN.md`
+  - `docs/phases/PHASE_1_REVIEW_CHECKLIST.zh-CN.md`
+  - `manifests/phase_1_manifest.yaml`
+  - `docs/handoff/2026-08-01-phase-1-skeleton.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:49 EDT
+
+- Action: 按 ChatGPT 对 Phase 1 PR #2 第一轮 `REQUEST_CHANGES` 修订阶段元数据。
+- How: 将 report 的 boundary verification 和 aggregate diff 标记为已通过；勾选 checklist 对应门禁；将 handoff 从“PR 待创建”同步到 PR #2；保存原始反馈。
+- Result: 提交 `330c0de` 推送到 `task_20260801_phase1-skeleton`；`./scripts/verify_repository_boundary.sh`、`git diff main...HEAD --check` 和 `git diff --check` 均通过。
+- Files affected:
+  - `docs/phases/PHASE_1_REPORT.zh-CN.md`
+  - `docs/phases/PHASE_1_REVIEW_CHECKLIST.zh-CN.md`
+  - `docs/handoff/2026-08-01-phase-1-skeleton.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-01-phase1-revision-1.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:55 EDT
+
+- Action: 处理 ChatGPT 复审显示的 PR head 与 handoff 自引用问题。
+- How: 通过 `gh api repos/leezx/StelligenOS/pulls/2` 和 `git ls-remote` 核实远端真实 head；确认 GitHub API 和远程分支均已更新，审核来源曾读取旧缓存；将 handoff 改为记录最近一次已验证 tip，并规定当前 PR tip 和 aggregate diff 以 PR 页面为唯一权威，不自引用自身提交 hash。
+- Result: 提交 `b332906` 推送成功；边界检查通过；PR 描述同步最新状态。
+- Files affected:
+  - `docs/handoff/2026-08-01-phase-1-skeleton.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-01-phase1-revision-1.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 13:05 EDT
+
+- Action: 完成 Phase 1 PR #2 的最终外部审核和合并。
+- How: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天，点击 `+` 确认 GitHub 来源，提交针对 PR #2 远端真实 head `b332906` 的最终审核指令；ChatGPT 复核完整 changed files、commits、aggregate diff、六层骨架、契约分离、数据边界和审计元数据。
+- Result: ChatGPT 返回 `APPROVE`，明确“可以进入下一 Phase”。补齐最终审核记录后生成提交 `716466b`，将 PR #2 转为 Ready 并 squash merge；合并提交为 `9eb2b7a`。远程任务分支按安全策略保留，未删除。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-phase1-final.md`
+  - `docs/phases/PHASE_1_REVIEW_CHECKLIST.zh-CN.md`
+  - `docs/phases/PHASE_1_REPORT.zh-CN.md`
+  - `docs/handoff/2026-08-01-phase-1-skeleton.zh-CN.md`
+  - `logs/worklog.md`
+
+## Worklog Maintenance Rule
+
+- 每次开始工作前记录时间、任务、所在分支和基线。
+- 每个实质步骤记录 `Action`、`How`、`Result` 和 `Files affected`。
+- 每次外部审核记录原始结论、审核范围、反馈和修订提交。
+- 每次验证记录实际执行的命令及结果，不把计划写成已完成。
+- 每次提交、推送、PR 创建、PR 更新、合并或阻断都立即追加记录。
+- 只使用显式文件清单暂存 worklog；不得使用 `git add .`、`git add -A` 或 `git add --all`。
+- 保留用户未提交修改；本次持续维护未触碰 `prompts/GPT-Feedback.md`。
