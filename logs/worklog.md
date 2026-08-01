@@ -1,0 +1,217 @@
+# StelligenOS Worklog
+
+Purpose: append a detailed timestamped record of what was done, how it was done, and which files were affected. This file should be updated at the end of each substantial task.
+
+## Update Rule
+
+- Append a new entry for each substantial task.
+- Include the timestamp, action, method, affected files, and verification results.
+- Keep entries chronological unless a later task explicitly needs a corrective note.
+
+## 2026-07-31
+
+### 2026-07-31 17:06 EDT
+
+- Action: Checked the workspace root and confirmed the target repository location strategy.
+- How: Used shell inspection of the workspace root, `find` for `.git` directories, and `git -C` to verify the workspace root itself was not the repository.
+- Result: Confirmed the repository needed to live as its own clone under the workspace instead of treating the workspace root as the git root.
+- Files affected: none.
+
+### 2026-07-31 17:07 EDT
+
+- Action: Cloned `leezx/StelligenOS` into the workspace root path requested by the user.
+- How: Ran `git clone https://github.com/leezx/StelligenOS.git /Volumes/Stelligen_SSD/Stelligen/StelligenOS` with network escalation approval.
+- Result: Created the root-level repository clone at `/Volumes/Stelligen_SSD/Stelligen/StelligenOS`.
+- Files affected: repository directory created.
+
+### 2026-07-31 17:11 EDT
+
+- Action: Inspected the initial repository contents and confirmed the starting files.
+- How: Used `find`, `ls`, and `sed` to inspect top-level files, prompts, and repository structure.
+- Result: Found `README.md`, `architecture.md`, `GPT-raw.md`, `LICENSE`, and `prompts/system/STELLIGENOS_MIGRATION_MASTER_PROMPT.zh-CN.md`.
+- Files affected: none.
+
+### 2026-07-31 17:16 EDT
+
+- Action: Established the first repository boundary policy and operational docs.
+- How: Edited `README.md`, `AGENTS.md`, `LINKS.md`, and `architecture.md` to make the repository software-focused and to prevent data from being stored in-repo.
+- Result: Added boundary language, canonical entry points, and repo-level working rules.
+- Files affected:
+  - `README.md`
+  - `AGENTS.md`
+  - `LINKS.md`
+  - `architecture.md`
+
+### 2026-07-31 17:17 EDT
+
+- Action: Added the first repository guardrail scripts and phase artifacts.
+- How: Created `scripts/verify_repository_boundary.sh`, `.gitignore`, and the initial phase documentation under `docs/phases/`.
+- Result: Added a filesystem-level check to reject data-like files and introduced Phase 0 reporting scaffolds.
+- Files affected:
+  - `scripts/verify_repository_boundary.sh`
+  - `.gitignore`
+  - `docs/phases/PHASE_0_REPORT.zh-CN.md`
+  - `docs/phases/PHASE_0_REVIEW_CHECKLIST.zh-CN.md`
+
+### 2026-07-31 17:18 EDT
+
+- Action: Recorded the first migration log entry.
+- How: Appended repository state notes to `logs/migration_log.zh-CN.md`.
+- Result: Created a durable migration note trail for the repository.
+- Files affected:
+  - `logs/migration_log.zh-CN.md`
+
+### 2026-07-31 17:21 EDT
+
+- Action: Completed the first Phase 0 audit pass and documented the actual repository state.
+- How: Read the root docs, prompts, and file tree; then summarized the repository as a documentation-first scaffold with no implemented business code, schema registry, or data layer.
+- Result: Wrote a Phase 0 report, checklist, and manifest reflecting the observed repository state.
+- Files affected:
+  - `docs/phases/PHASE_0_REPORT.zh-CN.md`
+  - `docs/phases/PHASE_0_REVIEW_CHECKLIST.zh-CN.md`
+  - `manifests/phase_0_manifest.yaml`
+
+### 2026-07-31 17:26 EDT
+
+- Action: Read the `GPT-Feedback.md#v2` feedback and extracted the architecture corrections.
+- How: Located the file with `find` and `rg`, then read the `# v2` section and the remainder of the file with `sed`.
+- Result: Identified the requested changes: biotech OS framing, looser boundary for small examples, Phase 0.5 legacy inventory, capability layer, `Knowledge Ledger` discussion, and `Asset Development` naming.
+- Files affected: none.
+
+### 2026-07-31 17:29 EDT
+
+- Action: Reworked the architecture into a biotech OS implementation model with explicit contract, capability, lifecycle, and legacy inventory documents.
+- How: Split the architecture into `docs/architecture/contract.zh-CN.md`, `docs/architecture/capabilities.zh-CN.md`, `docs/architecture/lifecycle.zh-CN.md`, and `docs/architecture/legacy_inventory.zh-CN.md`, then updated the root `architecture.md` as an entry point.
+- Result: The repository now distinguishes the implementation repo from the OS definition itself.
+- Files affected:
+  - `README.md`
+  - `AGENTS.md`
+  - `LINKS.md`
+  - `architecture.md`
+  - `docs/architecture/contract.zh-CN.md`
+  - `docs/architecture/capabilities.zh-CN.md`
+  - `docs/architecture/lifecycle.zh-CN.md`
+  - `docs/architecture/legacy_inventory.zh-CN.md`
+
+### 2026-07-31 17:31 EDT
+
+- Action: Rewrote the migration prompt and Phase 0 materials to require Phase 0.5 legacy inventory before Phase 1.
+- How: Replaced the operational prompt content with the new repository scope and updated the Phase 0 report, checklist, log, and manifest to match the revised architecture.
+- Result: The docs now reflect the new implementation-focused framing and the new capability/lifecycle split.
+- Files affected:
+  - `prompts/system/STELLIGENOS_MIGRATION_MASTER_PROMPT.zh-CN.md`
+  - `docs/phases/PHASE_0_REPORT.zh-CN.md`
+  - `docs/phases/PHASE_0_REVIEW_CHECKLIST.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `manifests/phase_0_manifest.yaml`
+
+### 2026-07-31 17:34 EDT
+
+- Action: Updated the repository guardrail script and manifest to allow the new implementation-document structure.
+- How: Added allowed top-level directories and future implementation directories to the boundary script, and synchronized the manifest with the new allowed/forbidden categories.
+- Result: The repository boundary check passed without false positives for the new doc layout.
+- Files affected:
+  - `scripts/verify_repository_boundary.sh`
+  - `manifests/phase_0_manifest.yaml`
+
+### 2026-07-31 17:36 EDT
+
+- Action: Created this worklog file so future tasks can be appended in one place.
+- How: Added `logs/worklog.md` with a timestamped, step-by-step session record and update rules.
+- Result: There is now a dedicated file for detailed future task tracing.
+- Files affected:
+  - `logs/worklog.md`
+
+### 2026-07-31 17:37 EDT
+
+- Action: Promoted the worklog into the repository navigation and working rules.
+- How: Updated `README.md`, `AGENTS.md`, `LINKS.md`, and `HANDOFF.md` so future substantial tasks are expected to append `logs/worklog.md`.
+- Result: The worklog is now part of the durable repo workflow, not just a standalone file.
+- Verification: Markdown link check passed after the navigation update.
+- Files affected:
+  - `README.md`
+  - `AGENTS.md`
+  - `LINKS.md`
+  - `HANDOFF.md`
+  - `logs/worklog.md`
+
+### 2026-07-31 17:38 EDT
+
+- Action: Added a one-step GitHub sync script for routine version management.
+- How: Created `scripts/git_sync.sh` to `fetch`, `rebase`, `add`, `commit`, and `push` from the repository root, then marked it executable and validated it with `bash -n`.
+- Result: The repository now has a consistent local-to-remote sync path for GitHub workflow use.
+- Verification: Shell syntax check passed.
+- Files affected:
+  - `scripts/git_sync.sh`
+  - `README.md`
+  - `AGENTS.md`
+  - `LINKS.md`
+
+## 2026-07-31 Verification Summary
+
+- Repository boundary check: passed.
+- Markdown link check: passed.
+- YAML parse check: passed.
+- Near-duplicate check: highest similarity around `0.466` between `architecture.md` and `LINKS.md`.
+- File count at the end of this session: `39` files under the repository root, excluding `.git`.
+
+### 2026-07-31 17:44 EDT
+
+- Action: Completed the Phase 0.5 migration matrix and tightened the repository boundary policy.
+- How: Removed `.DS_Store` from `scripts/verify_repository_boundary.sh`, deleted stray macOS metadata files from the repo, and prepared the Phase 0.5 report/checklist/manifest set.
+- Result: The repository boundary is now stricter, and the migration path is documented as complete through Phase 0.5.
+- Files affected:
+  - `scripts/verify_repository_boundary.sh`
+  - `docs/phases/PHASE_0_REPORT.zh-CN.md`
+  - `docs/phases/PHASE_0_5_REPORT.zh-CN.md`
+  - `docs/phases/PHASE_0_REVIEW_CHECKLIST.zh-CN.md`
+  - `docs/phases/PHASE_0_5_REVIEW_CHECKLIST.zh-CN.md`
+  - `manifests/phase_0_manifest.yaml`
+  - `manifests/phase_0_5_manifest.yaml`
+  - `logs/migration_log.zh-CN.md`
+
+### 2026-07-31 17:55 EDT
+
+- Action: Verified the completed Phase 0.5 state and recorded the final status.
+- How: Ran the repository boundary script, parsed both manifest YAML files, checked all repo-local Markdown links, and confirmed no `.DS_Store` files remained in the repository tree.
+- Result: Validation passed cleanly, and the repo is ready to enter Phase 1 with the current contract and migration matrix.
+- Files affected:
+  - `manifests/phase_0_manifest.yaml`
+  - `manifests/phase_0_5_manifest.yaml`
+  - `logs/worklog.md`
+
+### 2026-07-31 17:56 EDT
+
+- Action: Tightened the Phase 0 summary metadata and rechecked the repo state.
+- How: Added `.gitignore` to the Phase 0 artifact list, updated the Phase 0 validation summary to show the 48-file snapshot and boundary pass, and reran the boundary, YAML, and Markdown link checks.
+- Result: The documentation now matches the actual repository snapshot more closely, and the final verification still passes.
+- Files affected:
+  - `docs/phases/PHASE_0_REPORT.zh-CN.md`
+  - `manifests/phase_0_manifest.yaml`
+  - `logs/worklog.md`
+
+## 2026-08-01
+
+### 2026-08-01 11:01 EDT
+
+- Action: Converted `ChatGPT-Codex-talk.md` into the canonical execution-first interaction protocol and surfaced it from the repo entry docs.
+- How: Replaced the previous conversational prose with a formal role split, execution rules, and a reusable audit-instruction template; then linked the spec from `README.md`, `AGENTS.md`, and `LINKS.md`.
+- Result: The repository now has a single, explicit protocol for future ChatGPT/Codex interactions: I execute, and external models can be given a ready-to-forward review prompt.
+- Files affected:
+  - `ChatGPT-Codex-talk.md`
+  - `README.md`
+  - `AGENTS.md`
+  - `LINKS.md`
+  - `docs/phases/PHASE_0_REPORT.zh-CN.md`
+  - `manifests/phase_0_manifest.yaml`
+  - `manifests/phase_0_5_manifest.yaml`
+  - `logs/worklog.md`
+
+### 2026-08-01 11:03 EDT
+
+- Action: Added the new interaction protocol file to the repository boundary allowlist and revalidated the repo.
+- How: Updated `scripts/verify_repository_boundary.sh` to permit `ChatGPT-Codex-talk.md` as a small text governance file, then reran the boundary check, Markdown link check, YAML parse check, and file-count verification.
+- Result: The new protocol file is now officially part of the repo's allowed root-level text assets, and all validation checks pass again.
+- Files affected:
+  - `scripts/verify_repository_boundary.sh`
+  - `logs/worklog.md`

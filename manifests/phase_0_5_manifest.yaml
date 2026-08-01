@@ -1,0 +1,43 @@
+phase: 0.5
+repo: StelligenOS
+status: completed
+boundary:
+  repo_type: biotech_asset_os_implementation
+  allowed:
+    - architecture
+    - prompts
+    - schemas
+    - scripts
+    - code
+    - src
+    - tests
+    - notebooks
+    - docs
+    - logs
+    - manifests
+    - examples
+    - demo
+    - reference_asset
+    - tutorial
+    - templates
+    - fixtures
+  forbidden:
+    - large_datasets
+    - raw_sequencing
+    - intermediate_files
+    - caches
+    - outputs
+    - temporary_artifacts
+    - data_bearing_working_files
+artifacts:
+  - docs/architecture/legacy_inventory.zh-CN.md
+  - docs/phases/PHASE_0_5_REPORT.zh-CN.md
+  - docs/phases/PHASE_0_5_REVIEW_CHECKLIST.zh-CN.md
+  - ChatGPT-Codex-talk.md
+  - logs/worklog.md
+validation:
+  legacy_inventory_completed: true
+  migration_matrix_completed: true
+  boundary_check: passed
+  markdown_link_check: passed
+recommendation: PROCEED_TO_PHASE_1

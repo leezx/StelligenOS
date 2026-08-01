@@ -1,0 +1,28 @@
+# LINKS
+
+## 规范来源
+
+- [Architecture](./architecture.md)
+- [Architecture Contract](./docs/architecture/contract.zh-CN.md)
+- [Capabilities](./docs/architecture/capabilities.zh-CN.md)
+- [Lifecycle](./docs/architecture/lifecycle.zh-CN.md)
+- [Legacy Inventory](./docs/architecture/legacy_inventory.zh-CN.md)
+- [Phase 0 Prompt](./prompts/system/STELLIGENOS_MIGRATION_MASTER_PROMPT.zh-CN.md)
+- [Phase 0 Report](./docs/phases/PHASE_0_REPORT.zh-CN.md)
+- [Phase 0.5 Report](./docs/phases/PHASE_0_5_REPORT.zh-CN.md)
+- [ChatGPT-Codex Talk](./ChatGPT-Codex-talk.md)
+- [Worklog](./logs/worklog.md)
+- [Git Sync Script](./scripts/git_sync.sh)
+
+## 存储策略
+
+- 数据和处理产物都必须留在仓库外部。
+- 数据集、分析输出、证据包都应放在外部工作区。
+- reference examples、toy examples、report templates、demo assets、golden test cases 只允许保持小而受控。
+- `logs/worklog.md` 是详细执行轨迹。
+- `scripts/git_sync.sh` 用于一次性 fetch / rebase / commit / push。
+
+## 说明
+
+- 当前仓库已完成 Phase 0 和 Phase 0.5。
+- 后续任何数据相关路径都只能在仓库外部定义，再以引用形式挂回这里。
