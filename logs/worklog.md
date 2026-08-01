@@ -323,6 +323,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 12:49 EDT
+
+- Action: 处理 ChatGPT 对 Phase 1 PR #2 的第一轮 `REQUEST_CHANGES`。
+- How: 将 Phase 1 report 的 boundary verification 和 aggregate diff 更新为已通过；勾选 review checklist 对应门禁；将 handoff 的 PR 状态从“待创建”同步为 PR #2，并记录当前 tip `2d5e810` 和验证命令。
+- Result: 保存完整审核反馈到 `logs/chatgpt-review-2026-08-01-phase1-revision-1.md`；重新执行 `./scripts/verify_repository_boundary.sh`、`git diff main...HEAD --check` 和 `git diff --check` 均通过；ChatGPT 审核门禁仍未勾选，准备重新复审。
+- Files affected:
+  - `docs/phases/PHASE_1_REPORT.zh-CN.md`
+  - `docs/phases/PHASE_1_REVIEW_CHECKLIST.zh-CN.md`
+  - `docs/handoff/2026-08-01-phase-1-skeleton.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-01-phase1-revision-1.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 12:32 EDT
 
 - Action: 按 ChatGPT 对当前 PR tip `7d68fdc` 的复审反馈修复 Phase Gate 协议阻断项。

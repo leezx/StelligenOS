@@ -20,9 +20,9 @@
 
 ## 4. 验证
 
-- `./scripts/verify_repository_boundary.sh`：待提交前执行。
-- `git diff main...HEAD --check`：待提交后执行。
+- `./scripts/verify_repository_boundary.sh`：已通过。
+- `git diff main...HEAD --check`：已通过，当前分支相对 `main` 的 aggregate diff 无空白错误。
 
 ## 5. 结论
 
-Phase 1 的最小实现骨架已完成，等待 ChatGPT 通过 PR 审核后再进入后续 Phase。
+Phase 1 的最小实现骨架已完成，当前 PR 为 #2，等待 ChatGPT 通过 PR 审核后再进入后续 Phase。

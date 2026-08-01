@@ -23,6 +23,6 @@
 
 ## Gate
 
-- [ ] boundary verification passed
-- [ ] aggregate diff check passed
+- [x] boundary verification passed
+- [x] aggregate diff check passed
 - [ ] ChatGPT PR review approved
