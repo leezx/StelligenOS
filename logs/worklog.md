@@ -257,3 +257,12 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Files affected:
   - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 12:16 EDT
+
+- Action: 推送任务分支并创建 draft PR。
+- How: 推送 `task_20260801_pr-workflow` 到 `origin`，创建 PR #1 指向 `main`，并在 PR 描述中写入改动范围、验证结果、审核边界和数据声明。
+- Result: PR 已可供 ChatGPT 或其他大模型直接审核；当前等待外部审核，不执行 merge。
+- Files affected:
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`

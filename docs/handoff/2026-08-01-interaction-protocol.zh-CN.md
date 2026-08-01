@@ -4,7 +4,7 @@
 
 - 任务编号：`task_20260801_pr-workflow`
 - 分支：`task_20260801_pr-workflow`
-- PR：待创建
+- PR：https://github.com/leezx/StelligenOS/pull/1
 - Commit：`0fc4bbb`
 - 时间：`2026-08-01 America/New_York`
 
@@ -31,15 +31,14 @@
 
 ## 未决问题与风险
 
-- 当前工作已提交到任务分支，尚未推送。
+- 任务分支已推送，draft PR 已创建，等待外部模型审核。
 - PR 链接和最终 commit 尚未生成。
 
 ## 下一步
 
-1. 在确认工作区文件范围后创建任务分支。
-2. 显式暂存本任务文件并检查 staged diff。
-3. 提交、推送并创建 PR 到 `main`。
-4. 将 PR 链接交给外部模型审核。
+1. 将 PR 链接交给外部模型审核。
+2. 只按当前 PR 的审核意见修订。
+3. 由负责人决定 merge 或打回。
 
 ## 数据边界声明
 
