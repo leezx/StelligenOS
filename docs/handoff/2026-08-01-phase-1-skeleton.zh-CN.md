@@ -6,7 +6,8 @@
 - 分支：`task_20260801_phase1-skeleton`
 - Base：`main`
 - PR：[#2](https://github.com/leezx/StelligenOS/pull/2)
-- 当前 PR tip：`2d5e810`
+- 最近一次已验证 PR tip：`330c0de`
+- 当前 PR tip 和 aggregate diff：以 GitHub PR 页面实时状态为唯一权威；本文件不自引用其自身提交 hash。
 - 状态：等待 ChatGPT PR 审核
 
 ## 总纲与范围
@@ -25,7 +26,7 @@
 
 - `./scripts/verify_repository_boundary.sh`：已通过。
 - `git diff main...HEAD --check`：已通过。
-- `git diff main...HEAD`：已检查当前 aggregate diff，范围仅为 Phase 1 最小骨架及其文档。
+- `git diff main...330c0de`：已检查最近一次已验证 aggregate diff，范围仅为 Phase 1 最小骨架及其文档。
 
 ## 明确未改动
 

@@ -20,3 +20,8 @@
 - 已勾选 checklist 的 boundary verification 和 aggregate diff。
 - 已将 handoff 更新为 PR #2、当前 tip `2d5e810`，并记录两项验证。
 - ChatGPT 审核项仍保持未勾选，等待本次修订后的复审。
+
+## 远端核验
+
+- GitHub API 和 `git ls-remote` 均确认 PR #2 当前远端 head 为 `330c0de`。
+- 审核中显示 `2d5e810` 属于 GitHub 来源的陈旧读取状态，不是远端分支当前值。

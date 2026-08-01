@@ -335,6 +335,16 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/chatgpt-review-2026-08-01-phase1-revision-1.md`
   - `logs/worklog.md`
 
+### 2026-08-01 12:55 EDT
+
+- Action: 处理 ChatGPT 复审显示的 PR head 与 handoff 元数据不一致。
+- How: 通过 `gh api repos/leezx/StelligenOS/pulls/2` 和 `git ls-remote` 核实远端 PR #2 与分支真实 head 均为 `330c0de`；将 handoff 改为记录最近一次已验证 tip，并明确当前 PR tip 和 aggregate diff 以 GitHub PR 页面为唯一权威，避免 handoff 自引用造成持续漂移。
+- Result: 确认远端状态正确，陈旧的 `2d5e810` 来自审核来源读取；补充核验记录，准备再次请求 ChatGPT 复审。
+- Files affected:
+  - `docs/handoff/2026-08-01-phase-1-skeleton.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-01-phase1-revision-1.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 12:32 EDT
 
 - Action: 按 ChatGPT 对当前 PR tip `7d68fdc` 的复审反馈修复 Phase Gate 协议阻断项。
