@@ -376,6 +376,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 15:28 EDT
+
+- Action: 开始迁移 AssetGenOS 的 `gate-model-rule` 主模块。
+- How: 从 `origin/main` 创建独立任务分支 `task_20260801_gate-model-rule`；读取源模块的 Model Lifecycle、Historical Rule Reference、规则生成边界和 StelligenOS 当前 Gate 合同；只实现规则模型身份、Gate 绑定、历史规则审计合同和外部适用性引用。
+- Result: 建立纯软件 `genmodules/gate_model_rule`，明确禁止规则实例、案例数据、生成输出、数据库、缓存、执行器、自动评分、状态变化和 Profile 绑定；新增 6 个回归测试，全仓 31 个测试通过，边界检查和 diff 检查通过。
+- Files affected:
+  - `genmodules/README.md`
+  - `genmodules/gate_model_rule/`
+  - `tests/test_gate_model_rule.py`
+  - `docs/handoff/2026-08-01-gate-model-rule.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 13:56 EDT
 
 - Action: 开始架构冻结后的 AssetGenOS 模块迁移。
