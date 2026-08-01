@@ -6,7 +6,7 @@
 - 分支：`task_20260801_phase6-ip-fto-dd-portfolio`
 - Base：Phase 5 合并后的 `main` at `10fe06b`
 - PR：[#7](https://github.com/leezx/StelligenOS/pull/7)
-- 状态：草稿 PR 已创建，等待 ChatGPT 审核
+- 状态：ChatGPT 已批准，等待 PR 合并
 
 ## 范围
 
@@ -30,5 +30,5 @@ Portfolio。法律材料、尽调证据、资产组合、资本上下文和决�
 
 ## 下一步
 
-本地验证完成后创建 PR，提交到网页版 ChatGPT 的“GitHub PR 信息”聊天审核。
-只有明确 `APPROVE` 才能合并并进入 Phase 7。
+PR #7 已提交到网页版 ChatGPT 的“GitHub PR 信息”聊天并获得明确 `APPROVE`，
+可以进入 Phase 7。合并后从最新 `main` 创建 Phase 7 分支。

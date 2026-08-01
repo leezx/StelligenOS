@@ -27,5 +27,5 @@
 
 ## 5. 结论
 
-Phase 6 仅建立三类跨阶段能力的外部合同。待 PR 经 ChatGPT 明确 `APPROVE` 后，
-才允许进入 Phase 7 端到端最小闭环和 TWEAKR 示范资产。
+Phase 6 仅建立三类跨阶段能力的外部合同。PR #7 经 ChatGPT 明确 `APPROVE`，
+可以进入 Phase 7 端到端最小闭环和 TWEAKR 示范资产。
