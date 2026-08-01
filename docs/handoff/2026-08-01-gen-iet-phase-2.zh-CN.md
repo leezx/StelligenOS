@@ -27,4 +27,4 @@
 
 ## 下一步
 
-ChatGPT 已通过 Phase 2 审核，记录见 `logs/chatgpt-review-2026-08-01-gen-iet-phase2.md`。下一步从本阶段批准 tip 建立新分支，进入 Phase 3 target candidate generation contract/adapter 设计，并再次提交独立 PR 审核。
+ChatGPT 已通过 Phase 2 审核，记录见 `logs/chatgpt-review-2026-08-01-gen-iet-phase2.md`。下一步已从本阶段批准 tip 建立 `task_20260801_gen-iet-phase3-target-candidates`，完成 Phase 3 target candidate generation contract-only port；该阶段需单独提交 PR 并再次经 ChatGPT 审核。

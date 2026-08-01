@@ -732,6 +732,20 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-gen-iet-phase-2.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 18:18 EDT
+
+- Action: Phase 2 metadata-only 复审获得 ChatGPT 最终 `APPROVE` 后进入 Phase 3。
+- How: 从已批准 Phase 2 tip 创建 `task_20260801_gen-iet-phase3-target-candidates`；根据主提示词只实现单一 ClinicalFrame 内的 external-only target candidate generation port，加入 bounded policy、候选预算、证据范围和正证据组约束。
+- Result: 新增 `TargetCandidateGenerationPolicy`、`TargetCandidateGenerationRequest`、`TargetCandidateGenerationResult` 和 `TargetCandidateGenerationPort`；未读取数据、未执行 P-chain/T-gate、未创建本地候选或证据记录。61 个测试、repository boundary、`git diff --check` 通过，Phase 3 停在 ChatGPT PR 审核门。
+- Files affected:
+  - `src/capabilities/target_candidate_generation.py`
+  - `tests/test_target_candidate_generation.py`
+  - `docs/phases/GEN_IET_PHASE_3_REPORT.zh-CN.md`
+  - `manifests/gen_iet_phase_3_manifest.yaml`
+  - `docs/handoff/2026-08-01-gen-iet-phase-2.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 18:45 EDT
 
 - Action: 处理 ChatGPT 对 Phase 1 PR #19 Round 1 的 `REQUEST_CHANGES`。
