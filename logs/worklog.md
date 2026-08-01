@@ -1340,3 +1340,11 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `genmodules/README.md`
   - `logs/migration_log.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 19:30 EDT
+
+- Action: 使用当前 AssetGenOS 工作区执行第一轮真实外部运行，目标为 `TNFRSF12A/TWEAKR + CRC`。
+- How: 使用 AssetGenOS 自带 `.venv` 和 v0.2 `adc_factory.cli v2 evaluate`，设置 `ADC_FACTORY_LLM_PROVIDER=mock`；读取外部 `DATA/1.Databases/ADC_surfaceome_reference`、`ADC_internalization_reference` 和 `ADC_clinical_unmet_need_reference`，数据库与输出重定向到 `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_tweakr_crc_mock_20260801/`。未执行 `make demo`，避免重置或写入 AssetGenOS 自身 `data/`。
+- Result: 45 个唯一 Gate、48 次 Gate evaluation 成功完成；生成 `ADC-2026-0001` v0.2，状态为 `M0 / review_pending`，决策为 `gather_data`，overall score `0.23`，confidence `0.0`。运行正确保留 Hard Unknown，未把 mock 推断包装成科学结论或可销售资产。
+- Boundary: AssetGenOS `data/` 未发现本次运行新增文件；StelligenOS 未写入数据库、cache、result、weights 或资产数据。外部运行结果目录为 `/Volumes/Stelligen_SSD/Stelligen/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_tweakr_crc_mock_20260801/`。
+- Limitation: 本次执行的是 AssetGenOS v0.2 运行引擎，不是 StelligenOS Phase 9 contract port 的直接 adapter；下一步需将外部 run manifest、Gate audit 和 unknown/hold 语义映射到 `gen_indication_endpoint_target` external-only contracts。
