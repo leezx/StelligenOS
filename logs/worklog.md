@@ -192,6 +192,34 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 
 ## 2026-08-01
 
+### 2026-08-01 12:00 EDT
+
+- Action: Started the next AssetGenOS migration batch on an isolated worktree.
+- How: Fetched `origin/main` and created branch `task_20260801_model-contract-adapter` from merge commit `a0ad160`; inspected the frozen Gate/lifecycle contracts and the legacy AssetGenOS scoring, schemas, and model-governance modules.
+- Result: Chose a contract-only migration boundary and explicitly excluded legacy Pydantic schemas, registry records, model artifacts, scoring outputs, and persistence.
+- Files affected: none in the original worktree; isolated worktree created at `/private/tmp/StelligenOS-model-contract-adapter`.
+
+### 2026-08-01 12:04 EDT
+
+- Action: Implemented the pure model identity and lifecycle adapter.
+- How: Added `ModelRef`, `ModelLifecycleDescriptor`, `ModelGovernanceRequest`, `ModelGovernancePort`, and the AssetGenOS-compatible `parse_model_ref` rule; added the corresponding YAML contract and focused unit tests.
+- Result: Model governance is represented only as an external port request; no model records, files, caches, or automatic promotion logic were introduced.
+- Files affected:
+  - `src/cross_cutting/model_contracts.py`
+  - `src/contracts/model_lifecycle.yaml`
+  - `tests/test_model_contracts.py`
+  - `src/cross_cutting/README.md`
+  - `docs/handoff/2026-08-01-model-contract-adapter.zh-CN.md`
+
+### 2026-08-01 12:06 EDT
+
+- Action: Corrected the model-reference parser and reran validation after the first test exposed an incomplete capture group.
+- How: Changed the named regular-expression group to capture the complete major/minor/patch version, then ran the full unittest suite, repository boundary check, and whitespace check.
+- Result: Full validation passed after the correction.
+- Files affected:
+  - `src/cross_cutting/model_contracts.py`
+  - `logs/worklog.md`
+
 ### 2026-08-01 11:01 EDT
 
 - Action: Converted `ChatGPT-Codex-talk.md` into the canonical execution-first interaction protocol and surfaced it from the repo entry docs.

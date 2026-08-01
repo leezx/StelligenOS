@@ -1,0 +1,16 @@
+version: "1.0"
+name: stelligenos-model-lifecycle
+description: External model identity and lifecycle contract; contains no model records.
+standard_ref: ModelLifecycleStandard@1.0.0
+identity:
+  model_ref: model_id@semver
+  semver: 2.0.0
+stages:
+  - initialized
+  - formal_candidate
+  - validated
+  - deprecated
+governance:
+  implementation: external_port
+  persistence: forbidden
+  automatic_promotion: forbidden
