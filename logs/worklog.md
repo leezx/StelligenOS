@@ -910,3 +910,66 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `manifests/phase_1_manifest.yaml`
   - `docs/handoff/2026-08-01-phase-1-skeleton.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 16:10 EDT
+
+- Action: 继续迁移 `biotech_asset_due_diligence` 的 Phase 1A 纯软件边界。
+- How: 在独立分支 `task_20260801_biotech-dd` 中迁移稳定 ID、不可变核心实体、外部 ArtifactRef 校验、严格合同验证和合同 YAML；将抗体适配器升级为仅接受当前 `antibody_binder_asset_engineering@0.4.0`，并明确禁止仓库内输入、结果和持久化。未迁移 `examples/`、`archive/`、runner 或任何数据文件。
+- Result: 新模块可表达 Asset 到 SystemRecommendation 的可审计链，并保持 HumanDecision 独立；全仓 29 个 unittest、边界扫描和 diff 空白检查通过。
+- Files affected:
+  - `genmodules/README.md`
+  - `genmodules/biotech_asset_due_diligence/`
+  - `tests/test_biotech_asset_due_diligence.py`
+  - `logs/worklog.md`
+
+### 2026-08-01 16:40 EDT
+
+- Action: 处理 ChatGPT 对 PR #13 的第一轮审核反馈。
+- How: 通过已选中的 GitHub 来源审查 PR；针对两个阻断项，要求 ArtifactRef 必须使用外部 workspace root 且路径不得逃逸，并把合同验证器改为递归检查嵌套对象、数组元素、类型、enum、pattern、required 和 additionalProperties；新增对应回归测试和审核记录。
+- Result: 第一轮 `REQUEST_CHANGES` 已落实为最小范围修订，等待复审；PR 未合并。
+- Files affected:
+  - `genmodules/biotech_asset_due_diligence/core/artifact_refs.py`
+  - `genmodules/biotech_asset_due_diligence/core/contract_validation.py`
+  - `tests/test_biotech_asset_due_diligence.py`
+  - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-01-biotech-dd-round1.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 16:48 EDT
+
+- Action: 修正第一轮反馈修订后的测试断言并完成复验。
+- How: 将 ArtifactRef 测试断言改为比较 `resolve()` 后的路径；重新执行完整 unittest、仓库边界扫描和 diff 空白检查。
+- Result: 全仓 31 个 unittest 通过，边界检查通过，当前 PR 仍未合并，准备推送修订并请求 ChatGPT 复审。
+- Files affected:
+  - `tests/test_biotech_asset_due_diligence.py`
+  - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 17:25 EDT
+
+- Action: 处理 ChatGPT 第二轮复审发现的 PR 元数据不一致。
+- How: ChatGPT 确认 Round 1 的两个代码阻断项已经修复，但发现 PR 描述仍写 `29 passed`，而当前 handoff/worklog 已写 `31 passed`；新增 Round 2 审核记录并准备同步 PR 描述。
+- Result: 代码不再需要修改；待将 PR 描述更新为 `31 passed` 后重新复审。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-biotech-dd-round2.md`
+  - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 15:22 EDT
+
+- Action: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天完成 PR #13 的最终 metadata-only 复审。
+- How: 使用 `+` 菜单重新选中 GitHub 来源，针对最新 tip `7e20dbf` 核对 PR 描述、handoff、worklog、审核记录、Round 1 代码修复和软件仓库边界。
+- Result: 测试数字已统一为 `31 passed`，本次仅有审核元数据变化，代码修复仍在；ChatGPT 返回 `REQUEST_CHANGES`，唯一阻断为 GitHub 当前报告 `mergeable=false`。未自动合并，等待 GitHub 状态恢复后复审。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-biotech-dd-final.md`
+  - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 18:05 EDT
+
+- Action: 收敛 ChatGPT 最终复审发现的 PR 元数据残留。
+- How: 将 due diligence handoff 的当前状态更新为 `MERGEABLE/CLEAN`，把旧的 `mergeable=false` 标记为历史记录，并补齐当前 tip `645e9e2`、39 个测试、边界检查、diff 检查及 README 冲突解决说明。未修改迁移代码、合同或测试逻辑。
+- Result: PR 描述、handoff 和 worklog 现在统一以 GitHub PR 页面实时 HEAD 为唯一权威；本次复审基线为 `cadf825`，等待 ChatGPT 明确 `APPROVE`。
+- Files affected:
+  - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
+  - `logs/worklog.md`

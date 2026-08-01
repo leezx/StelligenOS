@@ -1,0 +1,14 @@
+$id: observation
+version: "1.0.0"
+type: object
+additionalProperties: false
+required: [observation_id, subject_ref, measurement_type, value, unit, quality_status, source_claim_ids]
+properties:
+  observation_id: {type: string, pattern: '^observation:[A-Za-z0-9_.-]+$'}
+  subject_ref: {type: string, minLength: 1}
+  measurement_type: {type: string, minLength: 1}
+  value: {}
+  unit: {type: [string, 'null']}
+  quality_status: {type: string, enum: [usable, unusable, unknown, conflicting]}
+  source_claim_ids: {type: array, items: {type: string}}
+  context: {type: object}

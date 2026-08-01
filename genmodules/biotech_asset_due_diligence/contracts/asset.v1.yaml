@@ -1,0 +1,11 @@
+$id: asset
+version: "1.0.0"
+type: object
+additionalProperties: false
+required: [asset_id, canonical_name, asset_class, status]
+properties:
+  asset_id: {type: string, pattern: '^asset:[A-Za-z0-9_.-]+$'}
+  canonical_name: {type: string, minLength: 1}
+  asset_class: {type: string, minLength: 1}
+  programme_owner: {type: [string, 'null']}
+  status: {type: string, enum: [active, paused, terminated, archived]}

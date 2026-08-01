@@ -1,0 +1,12 @@
+$id: system_recommendation
+version: "1.0.0"
+type: object
+additionalProperties: false
+required: [recommendation_id, assessment_run_id, policy_version, action, rejected_alternatives, basis_refs]
+properties:
+  recommendation_id: {type: string, pattern: '^recommendation:[A-Za-z0-9_.-]+$'}
+  assessment_run_id: {type: string, minLength: 1}
+  policy_version: {type: string, minLength: 1}
+  action: {type: string, enum: [advance, hold_for_evidence, pivot, abandon_route, abandon_asset, insufficient_information]}
+  rejected_alternatives: {type: array, items: {type: object}}
+  basis_refs: {type: array, items: {type: string}}

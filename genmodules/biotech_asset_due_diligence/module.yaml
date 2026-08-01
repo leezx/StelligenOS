@@ -1,0 +1,36 @@
+module:
+  module_id: biotech_asset_due_diligence
+  module_version: 0.1.0
+  module_type: GenModule
+  name: Biotech Asset Due Diligence
+  input_contract: DueDiligenceVerticalSliceInput@0.1.0
+  output_contract: DueDiligenceVerticalSlicePackage@0.1.0
+  execution_policy: external_input_and_output_only
+  persistence: forbidden
+  database: forbidden
+  data_files_in_repository: forbidden
+  upstream_adapters:
+  - module_id: antibody_binder_asset_engineering
+    supported_versions: [0.4.0]
+    input_contract: ExistingBinderAssetInput@0.4.0
+    output_contract: AntibodyAssetEngineeringPackage@0.4.0
+  chain:
+  - Asset
+  - AssetVariant
+  - AssessmentRun
+  - ArtifactRef
+  - EvidenceSource
+  - EvidenceClaim
+  - Observation
+  - Hypothesis
+  - FailureMode
+  - DecisionUncertainty
+  - ExperimentBranch
+  - SystemRecommendation
+  - HumanDecision
+  prohibited_claims:
+  - clinical safety or efficacy
+  - legal FTO clearance
+  - portfolio ranking or valuation
+  - ADC readiness from narrative evidence
+  - replacing Gate or human decision outputs

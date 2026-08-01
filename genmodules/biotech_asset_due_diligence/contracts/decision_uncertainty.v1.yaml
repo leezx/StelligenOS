@@ -1,0 +1,11 @@
+$id: decision_uncertainty
+version: "1.0.0"
+type: object
+additionalProperties: false
+required: [uncertainty_id, decision_question, candidate_actions, blocking_refs, resolution_experiment_ids]
+properties:
+  uncertainty_id: {type: string, pattern: '^uncertainty:[A-Za-z0-9_.-]+$'}
+  decision_question: {type: string, minLength: 1}
+  candidate_actions: {type: array, items: {type: string}}
+  blocking_refs: {type: array, items: {type: string}}
+  resolution_experiment_ids: {type: array, items: {type: string}}

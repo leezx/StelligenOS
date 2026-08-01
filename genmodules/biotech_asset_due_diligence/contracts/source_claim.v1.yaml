@@ -1,0 +1,14 @@
+$id: source_claim
+version: "1.0.0"
+type: object
+additionalProperties: false
+required: [source_id, claim_id, source_type, canonical_locator, assertion, subject_ref, direction]
+properties:
+  source_id: {type: string, pattern: '^source:[A-Za-z0-9_.-]+$'}
+  claim_id: {type: string, pattern: '^claim:[A-Za-z0-9_.-]+$'}
+  source_type: {type: string, minLength: 1}
+  canonical_locator: {type: string, minLength: 1}
+  assertion: {type: string, minLength: 1}
+  subject_ref: {type: string, minLength: 1}
+  direction: {type: string, enum: [supportive, adverse, mixed, neutral]}
+  directness: {type: string, enum: [direct, analogous, unknown]}
