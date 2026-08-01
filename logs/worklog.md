@@ -322,3 +322,13 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `LINKS.md`
   - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 12:32 EDT
+
+- Action: 按 ChatGPT 对当前 PR tip `7d68fdc` 的复审反馈修复 Phase Gate 协议阻断项。
+- How: 将 `APPROVE_WITH_NONBLOCKING_COMMENTS` 明确限定为非阻断审查记录，不再允许其作为 Phase 放行结论；补齐 handoff 的当前 metadata commit `7d68fdc`，记录当前 aggregate diff 检查，并将旧状态表述改为等待本次复审。
+- Result: 仅修改当前 PR 的协议和 handoff 状态；`./scripts/verify_repository_boundary.sh` 通过，`git diff main...HEAD --check` 通过，用户的 `prompts/GPT-Feedback.md` 保持未暂存。
+- Files affected:
+  - `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md`
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`

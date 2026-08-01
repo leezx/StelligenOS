@@ -140,7 +140,7 @@ Codex 提交 PR 时必须提供：
 ### 第四步：Codex 按反馈修订
 
 - `REQUEST_CHANGES`：Codex 只修当前 PR 指出的阻断和必要问题，不扩展到下一 Phase。
-- `APPROVE_WITH_NONBLOCKING_COMMENTS`：由负责人决定是否先处理非阻断意见；未改变 Phase 范围时可继续由负责人决定 merge。
+- `APPROVE_WITH_NONBLOCKING_COMMENTS`：只能表示当前 PR 没有新增阻断性意见，不能作为 Phase 放行结论；Codex 仍须等待明确的 `APPROVE` 才能进入下一 Phase。负责人可以在不推进下一 Phase 的前提下决定是否先处理非阻断意见或 merge。
 - `REJECT_PHASE`：Codex 停止当前执行，等待人类与 ChatGPT 重新讨论总纲或 Phase 定义。
 - `APPROVE`：当前 Phase 达到审核要求，等待负责人决定 merge 和下一 Phase。
 
@@ -150,7 +150,7 @@ Codex 提交 PR 时必须提供：
 
 只有同时满足以下条件，Phase 才能放行：
 
-- ChatGPT 对当前 PR 给出 `APPROVE`，或负责人明确接受 `APPROVE_WITH_NONBLOCKING_COMMENTS`；
+- ChatGPT 对当前 PR 明确给出 `APPROVE`；`APPROVE_WITH_NONBLOCKING_COMMENTS` 不满足 Phase 放行条件，只能作为当前 PR 的非阻断性审查记录；
 - 当前 PR 的 aggregate diff 验证通过；
 - handoff 与 PR 当前状态、base、code head、metadata commits 和验证结果一致；
 - 规定的脚本、测试、报告、清单和 manifest 均已完成；

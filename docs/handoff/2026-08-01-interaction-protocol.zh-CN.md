@@ -22,6 +22,7 @@
     - `025d815` `task_20260801_pr-workflow: clarify audited code head`
     - `ada438e` `task_20260801_pr-workflow: record ChatGPT review evidence`
     - `13b1737` `task_20260801_pr-workflow: clarify PR audit tip` (current PR tip at the time of this handoff revision)
+    - `7d68fdc` `task_20260801_pr-workflow: document phase gate collaboration` (current PR tip; adds the phase-gate protocol)
 - PR 状态：`OPEN / DRAFT`
 - 时间：`2026-08-01 America/New_York`
 
@@ -49,20 +50,19 @@
 - `bash -n tests/test_git_sync.sh`：通过。
 - `tests/test_git_sync.sh`：通过，A-D 四个场景均通过。
 - `git diff main...190e24a --check`：通过，覆盖代码审计范围。
-- `git diff main...025d815 --check`：通过，覆盖完整 PR aggregate diff。
+- `git diff main...025d815 --check`：通过，覆盖前一版完整 PR aggregate diff。
+- `git diff main...7d68fdc --check`：通过，覆盖当前 PR aggregate diff。
 
 ## 未决问题与风险
 
-- 任务分支已推送，draft PR 已创建，等待外部模型审核。
-- PR 已创建并已补充最终 handoff。
-- ChatGPT 最终复审结论：`APPROVE`；可以进入 Phase 1。脚本、测试、aggregate diff、数据边界和 commit 分类追溯均已完成。
-- 本次新增的分阶段 PR 审核协议属于批准后的治理文档扩展，已加入当前 PR，需在 PR 更新后重新确认审核状态。
+- 任务分支已推送，draft PR 已创建，当前 PR tip 为 `7d68fdc`。
+- 本次新增的分阶段 PR 审核协议属于批准后的治理文档扩展，已加入当前 PR，等待本次更新后的外部模型最终复审。
 
 ## 下一步
 
-1. 审核本次新增的分阶段 PR 审核协议扩展。
-2. 由负责人决定是否合并 PR #1。
-3. Phase 1 从 `main` 拉取最新代码，创建新的 `task_<编号>_<简短名>` 分支和 PR。
+1. 完成本次新增分阶段 PR 审核协议扩展的最终复审。
+2. 仅在 ChatGPT 明确输出 `APPROVE` 后，由负责人决定是否合并 PR #1。
+3. PR 合并且 Phase 1 获得明确放行后，从 `main` 拉取最新代码，创建新的 `task_<编号>_<简短名>` 分支和 PR。
 
 说明：本 handoff 文件自身的最新 metadata commit 不在自身列表中自引用；PR 页面是当前 branch tip 的权威来源。
 
