@@ -755,6 +755,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-gen-iet-phase-3.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 18:26 EDT
+
+- Action: 通过网页版 ChatGPT 完成 PR #21 Phase 3 修复后复审。
+- How: ChatGPT Round 1 的唯一阻断是缺少 Phase 3 专属 handoff；新增 handoff 后，使用 GitHub 来源仅复核该修复及原 Phase 3 external-only 边界。
+- Result: ChatGPT 返回 `APPROVE`，明确“Phase 3 审核通过，可以进入 Phase 4”。审核记录保存到 `logs/chatgpt-review-2026-08-01-gen-iet-phase3.md`；manifest、report 和 handoff 已更新为 `approved_phase_3`，允许进入 Phase 4。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-gen-iet-phase3.md`
+  - `manifests/gen_iet_phase_3_manifest.yaml`
+  - `docs/phases/GEN_IET_PHASE_3_REPORT.zh-CN.md`
+  - `docs/handoff/2026-08-01-gen-iet-phase-3.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 18:45 EDT
 
 - Action: 处理 ChatGPT 对 Phase 1 PR #19 Round 1 的 `REQUEST_CHANGES`。

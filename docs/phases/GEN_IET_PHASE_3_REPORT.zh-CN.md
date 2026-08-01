@@ -3,7 +3,7 @@
 - 阶段：Phase 3，Target Candidate Generation
 - 分支：`task_20260801_gen-iet-phase3-target-candidates`
 - 父阶段：Phase 2，已获 ChatGPT `APPROVE`
-- 状态：`COMPLETED_PENDING_REVIEW`
+- 状态：`APPROVED_PHASE_3`
 - Gate 变更：`NO_GATE_CHANGE`
 
 ## 本阶段实现
@@ -30,5 +30,5 @@ cache、模型权重、runner 或新 Gate。
 
 ## 停止点
 
-等待 ChatGPT 审核 Phase 3 contract-only PR。批准前不进入 Phase 4 early
-T-Gate candidate reduction。
+ChatGPT 已批准 Phase 3 contract-only PR，可以进入 Phase 4。该批准不包括
+Phase 4 实现或真实候选评估；Phase 4 必须从本阶段批准 tip 创建新分支并单独提交审核。
