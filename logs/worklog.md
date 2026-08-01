@@ -342,6 +342,13 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - How: `list-steps` 改为输出冻结合同的 14 个外部阶段；新增 `list-internal-steps` 输出 16 个内部步骤；在模块 YAML 和 stages 代码中声明完整映射；修正 `run_pipeline.py` 和 `contract_validation.py` 的 `0.4.0` 版本声明；同步 GenModules README、handoff、PR 描述准备内容和测试。
 - Verification: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v` 通过（22 项）；`./scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git diff main...3becd97 --check` 通过。
 - Review: ChatGPT 复审确认映射代码本身正确，但仍指出上述版本文档、根 README、PR 描述和 aggregate diff 记录需要同步；本次继续修订，未合并 PR。
+
+### 2026-08-01 14:58 EDT
+
+- Action: 完成 ChatGPT 第二轮反馈修订并更新 PR #11 描述。
+- How: 将 `contract_validation.py` 版本声明改为 `v0.4.0`；将根 `genmodules/README.md` 明确为 16 个内部步骤映射到 14 个外部合同阶段；保存第二轮反馈；在 handoff、Worklog 和 PR 描述中记录 aggregate diff 门禁。提交修订 `437123a` 后执行 `git diff main...HEAD --check`。
+- Verification: 全量 22 项测试通过；repository boundary 通过；working-tree `git diff --check` 通过；aggregate diff `git diff main...HEAD --check` 通过。
+- Review: 第二轮 ChatGPT 结果已保存到 `logs/chatgpt-review-2026-08-01-assetgenos-migration-revision-2.md`，当前等待最终复审，PR 仍未合并。
 - Files affected:
   - `genmodules/README.md`
   - `genmodules/antibody_binder_asset_engineering/`
