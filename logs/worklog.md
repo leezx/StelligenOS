@@ -945,6 +945,19 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 20:35 EDT
+
+- Action: 根据冻结 architecture 建立无数据 OS Boot/Smoke Runner。
+- How: 新增 `src/repository/boot.py` 和 `scripts/boot_os.py`，启动时只加载四阶段生命周期、9 个能力、3 个 Gate Group、2 条 Binder/ADC 路由，并强制所有 workspace/run/policy 引用使用 `external:` 前缀；新增正常启动、本地引用拒绝和 CLI 输出测试。未读取、处理或写入任何数据。
+- Result: 全仓 43 个 unittest 通过；CLI 返回 `ready_for_external_runtime`；repository boundary 和 `git diff --check` 通过。
+- Files affected:
+  - `src/repository/boot.py`
+  - `scripts/boot_os.py`
+  - `tests/test_os_boot.py`
+  - `src/repository/README.md`
+  - `docs/handoff/2026-08-01-os-boot-smoke.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 17:25 EDT
 
 - Action: 处理 ChatGPT 第二轮复审发现的 PR 元数据不一致。
