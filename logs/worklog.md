@@ -376,6 +376,50 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 15:28 EDT
+
+- Action: 开始迁移 AssetGenOS 的 `gate-model-rule` 主模块。
+- How: 从 `origin/main` 创建独立任务分支 `task_20260801_gate-model-rule`；读取源模块的 Model Lifecycle、Historical Rule Reference、规则生成边界和 StelligenOS 当前 Gate 合同；只实现规则模型身份、Gate 绑定、历史规则审计合同和外部适用性引用。
+- Result: 建立纯软件 `genmodules/gate_model_rule`，明确禁止规则实例、案例数据、生成输出、数据库、缓存、执行器、自动评分、状态变化和 Profile 绑定；新增 6 个回归测试，全仓 31 个测试通过，边界检查和 diff 检查通过。
+- Files affected:
+  - `genmodules/README.md`
+  - `genmodules/gate_model_rule/`
+  - `tests/test_gate_model_rule.py`
+  - `docs/handoff/2026-08-01-gate-model-rule.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 15:45 EDT
+
+- Action: 处理 ChatGPT 对 PR #14 的第一轮审核反馈。
+- How: 将 `historical_rule_reference.v1.yaml` 的嵌套 `review` 要求映射为 Python `RuleReview`；为 `GateModelRuleRef` 增加并锁定 `external_rule_model` implementation；新增 YAML/Python 合同一致性测试；保存审核记录并准备同步 PR 描述的测试数字。
+- Result: 两个合同对齐阻断已修复；全仓 33 个 unittest、repository boundary check 和 `git diff --check` 通过。PR 未合并，准备复审。
+- Files affected:
+  - `genmodules/gate_model_rule/core/contracts.py`
+  - `tests/test_gate_model_rule.py`
+  - `docs/handoff/2026-08-01-gate-model-rule.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-01-gate-model-rule-round1.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 16:05 EDT
+
+- Action: 完成 gate-model-rule PR #14 的第二轮 ChatGPT 复审。
+- How: 通过 `+` 菜单重新选中 GitHub 来源，针对修订 tip `42c6a27` 核对嵌套 review 合同、implementation 身份、YAML/Python 一致性测试和完整软件边界。
+- Result: ChatGPT 返回 `APPROVE`，明确“可以合并 PR #14”；新增审核记录。由于批准记录本身会形成新的元数据提交，准备再做 metadata-only 复审；仍不自动合并。
+- Files affected:
+- `logs/chatgpt-review-2026-08-01-gate-model-rule-round2.md`
+- `docs/handoff/2026-08-01-gate-model-rule.zh-CN.md`
+- `logs/worklog.md`
+
+### 2026-08-01 15:39 EDT
+
+- Action: 完成 gate-model-rule PR #14 的最终 metadata-only 复审。
+- How: 先通过网页版 ChatGPT 的“GitHub PR 信息”聊天、`+` 菜单重新选中 GitHub 来源；初次结果因 GitHub 暂时显示 `mergeable=false` 为 `REQUEST_CHANGES`。随后用 `gh pr view` 核实 PR 状态已恢复为 `mergeable=MERGEABLE`、`mergeStateStatus=CLEAN`，再次通过 `+` 菜单选中 GitHub 并提交最终复审。
+- Result: ChatGPT 返回 `APPROVE`，明确“可以合并 PR #14”。确认 `2993d10` 仅增加审核元数据、handoff 和 worklog，没有改变已批准的代码、合同、测试或软件边界；PR 仍保持 OPEN，不自动合并。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-gate-model-rule-round3.md`
+  - `docs/handoff/2026-08-01-gate-model-rule.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 13:56 EDT
 
 - Action: 开始架构冻结后的 AssetGenOS 模块迁移。

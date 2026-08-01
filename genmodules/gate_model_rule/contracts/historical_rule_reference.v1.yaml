@@ -1,0 +1,34 @@
+contract:
+  contract_id: historical_rule_reference
+  contract_version: "1.0.0"
+  source_contract: HistoricalADCRuleReference@1.0.0
+  description: >-
+    External review contract for preserving historical ADC case-derived rules
+    as auditable Gate-local references without automatic inference.
+  rule_record:
+    required_fields:
+      - rule_id
+      - gate_ref
+      - rule_type
+      - direction
+      - confidence
+      - source_refs
+      - limitation_refs
+    allowed_confidence_labels: [high, medium, low]
+    natural_language_predicates_are_executable: false
+  applicability_bundle:
+    required_fields:
+      - bundle_version
+      - candidate_ref
+      - gate_ref
+      - review
+      - assessments
+    review_required_fields: [reviewer_ref, reviewed_at, status]
+    allowed_review_status: [draft, approved, rejected]
+    assessment_required_fields: [rule_id, applicability, rationale_ref, evidence_refs]
+    allowed_applicability: [applies, does_not_apply, uncertain]
+  decision_policy:
+    automatic_condition_matching: forbidden
+    automatic_gate_score_change: forbidden
+    automatic_gate_status_change: forbidden
+    automatic_profile_binding: forbidden
