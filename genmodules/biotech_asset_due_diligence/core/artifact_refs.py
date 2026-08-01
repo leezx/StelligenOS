@@ -30,6 +30,14 @@ def resolve_path(path: str, root_env: str | None = None, workspace_root: Path | 
     return candidate.resolve()
 
 
+def _within(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return False
+    return True
+
+
 @dataclass(frozen=True)
 class ArtifactRef:
     artifact_id: str
@@ -44,7 +52,14 @@ class ArtifactRef:
         return asdict(self)
 
     def verify(self, workspace_root: Path | None = None) -> Path:
+        if workspace_root is None:
+            raise ValueError("an external workspace_root is required for artifact verification")
+        root = workspace_root.resolve()
+        if not root.is_dir():
+            raise ValueError(f"external workspace root does not exist: {root}")
         path = resolve_path(self.path, self.root_env, workspace_root)
+        if not _within(path, root):
+            raise ValueError(f"artifact path escapes external workspace root: {self.artifact_id}")
         if not path.is_file():
             raise ValueError(f"artifact does not exist: {path}")
         actual_bytes = path.stat().st_size

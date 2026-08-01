@@ -2,7 +2,7 @@
 
 - 任务编号：`task_20260801_biotech-dd`
 - 目标：将 AssetGenOS Due Diligence Phase 1A 的纯软件合同边界迁移到 StelligenOS。
-- 当前状态：已完成实现，等待 PR 审核；未合并。
+- 当前状态：已完成第一轮修订，等待 ChatGPT 复审；未合并。
 
 ## 本次已迁移
 
@@ -24,10 +24,17 @@
 
 ## 验证
 
-- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`: 29 passed
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`: 31 passed
 - `./scripts/verify_repository_boundary.sh`: passed
 - `git diff --check`: passed
 - 迁移目录未发现数据后缀、样例目录、归档或 runner。
+
+## 第一轮审核反馈
+
+- ChatGPT 结论：`REQUEST_CHANGES`。
+- 阻断项：ArtifactRef 未强制外部 root；合同验证未递归。
+- 修订：已强制外部 root 和 root 内路径，并补充递归合同验证及回归测试。
+- 原始记录：`logs/chatgpt-review-2026-08-01-biotech-dd-round1.md`。
 
 ## 审核重点
 

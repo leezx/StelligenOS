@@ -877,3 +877,26 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `genmodules/biotech_asset_due_diligence/`
   - `tests/test_biotech_asset_due_diligence.py`
   - `logs/worklog.md`
+
+### 2026-08-01 16:40 EDT
+
+- Action: 处理 ChatGPT 对 PR #13 的第一轮审核反馈。
+- How: 通过已选中的 GitHub 来源审查 PR；针对两个阻断项，要求 ArtifactRef 必须使用外部 workspace root 且路径不得逃逸，并把合同验证器改为递归检查嵌套对象、数组元素、类型、enum、pattern、required 和 additionalProperties；新增对应回归测试和审核记录。
+- Result: 第一轮 `REQUEST_CHANGES` 已落实为最小范围修订，等待复审；PR 未合并。
+- Files affected:
+  - `genmodules/biotech_asset_due_diligence/core/artifact_refs.py`
+  - `genmodules/biotech_asset_due_diligence/core/contract_validation.py`
+  - `tests/test_biotech_asset_due_diligence.py`
+  - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-01-biotech-dd-round1.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 16:48 EDT
+
+- Action: 修正第一轮反馈修订后的测试断言并完成复验。
+- How: 将 ArtifactRef 测试断言改为比较 `resolve()` 后的路径；重新执行完整 unittest、仓库边界扫描和 diff 空白检查。
+- Result: 全仓 31 个 unittest 通过，边界检查通过，当前 PR 仍未合并，准备推送修订并请求 ChatGPT 复审。
+- Files affected:
+  - `tests/test_biotech_asset_due_diligence.py`
+  - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
+  - `logs/worklog.md`

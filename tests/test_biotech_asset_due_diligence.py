@@ -8,6 +8,7 @@ from genmodules.biotech_asset_due_diligence.core.contract_validation import (
     ContractError,
     validate_record,
 )
+from genmodules.biotech_asset_due_diligence.core.artifact_refs import ArtifactRef
 from genmodules.biotech_asset_due_diligence.core.entities import (
     Asset,
     ExperimentBranch,
@@ -53,6 +54,46 @@ class BiotechAssetDueDiligenceTests(unittest.TestCase):
         }
         with self.assertRaises(ContractError):
             validate_record({"name": "ok", "unexpected": True}, contract)
+
+    def test_contract_validator_recurses_into_arrays_and_objects(self):
+        contract = {
+            "$id": "nested",
+            "version": "1.0.0",
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["items"],
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "required": ["kind"],
+                        "properties": {"kind": {"type": "string", "enum": ["usable"]}},
+                    },
+                },
+            },
+        }
+        with self.assertRaises(ContractError):
+            validate_record({"items": [{"kind": 7}]}, contract)
+
+    def test_artifact_ref_requires_external_root_and_rejects_escape(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            artifact = root / "artifact.txt"
+            artifact.write_text("external")
+            reference = ArtifactRef(
+                "artifact:demo", "artifact.txt", __import__("hashlib").sha256(b"external").hexdigest(),
+                artifact.stat().st_size, "Demo@1.0.0",
+            )
+            self.assertEqual(reference.verify(root), artifact.resolve())
+            with self.assertRaises(ValueError):
+                reference.verify(None)
+            escaping = ArtifactRef(
+                "artifact:escape", "../artifact.txt", reference.sha256, reference.bytes, reference.producer_contract,
+            )
+            with self.assertRaises(ValueError):
+                escaping.verify(root)
 
     def test_adapter_accepts_current_binder_contract_without_writing_repo(self):
         with TemporaryDirectory() as directory:
