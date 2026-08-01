@@ -1,6 +1,7 @@
 import unittest
 
 from genmodules.gen_indication_endpoint_target import (
+    AdversarialReview,
     CandidateDisposition,
     CandidateFilterResult,
     ClinicalFrame,
@@ -39,6 +40,10 @@ class GenIndicationEndpointTargetContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             OpportunitySearchScope(
                 **{**scope.__dict__, "source_policy_id": "local:policy"}
+            )
+        with self.assertRaises(ValueError):
+            OpportunitySearchScope(
+                **{**scope.__dict__, "evaluation_plan_id": "local:plan"}
             )
 
     def test_target_identity_contains_four_required_dimensions(self):
@@ -110,6 +115,31 @@ class GenIndicationEndpointTargetContractTests(unittest.TestCase):
         )
         self.assertEqual(result.status, EvaluationStatus.UNRESOLVED)
         self.assertNotIn("gate_id", result.__dataclass_fields__)
+
+    def test_filter_rejects_local_evidence_reference(self):
+        with self.assertRaises(ValueError):
+            CandidateFilterResult(
+                filter_id="filter-1",
+                candidate_id="candidate-1",
+                disposition=CandidateDisposition.DEFER,
+                status=EvaluationStatus.UNRESOLVED,
+                reason_codes=("insufficient_evidence",),
+                evidence_ids=("local:evidence",),
+            )
+
+    def test_adversarial_review_rejects_local_counter_evidence(self):
+        with self.assertRaises(ValueError):
+            AdversarialReview(
+                review_id="review-1",
+                candidate_id="candidate-1",
+                objections=("objection",),
+                counter_evidence_ids=("local:evidence",),
+                alternative_explanations=("alternative",),
+                critical_unknowns=("unknown",),
+                validation_tasks=("validate",),
+                reviewer_ref="external:reviewer/1",
+                status=EvaluationStatus.UNRESOLVED,
+            )
 
     def test_t12_handoff_rejects_local_evidence_reference(self):
         with self.assertRaises(ValueError):

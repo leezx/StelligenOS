@@ -46,4 +46,4 @@
 - 基于已批准的 Phase 0，在独立分支实现 data-free 合同包：Scope、ClinicalFrame、TargetCandidate、CandidateFilterResult、EvidenceRecord、AdversarialReview 和 T12 handoff。
 - 为合同增加外部引用、四元组 opportunity identity、unknown/not-evaluated 保留、非 Gate filter 和 provenance 字段约束。
 - 未实现候选生成、证据采集、Rule/Model/Gate evaluator、ranking、P/C chain、数据库、数据、cache、result 或 runner。
-- 51 个 unittest、repository boundary 和 `git diff --check` 均通过；当前状态为 `COMPLETED_PENDING_REVIEW`，等待 ChatGPT 审核。
+- 55 个 unittest、repository boundary 和 `git diff --check` 均通过；当前状态为 `COMPLETED_PENDING_REVIEW`，等待 ChatGPT 审核。

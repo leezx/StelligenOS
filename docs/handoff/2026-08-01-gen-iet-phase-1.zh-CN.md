@@ -20,7 +20,7 @@
 
 ## 验证
 
-- 53 tests passed
+- 55 tests passed
 - repository boundary passed
 - `git diff --check` passed
 

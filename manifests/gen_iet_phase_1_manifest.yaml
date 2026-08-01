@@ -36,7 +36,7 @@ explicitly_not_implemented:
   - new_gate
 
 validation:
-  tests: 53
+  tests: 55
   repository_boundary: passed
   git_diff_check: passed
 

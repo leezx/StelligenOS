@@ -724,7 +724,7 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 
 - Action: 处理 ChatGPT 对 Phase 1 PR #19 Round 1 的 `REQUEST_CHANGES`。
 - How: 将 `OpportunitySearchScope.source_policy_id`、`evaluation_plan_id`、ClinicalFrame source evidence、TargetCandidate positive/negative evidence、CandidateFilterResult evidence、AdversarialReview counter-evidence 和 T12 handoff evidence 全部统一为 `external:` 引用校验；新增 scope、frame、handoff 本地引用失败测试。
-- Result: 53 个 unittest 通过；repository boundary 和 `git diff --check` 通过；更新 Phase 1 report、manifest、handoff 和 worklog，准备推送后重新请求 ChatGPT 审核。
+- Result: 55 个 unittest 通过；repository boundary 和 `git diff --check` 通过；更新 Phase 1 report、manifest、handoff 和 worklog，准备推送后重新请求 ChatGPT 审核。
 - Files affected:
   - `genmodules/gen_indication_endpoint_target/contracts.py`
   - `tests/test_gen_indication_endpoint_target.py`
@@ -1070,7 +1070,7 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 
 - Action: 进入 ChatGPT 已批准的 Phase 1，建立 `gen_indication_endpoint_target` data-free 合同包。
 - How: 在独立分支新增 Scope、ClinicalFrame、TargetCandidate、非 Gate CandidateFilterResult、EvidenceRecord、AdversarialReview 和 T12 handoff；通过枚举和构造校验保留 unknown/not-evaluated 语义，所有跨边界运行/来源/结果引用要求 `external:`。
-- Result: 51 个 unittest 通过；repository boundary 和 `git diff --check` 通过；未新增 Gate、数据、数据库、cache、result、weights、runner 或真实生成逻辑。新增 Phase 1 报告、manifest 和 handoff，等待 ChatGPT PR 审核。
+- Result: 55 个 unittest 通过；repository boundary 和 `git diff --check` 通过；未新增 Gate、数据、数据库、cache、result、weights、runner 或真实生成逻辑。新增 Phase 1 报告、manifest 和 handoff，等待 ChatGPT PR 审核。
 - Files affected:
   - `genmodules/gen_indication_endpoint_target/`
   - `tests/test_gen_indication_endpoint_target.py`

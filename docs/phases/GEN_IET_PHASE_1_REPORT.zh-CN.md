@@ -34,7 +34,7 @@
 
 ## 验证
 
-- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`：53 passed
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`：55 passed
 - `./scripts/verify_repository_boundary.sh`：passed
 - `git diff --check`：passed
 
