@@ -1,0 +1,61 @@
+manifest_version: "1.0.0"
+module_id: gen_indication_endpoint_target
+phase: 7
+status: completed_pending_review
+parent_phase: 6
+parent_approval: logs/chatgpt-review-2026-08-01-gen-iet-phase6.md
+gate_change_declaration: NO_GATE_CHANGE
+
+scope:
+  implementation_type: external_t12_decision_and_ranking_ports
+  execution_enabled: false
+  persistence_enabled: false
+  inputs_external_only: true
+  outputs_external_only: true
+  gates_called_locally: false
+  t12_enabled: false
+  ranking_enabled: false
+  binder_development_enabled: false
+  p_chain_enabled: false
+  contracts:
+    - T12DecisionRequest
+    - T12DecisionResult
+    - OpportunityHandoffPackage
+    - OpportunityRankingRequest
+    - OpportunityRankingResult
+    - T12DecisionPort
+    - OpportunityRankingPort
+
+decision:
+  allowed_dispositions:
+    - PROVISIONAL_ADVANCE
+    - EXPLORATION
+    - HOLD
+    - FAIL
+  requires_ready_for_t12_reference: true
+  full_t0_t11_trace_required: true
+  asset_generation_eligible: false
+
+explicitly_not_executed:
+  - evidence_read
+  - clinical_data_read
+  - t12
+  - opportunity_ranking
+  - opportunity_creation
+  - binder_development
+  - p_chain
+  - database
+  - cache
+  - result_persistence
+  - model_weights
+  - runner
+  - new_gate
+
+validation:
+  tests: 73
+  repository_boundary: passed
+  git_diff_check: passed
+
+decision_gate:
+  requires_chatgpt_review: true
+  proceed_to_phase_8: false
