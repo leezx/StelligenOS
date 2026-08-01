@@ -3,7 +3,7 @@
 - 阶段：Phase 9，Freeze and Release
 - 分支：`task_20260801_gen-iet-phase9-freeze-release`
 - 父阶段：Phase 8，已获 ChatGPT `APPROVE`
-- 状态：`COMPLETED_PENDING_REVIEW`
+- 状态：`APPROVED_PHASE_9`
 - Gate 变更：`NO_GATE_CHANGE`
 
 ## 本阶段实现
@@ -37,5 +37,6 @@ cache、result、weights、runner 或新 Gate。
 
 ## 停止点
 
-等待 ChatGPT 审核 Phase 9 freeze/release contract-only PR。批准前不标记模块
-release ready，不发布真实资产或数据。
+ChatGPT 已批准 Phase 9 freeze/release contract-only PR，可以发布 v1.0.0
+架构冻结。该批准仍不授权读取真实数据、运行 pilot、生成资产或在仓库内创建
+release package。

@@ -13,6 +13,7 @@
 
 ## 决策
 
-- 当前状态：`COMPLETED_PENDING_REVIEW`
+- 当前状态：`APPROVED_PHASE_9`
 - Gate 变更：`NO_GATE_CHANGE`
-- 是否建议进入下一 Phase：等待 ChatGPT 审核；批准前为 `false`
+- 是否可以发布 v1.0.0 架构冻结：`true`（ChatGPT 已批准）
+- 审核记录：`logs/chatgpt-review-2026-08-01-gen-iet-phase9.md`

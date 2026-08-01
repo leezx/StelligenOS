@@ -102,4 +102,10 @@
 - 基于 ChatGPT 已批准的 Phase 8，在独立分支新增 v1.0 Architecture Freeze and Release contract、Phase 9 审核清单和 Decision Log。
 - 固定 45 个既有 Gate、T/P/C profile、依赖图、Phase 0-9 manifest 与归档 Prompt 引用；未批准 Gate Extension proposal 阻断 release contract。
 - 未发布数据或 release package，未读取数据、运行 CRC pilot、T0-T12/Gate/Rule/Model/P-chain/C-chain，未修改 Registry/Profile/依赖图或创建本地资产。
-- 77 个 unittest、repository boundary 和 `git diff --check` 均通过；当前状态为 `COMPLETED_PENDING_REVIEW`，等待 ChatGPT 审核后才可标记 release ready。
+- 77 个 unittest、repository boundary 和 `git diff --check` 均通过；Phase 9 初始实现状态为 `COMPLETED_PENDING_REVIEW`，现已由后续 ChatGPT 审核记录收敛为 `APPROVED_PHASE_9`。
+
+## 2026-08-01：`gen_indication_endpoint_target` Phase 9 审核完成
+
+- ChatGPT 通过 GitHub PR #27 审核 Phase 9 freeze/release contract-only，明确回复：`Phase 9 审核通过，可以发布 v1.0.0 架构冻结`。
+- Phase 9 状态更新为 `APPROVED_PHASE_9`，manifest 的 `release_ready` 更新为 `true`；批准范围仅为软件架构冻结，不包含数据读取、pilot、T0-T12、P/C 链、资产或仓库内 release package。
+- 审核记录：`logs/chatgpt-review-2026-08-01-gen-iet-phase9.md`。

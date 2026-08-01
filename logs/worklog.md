@@ -122,6 +122,21 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Files affected:
   - `logs/worklog.md`
 
+### 2026-08-01 19:11 EDT
+
+- Action: 通过 Chrome 中“GitHub PR 信息”ChatGPT 对话提交并完成 Phase 9 审核。
+- How: 确认聊天框 `+` 菜单的 GitHub 来源已选中；要求 ChatGPT 仅审查 PR #27 的架构冻结/发布合同、冻结 Gate/T/P/C/依赖边界、Gate Extension 治理、external-only 数据边界及 77 项验证。
+- Result: ChatGPT 返回 `APPROVE`，明确“Phase 9 审核通过，可以发布 v1.0.0 架构冻结”。已将 Phase 9 manifest 更新为 `approved_phase_9` 和 `release_ready: true`，但保留真实数据、pilot、T0-T12、资产和 release package 的外部执行边界。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-gen-iet-phase9.md`
+  - `manifests/gen_iet_phase_9_manifest.yaml`
+  - `docs/phases/GEN_IET_PHASE_9_REPORT.zh-CN.md`
+  - `docs/phases/GEN_IET_PHASE_9_REVIEW_CHECKLIST.zh-CN.md`
+  - `logs/decision-log-2026-08-01-gen-iet-phase9.zh-CN.md`
+  - `docs/handoff/2026-08-01-gen-iet-phase-9.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-07-31 17:37 EDT
 
 - Action: Promoted the worklog into the repository navigation and working rules.

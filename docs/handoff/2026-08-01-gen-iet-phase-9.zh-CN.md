@@ -2,7 +2,7 @@
 
 - 任务编号：`task_20260801_gen-iet-phase9-freeze-release`
 - 父阶段：Phase 8，已获 ChatGPT `APPROVE`
-- 当前状态：Phase 9 freeze/release contract-only 完成，等待 ChatGPT PR 审核
+- 当前状态：Phase 9 freeze/release contract-only 已获 ChatGPT 批准
 - Gate 变更：`NO_GATE_CHANGE`
 
 ## 已实现
@@ -22,7 +22,9 @@
 - 77 tests passed
 - repository boundary passed
 - `git diff --check` passed
+- ChatGPT `APPROVE`：可以发布 v1.0.0 架构冻结
 
 ## 下一步
 
-等待 ChatGPT 审核 Phase 9 freeze/release PR；批准前不标记 release ready。
+Phase 9 已完成，架构冻结状态可发布 v1.0.0；后续真实数据、pilot、资产和
+release package 仍必须在仓库外部执行和保存。
