@@ -289,3 +289,13 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/chatgpt-review-2026-08-01-pr1-revision.md`
   - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 12:35 EDT
+
+- Action: 通过网页版 ChatGPT 和 GitHub 插件完成最终复审轮次。
+- How: 提交针对 PR tip `13b1737` 的最终只读审核指令；ChatGPT 确认脚本、A-D 测试、Phase 0.5 中文化、数据边界和 aggregate diff 均通过，仅指出 handoff 过期状态句和 metadata commit 列表缺少 `13b1737` 两项。
+- Result: 两项最小 handoff 修订已完成，完整反馈保存到 `logs/chatgpt-review-2026-08-01-pr1-final-review.md`；修订后需要再做一次简短复审。
+- Files affected:
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-01-pr1-final-review.md`
+  - `logs/worklog.md`

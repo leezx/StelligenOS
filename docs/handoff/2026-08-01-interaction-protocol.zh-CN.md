@@ -21,6 +21,7 @@
     - `7bf3eac` `task_20260801_pr-workflow: align handoff head`
     - `025d815` `task_20260801_pr-workflow: clarify audited code head`
     - `ada438e` `task_20260801_pr-workflow: record ChatGPT review evidence`
+    - `13b1737` `task_20260801_pr-workflow: clarify PR audit tip` (current PR tip at the time of this handoff revision)
 - PR 状态：`OPEN / DRAFT`
 - 时间：`2026-08-01 America/New_York`
 
@@ -54,7 +55,7 @@
 
 - 任务分支已推送，draft PR 已创建，等待外部模型审核。
 - PR 已创建并已补充最终 handoff。
-- 当前复审仍为 `REQUEST_CHANGES`，阻断项仅剩 aggregate diff 记录和 commit 分类追溯。
+- 当前等待本次最终复审；脚本、测试、aggregate diff、数据边界和 commit 分类追溯均已完成。
 
 ## 下一步
 
@@ -62,6 +63,8 @@
 2. 将 PR 链接交给外部模型进行下一次复审。
 3. 只按当前 PR 的审核意见修订。
 4. 由负责人决定 merge 或打回。
+
+说明：本 handoff 文件自身的最新 metadata commit 不在自身列表中自引用；PR 页面是当前 branch tip 的权威来源。
 
 ## 数据边界声明
 
