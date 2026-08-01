@@ -26,5 +26,5 @@
 
 ## 5. 结论
 
-Phase 7 只建立零数据的端到端闭环合同。待 PR 经 ChatGPT 明确 `APPROVE` 后，
-才允许进入 Phase 8 架构冻结与发布规范。
+Phase 7 只建立零数据的端到端闭环合同。PR #8 经 ChatGPT 明确 `APPROVE`，
+可以进入 Phase 8 架构冻结与发布规范。
