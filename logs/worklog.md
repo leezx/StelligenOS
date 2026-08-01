@@ -970,6 +970,15 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-os-boot-smoke.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 21:10 EDT
+
+- Action: 核查 AssetGenOS 实际运行入口和 StelligenOS 接入边界。
+- How: 读取 AssetGenOS `pyproject.toml`、`src/adc_factory/cli.py` 和 `config.py`；确认 `adc-factory v2 evaluate` 需要 target/gene/indication/endpoint 等明确业务输入，并会管理 SQLite、cache、output 和外部数据索引。没有执行真实资产生成，也没有猜测业务输入。
+- Result: 通用外部 Runtime Adapter 已足以接入外部命令；下一次真实运行前必须由人类确定生成路线和外部输入引用。该决策不能由代码安全推断。
+- Files affected:
+  - `docs/handoff/2026-08-01-os-boot-smoke.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 17:25 EDT
 
 - Action: 处理 ChatGPT 第二轮复审发现的 PR 元数据不一致。

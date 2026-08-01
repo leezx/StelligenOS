@@ -30,3 +30,9 @@
 
 - 先通过 ChatGPT 审核本 PR。
 - 审核通过后，再新增外部 AssetGenOS runtime adapter；adapter 只能读取外部 workspace 并通过现有 capability ports 返回外部引用。
+
+## AssetGenOS 运行边界核查
+
+- AssetGenOS 当前 CLI `adc-factory v2 evaluate` 需要明确的 target、gene、indication、endpoint 等业务输入。
+- AssetGenOS 运行时会在其外部工作区管理 SQLite、cache、output 和外部数据索引；这些路径不能指向 StelligenOS。
+- StelligenOS 不应猜测首个资产、路线或业务输入。实际运行前需要明确选择现有 Binder 路线或 de novo 路线，并提供外部输入引用。
