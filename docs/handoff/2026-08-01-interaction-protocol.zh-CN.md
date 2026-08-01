@@ -5,7 +5,14 @@
 - 任务编号：`task_20260801_pr-workflow`
 - 分支：`task_20260801_pr-workflow`
 - PR：https://github.com/leezx/StelligenOS/pull/1
-- Commit：`0fc4bbb`
+- Base：`56c2e16`
+- Head：`88e1b46`
+- Commits：
+  - `0fc4bbb` `task_20260801_pr-workflow: formalize PR handoff collaboration`
+  - `959d124` `task_20260801_pr-workflow: record handoff verification`
+  - `54c0126` `task_20260801_pr-workflow: link handoff to pull request`
+  - `88e1b46` `task_20260801_pr-workflow: fix sync safety and add tests`
+- PR 状态：`OPEN / DRAFT`
 - 时间：`2026-08-01 America/New_York`
 
 ## 本次改动
@@ -15,6 +22,9 @@
 - 要求每个任务 PR 在 `docs/handoff/` 留下交接备忘。
 - 增加显式暂存和提交前状态检查要求，禁止全量暂存命令。
 - 更新同步脚本，使其必须接收明确的文件路径清单。
+- 修复同步脚本对未跟踪文件无效的问题，并在暂存区非空时拒绝执行。
+- 新增 `tests/test_git_sync.sh`，覆盖未跟踪文件、已跟踪修改、非空暂存区和缺少文件清单四个场景。
+- 将 Phase 0.5 审核清单改为中文，保留机器状态值为英文。
 
 ## 明确未改动
 
@@ -26,17 +36,18 @@
 
 - `./scripts/verify_repository_boundary.sh`：通过。
 - `bash -n scripts/git_sync.sh`：通过。
-- `git diff HEAD^ --check`：通过。
-- Git staged diff：提交前必须人工确认仅包含本任务文件。
+- `bash -n tests/test_git_sync.sh`：通过。
+- `tests/test_git_sync.sh`：通过，A-D 四个场景均通过。
+- `git diff --cached --check`：通过。
 
 ## 未决问题与风险
 
 - 任务分支已推送，draft PR 已创建，等待外部模型审核。
-- PR 链接和最终 commit 尚未生成。
+- PR 已创建并已补充最终 handoff。
 
 ## 下一步
 
-1. 将 PR 链接交给外部模型审核。
+1. 将 PR 链接交给外部模型进行 v4 修订复审。
 2. 只按当前 PR 的审核意见修订。
 3. 由负责人决定 merge 或打回。
 

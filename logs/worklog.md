@@ -266,3 +266,16 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Files affected:
   - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 12:20 EDT
+
+- Action: 按 GPT Feedback v4 修复 PR 治理阻断项。
+- How: 修改 `scripts/git_sync.sh`，先输出状态、拒绝非空暂存区、直接暂存显式文件清单并正确处理未跟踪文件；新增 `tests/test_git_sync.sh` 覆盖 A-D 四种行为；将 Phase 0.5 审核清单改为中文；同步更新 ChatGPT/Codex 协作规范。
+- Result: v4 指出的脚本安全问题已修复，行为测试 A-D 全部通过；当前修订已提交为 `88e1b46`，handoff 已同步记录当前 head 和完整 commit 列表。
+- Files affected:
+  - `scripts/git_sync.sh`
+  - `tests/test_git_sync.sh`
+  - `docs/phases/PHASE_0_5_REVIEW_CHECKLIST.zh-CN.md`
+  - `ChatGPT-Codex-talk.md`
+  - `AGENTS.md`
+  - `logs/worklog.md`
