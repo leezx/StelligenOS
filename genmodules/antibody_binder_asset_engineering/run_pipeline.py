@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CLI runner for antibody_binder_asset_engineering@0.3.1."""
+"""CLI runner for antibody_binder_asset_engineering@0.4.0."""
 
 from __future__ import annotations
 
@@ -30,6 +30,7 @@ from contract_validation import (  # noqa: E402
 )
 from stages import (  # noqa: E402
     EXECUTION_ORDER,
+    EXTERNAL_ROUTE_STAGES,
     STAGE_FUNCTIONS,
     STAGES,
     validate_binder,
@@ -334,7 +335,8 @@ def _print_doctor(status: dict[str, Any], as_json: bool) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
-    subparsers.add_parser("list-steps")
+    subparsers.add_parser("list-steps", help="show the frozen external route stages")
+    subparsers.add_parser("list-internal-steps", help="show internal implementation steps")
     doctor = subparsers.add_parser("doctor")
     doctor.add_argument("--json", action="store_true")
     run = subparsers.add_parser("run")
@@ -353,6 +355,10 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "list-steps":
+        for stage_id, internal_ids in EXTERNAL_ROUTE_STAGES:
+            print(f"{stage_id}\t{','.join(internal_ids)}")
+        return 0
+    if args.command == "list-internal-steps":
         execution_position = {stage_id: index + 1 for index, stage_id in enumerate(EXECUTION_ORDER)}
         for stage_id, name in STAGES:
             print(f"{stage_id}\t{name}\t(executes {execution_position[stage_id]} of {len(EXECUTION_ORDER)})")

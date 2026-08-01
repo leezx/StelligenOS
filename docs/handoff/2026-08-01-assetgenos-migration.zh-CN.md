@@ -8,7 +8,9 @@
 ## 已迁移
 
 - `genmodules/antibody_binder_asset_engineering/`，版本 `0.4.0`
-  - 保留 16 阶段、输入/输出契约、SHA-256 产物校验和外部执行默认关闭策略。
+  - 保留 16 个内部执行步骤，并显式映射到冻结合同的 14 个外部路线阶段。
+  - `list-steps` 输出 14 个外部阶段，`list-internal-steps` 输出 16 个内部步骤。
+  - 保留输入/输出契约、SHA-256 产物校验和外部执行默认关闭策略。
 - `genmodules/epitope_conditioned_de_novo_antibody_discovery/`，版本 `0.1.0`
   - 保留 15 阶段、输入验证、外部工具探测和“不凭空生成抗体序列”边界。
 - `tests/test_assetgenos_modules.py`

@@ -67,6 +67,26 @@ STAGES = (
     ("16_cross_asset_retrieval", "Cross-asset retrieval"),
 )
 
+# The frozen StelligenOS Binder/ADC route exposes fourteen external stages.
+# Several route stages aggregate internal implementation steps; run_manifest
+# is emitted by the runner rather than a scientific stage.
+EXTERNAL_ROUTE_STAGES = (
+    ("binder_intake", ("01_binder_intake",)),
+    ("sequence_normalization", ("01_binder_intake",)),
+    ("structural_analysis", ("03_structural_analysis",)),
+    ("liability_analysis", ("04_binder_engineering_design", "06_binder_quality_triage")),
+    ("developability_analysis", ("06_binder_quality_triage",)),
+    ("adc_carrier_phenotype", ("07_adc_carrier_phenotype",)),
+    ("delivery_cascade", ("07_adc_carrier_phenotype",)),
+    ("failure_mode_analysis", ("09_adc_failure_mode_analysis",)),
+    ("evidence_graph", ("15_evidence_graph",)),
+    ("pareto_selection", ("10_pareto_selection",)),
+    ("construct_specification", ("04_binder_engineering_design", "08_adc_product_assembly")),
+    ("adc_product_matrix", ("08_adc_product_assembly",)),
+    ("asset_report", ("14_asset_report",)),
+    ("run_manifest", ("__runner_manifest__",)),
+)
+
 # 0.2.0 stage id -> 0.3.0 stage id, for anyone reading an older run directory.
 STAGE_MIGRATION_FROM_0_2_0 = {
     "01_binder_intake": "01_binder_intake",

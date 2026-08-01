@@ -24,6 +24,8 @@ class AssetGenOSModuleMigrationTests(unittest.TestCase):
             module["output_contract"], "AntibodyAssetEngineeringPackage@0.4.0"
         )
         self.assertEqual(len(module["stages"]), 16)
+        self.assertEqual(module["external_stage_count"], 14)
+        self.assertEqual(len(module["external_stage_mapping"]), 14)
         self.assertEqual(module["external_execution_policy"], "disabled_by_default")
 
         result = subprocess.run(
@@ -34,7 +36,17 @@ class AssetGenOSModuleMigrationTests(unittest.TestCase):
             text=True,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(len(result.stdout.strip().splitlines()), 16)
+        self.assertEqual(len(result.stdout.strip().splitlines()), 14)
+
+        internal_result = subprocess.run(
+            [sys.executable, "run_pipeline.py", "list-internal-steps"],
+            cwd=module_root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(internal_result.returncode, 0, internal_result.stderr)
+        self.assertEqual(len(internal_result.stdout.strip().splitlines()), 16)
 
     def test_de_novo_module_preserves_frozen_catalogue_and_contract(self) -> None:
         module_root = GENMODULES / "epitope_conditioned_de_novo_antibody_discovery"

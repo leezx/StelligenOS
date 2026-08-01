@@ -13,6 +13,24 @@ module:
   # Bumped in 0.3.1: `region` on liability hits and proposals changed meaning
   # (IMGT-only -> union of IMGT and Kabat), so it is not a pure field addition.
   output_contract: AntibodyAssetEngineeringPackage@0.4.0
+  route_contract: binder_adc_generation_routes@0.1.0
+  route_id: existing_binder_asset_engineering
+  external_stage_count: 14
+  external_stage_mapping:
+  - {id: binder_intake, internal_steps: [01_binder_intake]}
+  - {id: sequence_normalization, internal_steps: [01_binder_intake]}
+  - {id: structural_analysis, internal_steps: [03_structural_analysis]}
+  - {id: liability_analysis, internal_steps: [04_binder_engineering_design, 06_binder_quality_triage]}
+  - {id: developability_analysis, internal_steps: [06_binder_quality_triage]}
+  - {id: adc_carrier_phenotype, internal_steps: [07_adc_carrier_phenotype]}
+  - {id: delivery_cascade, internal_steps: [07_adc_carrier_phenotype]}
+  - {id: failure_mode_analysis, internal_steps: [09_adc_failure_mode_analysis]}
+  - {id: evidence_graph, internal_steps: [15_evidence_graph]}
+  - {id: pareto_selection, internal_steps: [10_pareto_selection]}
+  - {id: construct_specification, internal_steps: [04_binder_engineering_design, 08_adc_product_assembly]}
+  - {id: adc_product_matrix, internal_steps: [08_adc_product_assembly]}
+  - {id: asset_report, internal_steps: [14_asset_report]}
+  - {id: run_manifest, internal_steps: [__runner_manifest__]}
   external_execution_policy: disabled_by_default
   external_execution_operations:
   - {operation: predict_structure, tool: ABodyBuilder2, enabled_by: --allow-external}

@@ -329,6 +329,12 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - How: 从最新 `origin/main` (`acd2f2c`) 建立隔离分支 `task_20260801_assetgenos-migration`；盘点 AssetGenOS 后选择两个不应与旧数据库绑定的 GenModule 作为第一批：现有 Binder 抗体/ADC 载体工程和表位条件 de novo 抗体发现。复制其代码、契约、工具声明和必要说明，删除示例输入、模块测试中的数据依赖、缓存和旧运行时状态；修正旧仓库路径，使科学运行时和结果目录都由外部工作区提供。
 - Result: 新增 `genmodules/` 下两个软件模块、总说明和迁移边界测试；未迁移 `data/adc_factory.sqlite3`、`.venv`、数据库层、历史标签、模型记录、缓存、模型权重、数据集或运行结果。当前等待测试、边界门禁和 PR 审核。
 - Follow-up: 首次边界检查因冻结前允许顶层清单未包含 `genmodules/` 而阻断；已将该软件代码目录加入允许清单，未放宽任何数据文件规则。
+
+### 2026-08-01 14:15 EDT
+
+- Action: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天提交 PR #11 审核，并读取到第一轮反馈。
+- Result: ChatGPT 返回 `REQUEST_CHANGES`。反馈确认存在两个阻断项：冻结 Binder/ADC 路线合同要求 14 个外部阶段，但迁移模块的 16 个内部步骤被直接作为外部 `list-steps` 暴露；runner 文档字符串仍声明 `@0.3.1`，而活动模块和合同为 `0.4.0`。
+- How: 保存完整反馈到 `logs/chatgpt-review-2026-08-01-assetgenos-migration-revision-1.md`；准备保留 16 个内部实现步骤，新增明确的 14 阶段外部路线映射和 `list-internal-steps`，同步测试、README、handoff 和 Worklog，并修正版本声明。
 - Files affected:
   - `genmodules/README.md`
   - `genmodules/antibody_binder_asset_engineering/`

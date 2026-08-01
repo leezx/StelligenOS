@@ -93,15 +93,15 @@ parent's phenotype measurement.
 
 - `contracts/existing_binder_asset_input.v0.3.1.yaml` accepts source records from
   0.1.0 through 0.3.1 and normalizes them to `ExistingBinderAssetInput@0.3.1`.
-- `contracts/antibody_asset_engineering_package.v0.3.1.yaml` fixes the exact
-  14-stage catalogue, manifest identity, stage/root artifact references, SHA-256
+- `contracts/antibody_asset_engineering_package.v0.4.0.yaml` fixes the exact
+  16-step internal catalogue, manifest identity, stage/root artifact references, SHA-256
   checksums, null semantics, and legacy rejection rules.
 
-Every completed run carries an `AntibodyAssetRunManifest@0.3.1` validation
+Every completed run carries an `AntibodyAssetRunManifest@0.4.0` validation
 receipt. Missing or invalid checksums, a different stage catalogue, or a contract
-identity mismatch block the run. Experimental evidence-graph and cross-asset
-retrieval prototypes are retained under `experimental/` / `lib/`, but are not
-registered stages and are not part of the v0.3.1 API.
+identity mismatch block the run. The external StelligenOS route exposes 14
+stages through `list-steps`; internal implementation steps remain inspectable
+through `list-internal-steps` and are explicitly mapped in `module.yaml`.
 
 ## Quick start
 
@@ -110,6 +110,9 @@ cd "/path/to/StelligenOS"
 
 .venv/bin/python \
   genmodules/antibody_binder_asset_engineering/run_pipeline.py list-steps
+
+.venv/bin/python \
+  genmodules/antibody_binder_asset_engineering/run_pipeline.py list-internal-steps
 
 .venv/bin/python \
   genmodules/antibody_binder_asset_engineering/run_pipeline.py doctor
@@ -131,7 +134,8 @@ first use; afterwards the full pipeline runs in about 13 seconds.
 ## Commands
 
 ```text
-list-steps                          Show the 14 stages.
+list-steps                          Show the 14 frozen external route stages.
+list-internal-steps                 Show the 16 internal implementation steps.
 doctor [--json]                     Check interpreters, software, and data roots.
 run --binder ... --output-root ...   Execute or plan a versioned run.
     [--mode plan|execute] [--run-id ID] [--allow-external]
