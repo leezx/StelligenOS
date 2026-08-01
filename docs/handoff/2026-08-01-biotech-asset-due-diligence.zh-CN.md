@@ -52,7 +52,7 @@
 
 ## 当前复审基线
 
-- 当前 PR tip：`645e9e2`（以 GitHub PR 页面实时 HEAD 为权威）。
+- 当前 PR tip：以 GitHub PR 页面实时 HEAD 为唯一权威；本次复审基线为 `cadf825`。
 - 当前合并状态：`MERGEABLE/CLEAN`。
 - 当前验证：`39 tests passed`、repository boundary check passed、`git diff --check` passed。
 - 冲突解决：`genmodules/README.md` 同时保留 `biotech_asset_due_diligence` 与 `gate_model_rule` 两个模块条目。

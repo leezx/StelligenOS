@@ -969,7 +969,7 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 
 - Action: 收敛 ChatGPT 最终复审发现的 PR 元数据残留。
 - How: 将 due diligence handoff 的当前状态更新为 `MERGEABLE/CLEAN`，把旧的 `mergeable=false` 标记为历史记录，并补齐当前 tip `645e9e2`、39 个测试、边界检查、diff 检查及 README 冲突解决说明。未修改迁移代码、合同或测试逻辑。
-- Result: PR 描述、handoff 和 worklog 现在统一指向当前 GitHub tip `645e9e2`，等待 ChatGPT 明确 `APPROVE`。
+- Result: PR 描述、handoff 和 worklog 现在统一以 GitHub PR 页面实时 HEAD 为唯一权威；本次复审基线为 `cadf825`，等待 ChatGPT 明确 `APPROVE`。
 - Files affected:
   - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
   - `logs/worklog.md`
