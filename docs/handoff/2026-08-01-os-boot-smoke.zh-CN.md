@@ -2,7 +2,7 @@
 
 - 任务编号：`task_20260801_os-boot-smoke`
 - 目标：根据冻结 architecture 建立无数据 OS 启动入口，证明架构可以被加载并准备接入外部 runtime。
-- 当前状态：本地实现和测试完成，待创建 PR 并提交 ChatGPT 审核。
+- 当前状态：Boot Smoke 已完成；外部 Runtime Adapter 已在后续任务分支实现，待创建 PR 并提交 ChatGPT 审核。
 
 ## 已实现
 
@@ -15,9 +15,14 @@
 - `tests/test_os_boot.py`
   - 覆盖正常启动、拒绝本地引用和 CLI 启动。
 
+后续分支新增 `src/repository/external_runtime.py` 和
+`scripts/run_external_runtime.py`，仅在显式 `--execute` 时运行外部命令，并
+拒绝仓库内 workspace/output 路径。
+
 ## 验证
 
-- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`: 43 passed
+- Boot Smoke 基线：`PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`: 43 passed
+- 加入 External Runtime Adapter 后：46 passed
 - `./scripts/verify_repository_boundary.sh`: passed
 - `git diff --check`: passed
 

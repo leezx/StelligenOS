@@ -958,6 +958,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-os-boot-smoke.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 20:55 EDT
+
+- Action: 实现外部 Runtime Adapter，连接 StelligenOS Boot 与外部 AssetGenOS runtime 边界。
+- How: 新增 `ExternalRuntimeRequest`、`ExternalRuntimeResult` 和 `SubprocessExternalRuntime`；强制 runtime/input/run/output 使用 `external:` 引用，workspace/output 路径必须位于仓库外，默认拒绝执行，只有显式 `execution_enabled`/`--execute` 才启动外部命令；stdout/stderr 不写入仓库或结果对象。
+- Result: 46 个 unittest 通过；repository boundary check 通过；`git diff --check` 通过；未创建数据、缓存、结果或持久化目录。
+- Files affected:
+  - `src/repository/external_runtime.py`
+  - `scripts/run_external_runtime.py`
+  - `tests/test_external_runtime.py`
+  - `docs/handoff/2026-08-01-os-boot-smoke.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 17:25 EDT
 
 - Action: 处理 ChatGPT 第二轮复审发现的 PR 元数据不一致。
