@@ -81,4 +81,4 @@
 - 基于 ChatGPT 已批准的 Phase 5，在独立分支新增 external-only Positive Evidence Policy、证据独立性检查、Adversarial Review、ValidationTask 和 readiness ports。
 - 保持 Adversarial Review 不是 Gate；只有满足外部 policy、独立性报告和 adversarial review 后才允许 `READY_FOR_T12_DECISION`，不执行 T12。
 - 未读取证据或临床数据，未执行 Gate/Rule/Model/T12/P-chain，未创建本地 Evidence、Review、ValidationTask 或 Opportunity，未写入数据库、cache、result、weights、runner 或新 Gate。
-- 70 个 unittest、repository boundary 和 `git diff --check` 均通过；当前状态为 `COMPLETED_PENDING_REVIEW`，等待 ChatGPT 审核后才可进入 Phase 7。
+- 70 个 unittest、repository boundary 和 `git diff --check` 均通过；ChatGPT 已返回 `APPROVE`，Phase 6 状态为 `APPROVED_PHASE_6`，可以进入 Phase 7；Phase 7 仍需独立 PR 审核。

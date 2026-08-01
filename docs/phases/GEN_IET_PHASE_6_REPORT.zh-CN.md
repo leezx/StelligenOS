@@ -3,7 +3,7 @@
 - 阶段：Phase 6，Evidence Sufficiency and Adversarial Review
 - 分支：`task_20260801_gen-iet-phase6-evidence-review`
 - 父阶段：Phase 5，已获 ChatGPT `APPROVE`
-- 状态：`COMPLETED_PENDING_REVIEW`
+- 状态：`APPROVED_PHASE_6`
 - Gate 变更：`NO_GATE_CHANGE`
 
 ## 本阶段实现
@@ -30,5 +30,5 @@ P-chain，没有持久化结果，没有调用数据库、cache、模型权重�
 
 ## 停止点
 
-等待 ChatGPT 审核 Phase 6 contract-only PR。批准前不进入 Phase 7 T12 decision
-and ranking。
+ChatGPT 已批准 Phase 6 contract-only PR，可以进入 Phase 7。该批准不包括
+Phase 7 实现或真实 T12 决策；Phase 7 必须从本阶段批准 tip 创建新分支并单独提交审核。
