@@ -29,5 +29,5 @@
 
 ## 5. 结论
 
-Phase 4 仅建立 Opportunity Generation 的软件接口和外部数据边界。待 PR 经
-ChatGPT 明确 `APPROVE` 后，才允许进入 Phase 5 Binder/ADC 生成路线迁移。
+Phase 4 仅建立 Opportunity Generation 的软件接口和外部数据边界。PR #5 经
+ChatGPT 明确 `APPROVE`，可以进入 Phase 5 Binder/ADC 生成路线迁移。
