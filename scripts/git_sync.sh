@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+repo_root="${STELLIGENOS_REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 branch="${1:-}"
 commit_message="${2:-}"
 if [[ $# -ge 1 ]]; then shift; fi
@@ -24,6 +24,15 @@ if (( ${#files[@]} == 0 )); then
   exit 2
 fi
 
+printf 'Working tree status before staging:\n'
+git status --short
+
+if ! git diff --cached --quiet; then
+  printf 'Refusing to continue: staging area is not empty.\n' >&2
+  git diff --cached --name-only >&2
+  exit 3
+fi
+
 printf 'Repository: %s\n' "$repo_root"
 printf 'Branch: %s\n' "$branch"
 
@@ -41,13 +50,13 @@ if git rev-parse --verify "origin/$branch" >/dev/null 2>&1; then
   fi
 fi
 
-if ! git diff --quiet || ! git diff --cached --quiet; then
-  git add -- "${files[@]}"
-  if ! git diff --cached --quiet; then
-    git commit -m "$commit_message"
-  fi
+git add -- "${files[@]}"
+
+if git diff --cached --quiet; then
+  printf 'No staged changes from the explicit file list.\n'
 else
-  printf 'No local changes to commit.\n'
+  git diff --cached --stat
+  git commit -m "$commit_message"
 fi
 
 git push origin "$branch"

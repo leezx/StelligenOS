@@ -37,3 +37,4 @@
 - 在增加新的顶层文件或目录之前，先运行 `scripts/verify_repository_boundary.sh`。
 - 不要把数据类文件或数据类目录加进这个仓库。
 - 例行 GitHub 同步优先使用 `scripts/git_sync.sh <branch> <commit-message> <相关文件...>`，保证 fetch/rebase/显式暂存/commit/push 流程一致。
+- 同步脚本在暂存区非空时必须拒绝执行；脚本行为由 `tests/test_git_sync.sh` 的 A-D 场景验证。
