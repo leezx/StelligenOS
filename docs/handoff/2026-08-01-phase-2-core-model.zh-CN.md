@@ -8,7 +8,7 @@
 - PR：[#3](https://github.com/leezx/StelligenOS/pull/3)
 - 最近一次已验证 PR tip：`66b057a`
 - 当前 PR tip 和 aggregate diff：以 GitHub PR 页面实时状态为唯一权威；本文件不自引用其自身提交 hash。
-- 状态：等待 ChatGPT 对 PR #3 完成复审
+- 状态：ChatGPT 已批准，等待合并到 `main`
 
 ## 总纲与范围
 
@@ -38,4 +38,6 @@ Phase 2 来源于总纲中“建立核心对象模型、状态机和 Evidence Le
 
 ## 下一步
 
-PR #3 已创建，等待 ChatGPT 明确返回 `APPROVE`。在获得批准前不得进入 Phase 3。
+ChatGPT 已对 PR #3 的远端 tip `88b6c38` 返回明确 `APPROVE`，可以进入 Phase 3。
+合并后应从最新 `main` 创建下一 Phase 分支；Phase 3 只允许迁移已批准的
+AssetGenOS Gate 体系，不得扩大为其他历史模块迁移。
