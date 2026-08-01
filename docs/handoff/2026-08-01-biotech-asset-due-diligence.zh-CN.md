@@ -36,6 +36,13 @@
 - 修订：已强制外部 root 和 root 内路径，并补充递归合同验证及回归测试。
 - 原始记录：`logs/chatgpt-review-2026-08-01-biotech-dd-round1.md`。
 
+## 第二轮审核反馈
+
+- ChatGPT 结论：`REQUEST_CHANGES`。
+- 代码阻断项已确认修复；剩余问题是 PR 描述仍写 `29 passed`，与当前 `31 passed` 不一致。
+- 修订：已准备将 PR 描述更新为 `31 passed`。
+- 原始记录：`logs/chatgpt-review-2026-08-01-biotech-dd-round2.md`。
+
 ## 审核重点
 
 1. 是否保持 StelligenOS 的“软件仓库、外部数据和运行结果”边界。

@@ -900,3 +900,13 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `tests/test_biotech_asset_due_diligence.py`
   - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 17:25 EDT
+
+- Action: 处理 ChatGPT 第二轮复审发现的 PR 元数据不一致。
+- How: ChatGPT 确认 Round 1 的两个代码阻断项已经修复，但发现 PR 描述仍写 `29 passed`，而当前 handoff/worklog 已写 `31 passed`；新增 Round 2 审核记录并准备同步 PR 描述。
+- Result: 代码不再需要修改；待将 PR 描述更新为 `31 passed` 后重新复审。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-biotech-dd-round2.md`
+  - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
+  - `logs/worklog.md`
