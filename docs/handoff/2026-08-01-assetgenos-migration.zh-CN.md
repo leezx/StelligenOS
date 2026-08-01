@@ -37,7 +37,7 @@
 
 ## 当前修订验证
 
-- 当前修订 tip：`437123a`
+- 当前修订 tip：`bd73e0f`
 - `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`：22 passed
 - `./scripts/verify_repository_boundary.sh`：passed
 - `git diff --check`：passed

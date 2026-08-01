@@ -91,8 +91,8 @@ parent's phenotype measurement.
 
 ## Machine contracts
 
-- `contracts/existing_binder_asset_input.v0.3.1.yaml` accepts source records from
-  0.1.0 through 0.3.1 and normalizes them to `ExistingBinderAssetInput@0.3.1`.
+- `contracts/existing_binder_asset_input.v0.4.0.yaml` accepts source records from
+  0.1.0 through 0.4.0 and normalizes them to `ExistingBinderAssetInput@0.4.0`.
 - `contracts/antibody_asset_engineering_package.v0.4.0.yaml` fixes the exact
   16-step internal catalogue, manifest identity, stage/root artifact references, SHA-256
   checksums, null semantics, and legacy rejection rules.

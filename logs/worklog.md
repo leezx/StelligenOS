@@ -349,6 +349,13 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - How: 将 `contract_validation.py` 版本声明改为 `v0.4.0`；将根 `genmodules/README.md` 明确为 16 个内部步骤映射到 14 个外部合同阶段；保存第二轮反馈；在 handoff、Worklog 和 PR 描述中记录 aggregate diff 门禁。提交修订 `437123a` 后执行 `git diff main...HEAD --check`。
 - Verification: 全量 22 项测试通过；repository boundary 通过；working-tree `git diff --check` 通过；aggregate diff `git diff main...HEAD --check` 通过。
 - Review: 第二轮 ChatGPT 结果已保存到 `logs/chatgpt-review-2026-08-01-assetgenos-migration-revision-2.md`，当前等待最终复审，PR 仍未合并。
+
+### 2026-08-01 15:35 EDT
+
+- Action: 读取 ChatGPT 最终复审反馈并修复最后两个元数据阻断项。
+- How: 将 handoff 当前 tip 从 `437123a` 收敛到 `bd73e0f`；把 Existing-Binder README 的当前输入合同从 `ExistingBinderAssetInput@0.3.1` 修正为 `ExistingBinderAssetInput@0.4.0`，同时保留旧版本作为历史兼容背景；补充当前 tip 的测试、boundary、working-tree diff 和 aggregate diff 验证记录。
+- Verification: 当前 tip `bd73e0f` 的 `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`、`./scripts/verify_repository_boundary.sh`、`git diff --check` 和 `git diff main...HEAD --check` 均通过。
+- Review: ChatGPT 已确认 14/16 阶段映射、list-steps/list-internal-steps、冻结路线合同、零数据边界和安全策略符合要求；当前修订后再次请求最终 APPROVE。
 - Files affected:
   - `genmodules/README.md`
   - `genmodules/antibody_binder_asset_engineering/`
