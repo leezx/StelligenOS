@@ -6,7 +6,8 @@
 - 分支：`task_20260801_phase3-assetgenos-gates`
 - Base：Phase 2 合并后的 `main`
 - PR：[#4](https://github.com/leezx/StelligenOS/pull/4)
-- 状态：ChatGPT 已批准，等待 PR 合并
+- 状态：已获 ChatGPT 批准并合并
+- 合并提交：`505ddd1`
 
 ## 总纲与范围
 
@@ -38,4 +39,4 @@
 ## 下一步
 
 PR #4 已提交到网页版 ChatGPT 的“GitHub PR 信息”聊天并获得明确 `APPROVE`，
-可以进入 Phase 4。合并后从最新 `main` 创建 Phase 4 分支。
+随后 squash merge 为 `505ddd1`。可以进入 Phase 4；当前分支已从最新 `main` 创建。

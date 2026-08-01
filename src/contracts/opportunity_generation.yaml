@@ -1,0 +1,27 @@
+contract:
+  contract_id: opportunity_generation
+  contract_version: "0.1.0"
+  lifecycle_stage: Opportunity Generation
+  inputs:
+    - knowledge_scope_ref
+    - target_context_ref
+    - clinical_context_ref
+    - generation_policy_ref
+    - run_context_ref
+  outputs:
+    - opportunity_refs
+    - target_hypothesis_refs
+    - evidence_refs
+    - missing_information_refs
+    - run_ref
+  reference_policy:
+    all_domain_values_external: true
+    local_record_creation: forbidden
+    local_persistence: forbidden
+    automatic_lifecycle_promotion: forbidden
+  object_boundary:
+    creates_identity_contracts_only: false
+    returned_values_are_external_references: true
+  handoff:
+    next_stage: Opportunity Validation
+    requires_explicit_human_or_external_decision: true

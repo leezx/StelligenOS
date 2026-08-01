@@ -375,6 +375,73 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-phase-3-assetgenos-gates.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 13:38 EDT
+
+- Action: 完成 Phase 3 PR #4 的 ready、squash merge，并开始 Phase 4。
+- How: 核实 PR #4 的远端状态为 `MERGED`，合并提交为 `505ddd1`；从最新
+  `origin/main` 创建 `task_20260801_phase4-opportunity-generation`；在 Phase 4
+  分支同步 Phase 3 report、handoff、manifest、README 的合并状态。
+- Result: Phase 3 的阶段状态已闭环为“已批准并合并”，Phase 4 进入实现阶段；未修改
+  用户的 `prompts/GPT-Feedback.md`。
+- Files affected:
+  - `README.md`
+  - `manifests/phase_3_manifest.yaml`
+  - `docs/handoff/2026-08-01-phase-3-assetgenos-gates.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 13:46 EDT
+
+- Action: 完成本地验证并创建 Phase 4 草稿 PR。
+- How: 显式暂存 Phase 4 合同、外部 port、测试、报告、清单、manifest、handoff，
+  以及 Phase 3 合并状态同步；提交 `70062bd`，推送
+  `task_20260801_phase4-opportunity-generation`，使用 `gh pr create --draft` 创建 PR #5。
+- Result: PR #5 已发布，等待网页版 ChatGPT 的 GitHub PR 审核；11 项测试、边界检查和
+  差异检查均已通过。用户的 `prompts/GPT-Feedback.md` 未被修改或暂存。
+- Files affected:
+  - `docs/handoff/2026-08-01-phase-4-opportunity-generation.zh-CN.md`
+  - `manifests/phase_4_manifest.yaml`
+  - `logs/worklog.md`
+
+### 2026-08-01 14:02 EDT
+
+- Action: 处理 ChatGPT 对 Phase 4 PR #5 的第一轮 `REQUEST_CHANGES`。
+- How: 将 Opportunity Generation request/result 的所有引用字段校验下沉到数据类
+  `__post_init__` 构造边界，防止调用者绕过 `require_external_reference()` 直接创建
+  本地引用；补充 request 构造时拒绝 `local:` 的回归测试，并保留输出引用的同等保护。
+- Result: 修复 ChatGPT 指出的唯一阻断项；待重新运行全量测试和边界检查后推送 PR #5
+  并请求复审。其他 Phase 4 范围和数据边界未改变。
+- Files affected:
+  - `src/capabilities/opportunity_generation.py`
+  - `tests/test_phase4_opportunity_generation.py`
+  - `logs/worklog.md`
+
+### 2026-08-01 14:29 EDT
+
+- Action: 处理 ChatGPT 对 Phase 4 PR #5 复审发现的第二个最小阻断。
+- How: 将 `OpportunityGenerationResult.request_id` 加入 result 的外部引用构造校验，
+  并补充本地 result request_id 必须失败的回归测试。
+- Result: request 和 result 的所有引用字段现在都在对象构造边界统一拒绝非
+  `external:` 引用；待重新验证并请求最终复审。
+- Files affected:
+  - `src/capabilities/opportunity_generation.py`
+  - `tests/test_phase4_opportunity_generation.py`
+  - `logs/worklog.md`
+
+### 2026-08-01 15:02 EDT
+
+- Action: 通过网页版 ChatGPT 完成 Phase 4 最终复审。
+- How: 在修复 request 和 result 的全部外部引用构造校验及回归测试后，提交 PR #5
+  最新 tip `8e22c77` 的复审指令，要求读取当前完整 aggregate diff 和 Phase 4 审计材料。
+- Result: ChatGPT 返回 `APPROVE`，明确“可以进入 Phase 5”；保存最终审核记录，
+  准备将 PR #5 转为 ready 并 squash merge。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-phase4-final.md`
+  - `docs/phases/PHASE_4_REVIEW_CHECKLIST.zh-CN.md`
+  - `manifests/phase_4_manifest.yaml`
+  - `docs/phases/PHASE_4_REPORT.zh-CN.md`
+  - `docs/handoff/2026-08-01-phase-4-opportunity-generation.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 13:05 EDT
 
 - Action: 完成 Phase 1 PR #2 的最终 ChatGPT 门禁审核。

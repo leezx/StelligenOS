@@ -10,6 +10,12 @@ from .gates import (
     GateModelOutput,
     gate_definition,
 )
+from .opportunity_generation import (
+    OpportunityGenerationPort,
+    OpportunityGenerationRequest,
+    OpportunityGenerationResult,
+    require_external_reference,
+)
 
 __all__ = [
     "GATE_CATALOG",
@@ -20,4 +26,8 @@ __all__ = [
     "GateInputEnvelope",
     "GateModelOutput",
     "gate_definition",
+    "OpportunityGenerationPort",
+    "OpportunityGenerationRequest",
+    "OpportunityGenerationResult",
+    "require_external_reference",
 ]
