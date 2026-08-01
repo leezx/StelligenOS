@@ -1032,3 +1032,11 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/migration_log.zh-CN.md`
   - `docs/handoff/2026-08-01-gen-iet-phase-0.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 17:07 EDT
+
+- Action: 将 Phase 0 审计提交并推送到 GitHub draft PR。
+- How: 使用分支 `task_20260801_gen-iet-phase0`，commit `5809d67`，以 `task_20260801_external-runtime-adapter` 为 base 创建 PR；未自动合并，等待 ChatGPT 架构审核。
+- Result: PR #18 已创建：`https://github.com/leezx/StelligenOS/pull/18`。当前停止在 Phase 0 review gate，不进入 Phase 1。
+- Files affected:
+  - `logs/worklog.md`
