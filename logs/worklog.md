@@ -378,3 +378,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/chatgpt-review-2026-08-01-phase-gate-final.md`
   - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 12:55 EDT
+
+- Action: 从已合并的 Phase 0 基线 `main` 创建 Phase 1 分支并建立最小实现骨架。
+- How: 从 `origin/main` 创建 `task_20260801_phase1-skeleton`，按架构契约新增 `src/` 下的 contracts、lifecycle、capabilities、cross_cutting、objects 和 repository 层级；补充 Phase 1 report、review checklist、manifest 和 handoff。
+- Result: 未新增数据、数据库、缓存、结果或运行时业务逻辑；仓库边界检查和工作树差异检查通过，等待 PR 审核。
+- Files affected:
+  - `README.md`
+  - `src/`
+  - `docs/phases/PHASE_1_REPORT.zh-CN.md`
+  - `docs/phases/PHASE_1_REVIEW_CHECKLIST.zh-CN.md`
+  - `manifests/phase_1_manifest.yaml`
+  - `docs/handoff/2026-08-01-phase-1-skeleton.zh-CN.md`
+  - `logs/worklog.md`

@@ -1,0 +1,13 @@
+phase: phase_1
+status: review_pending
+scope: minimal_implementation_skeleton
+repository_boundary: software_only_external_data
+data_added: false
+runtime_logic_added: false
+directories:
+  - src/contracts
+  - src/lifecycle
+  - src/capabilities
+  - src/cross_cutting
+  - src/objects
+  - src/repository
