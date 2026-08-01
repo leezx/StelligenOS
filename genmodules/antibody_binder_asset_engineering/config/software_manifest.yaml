@@ -1,0 +1,35 @@
+# Tool discovery spans two interpreters: the StelligenOS orchestrator and the
+# shared antibody scientific runtime. python_import entries are probed in both;
+# executable entries are searched on PATH and then in the shared runtime's bin
+# directory, because tools such as ANARCI and ABodyBuilder2 install there rather
+# than onto the ambient PATH.
+software:
+  core:
+  - {id: python, kind: executable, check: python3, required_for: [all]}
+  - {id: pyyaml, kind: python_import, check: yaml, required_for: [all]}
+  - {id: biopython, kind: python_import, check: Bio, required_for: [01_binder_intake, 03_structural_analysis, 06_computational_triage]}
+  workflow:
+  - {id: dagster, kind: python_import, check: dagster, required_for: [optional_orchestration]}
+  - {id: dagster_webserver, kind: executable, check: dagster, required_for: [optional_orchestration]}
+  antibody_annotation:
+  - {id: anarci, kind: executable, check: ANARCI, required_for: [01_binder_intake, 06_computational_triage]}
+  - {id: abnumber, kind: python_import, check: abnumber, required_for: [01_binder_intake, 06_computational_triage]}
+  sequence_search:
+  - {id: blast_plus, kind: executable, check: blastp, required_for: [02_ip_fto_landscape, 10_patent_package]}
+  - {id: mmseqs2, kind: executable, check: mmseqs, required_for: [02_ip_fto_landscape, 10_patent_package]}
+  structure:
+  - {id: immune_builder, kind: python_import, check: ImmuneBuilder, required_for: [03_structural_analysis]}
+  - {id: igfold, kind: python_import, check: igfold, required_for: [03_structural_analysis]}
+  - {id: openfold, kind: python_import, check: openfold, required_for: [03_structural_analysis]}
+  - {id: rosetta, kind: executable, check: rosetta_scripts, required_for: [03_structural_analysis, 04_ai_guided_engineering]}
+  design:
+  - {id: proteinmpnn, kind: env_path, check: PROTEINMPNN_ROOT, required_for: [04_ai_guided_engineering, 05_candidate_family_generation]}
+  - {id: esm, kind: python_import, check: esm, required_for: [04_ai_guided_engineering, 06_computational_triage]}
+  - {id: foldx, kind: executable, check: foldx, required_for: [03_structural_analysis, 06_computational_triage]}
+  optimization:
+  - {id: pandas, kind: python_import, check: pandas, required_for: [06_computational_triage, 08_active_learning]}
+  - {id: scikit_learn, kind: python_import, check: sklearn, required_for: [08_active_learning]}
+  - {id: optuna, kind: python_import, check: optuna, required_for: [08_active_learning]}
+  reporting:
+  - {id: jinja2, kind: python_import, check: jinja2, required_for: [10_patent_package, 11_asset_report]}
+  - {id: pandoc, kind: executable, check: pandoc, required_for: [11_asset_report]}

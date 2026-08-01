@@ -13,6 +13,7 @@ allowed_top_level=(
   "docs"
   "schemas"
   "src"
+  "genmodules"
   "code"
   "tests"
   "notebooks"
