@@ -910,3 +910,13 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/chatgpt-review-2026-08-01-biotech-dd-round2.md`
   - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 15:22 EDT
+
+- Action: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天完成 PR #13 的最终 metadata-only 复审。
+- How: 使用 `+` 菜单重新选中 GitHub 来源，针对最新 tip `7e20dbf` 核对 PR 描述、handoff、worklog、审核记录、Round 1 代码修复和软件仓库边界。
+- Result: 测试数字已统一为 `31 passed`，本次仅有审核元数据变化，代码修复仍在；ChatGPT 返回 `REQUEST_CHANGES`，唯一阻断为 GitHub 当前报告 `mergeable=false`。未自动合并，等待 GitHub 状态恢复后复审。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-biotech-dd-final.md`
+  - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
+  - `logs/worklog.md`
