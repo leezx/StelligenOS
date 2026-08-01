@@ -11,8 +11,10 @@
 - [Phase 0 Report](./docs/phases/PHASE_0_REPORT.zh-CN.md)
 - [Phase 0.5 Report](./docs/phases/PHASE_0_5_REPORT.zh-CN.md)
 - [ChatGPT-Codex Talk](./ChatGPT-Codex-talk.md)
+- [ChatGPT-Codex Phase Gate Protocol](./docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md)
 - [Worklog](./logs/worklog.md)
 - [Git Sync Script](./scripts/git_sync.sh)
+- [Handoff Template](./docs/handoff/TEMPLATE.zh-CN.md)
 
 ## 存储策略
 
@@ -20,7 +22,7 @@
 - 数据集、分析输出、证据包都应放在外部工作区。
 - reference examples、toy examples、report templates、demo assets、golden test cases 只允许保持小而受控。
 - `logs/worklog.md` 是详细执行轨迹。
-- `scripts/git_sync.sh` 用于一次性 fetch / rebase / commit / push。
+- `scripts/git_sync.sh` 用于显式文件清单的 fetch / rebase / commit / push；禁止用全量暂存替代范围检查。
 
 ## 说明
 

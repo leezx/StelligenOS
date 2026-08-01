@@ -28,9 +28,14 @@
 - `prompts/GPT-Feedback.md` 是用户反馈，不是 canonical architecture。
 - `architecture.md` 是入口页；正式契约在 `docs/architecture/` 下。
 - `ChatGPT-Codex-talk.md` 是 ChatGPT/Codex 的固定交互规范；以后需要“只负责执行、由外部模型审核”时，优先遵守这份文件。
+- `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md` 是分阶段执行、PR 反复审核和 Phase 放行的独立协作协议；任何复杂任务都必须遵守其 Phase gate。
+- 默认审核单位是 PR，不是本地未推送工作区；需要复审时，优先提供 PR diff、commits、report、checklist、manifest 和验证结果。
+- 默认任务分支格式是 `task_<编号>_<简短名>`；每个 PR 都要在 `docs/handoff/` 留下交接备忘。
+- 提交前必须先运行 `git status --short`，只用 `git add -- <相关文件>`，禁止 `git add .`、`git add -A` 和 `git add --all`。
 
 ## 校验
 
 - 在增加新的顶层文件或目录之前，先运行 `scripts/verify_repository_boundary.sh`。
 - 不要把数据类文件或数据类目录加进这个仓库。
-- 例行 GitHub 同步优先使用 `scripts/git_sync.sh`，保证 fetch/rebase/commit/push 流程一致。
+- 例行 GitHub 同步优先使用 `scripts/git_sync.sh <branch> <commit-message> <相关文件...>`，保证 fetch/rebase/显式暂存/commit/push 流程一致。
+- 同步脚本在暂存区非空时必须拒绝执行；脚本行为由 `tests/test_git_sync.sh` 的 A-D 场景验证。

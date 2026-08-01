@@ -215,3 +215,166 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Files affected:
   - `scripts/verify_repository_boundary.sh`
   - `logs/worklog.md`
+
+### 2026-08-01 11:12 EDT
+
+- Action: Made a tiny audit-scope clarification inside the interaction protocol for testing purposes.
+- How: Added one sentence to `ChatGPT-Codex-talk.md` that tells external reviewers to stay within the current commit/PR range and not count future optimizations as part of the review scope.
+- Result: The protocol now gives a slightly stricter, easier-to-test audit boundary without changing the overall execution-first workflow.
+- Files affected:
+  - `ChatGPT-Codex-talk.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 11:35 EDT
+
+- Action: Reworked the interaction protocol into a PR-centered review workflow and synced the repo-facing guidance.
+- How: Replaced the older local-worktree-oriented wording in `ChatGPT-Codex-talk.md` with a branch/commit/push/PR flow, then updated `AGENTS.md` and `HANDOFF.md` so the repository instructions match the new review model.
+- Result: The default collaboration model is now explicitly PR-based, with the assistant acting as executor and external models handling review on the PR diff.
+- Files affected:
+  - `ChatGPT-Codex-talk.md`
+  - `AGENTS.md`
+  - `HANDOFF.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:00 EDT
+
+- Action: 固化 GitHub 中间层协作方式，并补充可审计的 PR handoff 机制。
+- How: 更新 `ChatGPT-Codex-talk.md` 和 `AGENTS.md`，明确 `main` 拉取、`task_<编号>_<简短名>` 分支、显式暂存、PR 审核和负责人拍板流程；新增 `docs/handoff/` 模板与本任务交接备忘；将 `scripts/git_sync.sh` 改为必须接收明确文件清单，禁止隐式全量暂存。
+- Result: 后续任务不再依赖 ChatGPT/Codex 之间手工搬运文件，PR 成为默认审核和交付单元；当前改动尚未提交或推送。
+- Files affected:
+  - `ChatGPT-Codex-talk.md`
+  - `AGENTS.md`
+  - `scripts/git_sync.sh`
+  - `docs/handoff/TEMPLATE.zh-CN.md`
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:12 EDT
+
+- Action: 创建任务分支并提交 PR 协作规范改动。
+- How: 从 `main` 创建 `task_20260801_pr-workflow`，先检查状态，再使用显式文件清单暂存；提交前运行 staged diff 检查，提交为 `0fc4bbb`。
+- Result: 分支和本地 commit 已就绪；仓库边界检查、Shell 语法检查和提交差异检查通过，尚未推送或创建 PR。
+- Files affected:
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:16 EDT
+
+- Action: 推送任务分支并创建 draft PR。
+- How: 推送 `task_20260801_pr-workflow` 到 `origin`，创建 PR #1 指向 `main`，并在 PR 描述中写入改动范围、验证结果、审核边界和数据声明。
+- Result: PR 已可供 ChatGPT 或其他大模型直接审核；当前等待外部审核，不执行 merge。
+- Files affected:
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:20 EDT
+
+- Action: 按 GPT Feedback v4 修复 PR 治理阻断项。
+- How: 修改 `scripts/git_sync.sh`，先输出状态、拒绝非空暂存区、直接暂存显式文件清单并正确处理未跟踪文件；新增 `tests/test_git_sync.sh` 覆盖 A-D 四种行为；将 Phase 0.5 审核清单改为中文；同步更新 ChatGPT/Codex 协作规范。
+- Result: v4 指出的脚本安全问题已修复，行为测试 A-D 全部通过；当前修订已提交为 `88e1b46`，handoff 已同步记录当前 head 和完整 commit 列表。
+- Files affected:
+  - `scripts/git_sync.sh`
+  - `tests/test_git_sync.sh`
+  - `docs/phases/PHASE_0_5_REVIEW_CHECKLIST.zh-CN.md`
+  - `ChatGPT-Codex-talk.md`
+  - `AGENTS.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:25 EDT
+
+- Action: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天和 GitHub 插件完成 PR #1 修订复审。
+- How: 通过聊天框 `+` 菜单确认 GitHub 来源后，提交针对最新 PR head 的只读复审指令；ChatGPT 读取 PR 状态、完整 changed files、commits 和 aggregate diff，并返回 `REQUEST_CHANGES`。
+- Result: 脚本安全修复、A-D 行为测试、Phase 0.5 中文化和数据边界通过；剩余阻断为 aggregate diff 检查未记录，以及 handoff 未区分代码 commits 与 PR metadata commits。完整反馈已保存到 `logs/chatgpt-review-2026-08-01-pr1-revision.md`。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-pr1-revision.md`
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:35 EDT
+
+- Action: 通过网页版 ChatGPT 和 GitHub 插件完成最终复审轮次。
+- How: 提交针对 PR tip `13b1737` 的最终只读审核指令；ChatGPT 确认脚本、A-D 测试、Phase 0.5 中文化、数据边界和 aggregate diff 均通过，仅指出 handoff 过期状态句和 metadata commit 列表缺少 `13b1737` 两项。
+- Result: 两项最小 handoff 修订已完成，完整反馈保存到 `logs/chatgpt-review-2026-08-01-pr1-final-review.md`；修订后需要再做一次简短复审。
+- Files affected:
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-01-pr1-final-review.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:45 EDT
+
+- Action: 完成 GitHub 插件最终复审并取得批准。
+- How: ChatGPT 在“GitHub PR 信息”聊天中读取当前 PR 状态、aggregate diff、脚本、测试、handoff 和复审记录，返回 `APPROVE`，并明确“可以进入 Phase 1”。
+- Result: PR #1 的治理流程修订已通过外部审核；PR 保持 Draft，不执行 merge。后续可从 `main` 开始 Phase 1 新任务分支。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-pr1-final-review.md`
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:55 EDT
+
+- Action: 将 ChatGPT 与 Codex 的分阶段 PR 审核协作方法固化为独立协议。
+- How: 新增 `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md`，定义人类、ChatGPT、Codex、GitHub 四个角色，总纲冻结、Phase 执行、PR 反复审核、放行门、handoff、反馈留痕和防止越界执行的规则；并从 `ChatGPT-Codex-talk.md`、`AGENTS.md` 和 `LINKS.md` 建立引用。
+- Result: “深度讨论总纲 -> Codex 分阶段执行 -> 每阶段 PR 审核 -> 按反馈修订 -> APPROVE 后进入下一 Phase”的工作模式成为可追溯的仓库规范。本次文档扩展改变了 PR 内容，需重新审核后才算完成。
+- Files affected:
+  - `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md`
+  - `ChatGPT-Codex-talk.md`
+  - `AGENTS.md`
+  - `LINKS.md`
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:32 EDT
+
+- Action: 按 ChatGPT 对当前 PR tip `7d68fdc` 的复审反馈修复 Phase Gate 协议阻断项。
+- How: 将 `APPROVE_WITH_NONBLOCKING_COMMENTS` 明确限定为非阻断审查记录，不再允许其作为 Phase 放行结论；补齐 handoff 的当前 metadata commit `7d68fdc`，记录当前 aggregate diff 检查，并将旧状态表述改为等待本次复审。
+- Result: 仅修改当前 PR 的协议和 handoff 状态；`./scripts/verify_repository_boundary.sh` 通过，`git diff main...HEAD --check` 通过，用户的 `prompts/GPT-Feedback.md` 保持未暂存。
+- Files affected:
+  - `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md`
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:36 EDT
+
+- Action: 按 ChatGPT 对 `d75a940` 的复审反馈收敛 PR 当前状态。
+- How: 更新 PR #1 描述中的 `PR latest head` 和 aggregate diff 命令；更新 handoff 的当前 tip、前一版与当前验证记录。未修改协议内容或用户反馈文件。
+- Result: PR 描述和 handoff 均指向 `d75a940`，等待最后一次外部复审；`prompts/GPT-Feedback.md` 仍保持未暂存。
+- Files affected:
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:38 EDT
+
+- Action: 将 PR 描述和 handoff 从 `d75a940` 同步到推送后的当前 tip `dedf6e2`。
+- How: 更新 PR 描述的最新 head 与 aggregate diff 命令；补充 handoff 的前一版和当前验证记录。继续使用显式暂存，未触碰 `prompts/GPT-Feedback.md`。
+- Result: PR、handoff 和 worklog 的当前状态统一指向 `dedf6e2`，准备提交最终 ChatGPT 复审。
+- Files affected:
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:42 EDT
+
+- Action: 修复 ChatGPT 最终复审发现的 handoff 当前 tip 残留。
+- How: 将 handoff 当前状态从 `dedf6e2` 更新到 `ba92c32`，并把 `git diff main...ba92c32 --check` 作为当前 aggregate 验证记录；保留旧 tip 作为历史记录。
+- Result: 当前 PR tip、handoff 状态和验证记录即将统一到 `ba92c32`；用户的反馈文件仍未暂存。
+- Files affected:
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:46 EDT
+
+- Action: 处理 ChatGPT 复审暴露的 handoff 自引用问题。
+- How: 将 handoff 的当前 tip 与 aggregate diff 改为以 PR 页面实时状态为唯一权威，明确说明 handoff 自身提交不自列，并把历史 hash 与验证标记为历史记录，避免每次更新 handoff 后产生新的不可预先写入的 commit hash。
+- Result: 形成可执行、可追溯且不伪造当前状态的元数据规则；准备请求 ChatGPT 按该规则完成最终复审。
+- Files affected:
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:50 EDT
+
+- Action: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天完成 Phase Gate 协议最终复审。
+- How: 使用 `+` 菜单确认 GitHub 来源，提交针对 PR tip `de9423f` 的只读审核指令；ChatGPT 读取 PR、协议、handoff、worklog 和 aggregate diff。
+- Result: ChatGPT 返回 `APPROVE`，并明确“可以进入 Phase 1”。批准记录保存到 `logs/chatgpt-review-2026-08-01-phase-gate-final.md`；PR #1 保持 `OPEN / DRAFT`，不自动 merge。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-phase-gate-final.md`
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`
