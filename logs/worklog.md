@@ -1348,3 +1348,12 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Result: 45 个唯一 Gate、48 次 Gate evaluation 成功完成；生成 `ADC-2026-0001` v0.2，状态为 `M0 / review_pending`，决策为 `gather_data`，overall score `0.23`，confidence `0.0`。运行正确保留 Hard Unknown，未把 mock 推断包装成科学结论或可销售资产。
 - Boundary: AssetGenOS `data/` 未发现本次运行新增文件；StelligenOS 未写入数据库、cache、result、weights 或资产数据。外部运行结果目录为 `/Volumes/Stelligen_SSD/Stelligen/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_tweakr_crc_mock_20260801/`。
 - Limitation: 本次执行的是 AssetGenOS v0.2 运行引擎，不是 StelligenOS Phase 9 contract port 的直接 adapter；下一步需将外部 run manifest、Gate audit 和 unknown/hold 语义映射到 `gen_indication_endpoint_target` external-only contracts。
+
+### 2026-08-01 19:51 EDT
+
+- Action: 将用户与 Codex 关于 `gen_indication_endpoint_target` 的真实产品需求整理为独立的动态需求文档。
+- How: 记录从 clinical unmet need 到 indication/endpoint lock、biomarker hypothesis、ADC target filtering、45-Gate evaluation 和 pair output 的完整目标流程；同时记录 unknown、HOLD、opposing evidence、REJECT、ADVANCE 的语义，以及版本化需求变更规则。
+- Result: 明确当前产品不是“架构能启动”或“手工评估一个 TWEAKR 候选”，而是自动生成可审计 `indication + endpoint + target` pair，并给出 Gate 分数、证据数和明确反对证据。
+- Files affected:
+  - `docs/product/GEN_IET_PRODUCT_PURPOSE_AND_DYNAMIC_REQUIREMENTS.zh-CN.md`
+  - `logs/worklog.md`
