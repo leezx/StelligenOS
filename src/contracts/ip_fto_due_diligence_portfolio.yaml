@@ -1,0 +1,21 @@
+contract:
+  contract_id: cross_cutting_external_services
+  contract_version: "0.1.0"
+  services:
+    ip_fto:
+      input: IPFTORequest
+      output: ExternalDecisionPackage
+      legal_conclusion_storage: forbidden
+    due_diligence:
+      input: DueDiligenceRequest
+      output: ExternalDecisionPackage
+      stage_aware: true
+      record_storage: forbidden
+    portfolio:
+      input: PortfolioRequest
+      output: ExternalDecisionPackage
+      capital_allocation_storage: forbidden
+  shared_boundary:
+    evidence_and_decisions: external_only
+    automatic_lifecycle_promotion: forbidden
+    internal_database: forbidden

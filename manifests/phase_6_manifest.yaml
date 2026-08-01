@@ -1,0 +1,17 @@
+phase: phase_6
+status: approved_pending_merge
+pr: 7
+pr_url: https://github.com/leezx/StelligenOS/pull/7
+scope: ip_fto_due_diligence_portfolio_contracts
+repository_boundary: software_only_external_data
+data_added: false
+persistence_added: false
+runtime_analysis_added: false
+services: [ip_fto, due_diligence, portfolio]
+chatgpt_review: APPROVE
+phase_decision: 可以进入 Phase 7
+approval_record: logs/chatgpt-review-2026-08-01-phase6-final.md
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
+  - ./scripts/verify_repository_boundary.sh
+  - git diff origin/main...HEAD --check

@@ -483,6 +483,46 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-phase-5-binder-adc-routes.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 16:22 EDT
+
+- Action: 完成 Phase 5 PR #6 的 squash merge，并开始 Phase 6。
+- How: 核实 PR #6 远端状态为 `MERGED`，合并提交为 `10fe06b`；从最新 `origin/main`
+  创建 `task_20260801_phase6-ip-fto-dd-portfolio`；同步 Phase 5 的 report、handoff、
+  manifest、README 为已合并状态。
+- Result: Phase 5 状态闭环，Phase 6 进入实现阶段；本阶段继续只建立软件合同和外部边界。
+- Files affected:
+  - `README.md`
+  - `manifests/phase_5_manifest.yaml`
+  - `docs/handoff/2026-08-01-phase-5-binder-adc-routes.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 16:35 EDT
+
+- Action: 完成本地验证并创建 Phase 6 草稿 PR。
+- How: 显式暂存三类跨阶段服务合同、测试、Phase 6 文档，以及 Phase 5 合并状态同步；
+  提交 `76b46dc`，推送 `task_20260801_phase6-ip-fto-dd-portfolio`，使用
+  `gh pr create --draft` 创建 PR #7。
+- Result: PR #7 已发布，等待网页版 ChatGPT 的 GitHub PR 审核；17 项测试、边界检查和
+  差异检查均已通过。用户的 `prompts/GPT-Feedback.md` 未被修改或暂存。
+- Files affected:
+  - `docs/handoff/2026-08-01-phase-6-ip-fto-dd-portfolio.zh-CN.md`
+  - `manifests/phase_6_manifest.yaml`
+  - `logs/worklog.md`
+
+### 2026-08-01 17:05 EDT
+
+- Action: 通过网页版 ChatGPT 完成 Phase 6 最终审核。
+- How: 提交 PR #7 当前远端状态、三类服务合同、四阶段 Due Diligence 绑定和完整
+  aggregate diff 的审核指令。
+- Result: ChatGPT 返回 `APPROVE`，明确“可以进入 Phase 7”；保存最终审核记录，准备合并。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-phase6-final.md`
+  - `docs/phases/PHASE_6_REVIEW_CHECKLIST.zh-CN.md`
+  - `manifests/phase_6_manifest.yaml`
+  - `docs/phases/PHASE_6_REPORT.zh-CN.md`
+  - `docs/handoff/2026-08-01-phase-6-ip-fto-dd-portfolio.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 13:05 EDT
 
 - Action: 完成 Phase 1 PR #2 的最终 ChatGPT 门禁审核。
