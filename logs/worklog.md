@@ -446,6 +446,20 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/migration_log.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 18:55 EDT
+
+- Action: 进入 ChatGPT 已批准的 Phase 4，建立 Phase 5 Endpoint Biology Completion contract-only port。
+- How: 在 `task_20260801_gen-iet-phase5-endpoint-biology` 分支新增 T3-T6 completion、历史 ADC Rule/Gate Model external refs、完整 T0-T11 trace 顺序约束和 T12/P-chain 禁止边界。
+- Result: 未读取证据或临床数据，未执行 T3-T6/Gate/Rule/Model/T12/P-chain，未创建本地 trace、Gate result 或 Evidence。67 个测试、repository boundary、`git diff --check` 通过，Phase 5 停在 ChatGPT PR 审核门。
+- Files affected:
+  - `src/capabilities/endpoint_biology_completion.py`
+  - `tests/test_endpoint_biology_completion.py`
+  - `docs/phases/GEN_IET_PHASE_5_REPORT.zh-CN.md`
+  - `manifests/gen_iet_phase_5_manifest.yaml`
+  - `docs/handoff/2026-08-01-gen-iet-phase-5.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
 - Follow-up: ChatGPT 对最新 HEAD `d87e379` 完成 metadata-only 复核并返回 `APPROVE`，确认没有扩大批准范围或新增执行代码、数据、存储、Gate 或 runtime。
 
 ### 2026-08-01 15:39 EDT

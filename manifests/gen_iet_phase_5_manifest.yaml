@@ -1,0 +1,59 @@
+manifest_version: "1.0.0"
+module_id: gen_indication_endpoint_target
+phase: 5
+status: completed_pending_review
+parent_phase: 4
+parent_approval: logs/chatgpt-review-2026-08-01-gen-iet-phase4.md
+gate_change_declaration: NO_GATE_CHANGE
+
+scope:
+  implementation_type: external_endpoint_biology_completion_port
+  execution_enabled: false
+  persistence_enabled: false
+  inputs_external_only: true
+  outputs_external_only: true
+  gates_called_locally: false
+  t12_enabled: false
+  p_chain_enabled: false
+  full_t0_t11_trace_required: true
+  contracts:
+    - EndpointBiologyCompletionRequest
+    - EndpointBiologyGateTrace
+    - EndpointBiologyCompletionResult
+    - EndpointBiologyCompletionPort
+
+trace:
+  completion_gates:
+    - intervention_causality
+    - baseline_coverage_and_escape
+    - treatment_induced_state_response
+    - net_endpoint_benefit
+  historical_adc_rule_refs_external_only: true
+  gate_model_refs_external_only: true
+  t12_forbidden: true
+
+explicitly_not_executed:
+  - evidence_read
+  - clinical_data_read
+  - t3_t6_evaluation
+  - gate_execution
+  - rule_execution
+  - model_execution
+  - local_trace_creation
+  - t12
+  - p_chain
+  - database
+  - cache
+  - result_persistence
+  - model_weights
+  - runner
+  - new_gate
+
+validation:
+  tests: 67
+  repository_boundary: passed
+  git_diff_check: passed
+
+decision:
+  requires_chatgpt_review: true
+  proceed_to_phase_6: false
