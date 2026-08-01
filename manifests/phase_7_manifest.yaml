@@ -1,0 +1,13 @@
+phase: phase_7
+status: review_pending
+scope: zero_data_end_to_end_closure
+repository_boundary: software_only_external_data
+demo_asset_ref: external:demo/tweakr
+data_added: false
+persistence_added: false
+runtime_added: false
+chatgpt_review: pending
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
+  - ./scripts/verify_repository_boundary.sh
+  - git diff origin/main...HEAD --check
