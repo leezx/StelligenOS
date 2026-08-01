@@ -1,0 +1,59 @@
+manifest_version: "1.0.0"
+module_id: gen_indication_endpoint_target
+phase: 4
+status: completed_pending_review
+parent_phase: 3
+parent_approval: logs/chatgpt-review-2026-08-01-gen-iet-phase3.md
+gate_change_declaration: NO_GATE_CHANGE
+
+scope:
+  implementation_type: external_early_t_gate_reduction_port
+  execution_enabled: false
+  persistence_enabled: false
+  inputs_external_only: true
+  outputs_external_only: true
+  gates_called_locally: false
+  t12_enabled: false
+  p_chain_enabled: false
+  contracts:
+    - EarlyReductionSchedule
+    - CandidateReductionDecision
+    - EarlyTGateReductionRequest
+    - EarlyTGateReductionResult
+    - EarlyTGateReductionPort
+
+schedule:
+  priority_gates:
+    - target_population_mapping
+    - tumor_cell_surface_availability
+  optional_gates:
+    - intratumoral_antigen_accessibility
+    - antibody_dependent_internalization
+    - antibody_epitope_realizability
+    - on_target_therapeutic_index
+  t12_forbidden: true
+
+explicitly_not_executed:
+  - evidence_read
+  - clinical_data_read
+  - t2_t11_evaluation
+  - target_candidate_creation
+  - gate_result_creation
+  - evidence_record_creation
+  - t12
+  - p_chain
+  - database
+  - cache
+  - result_persistence
+  - model_weights
+  - runner
+  - new_gate
+
+validation:
+  tests: 64
+  repository_boundary: passed
+  git_diff_check: passed
+
+decision:
+  requires_chatgpt_review: true
+  proceed_to_phase_5: false

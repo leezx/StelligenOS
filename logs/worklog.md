@@ -419,6 +419,20 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/chatgpt-review-2026-08-01-gen-iet-phase3.md`
   - `logs/worklog.md`
 
+### 2026-08-01 18:40 EDT
+
+- Action: 进入 ChatGPT 已批准的 Phase 4，建立 Early T-Gate Candidate Reduction contract-only port。
+- How: 在 `task_20260801_gen-iet-phase4-early-t-gate` 分支新增既有 T2/T7/T8-T11 调度白名单、候选决策合同和 external-only request/result；用 `PROVISIONAL_ADVANCE`、`HOLD`、`EXCLUDE` 保存收缩状态，禁止 T12 和本地 Gate 执行。
+- Result: 未读取证据或临床数据，未执行 T2-T11/T12/P-chain，未创建本地候选或 Gate 记录。64 个测试、repository boundary、`git diff --check` 通过，Phase 4 停在 ChatGPT PR 审核门。
+- Files affected:
+  - `src/capabilities/early_t_gate_reduction.py`
+  - `tests/test_early_t_gate_reduction.py`
+  - `docs/phases/GEN_IET_PHASE_4_REPORT.zh-CN.md`
+  - `manifests/gen_iet_phase_4_manifest.yaml`
+  - `docs/handoff/2026-08-01-gen-iet-phase-4.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 15:39 EDT
 
 - Action: 完成 gate-model-rule PR #14 的最终 metadata-only 复审。
