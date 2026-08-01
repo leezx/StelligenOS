@@ -2,7 +2,7 @@
 
 - 任务编号：`task_20260801_gen-iet-phase5-endpoint-biology`
 - 父阶段：Phase 4，已获 ChatGPT `APPROVE`
-- 当前状态：Phase 5 contract-only 完成，等待 ChatGPT PR 审核
+- 当前状态：Phase 5 contract-only 完成，ChatGPT 已 APPROVE，可进入 Phase 6
 - Gate 变更：`NO_GATE_CHANGE`
 
 ## 已实现
@@ -26,4 +26,4 @@
 
 ## 下一步
 
-等待 ChatGPT 审核并批准 Phase 5 PR；批准前不得进入 Phase 6 evidence sufficiency and adversarial review。
+ChatGPT 已批准 Phase 5 PR，记录见 `logs/chatgpt-review-2026-08-01-gen-iet-phase5.md`。下一步从本阶段批准 tip 建立新分支，进入 Phase 6 evidence sufficiency and adversarial review；Phase 6 必须单独提交 PR 审核。

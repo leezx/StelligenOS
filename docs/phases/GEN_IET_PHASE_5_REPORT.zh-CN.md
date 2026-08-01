@@ -3,7 +3,7 @@
 - 阶段：Phase 5，Endpoint Biology Completion
 - 分支：`task_20260801_gen-iet-phase5-endpoint-biology`
 - 父阶段：Phase 4，已获 ChatGPT `APPROVE`
-- 状态：`COMPLETED_PENDING_REVIEW`
+- 状态：`APPROVED_PHASE_5`
 - Gate 变更：`NO_GATE_CHANGE`
 
 ## 本阶段实现
@@ -30,5 +30,5 @@
 
 ## 停止点
 
-等待 ChatGPT 审核 Phase 5 contract-only PR。批准前不进入 Phase 6 evidence
-sufficiency and adversarial review。
+ChatGPT 已批准 Phase 5 contract-only PR，可以进入 Phase 6。该批准不包括
+Phase 6 实现或真实证据审查；Phase 6 必须从本阶段批准 tip 创建新分支并单独提交审核。

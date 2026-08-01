@@ -460,6 +460,19 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/migration_log.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 19:05 EDT
+
+- Action: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天完成 PR #23 Phase 5 审核。
+- How: 确认 GitHub 来源已选中；要求 ChatGPT 只审查 T3-T6 completion、历史 ADC Rule/Gate Model external refs、完整 T0-T11 trace、T12/P-chain 禁止边界和 67 项验证，不扩展到 Phase 6。
+- Result: ChatGPT 返回 `APPROVE`，明确“Phase 5 审核通过，可以进入 Phase 6”。审核记录保存到 `logs/chatgpt-review-2026-08-01-gen-iet-phase5.md`；manifest、report、handoff 和 migration log 已更新为 `approved_phase_5`。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-gen-iet-phase5.md`
+  - `manifests/gen_iet_phase_5_manifest.yaml`
+  - `docs/phases/GEN_IET_PHASE_5_REPORT.zh-CN.md`
+  - `docs/handoff/2026-08-01-gen-iet-phase-5.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
 - Follow-up: ChatGPT 对最新 HEAD `d87e379` 完成 metadata-only 复核并返回 `APPROVE`，确认没有扩大批准范围或新增执行代码、数据、存储、Gate 或 runtime。
 
 ### 2026-08-01 15:39 EDT
