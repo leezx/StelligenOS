@@ -335,6 +335,50 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-phase-1-skeleton.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 12:58 EDT
+
+- Action: 从最新 `main` (`9eb2b7a`) 创建 Phase 2 分支并建立最小核心模型。
+- How: 创建 `task_20260801_phase2-core-model`；新增七类核心对象身份契约、四阶段单向状态机、Knowledge Ledger 外部端口、两个机器可读契约 registry 和结构/行为测试。所有定义均不包含对象记录、数据、数据库或持久化实现。
+- Result: 4 项 Python 单元测试、`./scripts/verify_repository_boundary.sh` 和 `git diff --check` 均通过；补齐 Phase 2 report、review checklist、manifest、handoff 和 README 状态，等待创建 PR 并提交 ChatGPT 审核。
+- Files affected:
+  - `src/objects/core.py`
+  - `src/objects/__init__.py`
+  - `src/lifecycle/state_machine.py`
+  - `src/lifecycle/__init__.py`
+  - `src/cross_cutting/knowledge_ledger.py`
+  - `src/contracts/core_objects.yaml`
+  - `src/contracts/lifecycle_transitions.yaml`
+  - `tests/test_phase2_contracts.py`
+  - `docs/phases/PHASE_2_REPORT.zh-CN.md`
+  - `docs/phases/PHASE_2_REVIEW_CHECKLIST.zh-CN.md`
+  - `manifests/phase_2_manifest.yaml`
+  - `docs/handoff/2026-08-01-phase-2-core-model.zh-CN.md`
+  - `README.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 13:02 EDT
+
+- Action: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天提交 Phase 2 PR #3 审核。
+- How: 使用已选中的 GitHub 来源，要求读取完整 changed files、commits、PR 描述、aggregate diff、架构契约、Phase 2 文档、对象/状态机/Ledger 代码和测试；审核严格限制在 Phase 2 最小范围。
+- Result: ChatGPT 返回 `REQUEST_CHANGES`；核心实现、测试和数据边界均通过，唯一阻断是 handoff 的 PR 状态仍为“待创建”。原始反馈保存到 `logs/chatgpt-review-2026-08-01-phase2-revision-1.md`，已开始最小元数据修订。
+- Files affected:
+  - `docs/handoff/2026-08-01-phase-2-core-model.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-01-phase2-revision-1.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 13:08 EDT
+
+- Action: 完成 Phase 2 PR #3 的最终 ChatGPT 门禁审核。
+- How: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天，以远端 tip `88b6c38` 为准复核 PR 完整 diff、handoff、报告、清单、manifest、worklog、对象模型、状态机、外部 Ledger port、测试和仓库边界。
+- Result: ChatGPT 返回 `APPROVE`，明确“可以进入 Phase 3”。补齐最终审核记录、checklist、report、manifest 和 handoff 状态，准备将 PR #3 squash merge 到 `main`。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-phase2-final.md`
+  - `docs/phases/PHASE_2_REVIEW_CHECKLIST.zh-CN.md`
+  - `docs/phases/PHASE_2_REPORT.zh-CN.md`
+  - `manifests/phase_2_manifest.yaml`
+  - `docs/handoff/2026-08-01-phase-2-core-model.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 12:49 EDT
 
 - Action: 处理 ChatGPT 对 Phase 1 PR #2 的第一轮 `REQUEST_CHANGES`。

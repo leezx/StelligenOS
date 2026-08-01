@@ -1,0 +1,18 @@
+version: "1.0"
+name: stelligenos-lifecycle-transitions
+description: Contract-level lifecycle transition registry; contains no state records.
+stages:
+  - Opportunity Generation
+  - Opportunity Validation
+  - Asset Generation
+  - Asset Development
+transitions:
+  - from: Opportunity Generation
+    to: Opportunity Validation
+  - from: Opportunity Validation
+    to: Asset Generation
+  - from: Asset Generation
+    to: Asset Development
+rules:
+  automatic_promotion: false
+  persistence: external-only
