@@ -554,6 +554,22 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/migration_log.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 21:00 EDT
+
+- Action: 进入 ChatGPT 已批准的 Phase 8，建立 Phase 9 Freeze and Release contract-only boundary。
+- How: 在 `task_20260801_gen-iet-phase9-freeze-release` 分支新增 Architecture Freeze contract、Phase 9 中文审核清单、Decision Log 和 release manifest；固定 45 Gate、T/P/C、依赖图、Phase 0-9 manifest 和 Gate Extension 治理边界。
+- Result: 未发布 release package、数据或资产，未运行 CRC pilot/T0-T12/Gate/Rule/Model/P-chain/C-chain，未修改 Registry/Profile/依赖图。77 个测试、repository boundary、`git diff --check` 通过，Phase 9 停在 ChatGPT 审核门。
+- Files affected:
+  - `src/capabilities/release_freeze.py`
+  - `tests/test_release_freeze.py`
+  - `docs/phases/GEN_IET_PHASE_9_REPORT.zh-CN.md`
+  - `docs/phases/GEN_IET_PHASE_9_REVIEW_CHECKLIST.zh-CN.md`
+  - `logs/decision-log-2026-08-01-gen-iet-phase9.zh-CN.md`
+  - `manifests/gen_iet_phase_9_manifest.yaml`
+  - `docs/handoff/2026-08-01-gen-iet-phase-9.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
 - Follow-up: ChatGPT 对最新 HEAD `d87e379` 完成 metadata-only 复核并返回 `APPROVE`，确认没有扩大批准范围或新增执行代码、数据、存储、Gate 或 runtime。
 
 ### 2026-08-01 15:39 EDT

@@ -96,3 +96,10 @@
 - 保留完整 Phase 0-7 trace、外部 data bundle 和候选结果引用；不预设 TWEAKR 或任何候选胜出，允许保留/HOLD/淘汰/全部不推进。
 - 未复制或读取 CRC 数据，未运行 T0-T12/Gate/Rule/Model/P-chain/真实 pilot，未生成资产或写入数据库、cache、result、weights、runner 或新 Gate。
 - 75 个 unittest、repository boundary 和 `git diff --check` 均通过；ChatGPT 已返回 `APPROVE`，Phase 8 状态为 `APPROVED_PHASE_8`，可以进入 Phase 9；真实 CRC pilot 保持外部。
+
+## 2026-08-01：`gen_indication_endpoint_target` Phase 9
+
+- 基于 ChatGPT 已批准的 Phase 8，在独立分支新增 v1.0 Architecture Freeze and Release contract、Phase 9 审核清单和 Decision Log。
+- 固定 45 个既有 Gate、T/P/C profile、依赖图、Phase 0-9 manifest 与归档 Prompt 引用；未批准 Gate Extension proposal 阻断 release contract。
+- 未发布数据或 release package，未读取数据、运行 CRC pilot、T0-T12/Gate/Rule/Model/P-chain/C-chain，未修改 Registry/Profile/依赖图或创建本地资产。
+- 77 个 unittest、repository boundary 和 `git diff --check` 均通过；当前状态为 `COMPLETED_PENDING_REVIEW`，等待 ChatGPT 审核后才可标记 release ready。
