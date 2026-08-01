@@ -388,6 +388,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-gate-model-rule.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 15:45 EDT
+
+- Action: 处理 ChatGPT 对 PR #14 的第一轮审核反馈。
+- How: 将 `historical_rule_reference.v1.yaml` 的嵌套 `review` 要求映射为 Python `RuleReview`；为 `GateModelRuleRef` 增加并锁定 `external_rule_model` implementation；新增 YAML/Python 合同一致性测试；保存审核记录并准备同步 PR 描述的测试数字。
+- Result: 两个合同对齐阻断已修复；全仓 33 个 unittest、repository boundary check 和 `git diff --check` 通过。PR 未合并，准备复审。
+- Files affected:
+  - `genmodules/gate_model_rule/core/contracts.py`
+  - `tests/test_gate_model_rule.py`
+  - `docs/handoff/2026-08-01-gate-model-rule.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-01-gate-model-rule-round1.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 13:56 EDT
 
 - Action: 开始架构冻结后的 AssetGenOS 模块迁移。

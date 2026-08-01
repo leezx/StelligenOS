@@ -2,7 +2,7 @@
 
 - 任务编号：`task_20260801_gate-model-rule`
 - 目标：将 AssetGenOS 的 `gate-model-rule` 主模块迁移为 StelligenOS 的纯软件合同边界。
-- 当前状态：已完成首版实现，已通过本地验证，准备提交 PR 并请求 ChatGPT 审核。
+- 当前状态：已完成第一轮修订，已通过本地验证，准备请求 ChatGPT 复审；PR #14 未合并。
 
 ## 已迁移
 
@@ -10,6 +10,8 @@
   - Gate Model Rule 稳定身份和 SemVer 校验。
   - 绑定 StelligenOS 冻结的 45 Gate 拓扑，未知 Gate 拒绝。
   - 历史规则描述、外部适用性评估和审核 bundle 合同。
+  - 嵌套 `RuleReview` 与 YAML review 合同一致。
+  - 锁定 `external_rule_model` implementation，并由测试验证 YAML/Python 一致性。
   - 强制证据、候选人、审阅人和理由均为外部引用。
 - `genmodules/gate_model_rule/contracts/`
   - Gate Model Rule 合同。
@@ -27,9 +29,17 @@
 
 ## 验证
 
-- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`: 31 passed
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`: 33 passed
 - `./scripts/verify_repository_boundary.sh`: passed
 - `git diff --check`: passed
+
+## 第一轮审核反馈
+
+- ChatGPT 结论：`REQUEST_CHANGES`。
+- 阻断项：YAML `review` 嵌套结构与 Python bundle 不一致；YAML
+  `implementation` 未由 Python 表达且缺少一致性测试。
+- 修订：已新增 `RuleReview`、implementation 字段和两个 YAML/Python 一致性测试。
+- 原始记录：`logs/chatgpt-review-2026-08-01-gate-model-rule-round1.md`。
 
 ## 审核重点
 

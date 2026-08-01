@@ -13,6 +13,7 @@ from typing import Final
 
 MODEL_LIFECYCLE_STANDARD_REF: Final = "ModelLifecycleStandard@1.0.0"
 HISTORICAL_RULE_REFERENCE_CONTRACT: Final = "HistoricalADCRuleReference@1.0.0"
+RULE_MODEL_IMPLEMENTATION: Final = "external_rule_model"
 RULE_CONFIDENCE_LABELS: Final = frozenset({"high", "medium", "low"})
 RULE_TYPES: Final = frozenset(
     {"one_sided_positive", "one_sided_negative", "contrastive", "insufficient_data"}
@@ -57,12 +58,17 @@ class GateModelRuleRef:
     model_id: str
     model_version: str
     gate_id: str
+    implementation: str = RULE_MODEL_IMPLEMENTATION
 
     def __post_init__(self) -> None:
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", self.model_id):
             raise ValueError("model_id contains unsupported characters")
         _validate_semver(self.model_version, "model_version")
         _validate_gate_id(f"gate:{self.gate_id}", "gate_id")
+        if self.implementation != RULE_MODEL_IMPLEMENTATION:
+            raise ValueError(
+                "Gate Model Rule implementation must remain external_rule_model"
+            )
 
     def as_string(self) -> str:
         return f"{self.model_id}@{self.model_version}"
@@ -119,29 +125,35 @@ class RuleApplicabilityAssessment:
 
 
 @dataclass(frozen=True)
+class RuleReview:
+    """Nested human review metadata required by the applicability contract."""
+
+    reviewer_ref: str
+    reviewed_at: str
+    status: str
+
+    def __post_init__(self) -> None:
+        _validate_external_ref(self.reviewer_ref, "reviewer_ref")
+        if not self.reviewed_at:
+            raise ValueError("reviewed_at must not be empty")
+        if self.status not in REVIEW_STATUSES:
+            raise ValueError(f"unsupported review status: {self.status}")
+
+
+@dataclass(frozen=True)
 class RuleApplicabilityBundle:
     """Review envelope supplied by an external workspace."""
 
     bundle_version: str
     candidate_ref: str
     gate_ref: str
-    reviewer_ref: str
-    reviewed_at: str
-    review_status: str
+    review: RuleReview
     assessments: tuple[RuleApplicabilityAssessment, ...]
 
     def __post_init__(self) -> None:
         _validate_semver(self.bundle_version, "bundle_version")
-        for value, label in (
-            (self.candidate_ref, "candidate_ref"),
-            (self.reviewer_ref, "reviewer_ref"),
-        ):
-            _validate_external_ref(value, label)
+        _validate_external_ref(self.candidate_ref, "candidate_ref")
         _validate_gate_id(self.gate_ref, "gate_ref")
-        if not self.reviewed_at:
-            raise ValueError("reviewed_at must not be empty")
-        if self.review_status not in REVIEW_STATUSES:
-            raise ValueError(f"unsupported review_status: {self.review_status}")
 
 
 def validate_external_ref(value: str) -> None:

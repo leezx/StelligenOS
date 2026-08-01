@@ -1,10 +1,15 @@
 import unittest
+from pathlib import Path
+
+import yaml
 
 from genmodules.gate_model_rule.core.contracts import (
     GateModelRuleRef,
     HistoricalRuleDescriptor,
     RuleApplicabilityAssessment,
     RuleApplicabilityBundle,
+    RuleReview,
+    RULE_MODEL_IMPLEMENTATION,
     validate_external_ref,
 )
 
@@ -46,12 +51,43 @@ class GateModelRuleContractTests(unittest.TestCase):
             "1.0.0",
             "external:candidate/1",
             "gate:target_population_mapping",
-            "external:reviewer/1",
-            "2026-08-01T00:00:00Z",
-            "draft",
+            RuleReview(
+                "external:reviewer/1",
+                "2026-08-01T00:00:00Z",
+                "draft",
+            ),
             (assessment,),
         )
         self.assertEqual(bundle.assessments[0].applicability, "uncertain")
+
+    def test_yaml_contract_and_python_identity_share_implementation(self):
+        root = Path(__file__).resolve().parents[1]
+        contract = yaml.safe_load(
+            (root / "genmodules/gate_model_rule/contracts/gate_model_rule.v1.yaml")
+            .read_text()
+        )["contract"]
+        ref = GateModelRuleRef(
+            "rule-model",
+            "0.1.0",
+            "target_population_mapping",
+        )
+        self.assertEqual(
+            contract["model_identity"]["implementation"],
+            RULE_MODEL_IMPLEMENTATION,
+        )
+        self.assertEqual(ref.implementation, RULE_MODEL_IMPLEMENTATION)
+
+    def test_yaml_review_shape_matches_nested_python_review(self):
+        root = Path(__file__).resolve().parents[1]
+        contract = yaml.safe_load(
+            (root / "genmodules/gate_model_rule/contracts/historical_rule_reference.v1.yaml")
+            .read_text()
+        )["contract"]["applicability_bundle"]
+        self.assertIn("review", contract["required_fields"])
+        self.assertEqual(
+            set(contract["review_required_fields"]),
+            {"reviewer_ref", "reviewed_at", "status"},
+        )
 
     def test_repository_local_references_are_rejected(self):
         for value in ("candidate/1", "/tmp/candidate", "../candidate"):
