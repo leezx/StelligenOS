@@ -5,8 +5,8 @@
 - 任务编号：`task_20260801_phase4-opportunity-generation`
 - 分支：`task_20260801_phase4-opportunity-generation`
 - Base：Phase 3 合并后的 `main` at `505ddd1`
-- PR：待创建
-- 状态：本地实现完成，等待创建 PR 和 ChatGPT 审核
+- PR：[#5](https://github.com/leezx/StelligenOS/pull/5)
+- 状态：草稿 PR 已创建，等待 ChatGPT 审核
 
 ## 范围
 
