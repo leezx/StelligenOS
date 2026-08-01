@@ -353,8 +353,8 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 ### 2026-08-01 15:35 EDT
 
 - Action: 读取 ChatGPT 最终复审反馈并修复最后两个元数据阻断项。
-- How: 将 handoff 当前 tip 从 `437123a` 收敛到 `bd73e0f`；把 Existing-Binder README 的当前输入合同从 `ExistingBinderAssetInput@0.3.1` 修正为 `ExistingBinderAssetInput@0.4.0`，同时保留旧版本作为历史兼容背景；补充当前 tip 的测试、boundary、working-tree diff 和 aggregate diff 验证记录。
-- Verification: 当前 tip `bd73e0f` 的 `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`、`./scripts/verify_repository_boundary.sh`、`git diff --check` 和 `git diff main...HEAD --check` 均通过。
+- How: 将 handoff 当前 tip 从 `437123a` 收敛到 GitHub PR #11 当前 HEAD，并把 Existing-Binder README 的当前输入合同从 `ExistingBinderInput@0.3.1` 修正为 `ExistingBinderAssetInput@0.4.0`，同时保留旧版本作为历史兼容背景；补充当前 HEAD 的测试、boundary、working-tree diff 和 aggregate diff 验证记录。
+- Verification: 基线 `bd73e0f` 的 `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`、`./scripts/verify_repository_boundary.sh`、`git diff --check` 和 `git diff main...HEAD --check` 均通过；后续仅更新审核元数据，不改变软件内容。
 - Review: ChatGPT 已确认 14/16 阶段映射、list-steps/list-internal-steps、冻结路线合同、零数据边界和安全策略符合要求；当前修订后再次请求最终 APPROVE。
 - Files affected:
   - `genmodules/README.md`
