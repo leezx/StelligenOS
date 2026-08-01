@@ -48,3 +48,9 @@
 - 未实现候选生成、证据采集、Rule/Model/Gate evaluator、ranking、P/C chain、数据库、数据、cache、result 或 runner。
 - 55 个 unittest、repository boundary 和 `git diff --check` 均通过；Phase 1 合同已提交并完成审核闭环。
 - ChatGPT Round 1/2 提出的外部引用与回归测试问题已修复；Round 3 返回 `APPROVE`，Phase 1 审核通过，可以进入下一阶段。执行适配仍必须另开分支和 PR。
+
+## 2026-08-01：`gen_indication_endpoint_target` Phase 2
+
+- 在 Phase 1 批准分支上新增外部-only T0-T1 Clinical Frame Pipeline port 和 request/result contracts。
+- 强制 clinical unmet need、scope、T0/T1 input、policy、run、ClinicalFrame、Evidence 和 missing information 引用使用 `external:`；未读取数据、未运行 T0/T1、未创建本地记录。
+- 58 个 unittest、repository boundary 和 `git diff --check` 均通过；等待 ChatGPT 审核后才可进入 Phase 3。

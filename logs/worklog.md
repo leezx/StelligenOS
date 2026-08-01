@@ -746,6 +746,20 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/migration_log.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 18:20 EDT
+
+- Action: 进入 ChatGPT 已批准的下一阶段 Phase 2，建立 T0-T1 Clinical Frame Pipeline 外部端口。
+- How: 新增 `ClinicalFramePipelineRequest`、`ClinicalFramePipelineResult` 和 `ClinicalFramePipelinePort`；所有 clinical unmet need、scope、T0/T1 input、policy、run、ClinicalFrame、Evidence 和 missing information 均强制 `external:`，不提供本地执行或持久化实现。
+- Result: 58 个 unittest 通过；repository boundary 和 `git diff --check` 通过；未读取 clinical unmet need 数据、未运行 T0/T1、未生成 ClinicalFrame 或 target。当前 Phase 2 等待 ChatGPT PR 审核。
+- Files affected:
+  - `src/capabilities/clinical_frame_pipeline.py`
+  - `tests/test_clinical_frame_pipeline.py`
+  - `docs/phases/GEN_IET_PHASE_2_REPORT.zh-CN.md`
+  - `manifests/gen_iet_phase_2_manifest.yaml`
+  - `docs/handoff/2026-08-01-gen-iet-phase-2.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 18:35 EDT
 
 - Action: 完成本地验证并创建 Phase 8 最终草稿 PR。
