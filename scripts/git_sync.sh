@@ -4,6 +4,9 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 branch="${1:-}"
 commit_message="${2:-}"
+if [[ $# -ge 1 ]]; then shift; fi
+if [[ $# -ge 1 ]]; then shift; fi
+files=("$@")
 
 cd "$repo_root"
 
@@ -13,6 +16,12 @@ fi
 
 if [[ -z "$commit_message" ]]; then
   commit_message="chore: sync ${branch} $(date '+%Y-%m-%d %H:%M %Z')"
+fi
+
+if (( ${#files[@]} == 0 )); then
+  printf 'Refusing to sync without an explicit file list.\n' >&2
+  printf 'Usage: %s <branch> <commit-message> <file> [file ...]\n' "$0" >&2
+  exit 2
 fi
 
 printf 'Repository: %s\n' "$repo_root"
@@ -33,7 +42,7 @@ if git rev-parse --verify "origin/$branch" >/dev/null 2>&1; then
 fi
 
 if ! git diff --quiet || ! git diff --cached --quiet; then
-  git add -A
+  git add -- "${files[@]}"
   if ! git diff --cached --quiet; then
     git commit -m "$commit_message"
   fi

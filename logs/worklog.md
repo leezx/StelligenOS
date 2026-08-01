@@ -215,3 +215,36 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Files affected:
   - `scripts/verify_repository_boundary.sh`
   - `logs/worklog.md`
+
+### 2026-08-01 11:12 EDT
+
+- Action: Made a tiny audit-scope clarification inside the interaction protocol for testing purposes.
+- How: Added one sentence to `ChatGPT-Codex-talk.md` that tells external reviewers to stay within the current commit/PR range and not count future optimizations as part of the review scope.
+- Result: The protocol now gives a slightly stricter, easier-to-test audit boundary without changing the overall execution-first workflow.
+- Files affected:
+  - `ChatGPT-Codex-talk.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 11:35 EDT
+
+- Action: Reworked the interaction protocol into a PR-centered review workflow and synced the repo-facing guidance.
+- How: Replaced the older local-worktree-oriented wording in `ChatGPT-Codex-talk.md` with a branch/commit/push/PR flow, then updated `AGENTS.md` and `HANDOFF.md` so the repository instructions match the new review model.
+- Result: The default collaboration model is now explicitly PR-based, with the assistant acting as executor and external models handling review on the PR diff.
+- Files affected:
+  - `ChatGPT-Codex-talk.md`
+  - `AGENTS.md`
+  - `HANDOFF.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:00 EDT
+
+- Action: 固化 GitHub 中间层协作方式，并补充可审计的 PR handoff 机制。
+- How: 更新 `ChatGPT-Codex-talk.md` 和 `AGENTS.md`，明确 `main` 拉取、`task_<编号>_<简短名>` 分支、显式暂存、PR 审核和负责人拍板流程；新增 `docs/handoff/` 模板与本任务交接备忘；将 `scripts/git_sync.sh` 改为必须接收明确文件清单，禁止隐式全量暂存。
+- Result: 后续任务不再依赖 ChatGPT/Codex 之间手工搬运文件，PR 成为默认审核和交付单元；当前改动尚未提交或推送。
+- Files affected:
+  - `ChatGPT-Codex-talk.md`
+  - `AGENTS.md`
+  - `scripts/git_sync.sh`
+  - `docs/handoff/TEMPLATE.zh-CN.md`
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`

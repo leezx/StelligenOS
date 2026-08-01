@@ -21,6 +21,8 @@
 - Added `ChatGPT-Codex-talk.md` as the canonical execution-first interaction protocol and linked it from the repo entry docs.
 - Brought the Phase 0 snapshot count up to the live 49-file repo state after adding the interaction protocol file.
 - Expanded the repository boundary allowlist to include `ChatGPT-Codex-talk.md` and revalidated the repo.
+- Reworked the interaction protocol into a PR-centered review workflow and synced the repo-facing guidance in `AGENTS.md` and `HANDOFF.md`.
+- 固化 GitHub 中间层协作方式，新增 `docs/handoff/` 交接模板和本任务 handoff，并将同步脚本改为显式文件清单暂存，禁止全量暂存。
 
 ## Next
 
