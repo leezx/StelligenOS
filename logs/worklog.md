@@ -527,6 +527,20 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/migration_log.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 20:25 EDT
+
+- Action: 进入 ChatGPT 已批准的 Phase 7，建立 Phase 8 End-to-End Pilot external-only port。
+- How: 在 `task_20260801_gen-iet-phase8-external-pilot` 分支新增受限 CRC ClinicalFrame pilot request/result、候选 outcome 和全阶段 trace 引用；明确不预设 TWEAKR 胜出，资产生成关闭。
+- Result: 未复制或读取 CRC 数据，未运行真实闭环、T0-T12、Gate/Rule/Model/P-chain 或资产生成。75 个测试、repository boundary、`git diff --check` 通过，Phase 8 停在 ChatGPT PR 审核门。
+- Files affected:
+  - `src/capabilities/end_to_end_pilot.py`
+  - `tests/test_end_to_end_pilot.py`
+  - `docs/phases/GEN_IET_PHASE_8_REPORT.zh-CN.md`
+  - `manifests/gen_iet_phase_8_manifest.yaml`
+  - `docs/handoff/2026-08-01-gen-iet-phase-8.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
 - Follow-up: ChatGPT 对最新 HEAD `d87e379` 完成 metadata-only 复核并返回 `APPROVE`，确认没有扩大批准范围或新增执行代码、数据、存储、Gate 或 runtime。
 
 ### 2026-08-01 15:39 EDT
