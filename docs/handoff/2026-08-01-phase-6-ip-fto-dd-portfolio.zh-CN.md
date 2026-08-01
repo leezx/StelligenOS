@@ -5,8 +5,8 @@
 - 任务编号：`task_20260801_phase6-ip-fto-dd-portfolio`
 - 分支：`task_20260801_phase6-ip-fto-dd-portfolio`
 - Base：Phase 5 合并后的 `main` at `10fe06b`
-- PR：待创建
-- 状态：本地实现完成，等待创建 PR 和 ChatGPT 审核
+- PR：[#7](https://github.com/leezx/StelligenOS/pull/7)
+- 状态：草稿 PR 已创建，等待 ChatGPT 审核
 
 ## 范围
 

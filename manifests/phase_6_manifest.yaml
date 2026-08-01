@@ -1,5 +1,7 @@
 phase: phase_6
-status: review_pending
+status: pr_open_review_pending
+pr: 7
+pr_url: https://github.com/leezx/StelligenOS/pull/7
 scope: ip_fto_due_diligence_portfolio_contracts
 repository_boundary: software_only_external_data
 data_added: false
