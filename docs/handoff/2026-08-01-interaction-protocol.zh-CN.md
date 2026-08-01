@@ -59,13 +59,12 @@
 ## 未决问题与风险
 
 - 任务分支已推送，draft PR 已创建；当前 PR tip 和当前 aggregate diff 以 PR 页面实时状态为权威。
-- 本次新增的分阶段 PR 审核协议属于批准后的治理文档扩展，已加入当前 PR，等待外部模型最终复审。
+- 本次新增的分阶段 PR 审核协议已通过 ChatGPT 最终复审，结论为 `APPROVE`，明确可以进入 Phase 1。
 
 ## 下一步
 
-1. 完成本次新增分阶段 PR 审核协议扩展的最终复审。
-2. 仅在 ChatGPT 明确输出 `APPROVE` 后，由负责人决定是否合并 PR #1。
-3. PR 合并且 Phase 1 获得明确放行后，从 `main` 拉取最新代码，创建新的 `task_<编号>_<简短名>` 分支和 PR。
+1. 由负责人决定是否合并已获批准的 PR #1。
+2. PR 合并后，从 `main` 拉取最新代码，创建 Phase 1 的 `task_<编号>_<简短名>` 分支和 PR。
 
 说明：本 handoff 文件自身的最新 metadata commit 不在自身列表中自引用；任何更新 handoff 的提交都会改变 branch tip，因此不能在提交内容中预先写入自己的 hash。PR 页面是当前 branch tip 和 aggregate diff 的唯一实时权威来源；本文件列出所有已知历史 metadata commits 和对应验证，不把历史值伪装成当前值。
 
