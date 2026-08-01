@@ -1,0 +1,32 @@
+contract:
+  contract_id: adc_three_group_graph_summary
+  contract_version: "2.0.0"
+  final_logic: target_opportunity AND product_realization AND commercial_executability
+  fields:
+    group_summaries:
+      type: map[group_id, GateGroupSummary]
+      required: true
+    sellable_asset_score:
+      type: number[0,1]
+      required: true
+      description: Minimum of the three confidence-adjusted group bottleneck scores.
+    confidence:
+      type: number[0,1]
+      required: true
+    decision:
+      type: enum
+      allowed_values: [reject, redesign, gather_data, hold, advance]
+      required: true
+    hard_failures:
+      type: list[string]
+      required: true
+    hard_unknowns:
+      type: list[string]
+      required: true
+    feedback_actions:
+      type: list[object]
+      required: true
+    prospective_claim_allowed:
+      type: boolean
+      required: true
+      default: false

@@ -1,0 +1,150 @@
+gate:
+  gate_id: construct_therapeutic_index
+  gate_family: adc.v0_2.product_realization.construct_therapeutic_index
+  gate_version: 0.2.0
+  sequence: 33
+  name: Construct-Level Therapeutic Index
+  purpose: Integrate target-mediated normal toxicity, payload-class and free-payload toxicity, premature release, catabolites,
+    Fc effects, bystander toxicity, and exposure margin.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - upstream_gate_results
+    outputs:
+    - on_target_normal_tissue_risk
+    - payload_class_toxicity
+    - free_payload_toxicity
+    - bystander_toxicity
+    - Fc_mediated_risk
+    - catabolite_toxicity
+    - dose_limiting_liability
+    - tumor_normal_exposure_margin
+    - therapeutic_index_plausibility
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium_high
+    default_model_ids:
+    - construct_therapeutic_index_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: product_realization
+    group_code: P
+    priority: P2
+    dependencies:
+    - on_target_therapeutic_index
+    - bystander_tumor_coverage
+    - integrated_pk_stability_exposure
+    output_defaults:
+      on_target_normal_tissue_risk: null
+      payload_class_toxicity: null
+      free_payload_toxicity: null
+      bystander_toxicity: null
+      Fc_mediated_risk: null
+      catabolite_toxicity: null
+      dose_limiting_liability: null
+      tumor_normal_exposure_margin: null
+      therapeutic_index_plausibility: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      on_target_normal_tissue_risk:
+        type: number[0,1]
+        description: 'Frozen construct_therapeutic_index@0.2.0 output field: on_target_normal_tissue_risk.'
+        required: true
+        nullable: true
+      payload_class_toxicity:
+        type: string_or_structured_object
+        description: 'Frozen construct_therapeutic_index@0.2.0 output field: payload_class_toxicity.'
+        required: true
+        nullable: true
+      free_payload_toxicity:
+        type: string_or_structured_object
+        description: 'Frozen construct_therapeutic_index@0.2.0 output field: free_payload_toxicity.'
+        required: true
+        nullable: true
+      bystander_toxicity:
+        type: string_or_structured_object
+        description: 'Frozen construct_therapeutic_index@0.2.0 output field: bystander_toxicity.'
+        required: true
+        nullable: true
+      Fc_mediated_risk:
+        type: number[0,1]
+        description: 'Frozen construct_therapeutic_index@0.2.0 output field: Fc_mediated_risk.'
+        required: true
+        nullable: true
+      catabolite_toxicity:
+        type: string_or_structured_object
+        description: 'Frozen construct_therapeutic_index@0.2.0 output field: catabolite_toxicity.'
+        required: true
+        nullable: true
+      dose_limiting_liability:
+        type: string_or_structured_object
+        description: 'Frozen construct_therapeutic_index@0.2.0 output field: dose_limiting_liability.'
+        required: true
+        nullable: true
+      tumor_normal_exposure_margin:
+        type: number[0,1]
+        description: 'Frozen construct_therapeutic_index@0.2.0 output field: tumor_normal_exposure_margin.'
+        required: true
+        nullable: true
+      therapeutic_index_plausibility:
+        type: string_or_structured_object
+        description: 'Frozen construct_therapeutic_index@0.2.0 output field: therapeutic_index_plausibility.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

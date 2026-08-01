@@ -1,0 +1,156 @@
+gate:
+  gate_id: lifecycle_exclusivity_strategy
+  gate_family: adc.v0_2.commercial_executability.lifecycle_exclusivity_strategy
+  gate_version: 0.2.0
+  sequence: 54
+  name: Regulatory–IP–Commercial Lifecycle Strategy
+  purpose: Align launch timing, patent term, regulatory exclusivity, indication expansion, next-generation products, and lifecycle
+    extensions.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - commercial_execution_context
+    - upstream_gate_results
+    outputs:
+    - projected_launch_timing
+    - core_patent_expiry
+    - effective_exclusivity_window
+    - regulatory_exclusivity_options
+    - patent_term_risk
+    - lifecycle_extensions
+    - indication_expansion_options
+    - next_generation_product_options
+    - exclusivity_durability
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: high
+    default_model_ids:
+    - lifecycle_exclusivity_strategy_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: commercial_executability
+    group_code: C
+    priority: P3
+    dependencies:
+    - regulatory_development_path
+    - fto_product_configuration
+    - claim_architecture_patent_estate
+    output_defaults:
+      projected_launch_timing: null
+      core_patent_expiry: null
+      effective_exclusivity_window: null
+      regulatory_exclusivity_options: []
+      patent_term_risk: null
+      lifecycle_extensions: []
+      indication_expansion_options: []
+      next_generation_product_options: []
+      exclusivity_durability: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      commercial_execution_context:
+        type: CommercialExecutionContext
+        description: 'Version-bound v0.2 input object: commercial_execution_context.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      projected_launch_timing:
+        type: string_or_structured_object
+        description: 'Frozen lifecycle_exclusivity_strategy@0.2.0 output field: projected_launch_timing.'
+        required: true
+        nullable: true
+      core_patent_expiry:
+        type: string_or_structured_object
+        description: 'Frozen lifecycle_exclusivity_strategy@0.2.0 output field: core_patent_expiry.'
+        required: true
+        nullable: true
+      effective_exclusivity_window:
+        type: number[0,1]
+        description: 'Frozen lifecycle_exclusivity_strategy@0.2.0 output field: effective_exclusivity_window.'
+        required: true
+        nullable: true
+      regulatory_exclusivity_options:
+        type: list[object]
+        description: 'Frozen lifecycle_exclusivity_strategy@0.2.0 output field: regulatory_exclusivity_options.'
+        required: true
+        nullable: true
+      patent_term_risk:
+        type: number[0,1]
+        description: 'Frozen lifecycle_exclusivity_strategy@0.2.0 output field: patent_term_risk.'
+        required: true
+        nullable: true
+      lifecycle_extensions:
+        type: list[object]
+        description: 'Frozen lifecycle_exclusivity_strategy@0.2.0 output field: lifecycle_extensions.'
+        required: true
+        nullable: true
+      indication_expansion_options:
+        type: list[object]
+        description: 'Frozen lifecycle_exclusivity_strategy@0.2.0 output field: indication_expansion_options.'
+        required: true
+        nullable: true
+      next_generation_product_options:
+        type: list[object]
+        description: 'Frozen lifecycle_exclusivity_strategy@0.2.0 output field: next_generation_product_options.'
+        required: true
+        nullable: true
+      exclusivity_durability:
+        type: number[0,1]
+        description: 'Frozen lifecycle_exclusivity_strategy@0.2.0 output field: exclusivity_durability.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

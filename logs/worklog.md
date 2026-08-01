@@ -973,3 +973,15 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Files affected:
   - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 20:05 EDT
+
+- Action: 迁移 AssetGenOS 剩余纯软件定义层。
+- How: 从外部 AssetGenOS 工作区迁移 7 个共享 contracts、45 个 Gate 定义、59 个 Model 定义和 53 个 Profile 定义到 `genmodules/assetgenos_catalog/`，保留源相对路径和版本身份；新增模块说明、排除清单和数量边界测试。没有复制 `model_governance`、`model_work_packages`、历史校准/审计、数据、缓存、结果、权重或 runner。
+- Result: 迁移目录共 173 个软件定义文件、约 1.2 MB；40 个 unittest 通过，repository boundary check 通过，`git diff --check` 通过，准备创建 PR 请求 ChatGPT 审核。
+- Files affected:
+  - `genmodules/assetgenos_catalog/`
+  - `tests/test_assetgenos_modules.py`
+  - `docs/handoff/2026-08-01-assetgenos-catalog.zh-CN.md`
+  - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
+  - `logs/worklog.md`

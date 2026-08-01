@@ -1,0 +1,149 @@
+gate:
+  gate_id: target_population_mapping
+  gate_family: adc.v0_2.target_opportunity.target_population_mapping
+  gate_version: 0.2.0
+  sequence: 2
+  name: Target-to-Population Mapping
+  purpose: Determine whether the target sensitively, specifically, stably, and prevalently marks the endpoint-driving population.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - upstream_gate_results
+    outputs:
+    - target_population_sensitivity
+    - target_population_specificity
+    - patient_level_prevalence
+    - within_patient_coverage
+    - state_specificity
+    - state_stability
+    - treatment_stability
+    - primary_metastasis_concordance
+    - target_negative_causal_fraction
+    - mapping_confidence
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium
+    default_model_ids:
+    - target_population_mapping_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: target_opportunity
+    group_code: T
+    priority: P1
+    dependencies:
+    - clinical_context_endpoint
+    - endpoint_driving_population
+    output_defaults:
+      target_population_sensitivity: null
+      target_population_specificity: null
+      patient_level_prevalence: null
+      within_patient_coverage: null
+      state_specificity: null
+      state_stability: null
+      treatment_stability: null
+      primary_metastasis_concordance: null
+      target_negative_causal_fraction: null
+      mapping_confidence: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      target_population_sensitivity:
+        type: number[0,1]
+        description: 'Frozen target_population_mapping@0.2.0 output field: target_population_sensitivity.'
+        required: true
+        nullable: true
+      target_population_specificity:
+        type: number[0,1]
+        description: 'Frozen target_population_mapping@0.2.0 output field: target_population_specificity.'
+        required: true
+        nullable: true
+      patient_level_prevalence:
+        type: number[0,1]
+        description: 'Frozen target_population_mapping@0.2.0 output field: patient_level_prevalence.'
+        required: true
+        nullable: true
+      within_patient_coverage:
+        type: number[0,1]
+        description: 'Frozen target_population_mapping@0.2.0 output field: within_patient_coverage.'
+        required: true
+        nullable: true
+      state_specificity:
+        type: number[0,1]
+        description: 'Frozen target_population_mapping@0.2.0 output field: state_specificity.'
+        required: true
+        nullable: true
+      state_stability:
+        type: number[0,1]
+        description: 'Frozen target_population_mapping@0.2.0 output field: state_stability.'
+        required: true
+        nullable: true
+      treatment_stability:
+        type: number[0,1]
+        description: 'Frozen target_population_mapping@0.2.0 output field: treatment_stability.'
+        required: true
+        nullable: true
+      primary_metastasis_concordance:
+        type: string_or_structured_object
+        description: 'Frozen target_population_mapping@0.2.0 output field: primary_metastasis_concordance.'
+        required: true
+        nullable: true
+      target_negative_causal_fraction:
+        type: number[0,1]
+        description: 'Frozen target_population_mapping@0.2.0 output field: target_negative_causal_fraction.'
+        required: true
+        nullable: true
+      mapping_confidence:
+        type: number[0,1]
+        description: 'Frozen target_population_mapping@0.2.0 output field: mapping_confidence.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

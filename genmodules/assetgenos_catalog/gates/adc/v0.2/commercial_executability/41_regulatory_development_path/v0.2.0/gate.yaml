@@ -1,0 +1,161 @@
+gate:
+  gate_id: regulatory_development_path
+  gate_family: adc.v0_2.commercial_executability.regulatory_development_path
+  gate_version: 0.2.0
+  sequence: 41
+  name: Regulatory and Development Path Attractiveness
+  purpose: Evaluate regulatory-path plausibility, endpoint acceptability, confirmatory burden, diagnostic burden, and earlier-line
+    feasibility without claiming designations.
+  runtime:
+    required: true
+    hard_gate: false
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - commercial_execution_context
+    - upstream_gate_results
+    outputs:
+    - serious_condition_status
+    - unmet_need_regulatory_fit
+    - fast_track_potential
+    - breakthrough_potential
+    - accelerated_approval_potential
+    - priority_review_potential
+    - surrogate_endpoint_feasibility
+    - confirmatory_trial_burden
+    - companion_diagnostic_requirement
+    - regulatory_path_score
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: low
+    default_model_ids:
+    - regulatory_development_path_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: commercial_executability
+    group_code: C
+    priority: P0
+    dependencies:
+    - commercial_opportunity_threshold
+    output_defaults:
+      serious_condition_status: null
+      unmet_need_regulatory_fit: null
+      fast_track_potential: null
+      breakthrough_potential: null
+      accelerated_approval_potential: null
+      priority_review_potential: null
+      surrogate_endpoint_feasibility: null
+      confirmatory_trial_burden: null
+      companion_diagnostic_requirement: null
+      regulatory_path_score: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      commercial_execution_context:
+        type: CommercialExecutionContext
+        description: 'Version-bound v0.2 input object: commercial_execution_context.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      serious_condition_status:
+        type: string_or_structured_object
+        description: 'Frozen regulatory_development_path@0.2.0 output field: serious_condition_status.'
+        required: true
+        nullable: true
+      unmet_need_regulatory_fit:
+        type: string_or_structured_object
+        description: 'Frozen regulatory_development_path@0.2.0 output field: unmet_need_regulatory_fit.'
+        required: true
+        nullable: true
+      fast_track_potential:
+        type: number[0,1]
+        description: 'Frozen regulatory_development_path@0.2.0 output field: fast_track_potential.'
+        required: true
+        nullable: true
+      breakthrough_potential:
+        type: number[0,1]
+        description: 'Frozen regulatory_development_path@0.2.0 output field: breakthrough_potential.'
+        required: true
+        nullable: true
+      accelerated_approval_potential:
+        type: number[0,1]
+        description: 'Frozen regulatory_development_path@0.2.0 output field: accelerated_approval_potential.'
+        required: true
+        nullable: true
+      priority_review_potential:
+        type: number[0,1]
+        description: 'Frozen regulatory_development_path@0.2.0 output field: priority_review_potential.'
+        required: true
+        nullable: true
+      surrogate_endpoint_feasibility:
+        type: number[0,1]
+        description: 'Frozen regulatory_development_path@0.2.0 output field: surrogate_endpoint_feasibility.'
+        required: true
+        nullable: true
+      confirmatory_trial_burden:
+        type: number[0,1]
+        description: 'Frozen regulatory_development_path@0.2.0 output field: confirmatory_trial_burden.'
+        required: true
+        nullable: true
+      companion_diagnostic_requirement:
+        type: string_or_structured_object
+        description: 'Frozen regulatory_development_path@0.2.0 output field: companion_diagnostic_requirement.'
+        required: true
+        nullable: true
+      regulatory_path_score:
+        type: number[0,1]
+        description: 'Frozen regulatory_development_path@0.2.0 output field: regulatory_path_score.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

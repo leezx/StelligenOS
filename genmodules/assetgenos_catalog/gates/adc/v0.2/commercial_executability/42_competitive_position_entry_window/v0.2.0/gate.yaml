@@ -1,0 +1,161 @@
+gate:
+  gate_id: competitive_position_entry_window
+  gate_family: adc.v0_2.commercial_executability.competitive_position_entry_window
+  gate_version: 0.2.0
+  sequence: 42
+  name: Competitive Position and Entry Window
+  purpose: Evaluate target, epitope, product, indication, mechanism, timing, differentiation threshold, and white-space competition
+    at expected entry.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - commercial_execution_context
+    - upstream_gate_results
+    outputs:
+    - target_level_competition
+    - epitope_level_competition
+    - product_level_competition
+    - indication_level_competition
+    - mechanism_level_competition
+    - expected_entry_rank
+    - time_to_market_gap
+    - minimum_differentiation_required
+    - white_space_opportunities
+    - competitive_viability
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: low
+    default_model_ids:
+    - competitive_position_entry_window_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: commercial_executability
+    group_code: C
+    priority: P0
+    dependencies:
+    - commercial_opportunity_threshold
+    output_defaults:
+      target_level_competition: null
+      epitope_level_competition: null
+      product_level_competition: null
+      indication_level_competition: null
+      mechanism_level_competition: null
+      expected_entry_rank: null
+      time_to_market_gap: null
+      minimum_differentiation_required: null
+      white_space_opportunities: null
+      competitive_viability: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      commercial_execution_context:
+        type: CommercialExecutionContext
+        description: 'Version-bound v0.2 input object: commercial_execution_context.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      target_level_competition:
+        type: string_or_structured_object
+        description: 'Frozen competitive_position_entry_window@0.2.0 output field: target_level_competition.'
+        required: true
+        nullable: true
+      epitope_level_competition:
+        type: string_or_structured_object
+        description: 'Frozen competitive_position_entry_window@0.2.0 output field: epitope_level_competition.'
+        required: true
+        nullable: true
+      product_level_competition:
+        type: string_or_structured_object
+        description: 'Frozen competitive_position_entry_window@0.2.0 output field: product_level_competition.'
+        required: true
+        nullable: true
+      indication_level_competition:
+        type: string_or_structured_object
+        description: 'Frozen competitive_position_entry_window@0.2.0 output field: indication_level_competition.'
+        required: true
+        nullable: true
+      mechanism_level_competition:
+        type: string_or_structured_object
+        description: 'Frozen competitive_position_entry_window@0.2.0 output field: mechanism_level_competition.'
+        required: true
+        nullable: true
+      expected_entry_rank:
+        type: string_or_structured_object
+        description: 'Frozen competitive_position_entry_window@0.2.0 output field: expected_entry_rank.'
+        required: true
+        nullable: true
+      time_to_market_gap:
+        type: string_or_structured_object
+        description: 'Frozen competitive_position_entry_window@0.2.0 output field: time_to_market_gap.'
+        required: true
+        nullable: true
+      minimum_differentiation_required:
+        type: string_or_structured_object
+        description: 'Frozen competitive_position_entry_window@0.2.0 output field: minimum_differentiation_required.'
+        required: true
+        nullable: true
+      white_space_opportunities:
+        type: string_or_structured_object
+        description: 'Frozen competitive_position_entry_window@0.2.0 output field: white_space_opportunities.'
+        required: true
+        nullable: true
+      competitive_viability:
+        type: number[0,1]
+        description: 'Frozen competitive_position_entry_window@0.2.0 output field: competitive_viability.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

@@ -1,0 +1,52 @@
+reference:
+  reference_id: ADC_target_opportunity_decision_integrator
+  reference_version: 0.1.0
+  architecture_cutoff: "2026-07-29"
+  confidence_cap: 0.55
+
+chains:
+  biology:
+    - clinical_context_endpoint
+    - endpoint_driving_population
+    - target_population_mapping
+    - intervention_causality
+    - baseline_coverage_and_escape
+    - treatment_induced_state_response
+    - net_endpoint_benefit
+  delivery:
+    - tumor_cell_surface_availability
+    - intratumoral_antigen_accessibility
+    - antibody_dependent_internalization
+    - antibody_epitope_realizability
+    - on_target_therapeutic_index
+
+hard_gates:
+  - clinical_context_endpoint
+  - target_population_mapping
+  - intervention_causality
+  - baseline_coverage_and_escape
+  - treatment_induced_state_response
+  - net_endpoint_benefit
+  - tumor_cell_surface_availability
+  - antibody_dependent_internalization
+  - on_target_therapeutic_index
+
+thresholds:
+  pass: 0.65
+  fail: 0.30
+  minimum_confidence_for_provisional_advance: 0.50
+  minimum_confidence_for_hard_failure: 0.60
+
+unknown_statuses:
+  - unknown
+  - uncertain
+  - model_error
+  - not_evaluated
+  - not_applicable
+
+rules:
+  chain_score: minimum_normalized_upstream_gate_score
+  opportunity_bottleneck_score: minimum_of_biology_and_delivery_chain_scores
+  target_opportunity_confidence: capped_minimum_upstream_confidence
+  score_confidence_separation: true
+  missing_data_policy: exploration_only

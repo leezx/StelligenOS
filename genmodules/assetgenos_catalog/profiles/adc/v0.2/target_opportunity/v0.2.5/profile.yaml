@@ -1,0 +1,90 @@
+profile:
+  profile_id: adc.target_opportunity_chain
+  profile_version: 0.2.5
+  profile_type: custom
+  modality: ADC
+  extends: []
+  description: 'Target Opportunity Chain v0.2; evaluates TargetOpportunityHypothesis and answers: 杀谁，为什么杀，清除后是否真正且持久地改善指定
+    endpoint？'
+  gate_order:
+  - clinical_context_endpoint
+  - endpoint_driving_population
+  - target_population_mapping
+  - intervention_causality
+  - baseline_coverage_and_escape
+  - treatment_induced_state_response
+  - net_endpoint_benefit
+  - tumor_cell_surface_availability
+  - intratumoral_antigen_accessibility
+  - antibody_dependent_internalization
+  - antibody_epitope_realizability
+  - on_target_therapeutic_index
+  - target_opportunity_decision
+  gate_versions:
+    clinical_context_endpoint: 0.2.0
+    endpoint_driving_population: 0.2.0
+    target_population_mapping: 0.2.0
+    intervention_causality: 0.2.0
+    baseline_coverage_and_escape: 0.2.0
+    treatment_induced_state_response: 0.2.0
+    net_endpoint_benefit: 0.2.0
+    tumor_cell_surface_availability: 0.2.0
+    intratumoral_antigen_accessibility: 0.2.0
+    antibody_dependent_internalization: 0.2.0
+    antibody_epitope_realizability: 0.2.0
+    on_target_therapeutic_index: 0.2.0
+    target_opportunity_decision: 0.2.0
+  model_bindings:
+    clinical_context_endpoint:
+      model_id: clinical_context_endpoint_llm_v0_2
+      model_version: 0.2.0
+    endpoint_driving_population:
+      model_id: endpoint_driving_population_llm_v0_2
+      model_version: 0.2.0
+    target_population_mapping:
+      model_id: target_population_mapping_llm_v0_2
+      model_version: 0.2.0
+    intervention_causality:
+      model_id: intervention_causality_llm_v0_2
+      model_version: 0.2.0
+    baseline_coverage_and_escape:
+      model_id: baseline_coverage_and_escape_llm_v0_2
+      model_version: 0.2.0
+    treatment_induced_state_response:
+      model_id: treatment_induced_state_response_llm_v0_2
+      model_version: 0.2.0
+    net_endpoint_benefit:
+      model_id: net_endpoint_benefit_llm_v0_2
+      model_version: 0.2.0
+    tumor_cell_surface_availability:
+      model_id: tumor_cell_surface_availability_reference_consensus_v2
+      model_version: 0.4.1
+    intratumoral_antigen_accessibility:
+      model_id: intratumoral_antigen_accessibility_llm_v0_2
+      model_version: 0.2.0
+    antibody_dependent_internalization:
+      model_id: antibody_dependent_internalization_trafficking_reference_v1
+      model_version: 0.1.0
+    antibody_epitope_realizability:
+      model_id: antibody_epitope_realizability_annotation_precedent_v1
+      model_version: 0.1.0
+    on_target_therapeutic_index:
+      model_id: on_target_therapeutic_index_llm_v0_2
+      model_version: 0.2.0
+    target_opportunity_decision:
+      model_id: target_opportunity_decision_integrator_v1
+      model_version: 0.1.0
+  gate_overrides: {}
+  context:
+    architecture_version: 0.2.0
+    gate_groups:
+      target_opportunity:
+        name: Target Opportunity Chain
+        object_under_evaluation: TargetOpportunityHypothesis
+        question: 杀谁，为什么杀，清除后是否真正且持久地改善指定 endpoint？
+        decision_gate: target_opportunity_decision
+    profile_revision:
+      version: 0.2.5
+      reason: Select the T12 deterministic target-opportunity-decision integrator challenger while preserving
+        frozen Gate contracts and all 0.2.4 Model bindings.
+      predecessor_profile_version: 0.2.4

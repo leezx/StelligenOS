@@ -1,0 +1,168 @@
+gate:
+  gate_id: design_around_opportunity
+  gate_family: adc.v0_2.commercial_executability.design_around_opportunity
+  gate_version: 0.2.0
+  sequence: 47
+  name: Design-Around Opportunity
+  purpose: Generate legally distinct alternatives and quantify their biology, delivery, safety, manufacturing, regulatory,
+    commercial, and residual-FTO consequences.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - commercial_execution_context
+    - upstream_gate_results
+    outputs:
+    - blocked_element
+    - design_around_options
+    - required_product_changes
+    - biology_impact
+    - delivery_impact
+    - safety_impact
+    - manufacturing_impact
+    - regulatory_impact
+    - commercial_impact
+    - residual_FTO_risk
+    - recommended_option
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium_high
+    default_model_ids:
+    - design_around_opportunity_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: commercial_executability
+    group_code: C
+    priority: P2
+    dependencies:
+    - blocking_claim_severity
+    output_defaults:
+      blocked_element: null
+      design_around_options: []
+      required_product_changes: []
+      biology_impact: null
+      delivery_impact: null
+      safety_impact: null
+      manufacturing_impact: null
+      regulatory_impact: null
+      commercial_impact: null
+      residual_FTO_risk: null
+      recommended_option: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      commercial_execution_context:
+        type: CommercialExecutionContext
+        description: 'Version-bound v0.2 input object: commercial_execution_context.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      blocked_element:
+        type: string_or_structured_object
+        description: 'Frozen design_around_opportunity@0.2.0 output field: blocked_element.'
+        required: true
+        nullable: true
+      design_around_options:
+        type: list[object]
+        description: 'Frozen design_around_opportunity@0.2.0 output field: design_around_options.'
+        required: true
+        nullable: true
+      required_product_changes:
+        type: list[object]
+        description: 'Frozen design_around_opportunity@0.2.0 output field: required_product_changes.'
+        required: true
+        nullable: true
+      biology_impact:
+        type: string_or_structured_object
+        description: 'Frozen design_around_opportunity@0.2.0 output field: biology_impact.'
+        required: true
+        nullable: true
+      delivery_impact:
+        type: string_or_structured_object
+        description: 'Frozen design_around_opportunity@0.2.0 output field: delivery_impact.'
+        required: true
+        nullable: true
+      safety_impact:
+        type: string_or_structured_object
+        description: 'Frozen design_around_opportunity@0.2.0 output field: safety_impact.'
+        required: true
+        nullable: true
+      manufacturing_impact:
+        type: string_or_structured_object
+        description: 'Frozen design_around_opportunity@0.2.0 output field: manufacturing_impact.'
+        required: true
+        nullable: true
+      regulatory_impact:
+        type: string_or_structured_object
+        description: 'Frozen design_around_opportunity@0.2.0 output field: regulatory_impact.'
+        required: true
+        nullable: true
+      commercial_impact:
+        type: string_or_structured_object
+        description: 'Frozen design_around_opportunity@0.2.0 output field: commercial_impact.'
+        required: true
+        nullable: true
+      residual_FTO_risk:
+        type: number[0,1]
+        description: 'Frozen design_around_opportunity@0.2.0 output field: residual_FTO_risk.'
+        required: true
+        nullable: true
+      recommended_option:
+        type: string_or_structured_object
+        description: 'Frozen design_around_opportunity@0.2.0 output field: recommended_option.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

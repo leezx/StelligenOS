@@ -1,0 +1,70 @@
+contract:
+  contract_id: historical_adc_rule_reference
+  contract_version: "1.0.0"
+  description: >-
+    Contract for preserving historical ADC case-derived IF/THEN rules as
+    auditable, Gate-local reference Models. Version 1 records human-reviewed
+    applicability but does not automatically infer applicability or change a
+    Gate score, status, threshold, or Profile selection.
+  rule_record:
+    required_fields:
+      - rule_id
+      - gate_ids
+      - gate_name
+      - rule_type
+      - direction
+      - confidence
+      - if
+      - then
+      - supporting_adc_cases
+      - counterexample_adc_cases
+      - source_ids
+      - limitations
+    allowed_confidence_labels: [high, medium, low]
+    natural_language_predicates_are_executable: false
+  applicability_bundle:
+    schema_id: historical_adc_rule_applicability
+    schema_version: "1.0.0"
+    required_fields:
+      - bundle_version
+      - candidate_id
+      - gate_id
+      - review
+      - assessments
+    review_required_fields:
+      - reviewer_id
+      - reviewed_at
+      - status
+    allowed_review_status: [draft, approved, rejected]
+    assessment_required_fields:
+      - rule_id
+      - applicability
+      - rationale
+      - evidence_ids
+    allowed_applicability: [applies, does_not_apply, uncertain]
+  v1_decision_policy:
+    automatic_condition_matching: forbidden
+    automatic_gate_score_change: forbidden
+    automatic_gate_status_change: forbidden
+    automatic_gate_threshold_change: forbidden
+    automatic_profile_binding: forbidden
+    neutral_score: 0.5
+    gate_confidence: 0.0
+    status: unknown
+    permitted_output: details_only_historical_rule_audit
+  evidence_boundary:
+    - Rules are directional precedents and guardrails, not fitted statistical models.
+    - Historical success or failure does not establish causal attribution to one rule condition.
+    - Source records flagged as requiring correction remain unverified until independently curated.
+    - Cross-Gate relevance does not substitute for a Gate-specific induced rule.
+    - Rule confidence labels are source-author judgments, not calibrated probabilities.
+  promotion_requirements:
+    executable_rule_model:
+      - Convert each natural-language condition into a versioned structured predicate.
+      - Define conflict, missing-data, precedence, and aggregation behavior.
+      - Validate identifier mapping and positive, negative, and discordant cases.
+    score_affecting_rule_model:
+      - Freeze outcome labels and time windows.
+      - Correct and version the ADC case cohort.
+      - Perform leakage-controlled validation and calibration.
+      - Pass independent review before Profile binding.

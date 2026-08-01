@@ -1,0 +1,151 @@
+reference:
+  reference_id: ADC_intervention_causality_evidence
+  reference_version: 0.1.0
+  evidence_cutoff: "2026-07-29"
+  scope: >-
+    Deterministic synthesis of version-bound evidence that selective depletion
+    of the exact target-positive, endpoint-driving population changes the exact
+    endpoint locked upstream.
+  score_semantics: >-
+    causal_intervention_confidence is an uncalibrated evidence-strength index,
+    not a causal probability, treatment-response probability, or clinical
+    effect estimate.
+  confidence_cap: 0.55
+
+evidence_contract:
+  evidence_type: intervention_causality_evidence_v1
+  policy_ref: ADC_intervention_causality_evidence@0.1.0
+  required_top_level_fields:
+  - policy_ref
+  - evidence_as_of
+  - indication
+  - locked_endpoint
+  - population_id
+  - target
+  - intervention_design
+  - measurements
+  target_required_fields:
+  - gene
+  - protein
+
+components:
+  depletion_endpoint_effect:
+    weight: 0.25
+    mandatory: true
+    interpretation: Controlled endpoint-benefit strength after selective depletion of the target-positive population.
+  expected_initial_response:
+    weight: 0.10
+    mandatory: false
+    interpretation: Evidence-supported early response after depletion, bound to a declared time window.
+  expected_durable_response:
+    weight: 0.15
+    mandatory: false
+    interpretation: Evidence-supported persistence of endpoint benefit through a declared follow-up interval.
+    requires_longitudinal: true
+  necessity_of_target_population:
+    weight: 0.15
+    mandatory: true
+    interpretation: Strength of evidence that the population is required for the endpoint-driving process.
+  sufficiency_of_target_population_depletion:
+    weight: 0.15
+    mandatory: true
+    interpretation: Strength of evidence that selective depletion alone is sufficient to change the endpoint under controlled conditions.
+  nonredundancy:
+    weight: 0.10
+    mandatory: false
+    interpretation: One minus explicitly measured biological redundancy risk.
+  nonreplenishment:
+    weight: 0.10
+    mandatory: false
+    interpretation: One minus explicitly measured population-replenishment risk.
+
+scoring:
+  minimum_known_weight: 0.55
+  fraction_count_conflict_tolerance: 0.02
+  mandatory_missing_behavior: causal_intervention_confidence_null
+  design_requirements:
+  - selective_target_positive_population_depletion
+  - exact_endpoint_match
+  - exact_population_match
+  - concurrent_or_prespecified_comparator
+  - on_target_control
+  - target_negative_or_nonpopulation_control
+  evidence_tier_caps:
+    uncontrolled_or_nonselective: 0.30
+    controlled_selective_depletion: 0.60
+    rescue_or_orthogonal_validation: 0.75
+    rescue_and_orthogonal_and_independent_with_durability: 0.85
+  status_behavior: formal_candidate_outputs_remain_uncertain_until_external_validation
+
+measurement_contract:
+  required_fields:
+  - value_or_counts
+  - assay_or_readout
+  - comparator
+  - experimental_system
+  - sampling_time
+  - source_ids
+  allowed_systems:
+  - human_clinical
+  - patient_derived_ex_vivo
+  - in_vivo_model
+  - organoid
+  - in_vitro
+  rules:
+  - Each value is local to its exact population, endpoint, perturbation, model, comparator, and time window.
+  - Gene knockout, target blockade, payload killing, and direct cell ablation remain distinct interventions.
+  - Generic proliferation loss is not automatically the locked clinical endpoint.
+  - Rescue or reconstitution must reverse the depletion-associated phenotype to strengthen on-target attribution.
+  - Initial response is not durable response.
+  - Redundancy and replenishment are distinct failure mechanisms.
+  - T2 target mapping is necessary context but is never counted as T3 causal evidence.
+
+method_sources:
+- source_id: HILL_1965
+  citation: Hill AB. The Environment and Disease—Association or Causation? Proc R Soc Med. 1965;58:295-300.
+  identifier: PMID:14283879
+  url: https://pubmed.ncbi.nlm.nih.gov/14283879/
+  use: Temporality, experiment, consistency, and alternative explanations inform causal assessment but are not a mechanical proof.
+- source_id: CANCER_DEPENDENCY_MAP_2017
+  citation: Tsherniak A et al. Defining a Cancer Dependency Map. Cell. 2017;170:564-576.e16.
+  identifier: PMCID:PMC5667678
+  url: https://pmc.ncbi.nlm.nih.gov/articles/PMC5667678/
+  use: Loss-of-function screens identify context-dependent fitness effects but require correction for off-target effects and model coverage.
+- source_id: CERES_2017
+  citation: Meyers RM et al. Computational correction of copy-number effect improves specificity of CRISPR-Cas9 essentiality screens in cancer cells. Nat Genet. 2017;49:1779-1784.
+  identifier: PMCID:PMC5709193
+  url: https://pmc.ncbi.nlm.nih.gov/articles/PMC5709193/
+  use: Copy-number-associated cutting can create false-positive CRISPR dependency signals.
+- source_id: PROJECT_SCORE_2019
+  citation: Behan FM et al. Prioritization of cancer therapeutic targets using CRISPR-Cas9 screens. Nature. 2019;568:511-516.
+  identifier: DOI:10.1038/s41586-019-1103-9
+  url: https://www.nature.com/articles/s41586-019-1103-9
+  use: Cancer dependency evidence requires biomarker context, tractability, downstream validation, rescue, and in-vivo confirmation.
+- source_id: CRISPR_DATASET_AGREEMENT_2019
+  citation: Dempster JM et al. Agreement between two large pan-cancer CRISPR-Cas9 gene dependency data sets. Nat Commun. 2019;10:5817.
+  identifier: DOI:10.1038/s41467-019-13805-y
+  url: https://www.nature.com/articles/s41467-019-13805-y
+  use: Cross-project agreement is useful but protocol, reagent, and model differences still matter.
+- source_id: LGR5_DEPLETION_2017
+  citation: de Sousa e Melo F et al. A distinct role for Lgr5+ stem cells in primary and metastatic colon cancer. Nature. 2017;543:676-680.
+  identifier: DOI:10.1038/nature21713
+  url: https://www.nature.com/articles/nature21713
+  use: Selective depletion can restrict growth without regression, show endpoint-specific effects, and reveal rapid replenishment after treatment cessation.
+- source_id: LGR5_PLASTICITY_2017
+  citation: Shimokawa M et al. Visualization and targeting of LGR5+ human colon cancer stem cells. Nature. 2017;545:187-192.
+  identifier: DOI:10.1038/nature22081
+  url: https://www.nature.com/articles/nature22081
+  use: Initial regression after selective ablation can be followed by regrowth through state plasticity and population re-emergence.
+- source_id: RNAI_RESCUE_GUIDANCE
+  citation: Assay Guidance Manual. Cell-Based RNAi Assay Development for HTS.
+  url: https://www.ncbi.nlm.nih.gov/books/NBK91998/
+  use: Rescue with perturbation-resistant constructs is a strong control for on-target phenotype attribution.
+
+boundaries:
+- T1 owns the target-independent endpoint-driving population definition.
+- T2 owns whether the candidate target maps that population.
+- T3 owns the causal expectation from selective depletion of the mapped population.
+- T4 owns integrated residual-disease and escape consequences beyond the T3 causal experiment.
+- T7 and downstream product Gates own ADC surface availability, delivery, payload, exposure, safety, and construct realization.
+- A gene dependency, cell-fitness phenotype, or population association does not automatically equal a clinical endpoint effect.
+- Missing evidence remains null and a neutral common score is only a missing-data placeholder.

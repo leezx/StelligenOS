@@ -1,0 +1,98 @@
+model:
+  model_id: treatment_state_response_evidence_v1
+  model_family: adc.v0_2.target_opportunity.treatment_induced_state_response.evidence_synthesis
+  model_version: 0.1.0
+  gate_id: treatment_induced_state_response
+  implementation: treatment_state_response_evidence_synthesis
+  status: active_challenger
+  runtime:
+    model_name: Treatment-Induced State Response Evidence v1
+    model_type: rule_based
+    provider: ADC_treatment_state_response_evidence
+    input_schema: GateInputEnvelope@2.0.0
+    output_schema: GateModelOutput@2.0.0
+    cost_tier: medium
+    limitations:
+    - Requires usable T4 and supplied paired or lineage-resolved longitudinal evidence.
+    - Cross-sectional differences do not establish treatment-induced transitions.
+    - Payload transition requires a declared payload class; reversibility requires withdrawal, rechallenge, or rescue.
+    - T4 baseline risk contributes no T5 score and T6 owns net benefit.
+    - Indices are uncalibrated and not probabilities.
+    calibration_status: uncalibrated_longitudinal_response_index
+    training_data_version: ADC_treatment_state_response_evidence@0.1.0
+    prompt_version: null
+    enabled: true
+    weight: 1.0
+    default_confidence_cap: 0.55
+  contract_refs:
+    gate: components/gates/adc/v0.2/target_opportunity/05_treatment_induced_state_response/v0.2.0/gate.yaml
+    input: components/contracts/gate_input.v2.yaml
+    output: components/contracts/model_output.v2.yaml
+  question_template: >-
+    Under a declared treatment pressure, what paired or lineage-resolved
+    malignant-state, target-expression, payload-resistance, ecosystem, and
+    residual-state changes occur from baseline through treatment, residual
+    disease, withdrawal, and rebound?
+  evidence_policy:
+    may_use:
+    - Usable baseline_coverage_and_escape GateResult as dependency context.
+    - Exact Candidate target and indication identity.
+    - Version-bound paired or lineage-resolved longitudinal transition evidence.
+    must_not_invent:
+    - state transitions, treatment pressure, or time points
+    - target downregulation, plasticity, payload resistance, or microenvironment rebound
+    - more aggressive residual state, reversibility, clinical response, or net endpoint benefit
+  fallback_policy:
+    mode: neutral_common_score_with_nullable_domain_outputs
+    confidence_cap: 0.55
+    complete_when_evidence_missing: true
+    nullable_domain_fields_when_unknown: true
+  version_roadmap:
+  - stage: v0.1
+    target: Paired longitudinal transition ontology and transparent risk synthesis
+  - stage: v0.2
+    target: Versioned single-cell, spatial, lineage, withdrawal, rechallenge, and rescue adapters
+  - stage: v0.3
+    target: Timepoint comparability, survivor-bias, clone-tracking, and model-transport analysis
+  - stage: v1
+    target: Independent blinded longitudinal biological and translational validation
+  - stage: v2
+    target: Endpoint-specific calibration, drift monitoring, and governed stable promotion
+  model_card:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    summary: Deterministic T5 candidate for paired longitudinal malignant-state and ecosystem transitions under declared treatment pressure.
+    intended_use:
+    - Separate baseline reservoirs from induced transitions.
+    - Quantify target, plasticity, payload, ecosystem, and residual-state risks.
+    - Identify reversibility and rebound evidence gaps.
+    decision_role: Exploratory evidence synthesis; not validated response prediction.
+    method_summary: Usable-T4 check, identity binding, paired/lineage transition validation, fraction conflict audit, payload/reversibility contracts, and fixed risk synthesis.
+    input_requirements:
+    - Usable baseline_coverage_and_escape result.
+    - Exact target and indication.
+    - Paired baseline/post-treatment evidence with explicit treatment pressure.
+    output_interpretation: Response confidence is capped evidence coverage; common score is one minus uncalibrated post-treatment risk.
+    evidence_boundary:
+    - T4 owns baseline reservoirs.
+    - T5 owns induced response.
+    - T6 owns net benefit.
+    known_failure_modes:
+    - Sparse longitudinal sampling.
+    - Survivor bias and noncomparable time points.
+    - Lineage misassignment and model-system transport failure.
+    - Unmeasured ecosystem compartments.
+    prohibited_uses:
+    - Inferring transitions from cross-sectional cohorts.
+    - Converting baseline risk into induced response.
+    - Selecting payloads or claiming efficacy, safety, or clinical benefit.
+    - Treating indices as probabilities.
+  lifecycle:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    artifact_stage: formal_candidate
+    release_kind: first_formal
+    released_at: '2026-07-30T05:10:00Z'
+    record_root: components/model_governance/treatment_state_response_evidence_v1/v0.1.0
+    change_summary:
+    - Added deterministic paired longitudinal transition synthesis.
+    - Enforced explicit T4/T5/T6 boundaries and payload/reversibility contracts.
+    - Added tests, source verification, governance records, and integration trace.

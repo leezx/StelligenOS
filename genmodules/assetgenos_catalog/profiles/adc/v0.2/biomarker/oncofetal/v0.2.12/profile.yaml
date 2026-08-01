@@ -1,0 +1,24 @@
+profile:
+  profile_id: adc.biomarker.oncofetal
+  profile_version: 0.2.12
+  profile_type: biomarker
+  modality: ADC
+  extends:
+  - adc.asset_factory_v0.2@0.2.12
+  description: Oncofetal context overlay for the current three-Gate-Group graph.
+  gate_order: []
+  gate_versions: {}
+  model_bindings: {}
+  gate_overrides: {}
+  context:
+    target_opportunity:
+      biomarker_hypothesis: oncofetal
+      evidence_requirements:
+      - fetal or regenerative program evidence
+      - tumor reactivation evidence
+      - adult normal tissue restriction evidence
+      - surface protein evidence
+    profile_revision:
+      version: 0.2.12
+      reason: Follow asset_factory_v0.2@0.2.12 without reverting upgraded T0, T2-T6, and T11 bindings.
+      predecessor_profile_version: 0.2.11

@@ -1,0 +1,149 @@
+gate:
+  gate_id: binding_geometry_kinetics
+  gate_family: adc.v0_2.product_realization.binding_geometry_kinetics
+  gate_version: 0.2.0
+  sequence: 23
+  name: Antibody Binding Geometry and Kinetics
+  purpose: Jointly evaluate affinity, kinetics, avidity, geometry, pH behavior, density dependence, penetration-retention
+    balance, and binding-site barrier.
+  runtime:
+    required: true
+    hard_gate: false
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - upstream_gate_results
+    outputs:
+    - binding_affinity
+    - association_rate
+    - dissociation_rate
+    - avidity_dependence
+    - binding_geometry_score
+    - penetration_retention_balance
+    - endosomal_dissociation_profile
+    - antigen_density_dependence
+    - binding_site_barrier_risk
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium_high
+    default_model_ids:
+    - binding_geometry_kinetics_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: product_realization
+    group_code: P
+    priority: P2
+    dependencies:
+    - epitope_landscape
+    - epitope_function
+    output_defaults:
+      binding_affinity: null
+      association_rate: null
+      dissociation_rate: null
+      avidity_dependence: null
+      binding_geometry_score: null
+      penetration_retention_balance: null
+      endosomal_dissociation_profile: null
+      antigen_density_dependence: null
+      binding_site_barrier_risk: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      binding_affinity:
+        type: string_or_structured_object
+        description: 'Frozen binding_geometry_kinetics@0.2.0 output field: binding_affinity.'
+        required: true
+        nullable: true
+      association_rate:
+        type: string_or_structured_object
+        description: 'Frozen binding_geometry_kinetics@0.2.0 output field: association_rate.'
+        required: true
+        nullable: true
+      dissociation_rate:
+        type: string_or_structured_object
+        description: 'Frozen binding_geometry_kinetics@0.2.0 output field: dissociation_rate.'
+        required: true
+        nullable: true
+      avidity_dependence:
+        type: string_or_structured_object
+        description: 'Frozen binding_geometry_kinetics@0.2.0 output field: avidity_dependence.'
+        required: true
+        nullable: true
+      binding_geometry_score:
+        type: number[0,1]
+        description: 'Frozen binding_geometry_kinetics@0.2.0 output field: binding_geometry_score.'
+        required: true
+        nullable: true
+      penetration_retention_balance:
+        type: number[0,1]
+        description: 'Frozen binding_geometry_kinetics@0.2.0 output field: penetration_retention_balance.'
+        required: true
+        nullable: true
+      endosomal_dissociation_profile:
+        type: string_or_structured_object
+        description: 'Frozen binding_geometry_kinetics@0.2.0 output field: endosomal_dissociation_profile.'
+        required: true
+        nullable: true
+      antigen_density_dependence:
+        type: string_or_structured_object
+        description: 'Frozen binding_geometry_kinetics@0.2.0 output field: antigen_density_dependence.'
+        required: true
+        nullable: true
+      binding_site_barrier_risk:
+        type: number[0,1]
+        description: 'Frozen binding_geometry_kinetics@0.2.0 output field: binding_site_barrier_risk.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

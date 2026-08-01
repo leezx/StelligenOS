@@ -1,0 +1,134 @@
+model:
+  model_id: antibody_dependent_internalization_trafficking_reference_v1
+  model_family: adc.v0_2.target_opportunity.antibody_dependent_internalization.trafficking_reference
+  model_version: 0.1.0
+  gate_id: antibody_dependent_internalization
+  implementation: internalization_reference_lookup
+  status: active_challenger
+  runtime:
+    model_name: Antibody-Dependent Internalization Potential Public Trafficking Reference v1
+    model_type: database_lookup
+    provider: ADC_internalization_reference
+    input_schema: GateInputEnvelope@2.0.0
+    output_schema: GateModelOutput@2.0.0
+    cost_tier: low
+    limitations:
+    - No public source measures antibody-induced internalization for an arbitrary target; internalization rate, internalized
+      fraction, recycling fraction, lysosomal delivery fraction, and productive payload release always remain null.
+    - Gene Ontology entry, routing, and recycling annotations share one source and are counted as a single evidence family.
+    - Gene Ontology internalization coverage is sparse and biased toward classically studied receptors; ERBB2 carries no receptor-mediated
+      endocytosis annotation despite extensive experimental literature.
+    - Cytoplasmic sorting motifs are regular-expression matches on UniProt-annotated cytoplasmic domains; motif presence does
+      not prove motif use in the intact receptor.
+    - UniProt shedding annotation is incomplete; ERBB2 has no shedding comment despite a well-documented soluble ectodomain.
+    - HPA plasma concentration is a systemic proxy, not a tumor-interstitial concentration or a measured antibody-sink competition
+      constant.
+    - ADCdb clinical precedent is a leakage-flagged draft target label that must not be reused to calibrate this Gate.
+    - Missing database annotation is unknown, never negative evidence.
+    calibration_status: uncalibrated_reference_consensus
+    training_data_version: ADC_internalization_reference@0.1.0
+    prompt_version: null
+    enabled: true
+    weight: 1.0
+    default_confidence_cap: 0.4
+  contract_refs:
+    gate: components/gates/adc/v0.2/target_opportunity/09_antibody_dependent_internalization/v0.2.0/gate.yaml
+    input: components/contracts/gate_input.v2.yaml
+    output: components/contracts/model_output.v2.yaml
+  question_template: Does version-bound public evidence support target-level potential for receptor internalization and lysosomal
+    routing, carry cytoplasmic sorting determinants, and indicate a soluble antigen sink? Keep internalization rate, internalized
+    fraction, recycling fraction, lysosomal delivery fraction, and productive payload release unknown; they require a concrete
+    antibody and a direct assay.
+  evidence_policy:
+    may_use:
+    - ADC_internalization_reference consensus rows
+    - Gene Ontology endocytosis, endosome, lysosome, and recycling annotations
+    - Reactome endocytosis pathway membership
+    - UniProt cytoplasmic topology and sorting-motif sequence analysis
+    - UniProt shedding/GPI-anchor annotation and HPA secretome and plasma-abundance context
+    - leakage-flagged ADCdb clinical precedent
+    - experiment-validated T9 evidence supplied to the candidate
+    must_not_invent:
+    - antibody-induced internalization rate
+    - internalized fraction
+    - recycling fraction
+    - lysosomal delivery fraction
+    - productive payload release probability
+    - measured shedding rate or antibody-sink competition constant
+    - epitope-resolved internalization behaviour
+    - negative evidence from database absence
+    - internalization competence from ADC clinical precedent alone
+  fallback_policy:
+    mode: neutral_unknown_when_unindexed_or_unsupported
+    confidence_cap: 0.4
+    complete_when_evidence_missing: true
+    nullable_domain_fields_when_unknown: true
+  version_roadmap:
+  - stage: v0
+    target: LLM-only executable baseline
+  - stage: v1
+    target: Trafficking annotation, sorting-motif, soluble-sink, and clinical-precedent reference consensus
+  - stage: v2
+    target: Curated antibody-specific internalization and lysosomal-delivery measurement adapters
+  - stage: v3
+    target: Quantitative internalization-rate and payload-release calibration
+  - stage: v4
+    target: Independent assay and tumor-cohort validation
+  model_card:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    summary: Version-bound public-reference consensus for T9. It combines Gene Ontology trafficking annotation, Reactome endocytosis
+      pathways, UniProt cytoplasmic sorting motifs, shedding and plasma-abundance context, and leakage-flagged ADC clinical
+      precedent, without claiming any measured internalization quantity.
+    intended_use:
+    - Prioritize whether a target has public support for receptor internalization and lysosomal routing.
+    - Expose cytoplasmic sorting determinants that bear on lysosomal delivery versus recycling.
+    - Flag soluble antigen sink risk from documented plasma entry routes and plasma abundance.
+    - Identify the antibody-specific internalization evidence still required for T9.
+    decision_role: Reference-only T9 challenger for exploration and evidence gap identification; it cannot pass the hard Gate
+      by itself.
+    method_summary: Deterministic gene lookup against ADC_internalization_reference@0.1.0. Entry and routing annotations come
+      from one Gene Ontology family; Reactome pathways, UniProt sequence motifs, plasma measurement, and ADC precedent are
+      recorded as separate families. Reference-only confidence is capped at 0.40.
+    input_requirements:
+    - Canonical target gene.
+    - ADC_internalization_reference@0.1.0 consensus row.
+    - Version-bound T9 Gate input envelope and upstream GateResults.
+    output_interpretation: Positive output supports target-level internalization plausibility and records soluble-sink context
+      only. Null internalization rate, internalized fraction, recycling fraction, lysosomal delivery fraction, and productive
+      payload release remain unresolved experimental requirements that need a concrete antibody.
+    evidence_boundary:
+    - Trafficking annotation is not a measured internalization rate.
+    - A cytoplasmic sorting motif is a sequence match, not demonstrated adaptor engagement.
+    - Plasma concentration is systemic and is not tumor-interstitial soluble antigen.
+    - ADC clinical precedent is a target-level programme label, not an internalization measurement.
+    - Database absence is unknown, never negative evidence.
+    known_failure_modes:
+    - Gene Ontology internalization annotation is sparse; well-studied ADC targets including ERBB2, TACSTD2, NECTIN4, MSLN,
+      and CEACAM5 carry no receptor-mediated endocytosis term.
+    - UniProt records some internalization behaviour only as free-text subcellular-location notes that this Model does not
+      parse.
+    - UniProt shedding annotation misses documented soluble ectodomains such as ERBB2.
+    - Sequence motif matches are frequent by chance in long cytoplasmic tails and are not weighted by context.
+    - ADCdb antigen entries include non-target proteins such as albumin, which inflates apparent precedent.
+    - Targets lacking an annotated cytoplasmic domain cannot be motif-screened at all.
+    - Recycling and lysosomal routing may both be annotated with no public basis for partitioning them.
+    prohibited_uses:
+    - Claiming an antibody-induced internalization rate or internalized fraction.
+    - Claiming lysosomal delivery fraction or productive payload release probability.
+    - Claiming a measured shedding rate or antibody-sink competition constant.
+    - Passing or failing T9 from database presence or absence alone.
+    - Reusing ADC clinical precedent as an outcome label for calibrating this Gate.
+    - Treating the 0.40 confidence cap as empirical calibration.
+  lifecycle:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    artifact_stage: formal_candidate
+    release_kind: first_formal
+    released_at: '2026-07-29T18:45:00Z'
+    predecessor_model_ref: null
+    record_root: components/model_governance/antibody_dependent_internalization_trafficking_reference_v1/v0.1.0
+    change_summary:
+    - First formal database-backed T9 trafficking-reference Model.
+    - Integrated Gene Ontology trafficking, Reactome pathways, UniProt sorting motifs, shedding and plasma abundance, and
+      leakage-flagged ADC precedent.
+    - Retained a 0.40 cap and explicit nulls for every antibody-dependent trafficking quantity.
+    - No independent scientific validation or empirical calibration claim.

@@ -1,0 +1,105 @@
+profile:
+  profile_id: adc.product_realization_chain
+  profile_version: 0.2.2
+  profile_type: custom
+  modality: ADC
+  extends: []
+  description: 'ADC Product Realization Chain v0.2; evaluates ADCProductHypothesis and answers: 如何把有效 payload 以可制造、可测量且有治疗指数的具体
+    construct 递送给 endpoint-driving cells？'
+  gate_order:
+  - product_design_objective
+  - epitope_landscape
+  - epitope_function
+  - binding_geometry_kinetics
+  - antibody_format_fc_design
+  - antibody_sequence_developability
+  - productive_internalization_trafficking
+  - conjugation_platform_site
+  - dar_molecular_property_balance
+  - payload_cell_state_match
+  - linker_release_match
+  - bystander_tumor_coverage
+  - integrated_pk_stability_exposure
+  - construct_therapeutic_index
+  - biomarker_clinical_assay_codesign
+  - integrated_adc_product_decision
+  gate_versions:
+    product_design_objective: 0.2.0
+    epitope_landscape: 0.2.0
+    epitope_function: 0.2.0
+    binding_geometry_kinetics: 0.2.0
+    antibody_format_fc_design: 0.2.0
+    antibody_sequence_developability: 0.2.0
+    productive_internalization_trafficking: 0.2.0
+    conjugation_platform_site: 0.2.0
+    dar_molecular_property_balance: 0.2.0
+    payload_cell_state_match: 0.2.0
+    linker_release_match: 0.2.0
+    bystander_tumor_coverage: 0.2.0
+    integrated_pk_stability_exposure: 0.2.0
+    construct_therapeutic_index: 0.2.0
+    biomarker_clinical_assay_codesign: 0.2.0
+    integrated_adc_product_decision: 0.2.0
+  model_bindings:
+    product_design_objective:
+      model_id: product_design_objective_llm_v0_2
+      model_version: 0.2.0
+    epitope_landscape:
+      model_id: epitope_landscape_llm_v0_2
+      model_version: 0.2.0
+    epitope_function:
+      model_id: epitope_function_llm_v0_2
+      model_version: 0.2.0
+    binding_geometry_kinetics:
+      model_id: binding_geometry_kinetics_llm_v0_2
+      model_version: 0.2.0
+    antibody_format_fc_design:
+      model_id: antibody_format_fc_design_llm_v0_2
+      model_version: 0.2.0
+    antibody_sequence_developability:
+      model_id: antibody_sequence_developability_llm_v0_2
+      model_version: 0.2.0
+    productive_internalization_trafficking:
+      model_id: productive_internalization_trafficking_llm_v0_2
+      model_version: 0.2.0
+    conjugation_platform_site:
+      model_id: conjugation_platform_site_llm_v0_2
+      model_version: 0.2.0
+    dar_molecular_property_balance:
+      model_id: dar_molecular_property_balance_llm_v0_2
+      model_version: 0.2.0
+    payload_cell_state_match:
+      model_id: payload_cell_state_match_llm_v0_2
+      model_version: 0.2.0
+    linker_release_match:
+      model_id: linker_release_match_llm_v0_2
+      model_version: 0.2.0
+    bystander_tumor_coverage:
+      model_id: bystander_tumor_coverage_llm_v0_2
+      model_version: 0.2.0
+    integrated_pk_stability_exposure:
+      model_id: integrated_pk_stability_exposure_llm_v0_2
+      model_version: 0.2.0
+    construct_therapeutic_index:
+      model_id: construct_therapeutic_index_llm_v0_2
+      model_version: 0.2.0
+    biomarker_clinical_assay_codesign:
+      model_id: biomarker_clinical_assay_codesign_llm_v0_2
+      model_version: 0.2.0
+    integrated_adc_product_decision:
+      model_id: integrated_adc_product_decision_llm_v0_2
+      model_version: 0.2.0
+  gate_overrides: {}
+  context:
+    architecture_version: 0.2.0
+    gate_groups:
+      product_realization:
+        name: ADC Product Realization Chain
+        object_under_evaluation: ADCProductHypothesis
+        question: 如何把有效 payload 以可制造、可测量且有治疗指数的具体 construct 递送给 endpoint-driving cells？
+        decision_gate: integrated_adc_product_decision
+    profile_revision:
+      version: 0.2.2
+      reason: Select T7 evidence consensus v2 while retaining Gate contracts and the v0.2.0 Profile catalog for replay.
+      predecessor_profile_version: 0.2.1
+      rejected_predecessor_profile: true

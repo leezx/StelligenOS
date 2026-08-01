@@ -1,0 +1,149 @@
+gate:
+  gate_id: antibody_dependent_internalization
+  gate_family: adc.v0_2.target_opportunity.antibody_dependent_internalization
+  gate_version: 0.2.0
+  sequence: 9
+  name: Antibody-Dependent Internalization Potential
+  purpose: Evaluate target-level potential for an antibody-epitope complex to internalize and productively traffic; without
+    a concrete antibody the output remains potential only.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - upstream_gate_results
+    outputs:
+    - binding_induced_internalization
+    - internalization_rate
+    - internalized_fraction
+    - recycling_fraction
+    - lysosomal_delivery_fraction
+    - productive_payload_release_probability
+    - shedding_competition
+    - soluble_sink
+    - epitope_dependence
+    - antibody_dependence
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium
+    default_model_ids:
+    - antibody_dependent_internalization_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: target_opportunity
+    group_code: T
+    priority: P1
+    dependencies:
+    - tumor_cell_surface_availability
+    output_defaults:
+      binding_induced_internalization: null
+      internalization_rate: null
+      internalized_fraction: null
+      recycling_fraction: null
+      lysosomal_delivery_fraction: null
+      productive_payload_release_probability: null
+      shedding_competition: null
+      soluble_sink: null
+      epitope_dependence: null
+      antibody_dependence: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      binding_induced_internalization:
+        type: string_or_structured_object
+        description: 'Frozen antibody_dependent_internalization@0.2.0 output field: binding_induced_internalization.'
+        required: true
+        nullable: true
+      internalization_rate:
+        type: string_or_structured_object
+        description: 'Frozen antibody_dependent_internalization@0.2.0 output field: internalization_rate.'
+        required: true
+        nullable: true
+      internalized_fraction:
+        type: number[0,1]
+        description: 'Frozen antibody_dependent_internalization@0.2.0 output field: internalized_fraction.'
+        required: true
+        nullable: true
+      recycling_fraction:
+        type: number[0,1]
+        description: 'Frozen antibody_dependent_internalization@0.2.0 output field: recycling_fraction.'
+        required: true
+        nullable: true
+      lysosomal_delivery_fraction:
+        type: number[0,1]
+        description: 'Frozen antibody_dependent_internalization@0.2.0 output field: lysosomal_delivery_fraction.'
+        required: true
+        nullable: true
+      productive_payload_release_probability:
+        type: number[0,1]
+        description: 'Frozen antibody_dependent_internalization@0.2.0 output field: productive_payload_release_probability.'
+        required: true
+        nullable: true
+      shedding_competition:
+        type: string_or_structured_object
+        description: 'Frozen antibody_dependent_internalization@0.2.0 output field: shedding_competition.'
+        required: true
+        nullable: true
+      soluble_sink:
+        type: string_or_structured_object
+        description: 'Frozen antibody_dependent_internalization@0.2.0 output field: soluble_sink.'
+        required: true
+        nullable: true
+      epitope_dependence:
+        type: string_or_structured_object
+        description: 'Frozen antibody_dependent_internalization@0.2.0 output field: epitope_dependence.'
+        required: true
+        nullable: true
+      antibody_dependence:
+        type: string_or_structured_object
+        description: 'Frozen antibody_dependent_internalization@0.2.0 output field: antibody_dependence.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

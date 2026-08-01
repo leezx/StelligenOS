@@ -1,0 +1,109 @@
+model:
+  model_id: product_claim_decomposition_llm_v0_2
+  model_family: adc.v0_2.commercial_executability.product_claim_decomposition.llm_baseline
+  model_version: 0.2.0
+  gate_id: product_claim_decomposition
+  implementation: llm_gate
+  status: active_baseline
+  runtime:
+    model_name: Product Claim Decomposition LLM v0.2 Baseline
+    model_type: llm
+    provider: mock_or_openai_compatible
+    input_schema: GateInputEnvelope@2.0.0
+    output_schema: GateModelOutput@2.0.0
+    cost_tier: low
+    limitations:
+    - Complete executable baseline only; not a validated scientific, legal, regulatory, or commercial model.
+    - Missing evidence produces nullable domain outputs and a confidence-capped uncertain result.
+    calibration_status: uncalibrated
+    training_data_version: none
+    prompt_version: 0.2.0
+    enabled: true
+    weight: 1.0
+    default_confidence_cap: 0.15
+  contract_refs:
+    gate: components/gates/adc/v0.2/commercial_executability/43_product_claim_decomposition/v0.2.0/gate.yaml
+    input: components/contracts/gate_input.v2.yaml
+    output: components/contracts/model_output.v2.yaml
+  question_template: Evaluate Product Claim Decomposition for the exact version-bound v0.2 input objects. Decompose the exact
+    intended product, use, jurisdiction, and commercial acts into essential, replaceable, performance-critical, and claim-sensitive
+    elements. Return every frozen domain field. When evidence is absent, use null or an empty collection, state assumptions,
+    list missing information, and remain uncertain.
+  evidence_policy:
+    may_use:
+    - version-bound candidate and v0.2 context objects
+    - supplied Evidence
+    - upstream GateResults
+    - Profile context
+    must_not_invent:
+    - measured numeric values not supplied as Evidence
+    - study results, patient counts, or assay results
+    - experimental validation
+    - formal FTO clearance or legal opinion
+    - patent claim scope or legal status without dated source evidence
+    - regulatory designation
+    - transaction value
+  fallback_policy:
+    mode: deterministic_llm_guess
+    confidence_cap: 0.15
+    complete_when_evidence_missing: true
+    nullable_domain_fields_when_unknown: true
+  version_roadmap:
+  - stage: v0
+    target: LLM-only executable baseline
+  - stage: v1
+    target: Evidence-grounded structured LLM
+  - stage: v2
+    target: Domain database, rules, statistics, or ML
+  - stage: v3
+    target: Gold-standard and experiment/outcome calibration
+  - stage: v4
+    target: Independent validation and governed production
+  model_card:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    summary: Schema-valid, confidence-capped LLM baseline for Product Claim Decomposition (product_claim_decomposition). It
+      completes the frozen Gate output envelope from supplied evidence and context while keeping missing fields nullable and
+      uncertain.
+    intended_use:
+    - Execute the complete v0.2 graph in exploration mode.
+    - Produce a Gate-local hypothesis and explicit evidence gaps.
+    - Provide a replaceable baseline for future domain Models.
+    decision_role: Gate-local exploration support; not an independently validated scientific, legal, regulatory, or commercial
+      decision.
+    method_summary: Structured LLM evaluation with schema validation, a deterministic local mock fallback, explicit evidence
+      IDs, nullable missing outputs, and a fixed confidence cap.
+    input_requirements:
+    - Version-bound Candidate identity.
+    - Version-bound target_opportunity context object.
+    - Version-bound adc_product_candidate context object.
+    - Version-bound commercial_execution_context context object.
+    - Version-bound upstream_gate_results context object.
+    - Supplied Evidence and upstream GateResults.
+    - Version-bound Gate/Profile/run context.
+    output_interpretation: Outputs are hypotheses constrained to the Gate contract. A confidence-capped uncertain output is
+      not a measured fact or a pass/fail validation result.
+    evidence_boundary:
+    - May use only supplied, version-bound evidence and context.
+    - May not invent measured values, studies, counts, or assays.
+    - Missing evidence remains null/unknown.
+    known_failure_modes:
+    - Plausible but unsupported inference from sparse context.
+    - Sensitivity to prompt/provider drift.
+    - Failure to resolve conflicting evidence without expert review.
+    - No prospective calibration for the Gate outcome.
+    prohibited_uses:
+    - Prospective scientific or clinical decision without validation.
+    - Legal, regulatory, or commercial clearance claim.
+    - Replacement for Gate-specific experiments or expert review.
+    - Treating model confidence as empirical probability.
+  lifecycle:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    artifact_stage: formal_candidate
+    release_kind: first_formal
+    released_at: '2026-07-28T00:00:00Z'
+    predecessor_model_ref: null
+    record_root: components/model_governance/product_claim_decomposition_llm_v0_2/v0.2.0
+    change_summary:
+    - First formally runnable v0.2 LLM baseline for this Gate.
+    - Introduced fixed I/O contracts, missing-data semantics, and confidence caps.
+    - No independent validation or calibration claim.

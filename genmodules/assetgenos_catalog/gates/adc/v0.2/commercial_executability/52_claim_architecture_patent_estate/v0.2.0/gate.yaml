@@ -1,0 +1,175 @@
+gate:
+  gate_id: claim_architecture_patent_estate
+  gate_family: adc.v0_2.commercial_executability.claim_architecture_patent_estate
+  gate_version: 0.2.0
+  sequence: 52
+  name: Claim Architecture and Patent Estate Design
+  purpose: Design layered composition, sequence, epitope, functional, use, biomarker, combination, process, fallback, continuation,
+    and trade-secret protection.
+  runtime:
+    required: true
+    hard_gate: false
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - commercial_execution_context
+    - upstream_gate_results
+    outputs:
+    - composition_claims
+    - sequence_claims
+    - epitope_claims
+    - functional_claims
+    - method_of_use_claims
+    - biomarker_claims
+    - combination_claims
+    - process_claims
+    - claim_breadth
+    - fallback_positions
+    - continuation_strategy
+    - trade_secret_candidates
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: high
+    default_model_ids:
+    - claim_architecture_patent_estate_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: commercial_executability
+    group_code: C
+    priority: P3
+    dependencies:
+    - patentability_enablement
+    output_defaults:
+      composition_claims: []
+      sequence_claims: []
+      epitope_claims: []
+      functional_claims: []
+      method_of_use_claims: []
+      biomarker_claims: []
+      combination_claims: []
+      process_claims: []
+      claim_breadth: null
+      fallback_positions: []
+      continuation_strategy: null
+      trade_secret_candidates: []
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      commercial_execution_context:
+        type: CommercialExecutionContext
+        description: 'Version-bound v0.2 input object: commercial_execution_context.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      composition_claims:
+        type: list[object]
+        description: 'Frozen claim_architecture_patent_estate@0.2.0 output field: composition_claims.'
+        required: true
+        nullable: true
+      sequence_claims:
+        type: list[object]
+        description: 'Frozen claim_architecture_patent_estate@0.2.0 output field: sequence_claims.'
+        required: true
+        nullable: true
+      epitope_claims:
+        type: list[object]
+        description: 'Frozen claim_architecture_patent_estate@0.2.0 output field: epitope_claims.'
+        required: true
+        nullable: true
+      functional_claims:
+        type: list[object]
+        description: 'Frozen claim_architecture_patent_estate@0.2.0 output field: functional_claims.'
+        required: true
+        nullable: true
+      method_of_use_claims:
+        type: list[object]
+        description: 'Frozen claim_architecture_patent_estate@0.2.0 output field: method_of_use_claims.'
+        required: true
+        nullable: true
+      biomarker_claims:
+        type: list[object]
+        description: 'Frozen claim_architecture_patent_estate@0.2.0 output field: biomarker_claims.'
+        required: true
+        nullable: true
+      combination_claims:
+        type: list[object]
+        description: 'Frozen claim_architecture_patent_estate@0.2.0 output field: combination_claims.'
+        required: true
+        nullable: true
+      process_claims:
+        type: list[object]
+        description: 'Frozen claim_architecture_patent_estate@0.2.0 output field: process_claims.'
+        required: true
+        nullable: true
+      claim_breadth:
+        type: string_or_structured_object
+        description: 'Frozen claim_architecture_patent_estate@0.2.0 output field: claim_breadth.'
+        required: true
+        nullable: true
+      fallback_positions:
+        type: list[object]
+        description: 'Frozen claim_architecture_patent_estate@0.2.0 output field: fallback_positions.'
+        required: true
+        nullable: true
+      continuation_strategy:
+        type: string_or_structured_object
+        description: 'Frozen claim_architecture_patent_estate@0.2.0 output field: continuation_strategy.'
+        required: true
+        nullable: true
+      trade_secret_candidates:
+        type: list[object]
+        description: 'Frozen claim_architecture_patent_estate@0.2.0 output field: trade_secret_candidates.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

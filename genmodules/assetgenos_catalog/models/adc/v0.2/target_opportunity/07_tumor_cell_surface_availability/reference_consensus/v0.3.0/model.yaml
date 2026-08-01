@@ -1,0 +1,116 @@
+model:
+  model_id: tumor_cell_surface_availability_reference_consensus_v1
+  model_family: adc.v0_2.target_opportunity.tumor_cell_surface_availability.reference_consensus
+  model_version: 0.3.0
+  gate_id: tumor_cell_surface_availability
+  implementation: surfaceome_reference_lookup
+  status: active_challenger
+  runtime:
+    model_name: Tumor-Cell Surface Availability Public Reference Consensus v1
+    model_type: database_lookup
+    provider: ADC_surfaceome_reference
+    input_schema: GateInputEnvelope@2.0.0
+    output_schema: GateModelOutput@2.0.0
+    cost_tier: low
+    limitations:
+    - CellChatDB, CellPhoneDB, and OmniPath receptor roles are annotation evidence and do not independently confirm intact-cell
+      surface localization.
+    - HPA tumor IHC and CPTAC are tissue-level protein proxies; they do not measure calibrated target-tumor surface density
+      or malignant-cell positive fraction.
+    - CSPA reference cell types are not assumed to represent the candidate tumor population.
+    - Missing database annotation is unknown, never negative evidence.
+    - The full T7 confidence remains capped until tumor-specific protein evidence is supplied.
+    calibration_status: uncalibrated_reference_consensus
+    training_data_version: ADC_surfaceome_reference@0.2.0
+    prompt_version: null
+    enabled: true
+    weight: 1.0
+    default_confidence_cap: 0.55
+  contract_refs:
+    gate: components/gates/adc/v0.2/target_opportunity/07_tumor_cell_surface_availability/v0.2.0/gate.yaml
+    input: components/contracts/gate_input.v2.yaml
+    output: components/contracts/model_output.v2.yaml
+  question_template: Does version-bound public evidence support structural cell-surface localization, an extracellular domain,
+    a curated receptor role, and indication-matched tumor-tissue protein expression? Keep calibrated surface density, malignant-cell
+    positive fraction, isoform fraction, and treatment persistence unknown unless direct evidence is supplied.
+  evidence_policy:
+    may_use:
+    - ADC_surfaceome_reference consensus rows
+    - CellChatDB, CellPhoneDB, and OmniPath receptor-role annotations
+    - indication-matched HPA tumor IHC and CPTAC protein proxies
+    - experiment-validated T7 evidence supplied to the candidate
+    must_not_invent:
+    - tumor-specific antigen density
+    - malignant-cell surface-positive fraction
+    - antibody-bindable isoform fraction
+    - treatment persistence
+    - negative evidence from database absence
+    - surface confirmation from receptor-role annotation alone
+    - surface density or malignant-cell fraction from bulk tumor protein proxies
+  fallback_policy:
+    mode: neutral_unknown_when_unindexed_or_unsupported
+    confidence_cap: 0.55
+    complete_when_evidence_missing: true
+    nullable_domain_fields_when_unknown: true
+  version_roadmap:
+  - stage: v0
+    target: LLM-only executable baseline
+  - stage: v1
+    target: Multi-source structural, receptor-role, and tumor-protein reference consensus
+  - stage: v2
+    target: Malignant-cell-resolved spatial or single-cell protein adapters
+  - stage: v3
+    target: Quantitative antigen-density and isoform calibration
+  - stage: v4
+    target: Independent tumor-cohort and assay validation
+  model_card:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    summary: Version-bound public-reference consensus for T7. It combines structural surface localization, UniProt ECD geometry,
+      CCI receptor roles, and indication-matched HPA tumor-protein proxies without claiming calibrated tumor-cell surface
+      availability.
+    intended_use:
+    - Prioritize whether a target has public structural support for extracellular antibody access.
+    - Expose receptor-role agreement and discordance across curated CCI databases.
+    - Attach indication-matched tumor-tissue protein context.
+    - Identify the direct tumor-cell surface evidence still required for T7.
+    decision_role: Reference-only T7 challenger for exploration and evidence gap identification; it cannot pass the hard Gate
+      by itself.
+    method_summary: Deterministic gene lookup against ADC_surfaceome_reference@0.2.0. Structural surface evidence uses non-double-counted
+      source families; CCI receptor roles and HPA tumor proxies are reported separately. Reference-only confidence is capped
+      at 0.55.
+    input_requirements:
+    - Canonical target gene and indication.
+    - ADC_surfaceome_reference@0.2.0 surfaceome consensus row.
+    - Indication-matched HPA tumor-protein context when available.
+    - Version-bound T7 Gate input envelope and upstream GateResults.
+    output_interpretation: Positive output supports structural surface plausibility and reference tumor-protein context only.
+      Null density, positive fraction, isoform fraction, or treatment stability remains an unresolved experimental requirement.
+    evidence_boundary:
+    - CCI receptor role is not independent intact-cell surface confirmation.
+    - HPA IHC patient detection is not malignant-cell surface-positive fraction.
+    - CPTAC global proteomics is not surface-specific or absolute abundance.
+    - Database absence is unknown, never negative evidence.
+    known_failure_modes:
+    - Gene-level annotations may not represent the tumor-present isoform.
+    - Bulk/tissue protein context may reflect stromal or non-malignant cells.
+    - ECD annotation does not prove antibody epitope accessibility.
+    - No treatment-time-course or calibrated antigens-per-cell measurement.
+    - Source overlap can exaggerate apparent receptor consensus if provenance is ignored.
+    prohibited_uses:
+    - Claiming calibrated tumor-cell antigen density.
+    - Claiming malignant-cell surface-positive fraction.
+    - Claiming antibody binding, internalization, efficacy, or therapeutic index.
+    - Passing or failing T7 from database presence or absence alone.
+    - Treating the 0.55 confidence cap as empirical calibration.
+  lifecycle:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    artifact_stage: formal_candidate
+    release_kind: first_formal
+    released_at: '2026-07-29T16:17:49Z'
+    predecessor_model_ref: null
+    record_root: components/model_governance/tumor_cell_surface_availability_reference_consensus_v1/v0.3.0
+    change_summary:
+    - First formal database-backed T7 reference-consensus Model.
+    - Integrated structural surface, ECD, receptor-role, and tumor-protein context.
+    - Retained a 0.55 cap and explicit nulls for unresolved direct measurements.
+    - No independent scientific validation or empirical calibration claim.

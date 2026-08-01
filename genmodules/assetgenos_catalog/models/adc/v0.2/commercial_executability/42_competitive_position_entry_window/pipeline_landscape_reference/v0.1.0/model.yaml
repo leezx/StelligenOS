@@ -1,0 +1,110 @@
+model:
+  model_id: competitive_position_entry_window_pipeline_landscape_reference_v1
+  model_family: adc.v0_2.commercial_executability.competitive_position_entry_window.pipeline_landscape_reference
+  model_version: 0.1.0
+  gate_id: competitive_position_entry_window
+  implementation: competitive_pipeline_landscape_lookup
+  status: active_challenger
+  runtime:
+    model_name: Competitive Position and Entry Window Pipeline Landscape Reference v0.1.0
+    model_type: database_lookup
+    provider: ADCdb_pipeline_landscape
+    input_schema: GateInputEnvelope@2.0.0
+    output_schema: GateModelOutput@2.0.0
+    cost_tier: low
+    limitations:
+    - ADCdb is a static, point-in-time local mirror, not a live competitive-intelligence feed.
+    - No sponsor/company field exists; the same underlying programme under multiple names cannot be deduplicated.
+    - Drug Status "Investigative" conflates active-but-undisclosed preclinical programmes with abandoned ones.
+    - competitive_viability reflects target-level clinical precedent only; indication- and mechanism-level competition are reported but not combined into the score.
+    - epitope_level_competition is always null; no public epitope-resolved vocabulary exists.
+    - No calendar-time or trial-duration forecasting is attempted.
+    calibration_status: uncalibrated
+    training_data_version: ADC_competitive_landscape_reference@0.1.0
+    prompt_version: null
+    enabled: true
+    weight: 1.0
+    default_confidence_cap: 0.40
+  contract_refs:
+    gate: components/gates/adc/v0.2/commercial_executability/42_competitive_position_entry_window/v0.2.0/gate.yaml
+    input: components/contracts/gate_input.v2.yaml
+    output: components/contracts/model_output.v2.yaml
+  question_template: Evaluate Competitive Position and Entry Window for the exact version-bound v0.2 input
+    objects using the version-bound ADC_competitive_landscape_reference dataset. Report real target-,
+    indication-, and mechanism-level ADCdb pipeline competition counts and clinical-stage distributions
+    for the candidate's target gene. When the target gene is not covered by ADCdb, return null domain
+    fields and an uncertain-to-unknown result rather than inferring an absence of competition.
+  evidence_policy:
+    may_use:
+    - version-bound ADCdb pipeline-landscape rows for the candidate's target gene
+    - the C0 clinical-unmet-need indication taxonomy (read-only cross-reference)
+    - supplied experiment_validated or human_asserted competitive due-diligence Evidence
+    - version-bound candidate and v0.2 context objects
+    must_not_invent:
+    - calendar timelines, trial durations, or approval-date predictions
+    - sponsor/company identity (no such field exists in ADCdb)
+    - legal, regulatory, or commercial-value conclusions
+    - epitope-level competitive data (no public vocabulary exists)
+  fallback_policy:
+    mode: gene_unresolved_unknown
+    confidence_cap: 0.40
+    complete_when_evidence_missing: true
+    nullable_domain_fields_when_unknown: true
+  version_roadmap:
+  - stage: v0
+    target: LLM-only executable baseline
+  - stage: v1
+    target: ADCdb-backed deterministic pipeline-landscape reference (this release)
+  - stage: v2
+    target: Live/licensed competitive-intelligence source, sponsor identity, expert-reviewed differentiation taxonomy
+  - stage: v3
+    target: Outcome-referenced calibration of competitive_viability
+  - stage: v4
+    target: Independent validation and governed production
+  model_card:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    summary: Deterministic ADCdb-backed lookup for Gate C2, reporting real target/indication/mechanism-level
+      ADC pipeline competition counts and clinical-stage distributions, without live-feed currency
+      or sponsor identity.
+    intended_use:
+    - Gate-local exploration support for competitive-position and entry-window analysis.
+    - Provide a real, checksum-reproducible pipeline-landscape count in place of the LLM baseline's
+      no-evidence guess.
+    - Serve as a replaceable challenger Model pending independent BD/competitive-intelligence review.
+    decision_role: Gate-local exploration support; not an independently validated commercial, legal,
+      or regulatory decision.
+    method_summary: Deterministic lookup over a version-bound ADCdb pipeline-landscape reference table,
+      joined against the existing C0 clinical-indication taxonomy, with fixed ordinal lookup tables
+      for viability, differentiation requirement, and entry-window qualitative gap.
+    input_requirements:
+    - Version-bound Candidate identity, in particular target_gene.
+    - Version-bound target_opportunity, adc_product_candidate, and commercial_execution_context context objects.
+    - Supplied Evidence and upstream GateResults.
+    - The built ADC_competitive_landscape_reference@0.1.0 dataset.
+    output_interpretation: A confidence-capped uncertain output describing known ADCdb pipeline competition;
+      not a measured market-share, deal-comparable, or timeline forecast.
+    evidence_boundary:
+    - May use only the version-bound ADCdb pipeline-landscape table and the read-only C0 indication taxonomy.
+    - May not invent sponsor identity, calendar timelines, or legal/regulatory conclusions.
+    - A gene absent from ADCdb yields unknown, never a confirmed-zero-competitor claim.
+    known_failure_modes:
+    - Undisclosed/stealth-mode competing programmes are invisible to ADCdb and thus to this Model.
+    - Drug Status "Investigative" cannot distinguish an active undisclosed programme from an abandoned one.
+    - No sponsor/company field means the same programme under multiple names is double-counted.
+    - ADCdb reflects a fixed snapshot date, not current pipeline reality.
+    prohibited_uses:
+    - Claiming a target/indication is truly uncontested because ADCdb shows zero programmes.
+    - Treating minimum_differentiation_required as a legal or regulatory bar.
+    - Using this Model as a live competitive-intelligence feed.
+    - Asserting a calendar timeline, trial duration, or approval-date prediction.
+    - Treating the confidence cap as a calibrated probability of a correct competitive assessment.
+  lifecycle:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    artifact_stage: formal_candidate
+    release_kind: first_formal
+    released_at: '2026-07-29T22:00:00Z'
+    predecessor_model_ref: null
+    record_root: components/model_governance/competitive_position_entry_window_pipeline_landscape_reference_v1/v0.1.0
+    change_summary:
+    - "First formal, evidence-grounded C2 Model: real ADCdb-backed target/indication/mechanism-level competitive counts and clinical-stage distributions."
+    - No independent BD/competitive-intelligence review or calibration claim.

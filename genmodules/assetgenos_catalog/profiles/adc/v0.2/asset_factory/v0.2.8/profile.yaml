@@ -1,0 +1,73 @@
+profile:
+  profile_id: adc.asset_factory_v0.2
+  profile_version: 0.2.8
+  profile_type: base
+  modality: ADC
+  extends:
+  - adc.target_opportunity_chain@0.2.8
+  - adc.product_realization_chain@0.2.3
+  - adc.commercial_executability_chain@0.2.4
+  description: >-
+    Complete v0.2 three-Gate-Group graph. Model selection is inherited from
+    the three chain Profiles so successor bindings cannot be overwritten by
+    stale duplicate bindings.
+  gate_order:
+  - commercial_opportunity_threshold
+  - regulatory_development_path
+  - competitive_position_entry_window
+  - product_claim_decomposition
+  - patent_landscape
+  - preliminary_technical_fto
+  - clinical_context_endpoint
+  - endpoint_driving_population
+  - target_population_mapping
+  - intervention_causality
+  - baseline_coverage_and_escape
+  - treatment_induced_state_response
+  - net_endpoint_benefit
+  - tumor_cell_surface_availability
+  - intratumoral_antigen_accessibility
+  - antibody_dependent_internalization
+  - antibody_epitope_realizability
+  - on_target_therapeutic_index
+  - target_opportunity_decision
+  - product_design_objective
+  - epitope_landscape
+  - epitope_function
+  - binding_geometry_kinetics
+  - antibody_format_fc_design
+  - antibody_sequence_developability
+  - productive_internalization_trafficking
+  - conjugation_platform_site
+  - dar_molecular_property_balance
+  - payload_cell_state_match
+  - linker_release_match
+  - bystander_tumor_coverage
+  - integrated_pk_stability_exposure
+  - construct_therapeutic_index
+  - biomarker_clinical_assay_codesign
+  - integrated_adc_product_decision
+  - blocking_claim_severity
+  - design_around_opportunity
+  - access_strategy
+  - fto_product_configuration
+  - own_ip_inventive_concept
+  - patentability_enablement
+  - claim_architecture_patent_estate
+  - disclosure_filing_strategy
+  - lifecycle_exclusivity_strategy
+  - transaction_readiness
+  gate_versions: {}
+  model_bindings: {}
+  gate_overrides: {}
+  context:
+    architecture_version: 0.2.0
+    final_success_semantics: >-
+      Target Opportunity AND Product Realization AND Commercial Executability;
+      no cross-Group compensation.
+    profile_revision:
+      version: 0.2.8
+      reason: >-
+        Select target_opportunity_chain@0.2.8 and inherit chain bindings
+        without stale master-level duplication.
+      predecessor_profile_version: 0.2.7

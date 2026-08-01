@@ -1,0 +1,72 @@
+reference:
+  reference_id: ADC_treatment_state_response_evidence
+  reference_version: 0.1.0
+  evidence_cutoff: "2026-07-29"
+  confidence_cap: 0.55
+  score_semantics: Common score is one minus a longitudinal post-treatment risk index; neither is a probability.
+
+evidence_contract:
+  evidence_type: treatment_state_response_evidence_v1
+  policy_ref: ADC_treatment_state_response_evidence@0.1.0
+
+risk_components:
+  malignant_state_enrichment_risk:
+    weight: 0.15
+    mandatory: true
+  target_downregulation_risk:
+    weight: 0.15
+    mandatory: true
+  plasticity_escape_risk:
+    weight: 0.20
+    mandatory: true
+  payload_resistance_transition:
+    weight: 0.15
+    mandatory: false
+  microenvironment_rebound_risk:
+    weight: 0.15
+    mandatory: false
+  more_aggressive_residual_state_risk:
+    weight: 0.20
+    mandatory: true
+
+scoring:
+  minimum_known_weight: 0.70
+  fraction_count_conflict_tolerance: 0.02
+
+measurement_contract:
+  required_fields:
+  - value_or_counts
+  - assay_or_readout
+  - paired_cohort_or_model
+  - baseline_timepoint
+  - posttreatment_timepoint
+  - treatment_pressure
+  - source_ids
+  rules:
+  - Every risk and transition requires paired or lineage-resolved longitudinal evidence.
+  - Cross-sectional pre/post cohorts cannot establish a treatment-induced transition.
+  - Payload transition requires a declared payload class and resistance-state definition.
+  - Response reversibility requires treatment withdrawal, rechallenge, or rescue evidence.
+  - T4 baseline reservoirs are context only and contribute no T5 risk score.
+
+method_sources:
+- source_id: RESISTANCE_CONTINUUM_2024
+  citation: Oren Y et al. Cellular adaptation to cancer therapy along a resistance continuum. Nature. 2024.
+  url: https://www.nature.com/articles/s41586-024-07690-9
+- source_id: BASAL_BREAST_PLASTICITY_2018
+  citation: Risom T et al. Differentiation-state plasticity is a targetable resistance mechanism in basal-like breast cancer. Nat Commun. 2018.
+  url: https://www.nature.com/articles/s41467-018-05729-w
+- source_id: GBM_LONGITUDINAL_2022
+  citation: A single-cell atlas of glioblastoma evolution under therapy. Nat Cancer. 2022.
+  url: https://www.nature.com/articles/s43018-022-00475-x
+- source_id: EARLY_TOLERANCE_2024
+  citation: Early tolerance and late persistence as alternative drug responses in cancer. Nat Commun. 2024.
+  url: https://www.nature.com/articles/s41467-024-54728-7
+- source_id: FAK_YAP_PERSISTER_2024
+  citation: FAK-YAP signaling drives drug-tolerant persister cells and residual disease in lung cancer. Nat Commun. 2024.
+  url: https://www.nature.com/articles/s41467-024-47423-0
+
+boundaries:
+- T4 owns pretreatment reservoirs; T5 owns changes after a declared pressure.
+- T6 owns net endpoint benefit.
+- T5 does not establish ADC delivery, payload selection, safety, or clinical response.

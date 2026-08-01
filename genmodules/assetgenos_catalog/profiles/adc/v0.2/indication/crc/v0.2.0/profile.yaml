@@ -1,0 +1,22 @@
+profile:
+  profile_id: adc.indication.crc
+  profile_version: 0.2.0
+  profile_type: indication
+  modality: ADC
+  extends:
+  - adc.asset_factory_v0.2@0.2.0
+  description: CRC v0.2 context overlay for the three-Gate-Group graph.
+  gate_order: []
+  gate_versions: {}
+  model_bindings: {}
+  gate_overrides: {}
+  context:
+    target_opportunity:
+      indication_definition: colorectal cancer; subtype, stage, metastatic site, and line remain explicit
+      critical_normal_tissues:
+      - gastrointestinal epithelium
+      - liver
+      - kidney
+      - bone marrow
+      - peripheral nerves
+      - skin

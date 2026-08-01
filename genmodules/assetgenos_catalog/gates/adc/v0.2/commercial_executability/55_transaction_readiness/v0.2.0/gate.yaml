@@ -1,0 +1,168 @@
+gate:
+  gate_id: transaction_readiness
+  gate_family: adc.v0_2.commercial_executability.transaction_readiness
+  gate_version: 0.2.0
+  sequence: 55
+  name: Transaction Readiness and Asset Saleability
+  purpose: Conjunctively determine technical, IP, FTO, regulatory, CMC, commercial, and data-room readiness for a defined
+    transaction type.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - commercial_execution_context
+    - upstream_gate_results
+    outputs:
+    - technical_diligence_readiness
+    - IP_diligence_readiness
+    - FTO_diligence_readiness
+    - regulatory_readiness
+    - CMC_readiness
+    - commercial_readiness
+    - data_room_completeness
+    - material_defects
+    - transaction_readiness
+    - recommended_transaction_type
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: very_high
+    default_model_ids:
+    - transaction_readiness_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: commercial_executability
+    group_code: C
+    priority: P4
+    dependencies:
+    - commercial_opportunity_threshold
+    - regulatory_development_path
+    - competitive_position_entry_window
+    - fto_product_configuration
+    - patentability_enablement
+    - claim_architecture_patent_estate
+    - disclosure_filing_strategy
+    - lifecycle_exclusivity_strategy
+    output_defaults:
+      technical_diligence_readiness: null
+      IP_diligence_readiness: null
+      FTO_diligence_readiness: null
+      regulatory_readiness: null
+      CMC_readiness: null
+      commercial_readiness: null
+      data_room_completeness: null
+      material_defects: []
+      transaction_readiness: null
+      recommended_transaction_type: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      commercial_execution_context:
+        type: CommercialExecutionContext
+        description: 'Version-bound v0.2 input object: commercial_execution_context.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      technical_diligence_readiness:
+        type: number[0,1]
+        description: 'Frozen transaction_readiness@0.2.0 output field: technical_diligence_readiness.'
+        required: true
+        nullable: true
+      IP_diligence_readiness:
+        type: number[0,1]
+        description: 'Frozen transaction_readiness@0.2.0 output field: IP_diligence_readiness.'
+        required: true
+        nullable: true
+      FTO_diligence_readiness:
+        type: number[0,1]
+        description: 'Frozen transaction_readiness@0.2.0 output field: FTO_diligence_readiness.'
+        required: true
+        nullable: true
+      regulatory_readiness:
+        type: number[0,1]
+        description: 'Frozen transaction_readiness@0.2.0 output field: regulatory_readiness.'
+        required: true
+        nullable: true
+      CMC_readiness:
+        type: number[0,1]
+        description: 'Frozen transaction_readiness@0.2.0 output field: CMC_readiness.'
+        required: true
+        nullable: true
+      commercial_readiness:
+        type: number[0,1]
+        description: 'Frozen transaction_readiness@0.2.0 output field: commercial_readiness.'
+        required: true
+        nullable: true
+      data_room_completeness:
+        type: number[0,1]
+        description: 'Frozen transaction_readiness@0.2.0 output field: data_room_completeness.'
+        required: true
+        nullable: true
+      material_defects:
+        type: list[object]
+        description: 'Frozen transaction_readiness@0.2.0 output field: material_defects.'
+        required: true
+        nullable: true
+      transaction_readiness:
+        type: number[0,1]
+        description: 'Frozen transaction_readiness@0.2.0 output field: transaction_readiness.'
+        required: true
+        nullable: true
+      recommended_transaction_type:
+        type: string_or_structured_object
+        description: 'Frozen transaction_readiness@0.2.0 output field: recommended_transaction_type.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

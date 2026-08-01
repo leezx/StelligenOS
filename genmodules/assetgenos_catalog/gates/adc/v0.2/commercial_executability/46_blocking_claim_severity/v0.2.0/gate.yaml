@@ -1,0 +1,161 @@
+gate:
+  gate_id: blocking_claim_severity
+  gate_family: adc.v0_2.commercial_executability.blocking_claim_severity
+  gate_version: 0.2.0
+  sequence: 46
+  name: Blocking Claim Severity
+  purpose: Distinguish relevant patents from potentially enforceable blocking claims using status, breadth, essentiality,
+    term, design-around, license, validity, and enforcement factors.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - commercial_execution_context
+    - upstream_gate_results
+    outputs:
+    - blocking_claim_id
+    - claim_status
+    - claim_breadth
+    - essentiality_to_product
+    - remaining_term
+    - design_around_difficulty
+    - license_availability
+    - validity_uncertainty
+    - enforcement_risk
+    - blocking_severity
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium_high
+    default_model_ids:
+    - blocking_claim_severity_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: commercial_executability
+    group_code: C
+    priority: P2
+    dependencies:
+    - preliminary_technical_fto
+    output_defaults:
+      blocking_claim_id: null
+      claim_status: null
+      claim_breadth: null
+      essentiality_to_product: null
+      remaining_term: null
+      design_around_difficulty: null
+      license_availability: null
+      validity_uncertainty: null
+      enforcement_risk: null
+      blocking_severity: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      commercial_execution_context:
+        type: CommercialExecutionContext
+        description: 'Version-bound v0.2 input object: commercial_execution_context.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      blocking_claim_id:
+        type: string_or_structured_object
+        description: 'Frozen blocking_claim_severity@0.2.0 output field: blocking_claim_id.'
+        required: true
+        nullable: true
+      claim_status:
+        type: string_or_structured_object
+        description: 'Frozen blocking_claim_severity@0.2.0 output field: claim_status.'
+        required: true
+        nullable: true
+      claim_breadth:
+        type: string_or_structured_object
+        description: 'Frozen blocking_claim_severity@0.2.0 output field: claim_breadth.'
+        required: true
+        nullable: true
+      essentiality_to_product:
+        type: string_or_structured_object
+        description: 'Frozen blocking_claim_severity@0.2.0 output field: essentiality_to_product.'
+        required: true
+        nullable: true
+      remaining_term:
+        type: string_or_structured_object
+        description: 'Frozen blocking_claim_severity@0.2.0 output field: remaining_term.'
+        required: true
+        nullable: true
+      design_around_difficulty:
+        type: number[0,1]
+        description: 'Frozen blocking_claim_severity@0.2.0 output field: design_around_difficulty.'
+        required: true
+        nullable: true
+      license_availability:
+        type: string_or_structured_object
+        description: 'Frozen blocking_claim_severity@0.2.0 output field: license_availability.'
+        required: true
+        nullable: true
+      validity_uncertainty:
+        type: string_or_structured_object
+        description: 'Frozen blocking_claim_severity@0.2.0 output field: validity_uncertainty.'
+        required: true
+        nullable: true
+      enforcement_risk:
+        type: number[0,1]
+        description: 'Frozen blocking_claim_severity@0.2.0 output field: enforcement_risk.'
+        required: true
+        nullable: true
+      blocking_severity:
+        type: string_or_structured_object
+        description: 'Frozen blocking_claim_severity@0.2.0 output field: blocking_severity.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

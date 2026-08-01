@@ -13,6 +13,28 @@ GENMODULES = ROOT / "genmodules"
 
 
 class AssetGenOSModuleMigrationTests(unittest.TestCase):
+    def test_assetgenos_catalog_migrates_only_software_definitions(self) -> None:
+        module_root = GENMODULES / "assetgenos_catalog"
+        module = yaml.safe_load((module_root / "module.yaml").read_text())["module"]
+        self.assertEqual(module["status"], "migrated_contracts_only")
+        self.assertEqual(module["contents"], {
+            "contracts": 7,
+            "gates": 45,
+            "models": 59,
+            "profiles": 53,
+        })
+        self.assertEqual(len(list((module_root / "gates").rglob("gate.yaml"))), 45)
+        self.assertEqual(len(list((module_root / "models").rglob("model.yaml"))), 59)
+        self.assertEqual(len(list((module_root / "profiles").rglob("profile.yaml"))), 53)
+        self.assertEqual(len(list((module_root / "contracts").glob("*.yaml"))), 7)
+
+        forbidden = {"model_governance", "model_work_packages", "data", "cache", "results"}
+        for path in module_root.rglob("*"):
+            self.assertTrue(
+                not any(part in forbidden for part in path.parts),
+                f"runtime or governance state migrated: {path}",
+            )
+
     def test_binder_module_preserves_frozen_catalogue_and_contract(self) -> None:
         module_root = GENMODULES / "antibody_binder_asset_engineering"
         module = yaml.safe_load((module_root / "module.yaml").read_text())[

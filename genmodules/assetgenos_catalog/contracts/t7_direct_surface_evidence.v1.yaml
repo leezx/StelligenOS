@@ -1,0 +1,82 @@
+contract:
+  contract_id: T7DirectSurfaceEvidence
+  contract_version: "1.0.0"
+  contract_ref: T7DirectSurfaceEvidence@1.0.0
+  gate_ref: tumor_cell_surface_availability@0.2.0
+  description: >-
+    Structured experiment-validated evidence accepted by the T7 evidence
+    consensus Model. Values are copied only when explicitly supplied; missing
+    values remain null and are never inferred from RNA, bulk protein, IHC, or
+    receptor annotation.
+  evidence_envelope:
+    evidence_category: tumor_cell_surface_availability
+    evidence_level: experiment_validated
+    structured_value:
+      required:
+        - contract_ref
+        - target_gene
+        - indication
+        - tumor_population
+        - assay
+        - domain_outputs
+        - quality_controls
+      fields:
+        contract_ref:
+          const: T7DirectSurfaceEvidence@1.0.0
+        target_gene:
+          type: string
+        indication:
+          type: string
+        tumor_population:
+          type: structured_object
+          required_fields:
+            - definition
+            - specimen_type
+            - malignant_cell_resolution_method
+        assay:
+          type: structured_object
+          required_fields:
+            - method
+            - protocol_version
+            - unit
+            - biological_replicates
+            - technical_replicates
+        overall_score:
+          type: number[0,1]
+          nullable: true
+        domain_outputs:
+          type: structured_object
+          exact_fields:
+            - protein_surface_presence
+            - surface_antigen_density
+            - surface_positive_fraction
+            - extracellular_domain_availability
+            - isoform_surface_fraction
+            - cell_state_specific_surface_expression
+            - treatment_stability
+          nullable_fields: true
+        quality_controls:
+          type: structured_object
+          required_fields:
+            - malignant_cell_resolved
+            - antibody_bindable_assay
+            - isotype_or_negative_control
+            - viability_control
+            - prespecified_acceptance_criteria_met
+  pass_eligibility:
+    all_domain_outputs_non_null: true
+    required_quality_controls:
+      malignant_cell_resolved: true
+      antibody_bindable_assay: true
+      prespecified_acceptance_criteria_met: true
+    note: >-
+      Pass eligibility does not waive the Model confidence cap or Gate
+      thresholds. Partial direct evidence is merged for audit but remains
+      uncertain.
+  prohibited_substitutions:
+    - RNA abundance as surface protein
+    - bulk tumor protein as malignant-cell surface density
+    - IHC patient detection fraction as surface-positive malignant-cell fraction
+    - receptor-role annotation as intact-cell localization
+    - relative LFQ intensity as copies per cell
+    - descriptive treatment fold-change bands as calibrated stability probability

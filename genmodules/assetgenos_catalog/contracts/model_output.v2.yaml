@@ -1,0 +1,47 @@
+contract:
+  contract_id: gate_model_output
+  contract_version: "2.0.0"
+  description: Stable v0.2 Gate output envelope with exact Gate-specific domain fields and graph propagation metadata.
+  fields:
+    score:
+      type: number[0,1]
+      required: true
+      description: Gate-local directional score; never the final sellable-asset score.
+    confidence:
+      type: number[0,1]
+      required: true
+      description: Evidence-aware confidence after Model-version caps.
+    status:
+      type: enum
+      allowed_values: [passed, failed, uncertain, unknown, not_applicable, not_evaluated, model_error]
+      required: true
+      description: Gate evaluation state.
+    rationale:
+      type: string
+      required: true
+      description: Evidence-versus-inference-separated explanation.
+    evidence_ids:
+      type: list[string]
+      required: true
+      description: Versioned Evidence actually used.
+    assumptions:
+      type: list[string]
+      required: true
+      description: Explicit guessed premises and scope assumptions.
+    missing_information:
+      type: list[string]
+      required: true
+      description: Information needed to resolve this Gate.
+    recommended_validation:
+      type: list[string]
+      required: true
+      description: Next evidence, experiment, search, counsel, or design action.
+    domain_output:
+      type: object
+      required: true
+      description: Exact fields frozen by the individual Gate@0.2.0 contract.
+    propagation:
+      type: object
+      required: true
+      description: Recorded outside domain_output; identifies hard failures, blocked dependencies, exploration-only continuation, and feedback edges.
+

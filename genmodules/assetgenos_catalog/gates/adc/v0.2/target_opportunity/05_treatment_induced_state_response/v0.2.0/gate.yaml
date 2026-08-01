@@ -1,0 +1,142 @@
+gate:
+  gate_id: treatment_induced_state_response
+  gate_family: adc.v0_2.target_opportunity.treatment_induced_state_response
+  gate_version: 0.2.0
+  sequence: 5
+  name: Treatment-Induced State Transition and Ecological Response
+  purpose: Model cell-intrinsic and ecosystem transitions from baseline through ADC pressure, residual disease, rebound, and
+    the final endpoint.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - upstream_gate_results
+    outputs:
+    - predicted_state_transitions
+    - malignant_state_enrichment_risk
+    - target_downregulation_risk
+    - plasticity_escape_risk
+    - payload_resistance_transition
+    - microenvironment_rebound_risk
+    - more_aggressive_residual_state_risk
+    - response_reversibility
+    - response_confidence
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium
+    default_model_ids:
+    - treatment_induced_state_response_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: target_opportunity
+    group_code: T
+    priority: P1
+    dependencies:
+    - baseline_coverage_and_escape
+    output_defaults:
+      predicted_state_transitions: []
+      malignant_state_enrichment_risk: null
+      target_downregulation_risk: null
+      plasticity_escape_risk: null
+      payload_resistance_transition: null
+      microenvironment_rebound_risk: null
+      more_aggressive_residual_state_risk: null
+      response_reversibility: null
+      response_confidence: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      predicted_state_transitions:
+        type: list[object]
+        description: 'Frozen treatment_induced_state_response@0.2.0 output field: predicted_state_transitions.'
+        required: true
+        nullable: true
+      malignant_state_enrichment_risk:
+        type: number[0,1]
+        description: 'Frozen treatment_induced_state_response@0.2.0 output field: malignant_state_enrichment_risk.'
+        required: true
+        nullable: true
+      target_downregulation_risk:
+        type: number[0,1]
+        description: 'Frozen treatment_induced_state_response@0.2.0 output field: target_downregulation_risk.'
+        required: true
+        nullable: true
+      plasticity_escape_risk:
+        type: number[0,1]
+        description: 'Frozen treatment_induced_state_response@0.2.0 output field: plasticity_escape_risk.'
+        required: true
+        nullable: true
+      payload_resistance_transition:
+        type: string_or_structured_object
+        description: 'Frozen treatment_induced_state_response@0.2.0 output field: payload_resistance_transition.'
+        required: true
+        nullable: true
+      microenvironment_rebound_risk:
+        type: number[0,1]
+        description: 'Frozen treatment_induced_state_response@0.2.0 output field: microenvironment_rebound_risk.'
+        required: true
+        nullable: true
+      more_aggressive_residual_state_risk:
+        type: number[0,1]
+        description: 'Frozen treatment_induced_state_response@0.2.0 output field: more_aggressive_residual_state_risk.'
+        required: true
+        nullable: true
+      response_reversibility:
+        type: string_or_structured_object
+        description: 'Frozen treatment_induced_state_response@0.2.0 output field: response_reversibility.'
+        required: true
+        nullable: true
+      response_confidence:
+        type: number[0,1]
+        description: 'Frozen treatment_induced_state_response@0.2.0 output field: response_confidence.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

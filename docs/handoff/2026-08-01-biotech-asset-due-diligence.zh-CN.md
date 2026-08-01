@@ -2,7 +2,7 @@
 
 - 任务编号：`task_20260801_biotech-dd`
 - 目标：将 AssetGenOS Due Diligence Phase 1A 的纯软件合同边界迁移到 StelligenOS。
-- 当前状态：代码修订已完成，GitHub 当前为 `MERGEABLE/CLEAN`，等待 ChatGPT 最终复审；未合并。
+- 当前状态：已获 ChatGPT `APPROVE`，PR #13 已合并到 `main`，合并提交为 `f8206e9`。
 
 ## 本次已迁移
 
@@ -52,8 +52,8 @@
 
 ## 当前复审基线
 
-- 当前 PR tip：以 GitHub PR 页面实时 HEAD 为唯一权威；本次复审基线为 `cadf825`。
-- 当前合并状态：`MERGEABLE/CLEAN`。
+- 当前 PR tip：历史复审基线为 `cadf825`；PR #13 已合并，当前 main 合并提交为 `f8206e9`。
+- 当前合并状态：`MERGED`。
 - 当前验证：`39 tests passed`、repository boundary check passed、`git diff --check` passed。
 - 冲突解决：`genmodules/README.md` 同时保留 `biotech_asset_due_diligence` 与 `gate_model_rule` 两个模块条目。
 - 本次同步未改变 due diligence 代码合同，未引入数据、runner、数据库、缓存、结果或模型权重。

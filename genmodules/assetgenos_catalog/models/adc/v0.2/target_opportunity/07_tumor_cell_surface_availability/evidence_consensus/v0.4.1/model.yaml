@@ -1,0 +1,128 @@
+model:
+  model_id: tumor_cell_surface_availability_reference_consensus_v2
+  model_family: adc.v0_2.target_opportunity.tumor_cell_surface_availability.evidence_consensus
+  model_version: 0.4.1
+  gate_id: tumor_cell_surface_availability
+  implementation: surfaceome_evidence_consensus
+  status: active_challenger
+  runtime:
+    model_name: Tumor-Cell Surface Availability Evidence Consensus v2
+    model_type: database_lookup
+    provider: ADC_surfaceome_reference
+    input_schema: GateInputEnvelope@2.0.0
+    output_schema: GateModelOutput@2.0.0
+    cost_tier: low
+    limitations:
+    - The general public-reference path remains confidence-capped and cannot establish every T7 field.
+    - JCB topology is a correlated geometry cross-check, not an independent intact-cell localization family.
+    - CSPA Table E and myeloma LFQ values are relative surface-proteomics quantities, not copies per cell.
+    - Calibrated copies-per-cell values are available only for CD38/CD48 in the specified myeloma samples.
+    - Public treatment fold changes are descriptive condition evidence, not a calibrated treatment-stability probability.
+    - No public source in this release establishes antibody-bindable isoform fraction or general malignant-cell surface-positive
+      fraction.
+    calibration_status: uncalibrated_unit_preserving_evidence_consensus
+    training_data_version: ADC_surfaceome_reference@0.3.0
+    prompt_version: null
+    enabled: true
+    weight: 1.0
+    default_confidence_cap: 0.55
+  contract_refs:
+    gate: components/gates/adc/v0.2/target_opportunity/07_tumor_cell_surface_availability/v0.2.0/gate.yaml
+    input: components/contracts/gate_input.v2.yaml
+    output: components/contracts/model_output.v2.yaml
+    direct_evidence: components/contracts/t7_direct_surface_evidence.v1.yaml
+  question_template: Does version-bound evidence establish sufficient, persistent, antibody-bindable protein antigen on the
+    declared target tumor population? Preserve assay units and indication/sample scope; do not convert relative LFQ, topology,
+    receptor annotations, bulk protein, or descriptive treatment changes into missing T7 measurements.
+  evidence_policy:
+    may_use:
+    - ADC_surfaceome_reference@0.3.0 structural consensus
+    - CellChatDB, CellPhoneDB, and OmniPath receptor-role annotations
+    - JCB 2026 membrane-topology geometry cross-checks
+    - CSPA Table E quantitative reference-cell surface proteomics
+    - myeloma baseline and treatment CSC-MS measurements
+    - myeloma CD38/CD48 calibrated flow-cytometry copies per cell
+    - T7DirectSurfaceEvidence@1.0.0 experiment-validated records
+    must_not_invent:
+    - copies per cell from relative LFQ or CSPA values
+    - malignant-cell surface-positive fraction from IHC patient counts
+    - antibody-bindable isoform fraction from gene-level annotations
+    - treatment-stability probability from fold-change bands
+    - candidate-indication relevance from an unmatched reference cell line
+    - negative evidence from database absence
+    - surface confirmation from receptor-role or topology annotation alone
+  fallback_policy:
+    mode: neutral_unknown_with_partial_evidence_preserved
+    confidence_cap: 0.55
+    complete_when_evidence_missing: true
+    nullable_domain_fields_when_unknown: true
+  version_roadmap:
+  - stage: v0
+    target: LLM-only executable baseline
+  - stage: v1
+    target: Structural, receptor-role, and tumor-protein reference consensus
+  - stage: v2
+    target: Unit-preserving topology, tumor surface-proteomics, treatment, and direct-evidence adapters
+  - stage: v3
+    target: Multi-indication malignant-cell prevalence and isoform calibration
+  - stage: v4
+    target: Independent tumor-cohort validation and empirical calibration
+  model_card:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    summary: Unit- and scope-preserving T7 evidence consensus. It extends the v1 structural/receptor/tumor-protein prior with
+      quantitative CSPA context, an independent topology comparison, direct myeloma surface proteomics, scoped CD38/CD48 copies-per-cell
+      measurements, treatment-response rows, and a strict structured direct-evidence contract.
+    intended_use:
+    - Identify structural surface and extracellular-geometry support.
+    - Report receptor-role agreement without double-counting it as localization.
+    - Expose quantitative surface measurements with original assay units and sample scope.
+    - Populate calibrated antigen density only when an absolute, indication-matched assay supplies it.
+    - Merge complete experiment-validated T7 records under a machine-readable contract.
+    - Keep unresolved positive fraction, isoform, epitope, or treatment-stability fields null.
+    decision_role: Formal-candidate T7 challenger for exploration, evidence integration, and gap identification. Public reference
+      evidence alone remains uncertain and confidence-capped at 0.55.
+    method_summary: Deterministic gene and indication lookup against ADC_surfaceome_reference@0.3.0. Source families are not
+      double-counted; topology is compared with UniProt geometry; relative and absolute measurements remain separate; direct
+      records must satisfy T7DirectSurfaceEvidence@1.0.0.
+    input_requirements:
+    - Canonical target gene and indication.
+    - ADC_surfaceome_reference@0.3.0 processed tables and checksums.
+    - Version-bound T7 Gate input and upstream GateResults.
+    - Optional experiment-validated records conforming to T7DirectSurfaceEvidence@1.0.0.
+    output_interpretation: Every populated field states source, assay, unit, and scope. Null means not established. The 0.55
+      confidence cap is a governance bound, not an empirical probability calibration.
+    evidence_boundary:
+    - Topology cross-checks geometry only.
+    - CCI receptor annotations do not prove intact-cell localization.
+    - HPA IHC/CPTAC remain tissue-level protein proxies.
+    - CSPA and CSC-MS LFQ are relative quantities.
+    - CD38/CD48 copies-per-cell values apply only to the reported myeloma samples.
+    - Treatment fold changes do not define a universal stability score.
+    - GSE160572 processed FPKM was excluded because it is RNA, not surface protein.
+    known_failure_modes:
+    - Gene identifiers may not resolve all isoforms or legacy accessions.
+    - Cell-line surface abundance may not reproduce in primary tumors.
+    - Patient samples are small and indication-specific.
+    - Topology resources partly reuse UniProt and predictions and are correlated.
+    - The source-data sheet note for Fig. 2I says MFI while the article and methods define calibrated copies per cell; the
+      conflict is retained.
+    - No empirical calibration set maps these outputs to prospective Gate outcomes.
+    prohibited_uses:
+    - Extrapolating myeloma measurements to another indication.
+    - Converting relative intensity to copies per cell.
+    - Claiming malignant-cell prevalence or isoform fraction when null.
+    - Claiming antibody binding, ADC internalization, efficacy, or therapeutic index.
+    - Treating a descriptive twofold band as calibrated persistence.
+    - Promoting the Model to stable without independent review, validation, calibration, and human approval.
+  lifecycle:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    artifact_stage: formal_candidate
+    release_kind: patch
+    released_at: '2026-07-29T18:45:00Z'
+    predecessor_model_ref: tumor_cell_surface_availability_reference_consensus_v2@0.4.0
+    record_root: components/model_governance/tumor_cell_surface_availability_reference_consensus_v2/v0.4.1
+    change_summary:
+    - Corrected the rejected 0.4.0 release lineage to retain model_id across the SemVer successor.
+    - Preserved the 0.4.0 scientific behavior, ADC_surfaceome_reference@0.3.0 binding, and 0.55 confidence cap.
+    - Archived the rejected 0.4.0 artifact and Profile 0.2.1 selectors without modification.
+    - Retained v1@0.3.0 and Profile 0.2.0 for reproducible legacy replay.

@@ -1,0 +1,108 @@
+model:
+  model_id: target_opportunity_decision_integrator_v1
+  model_family: adc.v0_2.target_opportunity.target_opportunity_decision.deterministic_integrator
+  model_version: 0.1.0
+  gate_id: target_opportunity_decision
+  implementation: target_opportunity_decision_deterministic_integrator
+  status: formal_candidate
+  runtime:
+    model_name: Target Opportunity Decision Deterministic Integrator v1
+    model_type: rule_based
+    provider: ADC_target_opportunity_decision_integrator
+    input_schema: GateInputEnvelope@2.0.0
+    output_schema: GateModelOutput@2.0.0
+    cost_tier: medium
+    limitations:
+      - Requires all 12 version-bound upstream T0-T11 GateResults.
+      - Inherits correlated errors, evidence gaps, and calibration limits from upstream Models.
+      - The minimum-chain index is conservative but not empirically calibrated.
+      - A provisional advance is not a clinical, technical, regulatory, legal, or commercial approval.
+    calibration_status: uncalibrated_target_opportunity_index
+    training_data_version: ADC_target_opportunity_decision_integrator@0.1.0
+    prompt_version: null
+    enabled: true
+    weight: 1.0
+    default_confidence_cap: 0.55
+  contract_refs:
+    gate: components/gates/adc/v0.2/target_opportunity/12_target_opportunity_decision/v0.2.0/gate.yaml
+    input: components/contracts/gate_input.v2.yaml
+    output: components/contracts/model_output.v2.yaml
+  question_template: >-
+    Conjunctively integrate the complete T0-T11 GateResults into Biology Chain,
+    Delivery Chain, bottleneck, propagated hard-failure/unknown, confidence,
+    target-opportunity status, and next-resolution outputs.
+  evidence_policy:
+    may_use:
+      - Exact version-bound Candidate identity.
+      - Exact version-bound upstream T0-T11 GateResults and their Evidence IDs.
+    must_not_invent:
+      - Missing upstream results or scores.
+      - Empirical efficacy, safety, delivery, or therapeutic-index measurements.
+      - Clinical, regulatory, legal, commercial, or product-realization approval.
+  fallback_policy:
+    mode: neutral_common_score_with_exploration_only_domain_output
+    confidence_cap: 0.55
+    complete_when_evidence_missing: true
+    nullable_domain_fields_when_unknown: true
+  version_roadmap:
+    - stage: v0
+      target: LLM-only executable baseline
+    - stage: v1
+      target: Deterministic auditable T0-T11 conjunctive integration (this release)
+    - stage: v2
+      target: Independently reviewed failure and uncertainty propagation
+    - stage: v3
+      target: Outcome-backed retrospective calibration
+    - stage: v4
+      target: External validation and governed stable promotion
+  model_card:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    summary: >-
+      Deterministic T12 integrator that applies conjunctive minimum-chain
+      scoring, hard-failure propagation, missing-data protection, and explicit
+      next-action selection to the 12 upstream target-opportunity Gates.
+    intended_use:
+      - Produce an auditable target-opportunity synthesis after T0-T11.
+      - Identify the weakest biological or delivery Gate for evidence resolution.
+      - Provide a replaceable formal candidate beyond the LLM baseline.
+    decision_role: >-
+      Exploratory target-opportunity decision support before product-design
+      work; not an independently validated advancement decision.
+    method_summary: >-
+      Take the minimum normalized score within Biology T0-T6 and Delivery
+      T7-T11, use the weaker chain as the bottleneck, propagate graph-declared
+      hard failures and unresolved dependencies, and cap confidence at the
+      minimum upstream confidence and 0.55.
+    input_requirements:
+      - Exact Candidate identity.
+      - Complete T0-T11 GateResults for that Candidate.
+      - Frozen target_opportunity_decision@0.2.0 Gate contract.
+    output_interpretation: >-
+      Scores are conservative uncalibrated indices. `provisional_advance`
+      requires both chains to clear the fixed threshold with no unresolved
+      dependency; it is not a probability or approval.
+    evidence_boundary:
+      - Uses upstream GateResults once each and introduces no new empirical evidence.
+      - Confidence is propagated separately and never contributes to score.
+      - Missing or identity-mismatched dependencies remain exploration-only.
+    known_failure_modes:
+      - Correlated upstream evidence can make multiple GateResults non-independent.
+      - A single noisy low score can dominate the minimum.
+      - Upstream schema-valid results may still be scientifically weak.
+      - Thresholds and confidence are not calibrated against prospective outcomes.
+    prohibited_uses:
+      - Overriding an upstream hard failure or missing-data state.
+      - Treating the bottleneck score or confidence as an empirical probability.
+      - Claiming clinical efficacy, safety, regulatory approval, legal FTO, or commercial success.
+      - Replacing expert review, Gate-specific experiments, or downstream product realization.
+  lifecycle:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    artifact_stage: formal_candidate
+    release_kind: first_formal
+    released_at: "2026-07-29T23:47:28Z"
+    predecessor_model_ref: null
+    record_root: components/model_governance/target_opportunity_decision_integrator_v1/v0.1.0
+    change_summary:
+      - Added deterministic conjunctive Biology and Delivery Chain integration.
+      - Added explicit hard-failure, unresolved-dependency, and identity checks.
+      - Added auditable bottleneck and next-resolution-action selection.

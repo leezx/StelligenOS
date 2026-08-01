@@ -1,0 +1,139 @@
+model:
+  model_id: intervention_causality_evidence_v1
+  model_family: adc.v0_2.target_opportunity.intervention_causality.evidence_synthesis
+  model_version: 0.1.0
+  gate_id: intervention_causality
+  implementation: intervention_causality_evidence_synthesis
+  status: active_challenger
+  runtime:
+    model_name: Intervention Causality Evidence Synthesis v1
+    model_type: rule_based
+    provider: ADC_intervention_causality_evidence
+    input_schema: GateInputEnvelope@2.0.0
+    output_schema: GateModelOutput@2.0.0
+    cost_tier: medium
+    limitations:
+    - The Model synthesizes a supplied evidence bundle and does not execute depletion experiments or recompute raw screening, lineage, imaging, pathology, pharmacology, or outcome data.
+    - It requires usable identity-consistent T1 and T2 GateResults; T2 mapping contributes no causal score.
+    - Controlled selective depletion, exact population/endpoint match, an on-target control, and a target-negative or nonpopulation control are required.
+    - Gene knockout, target blockade, direct cell ablation, and ADC-mediated killing are not interchangeable interventions.
+    - Generic cell fitness is not automatically the locked clinical endpoint.
+    - Initial response and durable response remain separate; durable response requires longitudinal follow-up.
+    - causal_intervention_confidence is an uncalibrated evidence-strength index, not a probability.
+    calibration_status: uncalibrated_causal_evidence_index
+    training_data_version: ADC_intervention_causality_evidence@0.1.0
+    prompt_version: null
+    enabled: true
+    weight: 1.0
+    default_confidence_cap: 0.55
+  contract_refs:
+    gate: components/gates/adc/v0.2/target_opportunity/03_intervention_causality/v0.2.0/gate.yaml
+    input: components/contracts/gate_input.v2.yaml
+    output: components/contracts/model_output.v2.yaml
+  question_template: >-
+    For the exact target-positive, endpoint-driving population established by
+    T1 and T2, what controlled evidence shows that selective depletion changes
+    the exact endpoint? Preserve early and durable response, necessity,
+    depletion sufficiency, redundancy, replenishment, rescue, orthogonal
+    validation, and independent replication separately. Do not convert target
+    mapping, generic fitness, or ADC feasibility into causal evidence.
+  evidence_policy:
+    may_use:
+    - Usable endpoint_driving_population GateResult with an explicit target-independent population.
+    - Usable target_population_mapping GateResult with non-null mapping_confidence and an exact identity audit.
+    - Version-bound Candidate and TargetOpportunityContext for indication consistency.
+    - Evidence type intervention_causality_evidence_v1 bound to ADC_intervention_causality_evidence@0.1.0.
+    - Controlled selective-depletion measurements with explicit comparator, model, endpoint readout, time, and source metadata.
+    must_not_invent:
+    - depletion selectivity, efficiency, endpoint effect, or response magnitude
+    - comparator behavior, target-negative control, on-target control, or confounder control
+    - necessity, sufficiency, rescue, orthogonal validation, or independent replication
+    - initial or durable response, follow-up duration, redundancy, or replenishment
+    - equivalence between genetic, pharmacological, cellular, or ADC interventions
+    - clinical response, survival benefit, safety, or probability of causal success
+  fallback_policy:
+    mode: neutral_common_score_with_nullable_domain_outputs
+    confidence_cap: 0.55
+    complete_when_evidence_missing: true
+    nullable_domain_fields_when_unknown: true
+  version_roadmap:
+  - stage: v0.1
+    target: Identity-locked selective-depletion evidence ontology and causal-strength synthesis
+  - stage: v0.2
+    target: Versioned adapters for CRISPR, inducible ablation, antibody depletion, lineage, organoid, and in-vivo result objects
+  - stage: v0.3
+    target: Perturbation fidelity, off-target, copy-number, model-transport, and time-to-replenishment analyses
+  - stage: v1
+    target: Independent blinded causal, translational, computational, pharmacological, and statistical validation
+  - stage: v2
+    target: Prospective endpoint-specific outcome calibration, monitoring, and stable promotion
+  model_card:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    summary: >-
+      Deterministic T3 Model that tests whether controlled selective depletion
+      of the exact T1/T2 target-positive population changes the locked endpoint.
+      It returns all eight frozen outputs, separates initial from durable
+      response and necessity from sufficiency, audits redundancy and
+      replenishment, requires explicit controls, and caps evidence strength by
+      rescue, orthogonal validation, independent replication, and durability.
+    intended_use:
+    - Distinguish target mapping from causal benefit of depleting the mapped population.
+    - Summarize controlled endpoint effects, early response, durable response, necessity, and depletion sufficiency.
+    - Identify biological redundancy and population plasticity/replenishment risks.
+    - Specify the strongest missing causal experiment before downstream escape and benefit Gates.
+    decision_role: >-
+      Low-confidence evidence-synthesis challenger for hard Gate T3. A high
+      index means the supplied controlled evidence aligns after deterministic
+      tier caps; it does not prove human benefit or validate an ADC product.
+    method_summary: >-
+      The Model checks exact T1/T2 target, population, and endpoint identity,
+      validates controlled selective-depletion design, audits each supplied or
+      count-derived component, requires longitudinal evidence for durability,
+      converts explicit risk values to nonredundancy/nonreplenishment support,
+      and applies evidence-tier caps based on rescue, orthogonal validation,
+      replication, and durable follow-up.
+    input_requirements:
+    - Usable endpoint_driving_population@0.2.0 result with a target-independent population and locked endpoint.
+    - Usable target_population_mapping@0.2.0 result with non-null mapping_confidence and exact identity audit.
+    - Exact Candidate target and indication.
+    - One intervention_causality_evidence_v1 bundle bound to ADC_intervention_causality_evidence@0.1.0.
+    - Controlled selective-depletion design and measurement-level experimental metadata.
+    output_interpretation: >-
+      Numeric and structured components are local evidence-strength values, not
+      universal effect sizes. causal_intervention_confidence is an
+      uncalibrated composite index; Model confidence is a separate capped
+      governance value. Formal-candidate results remain exploratory.
+    evidence_boundary:
+    - T1 defines the endpoint-driving population independently of the target.
+    - T2 maps the target to that population but contributes no T3 causal score.
+    - T3 assesses selective-depletion causality under a declared experiment.
+    - T4 integrates residual disease and escape beyond that experiment.
+    - T7 and product Gates own surface availability, delivery, exposure, payload, construct, safety, and clinical realization.
+    known_failure_modes:
+    - CRISPR copy-number and off-target effects can create false dependencies.
+    - A perturbation can alter the endpoint through unintended cells, pathways, or toxicity.
+    - Cell-line fitness dependencies can fail to transport to patient tumors or clinical endpoints.
+    - Endpoint effects can be compartment-specific, as primary and metastatic tumors may depend differently on the same population.
+    - Short follow-up can miss plasticity, replenishment, residual disease, and relapse.
+    - Rescue, orthogonal, and independent labels can be overstated or share hidden experimental sources.
+    prohibited_uses:
+    - Counting T2 sensitivity, specificity, prevalence, or mapping confidence as causal evidence.
+    - Treating correlation, target expression, trajectory inference, or generic viability loss as proof of endpoint causality.
+    - Inferring durable response from an early response.
+    - Inferring necessity from sufficiency or sufficiency from necessity.
+    - Treating gene knockout, target blockade, cell ablation, and ADC-mediated killing as interchangeable.
+    - Claiming clinical efficacy, survival benefit, safety, or treatment recommendation.
+    - Treating causal_intervention_confidence or Model confidence as probability.
+  lifecycle:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    artifact_stage: formal_candidate
+    release_kind: first_formal
+    released_at: '2026-07-30T03:57:30Z'
+    record_root: components/model_governance/intervention_causality_evidence_v1/v0.1.0
+    change_summary:
+    - Replaced generative T3 completion with deterministic controlled selective-depletion evidence synthesis.
+    - Added exact T1/T2 identity and target-independence checks.
+    - Added explicit design requirements, measurement auditing, and count-conflict rejection.
+    - Separated early/durable response, necessity/sufficiency, redundancy/replenishment, and rescue/replication evidence.
+    - Added evidence-tier caps and a strict prohibition on using T2 mapping as T3 causal score.
+    - Added package-local tests, source verification, internal review, reproducibility validation, and calibration-gap records.

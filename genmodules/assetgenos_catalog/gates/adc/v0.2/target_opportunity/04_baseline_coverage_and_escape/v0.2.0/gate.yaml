@@ -1,0 +1,143 @@
+gate:
+  gate_id: baseline_coverage_and_escape
+  gate_family: adc.v0_2.target_opportunity.baseline_coverage_and_escape
+  gate_version: 0.2.0
+  sequence: 4
+  name: Coverage, Residual Disease and Escape
+  purpose: Quantify baseline target-negative, antigen-low, spatially inaccessible, lineage-switching, and payload-resistant
+    residual disease.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - upstream_gate_results
+    outputs:
+    - baseline_target_negative_fraction
+    - causal_population_uncovered_fraction
+    - antigen_low_escape_risk
+    - target_loss_risk
+    - lineage_switch_risk
+    - spatial_escape_risk
+    - metastatic_escape_risk
+    - payload_resistance_overlap
+    - residual_disease_risk
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium
+    default_model_ids:
+    - baseline_coverage_and_escape_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: target_opportunity
+    group_code: T
+    priority: P1
+    dependencies:
+    - target_population_mapping
+    - intervention_causality
+    output_defaults:
+      baseline_target_negative_fraction: null
+      causal_population_uncovered_fraction: null
+      antigen_low_escape_risk: null
+      target_loss_risk: null
+      lineage_switch_risk: null
+      spatial_escape_risk: null
+      metastatic_escape_risk: null
+      payload_resistance_overlap: null
+      residual_disease_risk: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      baseline_target_negative_fraction:
+        type: number[0,1]
+        description: 'Frozen baseline_coverage_and_escape@0.2.0 output field: baseline_target_negative_fraction.'
+        required: true
+        nullable: true
+      causal_population_uncovered_fraction:
+        type: number[0,1]
+        description: 'Frozen baseline_coverage_and_escape@0.2.0 output field: causal_population_uncovered_fraction.'
+        required: true
+        nullable: true
+      antigen_low_escape_risk:
+        type: number[0,1]
+        description: 'Frozen baseline_coverage_and_escape@0.2.0 output field: antigen_low_escape_risk.'
+        required: true
+        nullable: true
+      target_loss_risk:
+        type: number[0,1]
+        description: 'Frozen baseline_coverage_and_escape@0.2.0 output field: target_loss_risk.'
+        required: true
+        nullable: true
+      lineage_switch_risk:
+        type: number[0,1]
+        description: 'Frozen baseline_coverage_and_escape@0.2.0 output field: lineage_switch_risk.'
+        required: true
+        nullable: true
+      spatial_escape_risk:
+        type: number[0,1]
+        description: 'Frozen baseline_coverage_and_escape@0.2.0 output field: spatial_escape_risk.'
+        required: true
+        nullable: true
+      metastatic_escape_risk:
+        type: number[0,1]
+        description: 'Frozen baseline_coverage_and_escape@0.2.0 output field: metastatic_escape_risk.'
+        required: true
+        nullable: true
+      payload_resistance_overlap:
+        type: string_or_structured_object
+        description: 'Frozen baseline_coverage_and_escape@0.2.0 output field: payload_resistance_overlap.'
+        required: true
+        nullable: true
+      residual_disease_risk:
+        type: number[0,1]
+        description: 'Frozen baseline_coverage_and_escape@0.2.0 output field: residual_disease_risk.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

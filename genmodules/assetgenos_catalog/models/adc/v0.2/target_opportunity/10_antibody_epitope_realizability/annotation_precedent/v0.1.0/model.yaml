@@ -1,0 +1,135 @@
+model:
+  model_id: antibody_epitope_realizability_annotation_precedent_v1
+  model_family: adc.v0_2.target_opportunity.antibody_epitope_realizability.annotation_precedent
+  model_version: 0.1.0
+  gate_id: antibody_epitope_realizability
+  implementation: epitope_annotation_precedent_lookup
+  status: active_challenger
+  runtime:
+    model_name: Antibody and Epitope Realizability Annotation and Precedent Reference v0.1.0
+    model_type: database_lookup
+    provider: ADC_epitope_realizability_reference
+    input_schema: GateInputEnvelope@2.0.0
+    output_schema: GateModelOutput@2.0.0
+    cost_tier: low
+    limitations:
+    - Five of the nine frozen contract fields cannot be established from this release's evidence base and are always null.
+    - No predicted or experimental structure, solvent accessibility, epitope patch geometry, or antibody footprint is used.
+    - No cross-species orthology is used, so ECD conservation is not assessed.
+    - Extracellular-domain intervals come from a single topology atlas, not a multi-source topology consensus.
+    - Curated glycosylation annotation is incomplete and biased toward well-studied proteins; absence of a CARBOHYD record is not absence of glycosylation.
+    - ADCdb antibody precedent reflects historical programme choices, not epitope quality, and only 206 genes have any resolvable antibody record.
+    - Antibody counts cannot be deduplicated by sponsor or by parent clone.
+    - 55 real ADC target antigens (GPI-anchored, secreted, intracellular, glycan, and viral or neoantigen targets) have no transmembrane topology row and resolve the antibody-precedent group only.
+    - No antibody sequence exists at a target-level Gate, so sequence-level developability is never computed.
+    calibration_status: uncalibrated
+    training_data_version: ADC_epitope_realizability_reference@0.1.0
+    prompt_version: null
+    enabled: true
+    weight: 1.0
+    default_confidence_cap: 0.40
+  contract_refs:
+    gate: components/gates/adc/v0.2/target_opportunity/10_antibody_epitope_realizability/v0.2.0/gate.yaml
+    input: components/contracts/gate_input.v2.yaml
+    output: components/contracts/model_output.v2.yaml
+  question_template: Evaluate Antibody and Epitope Realizability for the exact version-bound v0.2 input
+    objects using the version-bound ADC_epitope_realizability_reference dataset. Report the candidate
+    target's real extracellular-domain geometry, curated in-ECD glycosylation burden, isoform-invariant
+    and isoform-variable ECD extents, and ADC antibody precedent. Populate only the fields the evidence
+    base supports and leave epitope-level availability, cross-species conservation, internalizing
+    probability, and affinity-window feasibility null. When the target gene is not covered, return null
+    domain fields and an unknown result rather than inferring that an epitope is unrealizable.
+  evidence_policy:
+    may_use:
+    - version-bound extracellular-domain topology intervals for the candidate's target gene
+    - version-bound curated UniProtKB glycosylation, disulfide, and alternative-sequence annotation
+    - version-bound ADCdb antibody precedent counts, subtypes, and highest observed clinical stage
+    - supplied experiment_validated or human_asserted epitope realizability Evidence
+    - version-bound candidate and v0.2 context objects
+    must_not_invent:
+    - solvent accessibility, epitope patch geometry, or antibody footprints
+    - cross-species sequence identity or antibody cross-reactivity probability
+    - epitope-resolved internalization rates
+    - antigen density or an affinity window
+    - antibody sequence-level developability liabilities
+    - glycosylation or isoform features absent from the curated annotation
+  fallback_policy:
+    mode: gene_unresolved_unknown
+    confidence_cap: 0.40
+    complete_when_evidence_missing: true
+    nullable_domain_fields_when_unknown: true
+  version_roadmap:
+  - stage: v0
+    target: LLM-only executable baseline
+  - stage: v1
+    target: Deterministic curated-annotation and ADC-precedent reference lookup (this release)
+  - stage: v2
+    target: AlphaFold and PDB accessibility with pLDDT gating and patch geometry, plus Ensembl Compara
+      ECD-restricted conservation, populating functional_epitope_availability and epitope_conservation
+  - stage: v3
+    target: Measured per-epitope antibody binding, epitope-resolved internalization, and T7 antigen
+      density under a structured direct-evidence contract, making an affinity window computable
+  - stage: v4
+    target: Independent review, independent validation, and outcome-referenced calibration
+  model_card:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    summary: Deterministic lookup for Gate T10 reporting a target's real extracellular-domain geometry,
+      curated in-ECD glycosylation burden, isoform-invariant versus isoform-variable ECD extents, and
+      ADC antibody precedent, without any structural, accessibility, or cross-species evidence.
+    intended_use:
+    - Gate-local exploration support for antibody and epitope realizability analysis.
+    - Provide real, checksum-reproducible extracellular-domain annotation in place of the LLM baseline's
+      no-evidence guess.
+    - Identify which realizability questions the public annotation base cannot answer, so they can be
+      commissioned rather than assumed.
+    - Serve as a replaceable challenger Model pending independent antibody-discovery review.
+    decision_role: Gate-local exploration support; not an independently validated antibody-feasibility
+      predictor and not a basis for accepting or rejecting a target.
+    method_summary: Deterministic lookup over a version-bound reference table joining T7's curated
+      membrane-topology intervals with UniProtKB reviewed-human feature annotation and ADCdb antibody
+      precedent. Four evidence groups each yield a sub-score in [0,1]; the score is the coverage-weighted
+      mean over only the groups the evidence populated, and confidence rises 0.08 per populated group
+      from a 0.10 base to a hard 0.40 cap.
+    input_requirements:
+    - Version-bound Candidate identity, in particular target_gene.
+    - Version-bound target_opportunity context and upstream GateResults.
+    - Supplied Evidence.
+    - The built ADC_epitope_realizability_reference@0.1.0 dataset.
+    output_interpretation: A confidence-capped uncertain or unknown output describing annotation
+      completeness and precedent, never a measured probability that an antibody against this target can
+      be realized. A high score means the annotation base is rich and unproblematic, not that the
+      epitope is good.
+    evidence_boundary:
+    - May use only the version-bound annotation and precedent tables plus supplied direct Evidence.
+    - May not infer structure, accessibility, conservation, internalization, or affinity.
+    - A gene absent from the reference yields unknown, never an unrealizable-epitope claim.
+    - A gene present with no antibody precedent is a confirmed absence within ADCdb's coverage, not
+      evidence that an antibody cannot be raised.
+    known_failure_modes:
+    - A well-annotated but genuinely difficult epitope scores highly, because annotation completeness is
+      not epitope quality.
+    - A poorly studied but realizable target scores low for lack of curated annotation.
+    - Targets whose topology and UniProt records disagree on protein length lose three of four evidence
+      groups and fall to a 0.18 confidence unknown.
+    - GPI-anchored, secreted, intracellular, and glycan antigens resolve precedent only.
+    - Highest observed clinical stage reflects ADCdb's fixed snapshot, not current pipeline reality.
+    prohibited_uses:
+    - Claiming an epitope is realizable or unrealizable on the basis of this Model.
+    - Reading the score as an antibody feasibility probability.
+    - Treating absence of a CARBOHYD or VAR_SEQ record as evidence of absent glycosylation or absent
+      isoform interference.
+    - Using ADCdb antibody counts as epitope-level competitive or feasibility data.
+    - Treating the confidence cap as a calibrated probability of a correct realizability assessment.
+    - Substituting ECD sequence identity for a cross-reactivity measurement.
+  lifecycle:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    artifact_stage: formal_candidate
+    release_kind: first_formal
+    released_at: '2026-07-29T23:15:00Z'
+    predecessor_model_ref: null
+    record_root: components/model_governance/antibody_epitope_realizability_annotation_precedent_v1/v0.1.0
+    change_summary:
+    - "First formal, evidence-grounded T10 Model: real curated extracellular-domain geometry, in-ECD glycosylation burden, isoform-invariance extents, and ADC antibody precedent."
+    - "Deliberately scoped to data already on disk plus one UniProtKB download; structural accessibility and cross-species conservation are deferred to 0.2.0 rather than approximated."
+    - "Five of nine contract fields are held null with a stated reason; species_cross_reactivity is refused even where a proxy would fit the field type."
+    - No independent antibody-discovery review, no independent validation, and no calibration claim.
