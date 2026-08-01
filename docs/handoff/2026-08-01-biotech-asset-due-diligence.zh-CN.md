@@ -24,7 +24,7 @@
 
 ## 验证
 
-- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`: 31 passed
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`: 39 passed
 - `./scripts/verify_repository_boundary.sh`: passed
 - `git diff --check`: passed
 - 迁移目录未发现数据后缀、样例目录、归档或 runner。
@@ -52,7 +52,7 @@
 
 ## 当前复审基线
 
-- 当前 PR tip：`f9f3157`（以 GitHub PR 页面实时 HEAD 为权威）。
+- 当前 PR tip：`645e9e2`（以 GitHub PR 页面实时 HEAD 为权威）。
 - 当前合并状态：`MERGEABLE/CLEAN`。
 - 当前验证：`39 tests passed`、repository boundary check passed、`git diff --check` passed。
 - 冲突解决：`genmodules/README.md` 同时保留 `biotech_asset_due_diligence` 与 `gate_model_rule` 两个模块条目。
