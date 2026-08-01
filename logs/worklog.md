@@ -236,6 +236,15 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/chatgpt-review-2026-08-01-model-contract-adapter.md`
   - `logs/worklog.md`
 
+### 2026-08-01 12:25 EDT
+
+- Action: Closed the PR review gate before merge.
+- How: Submitted the metadata-only follow-up through the ChatGPT `GitHub PR 信息` conversation with GitHub reselected via the `+` menu; ChatGPT confirmed the added files were audit metadata only and returned `APPROVE`, explicitly stating `可以合并 PR #12`.
+- Result: Updated the handoff to record both approvals and the pending squash-merge state. No further PR content changes are planned before merge.
+- Files affected:
+  - `docs/handoff/2026-08-01-model-contract-adapter.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 11:01 EDT
 
 - Action: Converted `ChatGPT-Codex-talk.md` into the canonical execution-first interaction protocol and surfaced it from the repo entry docs.
