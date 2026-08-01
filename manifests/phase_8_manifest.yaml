@@ -1,5 +1,7 @@
 phase: phase_8
-status: review_pending
+status: pr_open_review_pending
+pr: 9
+pr_url: https://github.com/leezx/StelligenOS/pull/9
 scope: architecture_freeze_release_rules
 repository_boundary: software_only_external_data
 top_level_lifecycle_frozen: true
