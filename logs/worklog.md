@@ -350,3 +350,12 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Files affected:
   - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 12:42 EDT
+
+- Action: 修复 ChatGPT 最终复审发现的 handoff 当前 tip 残留。
+- How: 将 handoff 当前状态从 `dedf6e2` 更新到 `ba92c32`，并把 `git diff main...ba92c32 --check` 作为当前 aggregate 验证记录；保留旧 tip 作为历史记录。
+- Result: 当前 PR tip、handoff 状态和验证记录即将统一到 `ba92c32`；用户的反馈文件仍未暂存。
+- Files affected:
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`
