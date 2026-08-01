@@ -2,7 +2,7 @@
 
 - 任务编号：`task_20260801_gen-iet-phase7-t12-ranking`
 - 父阶段：Phase 6，已获 ChatGPT `APPROVE`
-- 当前状态：Phase 7 contract-only 完成，等待 ChatGPT PR 审核
+- 当前状态：Phase 7 contract-only 完成，ChatGPT 已 APPROVE，可进入 Phase 8
 - Gate 变更：`NO_GATE_CHANGE`
 
 ## 已实现
@@ -25,4 +25,4 @@
 
 ## 下一步
 
-等待 ChatGPT 审核并批准 Phase 7 PR；批准前不得进入 Phase 8 End-to-End Pilot 或运行真实 T12。
+ChatGPT 已批准 Phase 7 PR，记录见 `logs/chatgpt-review-2026-08-01-gen-iet-phase7.md`。下一步从本阶段批准 tip 建立新分支，进入 Phase 8 End-to-End Pilot contract；Phase 8 必须单独提交 PR 审核，真实 CRC 数据仍在仓库外部。

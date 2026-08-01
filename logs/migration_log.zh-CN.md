@@ -88,4 +88,4 @@
 - 基于 ChatGPT 已批准的 Phase 6，在独立分支新增 external-only T12 Decision Integrator、Opportunity Handoff Package 和 Ranking ports。
 - 要求 T12 绑定 readiness 与完整 T0-T11 trace，保留四类决策状态；Ranking 不能覆盖 T12/Hard Gate 语义，资产生成资格固定为 false。
 - 未运行 T12/ranking，未读取证据或临床数据，未创建本地 Opportunity/handoff，未进入 Binder 开发，未执行 P-chain 或写入数据库、cache、result、weights、runner 或新 Gate。
-- 73 个 unittest、repository boundary 和 `git diff --check` 均通过；当前状态为 `COMPLETED_PENDING_REVIEW`，等待 ChatGPT 审核后才可进入 Phase 8。
+- 73 个 unittest、repository boundary 和 `git diff --check` 均通过；ChatGPT 已返回 `APPROVE`，Phase 7 状态为 `APPROVED_PHASE_7`，可以进入 Phase 8；Phase 8 仍需独立 PR 审核，真实 CRC 数据保持外部。

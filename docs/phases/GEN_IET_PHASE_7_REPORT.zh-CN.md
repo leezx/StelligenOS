@@ -3,7 +3,7 @@
 - 阶段：Phase 7，T12 Decision and Ranking
 - 分支：`task_20260801_gen-iet-phase7-t12-ranking`
 - 父阶段：Phase 6，已获 ChatGPT `APPROVE`
-- 状态：`COMPLETED_PENDING_REVIEW`
+- 状态：`APPROVED_PHASE_7`
 - Gate 变更：`NO_GATE_CHANGE`
 
 ## 本阶段实现
@@ -30,5 +30,5 @@ Opportunity/handoff 记录，没有进入 Binder 开发，没有执行 P-chain�
 
 ## 停止点
 
-等待 ChatGPT 审核 Phase 7 contract-only PR。批准前不进入 Phase 8 End-to-End
-Pilot，也不运行真实 T12 或资产生成。
+ChatGPT 已批准 Phase 7 contract-only PR，可以进入 Phase 8。该批准不包括
+Phase 8 实现或真实 T12；Phase 8 必须从本阶段批准 tip 创建新分支并单独提交审核。
