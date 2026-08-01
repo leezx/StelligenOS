@@ -1,5 +1,5 @@
 phase: phase_4
-status: approved_pending_merge
+status: merged
 pr: 5
 pr_url: https://github.com/leezx/StelligenOS/pull/5
 scope: opportunity_generation_external_contract
@@ -11,6 +11,7 @@ automatic_promotion_added: false
 chatgpt_review: APPROVE
 phase_decision: 可以进入 Phase 5
 approval_record: logs/chatgpt-review-2026-08-01-phase4-final.md
+merge_commit: d2f8c09
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
   - ./scripts/verify_repository_boundary.sh
