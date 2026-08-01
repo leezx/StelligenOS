@@ -6,7 +6,8 @@
 - 分支：`task_20260801_phase5-binder-adc-routes`
 - Base：Phase 4 合并后的 `main` at `d2f8c09`
 - PR：[#6](https://github.com/leezx/StelligenOS/pull/6)
-- 状态：ChatGPT 已批准，等待 PR 合并
+- 状态：已获 ChatGPT 批准并合并
+- 合并提交：`10fe06b`
 
 ## 范围
 
@@ -31,4 +32,4 @@ Asset Engineering 和 Epitope-Conditioned de novo Antibody Discovery。路线运
 ## 下一步
 
 PR #6 已提交到网页版 ChatGPT 的“GitHub PR 信息”聊天并获得明确 `APPROVE`，
-可以进入 Phase 6。合并后从最新 `main` 创建 Phase 6 分支。
+随后 squash merge 为 `10fe06b`。可以进入 Phase 6；当前分支已从最新 `main` 创建。

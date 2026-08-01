@@ -483,6 +483,19 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-phase-5-binder-adc-routes.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 16:22 EDT
+
+- Action: 完成 Phase 5 PR #6 的 squash merge，并开始 Phase 6。
+- How: 核实 PR #6 远端状态为 `MERGED`，合并提交为 `10fe06b`；从最新 `origin/main`
+  创建 `task_20260801_phase6-ip-fto-dd-portfolio`；同步 Phase 5 的 report、handoff、
+  manifest、README 为已合并状态。
+- Result: Phase 5 状态闭环，Phase 6 进入实现阶段；本阶段继续只建立软件合同和外部边界。
+- Files affected:
+  - `README.md`
+  - `manifests/phase_5_manifest.yaml`
+  - `docs/handoff/2026-08-01-phase-5-binder-adc-routes.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 13:05 EDT
 
 - Action: 完成 Phase 1 PR #2 的最终 ChatGPT 门禁审核。
