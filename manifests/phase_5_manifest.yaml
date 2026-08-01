@@ -1,5 +1,5 @@
 phase: phase_5
-status: pr_open_review_pending
+status: approved_pending_merge
 pr: 6
 pr_url: https://github.com/leezx/StelligenOS/pull/6
 scope: binder_adc_generation_route_contracts
@@ -12,7 +12,9 @@ routes:
     stages: 14
   - id: epitope_conditioned_de_novo_antibody_discovery
     stages: 15
-chatgpt_review: pending
+chatgpt_review: APPROVE
+phase_decision: 可以进入 Phase 6
+approval_record: logs/chatgpt-review-2026-08-01-phase5-final.md
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
   - ./scripts/verify_repository_boundary.sh

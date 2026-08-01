@@ -30,5 +30,5 @@
 
 ## 5. 结论
 
-Phase 5 仅建立两条 Binder/ADC 生成路线的架构合同和外部端口。待 PR 经 ChatGPT
-明确 `APPROVE` 后，才允许进入 Phase 6 IP/FTO、Due Diligence 和 Portfolio 能力迁移。
+Phase 5 仅建立两条 Binder/ADC 生成路线的架构合同和外部端口。PR #6 经 ChatGPT
+明确 `APPROVE`，可以进入 Phase 6 IP/FTO、Due Diligence 和 Portfolio 能力迁移。
