@@ -541,6 +541,19 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/migration_log.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 20:45 EDT
+
+- Action: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天完成 PR #26 Phase 8 审核。
+- How: 确认 GitHub 来源已选中；要求 ChatGPT 只审查外部 CRC pilot 边界、Phase 0-7 trace、候选结果不偏置、资产生成关闭和 75 项验证，不扩展到 Phase 9。
+- Result: ChatGPT 返回 `APPROVE`，明确“Phase 8 审核通过，可以进入 Phase 9”。审核记录保存到 `logs/chatgpt-review-2026-08-01-gen-iet-phase8.md`；manifest、report、handoff 和 migration log 已更新为 `approved_phase_8`。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-gen-iet-phase8.md`
+  - `manifests/gen_iet_phase_8_manifest.yaml`
+  - `docs/phases/GEN_IET_PHASE_8_REPORT.zh-CN.md`
+  - `docs/handoff/2026-08-01-gen-iet-phase-8.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
 - Follow-up: ChatGPT 对最新 HEAD `d87e379` 完成 metadata-only 复核并返回 `APPROVE`，确认没有扩大批准范围或新增执行代码、数据、存储、Gate 或 runtime。
 
 ### 2026-08-01 15:39 EDT

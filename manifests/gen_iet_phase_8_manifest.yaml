@@ -1,7 +1,7 @@
 manifest_version: "1.0.0"
 module_id: gen_indication_endpoint_target
 phase: 8
-status: completed_pending_review
+status: approved_phase_8
 parent_phase: 7
 parent_approval: logs/chatgpt-review-2026-08-01-gen-iet-phase7.md
 gate_change_declaration: NO_GATE_CHANGE
@@ -55,5 +55,7 @@ validation:
   git_diff_check: passed
 
 decision:
-  requires_chatgpt_review: true
-  proceed_to_phase_9: false
+  requires_chatgpt_review: false
+  proceed_to_phase_9: true
+  approved_by: ChatGPT
+  approval_record: logs/chatgpt-review-2026-08-01-gen-iet-phase8.md

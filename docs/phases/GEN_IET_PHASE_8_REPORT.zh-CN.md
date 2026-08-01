@@ -3,7 +3,7 @@
 - 阶段：Phase 8，End-to-End Pilot
 - 分支：`task_20260801_gen-iet-phase8-external-pilot`
 - 父阶段：Phase 7，已获 ChatGPT `APPROVE`
-- 状态：`COMPLETED_PENDING_REVIEW`
+- 状态：`APPROVED_PHASE_8`
 - Gate 变更：`NO_GATE_CHANGE`
 
 ## 本阶段实现
@@ -30,5 +30,5 @@ Rule、Model 或 P-chain，没有生成资产，没有创建本地 pilot/candida
 
 ## 停止点
 
-等待 ChatGPT 审核 Phase 8 external pilot contract-only PR。批准前不进入 Phase
-9 Freeze and Release，也不执行真实 CRC pilot。
+ChatGPT 已批准 Phase 8 external pilot contract-only PR，可以进入 Phase 9。
+该批准不包括真实 CRC pilot；Phase 9 必须从本阶段批准 tip 创建新分支并单独提交审核。

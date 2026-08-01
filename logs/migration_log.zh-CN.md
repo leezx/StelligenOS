@@ -95,4 +95,4 @@
 - 基于 ChatGPT 已批准的 Phase 7，在独立分支新增受限 CRC ClinicalFrame external-only End-to-End Pilot port。
 - 保留完整 Phase 0-7 trace、外部 data bundle 和候选结果引用；不预设 TWEAKR 或任何候选胜出，允许保留/HOLD/淘汰/全部不推进。
 - 未复制或读取 CRC 数据，未运行 T0-T12/Gate/Rule/Model/P-chain/真实 pilot，未生成资产或写入数据库、cache、result、weights、runner 或新 Gate。
-- 75 个 unittest、repository boundary 和 `git diff --check` 均通过；当前状态为 `COMPLETED_PENDING_REVIEW`，等待 ChatGPT 审核后才可进入 Phase 9。
+- 75 个 unittest、repository boundary 和 `git diff --check` 均通过；ChatGPT 已返回 `APPROVE`，Phase 8 状态为 `APPROVED_PHASE_8`，可以进入 Phase 9；真实 CRC pilot 保持外部。

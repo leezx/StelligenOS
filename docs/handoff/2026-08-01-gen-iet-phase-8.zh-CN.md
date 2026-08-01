@@ -2,7 +2,7 @@
 
 - 任务编号：`task_20260801_gen-iet-phase8-external-pilot`
 - 父阶段：Phase 7，已获 ChatGPT `APPROVE`
-- 当前状态：Phase 8 external pilot contract-only 完成，等待 ChatGPT PR 审核
+- 当前状态：Phase 8 external pilot contract-only 完成，ChatGPT 已 APPROVE，可进入 Phase 9
 - Gate 变更：`NO_GATE_CHANGE`
 
 ## 已实现
@@ -26,4 +26,4 @@
 
 ## 下一步
 
-等待 ChatGPT 审核并批准 Phase 8 PR；批准前不得进入 Phase 9 Freeze and Release 或执行真实 CRC pilot。
+ChatGPT 已批准 Phase 8 PR，记录见 `logs/chatgpt-review-2026-08-01-gen-iet-phase8.md`。下一步从本阶段批准 tip 建立新分支，进入 Phase 9 Freeze and Release；真实 CRC pilot 仍需外部授权并保持在仓库外。
