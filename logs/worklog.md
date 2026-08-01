@@ -356,6 +356,16 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `README.md`
   - `logs/worklog.md`
 
+### 2026-08-01 13:02 EDT
+
+- Action: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天提交 Phase 2 PR #3 审核。
+- How: 使用已选中的 GitHub 来源，要求读取完整 changed files、commits、PR 描述、aggregate diff、架构契约、Phase 2 文档、对象/状态机/Ledger 代码和测试；审核严格限制在 Phase 2 最小范围。
+- Result: ChatGPT 返回 `REQUEST_CHANGES`；核心实现、测试和数据边界均通过，唯一阻断是 handoff 的 PR 状态仍为“待创建”。原始反馈保存到 `logs/chatgpt-review-2026-08-01-phase2-revision-1.md`，已开始最小元数据修订。
+- Files affected:
+  - `docs/handoff/2026-08-01-phase-2-core-model.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-01-phase2-revision-1.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 12:49 EDT
 
 - Action: 处理 ChatGPT 对 Phase 1 PR #2 的第一轮 `REQUEST_CHANGES`。

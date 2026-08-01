@@ -5,8 +5,10 @@
 - 任务编号：`task_20260801_phase2-core-model`
 - 分支：`task_20260801_phase2-core-model`
 - Base：`main` at `9eb2b7a`
-- PR：待创建
-- 状态：等待创建 PR 并提交 ChatGPT 审核
+- PR：[#3](https://github.com/leezx/StelligenOS/pull/3)
+- 最近一次已验证 PR tip：`66b057a`
+- 当前 PR tip 和 aggregate diff：以 GitHub PR 页面实时状态为唯一权威；本文件不自引用其自身提交 hash。
+- 状态：等待 ChatGPT 对 PR #3 完成复审
 
 ## 总纲与范围
 
@@ -31,8 +33,9 @@ Phase 2 来源于总纲中“建立核心对象模型、状态机和 Evidence Le
 
 - `python3 -m unittest discover -s tests -p 'test_phase2_contracts.py' -v`：4 项通过。
 - `./scripts/verify_repository_boundary.sh`：通过。
+- `git diff origin/main...66b057a --check`：通过。
 - `git diff --check`：通过。
 
 ## 下一步
 
-创建 PR 后等待 ChatGPT 明确返回 `APPROVE`。在获得批准前不得进入 Phase 3。
+PR #3 已创建，等待 ChatGPT 明确返回 `APPROVE`。在获得批准前不得进入 Phase 3。
