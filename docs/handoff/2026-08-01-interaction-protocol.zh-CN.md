@@ -51,12 +51,13 @@
 - `tests/test_git_sync.sh`：通过，A-D 四个场景均通过。
 - `git diff main...190e24a --check`：通过，覆盖代码审计范围。
 - `git diff main...025d815 --check`：通过，覆盖前一版完整 PR aggregate diff。
-- `git diff main...7d68fdc --check`：通过，覆盖当前 PR aggregate diff。
+- `git diff main...7d68fdc --check`：通过，覆盖前一版 PR aggregate diff。
+- `git diff main...d75a940 --check`：通过，覆盖当前 PR aggregate diff。
 
 ## 未决问题与风险
 
-- 任务分支已推送，draft PR 已创建，当前 PR tip 为 `7d68fdc`。
-- 本次新增的分阶段 PR 审核协议属于批准后的治理文档扩展，已加入当前 PR，等待本次更新后的外部模型最终复审。
+- 任务分支已推送，draft PR 已创建，当前 PR tip 为 `d75a940`。
+- 本次新增的分阶段 PR 审核协议属于批准后的治理文档扩展，已加入当前 PR，等待本次 `d75a940` 更新后的外部模型最终复审。
 
 ## 下一步
 

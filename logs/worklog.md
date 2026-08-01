@@ -332,3 +332,12 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md`
   - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 12:36 EDT
+
+- Action: 按 ChatGPT 对 `d75a940` 的复审反馈收敛 PR 当前状态。
+- How: 更新 PR #1 描述中的 `PR latest head` 和 aggregate diff 命令；更新 handoff 的当前 tip、前一版与当前验证记录。未修改协议内容或用户反馈文件。
+- Result: PR 描述和 handoff 均指向 `d75a940`，等待最后一次外部复审；`prompts/GPT-Feedback.md` 仍保持未暂存。
+- Files affected:
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`
