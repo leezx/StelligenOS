@@ -26,3 +26,10 @@ test validation metadata.
 
 Phase 5 may begin from the approved Phase 4 tip on a new task branch. Phase 5
 must receive its own GitHub PR and ChatGPT review before any subsequent phase.
+
+## Metadata-only Review
+
+At HEAD `d87e379`, ChatGPT performed a metadata-only final review and returned
+`APPROVE`, again stating `Phase 4 审核通过，可以进入 Phase 5`. The review
+confirmed that the added approval metadata did not expand the Phase 4 scope or
+add execution code, data, storage, Gate, or runtime artifacts.

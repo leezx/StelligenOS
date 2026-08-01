@@ -433,7 +433,7 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/migration_log.zh-CN.md`
   - `logs/worklog.md`
 
-### 2026-08-01 18:45 EDT
+### 2026-08-01 18:48 EDT
 
 - Action: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天完成 PR #22 Phase 4 审核。
 - How: 确认 GitHub 来源已选中；要求 ChatGPT 只审查 Phase 4 既有 T2/T7/T8-T11 调度、HOLD 语义、T12 禁止、external-only 边界和 64 项验证，不扩展到 Phase 5。
@@ -445,6 +445,8 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-gen-iet-phase-4.zh-CN.md`
   - `logs/migration_log.zh-CN.md`
   - `logs/worklog.md`
+
+- Follow-up: ChatGPT 对最新 HEAD `d87e379` 完成 metadata-only 复核并返回 `APPROVE`，确认没有扩大批准范围或新增执行代码、数据、存储、Gate 或 runtime。
 
 ### 2026-08-01 15:39 EDT
 
