@@ -1,0 +1,71 @@
+manifest_version: "1.0.0"
+module_id: gen_indication_endpoint_target
+phase: 0
+status: completed_pending_review
+source_of_truth: prompts/system/STELLIGENOS_GEN_INDICATION_ENDPOINT_TARGET_MASTER_PROMPT_v1.0.zh-CN.md
+audit_date: "2026-08-01"
+gate_change_declaration: NO_GATE_CHANGE
+
+official_gate_baseline:
+  topology_version: adc_gate_topology@0.3.0
+  architecture_version: "0.2.0"
+  total: 45
+  groups:
+    T: 13
+    P: 16
+    C: 16
+
+audited_sources:
+  - AssetGenOS/configs/gate_topology_freeze.yaml
+  - AssetGenOS/configs/v0.2_gate_groups.yaml
+  - AssetGenOS/configs/v0.2_graph.yaml
+  - AssetGenOS/components/gates/adc/v0.2
+  - AssetGenOS/components/models/adc/v0.2
+  - AssetGenOS/docs/gate_rules
+  - AssetGenOS/src/adc_factory/unmet_need.py
+  - AssetGenOS/src/adc_factory/seed.py
+  - AssetGenOS/src/adc_factory/cli.py
+  - StelligenOS/src/capabilities/opportunity_generation.py
+  - StelligenOS/genmodules/assetgenos_catalog
+
+reuse_map:
+  t_chain: T0-T12_existing_target_opportunity_gates
+  p_chain: external_only_after_concrete_construct_inputs
+  c_chain: supplemental_external_evidence_only
+  historical_rules: directional_weak_supervision_only
+  models: identities_and_contracts_reusable_runtime_not_migrated
+
+phase_0_deliverables:
+  - docs/phases/GEN_IET_PHASE_0_REPORT.zh-CN.md
+  - docs/phases/GEN_IET_PHASE_0_REVIEW_CHECKLIST.zh-CN.md
+  - manifests/gen_iet_phase_0_manifest.yaml
+  - logs/migration_log.zh-CN.md
+
+phase_1_minimum_scope:
+  - OpportunitySearchScope schema
+  - ClinicalFrame schema
+  - TargetCandidate schema
+  - CandidateFilterResult non_gate contract
+  - EvidenceRecord provenance contract
+  - AdversarialReview and T12 handoff contracts
+  - lifecycle enums and config-driven registries
+
+explicitly_excluded:
+  - data_files
+  - databases
+  - sqlite
+  - caches
+  - results
+  - model_weights
+  - runtime_runners
+  - real_candidate_generation
+  - real_evidence_collection
+  - new_gates
+  - full_p_chain_execution
+  - full_c_chain_execution
+
+decision:
+  recommend_phase_1: true
+  requires_human_architecture_approval: true
+  proceed_to_phase_1: false
+
