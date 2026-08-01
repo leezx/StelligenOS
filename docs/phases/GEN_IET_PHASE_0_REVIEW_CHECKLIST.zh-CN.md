@@ -45,8 +45,8 @@
 - [x] 审计文件未包含数据、数据库、缓存、结果或模型权重。
 - [x] `NO_GATE_CHANGE` 已写入报告和 manifest。
 - [x] Phase 1 范围已限定为 schema/contract/policy/adapter 边界。
-- [ ] 尚未开始 Phase 1，等待明确批准。
+- [x] Phase 0 已获得 ChatGPT 明确批准；Phase 1 可以在独立分支开始。
 
-**当前状态：`COMPLETED_PENDING_REVIEW`**  
-**推荐动作：审核通过后进入 Phase 1；在批准前不得继续实现。**
+**当前状态：`APPROVED_PHASE_0`**
 
+**推荐动作：在独立 Phase 1 分支实现最小无数据合同；合并前确认 GitHub mergeability。**

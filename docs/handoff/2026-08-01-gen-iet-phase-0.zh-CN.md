@@ -1,10 +1,12 @@
 # 任务交接备忘：`gen_indication_endpoint_target` Phase 0
 
 - 任务编号：`task_20260801_gen-iet-phase0`
-- 当前状态：Phase 0 审计完成，等待人类/架构审核
+- 当前状态：Phase 0 已通过 ChatGPT 审核，准备进入独立的 Phase 1 分支
 - Gate 变更：`NO_GATE_CHANGE`
 - 当前分支：`task_20260801_gen-iet-phase0`
 - 审核 PR：`https://github.com/leezx/StelligenOS/pull/18`
+- ChatGPT 结论：`APPROVE`，Phase 0 审核通过，可以进入 Phase 1
+- 审核记录：`logs/chatgpt-review-2026-08-01-gen-iet-phase0.md`
 
 ## 已完成
 
@@ -22,7 +24,8 @@
 - 未执行真实 Evidence Collector、Rule Evaluator、Model Evaluator 或 Gate Evaluator。
 - 未执行 P-chain/C-chain。
 - 未创建模块业务代码或数据文件。
+- 未将 Phase 1 改动混入 PR #18；PR #18 仍保持 Draft，合并前需确认 mergeability。
 
 ## 下一步
 
-只有在 Phase 0 审核批准后，才进入 Phase 1，先实现无数据的 Scope、ClinicalFrame、TargetCandidate、EvidenceRecord、CandidateFilterResult、AdversarialReview 和 T12 handoff 合同。
+Phase 0 已获批准。下一步从本分支创建独立 Phase 1 分支，先实现无数据的 Scope、ClinicalFrame、TargetCandidate、EvidenceRecord、CandidateFilterResult、AdversarialReview 和 T12 handoff 合同。
