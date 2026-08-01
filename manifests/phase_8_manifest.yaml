@@ -1,0 +1,12 @@
+phase: phase_8
+status: review_pending
+scope: architecture_freeze_release_rules
+repository_boundary: software_only_external_data
+top_level_lifecycle_frozen: true
+data_added: false
+persistence_added: false
+chatgpt_review: pending
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
+  - ./scripts/verify_repository_boundary.sh
+  - git diff origin/main...HEAD --check

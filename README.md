@@ -22,7 +22,8 @@ StelligenOS 是一个 biotechnology asset operating system 的实现仓库。
 - Phase 4 已建立 Opportunity Generation 外部能力合同并合并
 - Phase 5 已建立两条 Binder/ADC 生成路线的外部合同并合并
 - Phase 6 已建立 IP/FTO、Due Diligence 和 Portfolio 外部合同并合并
-- Phase 7 已建立端到端闭环和 TWEAKR 外部示范引用合同，等待 PR 审核
+- Phase 7 已建立端到端闭环和 TWEAKR 外部示范引用合同并合并
+- Phase 8 已冻结架构并建立发布与后续开发规范
 
 ## 关键入口
 
@@ -48,3 +49,4 @@ StelligenOS 是一个 biotechnology asset operating system 的实现仓库。
 - `docs/phases/PHASE_5_REPORT.zh-CN.md`
 - `docs/phases/PHASE_6_REPORT.zh-CN.md`
 - `docs/phases/PHASE_7_REPORT.zh-CN.md`
+- `docs/phases/PHASE_8_REPORT.zh-CN.md`
