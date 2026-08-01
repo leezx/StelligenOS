@@ -1,0 +1,21 @@
+module:
+  module_id: gate_model_rule
+  module_version: 0.1.0
+  module_type: GateModelContractModule
+  name: Gate Model Rule
+  input_contract: HistoricalRuleReferenceInput@0.1.0
+  output_contract: HistoricalRuleAuditReference@0.1.0
+  execution_policy: external_input_and_output_only
+  persistence: forbidden
+  database: forbidden
+  data_files_in_repository: forbidden
+  gate_topology_ref: gate_system@0.1.0
+  model_lifecycle_ref: ModelLifecycleStandard@1.0.0
+  rule_policy:
+    natural_language_predicates_are_executable: false
+    automatic_score_change: forbidden
+    automatic_status_change: forbidden
+    automatic_profile_binding: forbidden
+  migration_policy:
+    migrate: identity_and_contract_only
+    exclude: [rule_instances, case_records, datasets, generated_outputs, databases, caches]

@@ -12,6 +12,9 @@ are not lifecycle stages or Gate implementations.
 - `epitope_conditioned_de_novo_antibody_discovery@0.1.0`: prepares an
   epitope-conditioned de novo antibody asset-discovery package through a
   frozen 15-stage workflow.
+- `gate_model_rule@0.1.0`: defines the software-only identity and audit
+  boundary for historical Gate Model Rules. It is not a Gate implementation;
+  rule instances, cases, execution, and governance records remain external.
 
 ## Repository boundary
 
@@ -21,7 +24,7 @@ environments, observations, candidates, reports, and run directories must be
 provided by an external workspace through command-line paths or environment
 variables. No module writes to the repository by design.
 
-Both modules keep external scientific execution disabled by default. They do
+All modules keep external scientific execution disabled by default. They do
 not write Gate scores, promote lifecycle state, infer experimental evidence,
 or claim legal FTO, patentability, clinical safety, clinical efficacy, or ADC
 readiness without the required external evidence and review.

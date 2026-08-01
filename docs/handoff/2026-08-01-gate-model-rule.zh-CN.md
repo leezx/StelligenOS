@@ -1,0 +1,63 @@
+# 任务交接备忘：gate_model_rule 迁移
+
+- 任务编号：`task_20260801_gate-model-rule`
+- 目标：将 AssetGenOS 的 `gate-model-rule` 主模块迁移为 StelligenOS 的纯软件合同边界。
+- 当前状态：ChatGPT 已批准 PR #14；代码和合同修订完成，等待人类合并；当前未自动合并。
+
+## 已迁移
+
+- `genmodules/gate_model_rule/core/contracts.py`
+  - Gate Model Rule 稳定身份和 SemVer 校验。
+  - 绑定 StelligenOS 冻结的 45 Gate 拓扑，未知 Gate 拒绝。
+  - 历史规则描述、外部适用性评估和审核 bundle 合同。
+  - 嵌套 `RuleReview` 与 YAML review 合同一致。
+  - 锁定 `external_rule_model` implementation，并由测试验证 YAML/Python 一致性。
+  - 强制证据、候选人、审阅人和理由均为外部引用。
+- `genmodules/gate_model_rule/contracts/`
+  - Gate Model Rule 合同。
+  - Historical Rule Reference 合同。
+- `genmodules/gate_model_rule/module.yaml`
+  - 模块版本、Gate 系统引用、Model 生命周期引用和禁止自动执行政策。
+- `genmodules/gate_model_rule/README.md`
+  - 软件边界、外部输入输出和排除项说明。
+
+## 明确未迁移
+
+- AssetGenOS 的历史 ADC 规则 JSON/Markdown 和案例记录。
+- 规则生成脚本、数据集构建脚本、数据库、缓存、模型权重和运行输出。
+- 任何 Gate 执行器、自动评分、自动状态变化或 Profile 绑定逻辑。
+
+## 验证
+
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`: 33 passed
+- `./scripts/verify_repository_boundary.sh`: passed
+- `git diff --check`: passed
+
+## 第一轮审核反馈
+
+- ChatGPT 结论：`REQUEST_CHANGES`。
+- 阻断项：YAML `review` 嵌套结构与 Python bundle 不一致；YAML
+  `implementation` 未由 Python 表达且缺少一致性测试。
+- 修订：已新增 `RuleReview`、implementation 字段和两个 YAML/Python 一致性测试。
+- 原始记录：`logs/chatgpt-review-2026-08-01-gate-model-rule-round1.md`。
+
+## 第二轮审核结论
+
+- ChatGPT 确认两个合同对齐阻断已修复，且软件仓库边界、45 Gate 拓扑和禁止自动执行政策保持有效。
+- 结论：`APPROVE`，明确“可以合并 PR #14”。
+- 原始记录：`logs/chatgpt-review-2026-08-01-gate-model-rule-round2.md`。
+- 当前仍不自动合并，等待人类合并 PR。
+
+## 最终复审
+
+- `2993d10` 的第一次 metadata-only 复审因 GitHub 暂时返回 `mergeable=false` 被要求等待重新计算。
+- 通过 GitHub CLI 复核后状态为 `mergeable=MERGEABLE`、`mergeStateStatus=CLEAN`；随后重新通过 ChatGPT `+` 菜单选中 GitHub 来源复审。
+- ChatGPT 最终返回 `APPROVE`，明确“可以合并 PR #14”。
+- 当前仍不自动合并，等待人类合并 PR。
+
+## 审核重点
+
+1. 是否只迁移身份和合同，而未把历史规则实例或数据带入仓库。
+2. 是否严格绑定当前 45 Gate 冻结拓扑。
+3. 是否阻止自然语言规则自动改变分数、状态、阈值和 Profile。
+4. 是否保持所有运行输入、证据、审核记录和输出位于外部工作区。

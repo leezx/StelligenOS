@@ -1,0 +1,28 @@
+contract:
+  contract_id: gate_model_rule
+  contract_version: "0.1.0"
+  standard_ref: ModelLifecycleStandard@1.0.0
+  description: >-
+    Software-only identity and audit boundary for historical Gate Model Rules.
+    This contract does not contain rule instances or executable predicates.
+  model_identity:
+    required_fields: [model_id, model_version, gate_id, implementation]
+    implementation: external_rule_model
+    lifecycle_ref: ModelLifecycleStandard@1.0.0
+  rule_semantics:
+    natural_language_predicates_are_executable: false
+    score_affecting_execution: forbidden
+    gate_status_change: forbidden
+    profile_binding: forbidden
+    neutral_score: 0.5
+    confidence: 0.0
+    status: unknown
+    permitted_output: details_only_historical_rule_audit
+  evidence_boundary:
+    source_records: external_references_only
+    historical_success_is_not_causal_attribution: true
+    unverified_sources_cannot_be_promoted: true
+  persistence: forbidden
+  migration_policy:
+    migrate: identity_and_contract_only
+    exclude: [rule_instances, case_records, datasets, generated_outputs, databases, caches]
