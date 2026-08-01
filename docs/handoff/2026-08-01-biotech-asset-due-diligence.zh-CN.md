@@ -2,7 +2,7 @@
 
 - 任务编号：`task_20260801_biotech-dd`
 - 目标：将 AssetGenOS Due Diligence Phase 1A 的纯软件合同边界迁移到 StelligenOS。
-- 当前状态：代码修订已完成，但 ChatGPT 最终复审因 GitHub 报告 `mergeable=false` 返回 `REQUEST_CHANGES`；未合并。
+- 当前状态：代码修订已完成，GitHub 当前为 `MERGEABLE/CLEAN`，等待 ChatGPT 最终复审；未合并。
 
 ## 本次已迁移
 
@@ -43,12 +43,20 @@
 - 修订：已准备将 PR 描述更新为 `31 passed`。
 - 原始记录：`logs/chatgpt-review-2026-08-01-biotech-dd-round2.md`。
 
-## 最终元数据复审
+## 最终元数据复审（历史）
 
 - ChatGPT 确认验证数字一致、仅有审核元数据增量，且 Round 1 的两个代码修复仍在当前 tip。
-- 结论：`REQUEST_CHANGES`，原因是 GitHub 当前报告 `mergeable=false`；未发现新的代码或数据边界阻断。
+- 结论：`REQUEST_CHANGES`，原因是当时 GitHub 临时报告 `mergeable=false`；未发现新的代码或数据边界阻断。
 - 原始记录：`logs/chatgpt-review-2026-08-01-biotech-dd-final.md`。
-- 下一步：等待 GitHub 合并状态恢复后，重新提交相同范围的 metadata-only 复审；未经明确批准不合并。
+- 下一步：已将最新 `main` 合并到任务分支并解决唯一 README 冲突；当前 tip 的最终复审以 PR 页面、当前测试和本 handoff 为准。
+
+## 当前复审基线
+
+- 当前 PR tip：`f9f3157`（以 GitHub PR 页面实时 HEAD 为权威）。
+- 当前合并状态：`MERGEABLE/CLEAN`。
+- 当前验证：`39 tests passed`、repository boundary check passed、`git diff --check` passed。
+- 冲突解决：`genmodules/README.md` 同时保留 `biotech_asset_due_diligence` 与 `gate_model_rule` 两个模块条目。
+- 本次同步未改变 due diligence 代码合同，未引入数据、runner、数据库、缓存、结果或模型权重。
 
 ## 审核重点
 
