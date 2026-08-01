@@ -7,8 +7,9 @@
 - PR：https://github.com/leezx/StelligenOS/pull/1
 - Base：`56c2e16`
 - Code head：`190e24a`
-- PR latest head：`025d815`
-- PR commit count：`7`
+- PR latest head at prior handoff revision：`025d815`
+- Audit evidence commit：`ada438e`
+- PR current tip：以 PR 页面实时状态为准
 - Commits：
   - Code commits through code head:
     - `0fc4bbb` `task_20260801_pr-workflow: formalize PR handoff collaboration`
@@ -19,6 +20,7 @@
     - `190e24a` `task_20260801_pr-workflow: update v4 audit handoff`
     - `7bf3eac` `task_20260801_pr-workflow: align handoff head`
     - `025d815` `task_20260801_pr-workflow: clarify audited code head`
+    - `ada438e` `task_20260801_pr-workflow: record ChatGPT review evidence`
 - PR 状态：`OPEN / DRAFT`
 - 时间：`2026-08-01 America/New_York`
 
