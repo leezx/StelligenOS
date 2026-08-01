@@ -5,9 +5,10 @@
 - [x] 软件仓库与外部数据工作区边界写入发布规范。
 - [x] PR、ChatGPT APPROVE、handoff、worklog 和发布门禁写入规范。
 - [x] Phase 2-7 验证和 boundary checks 通过。
-- [ ] ChatGPT PR review `APPROVE`
+- [x] ChatGPT PR review `APPROVE`
 
 ## Final Gate
 
-- ChatGPT result: 待审核
-- Decision: 架构冻结待最终审核
+- ChatGPT result: `APPROVE`
+- Approval record: `logs/chatgpt-review-2026-08-01-phase8-final.md`
+- Decision: Phase 0-8 全部完成，可以进入架构冻结后的后续开发
