@@ -402,6 +402,19 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `manifests/phase_4_manifest.yaml`
   - `logs/worklog.md`
 
+### 2026-08-01 14:02 EDT
+
+- Action: 处理 ChatGPT 对 Phase 4 PR #5 的第一轮 `REQUEST_CHANGES`。
+- How: 将 Opportunity Generation request/result 的所有引用字段校验下沉到数据类
+  `__post_init__` 构造边界，防止调用者绕过 `require_external_reference()` 直接创建
+  本地引用；补充 request 构造时拒绝 `local:` 的回归测试，并保留输出引用的同等保护。
+- Result: 修复 ChatGPT 指出的唯一阻断项；待重新运行全量测试和边界检查后推送 PR #5
+  并请求复审。其他 Phase 4 范围和数据边界未改变。
+- Files affected:
+  - `src/capabilities/opportunity_generation.py`
+  - `tests/test_phase4_opportunity_generation.py`
+  - `logs/worklog.md`
+
 ### 2026-08-01 13:05 EDT
 
 - Action: 完成 Phase 1 PR #2 的最终 ChatGPT 门禁审核。

@@ -21,6 +21,17 @@ class OpportunityGenerationRequest:
     run_context_ref: str
     contract_version: str = "0.1.0"
 
+    def __post_init__(self) -> None:
+        for reference in (
+            self.request_id,
+            self.knowledge_scope_ref,
+            self.target_context_ref,
+            self.clinical_context_ref,
+            self.generation_policy_ref,
+            self.run_context_ref,
+        ):
+            require_external_reference(reference)
+
 
 @dataclass(frozen=True)
 class OpportunityGenerationResult:
@@ -33,6 +44,16 @@ class OpportunityGenerationResult:
     missing_information_refs: tuple[str, ...]
     run_ref: str
     contract_version: str = "0.1.0"
+
+    def __post_init__(self) -> None:
+        for reference in (
+            *self.opportunity_refs,
+            *self.target_hypothesis_refs,
+            *self.evidence_refs,
+            *self.missing_information_refs,
+            self.run_ref,
+        ):
+            require_external_reference(reference)
 
 
 class OpportunityGenerationPort(Protocol):

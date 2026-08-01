@@ -23,6 +23,16 @@ class Phase4OpportunityGenerationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             require_external_reference("local:opportunity/1")
 
+        with self.assertRaises(ValueError):
+            OpportunityGenerationRequest(
+                request_id="external:request/1",
+                knowledge_scope_ref="local:knowledge/1",
+                target_context_ref="external:target/1",
+                clinical_context_ref="external:clinical/1",
+                generation_policy_ref="external:policy/1",
+                run_context_ref="external:run/1",
+            )
+
     def test_external_reference_is_accepted(self):
         self.assertEqual(
             require_external_reference("external:opportunity/1"),
