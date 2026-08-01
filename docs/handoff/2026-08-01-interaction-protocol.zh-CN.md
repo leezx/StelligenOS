@@ -55,14 +55,13 @@
 
 - 任务分支已推送，draft PR 已创建，等待外部模型审核。
 - PR 已创建并已补充最终 handoff。
-- 当前等待本次最终复审；脚本、测试、aggregate diff、数据边界和 commit 分类追溯均已完成。
+- ChatGPT 最终复审结论：`APPROVE`；可以进入 Phase 1。脚本、测试、aggregate diff、数据边界和 commit 分类追溯均已完成。
 
 ## 下一步
 
-1. 更新 PR 描述并将本次 ChatGPT 复审记录保存到 `logs/`。
-2. 将 PR 链接交给外部模型进行下一次复审。
-3. 只按当前 PR 的审核意见修订。
-4. 由负责人决定 merge 或打回。
+1. 由负责人决定是否合并 PR #1。
+2. Phase 1 从 `main` 拉取最新代码，创建新的 `task_<编号>_<简短名>` 分支和 PR。
+3. 继续使用 `docs/handoff/`、worklog、显式暂存和 GitHub 插件复审闭环。
 
 说明：本 handoff 文件自身的最新 metadata commit 不在自身列表中自引用；PR 页面是当前 branch tip 的权威来源。
 
