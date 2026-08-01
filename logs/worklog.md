@@ -406,7 +406,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - How: 通过 `+` 菜单重新选中 GitHub 来源，针对修订 tip `42c6a27` 核对嵌套 review 合同、implementation 身份、YAML/Python 一致性测试和完整软件边界。
 - Result: ChatGPT 返回 `APPROVE`，明确“可以合并 PR #14”；新增审核记录。由于批准记录本身会形成新的元数据提交，准备再做 metadata-only 复审；仍不自动合并。
 - Files affected:
-  - `logs/chatgpt-review-2026-08-01-gate-model-rule-round2.md`
+- `logs/chatgpt-review-2026-08-01-gate-model-rule-round2.md`
+- `docs/handoff/2026-08-01-gate-model-rule.zh-CN.md`
+- `logs/worklog.md`
+
+### 2026-08-01 15:39 EDT
+
+- Action: 完成 gate-model-rule PR #14 的最终 metadata-only 复审。
+- How: 先通过网页版 ChatGPT 的“GitHub PR 信息”聊天、`+` 菜单重新选中 GitHub 来源；初次结果因 GitHub 暂时显示 `mergeable=false` 为 `REQUEST_CHANGES`。随后用 `gh pr view` 核实 PR 状态已恢复为 `mergeable=MERGEABLE`、`mergeStateStatus=CLEAN`，再次通过 `+` 菜单选中 GitHub 并提交最终复审。
+- Result: ChatGPT 返回 `APPROVE`，明确“可以合并 PR #14”。确认 `2993d10` 仅增加审核元数据、handoff 和 worklog，没有改变已批准的代码、合同、测试或软件边界；PR 仍保持 OPEN，不自动合并。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-gate-model-rule-round3.md`
   - `docs/handoff/2026-08-01-gate-model-rule.zh-CN.md`
   - `logs/worklog.md`
 

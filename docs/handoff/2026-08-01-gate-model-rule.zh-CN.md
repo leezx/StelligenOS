@@ -48,6 +48,13 @@
 - 原始记录：`logs/chatgpt-review-2026-08-01-gate-model-rule-round2.md`。
 - 当前仍不自动合并，等待人类合并 PR。
 
+## 最终复审
+
+- `2993d10` 的第一次 metadata-only 复审因 GitHub 暂时返回 `mergeable=false` 被要求等待重新计算。
+- 通过 GitHub CLI 复核后状态为 `mergeable=MERGEABLE`、`mergeStateStatus=CLEAN`；随后重新通过 ChatGPT `+` 菜单选中 GitHub 来源复审。
+- ChatGPT 最终返回 `APPROVE`，明确“可以合并 PR #14”。
+- 当前仍不自动合并，等待人类合并 PR。
+
 ## 审核重点
 
 1. 是否只迁移身份和合同，而未把历史规则实例或数据带入仓库。
