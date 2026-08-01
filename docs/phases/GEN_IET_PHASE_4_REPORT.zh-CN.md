@@ -3,7 +3,7 @@
 - 阶段：Phase 4，Early T-Gate Candidate Reduction
 - 分支：`task_20260801_gen-iet-phase4-early-t-gate`
 - 父阶段：Phase 3，已获 ChatGPT `APPROVE`
-- 状态：`COMPLETED_PENDING_REVIEW`
+- 状态：`APPROVED_PHASE_4`
 - Gate 变更：`NO_GATE_CHANGE`
 
 ## 本阶段实现
@@ -32,5 +32,5 @@ cache、模型权重、runner 或新 Gate。
 
 ## 停止点
 
-等待 ChatGPT 审核 Phase 4 contract-only PR。批准前不进入 Phase 5 endpoint
-biology completion。
+ChatGPT 已批准 Phase 4 contract-only PR，可以进入 Phase 5。该批准不包括
+Phase 5 实现或真实 Gate 评估；Phase 5 必须从本阶段批准 tip 创建新分支并单独提交审核。

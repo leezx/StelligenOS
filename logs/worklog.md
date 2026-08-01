@@ -433,6 +433,19 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/migration_log.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 18:45 EDT
+
+- Action: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天完成 PR #22 Phase 4 审核。
+- How: 确认 GitHub 来源已选中；要求 ChatGPT 只审查 Phase 4 既有 T2/T7/T8-T11 调度、HOLD 语义、T12 禁止、external-only 边界和 64 项验证，不扩展到 Phase 5。
+- Result: ChatGPT 返回 `APPROVE`，明确“Phase 4 审核通过，可以进入 Phase 5”。审核记录保存到 `logs/chatgpt-review-2026-08-01-gen-iet-phase4.md`；manifest、report、handoff 和 migration log 已更新为 `approved_phase_4`。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-gen-iet-phase4.md`
+  - `manifests/gen_iet_phase_4_manifest.yaml`
+  - `docs/phases/GEN_IET_PHASE_4_REPORT.zh-CN.md`
+  - `docs/handoff/2026-08-01-gen-iet-phase-4.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 15:39 EDT
 
 - Action: 完成 gate-model-rule PR #14 的最终 metadata-only 复审。
