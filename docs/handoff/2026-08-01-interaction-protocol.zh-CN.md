@@ -3,9 +3,9 @@
 ## 任务信息
 
 - 任务编号：`task_20260801_pr-workflow`
-- 分支：当前改动待在 `task_20260801_pr-workflow` 分支交付
+- 分支：`task_20260801_pr-workflow`
 - PR：待创建
-- Commit：待提交
+- Commit：`0fc4bbb`
 - 时间：`2026-08-01 America/New_York`
 
 ## 本次改动
@@ -24,14 +24,14 @@
 
 ## 验证
 
-- `./scripts/verify_repository_boundary.sh`：待本次修改完成后运行。
-- Markdown 链接检查：待本次修改完成后运行。
-- `bash -n scripts/git_sync.sh`：待本次修改完成后运行。
+- `./scripts/verify_repository_boundary.sh`：通过。
+- `bash -n scripts/git_sync.sh`：通过。
+- `git diff HEAD^ --check`：通过。
 - Git staged diff：提交前必须人工确认仅包含本任务文件。
 
 ## 未决问题与风险
 
-- 当前工作仍在 `main` 的未提交状态；交付前必须切换到任务分支。
+- 当前工作已提交到任务分支，尚未推送。
 - PR 链接和最终 commit 尚未生成。
 
 ## 下一步

@@ -248,3 +248,12 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/TEMPLATE.zh-CN.md`
   - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 12:12 EDT
+
+- Action: 创建任务分支并提交 PR 协作规范改动。
+- How: 从 `main` 创建 `task_20260801_pr-workflow`，先检查状态，再使用显式文件清单暂存；提交前运行 staged diff 检查，提交为 `0fc4bbb`。
+- Result: 分支和本地 commit 已就绪；仓库边界检查、Shell 语法检查和提交差异检查通过，尚未推送或创建 PR。
+- Files affected:
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`
