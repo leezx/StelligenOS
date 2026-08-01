@@ -6,7 +6,7 @@
 - 分支：`task_20260801_pr-workflow`
 - PR：https://github.com/leezx/StelligenOS/pull/1
 - Base：`56c2e16`
-- Head：`190e24a`
+- Code head：`190e24a`
 - Commits：
   - `0fc4bbb` `task_20260801_pr-workflow: formalize PR handoff collaboration`
   - `959d124` `task_20260801_pr-workflow: record handoff verification`
