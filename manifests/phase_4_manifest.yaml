@@ -1,0 +1,13 @@
+phase: phase_4
+status: review_pending
+scope: opportunity_generation_external_contract
+repository_boundary: software_only_external_data
+data_added: false
+persistence_added: false
+runtime_generation_added: false
+automatic_promotion_added: false
+chatgpt_review: pending
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
+  - ./scripts/verify_repository_boundary.sh
+  - git diff origin/main...HEAD --check
