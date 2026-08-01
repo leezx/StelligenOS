@@ -7,7 +7,8 @@ are not lifecycle stages or Gate implementations.
 ## Active modules
 
 - `antibody_binder_asset_engineering@0.4.0`: engineers an existing binder into
-  an antibody/ADC-carrier asset package through a frozen 16-stage workflow.
+  an antibody/ADC-carrier asset package through 16 internal implementation
+  steps mapped to the frozen 14-stage external Binder/ADC route.
 - `epitope_conditioned_de_novo_antibody_discovery@0.1.0`: prepares an
   epitope-conditioned de novo antibody asset-discovery package through a
   frozen 15-stage workflow.

@@ -1,4 +1,4 @@
-"""Machine validation for antibody GenModule v0.3.1 contracts.
+"""Machine validation for antibody GenModule v0.4.0 contracts.
 
 The YAML files are the published contract. This module is deliberately small and
 dependency-light so the runner and downstream adapters execute the same checks.

@@ -3,7 +3,7 @@
 - 任务编号：`task_20260801_assetgenos-migration`
 - Base：架构冻结后的 `main` at `acd2f2c`
 - 目标：将 AssetGenOS 的两个生成模块迁移到 StelligenOS 的 Asset Generation 生命周期
-- 当前状态：开发中，等待 PR 和 ChatGPT 审核
+- 当前状态：开发中，已完成两轮 ChatGPT 审核反馈修订，等待最终复审
 
 ## 已迁移
 
@@ -34,3 +34,11 @@
 1. ChatGPT 审查本 PR 的迁移完整性、模块版本和零数据边界。
 2. 审核通过后，再迁移 Gate/Model 运行时中的纯契约适配层；不得迁移旧数据库层。
 3. 最后再单独评估持续学习和历史标签服务是否能改造成外部存储端口。
+
+## 当前修订验证
+
+- 当前修订 tip：`3becd97`
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`：22 passed
+- `./scripts/verify_repository_boundary.sh`：passed
+- `git diff --check`：passed
+- aggregate diff：`git diff main...3becd97 --check`：passed

@@ -335,6 +335,13 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Action: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天提交 PR #11 审核，并读取到第一轮反馈。
 - Result: ChatGPT 返回 `REQUEST_CHANGES`。反馈确认存在两个阻断项：冻结 Binder/ADC 路线合同要求 14 个外部阶段，但迁移模块的 16 个内部步骤被直接作为外部 `list-steps` 暴露；runner 文档字符串仍声明 `@0.3.1`，而活动模块和合同为 `0.4.0`。
 - How: 保存完整反馈到 `logs/chatgpt-review-2026-08-01-assetgenos-migration-revision-1.md`；准备保留 16 个内部实现步骤，新增明确的 14 阶段外部路线映射和 `list-internal-steps`，同步测试、README、handoff 和 Worklog，并修正版本声明。
+
+### 2026-08-01 14:42 EDT
+
+- Action: 按 ChatGPT 第一轮反馈完成阶段映射和版本修订，并提交修订 tip `3becd97`。
+- How: `list-steps` 改为输出冻结合同的 14 个外部阶段；新增 `list-internal-steps` 输出 16 个内部步骤；在模块 YAML 和 stages 代码中声明完整映射；修正 `run_pipeline.py` 和 `contract_validation.py` 的 `0.4.0` 版本声明；同步 GenModules README、handoff、PR 描述准备内容和测试。
+- Verification: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v` 通过（22 项）；`./scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git diff main...3becd97 --check` 通过。
+- Review: ChatGPT 复审确认映射代码本身正确，但仍指出上述版本文档、根 README、PR 描述和 aggregate diff 记录需要同步；本次继续修订，未合并 PR。
 - Files affected:
   - `genmodules/README.md`
   - `genmodules/antibody_binder_asset_engineering/`
