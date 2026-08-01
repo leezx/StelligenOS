@@ -1357,3 +1357,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Files affected:
   - `docs/product/GEN_IET_PRODUCT_PURPOSE_AND_DYNAMIC_REQUIREMENTS.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 19:58 EDT
+
+- Action: 执行 CRC `indication + endpoint + target` 外部试运行。
+- How: 读取本地 ADC Drug Index 的 `Approved`、`Phase 1`、`Phase 2`、`Phase 3` 条目，并逐个读取 ADC 文档的 `Indication`、`Antigen Name` 和临床活动字段；同时读取 C0 临床未满足需求表及旧项目 CRC unmet-need/endpoint 策略文档。结果全部写入外部 `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_trial_20260801/`，没有把数据、结果或数据库写入 StelligenOS。
+- Result: 生成 1 条 canonical C0 CRC 场景、9 条显式标记来源的 CRC indication（包含 derived strategy 与 benchmark subgroup）、36 条 endpoint 层级记录，以及 29 个 Approved/Phase 1/2/3 范围内的 CRC 临床 ADC benchmark 三元组。三元组保留 CRC indication stage、固定 endpoint strategy（早期 ORR+DOR+safety；关键性 PFS；最终 OS）和 source target；同时保留原始文本证据。
+- Correction: 初版脚本错误使用不存在的 C0 字段，导致 canonical 数量暂时报为 0；已改用 `scenario_id`/`cancer_type` 校正为 1，并将 CRC stage 从整条 Indication 行规范化为 `Colorectal cancer Phase N`。重新检查 TSV 行数、manifest 计数和代码仓库边界，验证通过。
+- Limitation: 29 个临床 benchmark 表示本地 ADC Index 中存在 CRC 临床开发记录，不表示疗效已确认；本地 Index/ADC 文档是快照，当前试验状态、实际 primary endpoint 和文献证据仍需后续注册库/原始论文核验。9 条 indication 中只有 1 条进入 C0，其余明确标记为旧 KB 派生策略或 benchmark subgroup，不能直接当作结构化事实。
+- Files affected:
+  - External result: `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_trial_20260801/crc_unmet_need_indications.tsv`
+  - External result: `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_trial_20260801/crc_endpoint_hierarchy.tsv`
+  - External result: `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_trial_20260801/crc_clinical_adc_pairs.tsv`
+  - External result: `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_trial_20260801/crc_pair_trial_report.md`
+  - External result: `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_trial_20260801/run_manifest.json`
+  - `logs/worklog.md`
