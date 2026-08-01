@@ -720,6 +720,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-phase-7-tweakr-closure.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 18:13 EDT
+
+- Action: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天提交 PR #20 Phase 2 架构审核。
+- How: 确认 `+` 菜单中的 GitHub 来源已选中；要求 ChatGPT 只审查 Phase 2 T0-T1 Clinical Frame Pipeline 的 contract-only diff、外部引用约束、candidate budget、无本地执行边界、测试和阶段元数据，不扩展到 Phase 3 或真实资产生成。
+- Result: ChatGPT 返回 `APPROVE`，明确“Phase 2 审核通过，可以进入 Phase 3”。审核记录保存到 `logs/chatgpt-review-2026-08-01-gen-iet-phase2.md`；manifest、Phase 2 report 和 handoff 已更新为 `approved_phase_2`，允许进入 Phase 3。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-gen-iet-phase2.md`
+  - `manifests/gen_iet_phase_2_manifest.yaml`
+  - `docs/phases/GEN_IET_PHASE_2_REPORT.zh-CN.md`
+  - `docs/handoff/2026-08-01-gen-iet-phase-2.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 18:45 EDT
 
 - Action: 处理 ChatGPT 对 Phase 1 PR #19 Round 1 的 `REQUEST_CHANGES`。

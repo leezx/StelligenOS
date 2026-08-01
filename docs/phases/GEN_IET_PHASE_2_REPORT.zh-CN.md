@@ -2,7 +2,7 @@
 
 - 阶段：Phase 2，T0-T1 Clinical Frame Pipeline
 - 分支：`task_20260801_gen-iet-phase2-clinical-frame`
-- 状态：`COMPLETED_PENDING_REVIEW`
+- 状态：`APPROVED_PHASE_2`
 - Gate 变更：`NO_GATE_CHANGE`
 
 ## 本阶段实现
@@ -27,5 +27,4 @@
 
 ## 停止点
 
-等待 ChatGPT 审核 Phase 2 contract-only PR。批准前不进入 Phase 3 target candidate generation。
-
+ChatGPT 已批准 Phase 2 contract-only PR，可以进入 Phase 3。该批准不包括 Phase 3 实现或真实资产生成；Phase 3 必须从本阶段批准 tip 创建新分支并单独提交审核。

@@ -2,7 +2,7 @@
 
 - 任务编号：`task_20260801_gen-iet-phase2-clinical-frame`
 - 父阶段：Phase 1，已获 ChatGPT `APPROVE`
-- 当前状态：Phase 2 contract-only 完成，等待 ChatGPT PR 审核
+- 当前状态：Phase 2 contract-only 完成，ChatGPT 已 APPROVE，可进入 Phase 3
 - Gate 变更：`NO_GATE_CHANGE`
 
 ## 已实现
@@ -27,5 +27,4 @@
 
 ## 下一步
 
-先通过 ChatGPT 审核 Phase 2 PR；批准后才进入 Phase 3 target candidate generation contract/adapter 设计。
-
+ChatGPT 已通过 Phase 2 审核，记录见 `logs/chatgpt-review-2026-08-01-gen-iet-phase2.md`。下一步从本阶段批准 tip 建立新分支，进入 Phase 3 target candidate generation contract/adapter 设计，并再次提交独立 PR 审核。
