@@ -1,5 +1,7 @@
 phase: phase_7
-status: review_pending
+status: pr_open_review_pending
+pr: 8
+pr_url: https://github.com/leezx/StelligenOS/pull/8
 scope: zero_data_end_to_end_closure
 repository_boundary: software_only_external_data
 demo_asset_ref: external:demo/tweakr
