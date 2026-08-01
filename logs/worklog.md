@@ -866,3 +866,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `manifests/phase_1_manifest.yaml`
   - `docs/handoff/2026-08-01-phase-1-skeleton.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 16:10 EDT
+
+- Action: 继续迁移 `biotech_asset_due_diligence` 的 Phase 1A 纯软件边界。
+- How: 在独立分支 `task_20260801_biotech-dd` 中迁移稳定 ID、不可变核心实体、外部 ArtifactRef 校验、严格合同验证和合同 YAML；将抗体适配器升级为仅接受当前 `antibody_binder_asset_engineering@0.4.0`，并明确禁止仓库内输入、结果和持久化。未迁移 `examples/`、`archive/`、runner 或任何数据文件。
+- Result: 新模块可表达 Asset 到 SystemRecommendation 的可审计链，并保持 HumanDecision 独立；全仓 29 个 unittest、边界扫描和 diff 空白检查通过。
+- Files affected:
+  - `genmodules/README.md`
+  - `genmodules/biotech_asset_due_diligence/`
+  - `tests/test_biotech_asset_due_diligence.py`
+  - `logs/worklog.md`

@@ -1,0 +1,13 @@
+$id: artifact_ref
+version: "1.0.0"
+type: object
+additionalProperties: false
+required: [artifact_id, path, sha256, bytes, producer_contract]
+properties:
+  artifact_id: {type: string, pattern: '^artifact:[A-Za-z0-9_.-]+$'}
+  path: {type: string, minLength: 1}
+  root_env: {type: [string, 'null']}
+  sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+  bytes: {type: integer, minimum: 0}
+  producer_contract: {type: string, minLength: 1}
+  immutable: {type: boolean}

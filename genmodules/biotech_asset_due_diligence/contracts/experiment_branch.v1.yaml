@@ -1,0 +1,11 @@
+$id: experiment_branch
+version: "1.0.0"
+type: object
+additionalProperties: false
+required: [experiment_id, question, hypothesis_ids, readiness_status, outcome_branches]
+properties:
+  experiment_id: {type: string, pattern: '^experiment:[A-Za-z0-9_.-]+$'}
+  question: {type: string, minLength: 1}
+  hypothesis_ids: {type: array, items: {type: string}}
+  readiness_status: {type: string, enum: [ready, blocked, not_ready]}
+  outcome_branches: {type: array, minItems: 2, items: {type: object}}

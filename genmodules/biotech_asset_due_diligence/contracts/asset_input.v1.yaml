@@ -1,0 +1,13 @@
+$id: due_diligence_vertical_slice_input
+version: "1.0.0"
+type: object
+additionalProperties: false
+required: [input_contract, asset, variant, upstream_manifest, upstream_normalized_input]
+properties:
+  input_contract: {type: string, const: DueDiligenceVerticalSliceInput@0.1.0}
+  asset: {type: object}
+  variant: {type: object}
+  upstream_manifest: {type: object}
+  upstream_normalized_input: {type: object}
+  evidence_cutoff: {type: [string, 'null']}
+  reviewer_context: {type: [string, 'null']}

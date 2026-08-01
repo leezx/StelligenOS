@@ -1,0 +1,16 @@
+$id: due_diligence_vertical_slice_package
+version: "1.0.0"
+type: object
+additionalProperties: false
+required: [package_contract, package_version, asset, asset_variant, assessment_run, system_recommendation, human_decision, records]
+properties:
+  package_contract: {type: string, const: DueDiligenceVerticalSlicePackage@0.1.0}
+  package_version: {type: string, const: "0.1.0"}
+  asset: {type: object}
+  asset_variant: {type: object}
+  assessment_run: {type: object}
+  system_recommendation: {type: object}
+  human_decision: {type: [object, 'null']}
+  records: {type: object}
+  created_at_utc: {type: string}
+  input_contract_validation: {type: object}

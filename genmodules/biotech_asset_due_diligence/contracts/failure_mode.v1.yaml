@@ -1,0 +1,12 @@
+$id: failure_mode
+version: "1.0.0"
+type: object
+additionalProperties: false
+required: [failure_mode_id, catalog_ref, status, route_terminating, basis_refs]
+properties:
+  failure_mode_id: {type: string, pattern: '^failure_mode:[A-Za-z0-9_.-]+$'}
+  catalog_ref: {type: string, minLength: 1}
+  status: {type: string, enum: [supported, excluded, unresolved, conflicting]}
+  route_terminating: {type: boolean}
+  basis_refs: {type: array, items: {type: string}}
+  blocking_for_advance: {type: boolean}

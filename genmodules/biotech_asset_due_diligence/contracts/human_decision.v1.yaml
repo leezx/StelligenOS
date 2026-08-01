@@ -1,0 +1,11 @@
+$id: human_decision
+version: "1.0.0"
+type: object
+additionalProperties: false
+required: [human_decision_id, system_recommendation_id, selected_action, decision_status, override_rationale]
+properties:
+  human_decision_id: {type: string, pattern: '^human_decision:[A-Za-z0-9_.-]+$'}
+  system_recommendation_id: {type: string, minLength: 1}
+  selected_action: {type: string, minLength: 1}
+  decision_status: {type: string, enum: [accepted, overridden, rejected, pending]}
+  override_rationale: {type: [string, 'null']}

@@ -12,6 +12,9 @@ are not lifecycle stages or Gate implementations.
 - `epitope_conditioned_de_novo_antibody_discovery@0.1.0`: prepares an
   epitope-conditioned de novo antibody asset-discovery package through a
   frozen 15-stage workflow.
+- `biotech_asset_due_diligence@0.1.0`: validates external upstream artifacts
+  and models an auditable, modality-neutral due-diligence evidence chain. It
+  contains no runner, fixture, data, or result directory.
 
 ## Repository boundary
 

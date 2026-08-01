@@ -1,0 +1,13 @@
+$id: hypothesis
+version: "1.0.0"
+type: object
+additionalProperties: false
+required: [hypothesis_id, statement, subject_ref, state, supporting_claim_ids, observation_ids, falsification_criteria]
+properties:
+  hypothesis_id: {type: string, pattern: '^hypothesis:[A-Za-z0-9_.-]+$'}
+  statement: {type: string, minLength: 1}
+  subject_ref: {type: string, minLength: 1}
+  state: {type: string, enum: [supported, unresolved, contradicted, conflicting]}
+  supporting_claim_ids: {type: array, items: {type: string}}
+  observation_ids: {type: array, items: {type: string}}
+  falsification_criteria: {type: array, items: {type: string}}
