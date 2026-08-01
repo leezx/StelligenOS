@@ -323,6 +323,40 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 13:05 EDT
+
+- Action: 完成 Phase 1 PR #2 的最终 ChatGPT 门禁审核。
+- How: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天并使用 GitHub 来源，针对远端真实 tip `b332906` 复核完整 changed files、commits、aggregate diff、六层骨架、架构契约分离、数据边界和审计元数据。
+- Result: ChatGPT 返回 `APPROVE`，明确“可以进入下一 Phase”。补齐最终审核记录、review checklist、Phase 1 report 和 handoff 状态，准备将 PR #2 合并到 `main`。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-phase1-final.md`
+  - `docs/phases/PHASE_1_REVIEW_CHECKLIST.zh-CN.md`
+  - `docs/phases/PHASE_1_REPORT.zh-CN.md`
+  - `docs/handoff/2026-08-01-phase-1-skeleton.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:49 EDT
+
+- Action: 处理 ChatGPT 对 Phase 1 PR #2 的第一轮 `REQUEST_CHANGES`。
+- How: 将 Phase 1 report 的 boundary verification 和 aggregate diff 更新为已通过；勾选 review checklist 对应门禁；将 handoff 的 PR 状态从“待创建”同步为 PR #2，并记录当前 tip `2d5e810` 和验证命令。
+- Result: 保存完整审核反馈到 `logs/chatgpt-review-2026-08-01-phase1-revision-1.md`；重新执行 `./scripts/verify_repository_boundary.sh`、`git diff main...HEAD --check` 和 `git diff --check` 均通过；ChatGPT 审核门禁仍未勾选，准备重新复审。
+- Files affected:
+  - `docs/phases/PHASE_1_REPORT.zh-CN.md`
+  - `docs/phases/PHASE_1_REVIEW_CHECKLIST.zh-CN.md`
+  - `docs/handoff/2026-08-01-phase-1-skeleton.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-01-phase1-revision-1.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:55 EDT
+
+- Action: 处理 ChatGPT 复审显示的 PR head 与 handoff 元数据不一致。
+- How: 通过 `gh api repos/leezx/StelligenOS/pulls/2` 和 `git ls-remote` 核实远端 PR #2 与分支真实 head 均为 `330c0de`；将 handoff 改为记录最近一次已验证 tip，并明确当前 PR tip 和 aggregate diff 以 GitHub PR 页面为唯一权威，避免 handoff 自引用造成持续漂移。
+- Result: 确认远端状态正确，陈旧的 `2d5e810` 来自审核来源读取；补充核验记录，准备再次请求 ChatGPT 复审。
+- Files affected:
+  - `docs/handoff/2026-08-01-phase-1-skeleton.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-01-phase1-revision-1.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 12:32 EDT
 
 - Action: 按 ChatGPT 对当前 PR tip `7d68fdc` 的复审反馈修复 Phase Gate 协议阻断项。
@@ -377,4 +411,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Files affected:
   - `logs/chatgpt-review-2026-08-01-phase-gate-final.md`
   - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:55 EDT
+
+- Action: 从已合并的 Phase 0 基线 `main` 创建 Phase 1 分支并建立最小实现骨架。
+- How: 从 `origin/main` 创建 `task_20260801_phase1-skeleton`，按架构契约新增 `src/` 下的 contracts、lifecycle、capabilities、cross_cutting、objects 和 repository 层级；补充 Phase 1 report、review checklist、manifest 和 handoff。
+- Result: 未新增数据、数据库、缓存、结果或运行时业务逻辑；仓库边界检查和工作树差异检查通过，等待 PR 审核。
+- Files affected:
+  - `README.md`
+  - `src/`
+  - `docs/phases/PHASE_1_REPORT.zh-CN.md`
+  - `docs/phases/PHASE_1_REVIEW_CHECKLIST.zh-CN.md`
+  - `manifests/phase_1_manifest.yaml`
+  - `docs/handoff/2026-08-01-phase-1-skeleton.zh-CN.md`
   - `logs/worklog.md`
