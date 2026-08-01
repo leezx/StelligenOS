@@ -192,6 +192,59 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 
 ## 2026-08-01
 
+### 2026-08-01 12:00 EDT
+
+- Action: Started the next AssetGenOS migration batch on an isolated worktree.
+- How: Fetched `origin/main` and created branch `task_20260801_model-contract-adapter` from merge commit `a0ad160`; inspected the frozen Gate/lifecycle contracts and the legacy AssetGenOS scoring, schemas, and model-governance modules.
+- Result: Chose a contract-only migration boundary and explicitly excluded legacy Pydantic schemas, registry records, model artifacts, scoring outputs, and persistence.
+- Files affected: none in the original worktree; isolated worktree created at `/private/tmp/StelligenOS-model-contract-adapter`.
+
+### 2026-08-01 12:04 EDT
+
+- Action: Implemented the pure model identity and lifecycle adapter.
+- How: Added `ModelRef`, `ModelLifecycleDescriptor`, `ModelGovernanceRequest`, `ModelGovernancePort`, and the AssetGenOS-compatible `parse_model_ref` rule; added the corresponding YAML contract and focused unit tests.
+- Result: Model governance is represented only as an external port request; no model records, files, caches, or automatic promotion logic were introduced.
+- Files affected:
+  - `src/cross_cutting/model_contracts.py`
+  - `src/contracts/model_lifecycle.yaml`
+  - `tests/test_model_contracts.py`
+  - `src/cross_cutting/README.md`
+  - `docs/handoff/2026-08-01-model-contract-adapter.zh-CN.md`
+
+### 2026-08-01 12:06 EDT
+
+- Action: Corrected the model-reference parser and reran validation after the first test exposed an incomplete capture group.
+- How: Changed the named regular-expression group to capture the complete major/minor/patch version, then ran the full unittest suite, repository boundary check, and whitespace check.
+- Result: Full validation passed after the correction.
+- Files affected:
+  - `src/cross_cutting/model_contracts.py`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:18 EDT
+
+- Action: Submitted PR #12 to ChatGPT for the required external review.
+- How: Opened the persistent `GitHub PR 信息` conversation, used the chat-box `+` menu to select GitHub, and requested review of the live PR description, changed files, aggregate diff, tests, handoff, and worklog.
+- Result: ChatGPT returned `APPROVE` and explicitly authorized merging PR #12.
+- Files affected: none before recording the review result.
+
+### 2026-08-01 12:19 EDT
+
+- Action: Recorded the external approval in the repository.
+- How: Added a review log containing the PR link, selected source, review scope, and exact approval wording; appended this worklog entry.
+- Result: The approval is durable and auditable in the PR branch; a metadata-only re-review is required because the PR tip changed.
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-model-contract-adapter.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 12:25 EDT
+
+- Action: Closed the PR review gate before merge.
+- How: Submitted the metadata-only follow-up through the ChatGPT `GitHub PR 信息` conversation with GitHub reselected via the `+` menu; ChatGPT confirmed the added files were audit metadata only and returned `APPROVE`, explicitly stating `可以合并 PR #12`.
+- Result: Updated the handoff to record both approvals and the pending squash-merge state. No further PR content changes are planned before merge.
+- Files affected:
+  - `docs/handoff/2026-08-01-model-contract-adapter.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 11:01 EDT
 
 - Action: Converted `ChatGPT-Codex-talk.md` into the canonical execution-first interaction protocol and surfaced it from the repo entry docs.
