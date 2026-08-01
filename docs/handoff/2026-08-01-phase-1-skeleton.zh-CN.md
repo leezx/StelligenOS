@@ -8,7 +8,7 @@
 - PR：[#2](https://github.com/leezx/StelligenOS/pull/2)
 - 最近一次已验证 PR tip：`330c0de`
 - 当前 PR tip 和 aggregate diff：以 GitHub PR 页面实时状态为唯一权威；本文件不自引用其自身提交 hash。
-- 状态：等待 ChatGPT PR 审核
+- 状态：ChatGPT 已批准，等待合并到 `main`
 
 ## 总纲与范围
 
@@ -36,4 +36,4 @@
 
 ## 下一步
 
-等待 ChatGPT 审核当前 PR #2。只有获得明确 `APPROVE` 后，才允许进入后续 Phase。
+ChatGPT 已对 PR #2 的远端 tip `b332906` 返回明确 `APPROVE`，可以进入下一 Phase。合并后应从最新 `main` 创建下一 Phase 分支；下一 Phase 范围必须先由总纲和 ChatGPT 明确，不得自行扩展。
