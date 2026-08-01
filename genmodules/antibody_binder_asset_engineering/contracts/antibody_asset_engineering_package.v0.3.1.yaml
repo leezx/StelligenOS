@@ -1,0 +1,149 @@
+contract:
+  id: AntibodyAssetEngineeringPackage
+  version: "0.3.1"
+  ref: AntibodyAssetEngineeringPackage@0.3.1
+  schema_format: assetgenos-structural-contract/1.0
+  role: run_package
+
+producer:
+  module_id: antibody_binder_asset_engineering
+  module_version: "0.3.1"
+  accepted_input_contract: ExistingBinderAssetInput@0.3.1
+  manifest_contract: AntibodyAssetRunManifest@0.3.1
+
+accepted_stage_catalogue:
+  execution_order_equals_declared_order: true
+  stage_catalog_sha256_algorithm: sha256_canonical_json
+  stages:
+    - 01_binder_intake
+    - 02_ip_fto_landscape
+    - 03_structural_analysis
+    - 04_binder_engineering_design
+    - 05_candidate_family_generation
+    - 06_binder_quality_triage
+    - 07_adc_carrier_phenotype
+    - 08_adc_product_assembly
+    - 09_adc_failure_mode_analysis
+    - 10_pareto_selection
+    - 11_experimental_design
+    - 12_active_learning
+    - 13_patent_package
+    - 14_asset_report
+  explicitly_not_registered:
+    - 15_evidence_graph
+    - 16_cross_asset_retrieval
+
+manifest:
+  required:
+    - manifest_contract
+    - run_id
+    - asset_id
+    - binder_id
+    - module_id
+    - module_version
+    - source_input_contract
+    - input_contract
+    - output_contract
+    - mode
+    - input_sha256
+    - run_dir
+    - execution_order
+    - stage_catalog_sha256
+    - artifact_integrity
+    - artifacts
+    - stages
+    - contract_validation
+    - status
+  status_values: [complete, blocked]
+  mode_values: [plan, execute]
+
+stage_artifacts:
+  directory_pattern: "<stage_id>/"
+  result_file: result.yaml
+  required_result_fields:
+    all_modes: [stage_id, name, status, external_programs_executed]
+    plan: [stage_id, name, status, external_programs_executed]
+  allowed_status_values: [planned, complete, complete_with_gaps, blocked, unavailable]
+  reference_fields: [path, sha256, bytes]
+
+stage_output_contracts:
+  01_binder_intake:
+    execute_required: [binder_identity, numbering, liabilities, biophysical_properties, unresolved, claims]
+    optional: [germline_summary, annotation_tools]
+  02_ip_fto_landscape:
+    execute_required: [search_scopes, software, required_data, outputs_pending, legal_boundary]
+    optional: [supplied_conjugate_ip_evidence, epitope_diversification_note]
+  03_structural_analysis:
+    execute_required: [structure_prediction, solvent_accessibility, exposure_weighted_liabilities, software, boundary]
+    optional: [per_residue_accessibility, reclassified_by_exposure, outstanding_work, scope_caveat]
+    optional_artifacts: [fv_model]
+  04_binder_engineering_design:
+    execute_required: [objectives, constraints, sequence_proposals, rejected_proposals, construct_specifications, proposal_counts, boundary]
+    optional: [protected_positions, dual_benefit_proposals, cdr_scan_positions, software]
+  05_candidate_family_generation:
+    execute_required: [sequence_candidates, sequence_candidate_count, construct_specifications, construct_specification_count, sequence_families, construct_families, method, boundary]
+    optional: [excluded_candidates, proposals_in_no_family, mutation_budget]
+  06_binder_quality_triage:
+    execute_required: [track, scoring_policy, candidates_scored, ranking, parent_candidate_id, method, boundary]
+    optional: [candidates_scoring_above_parent, software, not_predicted]
+  07_adc_carrier_phenotype:
+    execute_required: [track, delivery_cascade, carrier_quality, modality_decision, measurement_catalogue, required_observation_metadata, boundary]
+    optional: [unusable_observation_count, why_five_steps]
+  08_adc_product_assembly:
+    execute_required: [conjugation_analysis, declared_payload, product_matrix, entity_model, boundary]
+    optional: [why_not_reuse_the_fv_ranking]
+  09_adc_failure_mode_analysis:
+    execute_required: [failure_mode_analysis, evidence_matrix, adc_readiness_score, required_data, boundary]
+    optional: [why_a_graph_not_a_checklist]
+  10_pareto_selection:
+    execute_required: [selection, carrier_scores_available_for, no_inheritance_rule, boundary]
+    optional: []
+  11_experimental_design:
+    execute_required: [sequencing_rule, modality_decision, critical_path, next_experiment, design_rules]
+    optional: [deferred_until_modality_resolved, uninformative_experiments, cost_and_time]
+  12_active_learning:
+    execute_required: [role, label_schema, observations, awaiting_observations_for, model_fitting_status, update_policy, boundary]
+    optional: [prior_sequence_developability_scores, usable_carrier_observations, software]
+  13_patent_package:
+    execute_required: [package_sections, representative_asset, numbered_cdrs, generated_sequence_families, missing, legal_boundary]
+    optional: [claimable_product_formats, software, derivation_caveat]
+  14_asset_report:
+    execute_required: [report_path, asset_state, modality_decision, next_experiment, validated_asset]
+    optional: []
+    required_artifacts: [asset_report]
+
+root_artifacts:
+  required_all_modes:
+    - normalized_input
+    - software_status
+  required_execute:
+    - asset_report
+  reference_fields: [path, sha256, bytes]
+
+artifact_integrity:
+  algorithm: sha256
+  path_scope: run_directory_relative
+  manifest_self_hash: excluded
+  verify_before_acceptance: true
+
+backward_compatibility:
+  accepted_source_inputs:
+    - ExistingBinderAssetInput@0.1.0
+    - ExistingBinderAssetInput@0.2.0
+    - ExistingBinderAssetInput@0.3.0
+    - ExistingBinderAssetInput@0.3.1
+  emitted_input_contract: ExistingBinderAssetInput@0.3.1
+  emitted_output_contract: AntibodyAssetEngineeringPackage@0.3.1
+  legacy_output_policy: reject_by_default
+  legacy_rejection_reasons:
+    - undeclared_stage_catalogue
+    - manifest_contract_mismatch
+    - output_contract_mismatch
+    - missing_or_invalid_artifact_checksum
+
+null_semantics:
+  null: unknown_unmeasured_or_not_computable_as_declared_by_the_field
+  absent: field_not_emitted_by_this_contract_path
+  empty_list: known_collection_with_no_members
+  numeric_zero: measured_or_computed_zero
+  rule: A consumer MUST preserve these states and MUST NOT map null to adverse.

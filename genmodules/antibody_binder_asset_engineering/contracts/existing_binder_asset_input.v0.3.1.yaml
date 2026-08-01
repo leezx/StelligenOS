@@ -1,0 +1,70 @@
+contract:
+  id: ExistingBinderAssetInput
+  version: "0.3.1"
+  ref: ExistingBinderAssetInput@0.3.1
+  schema_format: assetgenos-structural-contract/1.0
+  role: normalized_input
+
+compatibility:
+  accepted_source_contracts:
+    - ExistingBinderAssetInput@0.1.0
+    - ExistingBinderAssetInput@0.2.0
+    - ExistingBinderAssetInput@0.3.0
+    - ExistingBinderAssetInput@0.3.1
+  normalization_target: ExistingBinderAssetInput@0.3.1
+  unknown_top_level_fields: allowed
+  rule: >-
+    Older accepted records are normalized before execution. The source contract is
+    retained in the run manifest; the normalized artifact always declares 0.3.1.
+
+root:
+  type: mapping
+  required:
+    - input_contract
+    - asset_id
+    - binder_id
+    - format
+    - target
+    - sequences
+    - provenance
+  fields:
+    input_contract: string
+    asset_id: nonempty_string
+    binder_id: nonempty_string
+    format: nonempty_string
+    target: mapping
+    sequences: mapping
+    provenance: mapping
+    adc_carrier_observations: list_or_null
+    candidate_sequences: list_or_null
+    constraints: mapping_or_null
+
+objects:
+  target:
+    required: [gene, protein, indication]
+    fields:
+      gene: nonempty_string
+      protein: nonempty_string
+      indication: nonempty_string
+      epitope: string_or_null
+  sequences:
+    required: [vh]
+    fields:
+      vh: nonempty_string
+      vl: string_or_null
+    conditional_rules:
+      - if: format is neither VHH nor nanobody
+        then: sequences.vl is nonempty_string
+  provenance:
+    required: [source_type, owner_or_license_status, source_reference]
+    fields:
+      source_type: nonempty_string
+      owner_or_license_status: nonempty_string
+      source_reference: nonempty_string
+
+null_semantics:
+  optional_absent: not_provided
+  optional_null: explicitly_unknown_or_unmeasured
+  empty_list: measured_collection_with_no_items_or_no_supplied_records
+  numeric_zero: observed_zero_never_missing
+  rule: Missing, null, empty, and zero MUST NOT be coerced into one another.

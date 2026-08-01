@@ -1,0 +1,30 @@
+module:
+  module_id: epitope_conditioned_de_novo_antibody_discovery
+  module_version: 0.1.0
+  module_type: GenModule
+  name: Epitope-Conditioned de novo Antibody Asset Discovery
+  input_contract: EpitopeConditionedDiscoveryInput@0.1.0
+  output_contract: EpitopeConditionedAntibodyAssetPackage@0.1.0
+  external_execution_policy: disabled_by_default
+  stages:
+  - {id: 01_target_biology, name: Target biology}
+  - {id: 02_antigen_engineering, name: Antigen engineering}
+  - {id: 03_epitope_engineering, name: Epitope engineering}
+  - {id: 04_ip_fto_epitope_selection, name: IP/FTO-guided epitope selection}
+  - {id: 05_structural_preparation, name: Structural preparation}
+  - {id: 06_negative_design, name: Negative design}
+  - {id: 07_de_novo_antibody_design, name: Epitope-conditioned de novo antibody design}
+  - {id: 08_computational_ranking, name: Multi-objective computational ranking}
+  - {id: 09_asset_diversity_optimization, name: Asset-diversity optimization}
+  - {id: 10_focused_wet_lab_design, name: Focused wet-lab design}
+  - {id: 11_structural_validation, name: Structural validation}
+  - {id: 12_affinity_maturation, name: Affinity maturation}
+  - {id: 13_adc_readiness, name: ADC-readiness evaluation}
+  - {id: 14_patent_package, name: Patent package}
+  - {id: 15_asset_report, name: Asset report}
+  prohibited_claims:
+  - validated binding or epitope from prediction alone
+  - legal FTO clearance
+  - patentability without attorney review
+  - clinical safety or efficacy
+  - ADC readiness without versioned experimental evidence

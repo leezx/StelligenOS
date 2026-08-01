@@ -1,0 +1,56 @@
+data:
+  - id: target_sequence_reference
+    env_var: TARGET_SEQUENCE_REFERENCE_ROOT
+    required_for: [01_target_biology, 02_antigen_engineering]
+    purpose: Versioned UniProt or equivalent target sequence/topology reference.
+    licence_review_required: true
+  - id: target_structure_reference
+    env_var: TARGET_STRUCTURE_REFERENCE_ROOT
+    required_for: [03_epitope_engineering, 05_structural_preparation]
+    purpose: Experimental PDB/cryo-EM and approved predicted target structures.
+    licence_review_required: true
+  - id: antibody_antigen_complex_reference
+    env_var: ANTIBODY_ANTIGEN_COMPLEX_ROOT
+    required_for: [03_epitope_engineering, 07_de_novo_antibody_design, 08_computational_ranking]
+    purpose: SAbDab/PDB antibody-antigen complexes with provenance.
+    licence_review_required: true
+  - id: therapeutic_antibody_reference
+    env_var: THERAPEUTIC_ANTIBODY_REFERENCE_ROOT
+    required_for: [01_target_biology, 04_ip_fto_epitope_selection, 09_asset_diversity_optimization]
+    purpose: Known therapeutic antibodies, targets, epitopes, sequences, and status.
+    licence_review_required: true
+  - id: competitor_antibody_evidence
+    env_var: COMPETITOR_ANTIBODY_EVIDENCE_ROOT
+    required_for: [01_target_biology, 04_ip_fto_epitope_selection, 06_negative_design]
+    purpose: Versioned competitor binding, epitope, function, and clinical evidence.
+    licence_review_required: true
+  - id: patent_sequence_exports
+    env_var: ANTIBODY_PATENT_EXPORT_ROOT
+    required_for: [04_ip_fto_epitope_selection, 06_negative_design, 14_patent_package]
+    purpose: Lawfully obtained patent family, claim, sequence, and epitope exports.
+    licence_review_required: true
+  - id: design_model_weights
+    env_var: DE_NOVO_ANTIBODY_MODEL_ROOT
+    required_for: [07_de_novo_antibody_design, 08_computational_ranking]
+    purpose: RFantibody/RFdiffusion/ProteinMPNN/RF2 or other exact model weights.
+    licence_review_required: true
+  - id: normal_tissue_atlas
+    env_var: NORMAL_TISSUE_ATLAS_ROOT
+    required_for: [01_target_biology, 06_negative_design, 13_adc_readiness]
+    purpose: Normal-tissue and cell-type target-expression evidence.
+    licence_review_required: true
+  - id: adc_reference
+    env_var: ADC_REFERENCE_ROOT
+    required_for: [01_target_biology, 03_epitope_engineering, 13_adc_readiness]
+    purpose: ADC target, epitope, internalization, trafficking, linker/payload, and outcome evidence.
+    licence_review_required: true
+  - id: design_benchmark
+    env_var: DE_NOVO_ANTIBODY_BENCHMARK_ROOT
+    required_for: [07_de_novo_antibody_design, 08_computational_ranking]
+    purpose: Frozen positive and negative benchmark complexes and sequence families.
+    licence_review_required: true
+  - id: experimental_results
+    env_var: ANTIBODY_EXPERIMENT_ROOT
+    required_for: [10_focused_wet_lab_design, 11_structural_validation, 12_affinity_maturation, 13_adc_readiness, 14_patent_package, 15_asset_report]
+    purpose: Versioned binding, epitope, structure, developability, internalization, and ADC observations.
+    licence_review_required: false

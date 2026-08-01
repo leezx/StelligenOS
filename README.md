@@ -42,6 +42,7 @@ StelligenOS 是一个 biotechnology asset operating system 的实现仓库。
 - `scripts/verify_repository_boundary.sh`
 - `scripts/git_sync.sh`
 - `src/README.md`
+- `genmodules/README.md`
 - `docs/phases/PHASE_1_REPORT.zh-CN.md`
 - `docs/phases/PHASE_2_REPORT.zh-CN.md`
 - `docs/phases/PHASE_3_REPORT.zh-CN.md`

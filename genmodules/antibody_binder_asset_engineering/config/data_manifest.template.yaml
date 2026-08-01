@@ -1,0 +1,41 @@
+data:
+  - id: imgt_germline
+    env_var: IMGT_GERMLINE_ROOT
+    required_for: [01_binder_intake, 06_computational_triage]
+    purpose: Germline assignment, numbering, and humanness context.
+    licence_review_required: true
+  - id: sabdab_structures
+    env_var: SABDAB_ROOT
+    required_for: [01_binder_intake, 03_structural_analysis]
+    purpose: Experimentally resolved antibody structures and metadata.
+    licence_review_required: true
+  - id: therapeutic_antibody_reference
+    env_var: THERAPEUTIC_ANTIBODY_REFERENCE_ROOT
+    required_for: [01_binder_intake, 02_ip_fto_landscape, 06_computational_triage]
+    purpose: Known therapeutic sequence, status, and target references.
+    licence_review_required: true
+  - id: patent_sequence_exports
+    env_var: ANTIBODY_PATENT_EXPORT_ROOT
+    required_for: [02_ip_fto_landscape, 10_patent_package]
+    purpose: Versioned, lawfully obtained patent sequence and claim-search exports.
+    licence_review_required: true
+  - id: protein_structure_models
+    env_var: ANTIBODY_STRUCTURE_MODEL_ROOT
+    required_for: [03_structural_analysis, 04_ai_guided_engineering]
+    purpose: Manually installed model weights and structure databases.
+    licence_review_required: true
+  - id: normal_tissue_atlas
+    env_var: NORMAL_TISSUE_ATLAS_ROOT
+    required_for: [09_adc_readiness]
+    purpose: Normal-tissue and cell-type target-expression evidence.
+    licence_review_required: true
+  - id: adc_reference
+    env_var: ADC_REFERENCE_ROOT
+    required_for: [09_adc_readiness]
+    purpose: ADC target, internalization, trafficking, payload, linker, and clinical reference evidence.
+    licence_review_required: true
+  - id: experimental_results
+    env_var: ANTIBODY_EXPERIMENT_ROOT
+    required_for: [07_experimental_design, 08_active_learning, 09_adc_readiness, 10_patent_package, 11_asset_report]
+    purpose: Versioned wet-lab observations and assay metadata.
+    licence_review_required: false

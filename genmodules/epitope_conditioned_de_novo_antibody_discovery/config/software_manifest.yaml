@@ -1,0 +1,35 @@
+software:
+  core:
+  - {id: python, kind: executable, check: python3, required_for: [all]}
+  - {id: pyyaml, kind: python_import, check: yaml, required_for: [all]}
+  - {id: biopython, kind: python_import, check: Bio, required_for: [02_antigen_engineering, 03_epitope_engineering]}
+  workflow:
+  - {id: dagster, kind: python_import, check: dagster, required_for: [optional_orchestration]}
+  sequence_and_numbering:
+  - {id: anarci, kind: executable, check: ANARCI, required_for: [07_de_novo_antibody_design, 08_computational_ranking]}
+  - {id: abnumber, kind: python_import, check: abnumber, required_for: [07_de_novo_antibody_design, 08_computational_ranking]}
+  - {id: blast_plus, kind: executable, check: blastp, required_for: [04_ip_fto_epitope_selection, 14_patent_package]}
+  - {id: mmseqs2, kind: executable, check: mmseqs, required_for: [04_ip_fto_epitope_selection, 14_patent_package]}
+  structure:
+  - {id: pdbfixer, kind: python_import, check: pdbfixer, required_for: [05_structural_preparation]}
+  - {id: openmm, kind: python_import, check: openmm, required_for: [05_structural_preparation]}
+  - {id: freesasa, kind: executable, check: freesasa, required_for: [05_structural_preparation, 08_computational_ranking]}
+  - {id: immune_builder, kind: python_import, check: ImmuneBuilder, required_for: [08_computational_ranking]}
+  - {id: igfold, kind: python_import, check: igfold, required_for: [08_computational_ranking]}
+  - {id: openfold, kind: python_import, check: openfold, required_for: [05_structural_preparation]}
+  design:
+  - {id: rfantibody, kind: env_path, check: RFANTIBODY_ROOT, required_for: [07_de_novo_antibody_design]}
+  - {id: rfdiffusion, kind: env_path, check: RFDIFFUSION_ROOT, required_for: [07_de_novo_antibody_design]}
+  - {id: proteinmpnn, kind: env_path, check: PROTEINMPNN_ROOT, required_for: [07_de_novo_antibody_design]}
+  - {id: ligandmpnn, kind: env_path, check: LIGANDMPNN_ROOT, required_for: [07_de_novo_antibody_design]}
+  - {id: esm, kind: python_import, check: esm, required_for: [08_computational_ranking]}
+  scoring:
+  - {id: rosetta, kind: executable, check: rosetta_scripts, required_for: [08_computational_ranking, 12_affinity_maturation]}
+  - {id: foldx, kind: executable, check: foldx, required_for: [08_computational_ranking, 12_affinity_maturation]}
+  optimization:
+  - {id: pandas, kind: python_import, check: pandas, required_for: [08_computational_ranking, 09_asset_diversity_optimization]}
+  - {id: scikit_learn, kind: python_import, check: sklearn, required_for: [09_asset_diversity_optimization, 12_affinity_maturation]}
+  - {id: optuna, kind: python_import, check: optuna, required_for: [12_affinity_maturation]}
+  reporting:
+  - {id: jinja2, kind: python_import, check: jinja2, required_for: [14_patent_package, 15_asset_report]}
+  - {id: pandoc, kind: executable, check: pandoc, required_for: [15_asset_report]}

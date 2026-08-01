@@ -1,0 +1,166 @@
+module:
+  module_id: antibody_binder_asset_engineering
+  module_version: 0.4.0
+  predecessor_module_version: 0.3.1
+  # 0.3.0 was superseded in place rather than archived: 0.3.1 corrects risk
+  # classification defects in it, so no run should be reproduced against 0.3.0.
+  # v0.2.0 remains the last separately archived version.
+  last_archived_version: 0.2.0
+  predecessor_archive: external:AssetGenOS/archive/antibody_binder_asset_engineering/v0.2.0/
+  module_type: GenModule
+  name: Existing-Binder Antibody Asset Engineering
+  input_contract: ExistingBinderAssetInput@0.4.0
+  # Bumped in 0.3.1: `region` on liability hits and proposals changed meaning
+  # (IMGT-only -> union of IMGT and Kabat), so it is not a pure field addition.
+  output_contract: AntibodyAssetEngineeringPackage@0.4.0
+  route_contract: binder_adc_generation_routes@0.1.0
+  route_id: existing_binder_asset_engineering
+  external_stage_count: 14
+  external_stage_mapping:
+  - {id: binder_intake, internal_steps: [01_binder_intake]}
+  - {id: sequence_normalization, internal_steps: [01_binder_intake]}
+  - {id: structural_analysis, internal_steps: [03_structural_analysis]}
+  - {id: liability_analysis, internal_steps: [04_binder_engineering_design, 06_binder_quality_triage]}
+  - {id: developability_analysis, internal_steps: [06_binder_quality_triage]}
+  - {id: adc_carrier_phenotype, internal_steps: [07_adc_carrier_phenotype]}
+  - {id: delivery_cascade, internal_steps: [07_adc_carrier_phenotype]}
+  - {id: failure_mode_analysis, internal_steps: [09_adc_failure_mode_analysis]}
+  - {id: evidence_graph, internal_steps: [15_evidence_graph]}
+  - {id: pareto_selection, internal_steps: [10_pareto_selection]}
+  - {id: construct_specification, internal_steps: [04_binder_engineering_design, 08_adc_product_assembly]}
+  - {id: adc_product_matrix, internal_steps: [08_adc_product_assembly]}
+  - {id: asset_report, internal_steps: [14_asset_report]}
+  - {id: run_manifest, internal_steps: [__runner_manifest__]}
+  external_execution_policy: disabled_by_default
+  external_execution_operations:
+  - {operation: predict_structure, tool: ABodyBuilder2, enabled_by: --allow-external}
+  runtime:
+    orchestrator: external:StelligenOS-runtime
+    scientific_stack: external:SOFTWARES/venvs/antibody_pipeline_shared/py311
+    scientific_stack_override_env: ANTIBODY_SHARED_PYTHON
+
+  scope: >-
+    Phenotype-conditioned ADC carrier engineering. The module runs two orthogonal
+    tracks: binder molecule quality, which is computed from sequence and structure,
+    and ADC carrier phenotype, which is measured from structured experimental
+    observations. The tracks are combined only by Pareto dominance, never summed.
+
+  tracks:
+  - id: A_binder_molecule_quality
+    nature: computed
+    stages: [01_binder_intake, 03_structural_analysis, 04_binder_engineering_design, 05_candidate_family_generation, 06_binder_quality_triage]
+    emits: sequence_computational_developability_score
+  - id: B_adc_carrier_phenotype
+    nature: measured
+    stages: [07_adc_carrier_phenotype, 08_adc_product_assembly]
+    emits: adc_carrier_quality_score
+
+  stages:
+  - {id: 01_binder_intake, name: Binder intake and sequence audit}
+  - {id: 02_ip_fto_landscape, name: IP and FTO landscape}
+  - {id: 03_structural_analysis, name: Structural analysis}
+  - {id: 04_binder_engineering_design, name: Binder engineering design}
+  - {id: 05_candidate_family_generation, name: Candidate-family generation}
+  - {id: 06_binder_quality_triage, name: 'Track A: binder-quality triage'}
+  - {id: 07_adc_carrier_phenotype, name: 'Track B: ADC carrier phenotype'}
+  - {id: 08_adc_product_assembly, name: ADC product assembly}
+  - {id: 09_adc_failure_mode_analysis, name: ADC failure-mode analysis}
+  - {id: 10_pareto_selection, name: Two-track Pareto selection}
+  - {id: 11_experimental_design, name: Information-gain experimental design}
+  - {id: 12_active_learning, name: Active-learning data closed loop}
+  - {id: 13_patent_package, name: Patent package}
+  - {id: 14_asset_report, name: Asset report}
+  - {id: 15_evidence_graph, name: Evidence reasoning graph}
+  - {id: 16_cross_asset_retrieval, name: Cross-asset retrieval}
+
+  execution_order_equals_declared_order: true
+  execution_order_note: >-
+    0.2.0 needed an execution order distinct from its declared catalogue so that
+    ADC readiness could precede experimental design. 0.3.0 resolves that
+    structurally: the phenotype and failure-mode stages are simply earlier in the
+    catalogue, so declared order and execution order coincide again.
+
+  entity_model:
+  - AntibodyCandidate
+  - ConjugationVariant
+  - ADCProductCandidate
+
+  candidate_families:
+    sequence:
+    - conservative_liability_removal
+    - developability_optimized
+    - germline_reverted
+    construct_specification:
+    - function_silenced
+    - valency_clustering
+    campaign_specification:
+    - kinetic_ladder
+    product:
+    - conjugation_format
+
+  emitted_scores:
+  - id: sequence_computational_developability_score
+    track: A_binder_molecule_quality
+    scope: computed sequence and structure descriptors only
+    excludes: [target binding, affinity, expression titre, thermal stability, immunogenicity, internalisation, payload delivery]
+    comparability: within a single run only
+    promotion_eligible: false
+    renamed_from: developability_score
+    rename_reason: >-
+      The short name invited readers to treat the top-ranked row as the best
+      candidate overall. It is a within-track sequence pre-screen.
+  - id: adc_carrier_quality_score
+    track: B_adc_carrier_phenotype
+    scope: measured delivery-cascade observations carrying complete metadata
+    null_when: no usable observation exists
+    null_semantics: >-
+      Null means unmeasured, not poor. A candidate with no phenotype data is set
+      aside as incomparable on this axis rather than ranked last.
+    inheritable: false
+    inheritance_note: >-
+      Carrier quality belongs to a specific construct and is never inherited by a
+      sequence variant. One CDR substitution can abolish internalisation without
+      changing any sequence descriptor.
+
+  withheld_scores:
+  - id: adc_readiness_score
+    reason: requires versioned experimental evidence on every gating criterion; emitted by the Gate system, not this module
+  - id: dar_estimate
+    reason: not inferable from variable domains; requires full-length chains and a declared conjugation chemistry
+  - id: combined_binder_and_carrier_score
+    reason: >-
+      Summing the two tracks would let a clean sequence compensate for a molecule
+      that does not deliver payload, which is the one trade a payload-delivery
+      programme must never make. The tracks are combined by Pareto dominance only.
+
+  prohibited_claims:
+  - legal FTO clearance
+  - clinical safety or efficacy
+  - validated affinity improvement without assay evidence
+  - ADC readiness without versioned experimental evidence
+  - patentability without attorney review
+  - measured developability from a computed descriptor
+  - carrier capability from sequence alone
+  - internalisation as a single boolean criterion
+  - inheritance of a parent's phenotype measurement by a variant
+
+  changes_from_0_3_0:
+  - Region risk is the union of IMGT and Kabat. Under IMGT alone, Kabat CDR-H1 34-35 and the Kabat CDR-H2 tail 58-65 read as framework, so paratope residues inherited framework's low functional consequence and requires_binding_confirmation false.
+  - Conserved IMGT structural anchors (23, 41, 89, 104, 118) are declined into rejected_proposals with a reason; 0.3.0 proposed substitutions at the core tryptophans and the J-TRP at low risk.
+  - Burial now also raises engineering_risk and sets requires_fold_confirmation, not requires_binding_confirmation. 0.3.0 only lowered chemical urgency, which made a buried core substitution look like the cheapest available fix.
+  - Germline-encoded liabilities are distinguished from somatic ones as a tri-state, and every proposal carries reduces_framework_humanness. Null means the position is outside the V-gene framework alignment, not that the residue is somatic.
+  - conservative_liability_removal requires framework under both definitions and an unescalated risk tier; germline_reverted requires framework under both definitions; proposals no family accepts are listed in proposals_in_no_family.
+  - Triage rows and the report carry highest_engineering_risk, requires_fold_confirmation, and reduces_framework_humanness beside the score, which cannot express them.
+  - Track A scores differ from 0.3.0 because region assignment feeds functional_consequence, which feeds liability_burden. Runs made under 0.3.0 must not be used for candidate selection.
+
+  changes_from_0_2_0:
+  - Splits into two orthogonal tracks; 0.2.0 optimised binder quality and implicitly presented it as ADC suitability.
+  - Adds 07_adc_carrier_phenotype with a five-step delivery cascade, replacing the single internalization criterion.
+  - Enforces mandatory observation metadata; an observation without context is unusable rather than silently averaged.
+  - Adds 10_pareto_selection; refuses to name a lead when the carrier axis is unmeasured.
+  - Adds four construct- and campaign-specification families, kept visibly distinct from generated sequences.
+  - Adds 08_adc_product_assembly with the three-entity product model.
+  - Replaces the 12-criterion readiness checklist with causal failure-mode trees and information-gain experiment ranking.
+  - Renames developability_score to sequence_computational_developability_score.
+  - Reorders and renumbers stages; see STAGE_MIGRATION_FROM_0_2_0 in stages.py.
+  - Declines to add a learned sequence designer, on the grounds that the objective function is the bottleneck rather than proposal generation.

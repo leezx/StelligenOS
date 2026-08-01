@@ -323,6 +323,54 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 13:56 EDT
+
+- Action: 开始架构冻结后的 AssetGenOS 模块迁移。
+- How: 从最新 `origin/main` (`acd2f2c`) 建立隔离分支 `task_20260801_assetgenos-migration`；盘点 AssetGenOS 后选择两个不应与旧数据库绑定的 GenModule 作为第一批：现有 Binder 抗体/ADC 载体工程和表位条件 de novo 抗体发现。复制其代码、契约、工具声明和必要说明，删除示例输入、模块测试中的数据依赖、缓存和旧运行时状态；修正旧仓库路径，使科学运行时和结果目录都由外部工作区提供。
+- Result: 新增 `genmodules/` 下两个软件模块、总说明和迁移边界测试；未迁移 `data/adc_factory.sqlite3`、`.venv`、数据库层、历史标签、模型记录、缓存、模型权重、数据集或运行结果。当前等待测试、边界门禁和 PR 审核。
+- Follow-up: 首次边界检查因冻结前允许顶层清单未包含 `genmodules/` 而阻断；已将该软件代码目录加入允许清单，未放宽任何数据文件规则。
+
+### 2026-08-01 14:15 EDT
+
+- Action: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天提交 PR #11 审核，并读取到第一轮反馈。
+- Result: ChatGPT 返回 `REQUEST_CHANGES`。反馈确认存在两个阻断项：冻结 Binder/ADC 路线合同要求 14 个外部阶段，但迁移模块的 16 个内部步骤被直接作为外部 `list-steps` 暴露；runner 文档字符串仍声明 `@0.3.1`，而活动模块和合同为 `0.4.0`。
+- How: 保存完整反馈到 `logs/chatgpt-review-2026-08-01-assetgenos-migration-revision-1.md`；准备保留 16 个内部实现步骤，新增明确的 14 阶段外部路线映射和 `list-internal-steps`，同步测试、README、handoff 和 Worklog，并修正版本声明。
+
+### 2026-08-01 14:42 EDT
+
+- Action: 按 ChatGPT 第一轮反馈完成阶段映射和版本修订，并提交修订 tip `3becd97`。
+- How: `list-steps` 改为输出冻结合同的 14 个外部阶段；新增 `list-internal-steps` 输出 16 个内部步骤；在模块 YAML 和 stages 代码中声明完整映射；修正 `run_pipeline.py` 和 `contract_validation.py` 的 `0.4.0` 版本声明；同步 GenModules README、handoff、PR 描述准备内容和测试。
+- Verification: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v` 通过（22 项）；`./scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git diff main...3becd97 --check` 通过。
+- Review: ChatGPT 复审确认映射代码本身正确，但仍指出上述版本文档、根 README、PR 描述和 aggregate diff 记录需要同步；本次继续修订，未合并 PR。
+
+### 2026-08-01 14:58 EDT
+
+- Action: 完成 ChatGPT 第二轮反馈修订并更新 PR #11 描述。
+- How: 将 `contract_validation.py` 版本声明改为 `v0.4.0`；将根 `genmodules/README.md` 明确为 16 个内部步骤映射到 14 个外部合同阶段；保存第二轮反馈；在 handoff、Worklog 和 PR 描述中记录 aggregate diff 门禁。提交修订 `437123a` 后执行 `git diff main...HEAD --check`。
+- Verification: 全量 22 项测试通过；repository boundary 通过；working-tree `git diff --check` 通过；aggregate diff `git diff main...HEAD --check` 通过。
+- Review: 第二轮 ChatGPT 结果已保存到 `logs/chatgpt-review-2026-08-01-assetgenos-migration-revision-2.md`，当前等待最终复审，PR 仍未合并。
+
+### 2026-08-01 15:35 EDT
+
+- Action: 读取 ChatGPT 最终复审反馈并修复最后两个元数据阻断项。
+- How: 将 handoff 当前 tip 从 `437123a` 收敛到 GitHub PR #11 当前 HEAD，并把 Existing-Binder README 的当前输入合同从 `ExistingBinderInput@0.3.1` 修正为 `ExistingBinderAssetInput@0.4.0`，同时保留旧版本作为历史兼容背景；补充当前 HEAD 的测试、boundary、working-tree diff 和 aggregate diff 验证记录。
+- Verification: 基线 `bd73e0f` 的 `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`、`./scripts/verify_repository_boundary.sh`、`git diff --check` 和 `git diff main...HEAD --check` 均通过；后续仅更新审核元数据，不改变软件内容。
+- Review: ChatGPT 已确认 14/16 阶段映射、list-steps/list-internal-steps、冻结路线合同、零数据边界和安全策略符合要求；当前修订后再次请求最终 APPROVE。
+
+### 2026-08-01 16:22 EDT
+
+- Action: 完成 PR #11 的最终 ChatGPT 审核。
+- Result: ChatGPT 返回 `APPROVE`，明确“可以合并 PR #11，并进入下一批迁移”。完整批准记录保存到 `logs/chatgpt-review-2026-08-01-assetgenos-migration-final.md`。
+- Verified: 14/16 阶段映射、版本一致性、冻结 Binder/ADC 合同、零数据边界、外部执行默认关闭、禁止内部持久化、禁止 Gate score 写入、禁止路线混合、禁止自动晋级和 GitHub 可合并状态均通过。
+- Next: 保存批准记录后，PR #11 可以合并；合并后进入下一批 AssetGenOS 纯契约/适配层迁移。
+- Files affected:
+  - `genmodules/README.md`
+  - `genmodules/antibody_binder_asset_engineering/`
+  - `genmodules/epitope_conditioned_de_novo_antibody_discovery/`
+  - `tests/test_assetgenos_modules.py`
+  - `docs/handoff/2026-08-01-assetgenos-migration.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 13:08 EDT
 
 - Action: 开始 Phase 3，迁移 AssetGenOS Gate 体系的架构合同。
