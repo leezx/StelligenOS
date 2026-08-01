@@ -47,6 +47,7 @@ class OpportunityGenerationResult:
 
     def __post_init__(self) -> None:
         for reference in (
+            self.request_id,
             *self.opportunity_refs,
             *self.target_hypothesis_refs,
             *self.evidence_refs,

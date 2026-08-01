@@ -2,6 +2,7 @@ import unittest
 
 from src.capabilities.opportunity_generation import (
     OpportunityGenerationRequest,
+    OpportunityGenerationResult,
     require_external_reference,
 )
 
@@ -31,6 +32,16 @@ class Phase4OpportunityGenerationTests(unittest.TestCase):
                 clinical_context_ref="external:clinical/1",
                 generation_policy_ref="external:policy/1",
                 run_context_ref="external:run/1",
+            )
+
+        with self.assertRaises(ValueError):
+            OpportunityGenerationResult(
+                request_id="local:request/1",
+                opportunity_refs=(),
+                target_hypothesis_refs=(),
+                evidence_refs=(),
+                missing_information_refs=(),
+                run_ref="external:run/1",
             )
 
     def test_external_reference_is_accepted(self):

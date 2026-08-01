@@ -415,6 +415,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `tests/test_phase4_opportunity_generation.py`
   - `logs/worklog.md`
 
+### 2026-08-01 14:29 EDT
+
+- Action: 处理 ChatGPT 对 Phase 4 PR #5 复审发现的第二个最小阻断。
+- How: 将 `OpportunityGenerationResult.request_id` 加入 result 的外部引用构造校验，
+  并补充本地 result request_id 必须失败的回归测试。
+- Result: request 和 result 的所有引用字段现在都在对象构造边界统一拒绝非
+  `external:` 引用；待重新验证并请求最终复审。
+- Files affected:
+  - `src/capabilities/opportunity_generation.py`
+  - `tests/test_phase4_opportunity_generation.py`
+  - `logs/worklog.md`
+
 ### 2026-08-01 13:05 EDT
 
 - Action: 完成 Phase 1 PR #2 的最终 ChatGPT 门禁审核。
