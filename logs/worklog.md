@@ -220,6 +220,22 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `src/cross_cutting/model_contracts.py`
   - `logs/worklog.md`
 
+### 2026-08-01 12:18 EDT
+
+- Action: Submitted PR #12 to ChatGPT for the required external review.
+- How: Opened the persistent `GitHub PR 信息` conversation, used the chat-box `+` menu to select GitHub, and requested review of the live PR description, changed files, aggregate diff, tests, handoff, and worklog.
+- Result: ChatGPT returned `APPROVE` and explicitly authorized merging PR #12.
+- Files affected: none before recording the review result.
+
+### 2026-08-01 12:19 EDT
+
+- Action: Recorded the external approval in the repository.
+- How: Added a review log containing the PR link, selected source, review scope, and exact approval wording; appended this worklog entry.
+- Result: The approval is durable and auditable in the PR branch; a metadata-only re-review is required because the PR tip changed.
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-model-contract-adapter.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 11:01 EDT
 
 - Action: Converted `ChatGPT-Codex-talk.md` into the canonical execution-first interaction protocol and surfaced it from the repo entry docs.
