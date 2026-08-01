@@ -1,5 +1,7 @@
 phase: phase_3
-status: review_pending
+status: pr_open_review_pending
+pr: 4
+pr_url: https://github.com/leezx/StelligenOS/pull/4
 scope: assetgenos_gate_contract_migration
 repository_boundary: software_only_external_data
 data_added: false

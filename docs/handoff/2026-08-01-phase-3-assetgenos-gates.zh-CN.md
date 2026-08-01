@@ -5,8 +5,8 @@
 - 任务编号：`task_20260801_phase3-assetgenos-gates`
 - 分支：`task_20260801_phase3-assetgenos-gates`
 - Base：Phase 2 合并后的 `main`
-- PR：待创建
-- 状态：本地实现完成，等待创建 PR 和 ChatGPT 审核
+- PR：[#4](https://github.com/leezx/StelligenOS/pull/4)
+- 状态：草稿 PR 已创建，等待 ChatGPT 审核
 
 ## 总纲与范围
 
