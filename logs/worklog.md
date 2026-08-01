@@ -359,3 +359,12 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Files affected:
   - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 12:46 EDT
+
+- Action: 处理 ChatGPT 复审暴露的 handoff 自引用问题。
+- How: 将 handoff 的当前 tip 与 aggregate diff 改为以 PR 页面实时状态为唯一权威，明确说明 handoff 自身提交不自列，并把历史 hash 与验证标记为历史记录，避免每次更新 handoff 后产生新的不可预先写入的 commit hash。
+- Result: 形成可执行、可追溯且不伪造当前状态的元数据规则；准备请求 ChatGPT 按该规则完成最终复审。
+- Files affected:
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`

@@ -53,13 +53,13 @@
 - `git diff main...025d815 --check`：通过，覆盖前一版完整 PR aggregate diff。
 - `git diff main...7d68fdc --check`：通过，覆盖前一版 PR aggregate diff。
 - `git diff main...d75a940 --check`：通过，覆盖前一版 PR aggregate diff。
-- `git diff main...dedf6e2 --check`：通过，覆盖前一版 PR aggregate diff。
-- `git diff main...ba92c32 --check`：通过，覆盖当前 PR aggregate diff。
+- `git diff main...dedf6e2 --check`：通过，覆盖历史 PR aggregate diff。
+- `git diff main...ba92c32 --check`：通过，覆盖历史 PR aggregate diff。
 
 ## 未决问题与风险
 
-- 任务分支已推送，draft PR 已创建，当前 PR tip 为 `ba92c32`。
-- 本次新增的分阶段 PR 审核协议属于批准后的治理文档扩展，已加入当前 PR，等待本次 `ba92c32` 更新后的外部模型最终复审。
+- 任务分支已推送，draft PR 已创建；当前 PR tip 和当前 aggregate diff 以 PR 页面实时状态为权威。
+- 本次新增的分阶段 PR 审核协议属于批准后的治理文档扩展，已加入当前 PR，等待外部模型最终复审。
 
 ## 下一步
 
@@ -67,7 +67,7 @@
 2. 仅在 ChatGPT 明确输出 `APPROVE` 后，由负责人决定是否合并 PR #1。
 3. PR 合并且 Phase 1 获得明确放行后，从 `main` 拉取最新代码，创建新的 `task_<编号>_<简短名>` 分支和 PR。
 
-说明：本 handoff 文件自身的最新 metadata commit 不在自身列表中自引用；PR 页面是当前 branch tip 的权威来源。
+说明：本 handoff 文件自身的最新 metadata commit 不在自身列表中自引用；任何更新 handoff 的提交都会改变 branch tip，因此不能在提交内容中预先写入自己的 hash。PR 页面是当前 branch tip 和 aggregate diff 的唯一实时权威来源；本文件列出所有已知历史 metadata commits 和对应验证，不把历史值伪装成当前值。
 
 ## 数据边界声明
 
