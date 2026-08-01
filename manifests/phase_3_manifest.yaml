@@ -1,0 +1,25 @@
+phase: phase_3
+status: approved_pending_merge
+pr: 4
+pr_url: https://github.com/leezx/StelligenOS/pull/4
+scope: assetgenos_gate_contract_migration
+repository_boundary: software_only_external_data
+data_added: false
+persistence_added: false
+gate_topology:
+  architecture_version: "0.2.0"
+  count: 45
+  groups:
+    target_opportunity: 13
+    product_realization: 16
+    commercial_executability: 16
+migration_policy:
+  include: [gate_identity, group_membership, sequence, input_output_contracts]
+  exclude: [datasets, databases, generated_rule_outputs, model_records, caches]
+chatgpt_review: APPROVE
+phase_decision: 可以进入 Phase 4
+approval_record: logs/chatgpt-review-2026-08-01-phase3-final.md
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
+  - ./scripts/verify_repository_boundary.sh
+  - git diff origin/main...HEAD --check
