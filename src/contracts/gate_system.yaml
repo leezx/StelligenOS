@@ -1,0 +1,29 @@
+contract:
+  contract_id: gate_system
+  contract_version: "0.1.0"
+  source_contracts:
+    input_envelope: GateInputEnvelope@2.0.0
+    output_envelope: GateModelOutput@2.0.0
+    model_lifecycle: ModelLifecycleStandard@1.0.0
+  topology:
+    architecture_version: "0.2.0"
+    gate_count: 45
+    groups:
+      target_opportunity: 13
+      product_realization: 16
+      commercial_executability: 16
+    topology_change_policy: frozen_until_explicit_unfreeze
+  execution_boundary:
+    implementation: external_workspace
+    persistence: forbidden
+    automatic_score_change_from_historical_rules: forbidden
+    automatic_status_change_from_historical_rules: forbidden
+    automatic_profile_binding_from_historical_rules: forbidden
+  output_semantics:
+    nullable_domain_values_mean_unknown: true
+    null_is_not_zero: true
+    missing_information_is_explicit: true
+    evidence_is_referenced_externally: true
+  migration_policy:
+    migrate: contract_and_identity_only
+    exclude: [datasets, databases, generated_rule_outputs, model_records, caches]
