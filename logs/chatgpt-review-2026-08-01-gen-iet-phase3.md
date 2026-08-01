@@ -41,3 +41,13 @@ intact.
 
 Phase 4 may begin from the approved Phase 3 tip on a new task branch. Phase 4
 must receive its own GitHub PR and ChatGPT review before any subsequent phase.
+
+## Metadata-only Review Rounds
+
+- At HEAD `d88db9b`, ChatGPT returned `REQUEST_CHANGES` because the migration
+  log still described Phase 3 as `COMPLETED_PENDING_REVIEW`.
+- At HEAD `4145e97`, after synchronizing the migration log to
+  `APPROVED_PHASE_3`, ChatGPT returned `APPROVE` and again stated:
+  `Phase 3 审核通过，可以进入 Phase 4`.
+- These metadata-only rounds did not change the Phase 3 implementation scope
+  and did not approve Phase 4 implementation.
