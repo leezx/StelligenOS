@@ -1,5 +1,5 @@
 phase: phase_8
-status: approved_pending_merge
+status: merged
 pr: 9
 pr_url: https://github.com/leezx/StelligenOS/pull/9
 scope: architecture_freeze_release_rules
@@ -10,6 +10,7 @@ persistence_added: false
 chatgpt_review: APPROVE
 final_decision: Phase 0-8 全部完成，可以进入架构冻结后的后续开发
 approval_record: logs/chatgpt-review-2026-08-01-phase8-final.md
+merge_commit: 86a3fa8
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
   - ./scripts/verify_repository_boundary.sh
