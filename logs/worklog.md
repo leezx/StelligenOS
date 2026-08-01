@@ -473,6 +473,20 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/migration_log.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 19:20 EDT
+
+- Action: 进入 ChatGPT 已批准的 Phase 5，建立 Phase 6 Evidence Sufficiency and Adversarial Review contract-only ports。
+- How: 在 `task_20260801_gen-iet-phase6-evidence-review` 分支新增可配置 Positive Evidence Policy、证据独立性检查、Adversarial Review、ValidationTask 引用和 T12 前 readiness 状态；明确不新增 Gate。
+- Result: 未读取证据或临床数据，未执行 Gate/Rule/Model/T12/P-chain，未创建本地 Evidence、Review、ValidationTask 或 Opportunity。70 个测试、repository boundary、`git diff --check` 通过，Phase 6 停在 ChatGPT PR 审核门。
+- Files affected:
+  - `src/capabilities/evidence_sufficiency_review.py`
+  - `tests/test_evidence_sufficiency_review.py`
+  - `docs/phases/GEN_IET_PHASE_6_REPORT.zh-CN.md`
+  - `manifests/gen_iet_phase_6_manifest.yaml`
+  - `docs/handoff/2026-08-01-gen-iet-phase-6.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
 - Follow-up: ChatGPT 对最新 HEAD `d87e379` 完成 metadata-only 复核并返回 `APPROVE`，确认没有扩大批准范围或新增执行代码、数据、存储、Gate 或 runtime。
 
 ### 2026-08-01 15:39 EDT
