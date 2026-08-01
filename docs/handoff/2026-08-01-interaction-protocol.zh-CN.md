@@ -7,12 +7,18 @@
 - PR：https://github.com/leezx/StelligenOS/pull/1
 - Base：`56c2e16`
 - Code head：`190e24a`
+- PR latest head：`025d815`
+- PR commit count：`7`
 - Commits：
-  - `0fc4bbb` `task_20260801_pr-workflow: formalize PR handoff collaboration`
-  - `959d124` `task_20260801_pr-workflow: record handoff verification`
-  - `54c0126` `task_20260801_pr-workflow: link handoff to pull request`
-  - `88e1b46` `task_20260801_pr-workflow: fix sync safety and add tests`
-  - `190e24a` `task_20260801_pr-workflow: update v4 audit handoff`
+  - Code commits through code head:
+    - `0fc4bbb` `task_20260801_pr-workflow: formalize PR handoff collaboration`
+    - `959d124` `task_20260801_pr-workflow: record handoff verification`
+    - `54c0126` `task_20260801_pr-workflow: link handoff to pull request`
+    - `88e1b46` `task_20260801_pr-workflow: fix sync safety and add tests`
+  - PR metadata commits after code head:
+    - `190e24a` `task_20260801_pr-workflow: update v4 audit handoff`
+    - `7bf3eac` `task_20260801_pr-workflow: align handoff head`
+    - `025d815` `task_20260801_pr-workflow: clarify audited code head`
 - PR 状态：`OPEN / DRAFT`
 - 时间：`2026-08-01 America/New_York`
 
@@ -39,18 +45,21 @@
 - `bash -n scripts/git_sync.sh`：通过。
 - `bash -n tests/test_git_sync.sh`：通过。
 - `tests/test_git_sync.sh`：通过，A-D 四个场景均通过。
-- `git diff --cached --check`：通过。
+- `git diff main...190e24a --check`：通过，覆盖代码审计范围。
+- `git diff main...025d815 --check`：通过，覆盖完整 PR aggregate diff。
 
 ## 未决问题与风险
 
 - 任务分支已推送，draft PR 已创建，等待外部模型审核。
 - PR 已创建并已补充最终 handoff。
+- 当前复审仍为 `REQUEST_CHANGES`，阻断项仅剩 aggregate diff 记录和 commit 分类追溯。
 
 ## 下一步
 
-1. 将 PR 链接交给外部模型进行 v4 修订复审。
-2. 只按当前 PR 的审核意见修订。
-3. 由负责人决定 merge 或打回。
+1. 更新 PR 描述并将本次 ChatGPT 复审记录保存到 `logs/`。
+2. 将 PR 链接交给外部模型进行下一次复审。
+3. 只按当前 PR 的审核意见修订。
+4. 由负责人决定 merge 或打回。
 
 ## 数据边界声明
 

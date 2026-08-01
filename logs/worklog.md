@@ -279,3 +279,13 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `ChatGPT-Codex-talk.md`
   - `AGENTS.md`
   - `logs/worklog.md`
+
+### 2026-08-01 12:25 EDT
+
+- Action: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天和 GitHub 插件完成 PR #1 修订复审。
+- How: 通过聊天框 `+` 菜单确认 GitHub 来源后，提交针对最新 PR head 的只读复审指令；ChatGPT 读取 PR 状态、完整 changed files、commits 和 aggregate diff，并返回 `REQUEST_CHANGES`。
+- Result: 脚本安全修复、A-D 行为测试、Phase 0.5 中文化和数据边界通过；剩余阻断为 aggregate diff 检查未记录，以及 handoff 未区分代码 commits 与 PR metadata commits。完整反馈已保存到 `logs/chatgpt-review-2026-08-01-pr1-revision.md`。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-pr1-revision.md`
+  - `docs/handoff/2026-08-01-interaction-protocol.zh-CN.md`
+  - `logs/worklog.md`
