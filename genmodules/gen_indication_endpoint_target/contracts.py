@@ -30,6 +30,11 @@ def _require_ids(values: tuple[str, ...], field_name: str) -> None:
         _require_non_empty(value, field_name)
 
 
+def _require_external_ids(values: tuple[str, ...], field_name: str) -> None:
+    for value in values:
+        _require_external(value, field_name)
+
+
 class EvaluationStatus(str, Enum):
     """Status values that preserve unknown or unevaluated domains."""
 
@@ -116,6 +121,8 @@ class OpportunitySearchScope:
         ):
             _require_non_empty(getattr(self, name), name)
         _require_ids(self.patient_segment_constraints, "patient_segment_constraints")
+        _require_external(self.source_policy_id, "source_policy_id")
+        _require_external(self.evaluation_plan_id, "evaluation_plan_id")
         if self.modality != "ADC":
             raise ValueError("gen_indication_endpoint_target requires modality=ADC")
         if self.candidate_budget < 1:
@@ -155,7 +162,7 @@ class ClinicalFrame:
             "endpoint_driving_population",
         ):
             _require_non_empty(getattr(self, name), name)
-        _require_ids(self.source_evidence_ids, "source_evidence_ids")
+        _require_external_ids(self.source_evidence_ids, "source_evidence_ids")
         _require_external(self.t0_gate_result_ref, "t0_gate_result_ref")
         _require_external(self.t1_gate_result_ref, "t1_gate_result_ref")
 
@@ -203,8 +210,8 @@ class TargetCandidate:
         ):
             _require_non_empty(getattr(self, name), name)
         _require_external(self.source_run_ref, "source_run_ref")
-        _require_ids(self.positive_evidence_ids, "positive_evidence_ids")
-        _require_ids(self.negative_evidence_ids, "negative_evidence_ids")
+        _require_external_ids(self.positive_evidence_ids, "positive_evidence_ids")
+        _require_external_ids(self.negative_evidence_ids, "negative_evidence_ids")
         _require_ids(self.unknown_claims, "unknown_claims")
 
     @property
@@ -235,7 +242,7 @@ class CandidateFilterResult:
         for name in ("filter_id", "candidate_id"):
             _require_non_empty(getattr(self, name), name)
         _require_ids(self.reason_codes, "reason_codes")
-        _require_ids(self.evidence_ids, "evidence_ids")
+        _require_external_ids(self.evidence_ids, "evidence_ids")
         if self.filter_policy_ref:
             _require_external(self.filter_policy_ref, "filter_policy_ref")
 
@@ -308,7 +315,7 @@ class AdversarialReview:
         _require_non_empty(self.review_id, "review_id")
         _require_non_empty(self.candidate_id, "candidate_id")
         _require_ids(self.objections, "objections")
-        _require_ids(self.counter_evidence_ids, "counter_evidence_ids")
+        _require_external_ids(self.counter_evidence_ids, "counter_evidence_ids")
         _require_ids(self.alternative_explanations, "alternative_explanations")
         _require_ids(self.critical_unknowns, "critical_unknowns")
         _require_ids(self.validation_tasks, "validation_tasks")
@@ -339,5 +346,4 @@ class TargetOpportunityHandoff:
             "adversarial_review_ref",
         ):
             _require_external(getattr(self, name), name)
-        _require_ids(self.evidence_refs, "evidence_refs")
-
+        _require_external_ids(self.evidence_refs, "evidence_refs")

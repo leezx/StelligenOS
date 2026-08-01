@@ -720,6 +720,19 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-phase-7-tweakr-closure.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 18:45 EDT
+
+- Action: 处理 ChatGPT 对 Phase 1 PR #19 Round 1 的 `REQUEST_CHANGES`。
+- How: 将 `OpportunitySearchScope.source_policy_id`、`evaluation_plan_id`、ClinicalFrame source evidence、TargetCandidate positive/negative evidence、CandidateFilterResult evidence、AdversarialReview counter-evidence 和 T12 handoff evidence 全部统一为 `external:` 引用校验；新增 scope、frame、handoff 本地引用失败测试。
+- Result: 53 个 unittest 通过；repository boundary 和 `git diff --check` 通过；更新 Phase 1 report、manifest、handoff 和 worklog，准备推送后重新请求 ChatGPT 审核。
+- Files affected:
+  - `genmodules/gen_indication_endpoint_target/contracts.py`
+  - `tests/test_gen_indication_endpoint_target.py`
+  - `docs/phases/GEN_IET_PHASE_1_REPORT.zh-CN.md`
+  - `manifests/gen_iet_phase_1_manifest.yaml`
+  - `docs/handoff/2026-08-01-gen-iet-phase-1.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 18:35 EDT
 
 - Action: 完成本地验证并创建 Phase 8 最终草稿 PR。

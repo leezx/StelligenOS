@@ -34,11 +34,10 @@
 
 ## 验证
 
-- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`：51 passed
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`：53 passed
 - `./scripts/verify_repository_boundary.sh`：passed
 - `git diff --check`：passed
 
 ## 审核停止点
 
 请 ChatGPT 只审核本 Phase 1 PR 的合同、边界和测试；在明确批准前，不进入执行适配或真实资产生成阶段。
-

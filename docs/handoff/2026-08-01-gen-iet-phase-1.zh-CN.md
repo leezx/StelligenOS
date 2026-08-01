@@ -20,11 +20,16 @@
 
 ## 验证
 
-- 51 tests passed
+- 53 tests passed
 - repository boundary passed
 - `git diff --check` passed
+
+## ChatGPT Round 1
+
+- 结果：`REQUEST_CHANGES`
+- 阻断：source policy/evaluation plan、ClinicalFrame evidence IDs 和 T12 handoff evidence refs 未统一强制 `external:`；缺少对应回归测试。
+- 修复：统一使用 `_require_external` / `_require_external_ids`，并新增本地引用拒绝测试。
 
 ## 下一步
 
 先通过 ChatGPT 对 Phase 1 PR 的合同和边界审核；审核通过后再设计外部 execution adapter。真实资产生成仍需另一个阶段和独立审核。
-

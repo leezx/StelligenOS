@@ -7,6 +7,7 @@ from genmodules.gen_indication_endpoint_target import (
     EvaluationStatus,
     OpportunitySearchScope,
     TargetCandidate,
+    TargetOpportunityHandoff,
 )
 
 
@@ -27,13 +28,17 @@ class GenIndicationEndpointTargetContractTests(unittest.TestCase):
             modality="ADC",
             evidence_cutoff_date="2026-08-01",
             candidate_budget=3,
-            source_policy_id="policy-1",
-            evaluation_plan_id="plan-1",
+            source_policy_id="external:policy/1",
+            evaluation_plan_id="external:plan/1",
         )
         self.assertEqual(scope.modality, "ADC")
         with self.assertRaises(ValueError):
             OpportunitySearchScope(
                 **{**scope.__dict__, "modality": "small_molecule"}
+            )
+        with self.assertRaises(ValueError):
+            OpportunitySearchScope(
+                **{**scope.__dict__, "source_policy_id": "local:policy"}
             )
 
     def test_target_identity_contains_four_required_dimensions(self):
@@ -72,8 +77,26 @@ class GenIndicationEndpointTargetContractTests(unittest.TestCase):
                 endpoint_definition="endpoint",
                 endpoint_time_horizon="time",
                 endpoint_driving_population="population",
-                source_evidence_ids=("evidence-1",),
+                source_evidence_ids=("external:evidence/1",),
                 t0_gate_result_ref="local:t0",
+                t1_gate_result_ref="external:t1",
+            )
+
+    def test_clinical_frame_rejects_local_evidence_reference(self):
+        with self.assertRaises(ValueError):
+            ClinicalFrame(
+                frame_id="frame-1",
+                scope_id="scope-1",
+                indication="indication",
+                disease_setting="setting",
+                line_of_therapy="line",
+                treatment_context="context",
+                comparator="comparator",
+                endpoint_definition="endpoint",
+                endpoint_time_horizon="time",
+                endpoint_driving_population="population",
+                source_evidence_ids=("local:evidence",),
+                t0_gate_result_ref="external:t0",
                 t1_gate_result_ref="external:t1",
             )
 
@@ -88,6 +111,20 @@ class GenIndicationEndpointTargetContractTests(unittest.TestCase):
         self.assertEqual(result.status, EvaluationStatus.UNRESOLVED)
         self.assertNotIn("gate_id", result.__dataclass_fields__)
 
+    def test_t12_handoff_rejects_local_evidence_reference(self):
+        with self.assertRaises(ValueError):
+            TargetOpportunityHandoff(
+                handoff_id="handoff-1",
+                candidate_id="candidate-1",
+                opportunity_ref="external:opportunity/1",
+                target_hypothesis_ref="external:hypothesis/1",
+                t12_gate_result_ref="external:t12/1",
+                evidence_refs=("local:evidence",),
+                adversarial_review_ref="external:review/1",
+                lifecycle="READY_FOR_T12_DECISION",
+                readiness=EvaluationStatus.EVALUATED,
+            )
+
     def test_repository_has_no_data_bearing_runtime_artifacts(self):
         from pathlib import Path
 
@@ -98,4 +135,3 @@ class GenIndicationEndpointTargetContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
