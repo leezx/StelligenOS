@@ -6,7 +6,8 @@
 - 分支：`task_20260801_phase4-opportunity-generation`
 - Base：Phase 3 合并后的 `main` at `505ddd1`
 - PR：[#5](https://github.com/leezx/StelligenOS/pull/5)
-- 状态：ChatGPT 已批准，等待 PR 合并
+- 状态：已获 ChatGPT 批准并合并
+- 合并提交：`d2f8c09`
 
 ## 范围
 
@@ -31,4 +32,4 @@
 ## 下一步
 
 PR #5 已提交到网页版 ChatGPT 的“GitHub PR 信息”聊天并获得明确 `APPROVE`，
-可以进入 Phase 5。合并后从最新 `main` 创建 Phase 5 分支。
+随后 squash merge 为 `d2f8c09`。可以进入 Phase 5；当前分支已从最新 `main` 创建。

@@ -1,0 +1,29 @@
+contract:
+  contract_id: binder_adc_generation_routes
+  contract_version: "0.1.0"
+  routes:
+    existing_binder_asset_engineering:
+      source_version: "0.4.0"
+      stage_count: 14
+      input_ref: external_only
+      output_ref: external_only
+      gate_score_write: forbidden
+      combined_binder_and_carrier_score: forbidden
+    epitope_conditioned_de_novo_antibody_discovery:
+      source_version: "0.1.0"
+      stage_count: 15
+      input_ref: external_only
+      output_ref: external_only
+      external_scientific_tools_auto_invocation: forbidden
+      gate_score_write: forbidden
+  shared_boundary:
+    route_runtime: external_workspace
+    scientific_inputs: external_workspace
+    model_weights: external_workspace
+    observations: external_workspace
+    candidates_and_reports: external_workspace
+    repository_persistence: forbidden
+    automatic_lifecycle_promotion: forbidden
+  route_selection:
+    selected_route_must_be_explicit: true
+    route_mixing: forbidden

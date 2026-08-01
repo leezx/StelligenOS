@@ -1,0 +1,17 @@
+phase: phase_5
+status: review_pending
+scope: binder_adc_generation_route_contracts
+repository_boundary: software_only_external_data
+data_added: false
+persistence_added: false
+runtime_generation_added: false
+routes:
+  - id: existing_binder_asset_engineering
+    stages: 14
+  - id: epitope_conditioned_de_novo_antibody_discovery
+    stages: 15
+chatgpt_review: pending
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
+  - ./scripts/verify_repository_boundary.sh
+  - git diff origin/main...HEAD --check
