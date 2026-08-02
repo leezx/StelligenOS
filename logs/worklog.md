@@ -1582,6 +1582,16 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Interpretation boundary: unknown 表示尚未解决，不表示阴性；ADC precedent 不表示 CRC efficacy 或安全窗；没有新增 indication/endpoint/pair。
 - Validation: `StelligenOS/scripts/verify_repository_boundary.sh` 通过；结果目录未执行 Gate scoring、ranking 或 asset recommendation。
 - Next: 从批准的 contract tip 建立独立结果审核分支/PR，要求 ChatGPT 审核外部结果后再进入 Gate 评分或后续阶段。
+
+### 2026-08-01 22:43 EDT
+
+- Action: 获取 ChatGPT 对 PR #31 的结果审核 Round 1 `REQUEST_CHANGES`。
+- How: ChatGPT 使用 GitHub source 读取 PR #31；由于当前审核环境不能直接访问外部 `DATA`，无法独立确认外部文件字段、计数、checksum 和 supporting/opposing/unknown 分离。
+- Required correction: 在 handoff/worklog 增加可审计的 external manifest/checksum、输出文件列结构和统计校验记录；不得把原始数据复制进仓库。
+- Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-target-evidence-results-round1.md`，并把 7 个外部输出文件的行数、列结构、SHA-256、统计交叉校验和 Gate 未执行状态补入 handoff。
+- Validation record: `target_evidence_units.tsv`=292（88 supporting + 32 opposing + 172 unknown）；summary=41 targets，按行计数同样为 88/32/172；separate opposing/unknown files=32/172。
+- Boundary: 仅新增审计元数据和审核记录；外部结果仍只在 DATA，StelligenOS 未新增数据、cache、数据库或结果表。
+- Next: 推送同一 PR #31 并重新提交 ChatGPT 结果审核。
 - Files affected:
   - `AGENTS.md`
   - `ChatGPT-Codex-talk.md`

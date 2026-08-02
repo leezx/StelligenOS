@@ -34,3 +34,19 @@
 - 边界验证：`scripts/verify_repository_boundary.sh` 通过；仓库未新增数据、cache、数据库、结果表或模型权重。
 - 运行限制：未执行 Gate 评分、排序、资产推荐，未扩展 indication/endpoint/pair。
 - 审核状态：所有 evidence units 标记为 `machine_extracted_requires_human_review`；结果必须先经独立 PR 审核。
+
+## 外部结果可审计元数据
+
+以下是外部结果目录的审计记录，不是结果数据副本。审核者可用相同路径和 SHA-256 对外部文件复核；原始数据、cache 和结果表仍不进入仓库。
+
+| 文件 | 行数（不含表头） | 列结构 | SHA-256 |
+|---|---:|---|---|
+| `target_evidence_units.tsv` | 292 | `evidence_id`, `gene_symbol`, `target_name`, `dimension`, `evidence_direction`, `evidence_strength`, `statement`, `source_id`, `source_path_or_url`, `source_title_or_project`, `source_year`, `evidence_locator`, `retrieved_at`, `review_status` | `adc8fff738d9747f413aa2bcec7d95034782ed8cb9806bd5d32b6fe7de35124d` |
+| `target_evidence_summary.tsv` | 41 | `gene_symbol`, `target_name`, `input_evidence_class`, `clinical_adc_names`, `dimensions_with_units`, `supporting_unit_count`, `opposing_unit_count`, `unknown_unit_count`, `gate_score_status`, `gate_pass_status`, `human_review_status` | `6426fac0c23a91ccccaa68ac4fcd13078e4535470eae5e3fbd2cdcd0256e6bb6` |
+| `target_opposing_evidence.tsv` | 32 | 与 `target_evidence_units.tsv` 相同 | `72bc0701f42988c0e5eee3ea7d3ccdcc9594b5c289067365c0c55bd06ef6c1f6` |
+| `target_unknowns.tsv` | 172 | 与 `target_evidence_units.tsv` 相同 | `e957dd3ae38da3ba06352a1bc8ca62bd7a5f8d3a09e73456dcc47d2bd2066e12` |
+| `source_manifest.json` | JSON | `run_id`, `retrieved_at`, `sources[]`（含 `source_id`, `path`, `sha256`, `role`） | `59e17e1285b25864386e2955d9a9027f9a5bf2a7843c87e566e1130274e683d3` |
+| `run_report.md` | Markdown | 运行摘要、计数、边界和限制 | `a37da34d8c75678c6a4f8753a82a99b7671a333e8511f273e0fae1a7d6e41f09` |
+| `external_run_worklog.md` | Markdown | 外部运行步骤和门禁记录 | `b2eaa60fe528ba01f5b016e51fb0fa6eab9924ac15b75795a8dda071fd16420d` |
+
+统计校验：`target_evidence_units.tsv` 292 行 = supporting 88 + opposing 32 + unknown 172；`target_evidence_summary.tsv` 41 行，按行计数合计 supporting 88、opposing 32、unknown 172；`target_opposing_evidence.tsv` 与 `target_unknowns.tsv` 分别为 32/172 行。所有 summary 行的 `gate_score_status=not_executed`、`gate_pass_status=not_assessed`。
