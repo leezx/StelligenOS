@@ -1474,6 +1474,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
   - `logs/chatgpt-review-2026-08-01-global-review-worklog-rules-final.md`
   - `logs/worklog.md`
+
+### 2026-08-01 21:26 EDT
+
+- Action: 启动下一任务的审核前准备：CRC indication/endpoint/target 全靶点枚举。
+- How: 先读取 PR #27 合并状态和远程分支；确认 PR #27 已合并到 `task_20260801_gen-iet-phase8-external-pilot`，但 `origin/main` 尚未包含 merge commit `46cda05`。因此从实际已合并治理基线创建 `task_20260802_crc-target-enumeration`，没有假装 main 已同步。
+- Result: 新增执行契约和 handoff，只定义 indication、endpoint、target 的范围、公共来源、证据字段、外部输出规划、禁止事项和验收标准。当前状态为 `PENDING_CHATGPT_APPROVAL`。
+- Boundary: 尚未读取公共文献、临床注册库或公共数据；尚未运行分析、生成 pair、下载数据或写入外部结果目录；StelligenOS 未新增数据、cache、result、database、weights 或业务逻辑。
+- Next: 完成边界/格式验证，提交并推送 PR；在 ChatGPT `APPROVE` 前不执行任何外部枚举。
+- Files affected:
+  - `docs/tasks/CRC_TARGET_ENUMERATION_REQUEST.zh-CN.md`
+  - `docs/handoff/2026-08-02-crc-target-enumeration.zh-CN.md`
+  - `logs/worklog.md`
 - Files affected:
   - `AGENTS.md`
   - `ChatGPT-Codex-talk.md`
