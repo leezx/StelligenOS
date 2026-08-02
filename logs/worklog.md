@@ -1625,6 +1625,13 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Output: `/Volumes/Stelligen_SSD/Stelligen/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_target_evidence_manual_review_20260801T2258EDT/`，包含 reviewed units、queue、conflicts、manifest、report 和 external worklog。
 - Validation: 记录 6 个外部输出文件的行数/SHA-256；未执行 Gate scoring、ranking、recommendation、范围扩展或下游开发。
 - Next: 创建独立结果审核 PR #33，提交 ChatGPT 审核；未获批准前不得进入下一阶段。
+
+### 2026-08-01 23:02 EDT
+
+- Action: 修正结果审核 PR 创建流程。
+- How: 首次误用相同 base/head 分支，GitHub 正确拒绝创建 PR；随后创建 `task_20260802_crc-target-evidence-manual-review-results` 独立结果审核分支，并在 handoff 标记 `RESULT_PENDING_CHATGPT_REVIEW`。
+- Boundary: 仅补充结果审核门状态，未改动外部整理结果或仓库数据边界。
+- Next: 创建 PR #33 并提交 ChatGPT 审核。
 - Files affected:
   - `AGENTS.md`
   - `ChatGPT-Codex-talk.md`

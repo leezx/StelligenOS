@@ -2,7 +2,7 @@
 
 - 任务编号：`task_20260802_crc-target-evidence-manual-review`
 - 前置结果审核：PR #31，ChatGPT `APPROVE`
-- 当前状态：`CONTRACT_APPROVED_EXTERNAL_MANUAL_REVIEW_AUTHORIZED`
+- 当前状态：`RESULT_PENDING_CHATGPT_REVIEW`
 - 输入：外部 evidence extraction 结果目录；固定 292 条 evidence units、41 targets
 - 当前 tip：以 PR 页面实时 HEAD 为准；本 handoff 自引用后续提交不预先自列
 - ChatGPT 审核：PR #32，明确 `APPROVE`；允许开始外部人工 evidence review/curation
@@ -35,6 +35,7 @@
 - 原始值：全部保留在 `original_*` 列；`expert_review_status` 全部为 `pending_expert_review`。
 - 输出文件：`target_evidence_units_reviewed.tsv`、`target_evidence_review_queue.tsv`、`target_evidence_conflicts.tsv`、`source_manifest.json`、`review_report.md`、`external_review_worklog.md`。
 - 运行限制：未执行 Gate scoring、ranking、recommendation、范围扩展或下游开发。
+- 独立结果审核：当前分支用于提交外部整理结果的审核门；在 ChatGPT `APPROVE` 前不得将整理结果用于下一阶段。
 
 ### 外部输出审计元数据
 
