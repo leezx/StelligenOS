@@ -1429,6 +1429,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
   - `logs/worklog.md`
   - `logs/chatgpt-review-2026-08-01-global-review-rules-round2.md`
+
+### 2026-08-01 20:57 EDT
+
+- Action: 将 PR #27 标记为 Ready for review，并记录远程状态收敛。
+- How: 推送 Round 2 记录 commit `2f7e6a8` 后执行 `gh pr ready 27`；GitHub 返回 PR 已标记为 Ready for review，读取到 `OPEN / isDraft=false / mergeable=UNKNOWN`，说明 GitHub 正在重新计算 mergeability。
+- Result: 在 handoff 中记录最新观察 tip `2f7e6a8`、PR `OPEN / READY_FOR_REVIEW` 和 mergeability 重算状态；本次只更新审核元数据，没有修改业务代码或外部数据。
+- Next: 重新读取 GitHub 当前 PR 状态后，把 PR #27 当前 aggregate diff 第三次提交给 ChatGPT 审核。
+- Files affected:
+  - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
+  - `logs/worklog.md`
+  - External PR state: PR #27 marked ready for review
 - Files affected:
   - `AGENTS.md`
   - `ChatGPT-Codex-talk.md`
