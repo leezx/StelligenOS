@@ -2,7 +2,7 @@
 
 - 任务编号：`task_20260802_crc-chatgpt-expert-review-prompt`
 - 前置 Gate 契约：PR #36，ChatGPT `APPROVE`
-- 当前状态：`PROMPT_CONTRACT_PENDING_CHATGPT_REVIEW`
+- 当前状态：`PROMPT_APPROVED_READY_FOR_WEB_EXECUTION`
 - 输入：外部专家复核工作包中的 292 条 evidence units、41 targets
 
 ## 目的
@@ -18,7 +18,6 @@
 
 ## 下一步
 
-1. 提交本 Prompt contract-only PR 给 ChatGPT 审核。
-2. 获得批准后，在网页版 ChatGPT 中附加外部 `expert_review_assignment.tsv`，逐条生成 provisional review。
+1. PR #37 已获 ChatGPT `APPROVE`。
+2. 在网页版 ChatGPT 中附加外部 `expert_review_assignment.tsv`，逐条生成 `chatgpt_provisional_review`。
 3. 将 ChatGPT 输出保存到外部 `DATA`，再创建独立结果审核 PR；结果审核批准前不得进入 Gate 评分。
-
