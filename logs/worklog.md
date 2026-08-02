@@ -1499,6 +1499,19 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-02-crc-target-enumeration.zh-CN.md`
   - `logs/worklog.md`
   - External PR: `https://github.com/leezx/StelligenOS/pull/28`
+
+### 2026-08-01 21:35 EDT
+
+- Action: 完成 ChatGPT 对 PR #28 的首轮契约审核并处理元数据阻断。
+- How: 使用同一 `GitHub PR 信息` 对话和 GitHub 来源，要求读取 PR #28 当前 aggregate diff、执行契约、handoff、worklog、AGENTS、交互规范和 Phase Gate 协议。
+- Result: ChatGPT 返回 `REQUEST_CHANGES`；确认 contract 内容、实际 base 和 data-free 边界符合要求，但指出任务文档仍写“PR 待创建”，handoff 仍写“待创建/待验证”，与 PR #28、tip `2f1c17b` 和已完成 boundary/diff 验证不一致。
+- Action taken: 更新任务契约和 handoff，补齐 PR #28、review tip `2f1c17b`、`scripts/verify_repository_boundary.sh` 和 `git diff --check` 的通过记录；新增本轮审核原始记录。仍未执行外部文献、公共数据或 pair 生成。
+- Next: 推送同一 PR 的最小元数据修订并再次提交 ChatGPT 审核；只有 `APPROVE` 后才开始外部枚举。
+- Files affected:
+  - `docs/tasks/CRC_TARGET_ENUMERATION_REQUEST.zh-CN.md`
+  - `docs/handoff/2026-08-02-crc-target-enumeration.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-02-crc-target-enumeration-round1.md`
+  - `logs/worklog.md`
 - Files affected:
   - `AGENTS.md`
   - `ChatGPT-Codex-talk.md`

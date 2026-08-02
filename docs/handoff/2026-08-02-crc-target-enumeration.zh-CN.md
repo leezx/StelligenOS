@@ -7,6 +7,7 @@
 - 基线：`origin/task_20260801_gen-iet-phase8-external-pilot`
 - PR：https://github.com/leezx/StelligenOS/pull/28
 - Review tip at PR creation: `f4ecbe5`
+- Latest PR tip observed for review: `2f1c17b`
 - 说明：PR #27 已合并到该基线分支；`origin/main` 尚未包含 PR #27，因此本任务暂以实际已合并治理基线为 base，不伪装为 main 已同步。
 - 当前状态：`PENDING_CHATGPT_APPROVAL`
 - 时间：`2026-08-01 America/New_York`
@@ -29,8 +30,9 @@
 
 ## 验证与审核门
 
-- 待运行 `scripts/verify_repository_boundary.sh` 和 `git diff --check`。
-- 待创建并推送 PR，提交 ChatGPT 审核。
+- `scripts/verify_repository_boundary.sh`：通过。
+- `git diff --check`：通过。
+- PR #28 已创建并推送，当前审核 tip 为 `2f1c17b`。
 - ChatGPT `APPROVE` 前不得执行外部文献/公共数据枚举。
 - 运行结果完成后必须另行提交结果审核 PR。
 

@@ -4,7 +4,9 @@
 
 - Task ID: `task_20260802_crc-target-enumeration`
 - 当前状态：`PENDING_CHATGPT_APPROVAL`
-- PR：待推送后创建，目标基线为 `task_20260801_gen-iet-phase8-external-pilot`
+- PR：https://github.com/leezx/StelligenOS/pull/28
+- Review tip observed: `2f1c17b`
+- 目标基线：`task_20260801_gen-iet-phase8-external-pilot`
 - 本文件是执行契约，不是运行结果，不包含数据。
 
 ## 目标
