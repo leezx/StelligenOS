@@ -9,7 +9,7 @@
 - Review tip at PR creation: `f4ecbe5`
 - Latest PR tip observed for review: `2f1c17b`
 - 说明：PR #27 已合并到该基线分支；`origin/main` 尚未包含 PR #27，因此本任务暂以实际已合并治理基线为 base，不伪装为 main 已同步。
-- 当前状态：`EXTERNAL_RUN_COMPLETED_PENDING_RESULT_REVIEW`
+- 当前状态：`RESULT_REVIEW_APPROVED_TARGET_EVIDENCE_AUTHORIZED`
 - 时间：`2026-08-01 America/New_York`
 
 ## 本次改动
@@ -38,6 +38,8 @@
 - 结果统计：9 indications、36 endpoint rows、41 targets、1,476 unranked pairs、6 opposing-evidence rows。
 - 当前结果审核分支：`task_20260802_crc-target-enumeration-results`；结果审核 PR：[PR #29](https://github.com/leezx/StelligenOS/pull/29)，审核前观察到的当前审计提交为 `3d42bb5`。
 - 上述 `3d42bb5` 是本次审核前的 tip 快照；本次 handoff 修订自身产生的后续提交不预先自列，需以 PR 页面实时 HEAD 为准。
+- ChatGPT 已对 PR #29 Round 2 返回 `APPROVE`；批准基线为 `2ba4457`，允许将外部枚举结果作为 target-level evidence extraction 输入。
+- 下一步必须另建执行契约和独立 PR；不得在 PR #29 内扩大到 Gate 评分、排序或资产推荐。
 - ChatGPT `APPROVE` 前不得执行外部文献/公共数据枚举。
 - 运行结果完成后必须另行提交结果审核 PR。
 

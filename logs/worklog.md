@@ -1547,6 +1547,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Result: ChatGPT 确认结果边界、data-free 状态和 `OPEN / MERGEABLE` 状态符合要求，但指出 handoff 仍写旧 tip `5cae0e6`，与 PR 当前 HEAD `3d42bb5` 不一致。
 - Action taken: 将 handoff 更新为审核前观察到的 `3d42bb5`，明确这是历史快照并声明 handoff 自身后续提交不预先自列；新增 `logs/chatgpt-review-2026-08-02-crc-target-enumeration-results-round1.md` 保存反馈。
 - Next: 在同一 PR #29 推送最小修订并重新提交 ChatGPT 复审；在 `APPROVE` 前不进行 target-level evidence extraction。
+
+### 2026-08-02 00:28 EDT
+
+- Action: 获取 ChatGPT 对 PR #29 的 Round 2 `APPROVE`。
+- How: 在同一 Chrome ChatGPT “GitHub PR 信息”对话中，GitHub source 已选中；提交最新 tip `2ba4457`、修复说明和完整复审指令。
+- Result: ChatGPT 确认 tip 追溯阻断已修复，PR #29 保持 data-free，外部结果未进入仓库，未执行 Gate 评分/排序/资产推荐；允许将枚举结果作为 target-level evidence extraction 输入。
+- Boundary: 下一步必须另建执行契约和独立 PR，不得在 PR #29 中扩大范围。
+- Action taken: 保存最终批准记录至 `logs/chatgpt-review-2026-08-02-crc-target-enumeration-results-final.md`，更新 handoff 状态；本次仅为审计记录，不新增业务代码或数据。
   - `logs/worklog.md`
 - Files affected:
   - `AGENTS.md`
