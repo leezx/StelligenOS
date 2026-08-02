@@ -425,6 +425,16 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - `docs/handoff/2026-08-01-gate-model-rule.zh-CN.md`
 - `logs/worklog.md`
 
+### 2026-08-01 21:45 EDT
+
+- Action: 完成 ChatGPT 批准后的外部 CRC indication/endpoint/target 枚举运行。
+- How: 读取已批准 contract 的 9 个 indication、36 条 endpoint 和本地 ADC Index CRC clinical benchmark；结合已核查的 CRC ADC 公共文献/target landscape 来源，生成外部结果目录。
+- Result: 生成 41 个靶点、1,476 条未排序 indication/endpoint/target 候选组合和 6 条显式 opposing-evidence 记录；全部 Gate 分数和通过状态保持 `not_scored`/`not_assessed`。
+- Correction: 首次 TSV 解析因 delimiter 传值错误失败；随后修正。结果字段检查发现括号内 ADC antigen symbol 和临床阶段聚合问题，已规范化 ADAM9/RNF43/LAMP1/ERBB2/ERBB3/TACSTD2 等符号、拆分 TROP2/EpCAM，并按明确阶段顺序修正 `clinical_stage_max`。
+- Boundary: 所有数据、来源清单、TSV、报告和外部运行记录写入 `/Volumes/Stelligen_SSD/Stelligen/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_target_enumeration_20260802/`；未向 `StelligenOS` 写入数据、cache 或 result。
+- Verification: 外部输出文件完整；repo 工作区未出现数据文件；结果等待独立 PR 审核，批准前不进行 Gate 评分、排序或下一阶段。
+- Files affected: `docs/handoff/2026-08-02-crc-target-enumeration.zh-CN.md`, `logs/worklog.md`。
+
 ### 2026-08-01 18:31 EDT
 
 - Action: 完成 PR #21 migration log 修复后的 ChatGPT 最终 metadata-only 复核，并补齐审核记录。

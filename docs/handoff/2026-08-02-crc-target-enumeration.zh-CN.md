@@ -9,7 +9,7 @@
 - Review tip at PR creation: `f4ecbe5`
 - Latest PR tip observed for review: `2f1c17b`
 - 说明：PR #27 已合并到该基线分支；`origin/main` 尚未包含 PR #27，因此本任务暂以实际已合并治理基线为 base，不伪装为 main 已同步。
-- 当前状态：`APPROVED_EXTERNAL_RUN_AUTHORIZED`
+- 当前状态：`EXTERNAL_RUN_COMPLETED_PENDING_RESULT_REVIEW`
 - 时间：`2026-08-01 America/New_York`
 
 ## 本次改动
@@ -19,12 +19,13 @@
 - 固定 OS/PFS/ORR+DOR/safety endpoint 层级。
 - 定义 ADC target 的公共证据、内吞/递送、正常组织风险、反对证据和 unknown 语义。
 - 规划所有外部输出路径和审计文件。
+- 已完成外部 CRC indication/endpoint/target 枚举；结果仍在仓库外部 DATA 目录。
+- 完成一次结果字段质量修正：规范化 ADC Index 括号内靶点符号、拆分 TROP2/EpCAM、按明确阶段顺序聚合 clinical_stage_max。
 
 ## 明确未执行
 
-- 未抓取公共文献或临床注册库。
 - 未下载或分析 TCGA/GEO/单细胞/空间/蛋白组等公共数据。
-- 未生成任何 pair、target ranking、Gate 分数或资产。
+- 未生成 target ranking、Gate 分数或资产；当前 pair 仅为未排序候选。
 - 未修改 Gate、Model、Rule、Registry 或架构冻结内容。
 - 未向 StelligenOS 写入数据、cache、result、数据库、weights 或临时产物。
 
@@ -32,7 +33,10 @@
 
 - `scripts/verify_repository_boundary.sh`：通过。
 - `git diff --check`：通过。
-- PR #28 已创建并推送，当前审核 tip 为 `2f1c17b`。
+- PR #28 已获 ChatGPT `APPROVE`，允许本次外部枚举。
+- 外部结果目录：`/Volumes/Stelligen_SSD/Stelligen/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_target_enumeration_20260802/`。
+- 结果统计：9 indications、36 endpoint rows、41 targets、1,476 unranked pairs、6 opposing-evidence rows。
+- 当前结果审核分支：`task_20260802_crc-target-enumeration-results`；结果审核 PR 尚未创建。
 - ChatGPT `APPROVE` 前不得执行外部文献/公共数据枚举。
 - 运行结果完成后必须另行提交结果审核 PR。
 
@@ -42,10 +46,10 @@ ChatGPT Round 2 已返回 `APPROVE`，明确允许开始外部 CRC 文献/公共
 
 ## 下一步
 
-1. 验证仓库边界和文档 diff。
-2. 显式提交、推送并创建 PR。
-3. 在 `GitHub PR 信息` 对话中提交审核指令。
-4. 只根据 ChatGPT 反馈在同一 PR 修订，直到明确 `APPROVE`。
+1. 验证仓库边界、外部结果完整性和文档 diff。
+2. 显式提交、推送并创建独立结果审核 PR。
+3. 在 `GitHub PR 信息` 对话中提交结果审核指令。
+4. 只根据 ChatGPT 反馈在同一结果 PR 修订，直到明确 `APPROVE`；批准前不进行 Gate 评分、排序或下一阶段。
 
 ## 数据边界声明
 
