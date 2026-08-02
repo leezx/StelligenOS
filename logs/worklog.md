@@ -432,6 +432,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 只修改仓库审计元数据和 worklog；未修改外部 evidence units，未复制任何数据，未执行 Gate scoring、ranking、recommendation、范围扩展或下游开发。
 - Next: 在同一 PR #33 提交最小修订并重新请求 ChatGPT 结果审核。
 
+### 2026-08-01 22:50 EDT
+
+- Action: 获取 ChatGPT 对 PR #33 Round 2 的 `APPROVE`。
+- How: 在同一 `GitHub PR 信息` 对话中保持 GitHub source 选中，提交最新 head `535e821` 的最小修订复审；ChatGPT 核对 handoff、worklog 和 aggregate diff。
+- Result: ChatGPT 确认过期流程状态已修复，PR #33 仅更新 handoff/worklog 元数据，外部整理结果与 data-free 边界保持不变。
+- Authorization: 仅接受外部整理作为 `pending_expert_review` evidence package；不得执行 Gate scoring、ranking、asset recommendation 或 downstream development。专家生物学复核必须另建执行契约和独立审核门。
+- Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-target-evidence-manual-review-results-final.md`，将 handoff 状态更新为 `RESULT_REVIEW_APPROVED_PENDING_EXPERT_REVIEW`。
+
 ### 2026-08-01 21:45 EDT
 
 - Action: 完成 ChatGPT 批准后的外部 CRC indication/endpoint/target 枚举运行。
