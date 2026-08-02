@@ -147,6 +147,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 这是 ChatGPT provisional review，不是人类专家签字；未执行 Gate scoring、ranking、pair generation、recommendation 或 downstream development；结果只在外部 DATA。
 - Next: 提交 Batch 002 独立结果审核 PR 给 ChatGPT，未获 `APPROVE` 前不得进入任何 Gate 或下游使用。
 
+### 2026-08-02 16:11 EDT
+
+- Action: 完成 PR #41 Batch 002 结果审核的 base 修复与 ChatGPT 复审。
+- Round 1: ChatGPT 返回 `REQUEST_CHANGES`；结果元数据一致，但 PR 以 `main` 为 base，aggregate diff 为 78 commits、293 files，混入历史堆叠提交。
+- Correction: 将 PR #41 base 改为已批准的 `task_20260802_crc-chatgpt-provisional-review-batch001-results`；修复后 aggregate diff 为 2 commits、2 files、`+48/-0`，仅包含 Batch 002 handoff/worklog。
+- Round 2: ChatGPT 明确 `APPROVE`，确认 20/20、4 targets、`retain=19`、`downgrade=1`、SHA-256、provisional、data-free 和禁止 Gate 边界一致。
+- Authorization: 只接受 Batch 002 provisional package 并允许继续下一批；不授权 Gate scoring、ranking、recommendation 或 downstream development。
+
 ### 2026-08-01 19:11 EDT
 
 - Action: 通过 Chrome 中“GitHub PR 信息”ChatGPT 对话提交并完成 Phase 9 审核。

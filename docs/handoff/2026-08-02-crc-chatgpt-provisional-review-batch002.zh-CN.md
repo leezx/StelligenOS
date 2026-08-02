@@ -2,7 +2,7 @@
 
 - 任务编号：`task_20260802_crc-chatgpt-provisional-review-batch002`
 - 前置批准：PR #40，ChatGPT `APPROVE`
-- 当前状态：`RESULT_PENDING_CHATGPT_REVIEW`
+- 当前状态：`RESULT_REVIEW_APPROVED_NEXT_BATCH_AUTHORIZED`
 - 外部输入目录：`/Volumes/Stelligen_SSD/Stelligen/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_target_evidence_expert_review_20260802T025442Z/batches_20/`
 - 外部输入文件：`batch_002.tsv`
 - 输入规模：20 条 evidence rows（不含表头）
@@ -28,4 +28,6 @@
 
 ## 下一步
 
-已通过纯文本将 compact Batch 002 payload 发送给 ChatGPT；结果已保存到外部 DATA，计数和 checksum 已核对。下一步创建独立结果审核 PR，提交 ChatGPT 审核。
+PR #41 Round 1 因 base 错误导致 aggregate diff 混入历史提交而被 `REQUEST_CHANGES`；base 已改为获批 Batch 001 分支，修复后 diff 为 2 commits、2 files、`+48/-0`。Round 2 已获 ChatGPT `APPROVE`。只允许接受 Batch 002 provisional package 并继续下一批；仍不得执行 Gate、排序、推荐或下游开发。
+
+- Review record: `logs/chatgpt-review-2026-08-02-crc-chatgpt-provisional-review-batch002-results-final.md`
