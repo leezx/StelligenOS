@@ -13,7 +13,7 @@
 - PR status observed: `OPEN / READY_FOR_REVIEW`; GitHub mergeability was still recalculating.
 - Latest PR tip observed after Ready-for-review push: `66ea509`
 - PR status confirmed: `OPEN / READY_FOR_REVIEW / MERGEABLE`.
-- 当前状态：`REQUEST_CHANGES_PENDING_REVISION`
+- 当前状态：`PENDING_CHATGPT_APPROVAL`
 
 The PR page is the live authority for the final HEAD. This handoff cannot self-reference the commit that updates it; the latest observed tip and status above are the pre-commit audit snapshot.
 - 时间：`2026-08-01 America/New_York`
