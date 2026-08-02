@@ -1600,6 +1600,13 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Result: ChatGPT 确认 Round 1 可审计元数据阻断已修复，仓库保持 data-free，unknown/opposing 边界正确，未执行 Gate scoring、ranking、asset recommendation 或范围扩展；明确返回 `APPROVE`。
 - Authorization: 下一步仅限对外部 evidence units 做人工复核/整理；Gate 评分、排序、资产推荐和下游开发仍需独立契约和审核，当前未授权。
 - Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-target-evidence-results-final.md`，将 handoff 状态更新为 `RESULT_REVIEW_APPROVED_MANUAL_REVIEW_AUTHORIZED`。
+
+### 2026-08-01 22:52 EDT
+
+- Action: 按 PR #31 ChatGPT `APPROVE` 授权，建立下一步 CRC target evidence 人工复核/整理 contract-only 分支。
+- How: 从 PR #31 已批准结果审核分支创建 `task_20260802_crc-target-evidence-manual-review`；新增人工复核契约和 handoff，固定输入 292 evidence units/41 targets，定义允许的来源审计整理和禁止的 Gate/排序/推荐行为。
+- Boundary: 尚未修改任何 evidence unit，尚未执行人工复核，尚未生成新外部结果；仓库仍 data-free。
+- Next: 推送独立 PR 并提交 ChatGPT 审核；只有 `APPROVE` 后才开始外部人工复核/整理。
 - Files affected:
   - `AGENTS.md`
   - `ChatGPT-Codex-talk.md`
