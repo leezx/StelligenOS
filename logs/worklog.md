@@ -1607,6 +1607,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - How: 从 PR #31 已批准结果审核分支创建 `task_20260802_crc-target-evidence-manual-review`；新增人工复核契约和 handoff，固定输入 292 evidence units/41 targets，定义允许的来源审计整理和禁止的 Gate/排序/推荐行为。
 - Boundary: 尚未修改任何 evidence unit，尚未执行人工复核，尚未生成新外部结果；仓库仍 data-free。
 - Next: 推送独立 PR 并提交 ChatGPT 审核；只有 `APPROVE` 后才开始外部人工复核/整理。
+
+### 2026-08-01 22:55 EDT
+
+- Action: 获取 ChatGPT 对 PR #32 的 contract-only `APPROVE`。
+- How: 在同一 ChatGPT“GitHub PR 信息”对话中提交 PR #32 head `761cb80` 的完整审核指令；ChatGPT 核对 292 evidence units/41 targets 输入边界、supporting/opposing/unknown 语义、data-free 边界、修改审计字段和独立结果审核门。
+- Result: ChatGPT 明确允许开始外部人工 evidence review/curation；要求保留原始值、修改理由、复核者和时间戳，并在完成后提交独立结果审核 PR。
+- Boundary: Gate scoring、ranking、asset recommendation、new biological claims、scope expansion 和 downstream development 仍禁止。
+- Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-target-evidence-manual-review-final.md`，更新人工复核 handoff 状态。
 - Files affected:
   - `AGENTS.md`
   - `ChatGPT-Codex-talk.md`
