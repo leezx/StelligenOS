@@ -425,6 +425,13 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - `docs/handoff/2026-08-01-gate-model-rule.zh-CN.md`
 - `logs/worklog.md`
 
+### 2026-08-01 22:49 EDT
+
+- Action: 根据 ChatGPT 对 PR #33 Round 1 的 `REQUEST_CHANGES` 修正结果审核 handoff 的过期流程状态。
+- How: ChatGPT 指出 `docs/handoff/2026-08-02-crc-target-evidence-manual-review.zh-CN.md` 的“下一步”仍写成“获得 `APPROVE` 后才生成人工复核结果”，但外部整理已经完成且 PR #33 正在审核；将其改为等待 PR #33 结论，并明确 `APPROVE` 后只能接受为 `pending_expert_review` evidence package。
+- Boundary: 只修改仓库审计元数据和 worklog；未修改外部 evidence units，未复制任何数据，未执行 Gate scoring、ranking、recommendation、范围扩展或下游开发。
+- Next: 在同一 PR #33 提交最小修订并重新请求 ChatGPT 结果审核。
+
 ### 2026-08-01 21:45 EDT
 
 - Action: 完成 ChatGPT 批准后的外部 CRC indication/endpoint/target 枚举运行。
