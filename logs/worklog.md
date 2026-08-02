@@ -440,6 +440,13 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Authorization: 仅接受外部整理作为 `pending_expert_review` evidence package；不得执行 Gate scoring、ranking、asset recommendation 或 downstream development。专家生物学复核必须另建执行契约和独立审核门。
 - Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-target-evidence-manual-review-results-final.md`，将 handoff 状态更新为 `RESULT_REVIEW_APPROVED_PENDING_EXPERT_REVIEW`。
 
+### 2026-08-01 22:51 EDT
+
+- Action: 根据 PR #33 ChatGPT `APPROVE` 建立下一步专家生物学复核的 contract-only 分支。
+- How: 从已批准的结果审核分支创建 `task_20260802_crc-target-evidence-expert-review-contract`，仅新增执行契约和 handoff；固定输入为外部 `pending_expert_review` evidence package 的 292 条、41 targets。
+- Boundary: 未执行专家复核，未修改外部 evidence，未向仓库写入数据、cache、数据库或结果；明确禁止新增 pair、Gate scoring、ranking、recommendation 和 downstream development。
+- Next: 提交独立 PR 给 ChatGPT 审核，未经 `APPROVE` 不执行外部专家复核。
+
 ### 2026-08-01 21:45 EDT
 
 - Action: 完成 ChatGPT 批准后的外部 CRC indication/endpoint/target 枚举运行。
