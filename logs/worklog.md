@@ -501,6 +501,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 本次未执行证据复核，未修改 evidence，未执行 Gate scoring、ranking、pair generation 或 recommendation。
 - Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-chatgpt-expert-review-prompt-final.md`，更新 handoff 状态为 `PROMPT_APPROVED_READY_FOR_WEB_EXECUTION`。
 
+### 2026-08-01 23:20 EDT
+
+- Action: 尝试在已批准的网页版 ChatGPT 会话中附加外部 `expert_review_assignment.tsv`，启动 292 条 evidence units 的 provisional review。
+- How: 打开“Add files and more”并选择“Upload from computer”；浏览器安全层拒绝自动设置本地文件，上传未发生，未向 ChatGPT 发送外部证据。
+- Result: 未生成任何 ChatGPT evidence review 结果；没有修改 evidence、statement、direction 或 strength。
+- Boundary: 不绕过浏览器安全限制，不伪造专家结果；未执行 Gate scoring、ranking、pair generation 或 recommendation。
+- Next: 用户需在同一 ChatGPT 对话中手动附加 `/Volumes/Stelligen_SSD/Stelligen/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_target_evidence_expert_review_20260802T025442Z/expert_review_assignment.tsv`，然后继续使用已批准 Prompt。
+
 ### 2026-08-01 21:45 EDT
 
 - Action: 完成 ChatGPT 批准后的外部 CRC indication/endpoint/target 枚举运行。
