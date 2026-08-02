@@ -1,0 +1,59 @@
+manifest_version: "1.0.0"
+module_id: gen_indication_endpoint_target
+phase: 9
+status: approved_phase_9
+parent_phase: 8
+parent_approval: logs/chatgpt-review-2026-08-01-gen-iet-phase8.md
+gate_change_declaration: NO_GATE_CHANGE
+
+scope:
+  implementation_type: architecture_freeze_and_release_contract
+  execution_enabled: false
+  persistence_enabled: false
+  inputs_external_only: true
+  outputs_external_only: true
+  gates_called_locally: false
+  release_version: 1.0.0
+  frozen_gate_count: 45
+  tpc_boundaries_frozen: true
+  gate_extension_registry_mutation: false
+  contracts:
+    - ArchitectureFreezeRequest
+    - ArchitectureFreezeResult
+    - ArchitectureFreezePort
+
+freeze:
+  phase_manifest_count: 10
+  archived_prompt_external_only: true
+  unapproved_gate_extensions_block_release: true
+  future_extensions_require_separate_governance: true
+  real_data_external_only: true
+
+explicitly_not_executed:
+  - crc_data_read
+  - pilot_run
+  - t0_t12
+  - gate_execution
+  - rule_execution
+  - model_execution
+  - p_chain
+  - c_chain
+  - release_package_creation
+  - asset_generation
+  - database
+  - cache
+  - result_persistence
+  - model_weights
+  - runner
+  - new_gate
+
+validation:
+  tests: 77
+  repository_boundary: passed
+  git_diff_check: passed
+
+decision:
+  requires_chatgpt_review: false
+  release_ready: true
+  approved_by: ChatGPT
+  approval_record: logs/chatgpt-review-2026-08-01-gen-iet-phase9.md
