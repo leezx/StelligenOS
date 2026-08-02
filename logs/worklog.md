@@ -1538,7 +1538,15 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Files affected:
   - `docs/handoff/2026-08-02-crc-target-enumeration.zh-CN.md`
   - `logs/chatgpt-review-2026-08-02-crc-target-enumeration-final.md`
-  - `logs/worklog.md`
+- `logs/worklog.md`
+
+### 2026-08-02 00:20 EDT
+
+- Action: 获取 ChatGPT 对 PR #29 的结果审核 Round 1 `REQUEST_CHANGES`。
+- How: 在已恢复的 Chrome ChatGPT “GitHub PR 信息”对话中使用 GitHub source，提交 PR #29 最新 tip `3d42bb5` 的完整结果审核请求；ChatGPT 读取 PR 后返回唯一治理阻断。
+- Result: ChatGPT 确认结果边界、data-free 状态和 `OPEN / MERGEABLE` 状态符合要求，但指出 handoff 仍写旧 tip `5cae0e6`，与 PR 当前 HEAD `3d42bb5` 不一致。
+- Action taken: 将 handoff 更新为审核前观察到的 `3d42bb5`，明确这是历史快照并声明 handoff 自身后续提交不预先自列；新增 `logs/chatgpt-review-2026-08-02-crc-target-enumeration-results-round1.md` 保存反馈。
+- Next: 在同一 PR #29 推送最小修订并重新提交 ChatGPT 复审；在 `APPROVE` 前不进行 target-level evidence extraction。
   - `logs/worklog.md`
 - Files affected:
   - `AGENTS.md`

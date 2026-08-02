@@ -36,7 +36,8 @@
 - PR #28 已获 ChatGPT `APPROVE`，允许本次外部枚举。
 - 外部结果目录：`/Volumes/Stelligen_SSD/Stelligen/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_target_enumeration_20260802/`。
 - 结果统计：9 indications、36 endpoint rows、41 targets、1,476 unranked pairs、6 opposing-evidence rows。
-- 当前结果审核分支：`task_20260802_crc-target-enumeration-results`；结果审核 PR：[PR #29](https://github.com/leezx/StelligenOS/pull/29)，当前审计提交为 `5cae0e6`。
+- 当前结果审核分支：`task_20260802_crc-target-enumeration-results`；结果审核 PR：[PR #29](https://github.com/leezx/StelligenOS/pull/29)，审核前观察到的当前审计提交为 `3d42bb5`。
+- 上述 `3d42bb5` 是本次审核前的 tip 快照；本次 handoff 修订自身产生的后续提交不预先自列，需以 PR 页面实时 HEAD 为准。
 - ChatGPT `APPROVE` 前不得执行外部文献/公共数据枚举。
 - 运行结果完成后必须另行提交结果审核 PR。
 
