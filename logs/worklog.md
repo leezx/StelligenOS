@@ -1405,6 +1405,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - How: 删除 `docs/product/GEN_IET_PRODUCT_PURPOSE_AND_DYNAMIC_REQUIREMENTS.zh-CN.md`，将产品需求从 Phase 9 治理 PR 的 aggregate diff 中移出；新增原始审核反馈记录；将 AGENTS、交互规范和 Phase Gate 协议中的“较大任务才需要 handoff”改为“每一个 PR 和每一次外部运行都必须 handoff”，消除主观豁免路径；治理 handoff 改为记录 PR #27、基线和修订状态。
 - Result: 修订前验证通过：`./scripts/verify_repository_boundary.sh`、`bash -n scripts/git_sync.sh`、`bash tests/test_git_sync.sh`（A-D）、`git diff --check`。产品需求文档尚未删除其历史内容，只是移出当前 PR；后续如需保留，必须单独建 PR 审核。
 - Next: 提交并推送修订到 PR #27，更新 PR 描述以覆盖 Phase 9 与全局治理规则，随后再次通过 GitHub 来源提交 ChatGPT 审核；在 `APPROVE` 前不进入其他工作或外部运行。
+
+### 2026-08-01 20:53 EDT
+
+- Action: 完成 PR #27 修订提交并修正 PR 描述。
+- How: 以显式文件清单提交 commit `282c713` 并推送同一分支；使用安全的临时 Markdown body 文件通过 `gh pr edit --body-file` 更新 PR 描述，避免 shell 解释 Markdown 反引号。随后用 `gh pr view` 读取远程 body 和 head，确认内容完整、远程 HEAD 为 `282c713`。
+- Result: PR 描述现在明确覆盖 Phase 9 冻结契约、全局 PR/GPT 审核门禁、每个 PR/外部运行的 handoff、worklog、data-free 边界、验证结果和 Round 1 `REQUEST_CHANGES` 修订状态。临时 body 文件已删除，不进入仓库。
+- Correction: 上一次直接传递 body 的命令曾因 shell 转义导致描述内容被截断；已立即重写并远程核对，未改变代码或架构内容。
+- Next: 在同一 ChatGPT `GitHub PR 信息` 对话中重新提交 PR #27 当前 aggregate diff 审核；在明确 `APPROVE` 前不继续其他工作。
+- Files affected:
+  - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
+  - `logs/worklog.md`
+  - External PR metadata: PR #27 description
 - Files affected:
   - `AGENTS.md`
   - `ChatGPT-Codex-talk.md`

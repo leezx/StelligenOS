@@ -7,6 +7,7 @@
 - PR：https://github.com/leezx/StelligenOS/pull/27
 - Base：`task_20260801_gen-iet-phase8-external-pilot`
 - Head at last ChatGPT review: `93cd662`
+- Revision commit: `282c713`
 - 当前状态：`REQUEST_CHANGES_PENDING_REVISION`
 - 时间：`2026-08-01 America/New_York`
 
@@ -44,9 +45,10 @@ ChatGPT 在 `GitHub PR 信息` 对话中通过 GitHub 来源审核 PR #27，结�
 
 ## 下一步
 
-1. 在同一 PR 移除不属于治理范围的产品文档，补齐 PR 描述、handoff 和 worklog。
-2. 通过 GitHub 插件把 PR 完整 diff、协议、handoff、worklog 和验证结果再次交给 ChatGPT 审核。
-3. 若仍为 `REQUEST_CHANGES`，继续留在同一 PR 修订；只有 `APPROVE` 后才由负责人决定 merge。
+1. 已在同一 PR 移除不属于治理范围的产品文档，补齐 PR 描述、handoff 和 worklog。
+2. 修订 commit `282c713` 已推送；PR 描述已同步，PR 页面实时 HEAD 为唯一权威。
+3. 通过 GitHub 插件把 PR 完整 diff、协议、handoff、worklog 和验证结果再次交给 ChatGPT 审核。
+4. 若仍为 `REQUEST_CHANGES`，继续留在同一 PR 修订；只有 `APPROVE` 后才由负责人决定 merge。
 
 ## 数据边界声明
 
