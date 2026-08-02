@@ -8,6 +8,7 @@
 - Base：`task_20260801_gen-iet-phase8-external-pilot`
 - Head at last ChatGPT review: `93cd662`
 - Revision commit: `282c713`
+- Latest PR tip observed before this metadata revision: `3c9ba6c`
 - 当前状态：`REQUEST_CHANGES_PENDING_REVISION`
 - 时间：`2026-08-01 America/New_York`
 
@@ -36,6 +37,10 @@ ChatGPT 在 `GitHub PR 信息` 对话中通过 GitHub 来源审核 PR #27，结�
 3. 产品动态需求文档超出本 PR 的 Phase 9 治理范围，应移出或明确扩大范围后重新审核。
 4. worklog 中的历史外部运行和产品需求没有明确标注为治理规则生效前的历史记录，也没有独立 PR/批准记录。
 5. “较大任务”定义存在绕过 handoff 的漏洞，应改为所有 PR/外部运行都必须有 handoff。
+
+### Round 2
+
+ChatGPT 对 PR #27 当前 tip `3c9ba6c` 再次返回 `REQUEST_CHANGES`，Round 1 的范围、产品文档移除、历史运行标注和 handoff 全覆盖修复均已确认。剩余阻断为：PR 仍为 Draft 且 `mergeable=false`；handoff 未记录最新 tip `3c9ba6c`；worklog 未记录 `3c9ba6c` 对应的验证结果和审核状态。
 
 ## 验证与审核门
 

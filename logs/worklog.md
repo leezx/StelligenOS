@@ -1417,6 +1417,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
   - `logs/worklog.md`
   - External PR metadata: PR #27 description
+
+### 2026-08-01 20:55 EDT
+
+- Action: 完成 ChatGPT Round 2 复审并记录剩余阻断。
+- How: 在同一 `GitHub PR 信息` 对话中、保持 GitHub 来源选中，要求以远程 PR 实时 HEAD `3c9ba6c` 重新读取 aggregate diff、PR 描述、全部 commits、治理规范、handoff、worklog 和验证结果。
+- Result: ChatGPT 返回 `REQUEST_CHANGES`，确认 Round 1 的 5 个范围阻断已经修复；剩余问题为 PR 仍是 Draft、GitHub 状态 `mergeable=false`，handoff 尚未记录最新 tip `3c9ba6c`，worklog 尚未记录该 tip 的验证/审核状态。
+- Action taken: 新增 Round 2 原始反馈记录；在 handoff 中加入最新观察 tip `3c9ba6c` 和 Round 2 状态；本记录用于当前元数据收敛提交。之后将把 PR 标记为 Ready for review，并再次提交 ChatGPT 审核。
+- Boundary: 没有修改业务代码、Gate、Model、Rule、数据或外部结果；本轮只修正 PR 可审计元数据和远程审核状态。
+- Files affected:
+  - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
+  - `logs/worklog.md`
+  - `logs/chatgpt-review-2026-08-01-global-review-rules-round2.md`
 - Files affected:
   - `AGENTS.md`
   - `ChatGPT-Codex-talk.md`
