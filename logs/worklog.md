@@ -130,6 +130,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Restrictions: `conflict_queue=1` 仍然阻断 Gate；本批准不授权 Gate scoring、ranking、pair generation、recommendation 或 downstream development；后续每个 batch 仍需独立结果审核 PR 和 ChatGPT `APPROVE`。
 - Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-chatgpt-provisional-review-batch001-results-final.md`，更新 Batch 001 handoff 状态。
 
+### 2026-08-01 23:29 EDT
+
+- Action: 按 PR #40 ChatGPT `APPROVE` 授权，建立 CRC ChatGPT provisional review Batch 002 独立任务分支。
+- How: 从已批准 Batch 001 结果审核 tip `e027ff7` 创建 `task_20260802_crc-chatgpt-provisional-review-batch002`；读取外部 `batch_002.tsv`，确认 20 条 evidence rows，并生成仅含 evidence_id/gene_symbol/target_name/dimension/evidence_direction/evidence_strength/statement 的 compact payload。
+- Input audit: compact payload SHA-256=`2fce8677cd8b68b46a44c58f7d74575a90604480ebbd53d0854faa4fd2e86af8`。
+- Boundary: 仅准备纯文本 provisional review 输入；未执行 Gate scoring、ranking、pair generation、recommendation 或 downstream development。
+- Next: 将 Batch 002 compact payload 发送 ChatGPT，保存外部结果并为结果审核建立独立 PR。
+
 ### 2026-08-01 19:11 EDT
 
 - Action: 通过 Chrome 中“GitHub PR 信息”ChatGPT 对话提交并完成 Phase 9 审核。
