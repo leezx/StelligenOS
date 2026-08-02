@@ -1,7 +1,7 @@
 # 任务交接备忘：当前架构与模块逻辑专家审核版
 
 - 任务编号：`task_20260802_current-architecture-expert-review-doc`
-- 当前状态：`DOCUMENT_PENDING_CHATGPT_REVIEW`
+- 当前状态：`DOCUMENT_REVIEW_ROUND1_CHANGES_APPLIED`
 - 任务性质：current-state documentation only
 - Gate 变更：`NO_GATE_CHANGE`
 - 代码变更：`NO_CODE_CHANGE`
@@ -29,4 +29,4 @@
 
 ## 下一步
 
-创建独立 PR 并提交 ChatGPT 审核。只有收到明确 `APPROVE` 后，才能把本文件标记为可交付专家审核的当前版本。
+PR #42 Round 1 收到 `REQUEST_CHANGES`。已按反馈最小修正证据保存语义，并明确 `gen_indication_endpoint_target` 描述的是外部合同顺序、仓库模块只提供 contract/port。下一步在同一 PR 重新提交 ChatGPT 审核；只有收到明确 `APPROVE` 后，才能把本文件标记为可交付专家审核的当前版本。

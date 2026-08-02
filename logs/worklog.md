@@ -163,6 +163,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Round 2: ChatGPT 明确 `APPROVE`，确认 20/20、4 targets、`retain=19`、`downgrade=1`、SHA-256、provisional、data-free 和禁止 Gate 边界一致。
 - Authorization: 只接受 Batch 002 provisional package 并允许继续下一批；不授权 Gate scoring、ranking、recommendation 或 downstream development。
 
+### 2026-08-02 16:15 EDT
+
+- Action: 获取 ChatGPT 对 PR #42 当前架构专家审核文档的 Round 1 `REQUEST_CHANGES`，并完成最小修订。
+- Finding 1: “每个候选必须同时保存 supporting/opposing/conflict/missing”超过当前合同要求；改为相关合同按存在情况保留 supporting/opposing/mixed、conflict、unknown 和 missing information 引用，缺失不代表阴性。
+- Finding 2: `gen_indication_endpoint_target` 的步骤动词可能被理解为仓库模块已执行完整流程；补充其仅描述外部合同目标顺序，仓库模块只提供 contract/port，不执行候选生成、Gate、T12、排序或持久化。
+- Confirmed accurate: 六层架构、四阶段生命周期、七类对象、45 Gate（13/16/16）及 CRC `9/36/41/292` 状态。
+- Boundary: 仅修正文档表述；未修改代码、合同、Gate、Model、Profile、外部数据或运行结果。
+
 ### 2026-08-01 19:11 EDT
 
 - Action: 通过 Chrome 中“GitHub PR 信息”ChatGPT 对话提交并完成 Phase 9 审核。

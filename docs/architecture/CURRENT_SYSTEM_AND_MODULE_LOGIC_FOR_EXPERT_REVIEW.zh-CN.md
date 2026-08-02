@@ -15,7 +15,7 @@ StelligenOS 的目标是把未满足临床需求逐步转化为可验证、可�
 1. **临床问题先行**：先固定 indication 和需要改善的 endpoint，再寻找能够改变该 endpoint 的 target，避免从热门靶点反推适应症。
 2. **证据与判断分离**：原始证据、机器提取、专家复核、Gate 评分和最终决策分别记录，不允许相互冒充。
 3. **未知不是失败**：`unknown/null` 表示证据不足，不得自动转换为 0、FAIL 或负面证据。
-4. **支持与反对证据并存**：每个候选必须同时保存 supporting、opposing、conflict 和 missing information。
+4. **支持与反对证据并存**：相关合同分别保留 supporting/opposing/mixed、conflict、unknown 和 missing information（如存在）的引用；缺失不代表阴性。
 5. **规则和模型不能直接改写决策**：历史 Rule、Model 或自然语言 if/then 只能提供参考；只有受治理的 Gate 执行才能产生 Gate 结果。
 6. **状态不能自动晋级**：脚本成功、模型高分或单个 Gate 通过都不能自动推动生命周期；晋级需要显式决策及其证据和审计记录。
 7. **全过程可追溯**：对象、合同、模型、Gate、输入、输出、证据和审核均使用版本化身份和外部引用。
@@ -66,7 +66,7 @@ StelligenOS 的目标是把未满足临床需求逐步转化为可验证、可�
 
 目的：生成并验证 `indication + endpoint + target` 机会组合。
 
-逻辑：
+逻辑：下列内容是分阶段外部合同规定的目标运行顺序。当前仓库中的 `gen_indication_endpoint_target` 只提供 contract/port，不在仓库内执行候选生成、证据读取、Gate、T12、排序或持久化。
 
 1. 从临床 unmet need 建立 `ClinicalFrame`，固定患者亚群、疾病状态、现有治疗缺口和目标 endpoint。
 2. 从 ADC 临床先例、公共数据和文献中枚举 target；候选必须有明确身份，并达到外部策略规定的独立正向证据组数量，禁止仅凭 Model 或 Rule 生成。
