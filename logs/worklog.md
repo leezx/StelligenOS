@@ -1573,6 +1573,15 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Authorization: 允许开始外部 target-level evidence extraction；禁止 Gate 评分、排序、资产推荐和扩大 indication/endpoint 范围；运行完成后必须提交独立结果审核 PR。
 - Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-target-evidence-extraction-final.md`，将 handoff 更新为 `CONTRACT_APPROVED_EXTERNAL_RUN_AUTHORIZED`。
 - Boundary: 本次仍未抓取外部资料；仓库仍保持 data-free。
+
+### 2026-08-01 22:37 EDT
+
+- Action: 在 ChatGPT `APPROVE` PR #30 后运行 CRC target-level evidence extraction。
+- How: 读取已批准的 41-target 输入目录，以及现有 ADC internalization consensus、HPA/UniProt shedding-soluble-sink 和 ADC precedent 处理层；运行脚本仅在外部 `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_target_evidence_20260801T2235EDT/` 写入结果。
+- Result: 生成 292 条 evidence units：88 条 supporting、32 条 opposing、172 条 unknown；生成 summary、opposing evidence、unknowns、source manifest、run report 和 external worklog。
+- Interpretation boundary: unknown 表示尚未解决，不表示阴性；ADC precedent 不表示 CRC efficacy 或安全窗；没有新增 indication/endpoint/pair。
+- Validation: `StelligenOS/scripts/verify_repository_boundary.sh` 通过；结果目录未执行 Gate scoring、ranking 或 asset recommendation。
+- Next: 从批准的 contract tip 建立独立结果审核分支/PR，要求 ChatGPT 审核外部结果后再进入 Gate 评分或后续阶段。
 - Files affected:
   - `AGENTS.md`
   - `ChatGPT-Codex-talk.md`
