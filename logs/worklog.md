@@ -1386,3 +1386,30 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md`
   - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 20:51 EDT
+
+- Action: 通过网页版 ChatGPT 的 `GitHub PR 信息` 对话和已选中的 GitHub 来源提交 PR #27 全量审核。
+- How: 要求 ChatGPT 读取当前 PR 的 aggregate diff、全部 commits、AGENTS、交互规范、Phase Gate 协议、治理 handoff、worklog 和验证结果；未创建新对话、未重复发送审核请求。ChatGPT 以 GitHub 当前 PR 为权威进行审核。
+- Result: ChatGPT 返回 `REQUEST_CHANGES`。阻断项为：PR 描述未覆盖治理规则和 handoff；治理 handoff 未收敛到 PR #27/HEAD `93cd662`/验证结果；产品动态需求文档不应混入 Phase 9 治理 PR；历史外部运行/产品需求未标明为规则生效前历史并未有独立 PR；“较大任务”定义存在 handoff 绕过漏洞。
+- Action taken: 留在同一 PR 内修订；删除不属于本治理 PR 范围的 `docs/product/GEN_IET_PRODUCT_PURPOSE_AND_DYNAMIC_REQUIREMENTS.zh-CN.md`，在治理 handoff 中保存完整反馈并记录 PR #27、基线和当前修订状态，明确所有 PR/外部运行必须有 handoff。PR 描述将在本次修订提交后同步更新，随后再次提交 ChatGPT 审核。
+- Boundary: 删除的是本仓库内尚未进入 Phase 9 基线的产品文档；未删除外部数据或结果。CRC/TWEAKR 外部运行仍只存在于外部 `DATA/`，并在 worklog 中作为治理规则生效前的历史记录保留。
+- Files affected:
+  - `docs/product/GEN_IET_PRODUCT_PURPOSE_AND_DYNAMIC_REQUIREMENTS.zh-CN.md` (removed from this PR scope)
+  - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 20:52 EDT
+
+- Action: 按 ChatGPT Round 1 的 `REQUEST_CHANGES` 修订同一 PR #27。
+- How: 删除 `docs/product/GEN_IET_PRODUCT_PURPOSE_AND_DYNAMIC_REQUIREMENTS.zh-CN.md`，将产品需求从 Phase 9 治理 PR 的 aggregate diff 中移出；新增原始审核反馈记录；将 AGENTS、交互规范和 Phase Gate 协议中的“较大任务才需要 handoff”改为“每一个 PR 和每一次外部运行都必须 handoff”，消除主观豁免路径；治理 handoff 改为记录 PR #27、基线和修订状态。
+- Result: 修订前验证通过：`./scripts/verify_repository_boundary.sh`、`bash -n scripts/git_sync.sh`、`bash tests/test_git_sync.sh`（A-D）、`git diff --check`。产品需求文档尚未删除其历史内容，只是移出当前 PR；后续如需保留，必须单独建 PR 审核。
+- Next: 提交并推送修订到 PR #27，更新 PR 描述以覆盖 Phase 9 与全局治理规则，随后再次通过 GitHub 来源提交 ChatGPT 审核；在 `APPROVE` 前不进入其他工作或外部运行。
+- Files affected:
+  - `AGENTS.md`
+  - `ChatGPT-Codex-talk.md`
+  - `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md`
+  - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
+  - `docs/product/GEN_IET_PRODUCT_PURPOSE_AND_DYNAMIC_REQUIREMENTS.zh-CN.md` (removed from PR #27)
+  - `logs/chatgpt-review-2026-08-01-global-review-rules-round1.md`
+  - `logs/worklog.md`

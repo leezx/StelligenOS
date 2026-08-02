@@ -4,8 +4,10 @@
 
 - 任务编号：`task_20260801_global-review-worklog-rules`
 - 当前分支：`task_20260801_gen-iet-phase9-freeze-release`
-- PR：将在本分支更新后提交现有任务 PR 供 GPT/ChatGPT 审核
-- 当前状态：`PENDING_CHATGPT_APPROVAL`
+- PR：https://github.com/leezx/StelligenOS/pull/27
+- Base：`task_20260801_gen-iet-phase8-external-pilot`
+- Head at last ChatGPT review: `93cd662`
+- 当前状态：`REQUEST_CHANGES_PENDING_REVISION`
 - 时间：`2026-08-01 America/New_York`
 
 ## 本次变更
@@ -15,6 +17,8 @@
 - 明确 `REQUEST_CHANGES` 后必须留在同一个 PR 内最小修订并重新审核。
 - 明确所有读取、决策、命令、修改、验证、外部运行、失败、修正和审核反馈都必须带时间戳记录到 worklog。
 - 明确外部数据/结果不得进入仓库，PR 通过软件契约、manifest、摘要、校验信息和外部路径引用保持可审计性。
+- 将产品动态需求文档移出本 PR，避免把产品范围与 Phase 9 治理规则混在同一个审核表面；该需求必须通过独立 PR 审核。
+- 明确每个 PR 和每次外部运行都必须有 handoff，不再使用“较大任务”作为是否留 handoff 的主观判断。
 
 ## 明确未改动
 
@@ -22,17 +26,27 @@
 - 未新增数据、数据库、cache、result、weights 或临时产物。
 - 未修改 `Zhixins-KB`。
 
+## ChatGPT 审核反馈
+
+ChatGPT 在 `GitHub PR 信息` 对话中通过 GitHub 来源审核 PR #27，结论为 `REQUEST_CHANGES`。阻断项：
+
+1. PR 描述只说明 Phase 9，未覆盖本次新增的全局治理规则和 handoff。
+2. 本 handoff 未记录 PR #27、当前 HEAD `93cd662` 和验证结果。
+3. 产品动态需求文档超出本 PR 的 Phase 9 治理范围，应移出或明确扩大范围后重新审核。
+4. worklog 中的历史外部运行和产品需求没有明确标注为治理规则生效前的历史记录，也没有独立 PR/批准记录。
+5. “较大任务”定义存在绕过 handoff 的漏洞，应改为所有 PR/外部运行都必须有 handoff。
+
 ## 验证与审核门
 
-- 待运行 `scripts/verify_repository_boundary.sh`、相关规范测试和 `git diff --check`。
-- 待推送当前任务分支并更新 PR aggregate diff。
+- 已运行 `scripts/verify_repository_boundary.sh`、同步脚本测试 A-D 和 `git diff --check`；修订后必须重新运行并记录。
+- 已有 PR #27；修订继续留在同一个 PR，PR 页面实时 HEAD 为唯一权威。
 - 在 ChatGPT 明确返回 `APPROVE` 前，本任务不得作为已生效全局配置继续推进依赖工作；当前 PR 是唯一审核表面。
 
 ## 下一步
 
-1. 提交当前规则变更到 PR。
-2. 通过 GitHub 插件把 PR 完整 diff、协议、handoff、worklog 和验证结果交给 ChatGPT 审核。
-3. 若 `REQUEST_CHANGES`，只在同一 PR 修订；若 `APPROVE`，由负责人决定 merge。
+1. 在同一 PR 移除不属于治理范围的产品文档，补齐 PR 描述、handoff 和 worklog。
+2. 通过 GitHub 插件把 PR 完整 diff、协议、handoff、worklog 和验证结果再次交给 ChatGPT 审核。
+3. 若仍为 `REQUEST_CHANGES`，继续留在同一 PR 修订；只有 `APPROVE` 后才由负责人决定 merge。
 
 ## 数据边界声明
 
