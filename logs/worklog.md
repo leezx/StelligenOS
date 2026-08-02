@@ -525,6 +525,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 未修改 evidence、statement、direction 或 strength；未执行 Gate scoring、ranking、pair generation 或 recommendation。
 - Next: 用户手动附加外部 `batches_20/batch_001.tsv`，使用已批准 Prompt 继续逐批复核。
 
+### 2026-08-01 23:35 EDT
+
+- Action: 获取 ChatGPT 对 PR #39 分 batch 上传测试记录的 `APPROVE`。
+- How: 在同一 `GitHub PR 信息` 对话中提交测试统计和阻断记录；ChatGPT 核对 15 个 batch、292 条总数及未发送/未生成声明。
+- Result: 接受分 batch 准备和上传阻断审计记录；下一步需用户手动附加 `batch_001.tsv`。
+- Boundary: 未修改 evidence，未生成 provisional review，未执行 Gate scoring、ranking、pair generation 或 recommendation。
+- Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-chatgpt-expert-review-batch-upload-test-final.md`。
+
 ### 2026-08-01 21:45 EDT
 
 - Action: 完成 ChatGPT 批准后的外部 CRC indication/endpoint/target 枚举运行。
