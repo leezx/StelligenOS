@@ -1372,3 +1372,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - External result: `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_trial_20260801/crc_pair_trial_report.md`
   - External result: `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_trial_20260801/run_manifest.json`
   - `logs/worklog.md`
+
+### 2026-08-01 20:04 EDT
+
+- Action: 根据负责人再次确认，将“所有工作必须经 PR/GPT 审核”和“所有步骤必须持续记录”提升为全局强制配置。
+- How: 先读取现有 `AGENTS.md`、`ChatGPT-Codex-talk.md`、`CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md` 和历史 handoff；在不改变既有 Phase 语义的前提下，补充覆盖架构、文档、代码、脚本、迁移、配置、外部数据处理和试运行的统一 PR 门禁。明确 GPT/ChatGPT `APPROVE` 前不得进入下一工作/Phase、不得执行依赖性外部运行或扩大范围；`REQUEST_CHANGES` 必须留在同一 PR 最小修订并复审；所有动作、命令、来源、结果、失败和修正必须带时间戳写入 worklog。
+- Result: 更新全局 Agent 规则、ChatGPT/Codex 固定交互规范、分阶段 PR 协议，并新增 `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`，当前状态标记为 `PENDING_CHATGPT_APPROVAL`。未新增数据、数据库、cache、result 或业务逻辑。
+- Boundary: 外部数据/结果仍只能留在 `DATA/` 等外部工作区；PR 只提交软件、架构契约、manifest、摘要、校验信息和外部路径引用。
+- Next: 运行边界/格式验证，显式提交并推送当前任务 PR，生成 GPT/ChatGPT 审核指令；在明确 `APPROVE` 前不继续依赖本规则的任何新工作。
+- Files affected:
+  - `AGENTS.md`
+  - `ChatGPT-Codex-talk.md`
+  - `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md`
+  - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
+  - `logs/worklog.md`
