@@ -36,7 +36,7 @@
 - PR #28 已获 ChatGPT `APPROVE`，允许本次外部枚举。
 - 外部结果目录：`/Volumes/Stelligen_SSD/Stelligen/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_target_enumeration_20260802/`。
 - 结果统计：9 indications、36 endpoint rows、41 targets、1,476 unranked pairs、6 opposing-evidence rows。
-- 当前结果审核分支：`task_20260802_crc-target-enumeration-results`；结果审核 PR 尚未创建。
+- 当前结果审核分支：`task_20260802_crc-target-enumeration-results`；结果审核 PR：[PR #29](https://github.com/leezx/StelligenOS/pull/29)，当前审计提交为 `5cae0e6`。
 - ChatGPT `APPROVE` 前不得执行外部文献/公共数据枚举。
 - 运行结果完成后必须另行提交结果审核 PR。
 
@@ -46,10 +46,8 @@ ChatGPT Round 2 已返回 `APPROVE`，明确允许开始外部 CRC 文献/公共
 
 ## 下一步
 
-1. 验证仓库边界、外部结果完整性和文档 diff。
-2. 显式提交、推送并创建独立结果审核 PR。
-3. 在 `GitHub PR 信息` 对话中提交结果审核指令。
-4. 只根据 ChatGPT 反馈在同一结果 PR 修订，直到明确 `APPROVE`；批准前不进行 Gate 评分、排序或下一阶段。
+1. 在 `GitHub PR 信息` 对话中提交 PR #29 结果审核指令。
+2. 只根据 ChatGPT 反馈在同一结果 PR 修订，直到明确 `APPROVE`；批准前不进行 Gate 评分、排序或下一阶段。
 
 ## 数据边界声明
 

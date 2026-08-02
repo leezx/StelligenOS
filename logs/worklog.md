@@ -435,6 +435,13 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Verification: 外部输出文件完整；repo 工作区未出现数据文件；结果等待独立 PR 审核，批准前不进行 Gate 评分、排序或下一阶段。
 - Files affected: `docs/handoff/2026-08-02-crc-target-enumeration.zh-CN.md`, `logs/worklog.md`。
 
+### 2026-08-01 21:49 EDT
+
+- Action: 创建独立外部结果审核 PR #29。
+- How: 从已批准 contract 分支创建 `task_20260802_crc-target-enumeration-results`，显式提交并推送 `5cae0e6`；PR base 使用实际 contract 分支，不伪装为 `main`。
+- Result: PR #29 已创建并等待 ChatGPT 审核；handoff/worklog 只记录外部结果路径和审计状态，不携带任何数据文件。
+- Next: 将 PR #29 的 diff、外部运行报告摘要和边界约束提交 ChatGPT；只有明确 `APPROVE` 后才进入 target-level evidence extraction。
+
 ### 2026-08-01 18:31 EDT
 
 - Action: 完成 PR #21 migration log 修复后的 ChatGPT 最终 metadata-only 复核，并补齐审核记录。
