@@ -2,7 +2,7 @@
 
 - 任务编号：`task_20260802_crc-target-evidence-expert-review-preparation`
 - 前置契约：PR #34，ChatGPT `APPROVE`
-- 当前状态：`EXPERT_REVIEW_ASSIGNMENT_READY_PENDING_REAL_EXPERT`
+- 当前状态：`PREPARATION_APPROVED_PENDING_REAL_EXPERT`
 - 外部输出：`/Volumes/Stelligen_SSD/Stelligen/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_target_evidence_expert_review_20260802T025442Z/`
 
 ## 已完成
@@ -22,5 +22,4 @@
 
 - 工作包只写入外部 `DATA`，不复制到 `StelligenOS`。
 - 不执行 Gate scoring、ranking、asset recommendation、pair generation 或 downstream development。
-- 获得真实专家复核结果后，必须创建独立结果审核 PR；在该 PR 获 ChatGPT `APPROVE` 前不得进入下一阶段。
-
+- PR #35 已获 ChatGPT `APPROVE`。获得真实专家复核结果后，必须创建独立结果审核 PR；在该 PR 获 ChatGPT `APPROVE` 前不得进入下一阶段。
