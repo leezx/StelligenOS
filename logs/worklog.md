@@ -147,6 +147,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 这是 ChatGPT provisional review，不是人类专家签字；未执行 Gate scoring、ranking、pair generation、recommendation 或 downstream development；结果只在外部 DATA。
 - Next: 提交 Batch 002 独立结果审核 PR 给 ChatGPT，未获 `APPROVE` 前不得进入任何 Gate 或下游使用。
 
+### 2026-08-02 16:07 EDT
+
+- Action: 按用户要求编写 StelligenOS 当前总架构与模块核心设计逻辑的专家审核版说明。
+- How: 以当前 architecture contract、lifecycle、core objects、45-Gate contract、capability ports、六个 GenModule README、CRC evidence handoff 和当前代码为事实来源；区分已实现、已运行、正在审核和尚未执行状态。
+- Scope: 仅新增架构说明文档和本 worklog；未修改代码、合同、Gate、Model、Profile、模块行为、外部数据或运行结果。
+- Output: `docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md`。
+- Boundary: 文档明确 CRC 292 条 evidence 仍在 provisional review，尚未执行 Gate scoring、T12、pair ranking/recommendation 或 asset generation。
+
 ### 2026-08-02 16:11 EDT
 
 - Action: 完成 PR #41 Batch 002 结果审核的 base 修复与 ChatGPT 复审。
