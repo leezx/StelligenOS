@@ -6,7 +6,7 @@
 - 分支：`task_20260802_crc-target-evidence-extraction`
 - 基线：`task_20260802_crc-target-enumeration-results`，前置结果审核已获批准
 - 前置结果审核：PR #29，ChatGPT `APPROVE`
-- 当前状态：`CONTRACT_APPROVED_EXTERNAL_RUN_AUTHORIZED`
+- 当前状态：`RESULT_REVIEW_APPROVED_MANUAL_REVIEW_AUTHORIZED`
 - 当前 tip：以 PR 页面实时 HEAD 为准；本 handoff 的自引用后续提交不预先自列
 - ChatGPT 审核：PR #30，明确 `APPROVE`；允许开始外部 target-level evidence extraction
 - 外部运行：已完成，等待独立结果审核 PR
@@ -34,6 +34,7 @@
 - 边界验证：`scripts/verify_repository_boundary.sh` 通过；仓库未新增数据、cache、数据库、结果表或模型权重。
 - 运行限制：未执行 Gate 评分、排序、资产推荐，未扩展 indication/endpoint/pair。
 - 审核状态：所有 evidence units 标记为 `machine_extracted_requires_human_review`；结果必须先经独立 PR 审核。
+- 结果审核：PR #31 Round 2 获 ChatGPT `APPROVE`；仅授权对外部 evidence units 做人工复核/整理。
 
 ## 外部结果可审计元数据
 
@@ -50,3 +51,5 @@
 | `external_run_worklog.md` | Markdown | 外部运行步骤和门禁记录 | `b2eaa60fe528ba01f5b016e51fb0fa6eab9924ac15b75795a8dda071fd16420d` |
 
 统计校验：`target_evidence_units.tsv` 292 行 = supporting 88 + opposing 32 + unknown 172；`target_evidence_summary.tsv` 41 行，按行计数合计 supporting 88、opposing 32、unknown 172；`target_opposing_evidence.tsv` 与 `target_unknowns.tsv` 分别为 32/172 行。所有 summary 行的 `gate_score_status=not_executed`、`gate_pass_status=not_assessed`。
+
+ChatGPT 结果审核结论：Round 1 的可审计元数据阻断已修复，PR #31 获 `APPROVE`。下一步只能做 evidence units 人工复核/整理；Gate 评分、排序、资产推荐和下游开发仍未授权。
