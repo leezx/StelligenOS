@@ -533,6 +533,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 未修改 evidence，未生成 provisional review，未执行 Gate scoring、ranking、pair generation 或 recommendation。
 - Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-chatgpt-expert-review-batch-upload-test-final.md`。
 
+### 2026-08-01 23:45 EDT
+
+- Action: 通过全新网页版 ChatGPT 对话，以纯文本发送 Batch 001 的 20 条精简 evidence（evidence_id、target、dimension、direction、strength、statement），避免文件上传限制和历史会话上下文干扰。
+- Result: ChatGPT 返回 20 条逐条 provisional review：retain=17、downgrade=2、conflict_queue=1；targets=3。发现初始 summary 计数错误后，要求 ChatGPT 重算并确认 row-level 结果，未修改任何逐条决定。
+- Output: 外部 `batch_001_chatgpt_provisional_review.tsv`、report 和 reconciliation 文件；未向 StelligenOS 写入数据。
+- Boundary: 结果明确标记为 `chatgpt_provisional_review`，不是人类专家签字；未执行 Gate scoring、ranking、pair generation、recommendation 或 downstream development。
+- Next: 创建独立 Batch 001 结果审核 PR；获 ChatGPT `APPROVE` 后再处理 Batch 002。
+
 ### 2026-08-01 21:45 EDT
 
 - Action: 完成 ChatGPT 批准后的外部 CRC indication/endpoint/target 枚举运行。
