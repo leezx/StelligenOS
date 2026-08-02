@@ -13,7 +13,7 @@
 - PR status observed: `OPEN / READY_FOR_REVIEW`; GitHub mergeability was still recalculating.
 - Latest PR tip observed after Ready-for-review push: `66ea509`
 - PR status confirmed: `OPEN / READY_FOR_REVIEW / MERGEABLE`.
-- 当前状态：`PENDING_CHATGPT_APPROVAL`
+- 当前状态：`APPROVED_WAITING_HUMAN_MERGE`
 
 The PR page is the live authority for the final HEAD. This handoff cannot self-reference the commit that updates it; the latest observed tip and status above are the pre-commit audit snapshot.
 - 时间：`2026-08-01 America/New_York`
@@ -59,7 +59,7 @@ ChatGPT 对 PR #27 当前 tip `3c9ba6c` 再次返回 `REQUEST_CHANGES`，Round 1
 1. 已在同一 PR 移除不属于治理范围的产品文档，补齐 PR 描述、handoff 和 worklog。
 2. 修订 commit `282c713` 已推送；PR 描述已同步，PR 页面实时 HEAD 为唯一权威。
 3. 通过 GitHub 插件把 PR 完整 diff、协议、handoff、worklog 和验证结果再次交给 ChatGPT 审核。
-4. 若仍为 `REQUEST_CHANGES`，继续留在同一 PR 修订；只有 `APPROVE` 后才由负责人决定 merge。
+4. ChatGPT 已返回 `APPROVE`；由负责人决定是否合并 PR #27，Codex 不自动合并。
 
 ## 数据边界声明
 
