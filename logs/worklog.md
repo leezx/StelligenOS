@@ -122,6 +122,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Files affected:
   - `logs/worklog.md`
 
+### 2026-08-01 23:27 EDT
+
+- Action: 获取 ChatGPT 对 CRC provisional evidence review Batch 001 结果 PR #40 的最终审核。
+- How: 通过网页版 ChatGPT 的 GitHub source 审核 PR #40 的 handoff/worklog 审计元数据；ChatGPT 核对 20/20 条、3 targets、reconciled `retain=17`/`downgrade=2`/`conflict_queue=1`，并确认 provisional、data-free 和未执行 Gate 等边界。
+- Result: ChatGPT 明确返回 `APPROVE`，接受 Batch 001 为 provisional evidence package，并授权继续处理 Batch 002。
+- Restrictions: `conflict_queue=1` 仍然阻断 Gate；本批准不授权 Gate scoring、ranking、pair generation、recommendation 或 downstream development；后续每个 batch 仍需独立结果审核 PR 和 ChatGPT `APPROVE`。
+- Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-chatgpt-provisional-review-batch001-results-final.md`，更新 Batch 001 handoff 状态。
+
 ### 2026-08-01 19:11 EDT
 
 - Action: 通过 Chrome 中“GitHub PR 信息”ChatGPT 对话提交并完成 Phase 9 审核。
