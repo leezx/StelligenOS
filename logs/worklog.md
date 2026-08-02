@@ -1486,6 +1486,19 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/tasks/CRC_TARGET_ENUMERATION_REQUEST.zh-CN.md`
   - `docs/handoff/2026-08-02-crc-target-enumeration.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-01 21:28 EDT
+
+- Action: 创建 CRC 全靶点枚举执行契约 PR #28。
+- How: 显式提交 commit `f4ecbe5` 并推送分支 `task_20260802_crc-target-enumeration`；PR #28 指向实际包含 PR #27 的 `task_20260801_gen-iet-phase8-external-pilot`，PR 描述明确写明该基线事实、contract-only 范围、data-free 边界和 ChatGPT 审核门。
+- Result: PR #28 已创建并保持 `OPEN / READY_FOR_REVIEW`，当前审核 tip 为 `f4ecbe5`。新增 handoff PR 链接、tip 快照和实时 PR 权威说明。
+- Boundary: 未抓取文献、未读取公共数据、未运行分析、未生成 pair、未写入外部结果；临时 PR body 文件已删除。
+- Next: 将 PR #28 的完整 diff、契约、handoff、worklog 和验证结果提交 ChatGPT 审核；在 `APPROVE` 前不执行外部枚举。
+- Files affected:
+  - `docs/tasks/CRC_TARGET_ENUMERATION_REQUEST.zh-CN.md`
+  - `docs/handoff/2026-08-02-crc-target-enumeration.zh-CN.md`
+  - `logs/worklog.md`
+  - External PR: `https://github.com/leezx/StelligenOS/pull/28`
 - Files affected:
   - `AGENTS.md`
   - `ChatGPT-Codex-talk.md`

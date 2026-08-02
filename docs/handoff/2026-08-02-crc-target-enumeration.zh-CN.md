@@ -5,6 +5,8 @@
 - 任务编号：`task_20260802_crc-target-enumeration`
 - 分支：`task_20260802_crc-target-enumeration`
 - 基线：`origin/task_20260801_gen-iet-phase8-external-pilot`
+- PR：https://github.com/leezx/StelligenOS/pull/28
+- Review tip at PR creation: `f4ecbe5`
 - 说明：PR #27 已合并到该基线分支；`origin/main` 尚未包含 PR #27，因此本任务暂以实际已合并治理基线为 base，不伪装为 main 已同步。
 - 当前状态：`PENDING_CHATGPT_APPROVAL`
 - 时间：`2026-08-01 America/New_York`
@@ -31,6 +33,8 @@
 - 待创建并推送 PR，提交 ChatGPT 审核。
 - ChatGPT `APPROVE` 前不得执行外部文献/公共数据枚举。
 - 运行结果完成后必须另行提交结果审核 PR。
+
+PR 页面是当前分支 tip 和 aggregate diff 的实时权威；本 handoff 的 PR 创建 tip 是审核快照，不自引用后续更新本 handoff 的提交。
 
 ## 下一步
 
