@@ -138,6 +138,15 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 仅准备纯文本 provisional review 输入；未执行 Gate scoring、ranking、pair generation、recommendation 或 downstream development。
 - Next: 将 Batch 002 compact payload 发送 ChatGPT，保存外部结果并为结果审核建立独立 PR。
 
+### 2026-08-01 23:34 EDT
+
+- Action: 通过网页版 ChatGPT 以纯文本提交 CRC target evidence provisional review Batch 002。
+- How: 在无 GitHub source 依赖的独立 ChatGPT 对话中发送 20 条 compact TSV；要求按原顺序逐条输出 decision 和一句话理由，禁止 Gate scoring、ranking、pair generation、recommendation 和 downstream development。
+- Result: ChatGPT 输出 20/20 条、4 targets（CEACAM5、EGFR、ERBB2、ERBB3）；SUMMARY 为 `retain=19`、`downgrade=1`、`reclassify_unknown=0`、`conflict_queue=0`、`source_not_verified=0`。
+- Validation: 本地 awk 逐条计数与 ChatGPT SUMMARY 一致；结果文件 SHA-256=`030b45ecfdf18e611e33307c43b6d917b50e26d63d6d46ad8a7eec813e0975d6`。
+- Boundary: 这是 ChatGPT provisional review，不是人类专家签字；未执行 Gate scoring、ranking、pair generation、recommendation 或 downstream development；结果只在外部 DATA。
+- Next: 提交 Batch 002 独立结果审核 PR 给 ChatGPT，未获 `APPROVE` 前不得进入任何 Gate 或下游使用。
+
 ### 2026-08-01 19:11 EDT
 
 - Action: 通过 Chrome 中“GitHub PR 信息”ChatGPT 对话提交并完成 Phase 9 审核。
