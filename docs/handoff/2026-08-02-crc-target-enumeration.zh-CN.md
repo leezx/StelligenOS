@@ -9,7 +9,7 @@
 - Review tip at PR creation: `f4ecbe5`
 - Latest PR tip observed for review: `2f1c17b`
 - 说明：PR #27 已合并到该基线分支；`origin/main` 尚未包含 PR #27，因此本任务暂以实际已合并治理基线为 base，不伪装为 main 已同步。
-- 当前状态：`PENDING_CHATGPT_APPROVAL`
+- 当前状态：`APPROVED_EXTERNAL_RUN_AUTHORIZED`
 - 时间：`2026-08-01 America/New_York`
 
 ## 本次改动
@@ -37,6 +37,8 @@
 - 运行结果完成后必须另行提交结果审核 PR。
 
 PR 页面是当前分支 tip 和 aggregate diff 的实时权威；本 handoff 的 PR 创建 tip 是审核快照，不自引用后续更新本 handoff 的提交。
+
+ChatGPT Round 2 已返回 `APPROVE`，明确允许开始外部 CRC 文献/公共数据枚举；运行只能写入指定外部 `DATA` 目录，完成后必须提交独立结果审核 PR。
 
 ## 下一步
 

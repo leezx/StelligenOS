@@ -1511,6 +1511,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/tasks/CRC_TARGET_ENUMERATION_REQUEST.zh-CN.md`
   - `docs/handoff/2026-08-02-crc-target-enumeration.zh-CN.md`
   - `logs/chatgpt-review-2026-08-02-crc-target-enumeration-round1.md`
+
+### 2026-08-01 21:33 EDT
+
+- Action: 获取 PR #28 的 ChatGPT Round 2 `APPROVE`，获得外部 CRC 枚举运行授权。
+- How: 在同一 `GitHub PR 信息` 对话中提交 PR #28 最新 tip `41ac89e` 的复审；ChatGPT 确认 Round 1 元数据阻断已修复，PR 为 `OPEN / MERGEABLE`，contract-only、data-free，实际 base 和运行门禁一致。
+- Result: ChatGPT 明确允许开始外部 CRC 文献/公共数据枚举，但限定所有输入、缓存、处理结果和报告只能写入指定外部 `DATA`，运行完成后必须通过独立结果审核 PR。
+- Action taken: 保存最终批准记录并将 CRC 任务 handoff 状态更新为 `APPROVED_EXTERNAL_RUN_AUTHORIZED`；下一步开始外部枚举，不向 StelligenOS 写入数据。
+- Files affected:
+  - `docs/handoff/2026-08-02-crc-target-enumeration.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-02-crc-target-enumeration-final.md`
+  - `logs/worklog.md`
   - `logs/worklog.md`
 - Files affected:
   - `AGENTS.md`
