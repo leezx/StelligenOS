@@ -45,7 +45,20 @@
 
 充分性判定方向中立：`max(独立支持, 独立反对) >= min_independent_evidence`。两个方向不相加，裁决不携带方向也不携带 pass/fail 信号。
 
-授权与裁决分离：`actionable = (verdict == SUFFICIENT) AND (calibration_status == expert_calibrated)`。`DEFAULT_SUFFICIENCY_BASELINES` 的阈值来自外部专家建议值，标记为 `proposed_baseline_requires_expert_calibration`，据此求值的裁决 `actionable` 恒为 `False`。
+授权与裁决分离。能否据此进入 Gate 评分只看 `actionable`，它要求四个条件同时成立：
+
+```
+actionable = (verdict == SUFFICIENT)
+         AND (calibration_status == expert_calibrated)
+         AND (governance_status == governed)
+         AND (EXTENSION_STATUS == governed)
+```
+
+三道门互不替代：充分性由求值给出，校准由领域专家给出（阈值是否可信），治理由独立 PR 与 ChatGPT `APPROVE` 给出（是否允许投入使用）。`EXTENSION_STATUS` 镜像 `extension.yaml` 的 `status`，是最外层硬性上限。
+
+`DEFAULT_SUFFICIENCY_BASELINES` 的阈值来自外部专家建议值，标记为 `proposed_baseline_requires_expert_calibration`，据此求值的裁决 `actionable` 恒为 `False`。又因 EXT-04 自身为 `active_design`，**当前任何裁决的 `actionable` 都必然为 `False`**，即使合同已校准且已治理。
+
+`StopDecision` 用一条双向约束强制 `actionable` 恰好等于上述合取，因此既不能伪造 `actionable=True`，也不能在门全开时隐藏 `actionable=False` 规避审计。
 
 ### 3. 二级风险登记
 
@@ -62,7 +75,9 @@
 
 ## Round 1 `REQUEST_CHANGES` 与修订
 
-ChatGPT 对 HEAD `9f7b946` 返回 `REQUEST_CHANGES`，五条阻断经逐条核实全部成立，已在同一 PR 内做最小修订：
+ChatGPT 对 HEAD `9f7b946` 返回 `REQUEST_CHANGES`，五条阻断经逐条核实全部成立，已在同一 PR 内做最小修订。
+
+> 以下表格记录的是 **Round 1 当时的修订内容**，其中第 1 条的 `actionable` 公式（仅 `SUFFICIENT` + `EXPERT_CALIBRATED`）已在 Round 2 被取代为四条件合取。当前状态见「本次改动」小节与「Round 2 `REQUEST_CHANGES` 与修订」。
 
 | # | 阻断 | 核实结果 | 修订 |
 |---|---|---|---|
@@ -146,8 +161,10 @@ Round 1 与 Round 2 的数字已被本轮修订取代。测试数随每轮回归
 
 ## 下一步
 
-- 推送分支并创建 PR，提交 ChatGPT 审核。
+- PR #43 已创建并推送，当前处于 Round 3 复审。Round 1 五条与 Round 2 两条阻断均已在同一 PR 内修订完毕；Round 3 反馈的三处元数据冲突（PR 描述的 `.claude` allowlist 表述、本文件的旧 `actionable` 公式、本节的过期「创建 PR」表述）已同步，未改动代码。
+- 提交 ChatGPT 最终审核。
 - 在获得 `APPROVE` 前，不得把任何扩展从 `shell_only`/`active_design` 提升为 `governed`，不得开始 `EXT-04` 的逐 Gate 阈值实例化，也不得继续 CRC 批次审核以外的工作。
+- 获得 `APPROVE` 后由人类负责人决定 merge 或打回；merge 目标为本 PR 的 base 分支 `task_20260802_current-architecture-expert-review-doc`，最终并入 `main` 仍取决于 PR #42 的合并。
 
 ## 数据边界声明
 

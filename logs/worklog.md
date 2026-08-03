@@ -1860,3 +1860,15 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 修订仍限于 `extensions/stop_rule/`、`tests/test_stop_rule_extension.py`、handoff 与 worklog；未改内核、未改 Gate 拓扑、未改三个 shell_only 扩展、未扩大范围、未另起分支；没有任何扩展被提升为 `governed`。
 - Validation: 23 个测试模块全部 OK，共 128 项（stop_rule 由 34 增至 40）；`scripts/verify_repository_boundary.sh` 通过；`bash tests/test_git_sync.sh` A-D 通过；`git diff --check` 通过。
 - Next: 推送同一 PR #43 并重新提交 ChatGPT 复审。
+
+### 2026-08-03 12:20 EDT
+
+- Action: 处理 ChatGPT 对 PR #43 的 Round 3 `REQUEST_CHANGES`，三处元数据冲突同步，按要求不改代码。
+- Verification of blockers: (1) PR 描述第 45 行确实写「allowlist 新增 `extensions` 与 `.claude`」，与代码实际的精确豁免相反 —— 成立；(2) handoff「本次改动」第 48 行确实仍写旧公式 `SUFFICIENT + expert_calibrated` —— 成立；(3) handoff「下一步」确实仍写「推送分支并创建 PR」，而 PR #43 已存在且在 Round 3 复审 —— 成立。三条均无需 pushback。
+- Change: PR 描述改为「allowlist 新增 `extensions`；`.claude` 不进 allowlist，改为精确豁免 `.claude/settings.local.json` 单条路径，其他内容仍判违规，`.claude` 为文件时不豁免」。
+- Change: handoff「本次改动」的 `actionable` 公式更新为四条件合取（`SUFFICIENT` + `expert_calibrated` + 合同 `governed` + `EXTENSION_STATUS == governed`），并补充三门语义、当前 `actionable` 恒为 `False` 的结论，以及双向约束说明。
+- Change: handoff「下一步」更新为 PR #43 已创建、当前 Round 3 复审、三处元数据已同步、merge 目标为 base 分支 `task_20260802_current-architecture-expert-review-doc`。
+- Change: 在 Round 1 修订表上方加注，声明该表记录的是 Round 1 当时内容，其 `actionable` 公式已在 Round 2 被取代，避免历史记录被误读为当前状态。
+- Boundary: 本轮**未改动任何代码、测试、契约或脚本**，仅同步 PR 描述、handoff 与 worklog 文本；HEAD 代码与 Round 3 审核确认通过的 `ed61fc0` 一致。
+- Validation: 23 个测试模块全部 OK，共 128 项；`scripts/verify_repository_boundary.sh` 通过；`bash tests/test_git_sync.sh` A-D 通过；`git diff --check` 通过；元数据与代码一致性经 grep 交叉核对。
+- Next: 提交 ChatGPT 最终审核。`APPROVE` 前不得提升扩展状态或开始逐 Gate 阈值实例化。
