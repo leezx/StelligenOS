@@ -1,298 +1,270 @@
 from __future__ import annotations
 
 import json
-import os
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest import mock
 
+from src.repository import external_runtime
 from src.repository.external_runtime import (
-    INHERITED_ENVIRONMENT_KEYS,
+    ExternalRuntimePort,
     ExternalRuntimeRequest,
-    RepositoryMutationError,
-    SubprocessExternalRuntime,
+    ExternalRuntimeResult,
 )
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+MODULE_SOURCE = (REPO_ROOT / "src" / "repository" / "external_runtime.py").read_text()
+CLI_SOURCE = (REPO_ROOT / "scripts" / "run_external_runtime.py").read_text()
 
 
-class ExternalRuntimeTestCase(unittest.TestCase):
-    def _request(
-        self, workspace: Path, output_root: Path, **overrides: object
-    ) -> ExternalRuntimeRequest:
-        values: dict[str, object] = {
-            "runtime_ref": "external:assetgenos/runtime",
-            "command": (sys.executable, "-c", "raise SystemExit(0)"),
-            "workspace_path": str(workspace),
-            "output_root_path": str(output_root),
-            "input_ref": "external:inputs/smoke",
-            "run_context_ref": "external:runs/smoke",
-            "output_ref": "external:outputs/smoke",
-            "sandbox_profile_ref": "external:sandbox/profiles/assetgenos",
-            "execution_enabled": True,
-        }
-        values.update(overrides)
-        return ExternalRuntimeRequest(**values)  # type: ignore[arg-type]
+def _request(**overrides: object) -> ExternalRuntimeRequest:
+    values: dict[str, object] = {
+        "runtime_ref": "external:assetgenos/runtime",
+        "command": ("adc-factory", "v2", "evaluate"),
+        "workspace_path": tempfile.gettempdir(),
+        "output_root_path": tempfile.gettempdir(),
+        "input_ref": "external:inputs/smoke",
+        "run_context_ref": "external:runs/smoke",
+        "output_ref": "external:outputs/smoke",
+        "sandbox_profile_ref": "external:sandbox/profiles/assetgenos",
+    }
+    values.update(overrides)
+    return ExternalRuntimeRequest(**values)  # type: ignore[arg-type]
 
 
-class ExternalRuntimeTests(ExternalRuntimeTestCase):
-    def test_execution_is_disabled_by_default(self) -> None:
-        with tempfile.TemporaryDirectory() as workspace, tempfile.TemporaryDirectory() as output:
-            request = self._request(
-                Path(workspace), Path(output), execution_enabled=False
-            )
-            with self.assertRaises(PermissionError):
-                SubprocessExternalRuntime().run(request)
-
-    def test_external_command_runs_without_repository_output(self) -> None:
-        with tempfile.TemporaryDirectory() as workspace, tempfile.TemporaryDirectory() as output:
-            result = SubprocessExternalRuntime().run(
-                self._request(Path(workspace), Path(output))
-            )
-            self.assertEqual(result.status, "completed")
-            self.assertEqual(result.exit_code, 0)
-            self.assertEqual(list(Path(workspace).iterdir()), [])
-            self.assertEqual(list(Path(output).iterdir()), [])
-
-    def test_failing_command_is_reported_not_raised(self) -> None:
-        with tempfile.TemporaryDirectory() as workspace, tempfile.TemporaryDirectory() as output:
-            result = SubprocessExternalRuntime().run(
-                self._request(
-                    Path(workspace),
-                    Path(output),
-                    command=(sys.executable, "-c", "raise SystemExit(3)"),
-                )
-            )
-            self.assertEqual(result.status, "failed")
-            self.assertEqual(result.exit_code, 3)
-
-    def test_result_records_the_sandbox_attestation(self) -> None:
-        with tempfile.TemporaryDirectory() as workspace, tempfile.TemporaryDirectory() as output:
-            result = SubprocessExternalRuntime().run(
-                self._request(Path(workspace), Path(output))
-            )
-            self.assertEqual(
-                result.sandbox_profile_ref, "external:sandbox/profiles/assetgenos"
-            )
+def _result(**overrides: object) -> ExternalRuntimeResult:
+    values: dict[str, object] = {
+        "runtime_ref": "external:assetgenos/runtime",
+        "run_context_ref": "external:runs/smoke",
+        "output_ref": "external:outputs/smoke",
+        "sandbox_profile_ref": "external:sandbox/profiles/assetgenos",
+        "status": "completed",
+        "exit_code": 0,
+    }
+    values.update(overrides)
+    return ExternalRuntimeResult(**values)  # type: ignore[arg-type]
 
 
-class RepositoryPathRejectionTests(ExternalRuntimeTestCase):
-    def test_repository_paths_are_rejected(self) -> None:
-        with self.assertRaises(ValueError):
-            self._request(REPO_ROOT, Path(tempfile.gettempdir()))
+class NoExecutionCapabilityTests(unittest.TestCase):
+    """This module is contracts only; execution must not come back.
 
-    def test_repository_subdirectory_paths_are_rejected(self) -> None:
-        for field, value in (
-            ("workspace_path", str(REPO_ROOT / "logs")),
-            ("output_root_path", str(REPO_ROOT / "docs")),
-        ):
-            with self.subTest(field=field):
-                with tempfile.TemporaryDirectory() as other:
-                    with self.assertRaises(ValueError):
-                        self._request(Path(other), Path(other), **{field: value})
-
-    def test_output_root_must_be_a_directory(self) -> None:
-        """A file, or a path that does not exist, is not an output root."""
-        with tempfile.TemporaryDirectory() as workspace, tempfile.TemporaryDirectory() as output:
-            as_file = Path(output) / "not-a-directory"
-            as_file.write_text("")
-            with self.assertRaises(NotADirectoryError):
-                SubprocessExternalRuntime().run(
-                    self._request(
-                        Path(workspace), Path(output), output_root_path=str(as_file)
-                    )
-                )
-            missing = Path(output) / "absent"
-            with self.assertRaises(NotADirectoryError):
-                SubprocessExternalRuntime().run(
-                    self._request(
-                        Path(workspace), Path(output), output_root_path=str(missing)
-                    )
-                )
-
-    def test_workspace_must_be_a_directory(self) -> None:
-        with tempfile.TemporaryDirectory() as workspace, tempfile.TemporaryDirectory() as output:
-            as_file = Path(workspace) / "not-a-directory"
-            as_file.write_text("")
-            with self.assertRaises(NotADirectoryError):
-                SubprocessExternalRuntime().run(
-                    self._request(
-                        Path(workspace), Path(output), workspace_path=str(as_file)
-                    )
-                )
-
-
-class SandboxAttestationTests(ExternalRuntimeTestCase):
-    """Path checks are not write isolation, so isolation must be attested."""
-
-    def test_sandbox_profile_ref_is_required(self) -> None:
-        with tempfile.TemporaryDirectory() as workspace:
-            with self.assertRaises(TypeError):
-                ExternalRuntimeRequest(  # type: ignore[call-arg]
-                    runtime_ref="external:assetgenos/runtime",
-                    command=(sys.executable, "-c", "pass"),
-                    workspace_path=workspace,
-                    output_root_path=workspace,
-                    input_ref="external:inputs/smoke",
-                    run_context_ref="external:runs/smoke",
-                    output_ref="external:outputs/smoke",
-                )
-
-    def test_sandbox_profile_ref_must_be_external(self) -> None:
-        with tempfile.TemporaryDirectory() as workspace:
-            with self.assertRaises(ValueError):
-                self._request(
-                    Path(workspace),
-                    Path(workspace),
-                    sandbox_profile_ref="local/sandbox",
-                )
-
-
-class RepositoryMutationDetectionTests(ExternalRuntimeTestCase):
-    """The boundary must fail loudly when a command writes into the repository.
-
-    Detection, not prevention: an arbitrary child can always name an absolute
-    path. What must not happen is that the write goes unnoticed.
+    The removed ``SubprocessExternalRuntime`` could not isolate the command it
+    ran: writes into ``.git/`` were excluded from its fingerprint, a write could
+    be reverted before exit to defeat the after-the-fact comparison, and nothing
+    stopped the command reading host credentials. These assertions exist so that
+    executor cannot be reintroduced without failing the suite.
     """
 
-    def test_command_writing_into_the_repository_is_detected(self) -> None:
-        target = REPO_ROOT / "external-runtime-boundary-probe.txt"
-        self.addCleanup(target.unlink, missing_ok=True)
-        with tempfile.TemporaryDirectory() as workspace, tempfile.TemporaryDirectory() as output:
-            request = self._request(
-                Path(workspace),
-                Path(output),
-                command=(
-                    sys.executable,
-                    "-c",
-                    f"open({str(target)!r}, 'w').write('escaped')",
-                ),
-            )
-            with self.assertRaises(RepositoryMutationError) as caught:
-                SubprocessExternalRuntime().run(request)
-            self.assertIn("external-runtime-boundary-probe.txt", str(caught.exception))
-            self.assertIn("created", str(caught.exception))
+    def test_module_exposes_no_runtime_implementation(self) -> None:
+        self.assertFalse(
+            hasattr(external_runtime, "SubprocessExternalRuntime"),
+            "the in-repository executor must not be reintroduced",
+        )
 
-    def test_command_modifying_a_repository_file_is_detected(self) -> None:
-        target = REPO_ROOT / "logs" / "worklog.md"
-        original = target.read_bytes()
-        self.addCleanup(target.write_bytes, original)
-        with tempfile.TemporaryDirectory() as workspace, tempfile.TemporaryDirectory() as output:
-            request = self._request(
-                Path(workspace),
-                Path(output),
-                command=(
-                    sys.executable,
-                    "-c",
-                    f"open({str(target)!r}, 'a').write('tampered')",
-                ),
-            )
-            with self.assertRaises(RepositoryMutationError) as caught:
-                SubprocessExternalRuntime().run(request)
-            self.assertIn("modified", str(caught.exception))
+    def test_module_does_not_import_process_or_hashing_machinery(self) -> None:
+        for forbidden in ("import subprocess", "import os", "import hashlib"):
+            with self.subTest(statement=forbidden):
+                self.assertNotIn(forbidden, MODULE_SOURCE)
 
-    def test_clean_run_reports_no_mutation(self) -> None:
-        with tempfile.TemporaryDirectory() as workspace, tempfile.TemporaryDirectory() as output:
-            result = SubprocessExternalRuntime().run(
-                self._request(
-                    Path(workspace),
-                    Path(output),
-                    command=(
-                        sys.executable,
-                        "-c",
-                        "import os; open(os.path.join(os.environ['STELLIGEN_OUTPUT_ROOT'], 'ok'), 'w').write('x')",
-                    ),
-                )
-            )
-            self.assertEqual(result.status, "completed")
-            self.assertEqual([p.name for p in Path(output).iterdir()], ["ok"])
+    def test_module_defines_no_repository_fingerprinting(self) -> None:
+        """Fingerprinting was detection, not prevention, and is gone with it."""
+        for removed in ("_repository_fingerprint", "RepositoryMutationError"):
+            with self.subTest(symbol=removed):
+                self.assertNotIn(removed, MODULE_SOURCE)
+                self.assertFalse(hasattr(external_runtime, removed))
 
-
-class EnvironmentIsolationTests(ExternalRuntimeTestCase):
-    """Sensitive parent environment must not reach the external command."""
-
-    def _captured_environment(self, extra_parent_env: dict[str, str]) -> dict[str, str]:
-        with tempfile.TemporaryDirectory() as workspace, tempfile.TemporaryDirectory() as output:
-            dump = Path(output) / "env.json"
-            request = self._request(
-                Path(workspace),
-                Path(output),
-                command=(
-                    sys.executable,
-                    "-c",
-                    f"import json, os; json.dump(dict(os.environ), open({str(dump)!r}, 'w'))",
-                ),
-            )
-            with mock.patch.dict(os.environ, extra_parent_env, clear=False):
-                result = SubprocessExternalRuntime().run(request)
-            self.assertEqual(result.status, "completed")
-            return json.loads(dump.read_text())
-
-    def test_credentials_are_not_inherited(self) -> None:
-        secrets = {
-            "AWS_SECRET_ACCESS_KEY": "must-not-leak",
-            "GITHUB_TOKEN": "must-not-leak",
-            "ANTHROPIC_API_KEY": "must-not-leak",
-            "OPENAI_API_KEY": "must-not-leak",
-            "SSH_AUTH_SOCK": "/must/not/leak",
+    def test_module_exports_only_contract_symbols(self) -> None:
+        public = {
+            name
+            for name in vars(external_runtime)
+            if not name.startswith("_") and name[0].isupper()
         }
-        child_env = self._captured_environment(secrets)
-        for key in secrets:
-            with self.subTest(variable=key):
-                self.assertNotIn(key, child_env)
-        self.assertNotIn("must-not-leak", "".join(child_env.values()))
-
-    def test_home_is_redirected_into_the_external_workspace(self) -> None:
-        """Inheriting HOME would expose ~/.ssh and ~/.aws."""
-        child_env = self._captured_environment({"HOME": "/parent/home"})
-        self.assertIn("HOME", child_env)
-        self.assertNotEqual(child_env["HOME"], "/parent/home")
-
-    @staticmethod
-    def _platform_injected_keys() -> set[str]:
-        """Variables the OS adds to any child, even when given an empty env.
-
-        macOS injects ``__CF_USER_TEXT_ENCODING``, ``SDKROOT`` and friends. Those
-        are not leaks, so the leak assertion is measured against this baseline
-        rather than against a hardcoded per-platform exclusion list.
-        """
-
-        probe = subprocess.run(
-            [sys.executable, "-c", "import json, os; print(json.dumps(dict(os.environ)))"],
-            env={},
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        return set(json.loads(probe.stdout))
-
-    def test_no_parent_variable_leaks_outside_the_allowlist(self) -> None:
-        child_env = self._captured_environment({"UNRELATED_PARENT_VAR": "nope"})
-        self.assertNotIn("UNRELATED_PARENT_VAR", child_env)
-        permitted = (
-            set(INHERITED_ENVIRONMENT_KEYS)
-            | {"HOME"}
-            | self._platform_injected_keys()
-        )
-        for key in child_env:
-            if key.startswith("STELLIGEN_"):
-                continue
-            with self.subTest(variable=key):
-                self.assertIn(key, permitted)
-
-    def test_run_context_is_passed_through_as_references(self) -> None:
-        child_env = self._captured_environment({})
         self.assertEqual(
-            child_env["STELLIGEN_SANDBOX_PROFILE_REF"],
+            public,
+            {
+                "ExternalRuntimeRequest",
+                "ExternalRuntimeResult",
+                "ExternalRuntimePort",
+                "REPO_ROOT",
+                "Path",
+                "Protocol",
+            },
+        )
+
+    def test_port_run_is_a_stub(self) -> None:
+        self.assertIsNone(
+            ExternalRuntimePort.run(None, _request())  # type: ignore[arg-type]
+        )
+
+    def test_cli_cannot_execute(self) -> None:
+        for forbidden in ("subprocess", "--execute", "execution_enabled"):
+            with self.subTest(token=forbidden):
+                self.assertNotIn(forbidden, CLI_SOURCE)
+
+
+class RequestContractTests(unittest.TestCase):
+    def test_all_reference_fields_must_be_external(self) -> None:
+        for field in (
+            "runtime_ref",
+            "input_ref",
+            "run_context_ref",
+            "output_ref",
+            "sandbox_profile_ref",
+        ):
+            for local_value in ("local/thing", "/tmp/thing", "./thing"):
+                with self.subTest(field=field, value=local_value):
+                    with self.assertRaises(ValueError):
+                        _request(**{field: local_value})
+
+    def test_sandbox_profile_ref_is_required(self) -> None:
+        with self.assertRaises(TypeError):
+            ExternalRuntimeRequest(  # type: ignore[call-arg]
+                runtime_ref="external:assetgenos/runtime",
+                command=("adc-factory",),
+                workspace_path=tempfile.gettempdir(),
+                output_root_path=tempfile.gettempdir(),
+                input_ref="external:inputs/smoke",
+                run_context_ref="external:runs/smoke",
+                output_ref="external:outputs/smoke",
+            )
+
+    def test_repository_paths_are_rejected(self) -> None:
+        for field, value in (
+            ("workspace_path", str(REPO_ROOT)),
+            ("workspace_path", str(REPO_ROOT / "logs")),
+            ("output_root_path", str(REPO_ROOT)),
+            ("output_root_path", str(REPO_ROOT / "docs")),
+        ):
+            with self.subTest(field=field, value=value):
+                with self.assertRaises(ValueError):
+                    _request(**{field: value})
+
+    def test_empty_command_is_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            _request(command=())
+
+    def test_timeout_must_be_positive(self) -> None:
+        for value in (0, -1):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    _request(timeout_seconds=value)
+
+    def test_conforming_request_is_accepted(self) -> None:
+        self.assertEqual(_request().timeout_seconds, 1800)
+
+
+class HandoverEnvelopeTests(unittest.TestCase):
+    def test_envelope_states_that_execution_is_external(self) -> None:
+        envelope = _request().envelope
+        self.assertEqual(envelope["executed_by"], "external_controlled_runtime")
+        self.assertIs(envelope["executed_in_repository"], False)
+
+    def test_envelope_carries_the_sandbox_requirement(self) -> None:
+        self.assertEqual(
+            _request().envelope["sandbox_profile_ref"],
             "external:sandbox/profiles/assetgenos",
         )
-        self.assertEqual(
-            child_env["STELLIGEN_RUNTIME_REF"], "external:assetgenos/runtime"
+
+    def test_envelope_is_json_serialisable(self) -> None:
+        self.assertIn("adc-factory", json.dumps(_request().envelope))
+
+
+class ResultContractTests(unittest.TestCase):
+    def test_all_reference_fields_must_be_external(self) -> None:
+        for field in (
+            "runtime_ref",
+            "run_context_ref",
+            "output_ref",
+            "sandbox_profile_ref",
+        ):
+            with self.subTest(field=field):
+                with self.assertRaises(ValueError):
+                    _result(**{field: "local/thing"})
+
+    def test_status_is_constrained(self) -> None:
+        for value in ("running", "ok", ""):
+            with self.subTest(status=value):
+                with self.assertRaises(ValueError):
+                    _result(status=value)
+        self.assertEqual(_result(status="failed", exit_code=3).exit_code, 3)
+
+
+class CliTests(unittest.TestCase):
+    def _run_cli(self, *extra: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [
+                sys.executable,
+                "scripts/run_external_runtime.py",
+                "--runtime-ref",
+                "external:assetgenos/runtime",
+                "--workspace-path",
+                tempfile.gettempdir(),
+                "--output-root-path",
+                tempfile.gettempdir(),
+                "--input-ref",
+                "external:inputs/smoke",
+                "--run-context-ref",
+                "external:runs/smoke",
+                "--output-ref",
+                "external:outputs/smoke",
+                *extra,
+                "--command",
+                "adc-factory",
+                "v2",
+                "evaluate",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            cwd=REPO_ROOT,
         )
+
+    def test_cli_prints_the_handover_envelope(self) -> None:
+        result = self._run_cli(
+            "--sandbox-profile-ref", "external:sandbox/profiles/assetgenos"
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        envelope = json.loads(result.stdout)
+        self.assertIs(envelope["executed_in_repository"], False)
+        self.assertEqual(envelope["command"], ["adc-factory", "v2", "evaluate"])
+
+    def test_cli_requires_a_sandbox_profile_ref(self) -> None:
+        result = self._run_cli()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("--sandbox-profile-ref", result.stderr)
+
+    def test_cli_rejects_a_repository_workspace(self) -> None:
+        result = subprocess.run(
+            [
+                sys.executable,
+                "scripts/run_external_runtime.py",
+                "--runtime-ref",
+                "external:assetgenos/runtime",
+                "--workspace-path",
+                str(REPO_ROOT),
+                "--output-root-path",
+                tempfile.gettempdir(),
+                "--input-ref",
+                "external:inputs/smoke",
+                "--run-context-ref",
+                "external:runs/smoke",
+                "--output-ref",
+                "external:outputs/smoke",
+                "--sandbox-profile-ref",
+                "external:sandbox/profiles/assetgenos",
+                "--command",
+                "adc-factory",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            cwd=REPO_ROOT,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("must be outside the StelligenOS repository", result.stderr)
 
 
 if __name__ == "__main__":

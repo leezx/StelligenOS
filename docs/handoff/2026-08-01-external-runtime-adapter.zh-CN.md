@@ -3,103 +3,98 @@
 - 任务编号：`task_20260801_external-runtime-adapter`
 - 分支：`task_20260801_external-runtime-adapter`
 - PR：**#17**（base 为 `task_20260801_os-boot-smoke`，即 PR #16 的 head）
-- 当前状态：`ROUND_1_REQUEST_CHANGES_ADDRESSED_PENDING_REVIEW`
-- 目标：为外部工作区拥有的 runtime 提供适配边界，使外部命令可被显式启用地调用，而输入、输出和数据全部留在仓库之外。
+- 当前状态：`ROUND_2_REQUEST_CHANGES_ADDRESSED_PENDING_REVIEW`
+- 任务性质：**contract-only**（Round 2 后已移除仓库内执行器）
+- 目标：为外部工作区拥有的 runtime 定义请求／结果信封与 Port 契约。**本仓库不执行任何命令**，执行由外部受控运行环境实现该 Port。
 - **HEAD 与 aggregate diff 的权威来源是 GitHub PR #17 的实时值**；本文件中的数字均为撰写时快照。
 
-本文件是 PR #17 的独立 handoff。此前该 PR 的内容被并入 `2026-08-01-os-boot-smoke.zh-CN.md`，导致 adapter 被描述为「未来步骤」，与实际流程状态不符。Round 1 审核将此列为阻断，已按要求拆出独立记录。
+本文件是 PR #17 的独立 handoff。此前该 PR 的内容被并入 `2026-08-01-os-boot-smoke.zh-CN.md`，导致 adapter 被描述为「未来步骤」，与实际流程状态不符。Round 1 审核将此列为阻断，已拆出独立记录。
 
 ## 依赖与阻断关系
 
 依赖顺序为 **#15 → #16 → #17**。本 PR 的 base 是 PR #16 的 head，因此 **#15 与 #16 依次获批并合并是本 PR 的前提**。
 
-## 已实现
+## 当前形态（Round 2 后）
 
-- `src/repository/external_runtime.py`
-  - `ExternalRuntimeRequest`／`ExternalRuntimeResult`／`ExternalRuntimePort` 契约。
-  - `SubprocessExternalRuntime`：仅在显式 `execution_enabled` 时运行外部命令。
-  - 强制 `runtime_ref`、`input_ref`、`run_context_ref`、`output_ref`、`sandbox_profile_ref` 为 `external:` 引用。
-  - 强制 `workspace_path` 与 `output_root_path` 位于仓库之外且必须是目录。
-  - 环境变量采用最小允许清单，不继承父进程环境。
-  - 运行前后对仓库做内容指纹比对，检测到变更即抛 `RepositoryMutationError`。
-- `scripts/run_external_runtime.py`
-  - 命令行入口，新增必填 `--sandbox-profile-ref`，仅在 `--execute` 时执行。
+- `src/repository/external_runtime.py` —— **纯契约，无执行能力**
+  - `ExternalRuntimeRequest`：强制 `runtime_ref`、`input_ref`、`run_context_ref`、`output_ref`、`sandbox_profile_ref` 为 `external:` 引用；`workspace_path` 与 `output_root_path` 必须位于仓库之外；命令非空；timeout 为正。
+  - `ExternalRuntimeRequest.envelope`：交给外部运行环境的交接载荷，显式声明 `executed_by: external_controlled_runtime` 与 `executed_in_repository: false`。
+  - `ExternalRuntimeResult`：状态受限于 `completed`／`failed`，全部引用必须外部。
+  - `ExternalRuntimePort`：Protocol，方法体为 `...`，由外部**具备真实隔离能力**的运行环境实现。
+- `scripts/run_external_runtime.py` —— **只校验并打印交接信封，不执行**
+  - 与 `scripts/boot_os.py` 同形态：校验契约后输出 JSON，不调用任何子进程。
+  - 已移除 `--execute` 与全部执行路径。
+
+契约校验在这里是**契约校验，不是安全控制**。它规定什么样的请求算合规；命令运行期间的隔离由实现方负责。
 
 ## Round 1 `REQUEST_CHANGES` 与修订
 
-ChatGPT 对 HEAD `17404dc` 返回 `REQUEST_CHANGES`，五条阻断（两条安全、三条其他）经核实全部成立。
+ChatGPT 对 HEAD `17404dc` 返回 `REQUEST_CHANGES`，五条阻断经核实全部成立：`os.environ.copy()` 泄漏凭据、`output_root` 只查 `exists()`、缺独立 handoff、测试未覆盖三类情形，以及「可执行任意命令、绝对路径仍可写回仓库」。
 
-### 安全阻断 1：可执行任意命令，绝对路径仍可写回仓库
+Round 1 的做法是保留执行器并加四层防护（显式启用、必填沙箱声明、环境允许清单、运行前后仓库指纹比对），同时把每层是预防还是检测写明。环境隔离、目录校验、独立 handoff 与测试扩充这几项在 Round 2 被确认为真实修复并保留至今；执行器相关的部分已在 Round 2 整体移除，详见下节。
 
-核实成立，且这是本 PR 最实质的问题。`_require_external_path` 只校验 `workspace_path` 与 `output_root_path`；命令本身是任意的，`python -c "open('<repo>/x','w')"` 可以直接写进 StelligenOS。而 `SubprocessExternalRuntime` 的 docstring 当时写的是「with no repository writes」——**这个保证从未被真正强制执行**，问题首先出在这个断言本身。
+其中一处实证修正值得保留记录：环境隔离测试初版断言「子进程环境键必须全在允许清单内」，实测失败于 `__CF_USER_TEXT_ENCODING`。经验证即使传 `env={}`，macOS 仍注入 `__CF_USER_TEXT_ENCODING`、`SDKROOT`、`CPATH`、`LIBRARY_PATH`、`MANPATH`、`LC_CTYPE`，属平台注入而非父进程泄漏。当时改为先探测平台基线再断言「无泄漏」。该测试随执行器一并移除，但这一判断方法在将来实现真正沙箱时仍适用。
 
-#### 一处技术判断：为什么没有引入容器沙箱
+## Round 2 `REQUEST_CHANGES` 与修订：降级为 contract-only
 
-审核建议「将命令放入仓库不可见或只读挂载的受控外部执行环境」。方向正确，但在本仓库内直接实现有几个硬性代价：
+Round 2 确认 Round 1 的环境隔离、目录校验、独立 handoff 与测试扩充均已真实修复，但指出仍有一个**实质性安全阻断**：`sandbox_profile_ref` 只是一个未经验证的字符串，`SubprocessExternalRuntime` 并未据此建立容器或只读挂载，仍然直接执行任意子进程。
 
-- 本仓库当前**没有任何依赖声明文件**，引入 Docker／podman／bubblewrap 会使其从纯契约仓库变成带容器运行时依赖的仓库。
-- 缺少容器运行时的环境（含 CI）将无法运行该测试。
-- 真正的写入隔离本质上属于**运行环境**的职责，不是一个 Python 适配器能提供的能力。进程内阻止任意子进程写盘在 Python 中无法可移植地做到。
+### 四条攻击路径，其中两条已实证复现
 
-因此本 PR 不伪造一个做不到的技术保证，改为分层处理，并把每一层的能力边界写清楚：
-
-| 层 | 内容 | 性质 |
-|---|---|---|
-| 1 | 未显式 `execution_enabled` 则不执行 | 预防 |
-| 2 | 必填 `sandbox_profile_ref`，声明命令运行于何种受控环境 | 治理／可审计。仓库无法验证该声明，因此只记录为外部引用，且缺失即拒绝执行 |
-| 3 | 环境变量最小允许清单 | 预防（真实生效，见安全阻断 2） |
-| 4 | 运行前后仓库内容指纹比对，变更即抛错 | **检测，不是预防**。触发时写入已经发生；作用是让越界失败得响亮，而不是静默通过 |
-
-模块 docstring 现在明确写出：本模块不提供沙箱；真正的写入隔离必须来自 `sandbox_profile_ref` 所指的环境——容器、只读挂载，或干脆是一台没有这个仓库的主机。
-
-如果需要真正的隔离执行环境，建议另立任务，并同时决定该执行器是否应该继续留在本仓库内。
-
-指纹实现细节：对仓库内全部文件做 SHA-256 内容哈希（而非 size+mtime，避免同长度原位改写漏过），排除 `.git`、`__pycache__` 和 `.DS_Store`。
-
-### 安全阻断 2：`os.environ.copy()` 泄漏凭据
-
-核实成立。原实现把父进程全部环境变量交给外部命令，`AWS_SECRET_ACCESS_KEY`、`GITHUB_TOKEN`、`SSH_AUTH_SOCK` 等会一并继承。
-
-已改为最小允许清单 `INHERITED_ENVIRONMENT_KEYS = ("PATH", "LANG", "LC_ALL", "TZ", "TMPDIR")`。
-
-**`HOME` 被刻意排除**：继承它等于暴露 `~/.ssh`、`~/.aws`。改为把 `HOME` 指向外部 workspace，这样写 `$HOME` 的工具也留在仓库之外。
-
-### 阻断 3：`output_root` 只检查存在，未检查是否为目录
-
-核实成立。已改为 `is_dir()`，并对 `workspace` 一并统一为 `NotADirectoryError`。不存在的路径与普通文件都会被拒绝。
-
-### 阻断 4：handoff 仍是 PR #16 的旧状态
-
-核实成立。已拆出本独立文件；`2026-08-01-os-boot-smoke.zh-CN.md` 在 PR #16 中同步更正为「PR #17 已实现且在本 PR 获批前仍被阻断」。
-
-### 阻断 5：测试未覆盖写入仓库、敏感环境隔离与非目录 output root
-
-核实成立。`tests/test_external_runtime.py` 由 3 项增至 17 项：
-
-| 测试组 | 覆盖 |
+| 攻击路径 | 实证结果 |
 |---|---|
-| `ExternalRuntimeTests` 4 项 | 默认禁用执行、正常运行不产生仓库输出、失败以状态返回而非抛错、结果记录 sandbox 声明 |
-| `RepositoryPathRejectionTests` 4 项 | 仓库根与子目录路径被拒、`output_root` 与 `workspace` 必须是目录（文件与不存在两种情形） |
-| `SandboxAttestationTests` 2 项 | `sandbox_profile_ref` 必填且必须是 `external:` |
-| `RepositoryMutationDetectionTests` 3 项 | **命令写入仓库被检测**（新建文件、修改既有文件两种），干净运行不误报 |
-| `EnvironmentIsolationTests` 4 项 | 五类凭据不被继承且其值不出现在子进程环境、`HOME` 被重定向、无父进程变量越过允许清单、运行上下文以引用形式传入 |
+| 写入仓库后被事后检测 —— 损害已发生 | 成立（Round 1 即已承认指纹是检测非预防） |
+| **修改 `.git/`，因 `.git` 被指纹排除而完全不被发现** | **实证成立**。写入 `.git/hooks/evil-probe` 后 `status=completed`、未抛错、文件确实存在。git hook 会在后续 checkout／commit 时执行，等于任意代码执行 |
+| **结束前还原被修改文件，绕过运行后指纹比较** | **实证成立**。命令「写入 `README.md` → 读走原内容到 `/tmp/exfil` → 还原」后 `status=completed`、未抛错，且仓库内容已被完整读出 |
+| 直接读取宿主机凭据或其他文件；环境白名单不提供文件系统隔离 | 成立。上一条的实证同时证明了这一点 |
 
-#### 关于环境隔离测试的一处实证修正
+第二条是 Round 1 修订**引入的漏洞**：为避免 `.git` 频繁变动造成误报而将其排除，结果留下了最危险的一块。这不是取舍失当，是漏掉了 `.git/hooks` 这个攻击面。
 
-初版断言「子进程环境的键必须全部落在允许清单内」，实测失败于 `__CF_USER_TEXT_ENCODING`。经验证：即使给子进程传 `env={}`，macOS 仍会注入 `__CF_USER_TEXT_ENCODING`、`SDKROOT`、`CPATH`、`LIBRARY_PATH`、`MANPATH`、`LC_CTYPE`。这属于平台注入，不是父进程泄漏。
+### 采纳「方案 1：降级为 contract-only」
 
-因此改为先用 `env={}` 探测**平台注入基线**，再断言子进程环境 ⊆（允许清单 ∪ `STELLIGEN_*` ∪ 平台基线）。这样断言的是「泄漏」这一真正的安全属性，且不硬编码 macOS 特例，换平台仍成立。
+审核给出两个选项，采纳推荐的方案 1，理由是它让本模块与整个仓库的设计一致，而不再是例外：
 
-### 变异测试证据
+- `src/` 现有约 2000 行几乎全部是 frozen dataclass 与方法体为 `...` 的 Protocol。**`SubprocessExternalRuntime` 是唯一的真实执行器，本身就是异类。**
+- 架构契约要求一切数据处理发生在仓库之外；仓库内自带执行器与该原则冲突。
+- 方案 2 需要引入容器运行时依赖，而本仓库无任何依赖声明文件，且缺容器运行时的环境（含尚不存在的 CI）无法运行其测试。
+- Round 1 的 handoff 已把「该执行器是否应继续留在本仓库内」列为未决问题。本轮审核给出了答案：不应该。
 
-为验证新测试确实能捕捉安全回退，逐个撤销修复确认失败，随后从备份还原：
+具体改动：
 
-| 撤销的修复 | 结果 |
+| 移除 | 保留 |
 |---|---|
-| 环境退回 `os.environ.copy()` | `FAILED (failures=8)` |
-| 移除仓库变更检测 | `FAILED (failures=2)` |
-| `output_root` 退回只查 `exists()` | `FAILED (failures=1)` |
-| 全部还原 | `OK` |
+| `SubprocessExternalRuntime` | `ExternalRuntimeRequest`／`Result`／`Port` |
+| `RepositoryMutationError`、`_repository_fingerprint`、`_describe_mutations` | 全部契约校验（外部引用、仓库外路径、非空命令、正 timeout） |
+| `INHERITED_ENVIRONMENT_KEYS` 及环境构造 | `sandbox_profile_ref`（改为契约字段，声明实现方必须满足的隔离要求） |
+| `os`／`subprocess`／`hashlib` 导入 | 新增 `envelope` 交接载荷 |
+| CLI 的 `--execute` 与全部执行路径 | CLI 的契约校验与 JSON 输出 |
+
+`sandbox_profile_ref` 在 contract-only 形态下不再假装是执行期防护，而是交接契约的一部分：它声明实现方必须在何种受控环境中执行，仓库只负责记录与传递。这样它作为「未经验证的字符串」不再构成安全问题，因为仓库不再据它做任何放行决定。
+
+### 依赖影响核查
+
+移除前已确认链上后续分支（`gen-iet-phase0`、`crc-target-enumeration`、`architecture-extensions` 等）中，只有这三个文件本身引用 `SubprocessExternalRuntime`，**没有任何其他模块导入它**，因此移除不会破坏上层分支。
+
+### 降级后的复测
+
+```text
+SubprocessExternalRuntime 存在: False
+RepositoryMutationError 存在:   False
+模块源码含 'subprocess' / 'os.environ' / 'hashlib': False / False / False
+CLI 传入会写文件的命令 -> 探针文件未被创建（CLI 不执行任何命令）
+```
+
+新增 `NoExecutionCapabilityTests` 6 项作为防回归闸门：模块不得导出 `SubprocessExternalRuntime`、不得 `import subprocess`／`os`／`hashlib`、不得再定义指纹与 `RepositoryMutationError`、公开符号集合被精确固定、Port 方法体为 stub、CLI 源码不得出现 `subprocess`／`--execute`／`execution_enabled`。
+
+## AssetGenOS 运行边界核查
+
+本节内容原先误置于 `2026-08-01-os-boot-smoke.zh-CN.md`（PR #16 的 handoff），实际属于本 PR 的运行边界，Round 1 修订时随独立 handoff 迁入此处。
+
+- AssetGenOS 当前 CLI `adc-factory v2 evaluate` 需要明确的 target、gene、indication、endpoint 等业务输入。
+- AssetGenOS 运行时会在其外部工作区管理 SQLite、cache、output 和外部数据索引；这些路径不能指向 StelligenOS。
+- StelligenOS 不应猜测首个资产、路线或业务输入。实际运行前需要明确选择现有 Binder 路线或 de novo 路线，并提供外部输入引用。
+
+降级为 contract-only 后，上述运行本身将由外部受控环境执行；本仓库只产出经校验的交接信封。
 
 ## 明确未改动
 
@@ -111,36 +106,43 @@ ChatGPT 对 HEAD `17404dc` 返回 `REQUEST_CHANGES`，五条阻断（两条安�
 
 ## 验证
 
+### 当前验证（Round 2，权威）
+
 ```text
 命令：PYTHONDONTWRITEBYTECODE=1，逐模块运行 tests/test_*.py
-结果：ALL OK —— 12 modules / 60 tests
-      （修订前 46 项；tests/test_external_runtime.py 由 3 项增至 17 项）
+结果：ALL OK —— 12 modules / 85 tests
+      tests/test_external_runtime.py 20 项（形态已完全改变，非 Round 1 的 17 项之增量）
 
-命令：scripts/run_external_runtime.py 缺少 --sandbox-profile-ref
-结果：error: the following arguments are required: --sandbox-profile-ref
+命令：scripts/run_external_runtime.py 传入会写文件的命令
+结果：探针文件未被创建；CLI 只输出交接信封，不执行任何命令
 
-命令：scripts/run_external_runtime.py 带 sandbox ref 但不加 --execute
-结果：PermissionError: External runtime execution is disabled; pass an explicit opt-in
+命令：scripts/run_external_runtime.py 缺 --sandbox-profile-ref
+结果：argparse 报缺失必填参数
+
+命令：scripts/run_external_runtime.py 以仓库根为 workspace
+结果：must be outside the StelligenOS repository
 
 命令：git diff --check
 结果：通过
 ```
 
-`scripts/verify_repository_boundary.sh` 在本分支因本地 `.claude` 目录报 exit=1；该目录在本分支创建之后才出现，修复位于已获批的链顶 PR #43，本 PR 不重复修复以避免同文件合并冲突。
+`scripts/verify_repository_boundary.sh` 在本分支因本地 `.claude` 目录报 exit=1。该目录是本地 Claude Code 工具配置、被用户全局 gitignore 忽略，在本分支创建之后才出现，**不在本 PR 的提交树中**；干净 clone 上本分支的边界检查通过。对应修复位于已获批的链顶 PR #43，本 PR 不重复修复以避免同文件合并冲突。
 
-## AssetGenOS 运行边界核查
+### 历史验证数字（仅供追溯，不作为审核依据）
 
-本节内容原先误置于 `2026-08-01-os-boot-smoke.zh-CN.md`（PR #16 的 handoff），实际属于本 PR 的运行边界。Round 1 修订时随独立 handoff 一并迁入此处。
+| 轮次 | 模块 / 总项数 | `test_external_runtime.py` | 形态 |
+|---|---|---:|---|
+| 初始 | 12 / 46 | 3 | 含 subprocess 执行器 |
+| Round 1 | 12 / 60 | 17 | 执行器 + 四层防护 |
+| **Round 2（当前）** | **12 / 85** | **20** | **contract-only，无执行能力** |
 
-- AssetGenOS 当前 CLI `adc-factory v2 evaluate` 需要明确的 target、gene、indication、endpoint 等业务输入。
-- AssetGenOS 运行时会在其外部工作区管理 SQLite、cache、output 和外部数据索引；这些路径不能指向 StelligenOS。
-- StelligenOS 不应猜测首个资产、路线或业务输入。实际运行前需要明确选择现有 Binder 路线或 de novo 路线，并提供外部输入引用。
+验证数字的权威来源是当前 HEAD 上实际运行的结果。
 
 ## 未决问题与风险
 
-- **仓库变更检测是检测而非预防。** 触发时写入已经发生。真正的写入隔离必须由 `sandbox_profile_ref` 所指的外部环境提供，本仓库无法验证该声明。
-- 指纹会遍历并哈希仓库全部文件。当前规模下开销可忽略，若仓库将来显著增大需重新评估。
-- `sandbox_profile_ref` 是新增必填字段，属于对 `ExternalRuntimeRequest` 的破坏性变更。当前调用方只有本仓库的测试与 `scripts/run_external_runtime.py`，均已同步。
+- **本仓库现在完全不具备执行外部 runtime 的能力。** 这是本轮的有意结果，但也意味着真实运行需要先有一个实现 `ExternalRuntimePort` 的外部受控环境。该环境尚不存在，需另立任务建设。
+- 该外部实现必须真正做到仓库对命令不可见或只读、且宿主凭据不可达。本仓库无法验证这一点，只能在契约中声明要求。
+- `sandbox_profile_ref` 与移除 `execution_enabled` 都是对 `ExternalRuntimeRequest` 的破坏性变更。当前调用方只有本仓库测试与 `scripts/run_external_runtime.py`，均已同步。
 - GitHub 上没有 commit status 或 Actions workflow，验证数字无法由 CI 独立复核。建议另立任务引入 CI。
 - 合并后 `logs/worklog.md` 会与链上后续分支产生追加式冲突，解决方式是按时间顺序保留两侧。
 
@@ -148,4 +150,4 @@ ChatGPT 对 HEAD `17404dc` 返回 `REQUEST_CHANGES`，五条阻断（两条安�
 
 1. 提交 ChatGPT 复审本 PR。
 2. 只有收到 `APPROVE` 后，由人类负责人决定合并，且须在 #15、#16 合并之后。
-3. 若需要真正的沙箱执行环境，另立任务，并同时决定该执行器是否应继续留在本仓库内。
+3. 真正的外部受控执行环境另立任务建设，并实现 `ExternalRuntimePort`。

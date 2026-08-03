@@ -1064,3 +1064,19 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: 12 个测试模块 / 60 项通过（修订前 46 项）；CLI 缺 `--sandbox-profile-ref` 报参数缺失，带 ref 但不加 `--execute` 抛 PermissionError；`git diff --check` 通过。
 - Open risk: 仓库变更检测是检测而非预防，触发时写入已发生；真正写入隔离需由外部环境提供，仓库无法验证该声明。若需真正沙箱执行环境，建议另立任务并同时决定该执行器是否应继续留在本仓库内。
 - Next: 推送同一 PR #17 并提交 ChatGPT 复审。三个链底 PR 的修订至此完成，依赖顺序仍为 #15 → #16 → #17。
+
+### 2026-08-03 15:40 EDT
+
+- Action: 处理 ChatGPT 对 PR #17（HEAD `b6d7321`）的 Round 2 `REQUEST_CHANGES`。Round 2 确认 Round 1 的环境隔离、目录校验、独立 handoff 与测试扩充均已真实修复，但指出仍有实质性安全阻断：`sandbox_profile_ref` 只是未经验证的字符串，`SubprocessExternalRuntime` 并未据此建立容器或只读挂载，仍直接执行任意子进程。
+- Verification by exploit: 四条攻击路径中两条已实证复现。(a) 写入 `.git/hooks/evil-probe` 后 `status=completed`、未抛错、文件确实存在 —— `.git` 被指纹排除，而 git hook 会在后续 checkout/commit 时执行，等于任意代码执行；(b) 命令「写入 README.md → 读走原内容到 /tmp/exfil → 结束前还原」后 `status=completed`、未抛错，且仓库内容已被完整读出 —— 同时证明事后指纹可被绕过且环境白名单不提供文件系统隔离。另两条（写入后才被检测、可读宿主凭据）Round 1 已承认或由上述实证覆盖。
+- Root cause note: `.git` 排除是 Round 1 修订**引入**的漏洞。当时为避免 `.git` 频繁变动造成误报而排除，结果留下最危险的一块；属漏掉 `.git/hooks` 攻击面，非取舍失当。
+- Decision: 采纳审核推荐的方案 1，将本 PR 降级为 contract-only。理由：`src/` 现有约 2000 行几乎全是 frozen dataclass 与方法体为 `...` 的 Protocol，`SubprocessExternalRuntime` 是唯一真实执行器、本身即异类；架构契约要求一切数据处理发生在仓库之外；方案 2 需引入容器运行时依赖而本仓库无任何依赖声明文件，且缺容器运行时的环境无法运行其测试；Round 1 handoff 已把「执行器是否应留在本仓库」列为未决问题，本轮审核给出答案。
+- Precondition check: 移除前确认链上后续分支（gen-iet-phase0、crc-target-enumeration、architecture-extensions）中只有这三个文件本身引用 `SubprocessExternalRuntime`，无其他模块导入，移除不破坏上层分支。
+- Change: 移除 `SubprocessExternalRuntime`、`RepositoryMutationError`、`_repository_fingerprint`、`_describe_mutations`、`INHERITED_ENVIRONMENT_KEYS` 及 `os`/`subprocess`/`hashlib` 导入；保留 Request/Result/Port 与全部契约校验；`ExternalRuntimeResult` 状态受限于 completed/failed；新增 `ExternalRuntimeRequest.envelope` 交接载荷，显式声明 `executed_by: external_controlled_runtime` 与 `executed_in_repository: false`。
+- Change: `scripts/run_external_runtime.py` 移除 `--execute` 与全部执行路径，改为与 `scripts/boot_os.py` 同形态——校验契约后打印 JSON 信封。
+- Change: 测试重写为 20 项，其中 `NoExecutionCapabilityTests` 6 项为防回归闸门：模块不得导出 `SubprocessExternalRuntime`、不得导入 subprocess/os/hashlib、不得再定义指纹与 `RepositoryMutationError`、公开符号集合被精确固定、Port 方法体为 stub、CLI 源码不得出现 subprocess/--execute/execution_enabled。
+- Validation post-downgrade: `SubprocessExternalRuntime` 与 `RepositoryMutationError` 均不存在；模块源码不含 subprocess/os.environ/hashlib；CLI 传入会写文件的命令后探针文件未被创建。12 个测试模块 / 85 项通过；`git diff --check` 通过。
+- Incident: 更新 handoff 验证段时误用过宽的字符串替换区间，把「Round 2 修订」与「AssetGenOS 运行边界核查」两节一并删除。已确认丢失后整份重写 handoff，两节均已恢复并核验存在。
+- Boundary: 未改动 `boot.py`、`src/capabilities/`、`src/lifecycle/`、Gate 拓扑、生命周期或核心对象；未引入任何第三方依赖；未执行任何真实外部 runtime。
+- Open risk: 本仓库现已完全不具备执行外部 runtime 的能力，这是有意结果；真实运行需先建设实现 `ExternalRuntimePort` 的外部受控环境，该环境尚不存在，需另立任务。
+- Next: 推送同一 PR #17 并提交 ChatGPT 复审。#15/#16 的元数据同步另行处理。
