@@ -31,3 +31,12 @@
 - Keep Phase 1 architecture-first and minimal.
 - Preserve the implementation-focused boundary.
 - Avoid adding large datasets or data-bearing artifacts to this repository.
+
+## 2026-08-01：`gen_indication_endpoint_target` Phase 0
+
+- 读取并审计主提示词 `prompts/system/STELLIGENOS_GEN_INDICATION_ENDPOINT_TARGET_MASTER_PROMPT_v1.0.zh-CN.md`。
+- 核对 AssetGenOS 的 Gate topology freeze、Gate Registry、T/P/C profiles、dependency graph、Model Registry、Rule Registry、evidence contract、clinical unmet need adapter、target generation 入口和测试/日志。
+- 确认官方基线为 45 个 Gate（T=13、P=16、C=16），T0-T12 只能映射既有 T-chain，不新增 Gate。
+- 确认 AssetGenOS target generation 与 SQLite、数据索引、cache、output 和 runtime 耦合；只保留软件定义、字段语义和外部引用边界，不迁移任何数据实例。
+- 生成 `GEN_IET_PHASE_0_REPORT.zh-CN.md`、`GEN_IET_PHASE_0_REVIEW_CHECKLIST.zh-CN.md` 和 `manifests/gen_iet_phase_0_manifest.yaml`。
+- 未执行真实候选生成、Gate/Rule/Model 评估、P-chain/C-chain 或数据处理；当前状态为 `COMPLETED_PENDING_REVIEW`，等待批准后才进入 Phase 1。

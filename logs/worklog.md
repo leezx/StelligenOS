@@ -1020,6 +1020,39 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 17:04 EDT
+
+- Action: 按 `STELLIGENOS_GEN_INDICATION_ENDPOINT_TARGET_MASTER_PROMPT_v1.0.zh-CN.md` 完成 `gen_indication_endpoint_target` Phase 0 架构审计。
+- How: 核对 AssetGenOS 的 45 个正式 Gate、T/P/C profiles、dependency graph、Model/Rule Registry、evidence contract、clinical unmet need adapter、target generation 入口及测试/日志；将 T0-T12 映射到既有 T-chain，明确 P/C 边界和外部数据/运行时边界。
+- Result: 声明 `NO_GATE_CHANGE`；未执行真实候选生成、Gate/Rule/Model 评估、P-chain/C-chain 或数据处理；生成 Phase 0 报告、审核清单、manifest 和 handoff，状态为 `COMPLETED_PENDING_REVIEW`，等待批准后进入 Phase 1。
+- Files affected:
+  - `docs/phases/GEN_IET_PHASE_0_REPORT.zh-CN.md`
+  - `docs/phases/GEN_IET_PHASE_0_REVIEW_CHECKLIST.zh-CN.md`
+  - `manifests/gen_iet_phase_0_manifest.yaml`
+  - `logs/migration_log.zh-CN.md`
+  - `docs/handoff/2026-08-01-gen-iet-phase-0.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 17:07 EDT
+
+- Action: 将 Phase 0 审计提交并推送到 GitHub draft PR。
+- How: 使用分支 `task_20260801_gen-iet-phase0`，commit `5809d67`，以 `task_20260801_external-runtime-adapter` 为 base 创建 PR；未自动合并，等待 ChatGPT 架构审核。
+- Result: PR #18 已创建：`https://github.com/leezx/StelligenOS/pull/18`。当前停止在 Phase 0 review gate，不进入 Phase 1。
+- Files affected:
+  - `logs/worklog.md`
+
+### 2026-08-01 17:50 EDT
+
+- Action: 通过 Chrome 中“GitHub PR 信息”ChatGPT 对话提交 PR #18 Phase 0 审核申请，并读取最终反馈。
+- How: 确认聊天框 `+` 菜单的 GitHub 来源已选中；要求 ChatGPT 只审查 PR #18 当前 diff、commits、Phase 0 产物、handoff、日志和验证结果，不延伸到 Phase 1。
+- Result: ChatGPT 返回 `APPROVE`，明确“Phase 0 审核通过，可以进入 Phase 1”；唯一意见是 PR 仍为 Draft，合并前确认 GitHub mergeability。反馈已保存到 `logs/chatgpt-review-2026-08-01-gen-iet-phase0.md`，Phase 1 将从独立分支开始。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-gen-iet-phase0.md`
+  - `manifests/gen_iet_phase_0_manifest.yaml`
+  - `docs/phases/GEN_IET_PHASE_0_REVIEW_CHECKLIST.zh-CN.md`
+  - `docs/handoff/2026-08-01-gen-iet-phase-0.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-03 13:30 EDT
 
 - Action: 处理 ChatGPT 对 PR #15（HEAD `4b8d029`）的 Round 1 `REQUEST_CHANGES`，两条阻断在同一 PR 内修订。
