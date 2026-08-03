@@ -128,6 +128,14 @@ ChatGPT 对 HEAD `17404dc` 返回 `REQUEST_CHANGES`，五条阻断（两条安�
 
 `scripts/verify_repository_boundary.sh` 在本分支因本地 `.claude` 目录报 exit=1；该目录在本分支创建之后才出现，修复位于已获批的链顶 PR #43，本 PR 不重复修复以避免同文件合并冲突。
 
+## AssetGenOS 运行边界核查
+
+本节内容原先误置于 `2026-08-01-os-boot-smoke.zh-CN.md`（PR #16 的 handoff），实际属于本 PR 的运行边界。Round 1 修订时随独立 handoff 一并迁入此处。
+
+- AssetGenOS 当前 CLI `adc-factory v2 evaluate` 需要明确的 target、gene、indication、endpoint 等业务输入。
+- AssetGenOS 运行时会在其外部工作区管理 SQLite、cache、output 和外部数据索引；这些路径不能指向 StelligenOS。
+- StelligenOS 不应猜测首个资产、路线或业务输入。实际运行前需要明确选择现有 Binder 路线或 de novo 路线，并提供外部输入引用。
+
 ## 未决问题与风险
 
 - **仓库变更检测是检测而非预防。** 触发时写入已经发生。真正的写入隔离必须由 `sandbox_profile_ref` 所指的外部环境提供，本仓库无法验证该声明。
