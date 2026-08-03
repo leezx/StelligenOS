@@ -1,0 +1,40 @@
+reference:
+  reference_id: ADC_net_endpoint_benefit_integrator
+  reference_version: 0.1.0
+  evidence_cutoff: "2026-07-29"
+  confidence_cap: 0.55
+
+evidence_contract:
+  evidence_type: net_endpoint_alignment_evidence_v1
+  policy_ref: ADC_net_endpoint_benefit_integrator@0.1.0
+
+positive_weights:
+  initial_debulking_benefit: 0.25
+  durability_score: 0.25
+  escape_adjusted_benefit: 0.30
+  endpoint_alignment_score: 0.20
+
+reported_not_reweighted:
+  causal_population_depletion_benefit:
+    reason: It is the source value for escape_adjusted_benefit and would be double-counted if weighted again.
+
+rebound:
+  source_fields:
+  - more_aggressive_residual_state_risk
+  - plasticity_escape_risk
+  - microenvironment_rebound_risk
+  multiplier: 0.35
+
+formula:
+  escape_adjusted_benefit: causal_population_depletion_benefit * (1 - residual_disease_risk)
+  base_benefit: weighted_sum_of_four_nonduplicative_positive_components
+  net_endpoint_benefit: base_benefit * (1 - rebound_multiplier * aggressive_rebound_penalty)
+  common_score: net_endpoint_benefit
+
+boundaries:
+- Upstream confidence fields are never used as benefit components.
+- T3 expected initial and durable evidence strengths are used once.
+- T3 direct depletion effect is reported and adjusted once by T4 residual risk; only the adjusted value enters the base benefit.
+- T5 rebound risks form one penalty and are not separately subtracted again.
+- Endpoint alignment requires independent exact-endpoint evidence and cannot be inferred from generic viability, response rate, or tumor shrinkage.
+- T6 integrates biological endpoint benefit only; ADC feasibility, safety, and therapeutic index belong to other Gates.

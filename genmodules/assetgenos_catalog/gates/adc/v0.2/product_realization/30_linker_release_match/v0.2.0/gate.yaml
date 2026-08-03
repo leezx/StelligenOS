@@ -1,0 +1,163 @@
+gate:
+  gate_id: linker_release_match
+  gate_family: adc.v0_2.product_realization.linker_release_match
+  gate_version: 0.2.0
+  sequence: 30
+  name: Linker Release Mechanism Match
+  purpose: Match linker stability, trigger, kinetics, release compartment, payload chemistry, catabolite identity, and species
+    behavior to productive trafficking.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - upstream_gate_results
+    outputs:
+    - linker_class
+    - release_trigger
+    - trigger_abundance
+    - plasma_stability
+    - tumor_stability
+    - intracellular_release_efficiency
+    - release_kinetics
+    - released_payload_identity
+    - catabolite_activity
+    - species_stability_difference
+    - premature_release_risk
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium_high
+    default_model_ids:
+    - linker_release_match_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: product_realization
+    group_code: P
+    priority: P2
+    dependencies:
+    - productive_internalization_trafficking
+    - payload_cell_state_match
+    output_defaults:
+      linker_class: null
+      release_trigger: null
+      trigger_abundance: null
+      plasma_stability: null
+      tumor_stability: null
+      intracellular_release_efficiency: null
+      release_kinetics: null
+      released_payload_identity: null
+      catabolite_activity: null
+      species_stability_difference: null
+      premature_release_risk: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      linker_class:
+        type: string_or_structured_object
+        description: 'Frozen linker_release_match@0.2.0 output field: linker_class.'
+        required: true
+        nullable: true
+      release_trigger:
+        type: string_or_structured_object
+        description: 'Frozen linker_release_match@0.2.0 output field: release_trigger.'
+        required: true
+        nullable: true
+      trigger_abundance:
+        type: string_or_structured_object
+        description: 'Frozen linker_release_match@0.2.0 output field: trigger_abundance.'
+        required: true
+        nullable: true
+      plasma_stability:
+        type: number[0,1]
+        description: 'Frozen linker_release_match@0.2.0 output field: plasma_stability.'
+        required: true
+        nullable: true
+      tumor_stability:
+        type: number[0,1]
+        description: 'Frozen linker_release_match@0.2.0 output field: tumor_stability.'
+        required: true
+        nullable: true
+      intracellular_release_efficiency:
+        type: string_or_structured_object
+        description: 'Frozen linker_release_match@0.2.0 output field: intracellular_release_efficiency.'
+        required: true
+        nullable: true
+      release_kinetics:
+        type: string_or_structured_object
+        description: 'Frozen linker_release_match@0.2.0 output field: release_kinetics.'
+        required: true
+        nullable: true
+      released_payload_identity:
+        type: string_or_structured_object
+        description: 'Frozen linker_release_match@0.2.0 output field: released_payload_identity.'
+        required: true
+        nullable: true
+      catabolite_activity:
+        type: number[0,1]
+        description: 'Frozen linker_release_match@0.2.0 output field: catabolite_activity.'
+        required: true
+        nullable: true
+      species_stability_difference:
+        type: number[0,1]
+        description: 'Frozen linker_release_match@0.2.0 output field: species_stability_difference.'
+        required: true
+        nullable: true
+      premature_release_risk:
+        type: number[0,1]
+        description: 'Frozen linker_release_match@0.2.0 output field: premature_release_risk.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

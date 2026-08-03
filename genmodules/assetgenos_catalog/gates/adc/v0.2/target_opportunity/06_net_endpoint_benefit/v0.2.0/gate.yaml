@@ -1,0 +1,137 @@
+gate:
+  gate_id: net_endpoint_benefit
+  gate_family: adc.v0_2.target_opportunity.net_endpoint_benefit
+  gate_version: 0.2.0
+  sequence: 6
+  name: Net Endpoint Benefit
+  purpose: Integrate initial killing, causal-population depletion, uncovered disease, state transitions, and rebound into
+    a durable endpoint-aligned benefit.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - upstream_gate_results
+    outputs:
+    - initial_debulking_benefit
+    - causal_population_depletion_benefit
+    - durability_score
+    - escape_adjusted_benefit
+    - aggressive_rebound_penalty
+    - endpoint_alignment_score
+    - net_endpoint_benefit
+    - net_benefit_confidence
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium
+    default_model_ids:
+    - net_endpoint_benefit_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: target_opportunity
+    group_code: T
+    priority: P1
+    dependencies:
+    - intervention_causality
+    - baseline_coverage_and_escape
+    - treatment_induced_state_response
+    output_defaults:
+      initial_debulking_benefit: null
+      causal_population_depletion_benefit: null
+      durability_score: null
+      escape_adjusted_benefit: null
+      aggressive_rebound_penalty: null
+      endpoint_alignment_score: null
+      net_endpoint_benefit: null
+      net_benefit_confidence: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      initial_debulking_benefit:
+        type: number[0,1]
+        description: 'Frozen net_endpoint_benefit@0.2.0 output field: initial_debulking_benefit.'
+        required: true
+        nullable: true
+      causal_population_depletion_benefit:
+        type: number[0,1]
+        description: 'Frozen net_endpoint_benefit@0.2.0 output field: causal_population_depletion_benefit.'
+        required: true
+        nullable: true
+      durability_score:
+        type: number[0,1]
+        description: 'Frozen net_endpoint_benefit@0.2.0 output field: durability_score.'
+        required: true
+        nullable: true
+      escape_adjusted_benefit:
+        type: number[0,1]
+        description: 'Frozen net_endpoint_benefit@0.2.0 output field: escape_adjusted_benefit.'
+        required: true
+        nullable: true
+      aggressive_rebound_penalty:
+        type: number[0,1]
+        description: 'Frozen net_endpoint_benefit@0.2.0 output field: aggressive_rebound_penalty.'
+        required: true
+        nullable: true
+      endpoint_alignment_score:
+        type: number[0,1]
+        description: 'Frozen net_endpoint_benefit@0.2.0 output field: endpoint_alignment_score.'
+        required: true
+        nullable: true
+      net_endpoint_benefit:
+        type: number[0,1]
+        description: 'Frozen net_endpoint_benefit@0.2.0 output field: net_endpoint_benefit.'
+        required: true
+        nullable: true
+      net_benefit_confidence:
+        type: number[0,1]
+        description: 'Frozen net_endpoint_benefit@0.2.0 output field: net_benefit_confidence.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

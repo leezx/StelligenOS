@@ -1,0 +1,107 @@
+model:
+  model_id: baseline_coverage_escape_evidence_v1
+  model_family: adc.v0_2.target_opportunity.baseline_coverage_and_escape.evidence_synthesis
+  model_version: 0.1.0
+  gate_id: baseline_coverage_and_escape
+  implementation: baseline_coverage_escape_evidence_synthesis
+  status: active_challenger
+  runtime:
+    model_name: Baseline Coverage and Escape Evidence Synthesis v1
+    model_type: rule_based
+    provider: ADC_baseline_coverage_escape_evidence
+    input_schema: GateInputEnvelope@2.0.0
+    output_schema: GateModelOutput@2.0.0
+    cost_tier: medium
+    limitations:
+    - Synthesizes supplied pretreatment evidence; does not analyze raw single-cell, spatial, multiregion, metastatic, lineage, or resistance data.
+    - Requires identity-consistent usable T2 and T3 results.
+    - T2 anchors baseline target-negative and causal-uncovered fractions; material conflicts become null.
+    - Single-region sampling cannot support spatial or metastatic escape.
+    - Payload overlap requires a declared payload class and resistance-state definition.
+    - Treatment-induced transitions belong to T5.
+    - Risk and confidence values are uncalibrated indices, not probabilities.
+    calibration_status: uncalibrated_baseline_residual_risk_index
+    training_data_version: ADC_baseline_coverage_escape_evidence@0.1.0
+    prompt_version: null
+    enabled: true
+    weight: 1.0
+    default_confidence_cap: 0.55
+  contract_refs:
+    gate: components/gates/adc/v0.2/target_opportunity/04_baseline_coverage_and_escape/v0.2.0/gate.yaml
+    input: components/contracts/gate_input.v2.yaml
+    output: components/contracts/model_output.v2.yaml
+  question_template: >-
+    Before treatment, what fraction of the exact endpoint-driving population is
+    target-negative, uncovered, antigen-low, target-variable,
+    lineage-plastic, spatially inaccessible, metastatic-site discordant, or
+    overlapping a declared payload-resistance state? Preserve each reservoir
+    separately and do not infer T5 treatment-induced responses.
+  evidence_policy:
+    may_use:
+    - Usable target_population_mapping and intervention_causality GateResults.
+    - Exact version-bound Candidate and target opportunity identity.
+    - baseline_coverage_escape_evidence_v1 bound to ADC_baseline_coverage_escape_evidence@0.1.0.
+    - Pretreatment cellular, multiregion, paired-site, lineage, and declared payload-state evidence.
+    must_not_invent:
+    - target-negative, uncovered, antigen-low, target-loss, lineage, spatial, metastatic, or payload-overlap fractions
+    - assay, threshold, sampling scope, cohort, payload class, or resistance mechanism
+    - treatment-induced transition, ADC delivery, bystander effect, efficacy, or clinical response
+  fallback_policy:
+    mode: neutral_common_score_with_nullable_domain_outputs
+    confidence_cap: 0.55
+    complete_when_evidence_missing: true
+    nullable_domain_fields_when_unknown: true
+  version_roadmap:
+  - stage: v0.1
+    target: Pretreatment identity-locked residual-risk ontology and synthesis
+  - stage: v0.2
+    target: Single-cell, spatial, multiregion, metastatic, lineage, and payload-state adapters
+  - stage: v0.3
+    target: Assay-specific sampling-error, lesion-transport, rare-clone, and threshold-sensitivity analysis
+  - stage: v1
+    target: Independent blinded validation across tumor types and sampling designs
+  - stage: v2
+    target: Outcome calibration, monitoring, and governed stable promotion
+  model_card:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    summary: >-
+      Deterministic T4 candidate that quantifies eight distinct pretreatment
+      residual-disease reservoirs, cross-checks T2 anchors, requires
+      multiregion evidence for spatial/metastatic claims, and returns all nine
+      frozen outputs with favorable common-score direction.
+    intended_use:
+    - Identify baseline target-negative and causally uncovered disease.
+    - Separate antigen-low, target-loss, lineage, spatial, metastatic, and payload-overlap reservoirs.
+    - Expose sampling and payload-definition gaps before T5 and product design.
+    decision_role: Low-confidence evidence-synthesis challenger; not validated residual-disease prediction.
+    method_summary: Exact upstream identity checks, direct/count-derived fraction audit, T2-anchor consistency, baseline-timing enforcement, multiregion requirements, and fixed weighted risk synthesis.
+    input_requirements:
+    - Usable identity-consistent T2 and T3 GateResults.
+    - Exact pretreatment baseline evidence bundle with denominator and sampling metadata.
+    output_interpretation: residual_disease_risk is uncalibrated; common score is one minus risk. Payload overlap is conditional on a declared payload hypothesis.
+    evidence_boundary:
+    - T2 owns mapping and anchors the first two risks.
+    - T3 owns depletion causality and contributes no risk score.
+    - T4 owns pretreatment residual reservoirs.
+    - T5 owns treatment-induced state/ecological response.
+    known_failure_modes:
+    - Biopsy sampling can miss rare, spatially segregated, or metastatic clones.
+    - Bulk averages can conceal target-negative cellular subpopulations.
+    - Lineage plasticity and target loss may be context-specific.
+    - Different payload classes have different resistance-state overlap.
+    prohibited_uses:
+    - Inferring cellular coverage from bulk average expression.
+    - Inferring spatial/metastatic escape from one region or lesion.
+    - Treating baseline lineage risk as an observed treatment-induced transition.
+    - Selecting a payload or claiming efficacy, safety, or clinical benefit.
+    - Treating risk or confidence indices as probabilities.
+  lifecycle:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    artifact_stage: formal_candidate
+    release_kind: first_formal
+    released_at: '2026-07-30T04:30:00Z'
+    record_root: components/model_governance/baseline_coverage_escape_evidence_v1/v0.1.0
+    change_summary:
+    - Added deterministic pretreatment escape-risk synthesis and T2 anchor checks.
+    - Added baseline-timing, denominator, multiregion, payload-definition, and score-direction controls.
+    - Added isolated tests, sources, review, validation, calibration-gap, and integration records.

@@ -1,0 +1,162 @@
+gate:
+  gate_id: preliminary_technical_fto
+  gate_family: adc.v0_2.commercial_executability.preliminary_technical_fto
+  gate_version: 0.2.0
+  sequence: 45
+  name: Preliminary Technical FTO
+  purpose: Identify potentially blocking claims and element overlap for counsel review; never represent this technical screen
+    as a legal FTO opinion.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - commercial_execution_context
+    - upstream_gate_results
+    outputs:
+    - potential_blocking_claims
+    - element_claim_map
+    - literal_overlap_risk
+    - equivalents_risk
+    - pending_claim_risk
+    - legal_status_uncertainty
+    - expiration_timeline
+    - preliminary_FTO_risk
+    - counsel_questions
+    - legal_opinion_required
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: low
+    default_model_ids:
+    - preliminary_technical_fto_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: commercial_executability
+    group_code: C
+    priority: P0
+    dependencies:
+    - product_claim_decomposition
+    - patent_landscape
+    output_defaults:
+      potential_blocking_claims: []
+      element_claim_map: null
+      literal_overlap_risk: null
+      equivalents_risk: null
+      pending_claim_risk: null
+      legal_status_uncertainty: null
+      expiration_timeline: null
+      preliminary_FTO_risk: null
+      counsel_questions: []
+      legal_opinion_required: true
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      commercial_execution_context:
+        type: CommercialExecutionContext
+        description: 'Version-bound v0.2 input object: commercial_execution_context.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      potential_blocking_claims:
+        type: list[object]
+        description: 'Frozen preliminary_technical_fto@0.2.0 output field: potential_blocking_claims.'
+        required: true
+        nullable: true
+      element_claim_map:
+        type: string_or_structured_object
+        description: 'Frozen preliminary_technical_fto@0.2.0 output field: element_claim_map.'
+        required: true
+        nullable: true
+      literal_overlap_risk:
+        type: number[0,1]
+        description: 'Frozen preliminary_technical_fto@0.2.0 output field: literal_overlap_risk.'
+        required: true
+        nullable: true
+      equivalents_risk:
+        type: number[0,1]
+        description: 'Frozen preliminary_technical_fto@0.2.0 output field: equivalents_risk.'
+        required: true
+        nullable: true
+      pending_claim_risk:
+        type: number[0,1]
+        description: 'Frozen preliminary_technical_fto@0.2.0 output field: pending_claim_risk.'
+        required: true
+        nullable: true
+      legal_status_uncertainty:
+        type: string_or_structured_object
+        description: 'Frozen preliminary_technical_fto@0.2.0 output field: legal_status_uncertainty.'
+        required: true
+        nullable: true
+      expiration_timeline:
+        type: string_or_structured_object
+        description: 'Frozen preliminary_technical_fto@0.2.0 output field: expiration_timeline.'
+        required: true
+        nullable: true
+      preliminary_FTO_risk:
+        type: number[0,1]
+        description: 'Frozen preliminary_technical_fto@0.2.0 output field: preliminary_FTO_risk.'
+        required: true
+        nullable: true
+      counsel_questions:
+        type: list[object]
+        description: 'Frozen preliminary_technical_fto@0.2.0 output field: counsel_questions.'
+        required: true
+        nullable: true
+      legal_opinion_required:
+        type: boolean
+        description: 'Frozen preliminary_technical_fto@0.2.0 output field: legal_opinion_required.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

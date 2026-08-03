@@ -1,0 +1,25 @@
+module:
+  module_id: assetgenos_catalog
+  module_version: 0.1.0
+  status: migrated_contracts_only
+  source_system: AssetGenOS
+  source_root: external_workspace
+  contents:
+    contracts: 7
+    gates: 45
+    models: 59
+    profiles: 53
+  execution_boundary:
+    repository_persistence: forbidden
+    runtime_execution: external_workspace
+    data_storage: external_workspace
+    governance_records: external_workspace
+  excluded:
+    - datasets
+    - databases
+    - caches
+    - generated_results
+    - model_weights
+    - runners
+    - governance_records
+    - model_work_packages

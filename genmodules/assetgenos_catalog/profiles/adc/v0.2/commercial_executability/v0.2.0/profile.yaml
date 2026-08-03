@@ -1,0 +1,99 @@
+profile:
+  profile_id: adc.commercial_executability_chain
+  profile_version: 0.2.0
+  profile_type: custom
+  modality: ADC
+  extends: []
+  description: 'Commercial Executability Chain v0.2; evaluates CommerciallyExecutableADCAsset and answers: 这个产品是否值得做、能否实施、能否保护并形成可交易资产？'
+  gate_order:
+  - commercial_opportunity_threshold
+  - regulatory_development_path
+  - competitive_position_entry_window
+  - product_claim_decomposition
+  - patent_landscape
+  - preliminary_technical_fto
+  - blocking_claim_severity
+  - design_around_opportunity
+  - access_strategy
+  - fto_product_configuration
+  - own_ip_inventive_concept
+  - patentability_enablement
+  - claim_architecture_patent_estate
+  - disclosure_filing_strategy
+  - lifecycle_exclusivity_strategy
+  - transaction_readiness
+  gate_versions:
+    commercial_opportunity_threshold: 0.2.0
+    regulatory_development_path: 0.2.0
+    competitive_position_entry_window: 0.2.0
+    product_claim_decomposition: 0.2.0
+    patent_landscape: 0.2.0
+    preliminary_technical_fto: 0.2.0
+    blocking_claim_severity: 0.2.0
+    design_around_opportunity: 0.2.0
+    access_strategy: 0.2.0
+    fto_product_configuration: 0.2.0
+    own_ip_inventive_concept: 0.2.0
+    patentability_enablement: 0.2.0
+    claim_architecture_patent_estate: 0.2.0
+    disclosure_filing_strategy: 0.2.0
+    lifecycle_exclusivity_strategy: 0.2.0
+    transaction_readiness: 0.2.0
+  model_bindings:
+    commercial_opportunity_threshold:
+      model_id: commercial_opportunity_threshold_llm_v0_2
+      model_version: 0.2.0
+    regulatory_development_path:
+      model_id: regulatory_development_path_llm_v0_2
+      model_version: 0.2.0
+    competitive_position_entry_window:
+      model_id: competitive_position_entry_window_llm_v0_2
+      model_version: 0.2.0
+    product_claim_decomposition:
+      model_id: product_claim_decomposition_llm_v0_2
+      model_version: 0.2.0
+    patent_landscape:
+      model_id: patent_landscape_llm_v0_2
+      model_version: 0.2.0
+    preliminary_technical_fto:
+      model_id: preliminary_technical_fto_llm_v0_2
+      model_version: 0.2.0
+    blocking_claim_severity:
+      model_id: blocking_claim_severity_llm_v0_2
+      model_version: 0.2.0
+    design_around_opportunity:
+      model_id: design_around_opportunity_llm_v0_2
+      model_version: 0.2.0
+    access_strategy:
+      model_id: access_strategy_llm_v0_2
+      model_version: 0.2.0
+    fto_product_configuration:
+      model_id: fto_product_configuration_llm_v0_2
+      model_version: 0.2.0
+    own_ip_inventive_concept:
+      model_id: own_ip_inventive_concept_llm_v0_2
+      model_version: 0.2.0
+    patentability_enablement:
+      model_id: patentability_enablement_llm_v0_2
+      model_version: 0.2.0
+    claim_architecture_patent_estate:
+      model_id: claim_architecture_patent_estate_llm_v0_2
+      model_version: 0.2.0
+    disclosure_filing_strategy:
+      model_id: disclosure_filing_strategy_llm_v0_2
+      model_version: 0.2.0
+    lifecycle_exclusivity_strategy:
+      model_id: lifecycle_exclusivity_strategy_llm_v0_2
+      model_version: 0.2.0
+    transaction_readiness:
+      model_id: transaction_readiness_llm_v0_2
+      model_version: 0.2.0
+  gate_overrides: {}
+  context:
+    architecture_version: 0.2.0
+    gate_groups:
+      commercial_executability:
+        name: Commercial Executability Chain
+        object_under_evaluation: CommerciallyExecutableADCAsset
+        question: 这个产品是否值得做、能否实施、能否保护并形成可交易资产？
+        decision_gate: transaction_readiness

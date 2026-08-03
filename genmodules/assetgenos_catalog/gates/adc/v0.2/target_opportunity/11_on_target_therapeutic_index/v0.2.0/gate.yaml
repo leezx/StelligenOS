@@ -1,0 +1,130 @@
+gate:
+  gate_id: on_target_therapeutic_index
+  gate_family: adc.v0_2.target_opportunity.on_target_therapeutic_index
+  gate_version: 0.2.0
+  sequence: 11
+  name: On-Target Therapeutic Index
+  purpose: Determine whether normal tissues can tolerate the exposure required to affect the endpoint, considering surface
+    density, accessibility, internalization, turnover, and regenerative reserve.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - upstream_gate_results
+    outputs:
+    - normal_surface_exposure
+    - critical_normal_cell_population
+    - normal_internalization_risk
+    - normal_regenerative_risk
+    - anticipated_tumor_exposure_requirement
+    - therapeutic_index_plausibility
+    - irreversible_toxicity_risk
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium
+    default_model_ids:
+    - on_target_therapeutic_index_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: target_opportunity
+    group_code: T
+    priority: P1
+    dependencies:
+    - clinical_context_endpoint
+    - tumor_cell_surface_availability
+    - intratumoral_antigen_accessibility
+    output_defaults:
+      normal_surface_exposure: null
+      critical_normal_cell_population: null
+      normal_internalization_risk: null
+      normal_regenerative_risk: null
+      anticipated_tumor_exposure_requirement: null
+      therapeutic_index_plausibility: null
+      irreversible_toxicity_risk: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      normal_surface_exposure:
+        type: number[0,1]
+        description: 'Frozen on_target_therapeutic_index@0.2.0 output field: normal_surface_exposure.'
+        required: true
+        nullable: true
+      critical_normal_cell_population:
+        type: string_or_structured_object
+        description: 'Frozen on_target_therapeutic_index@0.2.0 output field: critical_normal_cell_population.'
+        required: true
+        nullable: true
+      normal_internalization_risk:
+        type: number[0,1]
+        description: 'Frozen on_target_therapeutic_index@0.2.0 output field: normal_internalization_risk.'
+        required: true
+        nullable: true
+      normal_regenerative_risk:
+        type: number[0,1]
+        description: 'Frozen on_target_therapeutic_index@0.2.0 output field: normal_regenerative_risk.'
+        required: true
+        nullable: true
+      anticipated_tumor_exposure_requirement:
+        type: number[0,1]
+        description: 'Frozen on_target_therapeutic_index@0.2.0 output field: anticipated_tumor_exposure_requirement.'
+        required: true
+        nullable: true
+      therapeutic_index_plausibility:
+        type: string_or_structured_object
+        description: 'Frozen on_target_therapeutic_index@0.2.0 output field: therapeutic_index_plausibility.'
+        required: true
+        nullable: true
+      irreversible_toxicity_risk:
+        type: number[0,1]
+        description: 'Frozen on_target_therapeutic_index@0.2.0 output field: irreversible_toxicity_risk.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

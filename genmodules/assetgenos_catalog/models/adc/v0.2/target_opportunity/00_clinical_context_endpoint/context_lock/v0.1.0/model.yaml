@@ -1,0 +1,114 @@
+model:
+  model_id: clinical_context_endpoint_lock_v1
+  model_family: adc.v0_2.target_opportunity.clinical_context_endpoint.context_lock
+  model_version: 0.1.0
+  gate_id: clinical_context_endpoint
+  implementation: clinical_context_endpoint_lock
+  status: active_challenger
+  runtime:
+    model_name: Clinical Context and Endpoint Lock v1
+    model_type: rule_based
+    provider: ADC_clinical_endpoint_reference
+    input_schema: GateInputEnvelope@2.0.0
+    output_schema: GateModelOutput@2.0.0
+    cost_tier: low
+    limitations:
+    - Validates structural completeness; it does not select a clinical context or endpoint.
+    - Non-placeholder inputs are explicit assertions and are not independently verified.
+    - Ontology matching does not establish endpoint validation, approvability, or program suitability.
+    - The frozen input contract cannot encode a complete ICH E9(R1) estimand or statistical analysis plan.
+    - Free-text minimum meaningful effects are preserved but not clinically adjudicated.
+    calibration_status: uncalibrated_structural_rule
+    training_data_version: ADC_clinical_endpoint_reference@0.1.0
+    prompt_version: null
+    enabled: true
+    weight: 1.0
+    default_confidence_cap: 0.50
+  contract_refs:
+    gate: components/gates/adc/v0.2/target_opportunity/00_clinical_context_endpoint/v0.2.0/gate.yaml
+    input: components/contracts/gate_input.v2.yaml
+    output: components/contracts/model_output.v2.yaml
+  question_template: >-
+    Are the exact version-bound indication, patient segment, disease setting,
+    line of therapy, treatment context, comparator, efficacy or direct-benefit
+    endpoint, endpoint time horizon, and minimum clinically meaningful effect
+    explicitly supplied and internally non-conflicting?
+  evidence_policy:
+    may_use:
+    - Version-bound Candidate and TargetOpportunityContext fields.
+    - ADC_clinical_endpoint_reference@0.1.0 solely for endpoint definition and classification.
+    must_not_invent:
+    - indication, population, disease setting, line of therapy, or treatment context
+    - comparator, endpoint, time horizon, or minimum clinically meaningful effect
+    - estimand, censoring, multiplicity, statistical test, or error control
+    - surrogate validation, regulatory acceptability, or probability of success
+  fallback_policy:
+    mode: preserve_explicit_values_and_leave_missing_values_null
+    confidence_cap: 0.50
+    complete_when_evidence_missing: false
+    nullable_domain_fields_when_unknown: true
+  version_roadmap:
+  - stage: v0.1
+    target: Deterministic context completeness and endpoint ontology lock
+  - stage: v0.2
+    target: Versioned indication, setting, comparator, and population consistency rules
+  - stage: v0.3
+    target: Full estimand object and protocol/SAP linkage
+  - stage: v1
+    target: Independent protocol and regulatory review with human approval signatures
+  - stage: v2
+    target: Inter-rater calibration, drift monitoring, and governed stable promotion
+  model_card:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    summary: >-
+      Deterministic T0 structural lock that preserves explicit clinical context,
+      calculates completeness, classifies only a supplied endpoint, exposes
+      conflicts and missing fields, and never predicts clinical success.
+    intended_use:
+    - Block formal ADC ranking until required clinical context is explicit.
+    - Normalize common oncology endpoints without selecting one.
+    - Make comparator and minimum-effect omissions visible.
+    decision_role: >-
+      A pass means the required context is explicit and internally
+      non-conflicting; it does not mean the endpoint is optimal, powered,
+      regulator-accepted, or likely to succeed.
+    method_summary: >-
+      Nine explicit fields are scored with fixed weights. A pass requires full
+      completeness, an ontology-matched efficacy or direct-benefit endpoint,
+      and no indication or proxy-role conflict. Safety/tolerability alone
+      cannot define the T0 clinical-benefit condition.
+    input_requirements:
+    - Version-bound Candidate identity and indication.
+    - Version-bound TargetOpportunityContext.
+    - Explicit comparator and minimum clinically meaningful effect.
+    output_interpretation: >-
+      context_completeness_score is structural, not probabilistic.
+      clinical_success_condition remains null unless the benefit endpoint,
+      horizon, comparator, and minimum effect are explicit.
+    evidence_boundary:
+    - Guidance and standards define terms but do not approve a program-specific endpoint.
+    - Surrogate acceptability remains indication- and setting-specific.
+    - Input assertions are not independently verified.
+    - A complete ICH E9(R1) estimand remains a downstream protocol task.
+    known_failure_modes:
+    - Unrepresented or non-English aliases remain unmapped.
+    - Lexically different but semantically conflicting disease descriptions may evade simple checks.
+    - A populated free-text field can still be vague or clinically wrong.
+    - Composite endpoints and estimand details require expert review.
+    prohibited_uses:
+    - Selecting or recommending a clinical endpoint.
+    - Claiming surrogate validation, accelerated-approval eligibility, or regulator acceptance.
+    - Treating completeness or confidence as probability of clinical success.
+    - Using safety/tolerability alone as the clinical-benefit endpoint.
+    - Replacing clinical, statistical, regulatory, or patient-relevance review.
+  lifecycle:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    artifact_stage: formal_candidate
+    release_kind: first_formal
+    released_at: "2026-07-30T14:30:00Z"
+    record_root: components/model_governance/clinical_context_endpoint_lock_v1/v0.1.0
+    change_summary:
+    - Replaced generative completion with deterministic no-imputation context locking.
+    - Added fixed completeness weights and explicit comparator/minimum-effect enforcement.
+    - Added a versioned oncology endpoint ontology and proxy-role conflict detection.
+    - Prevented safety/tolerability-only endpoints from passing the clinical-benefit lock.

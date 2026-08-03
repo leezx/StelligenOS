@@ -1,0 +1,38 @@
+contract:
+  contract_id: gate_input_envelope
+  contract_version: "2.0.0"
+  description: Stable v0.2 input envelope shared by all three ADC Gate Groups.
+  fields:
+    candidate:
+      type: Candidate
+      description: Immutable canonical target/candidate identity.
+      required: true
+    target_opportunity:
+      type: TargetOpportunityContext
+      description: Indication, segment, setting, line, endpoint, target population, comparator, and success condition.
+      required: true
+    adc_product_candidate:
+      type: ADCProductContext
+      description: Epitope, antibody, format, conjugation, DAR, linker, payload, and biomarker hypothesis.
+      required: true
+    commercial_execution_context:
+      type: CommercialExecutionContext
+      description: Jurisdictions, intended commercial acts, value threshold, development and transaction context.
+      required: true
+    evidence:
+      type: list[Evidence]
+      description: Versioned evidence records available to the Gate.
+      required: true
+    upstream_results:
+      type: map[gate_id, GateResult]
+      description: Latest upstream Gate outputs, including refreshed FTO results where applicable.
+      required: true
+    graph_context:
+      type: object
+      description: Execution stage, dependencies, blockers, feedback edges, Profile and version metadata.
+      required: true
+    run_context:
+      type: object
+      description: Pipeline, model, prompt, dataset, seed, and scoring-policy versions.
+      required: true
+

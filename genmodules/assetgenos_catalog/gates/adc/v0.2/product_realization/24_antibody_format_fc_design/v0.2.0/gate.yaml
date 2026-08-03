@@ -1,0 +1,149 @@
+gate:
+  gate_id: antibody_format_fc_design
+  gate_family: adc.v0_2.product_realization.antibody_format_fc_design
+  gate_version: 0.2.0
+  sequence: 24
+  name: Antibody Format and Fc Design
+  purpose: Select format, valency, Fc behavior, conditional activation, multispecific opportunity, and half-life design against
+    product constraints.
+  runtime:
+    required: true
+    hard_gate: false
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - upstream_gate_results
+    outputs:
+    - recommended_antibody_formats
+    - valency_requirement
+    - Fc_effector_requirement
+    - Fc_safety_risk
+    - biparatopic_opportunity
+    - bispecific_opportunity
+    - conditional_activation_need
+    - half_life_design
+    - format_developability_risk
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium_high
+    default_model_ids:
+    - antibody_format_fc_design_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: product_realization
+    group_code: P
+    priority: P2
+    dependencies:
+    - epitope_function
+    - binding_geometry_kinetics
+    output_defaults:
+      recommended_antibody_formats: []
+      valency_requirement: null
+      Fc_effector_requirement: null
+      Fc_safety_risk: null
+      biparatopic_opportunity: null
+      bispecific_opportunity: null
+      conditional_activation_need: null
+      half_life_design: null
+      format_developability_risk: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      recommended_antibody_formats:
+        type: list[object]
+        description: 'Frozen antibody_format_fc_design@0.2.0 output field: recommended_antibody_formats.'
+        required: true
+        nullable: true
+      valency_requirement:
+        type: string_or_structured_object
+        description: 'Frozen antibody_format_fc_design@0.2.0 output field: valency_requirement.'
+        required: true
+        nullable: true
+      Fc_effector_requirement:
+        type: number[0,1]
+        description: 'Frozen antibody_format_fc_design@0.2.0 output field: Fc_effector_requirement.'
+        required: true
+        nullable: true
+      Fc_safety_risk:
+        type: number[0,1]
+        description: 'Frozen antibody_format_fc_design@0.2.0 output field: Fc_safety_risk.'
+        required: true
+        nullable: true
+      biparatopic_opportunity:
+        type: string_or_structured_object
+        description: 'Frozen antibody_format_fc_design@0.2.0 output field: biparatopic_opportunity.'
+        required: true
+        nullable: true
+      bispecific_opportunity:
+        type: string_or_structured_object
+        description: 'Frozen antibody_format_fc_design@0.2.0 output field: bispecific_opportunity.'
+        required: true
+        nullable: true
+      conditional_activation_need:
+        type: string_or_structured_object
+        description: 'Frozen antibody_format_fc_design@0.2.0 output field: conditional_activation_need.'
+        required: true
+        nullable: true
+      half_life_design:
+        type: string_or_structured_object
+        description: 'Frozen antibody_format_fc_design@0.2.0 output field: half_life_design.'
+        required: true
+        nullable: true
+      format_developability_risk:
+        type: number[0,1]
+        description: 'Frozen antibody_format_fc_design@0.2.0 output field: format_developability_risk.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

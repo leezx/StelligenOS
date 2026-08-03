@@ -1,0 +1,154 @@
+gate:
+  gate_id: patentability_enablement
+  gate_family: adc.v0_2.commercial_executability.patentability_enablement
+  gate_version: 0.2.0
+  sequence: 51
+  name: Patentability and Enablement
+  purpose: Separately evaluate novelty, non-obviousness, utility, written description, enablement, data support, inventorship,
+    and ownership.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - commercial_execution_context
+    - upstream_gate_results
+    outputs:
+    - novelty_score
+    - non_obviousness_score
+    - enablement_score
+    - written_description_score
+    - utility_score
+    - inventorship_status
+    - ownership_status
+    - data_support_gaps
+    - patentability_risk
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: high
+    default_model_ids:
+    - patentability_enablement_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: commercial_executability
+    group_code: C
+    priority: P3
+    dependencies:
+    - own_ip_inventive_concept
+    output_defaults:
+      novelty_score: null
+      non_obviousness_score: null
+      enablement_score: null
+      written_description_score: null
+      utility_score: null
+      inventorship_status: null
+      ownership_status: null
+      data_support_gaps: []
+      patentability_risk: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      commercial_execution_context:
+        type: CommercialExecutionContext
+        description: 'Version-bound v0.2 input object: commercial_execution_context.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      novelty_score:
+        type: number[0,1]
+        description: 'Frozen patentability_enablement@0.2.0 output field: novelty_score.'
+        required: true
+        nullable: true
+      non_obviousness_score:
+        type: number[0,1]
+        description: 'Frozen patentability_enablement@0.2.0 output field: non_obviousness_score.'
+        required: true
+        nullable: true
+      enablement_score:
+        type: number[0,1]
+        description: 'Frozen patentability_enablement@0.2.0 output field: enablement_score.'
+        required: true
+        nullable: true
+      written_description_score:
+        type: number[0,1]
+        description: 'Frozen patentability_enablement@0.2.0 output field: written_description_score.'
+        required: true
+        nullable: true
+      utility_score:
+        type: number[0,1]
+        description: 'Frozen patentability_enablement@0.2.0 output field: utility_score.'
+        required: true
+        nullable: true
+      inventorship_status:
+        type: string_or_structured_object
+        description: 'Frozen patentability_enablement@0.2.0 output field: inventorship_status.'
+        required: true
+        nullable: true
+      ownership_status:
+        type: string_or_structured_object
+        description: 'Frozen patentability_enablement@0.2.0 output field: ownership_status.'
+        required: true
+        nullable: true
+      data_support_gaps:
+        type: list[object]
+        description: 'Frozen patentability_enablement@0.2.0 output field: data_support_gaps.'
+        required: true
+        nullable: true
+      patentability_risk:
+        type: number[0,1]
+        description: 'Frozen patentability_enablement@0.2.0 output field: patentability_risk.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

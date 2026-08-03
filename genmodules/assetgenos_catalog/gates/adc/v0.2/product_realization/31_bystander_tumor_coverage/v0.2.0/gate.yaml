@@ -1,0 +1,143 @@
+gate:
+  gate_id: bystander_tumor_coverage
+  gate_family: adc.v0_2.product_realization.bystander_tumor_coverage
+  gate_version: 0.2.0
+  sequence: 31
+  name: Bystander and Tumor-Coverage Design
+  purpose: Design the bystander range needed to cover heterogeneous causal disease while limiting neighboring normal, stromal,
+    and immune-cell injury.
+  runtime:
+    required: true
+    hard_gate: false
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - upstream_gate_results
+    outputs:
+    - bystander_required
+    - bystander_range_required
+    - payload_membrane_permeability
+    - local_diffusion_potential
+    - target_negative_rescue_probability
+    - neighboring_normal_cell_risk
+    - stromal_damage_risk
+    - bystander_therapeutic_value
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium_high
+    default_model_ids:
+    - bystander_tumor_coverage_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: product_realization
+    group_code: P
+    priority: P2
+    dependencies:
+    - baseline_coverage_and_escape
+    - payload_cell_state_match
+    - linker_release_match
+    output_defaults:
+      bystander_required: null
+      bystander_range_required: null
+      payload_membrane_permeability: null
+      local_diffusion_potential: null
+      target_negative_rescue_probability: null
+      neighboring_normal_cell_risk: null
+      stromal_damage_risk: null
+      bystander_therapeutic_value: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      bystander_required:
+        type: boolean
+        description: 'Frozen bystander_tumor_coverage@0.2.0 output field: bystander_required.'
+        required: true
+        nullable: true
+      bystander_range_required:
+        type: string_or_structured_object
+        description: 'Frozen bystander_tumor_coverage@0.2.0 output field: bystander_range_required.'
+        required: true
+        nullable: true
+      payload_membrane_permeability:
+        type: string_or_structured_object
+        description: 'Frozen bystander_tumor_coverage@0.2.0 output field: payload_membrane_permeability.'
+        required: true
+        nullable: true
+      local_diffusion_potential:
+        type: number[0,1]
+        description: 'Frozen bystander_tumor_coverage@0.2.0 output field: local_diffusion_potential.'
+        required: true
+        nullable: true
+      target_negative_rescue_probability:
+        type: number[0,1]
+        description: 'Frozen bystander_tumor_coverage@0.2.0 output field: target_negative_rescue_probability.'
+        required: true
+        nullable: true
+      neighboring_normal_cell_risk:
+        type: number[0,1]
+        description: 'Frozen bystander_tumor_coverage@0.2.0 output field: neighboring_normal_cell_risk.'
+        required: true
+        nullable: true
+      stromal_damage_risk:
+        type: number[0,1]
+        description: 'Frozen bystander_tumor_coverage@0.2.0 output field: stromal_damage_risk.'
+        required: true
+        nullable: true
+      bystander_therapeutic_value:
+        type: string_or_structured_object
+        description: 'Frozen bystander_tumor_coverage@0.2.0 output field: bystander_therapeutic_value.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

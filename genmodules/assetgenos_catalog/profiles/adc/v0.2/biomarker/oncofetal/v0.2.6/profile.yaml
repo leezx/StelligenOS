@@ -1,0 +1,30 @@
+profile:
+  profile_id: adc.biomarker.oncofetal
+  profile_version: 0.2.6
+  profile_type: biomarker
+  modality: ADC
+  extends:
+  - adc.asset_factory_v0.2@0.2.6
+  description: Oncofetal/fetal-like v0.2 biomarker overlay for causal-population mapping and assay co-design.
+  gate_order: []
+  gate_versions: {}
+  model_bindings: {}
+  gate_overrides: {}
+  context:
+    target_opportunity:
+      cell_state_hypothesis: oncofetal_like_malignant_cells
+      required_comparators:
+      - adult normal tissue
+      - matched tumor
+      - developmental reference
+      - regenerative or injury state
+    adc_product_candidate:
+      biomarker_intended_use:
+      - target engagement
+      - patient selection
+      - response and resistance
+    profile_revision:
+      version: 0.2.6
+      reason: Follow the asset_factory_v0.2@0.2.6 base to select the T12 deterministic
+        target-opportunity-decision integrator challenger.
+      predecessor_profile_version: 0.2.5

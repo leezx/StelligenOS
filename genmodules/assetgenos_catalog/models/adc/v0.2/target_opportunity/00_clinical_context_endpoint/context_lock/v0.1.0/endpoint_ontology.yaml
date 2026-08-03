@@ -1,0 +1,141 @@
+catalog:
+  catalog_id: ADC_clinical_endpoint_reference
+  catalog_version: 0.1.0
+  evidence_cutoff: "2026-07-29"
+  intended_use: >-
+    Deterministic classification and definition of an endpoint explicitly
+    supplied in TargetOpportunityContext. This catalog does not select an
+    endpoint and does not establish regulatory acceptability.
+  non_claims:
+  - No endpoint is universally acceptable for approval.
+  - A tumor-response, time-to-event, pathological, or molecular endpoint is not assumed to be a validated surrogate for clinical benefit.
+  - Classification does not replace a protocol estimand, statistical analysis plan, regulator interaction, or clinical review.
+  completeness_fields:
+    indication: 0.15
+    patient_segment: 0.15
+    disease_setting: 0.10
+    line_of_therapy: 0.10
+    treatment_context: 0.10
+    comparator: 0.10
+    endpoint: 0.15
+    endpoint_time_horizon: 0.05
+    minimum_clinically_meaningful_effect: 0.10
+  pass_requirements:
+  - Every weighted field is explicitly supplied in the version-bound input.
+  - The endpoint matches this catalog and is not safety/tolerability alone.
+  - Candidate and target-opportunity indications do not conflict.
+  - An explicitly declared endpoint-proxy role does not contradict the catalog.
+  endpoint_rules:
+  - endpoint_id: overall_survival
+    aliases: [overall survival, OS]
+    endpoint_class: direct_clinical_outcome
+    proxy_role: direct_clinical_benefit
+    definition: Time from a prespecified origin until death from any cause.
+    qualification: Requires a prespecified time origin, censoring rules, estimand, and analysis.
+    reference_ids: [FDA_ONCOLOGY_ENDPOINTS_2018, ICH_E9_R1_2019]
+  - endpoint_id: progression_free_survival
+    aliases: [progression-free survival, progression free survival, PFS]
+    endpoint_class: time_to_event_tumor_assessment
+    proxy_role: context_dependent_intermediate_endpoint
+    definition: Time from a prespecified origin until objective disease progression or death.
+    qualification: Assessment schedule, progression rules, missing assessments, censoring, and independent review can affect interpretation.
+    reference_ids: [FDA_ONCOLOGY_ENDPOINTS_2018, FDA_SURROGATE_TABLE_2026, ICH_E9_R1_2019]
+  - endpoint_id: time_to_progression
+    aliases: [time to progression, TTP]
+    endpoint_class: time_to_event_tumor_assessment
+    proxy_role: context_dependent_intermediate_endpoint
+    definition: Time from a prespecified origin until objective disease progression; deaths require prespecified handling.
+    qualification: Death handling distinguishes TTP from PFS and must be locked in the estimand and analysis.
+    reference_ids: [FDA_ONCOLOGY_ENDPOINTS_2018, ICH_E9_R1_2019]
+  - endpoint_id: disease_free_survival
+    aliases: [disease-free survival, disease free survival, DFS]
+    endpoint_class: time_to_event_recurrence
+    proxy_role: context_dependent_intermediate_endpoint
+    definition: Time after definitive treatment until recurrence or death, according to prespecified event rules.
+    qualification: Event definition and death handling depend on disease and treatment setting.
+    reference_ids: [FDA_ONCOLOGY_ENDPOINTS_2018, FDA_SURROGATE_TABLE_2026, ICH_E9_R1_2019]
+  - endpoint_id: event_free_survival
+    aliases: [event-free survival, event free survival, EFS]
+    endpoint_class: time_to_event_composite
+    proxy_role: context_dependent_intermediate_endpoint
+    definition: Time until any event in a prespecified disease- and setting-specific composite.
+    qualification: Every component and intercurrent-event rule must be defined before interpretation.
+    reference_ids: [FDA_ONCOLOGY_ENDPOINTS_2018, FDA_SURROGATE_TABLE_2026, ICH_E9_R1_2019]
+  - endpoint_id: objective_response_rate
+    aliases: [objective response rate, overall response rate, ORR]
+    endpoint_class: tumor_response
+    proxy_role: context_dependent_intermediate_endpoint
+    definition: Proportion of patients with a prespecified objective tumor response under a named response framework.
+    qualification: Response criteria, confirmation, duration, assessment schedule, and review method must be specified.
+    reference_ids: [FDA_ONCOLOGY_ENDPOINTS_2018, FDA_SURROGATE_TABLE_2026, RECIST_1_1_2009]
+  - endpoint_id: complete_response_rate
+    aliases: [complete response rate, complete remission rate, CR rate]
+    endpoint_class: tumor_response
+    proxy_role: context_dependent_intermediate_endpoint
+    definition: Proportion of patients meeting prespecified complete response or remission criteria.
+    qualification: Disease-specific criteria, confirmation, and response duration must be specified.
+    reference_ids: [FDA_ONCOLOGY_ENDPOINTS_2018, FDA_SURROGATE_TABLE_2026]
+  - endpoint_id: duration_of_response
+    aliases: [duration of response, response duration, DoR]
+    endpoint_class: tumor_response_duration
+    proxy_role: supportive_context_dependent_endpoint
+    definition: Time from first documented response until progression or death under prespecified rules.
+    qualification: Applies only to responders and generally requires response criteria plus censoring rules.
+    reference_ids: [FDA_ONCOLOGY_ENDPOINTS_2018, ICH_E9_R1_2019]
+  - endpoint_id: patient_reported_symptoms
+    aliases: [patient-reported symptoms, patient reported symptoms, symptom improvement, symptom deterioration, PRO symptoms]
+    endpoint_class: direct_patient_reported_outcome
+    proxy_role: direct_clinical_benefit
+    definition: Prespecified patient-reported symptom status, improvement, deterioration, or time-to-event measure.
+    qualification: Instrument, domain, recall period, scoring, missing-data handling, and meaningful-change threshold must be locked.
+    reference_ids: [FDA_ONCOLOGY_ENDPOINTS_2018, FDA_CORE_PRO_2024, ICH_E9_R1_2019]
+  - endpoint_id: physical_function
+    aliases: [physical function, physical functioning, PRO physical function]
+    endpoint_class: direct_patient_reported_outcome
+    proxy_role: direct_clinical_benefit
+    definition: Prespecified patient-reported physical function outcome measured with a fit-for-purpose instrument.
+    qualification: Instrument, domain, scoring, time horizon, and meaningful-change threshold must be locked.
+    reference_ids: [FDA_CORE_PRO_2024, ICH_E9_R1_2019]
+  - endpoint_id: pathological_complete_response
+    aliases: [pathological complete response, pathologic complete response, pCR]
+    endpoint_class: pathological_response
+    proxy_role: context_specific_surrogate_candidate
+    definition: Absence of specified residual invasive cancer in resected tissue after neoadjuvant therapy.
+    qualification: Regulatory use is setting-specific; the exact breast/tissue definition and trial context must be specified.
+    reference_ids: [FDA_PCR_BREAST_2020, FDA_SURROGATE_TABLE_2026]
+  - endpoint_id: minimal_residual_disease
+    aliases: [minimal residual disease negativity, measurable residual disease negativity, MRD negativity, MRD negative]
+    endpoint_class: molecular_or_cellular_biomarker
+    proxy_role: context_specific_surrogate_candidate
+    definition: Absence of measurable residual disease above a prespecified assay threshold at a prespecified time.
+    qualification: Disease, specimen, assay, sensitivity, threshold, timing, and confirmation rules are essential.
+    reference_ids: [FDA_MRD_HEMATOLOGIC_2020, FDA_SURROGATE_TABLE_2026]
+  - endpoint_id: circulating_tumor_dna
+    aliases: [ctDNA clearance, ctDNA negativity, ctDNA response, molecular residual disease by ctDNA]
+    endpoint_class: molecular_biomarker
+    proxy_role: context_specific_surrogate_candidate
+    definition: Prespecified change or detectability state for circulating tumor DNA using a named assay and time point.
+    qualification: Assay, threshold, specimen handling, disease setting, timing, and intended regulatory role must be specified.
+    reference_ids: [FDA_CTDNA_EARLY_STAGE_2024, FDA_SURROGATE_TABLE_2026]
+  - endpoint_id: safety_tolerability
+    aliases: [dose-limiting toxicity, DLT, treatment-emergent adverse events, TEAE, safety, tolerability]
+    endpoint_class: safety_tolerability
+    proxy_role: not_an_efficacy_endpoint
+    definition: Prespecified adverse-event, toxicity, dose modification, or tolerability outcome.
+    qualification: A safety endpoint does not by itself define antitumor clinical benefit.
+    reference_ids: [ICH_E9_R1_2019]
+  sources:
+  - {source_id: FDA_ONCOLOGY_ENDPOINTS_2018, authority: US Food and Drug Administration, status: final_guidance, url: "https://www.fda.gov/media/71195/download"}
+  - {source_id: FDA_SURROGATE_TABLE_2026, authority: US Food and Drug Administration, status: current_table_checked_2026-07-29, url: "https://www.fda.gov/drugs/development-resources/table-surrogate-endpoints-were-basis-drug-approval-or-licensure"}
+  - {source_id: FDA_ACCELERATED_APPROVAL, authority: US Food and Drug Administration, status: current_program_page_checked_2026-07-29, url: "https://www.fda.gov/drugs/nda-and-bla-approvals/accelerated-approval-program"}
+  - {source_id: ICH_E9_R1_2019, authority: International Council for Harmonisation, status: final_guideline, url: "https://database.ich.org/sites/default/files/E9-R1_Step4_Guideline_2019_1203.pdf"}
+  - {source_id: FDA_CORE_PRO_2024, authority: US Food and Drug Administration, status: final_guidance, url: "https://www.fda.gov/media/149994/download"}
+  - {source_id: FDA_CTDNA_EARLY_STAGE_2024, authority: US Food and Drug Administration, status: final_guidance, url: "https://www.fda.gov/media/183874/download"}
+  - {source_id: FDA_MRD_HEMATOLOGIC_2020, authority: US Food and Drug Administration, status: final_guidance, url: "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/hematologic-malignancies-regulatory-considerations-use-minimal-residual-disease-development-drug-and"}
+  - {source_id: FDA_PCR_BREAST_2020, authority: US Food and Drug Administration, status: final_guidance, url: "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/pathological-complete-response-neoadjuvant-treatment-high-risk-early-stage-breast-cancer-use"}
+  - {source_id: RECIST_1_1_2009, authority: RECIST Working Group, status: peer_reviewed_guideline, url: "https://pubmed.ncbi.nlm.nih.gov/19097774/"}
+  excluded_from_normative_rules:
+  - title: Approaches to Assessment of Overall Survival in Oncology Clinical Trials
+    reason: FDA draft guidance dated August 2025; not for implementation.
+  - title: Minimal Residual Disease and Complete Response in Multiple Myeloma for Accelerated Approval
+    reason: FDA draft guidance dated January 2026; not for implementation.

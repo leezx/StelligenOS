@@ -1,0 +1,132 @@
+model:
+  model_id: commercial_opportunity_clinical_unmet_need_reference_v1
+  model_family: adc.v0_2.commercial_executability.commercial_opportunity_threshold.clinical_unmet_need_reference
+  model_version: 0.1.0
+  gate_id: commercial_opportunity_threshold
+  implementation: clinical_unmet_need_reference_lookup
+  status: active_challenger
+  runtime:
+    model_name: Commercial Opportunity Clinical Unmet-Need Reference v1
+    model_type: database_lookup
+    provider: ADC_clinical_unmet_need_reference
+    input_schema: GateInputEnvelope@2.0.0
+    output_schema: GateModelOutput@2.0.0
+    cost_tier: low
+    limitations:
+    - The 28 scenarios are a bounded enumeration of major adult oncology development settings, not all cancers or every clinically important need.
+    - Source evidence is treatment-summary level. It does not quantify line-specific eligible patient count, biomarker prevalence, duration of benefit, willingness to pay, price, cost, probability of success, or commercial value.
+    - The unmet-need score is an ordinal three-component curation heuristic; it is not calibrated to clinical outcome or commercial success.
+    - Qualitative population scope is deliberately separated from clinical severity and cannot substitute for epidemiology.
+    - Treatment standards change quickly. Every scenario is bounded to the 2026-07-29 evidence cutoff and must be refreshed through a new dataset/Model version.
+    - The Model does not evaluate target expression, ADC suitability, competition, entry window, regulatory path, IP, FTO, or transaction value.
+    - Disease-only matches are ambiguous when subtype, line, and prior therapy are absent.
+    - High unmet need cannot pass the C0 hard Gate without independently quantified population, value, cost, and threshold evidence.
+    calibration_status: uncalibrated_reference_curation
+    training_data_version: ADC_clinical_unmet_need_reference@0.1.0
+    prompt_version: null
+    enabled: true
+    weight: 1.0
+    default_confidence_cap: 0.45
+  contract_refs:
+    gate: components/gates/adc/v0.2/commercial_executability/40_commercial_opportunity_threshold/v0.2.0/gate.yaml
+    input: components/contracts/gate_input.v2.yaml
+    output: components/contracts/model_output.v2.yaml
+  question_template: >-
+    Does the exact indication, subtype, disease setting, line of therapy, and
+    prior-treatment context match a version-bound high-priority clinical
+    unmet-need scenario? Report the clinical gap and its ordinal severity, but
+    keep eligible patient count, biomarker prevalence, development cost,
+    commercial value, and minimum-value-threshold passage unknown unless
+    independently supplied.
+  evidence_policy:
+    may_use:
+    - ADC_clinical_unmet_need_reference@0.1.0 scenario rows
+    - Version-bound Candidate and target_opportunity context
+    - Dated NCI PDQ source URLs retained by the dataset
+    must_not_invent:
+    - eligible patient counts or incidence-to-line attrition
+    - biomarker prevalence or segment size
+    - duration of benefit not supplied as evidence
+    - development cost, timeline, or probability of success
+    - price, revenue, NPV, transaction value, or commercial value range
+    - minimum commercial value threshold passage
+    - competition density or entry-window conclusions owned by C2
+    - regulatory, patent, FTO, or legal conclusions
+    - target or ADC suitability from disease unmet need
+  fallback_policy:
+    mode: neutral_unknown_when_indication_or_setting_unindexed
+    confidence_cap: 0.45
+    complete_when_evidence_missing: true
+    nullable_domain_fields_when_unknown: true
+  version_roadmap:
+  - stage: v0
+    target: LLM-only executable baseline
+  - stage: v1
+    target: Enumerated, source-backed clinical unmet-need scenario reference
+  - stage: v2
+    target: Version-bound epidemiology, biomarker prevalence, treatment-line attrition, and TPP value inputs
+  - stage: v3
+    target: Probability-adjusted commercial value calibration with historical development outcomes
+  - stage: v4
+    target: Independent clinical/commercial validation and governed production
+  model_card:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    summary: >-
+      Version-bound scenario lookup for C0. It enumerates 28 high-priority
+      treatment-failure settings across 27 major adult cancer categories and
+      returns a transparent ordinal clinical unmet-need score without
+      pretending that clinical need is a commercial valuation.
+    intended_use:
+    - Enumerate major adult oncology clinical unmet-need hypotheses at disease, subtype, setting, line, and prior-treatment resolution.
+    - Match an AssetGenOS candidate to the most relevant curated treatment-failure scenario.
+    - Make missing epidemiology, biomarker prevalence, TPP, cost, competition, and value inputs explicit before C0 can pass.
+    - Provide a reproducible clinical-need reference for later independent review and dataset refresh.
+    decision_role: >-
+      Reference-only C0 challenger for exploration and evidence-gap
+      identification. It cannot pass or fail the Commercial Opportunity
+      Threshold hard Gate by itself.
+    method_summary: >-
+      Deterministic indication/alias lookup followed by subtype, disease-setting,
+      line, and prior-treatment overlap ranking against
+      ADC_clinical_unmet_need_reference@0.1.0. Clinical severity is the declared
+      weighted ordinal score (40% prognosis severity, 35% option scarcity, 25%
+      durability gap), capped at 0.45 confidence and always reported uncertain.
+    input_requirements:
+    - Canonical candidate indication and cancer type.
+    - Version-bound target_opportunity indication, patient segment, molecular subtype, disease setting, line, and treatment context.
+    - ADC_clinical_unmet_need_reference@0.1.0 scenario table.
+    output_interpretation: >-
+      A high score means the candidate context resembles a curated severe
+      treatment-failure scenario. It does not mean the target, ADC, market, or
+      transaction is attractive, and it does not establish C0 passage.
+    evidence_boundary:
+    - NCI PDQ treatment summaries support clinical context, not market size or value.
+    - Population scope is qualitative and does not quantify eligible patients.
+    - The score is ordinal, transparent, and uncalibrated.
+    - C2 owns competition and entry-window analysis.
+    - No output is a medical recommendation or treatment guideline.
+    known_failure_modes:
+    - Broad labels such as breast cancer or thyroid cancer can match multiple scenarios when subtype is missing.
+    - Treatment vocabulary may drift after the evidence cutoff.
+    - US-oriented therapy names may not represent access or sequencing in other jurisdictions.
+    - A scenario can be clinically severe but commercially unattractive because its eligible population is small, competition is dense, development is infeasible, or value capture is limited.
+    - A high-priority scenario may not be addressable by an ADC or by the candidate target.
+    prohibited_uses:
+    - Passing or failing C0 from unmet need alone.
+    - Claiming a patient count, biomarker segment size, price, revenue, NPV, development cost, probability of success, or commercial value.
+    - Treating the heuristic score or confidence cap as an empirical probability.
+    - Replacing current guideline review, clinical expert review, epidemiology, competitive intelligence, finance, or legal diligence.
+    - Selecting a target or modality solely from disease-level unmet need.
+  lifecycle:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    artifact_stage: formal_candidate
+    release_kind: first_formal
+    released_at: '2026-07-29T19:05:00Z'
+    predecessor_model_ref: null
+    record_root: components/model_governance/commercial_opportunity_clinical_unmet_need_reference_v1/v0.1.0
+    change_summary:
+    - First formal database-backed C0 clinical unmet-need reference Model.
+    - Enumerated 28 treatment-failure scenarios across 27 major adult cancer categories.
+    - Separated clinical unmet need from epidemiology, competition, development cost, and commercial value.
+    - Retained a 0.45 confidence cap and prohibited C0 passage from clinical need alone.
+    - No independent validation or commercial calibration claim.

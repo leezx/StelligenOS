@@ -1,0 +1,147 @@
+gate:
+  gate_id: access_strategy
+  gate_family: adc.v0_2.commercial_executability.access_strategy
+  gate_version: 0.2.0
+  sequence: 48
+  name: License, Acquire, Partner or Abandon
+  purpose: Compare design-around, license, cross-license, acquisition, partnership, expiry, validity challenge, and abandonment
+    strategies.
+  runtime:
+    required: true
+    hard_gate: false
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - commercial_execution_context
+    - upstream_gate_results
+    outputs:
+    - strategy_options
+    - design_around_cost
+    - license_cost_range
+    - acquisition_feasibility
+    - time_to_resolution
+    - residual_legal_risk
+    - strategic_dependency
+    - recommended_access_strategy
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium_high
+    default_model_ids:
+    - access_strategy_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: commercial_executability
+    group_code: C
+    priority: P2
+    dependencies:
+    - design_around_opportunity
+    output_defaults:
+      strategy_options: []
+      design_around_cost: null
+      license_cost_range: null
+      acquisition_feasibility: null
+      time_to_resolution: null
+      residual_legal_risk: null
+      strategic_dependency: null
+      recommended_access_strategy: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      commercial_execution_context:
+        type: CommercialExecutionContext
+        description: 'Version-bound v0.2 input object: commercial_execution_context.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      strategy_options:
+        type: list[object]
+        description: 'Frozen access_strategy@0.2.0 output field: strategy_options.'
+        required: true
+        nullable: true
+      design_around_cost:
+        type: string_or_structured_object
+        description: 'Frozen access_strategy@0.2.0 output field: design_around_cost.'
+        required: true
+        nullable: true
+      license_cost_range:
+        type: string_or_structured_object
+        description: 'Frozen access_strategy@0.2.0 output field: license_cost_range.'
+        required: true
+        nullable: true
+      acquisition_feasibility:
+        type: number[0,1]
+        description: 'Frozen access_strategy@0.2.0 output field: acquisition_feasibility.'
+        required: true
+        nullable: true
+      time_to_resolution:
+        type: string_or_structured_object
+        description: 'Frozen access_strategy@0.2.0 output field: time_to_resolution.'
+        required: true
+        nullable: true
+      residual_legal_risk:
+        type: number[0,1]
+        description: 'Frozen access_strategy@0.2.0 output field: residual_legal_risk.'
+        required: true
+        nullable: true
+      strategic_dependency:
+        type: string_or_structured_object
+        description: 'Frozen access_strategy@0.2.0 output field: strategic_dependency.'
+        required: true
+        nullable: true
+      recommended_access_strategy:
+        type: string_or_structured_object
+        description: 'Frozen access_strategy@0.2.0 output field: recommended_access_strategy.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

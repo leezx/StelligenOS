@@ -1,0 +1,121 @@
+gate:
+  gate_id: intratumoral_antigen_accessibility
+  gate_family: adc.v0_2.target_opportunity.intratumoral_antigen_accessibility
+  gate_version: 0.2.0
+  sequence: 8
+  name: In-Tumor Antigen Accessibility
+  purpose: Determine whether a circulating antibody can reach the target antigen through vascular, stromal, spatial, shedding,
+    and sink constraints.
+  runtime:
+    required: true
+    hard_gate: false
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - upstream_gate_results
+    outputs:
+    - vascular_delivery_access
+    - tissue_penetration
+    - spatial_target_exposure
+    - stromal_barrier_risk
+    - shed_antigen_sink
+    - accessible_target_fraction
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium
+    default_model_ids:
+    - intratumoral_antigen_accessibility_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: target_opportunity
+    group_code: T
+    priority: P1
+    dependencies:
+    - tumor_cell_surface_availability
+    output_defaults:
+      vascular_delivery_access: null
+      tissue_penetration: null
+      spatial_target_exposure: null
+      stromal_barrier_risk: null
+      shed_antigen_sink: null
+      accessible_target_fraction: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      vascular_delivery_access:
+        type: string_or_structured_object
+        description: 'Frozen intratumoral_antigen_accessibility@0.2.0 output field: vascular_delivery_access.'
+        required: true
+        nullable: true
+      tissue_penetration:
+        type: string_or_structured_object
+        description: 'Frozen intratumoral_antigen_accessibility@0.2.0 output field: tissue_penetration.'
+        required: true
+        nullable: true
+      spatial_target_exposure:
+        type: number[0,1]
+        description: 'Frozen intratumoral_antigen_accessibility@0.2.0 output field: spatial_target_exposure.'
+        required: true
+        nullable: true
+      stromal_barrier_risk:
+        type: number[0,1]
+        description: 'Frozen intratumoral_antigen_accessibility@0.2.0 output field: stromal_barrier_risk.'
+        required: true
+        nullable: true
+      shed_antigen_sink:
+        type: string_or_structured_object
+        description: 'Frozen intratumoral_antigen_accessibility@0.2.0 output field: shed_antigen_sink.'
+        required: true
+        nullable: true
+      accessible_target_fraction:
+        type: number[0,1]
+        description: 'Frozen intratumoral_antigen_accessibility@0.2.0 output field: accessible_target_fraction.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

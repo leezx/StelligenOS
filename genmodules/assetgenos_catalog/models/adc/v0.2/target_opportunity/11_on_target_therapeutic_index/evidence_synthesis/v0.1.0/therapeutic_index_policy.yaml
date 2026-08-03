@@ -1,0 +1,31 @@
+evidence_contract:
+  policy_ref: ADC_on_target_therapeutic_index_evidence@0.1.0
+  evidence_type: on_target_therapeutic_index_evidence_v1
+reference:
+  evidence_cutoff: "2026-07-29"
+  confidence_cap: 0.55
+scoring:
+  fraction_count_conflict_tolerance: 0.02
+  formula: 1 - weighted_on_target_risk
+risk_components:
+  normal_surface_exposure: {weight: 0.25}
+  normal_internalization_risk: {weight: 0.20}
+  normal_regenerative_risk: {weight: 0.20}
+  anticipated_tumor_exposure_requirement: {weight: 0.15}
+  irreversible_toxicity_risk: {weight: 0.20}
+method_sources:
+  - source_id: Uhlen_2021_HumanProteinAtlas
+    locator: https://pmc.ncbi.nlm.nih.gov/articles/PMC7737765/
+    supports: Cell-type-resolved normal-tissue protein and RNA localization.
+  - source_id: TabulaSapiens_2022
+    locator: https://doi.org/10.1126/science.abl4896
+    supports: Multi-organ single-cell normal-human reference.
+  - source_id: Derksen_2025_ADC_targets_normal_tissue
+    locator: https://doi.org/10.1038/s41467-025-67840-z
+    supports: Matched assessment of ADC-target expression in metastases and normal tissues.
+  - source_id: Saber_2015_ADC_nonclinical_safety
+    locator: https://pmc.ncbi.nlm.nih.gov/articles/PMC4540738/
+    supports: On-target normal-tissue expression and nonclinical safety boundaries.
+  - source_id: Bordeau_2023_antiMET_affinity
+    locator: https://doi.org/10.1371/journal.pone.0293703
+    supports: Experimental evidence that target binding can alter ADC therapeutic index.

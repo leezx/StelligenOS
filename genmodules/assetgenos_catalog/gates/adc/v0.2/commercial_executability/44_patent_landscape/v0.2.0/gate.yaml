@@ -1,0 +1,154 @@
+gate:
+  gate_id: patent_landscape
+  gate_family: adc.v0_2.commercial_executability.patent_landscape
+  gate_version: 0.2.0
+  sequence: 44
+  name: Patent Landscape
+  purpose: Build a dated map of relevant patent families, applications, legal status, assignees, priority timeline, claim
+    categories, and density without making an FTO conclusion.
+  runtime:
+    required: true
+    hard_gate: false
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - commercial_execution_context
+    - upstream_gate_results
+    outputs:
+    - relevant_patent_families
+    - active_patent_families
+    - pending_applications
+    - expired_or_abandoned_families
+    - key_assignees
+    - priority_timeline
+    - claim_category_map
+    - patent_density
+    - landscape_confidence
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: low
+    default_model_ids:
+    - patent_landscape_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: commercial_executability
+    group_code: C
+    priority: P0
+    dependencies:
+    - product_claim_decomposition
+    output_defaults:
+      relevant_patent_families: []
+      active_patent_families: []
+      pending_applications: []
+      expired_or_abandoned_families: []
+      key_assignees: []
+      priority_timeline: null
+      claim_category_map: null
+      patent_density: null
+      landscape_confidence: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      commercial_execution_context:
+        type: CommercialExecutionContext
+        description: 'Version-bound v0.2 input object: commercial_execution_context.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      relevant_patent_families:
+        type: list[object]
+        description: 'Frozen patent_landscape@0.2.0 output field: relevant_patent_families.'
+        required: true
+        nullable: true
+      active_patent_families:
+        type: list[object]
+        description: 'Frozen patent_landscape@0.2.0 output field: active_patent_families.'
+        required: true
+        nullable: true
+      pending_applications:
+        type: list[object]
+        description: 'Frozen patent_landscape@0.2.0 output field: pending_applications.'
+        required: true
+        nullable: true
+      expired_or_abandoned_families:
+        type: list[object]
+        description: 'Frozen patent_landscape@0.2.0 output field: expired_or_abandoned_families.'
+        required: true
+        nullable: true
+      key_assignees:
+        type: list[object]
+        description: 'Frozen patent_landscape@0.2.0 output field: key_assignees.'
+        required: true
+        nullable: true
+      priority_timeline:
+        type: string_or_structured_object
+        description: 'Frozen patent_landscape@0.2.0 output field: priority_timeline.'
+        required: true
+        nullable: true
+      claim_category_map:
+        type: string_or_structured_object
+        description: 'Frozen patent_landscape@0.2.0 output field: claim_category_map.'
+        required: true
+        nullable: true
+      patent_density:
+        type: string_or_structured_object
+        description: 'Frozen patent_landscape@0.2.0 output field: patent_density.'
+        required: true
+        nullable: true
+      landscape_confidence:
+        type: number[0,1]
+        description: 'Frozen patent_landscape@0.2.0 output field: landscape_confidence.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

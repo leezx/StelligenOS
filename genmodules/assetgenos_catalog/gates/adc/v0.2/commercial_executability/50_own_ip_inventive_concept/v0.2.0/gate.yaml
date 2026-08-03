@@ -1,0 +1,154 @@
+gate:
+  gate_id: own_ip_inventive_concept
+  gate_family: adc.v0_2.commercial_executability.own_ip_inventive_concept
+  gate_version: 0.2.0
+  sequence: 50
+  name: Own-IP Inventive Concept
+  purpose: Identify the actual technical problem, solution, novelty basis, non-obviousness basis, unexpected results, inventors,
+    and evidence supporting own-IP concepts.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - commercial_execution_context
+    - upstream_gate_results
+    outputs:
+    - inventive_concepts
+    - inventor_contributions
+    - novelty_basis
+    - non_obviousness_basis
+    - technical_problem
+    - technical_solution
+    - unexpected_results
+    - claim_supporting_evidence
+    - inventive_concept_strength
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: high
+    default_model_ids:
+    - own_ip_inventive_concept_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: commercial_executability
+    group_code: C
+    priority: P3
+    dependencies:
+    - integrated_adc_product_decision
+    output_defaults:
+      inventive_concepts: []
+      inventor_contributions: []
+      novelty_basis: null
+      non_obviousness_basis: null
+      technical_problem: null
+      technical_solution: null
+      unexpected_results: null
+      claim_supporting_evidence: []
+      inventive_concept_strength: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      commercial_execution_context:
+        type: CommercialExecutionContext
+        description: 'Version-bound v0.2 input object: commercial_execution_context.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      inventive_concepts:
+        type: list[object]
+        description: 'Frozen own_ip_inventive_concept@0.2.0 output field: inventive_concepts.'
+        required: true
+        nullable: true
+      inventor_contributions:
+        type: list[object]
+        description: 'Frozen own_ip_inventive_concept@0.2.0 output field: inventor_contributions.'
+        required: true
+        nullable: true
+      novelty_basis:
+        type: string_or_structured_object
+        description: 'Frozen own_ip_inventive_concept@0.2.0 output field: novelty_basis.'
+        required: true
+        nullable: true
+      non_obviousness_basis:
+        type: string_or_structured_object
+        description: 'Frozen own_ip_inventive_concept@0.2.0 output field: non_obviousness_basis.'
+        required: true
+        nullable: true
+      technical_problem:
+        type: string_or_structured_object
+        description: 'Frozen own_ip_inventive_concept@0.2.0 output field: technical_problem.'
+        required: true
+        nullable: true
+      technical_solution:
+        type: string_or_structured_object
+        description: 'Frozen own_ip_inventive_concept@0.2.0 output field: technical_solution.'
+        required: true
+        nullable: true
+      unexpected_results:
+        type: string_or_structured_object
+        description: 'Frozen own_ip_inventive_concept@0.2.0 output field: unexpected_results.'
+        required: true
+        nullable: true
+      claim_supporting_evidence:
+        type: list[object]
+        description: 'Frozen own_ip_inventive_concept@0.2.0 output field: claim_supporting_evidence.'
+        required: true
+        nullable: true
+      inventive_concept_strength:
+        type: string_or_structured_object
+        description: 'Frozen own_ip_inventive_concept@0.2.0 output field: inventive_concept_strength.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

@@ -1,0 +1,111 @@
+contract:
+  contract_id: model_lifecycle
+  contract_version: "1.0.0"
+  standard_ref: ModelLifecycleStandard@1.0.0
+  description: >-
+    Universal immutable Model artifact and append-only governance-record
+    contract for every active Gate Model.
+  model_artifact:
+    identity:
+      required_fields:
+        - model_id
+        - model_family
+        - model_version
+        - gate_id
+        - implementation
+    required_sections:
+      - runtime
+      - contract_refs
+      - question_template
+      - evidence_policy
+      - fallback_policy
+      - version_roadmap
+      - model_card
+      - lifecycle
+    model_card_required_fields:
+      - standard_ref
+      - summary
+      - intended_use
+      - decision_role
+      - method_summary
+      - input_requirements
+      - output_interpretation
+      - evidence_boundary
+      - known_failure_modes
+      - prohibited_uses
+    lifecycle_required_fields:
+      - standard_ref
+      - artifact_stage
+      - release_kind
+      - released_at
+      - predecessor_model_ref
+      - record_root
+      - change_summary
+    allowed_artifact_stages:
+      - initialized
+      - formal_candidate
+      - validated
+      - stable
+      - deprecated
+      - retired
+      - rejected
+    allowed_release_kinds:
+      - initialization
+      - first_formal
+      - patch
+      - minor
+      - major
+      - stable_promotion
+      - deprecation
+      - retirement
+    immutability_rule: >-
+      After release.yaml exists, model.yaml is immutable. Any behavior, data,
+      prompt, threshold, contract, or intended-use change requires a new
+      SemVer artifact and predecessor_model_ref.
+  governance_record:
+    envelope_key: record
+    record_version: "1.0.0"
+    required_fields:
+      - record_id
+      - record_type
+      - record_version
+      - standard_ref
+      - model_id
+      - model_version
+      - gate_id
+      - created_at
+      - actor
+      - actor_role
+      - independence
+      - status
+      - summary
+      - evidence_refs
+      - findings
+      - metrics
+      - decision
+      - metadata
+    allowed_record_types:
+      - release
+      - review
+      - validation
+      - calibration
+      - promotion
+      - deprecation
+      - retirement
+    allowed_independence:
+      - internal
+      - independent
+      - external
+    append_only: true
+  stable_requirements:
+    minimum_semver: "1.0.0"
+    required_release_kind: stable_promotion
+    required_passed_records:
+      - independent review
+      - independent validation
+      - calibration
+      - human promotion
+    forbidden_calibration_status:
+      - uncalibrated
+      - not_calibrated
+    note: Stable means governed and fit for the declared intended use, not infallible.

@@ -1,0 +1,148 @@
+gate:
+  gate_id: clinical_context_endpoint
+  gate_family: adc.v0_2.target_opportunity.clinical_context_endpoint
+  gate_version: 0.2.0
+  sequence: 0
+  name: Clinical Context and Endpoint Lock
+  purpose: Freeze the indication, patient segment, disease setting, treatment context, comparator, time horizon, and minimum
+    clinically meaningful endpoint before formal ranking.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - upstream_gate_results
+    outputs:
+    - indication_definition
+    - patient_segment_definition
+    - disease_setting
+    - line_of_therapy
+    - treatment_context
+    - endpoint_definition
+    - endpoint_time_horizon
+    - endpoint_proxy
+    - clinical_success_condition
+    - context_completeness_score
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: low
+    default_model_ids:
+    - clinical_context_endpoint_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: target_opportunity
+    group_code: T
+    priority: P0
+    dependencies: []
+    output_defaults:
+      indication_definition: null
+      patient_segment_definition: null
+      disease_setting: null
+      line_of_therapy: null
+      treatment_context: null
+      endpoint_definition: null
+      endpoint_time_horizon: null
+      endpoint_proxy: null
+      clinical_success_condition: null
+      context_completeness_score: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      indication_definition:
+        type: string_or_structured_object
+        description: 'Frozen clinical_context_endpoint@0.2.0 output field: indication_definition.'
+        required: true
+        nullable: true
+      patient_segment_definition:
+        type: string_or_structured_object
+        description: 'Frozen clinical_context_endpoint@0.2.0 output field: patient_segment_definition.'
+        required: true
+        nullable: true
+      disease_setting:
+        type: string_or_structured_object
+        description: 'Frozen clinical_context_endpoint@0.2.0 output field: disease_setting.'
+        required: true
+        nullable: true
+      line_of_therapy:
+        type: string_or_structured_object
+        description: 'Frozen clinical_context_endpoint@0.2.0 output field: line_of_therapy.'
+        required: true
+        nullable: true
+      treatment_context:
+        type: string_or_structured_object
+        description: 'Frozen clinical_context_endpoint@0.2.0 output field: treatment_context.'
+        required: true
+        nullable: true
+      endpoint_definition:
+        type: string_or_structured_object
+        description: 'Frozen clinical_context_endpoint@0.2.0 output field: endpoint_definition.'
+        required: true
+        nullable: true
+      endpoint_time_horizon:
+        type: string_or_structured_object
+        description: 'Frozen clinical_context_endpoint@0.2.0 output field: endpoint_time_horizon.'
+        required: true
+        nullable: true
+      endpoint_proxy:
+        type: string_or_structured_object
+        description: 'Frozen clinical_context_endpoint@0.2.0 output field: endpoint_proxy.'
+        required: true
+        nullable: true
+      clinical_success_condition:
+        type: string_or_structured_object
+        description: 'Frozen clinical_context_endpoint@0.2.0 output field: clinical_success_condition.'
+        required: true
+        nullable: true
+      context_completeness_score:
+        type: number[0,1]
+        description: 'Frozen clinical_context_endpoint@0.2.0 output field: context_completeness_score.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

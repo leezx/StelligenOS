@@ -1,0 +1,141 @@
+gate:
+  gate_id: endpoint_driving_population
+  gate_family: adc.v0_2.target_opportunity.endpoint_driving_population
+  gate_version: 0.2.0
+  sequence: 1
+  name: Endpoint-Driving Cell Population
+  purpose: Identify the malignant cell population that causally contributes to the locked clinical failure event.
+  runtime:
+    required: true
+    hard_gate: false
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - upstream_gate_results
+    outputs:
+    - target_population_definition
+    - population_prevalence
+    - population_endpoint_association
+    - population_causal_evidence
+    - population_necessity_evidence
+    - population_sufficiency_evidence
+    - population_temporal_relevance
+    - population_spatial_relevance
+    - causal_confidence
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium
+    default_model_ids:
+    - endpoint_driving_population_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: target_opportunity
+    group_code: T
+    priority: P1
+    dependencies:
+    - clinical_context_endpoint
+    output_defaults:
+      target_population_definition: null
+      population_prevalence: null
+      population_endpoint_association: null
+      population_causal_evidence: null
+      population_necessity_evidence: null
+      population_sufficiency_evidence: null
+      population_temporal_relevance: null
+      population_spatial_relevance: null
+      causal_confidence: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      target_population_definition:
+        type: string_or_structured_object
+        description: 'Frozen endpoint_driving_population@0.2.0 output field: target_population_definition.'
+        required: true
+        nullable: true
+      population_prevalence:
+        type: number[0,1]
+        description: 'Frozen endpoint_driving_population@0.2.0 output field: population_prevalence.'
+        required: true
+        nullable: true
+      population_endpoint_association:
+        type: string_or_structured_object
+        description: 'Frozen endpoint_driving_population@0.2.0 output field: population_endpoint_association.'
+        required: true
+        nullable: true
+      population_causal_evidence:
+        type: string_or_structured_object
+        description: 'Frozen endpoint_driving_population@0.2.0 output field: population_causal_evidence.'
+        required: true
+        nullable: true
+      population_necessity_evidence:
+        type: string_or_structured_object
+        description: 'Frozen endpoint_driving_population@0.2.0 output field: population_necessity_evidence.'
+        required: true
+        nullable: true
+      population_sufficiency_evidence:
+        type: string_or_structured_object
+        description: 'Frozen endpoint_driving_population@0.2.0 output field: population_sufficiency_evidence.'
+        required: true
+        nullable: true
+      population_temporal_relevance:
+        type: string_or_structured_object
+        description: 'Frozen endpoint_driving_population@0.2.0 output field: population_temporal_relevance.'
+        required: true
+        nullable: true
+      population_spatial_relevance:
+        type: string_or_structured_object
+        description: 'Frozen endpoint_driving_population@0.2.0 output field: population_spatial_relevance.'
+        required: true
+        nullable: true
+      causal_confidence:
+        type: number[0,1]
+        description: 'Frozen endpoint_driving_population@0.2.0 output field: causal_confidence.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

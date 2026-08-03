@@ -1,0 +1,144 @@
+reference:
+  reference_id: ADC_target_population_mapping_evidence
+  reference_version: 0.1.0
+  evidence_cutoff: "2026-07-29"
+  scope: >-
+    Deterministic synthesis of version-bound cell- and patient-level evidence
+    that the candidate target marks the exact target-independent,
+    endpoint-driving malignant population frozen by T1.
+  score_semantics: >-
+    mapping_confidence is an uncalibrated mapping-completeness index, not an
+    empirical probability, clinical response probability, or surface-antigen
+    availability claim.
+  confidence_cap: 0.55
+
+evidence_contract:
+  evidence_type: target_population_mapping_evidence_v1
+  policy_ref: ADC_target_population_mapping_evidence@0.1.0
+  required_top_level_fields:
+  - policy_ref
+  - evidence_as_of
+  - indication
+  - locked_endpoint
+  - population_id
+  - target
+  - measurements
+  target_required_fields:
+  - gene
+  - protein
+  measurement_required_fields:
+  - value_or_counts
+  - assay
+  - threshold
+  - cohort
+  - sampling_time
+
+measurements:
+  target_population_sensitivity:
+    weight: 0.20
+    interpretation: Fraction of endpoint-driving population cells that are target-positive under a prespecified assay threshold.
+    denominator_semantics: endpoint_driving_population_cells
+    mandatory_for_mapping_index: true
+  target_population_specificity:
+    weight: 0.15
+    interpretation: Fraction of target-positive malignant cells that belong to the endpoint-driving population.
+    denominator_semantics: target_positive_malignant_cells
+    mandatory_for_mapping_index: true
+  patient_level_prevalence:
+    weight: 0.15
+    interpretation: Fraction of evaluable patients meeting a prespecified within-patient target-coverage threshold.
+    denominator_semantics: evaluable_patients
+    mandatory_for_mapping_index: true
+  within_patient_coverage:
+    weight: 0.15
+    interpretation: Prespecified patient-level aggregation of target-positive fraction inside the endpoint-driving population.
+    denominator_semantics: endpoint_driving_population_cells_within_patient
+    mandatory_for_mapping_index: true
+  state_specificity:
+    weight: 0.10
+    interpretation: Degree to which target signal distinguishes the endpoint-driving state from prespecified comparator malignant states.
+    denominator_semantics: prespecified_state_comparison
+    mandatory_for_mapping_index: false
+  state_stability:
+    weight: 0.10
+    interpretation: Persistence of target-to-population mapping across paired states or longitudinal time points.
+    denominator_semantics: paired_or_longitudinal_state_observations
+    mandatory_for_mapping_index: false
+    requires_paired_or_longitudinal: true
+  treatment_stability:
+    weight: 0.05
+    interpretation: Persistence of target-to-population mapping across paired pre/post-treatment observations.
+    denominator_semantics: paired_pre_post_treatment_observations
+    mandatory_for_mapping_index: false
+    requires_paired_or_longitudinal: true
+  primary_metastasis_concordance:
+    weight: 0.05
+    interpretation: Concordance of target-to-population mapping in paired primary and metastatic specimens.
+    denominator_semantics: paired_primary_metastasis_observations
+    mandatory_for_mapping_index: false
+    requires_paired_or_longitudinal: true
+  covered_causal_fraction:
+    weight: 0.05
+    interpretation: One minus the explicitly measured target-negative causal fraction.
+    denominator_semantics: endpoint_driving_population_cells
+    mandatory_for_mapping_index: false
+
+scoring:
+  minimum_known_weight: 0.65
+  fraction_count_conflict_tolerance: 0.02
+  sensitivity_complement_tolerance: 0.05
+  missing_measurement_behavior: omit_weight_and_report_null
+  mandatory_missing_behavior: mapping_confidence_null
+  status_behavior: formal_candidate_outputs_remain_uncertain_until_external_validation
+
+assay_boundaries:
+  allowed_measurement_levels:
+  - rna
+  - protein_total
+  - protein_surface
+  - multimodal
+  rules:
+  - Every measurement retains its assay and measurement level.
+  - RNA evidence supports transcript-level mapping only.
+  - Total-protein evidence does not establish membrane localization.
+  - Surface-protein evidence can support T2 mapping but is not automatically transferred to T7.
+  - Cross-sectional evidence cannot support state, treatment, or primary-metastasis stability.
+  - Different thresholds, cohorts, time points, and denominators are not silently pooled.
+
+method_sources:
+- source_id: FDA_ENRICHMENT_2019
+  citation: U.S. FDA. Enrichment Strategies for Clinical Trials to Support Determination of Effectiveness of Human Drugs and Biological Products. Final Guidance. 2019.
+  url: https://www.fda.gov/regulatory-information/search-fda-guidance-documents/enrichment-strategies-clinical-trials-support-approval-human-drugs-and-biological-products
+  use: Prespecify biomarker-positive populations, assays, thresholds, prevalence, and intended clinical context.
+- source_id: REMARK_2005
+  citation: McShane LM et al. Reporting recommendations for tumor marker prognostic studies. J Natl Cancer Inst. 2005;97:1180-1184.
+  identifier: PMID:16106022
+  url: https://pubmed.ncbi.nlm.nih.gov/16106022/
+  use: Retain cohort, specimen, assay, threshold, endpoint, analysis, and missing-data context.
+- source_id: SC_DROPOUT_2020
+  citation: Qiu P. Embracing the dropouts in single-cell RNA-seq analysis. Nat Commun. 2020;11:1169.
+  identifier: DOI:10.1038/s41467-020-14976-9
+  url: https://www.nature.com/articles/s41467-020-14976-9
+  use: A zero single-cell RNA count can reflect measurement sparsity and is not automatically a target-negative cell.
+- source_id: SC_DE_BENCHMARK_2018
+  citation: Soneson C, Robinson MD. Bias, robustness and scalability in single-cell differential expression analysis. Nat Methods. 2018;15:255-261.
+  identifier: DOI:10.1038/nmeth.4612
+  url: https://www.nature.com/articles/nmeth.4612
+  use: Single-cell analysis method choice can alter state-specific expression conclusions.
+- source_id: PAIRED_PRIMARY_METASTASIS_2018
+  citation: Yates LR et al. Mutation profiling of key cancer genes in primary breast cancers and their distant metastases. Cancer Res. 2018;78:3112-3121.
+  url: https://aacrjournals.org/cancerres/article/78/12/3112/625081/Mutation-Profiling-of-Key-Cancer-Genes-in-Primary
+  use: Paired primary-metastasis evidence is needed because tumor evolution can produce discordance.
+- source_id: PAIRED_PDL1_CCRCC_2020
+  citation: Eckel-Passow JE et al. Concordance of PD-1 and PD-L1 expression in paired primary and metastatic clear cell renal cell carcinoma. Cancer Med. 2020.
+  identifier: PMCID:PMC6997072
+  url: https://pmc.ncbi.nlm.nih.gov/articles/PMC6997072/
+  use: Marker expression can differ between paired anatomical sites and requires explicit paired-sample reporting.
+
+boundaries:
+- T0 owns the locked indication and clinical endpoint.
+- T1 owns the target-independent definition of the endpoint-driving population.
+- T2 owns sensitivity, specificity, prevalence, within-patient coverage, state/treatment stability, anatomical concordance, and target-negative causal fraction for that frozen population.
+- T7 separately owns membrane localization, antibody accessibility, extracellular-domain availability, density, and surface-positive fraction.
+- T2 does not claim intervention causality, therapeutic benefit, ADC suitability, or safety.
+- Missing values remain null; a neutral common score is only a missing-data placeholder.

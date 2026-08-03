@@ -1,0 +1,250 @@
+profile:
+  profile_id: adc.asset_factory_v0.2
+  profile_version: 0.2.4
+  profile_type: base
+  modality: ADC
+  extends:
+  - adc.target_opportunity_chain@0.2.3
+  - adc.product_realization_chain@0.2.3
+  - adc.commercial_executability_chain@0.2.4
+  description: Complete v0.2 three-Gate-Group graph. Final success requires Target Opportunity AND Product
+    Realization AND Commercial Executability.
+  gate_order:
+  - commercial_opportunity_threshold
+  - regulatory_development_path
+  - competitive_position_entry_window
+  - product_claim_decomposition
+  - patent_landscape
+  - preliminary_technical_fto
+  - clinical_context_endpoint
+  - endpoint_driving_population
+  - target_population_mapping
+  - intervention_causality
+  - baseline_coverage_and_escape
+  - treatment_induced_state_response
+  - net_endpoint_benefit
+  - tumor_cell_surface_availability
+  - intratumoral_antigen_accessibility
+  - antibody_dependent_internalization
+  - antibody_epitope_realizability
+  - on_target_therapeutic_index
+  - target_opportunity_decision
+  - product_design_objective
+  - epitope_landscape
+  - epitope_function
+  - binding_geometry_kinetics
+  - antibody_format_fc_design
+  - antibody_sequence_developability
+  - productive_internalization_trafficking
+  - conjugation_platform_site
+  - dar_molecular_property_balance
+  - payload_cell_state_match
+  - linker_release_match
+  - bystander_tumor_coverage
+  - integrated_pk_stability_exposure
+  - construct_therapeutic_index
+  - biomarker_clinical_assay_codesign
+  - integrated_adc_product_decision
+  - blocking_claim_severity
+  - design_around_opportunity
+  - access_strategy
+  - fto_product_configuration
+  - own_ip_inventive_concept
+  - patentability_enablement
+  - claim_architecture_patent_estate
+  - disclosure_filing_strategy
+  - lifecycle_exclusivity_strategy
+  - transaction_readiness
+  gate_versions:
+    commercial_opportunity_threshold: 0.2.0
+    regulatory_development_path: 0.2.0
+    competitive_position_entry_window: 0.2.0
+    product_claim_decomposition: 0.2.0
+    patent_landscape: 0.2.0
+    preliminary_technical_fto: 0.2.0
+    clinical_context_endpoint: 0.2.0
+    endpoint_driving_population: 0.2.0
+    target_population_mapping: 0.2.0
+    intervention_causality: 0.2.0
+    baseline_coverage_and_escape: 0.2.0
+    treatment_induced_state_response: 0.2.0
+    net_endpoint_benefit: 0.2.0
+    tumor_cell_surface_availability: 0.2.0
+    intratumoral_antigen_accessibility: 0.2.0
+    antibody_dependent_internalization: 0.2.0
+    antibody_epitope_realizability: 0.2.0
+    on_target_therapeutic_index: 0.2.0
+    target_opportunity_decision: 0.2.0
+    product_design_objective: 0.2.0
+    epitope_landscape: 0.2.0
+    epitope_function: 0.2.0
+    binding_geometry_kinetics: 0.2.0
+    antibody_format_fc_design: 0.2.0
+    antibody_sequence_developability: 0.2.0
+    productive_internalization_trafficking: 0.2.0
+    conjugation_platform_site: 0.2.0
+    dar_molecular_property_balance: 0.2.0
+    payload_cell_state_match: 0.2.0
+    linker_release_match: 0.2.0
+    bystander_tumor_coverage: 0.2.0
+    integrated_pk_stability_exposure: 0.2.0
+    construct_therapeutic_index: 0.2.0
+    biomarker_clinical_assay_codesign: 0.2.0
+    integrated_adc_product_decision: 0.2.0
+    blocking_claim_severity: 0.2.0
+    design_around_opportunity: 0.2.0
+    access_strategy: 0.2.0
+    fto_product_configuration: 0.2.0
+    own_ip_inventive_concept: 0.2.0
+    patentability_enablement: 0.2.0
+    claim_architecture_patent_estate: 0.2.0
+    disclosure_filing_strategy: 0.2.0
+    lifecycle_exclusivity_strategy: 0.2.0
+    transaction_readiness: 0.2.0
+  model_bindings:
+    commercial_opportunity_threshold:
+      model_id: commercial_opportunity_clinical_unmet_need_reference_v1
+      model_version: 0.1.0
+    regulatory_development_path:
+      model_id: regulatory_development_path_llm_v0_2
+      model_version: 0.2.0
+    competitive_position_entry_window:
+      model_id: competitive_position_entry_window_pipeline_landscape_reference_v1
+      model_version: 0.1.0
+    product_claim_decomposition:
+      model_id: product_claim_decomposition_llm_v0_2
+      model_version: 0.2.0
+    patent_landscape:
+      model_id: patent_landscape_llm_v0_2
+      model_version: 0.2.0
+    preliminary_technical_fto:
+      model_id: preliminary_technical_fto_llm_v0_2
+      model_version: 0.2.0
+    clinical_context_endpoint:
+      model_id: clinical_context_endpoint_llm_v0_2
+      model_version: 0.2.0
+    endpoint_driving_population:
+      model_id: endpoint_driving_population_llm_v0_2
+      model_version: 0.2.0
+    target_population_mapping:
+      model_id: target_population_mapping_llm_v0_2
+      model_version: 0.2.0
+    intervention_causality:
+      model_id: intervention_causality_llm_v0_2
+      model_version: 0.2.0
+    baseline_coverage_and_escape:
+      model_id: baseline_coverage_and_escape_llm_v0_2
+      model_version: 0.2.0
+    treatment_induced_state_response:
+      model_id: treatment_induced_state_response_llm_v0_2
+      model_version: 0.2.0
+    net_endpoint_benefit:
+      model_id: net_endpoint_benefit_llm_v0_2
+      model_version: 0.2.0
+    tumor_cell_surface_availability:
+      model_id: tumor_cell_surface_availability_reference_consensus_v2
+      model_version: 0.4.1
+    intratumoral_antigen_accessibility:
+      model_id: intratumoral_antigen_accessibility_llm_v0_2
+      model_version: 0.2.0
+    antibody_dependent_internalization:
+      model_id: antibody_dependent_internalization_trafficking_reference_v1
+      model_version: 0.1.0
+    antibody_epitope_realizability:
+      model_id: antibody_epitope_realizability_llm_v0_2
+      model_version: 0.2.0
+    on_target_therapeutic_index:
+      model_id: on_target_therapeutic_index_llm_v0_2
+      model_version: 0.2.0
+    target_opportunity_decision:
+      model_id: target_opportunity_decision_llm_v0_2
+      model_version: 0.2.0
+    product_design_objective:
+      model_id: product_design_objective_llm_v0_2
+      model_version: 0.2.0
+    epitope_landscape:
+      model_id: epitope_landscape_llm_v0_2
+      model_version: 0.2.0
+    epitope_function:
+      model_id: epitope_function_llm_v0_2
+      model_version: 0.2.0
+    binding_geometry_kinetics:
+      model_id: binding_geometry_kinetics_llm_v0_2
+      model_version: 0.2.0
+    antibody_format_fc_design:
+      model_id: antibody_format_fc_design_llm_v0_2
+      model_version: 0.2.0
+    antibody_sequence_developability:
+      model_id: antibody_sequence_developability_llm_v0_2
+      model_version: 0.2.0
+    productive_internalization_trafficking:
+      model_id: productive_internalization_trafficking_llm_v0_2
+      model_version: 0.2.0
+    conjugation_platform_site:
+      model_id: conjugation_platform_site_llm_v0_2
+      model_version: 0.2.0
+    dar_molecular_property_balance:
+      model_id: dar_molecular_property_balance_llm_v0_2
+      model_version: 0.2.0
+    payload_cell_state_match:
+      model_id: payload_cell_state_match_llm_v0_2
+      model_version: 0.2.0
+    linker_release_match:
+      model_id: linker_release_match_llm_v0_2
+      model_version: 0.2.0
+    bystander_tumor_coverage:
+      model_id: bystander_tumor_coverage_llm_v0_2
+      model_version: 0.2.0
+    integrated_pk_stability_exposure:
+      model_id: integrated_pk_stability_exposure_llm_v0_2
+      model_version: 0.2.0
+    construct_therapeutic_index:
+      model_id: construct_therapeutic_index_llm_v0_2
+      model_version: 0.2.0
+    biomarker_clinical_assay_codesign:
+      model_id: biomarker_clinical_assay_codesign_llm_v0_2
+      model_version: 0.2.0
+    integrated_adc_product_decision:
+      model_id: integrated_adc_product_decision_llm_v0_2
+      model_version: 0.2.0
+    blocking_claim_severity:
+      model_id: blocking_claim_severity_llm_v0_2
+      model_version: 0.2.0
+    design_around_opportunity:
+      model_id: design_around_opportunity_llm_v0_2
+      model_version: 0.2.0
+    access_strategy:
+      model_id: access_strategy_llm_v0_2
+      model_version: 0.2.0
+    fto_product_configuration:
+      model_id: fto_product_configuration_llm_v0_2
+      model_version: 0.2.0
+    own_ip_inventive_concept:
+      model_id: own_ip_inventive_concept_llm_v0_2
+      model_version: 0.2.0
+    patentability_enablement:
+      model_id: patentability_enablement_llm_v0_2
+      model_version: 0.2.0
+    claim_architecture_patent_estate:
+      model_id: claim_architecture_patent_estate_llm_v0_2
+      model_version: 0.2.0
+    disclosure_filing_strategy:
+      model_id: disclosure_filing_strategy_llm_v0_2
+      model_version: 0.2.0
+    lifecycle_exclusivity_strategy:
+      model_id: lifecycle_exclusivity_strategy_llm_v0_2
+      model_version: 0.2.0
+    transaction_readiness:
+      model_id: transaction_readiness_llm_v0_2
+      model_version: 0.2.0
+  gate_overrides: {}
+  context:
+    architecture_version: 0.2.0
+    execution_model: directed_graph_with_feedback_edges
+    final_logic: target_opportunity AND product_realization AND commercial_executability
+    graph_config: configs/v0.2_graph.yaml
+    profile_revision:
+      version: 0.2.4
+      reason: Select the C2 competitive-position-entry-window pipeline landscape reference challenger
+        while preserving frozen Gate contracts and all 0.2.3 Model bindings.
+      predecessor_profile_version: 0.2.3

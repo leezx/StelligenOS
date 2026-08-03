@@ -1,0 +1,149 @@
+model:
+  model_id: target_population_mapping_evidence_v1
+  model_family: adc.v0_2.target_opportunity.target_population_mapping.evidence_synthesis
+  model_version: 0.1.0
+  gate_id: target_population_mapping
+  implementation: target_population_mapping_evidence_synthesis
+  status: active_challenger
+  runtime:
+    model_name: Target-to-Population Mapping Evidence Synthesis v1
+    model_type: rule_based
+    provider: ADC_target_population_mapping_evidence
+    input_schema: GateInputEnvelope@2.0.0
+    output_schema: GateModelOutput@2.0.0
+    cost_tier: medium
+    limitations:
+    - The Model synthesizes a supplied, version-bound evidence bundle; it does not process raw single-cell, spatial, pathology, flow-cytometry, proteomic, longitudinal, or clinical data.
+    - A passed T0 endpoint lock and a usable target-independent T1 population definition are required.
+    - Target, indication, endpoint, and T1 population identity must match exactly.
+    - Fractions are valid only for their declared assay, measurement level, threshold, cohort, denominator, and sampling time.
+    - Cross-sectional measurements cannot support state, treatment, or primary-metastasis stability.
+    - RNA and total-protein measurements do not establish membrane localization, extracellular-domain availability, antigen density, or antibody bindability.
+    - mapping_confidence is an uncalibrated mapping-completeness index, not a probability.
+    calibration_status: uncalibrated_mapping_index
+    training_data_version: ADC_target_population_mapping_evidence@0.1.0
+    prompt_version: null
+    enabled: true
+    weight: 1.0
+    default_confidence_cap: 0.55
+  contract_refs:
+    gate: components/gates/adc/v0.2/target_opportunity/02_target_population_mapping/v0.2.0/gate.yaml
+    input: components/contracts/gate_input.v2.yaml
+    output: components/contracts/model_output.v2.yaml
+  question_template: >-
+    For the exact target-independent malignant population frozen by T1 and the
+    exact endpoint locked by T0, what prespecified cell- and patient-level
+    evidence quantifies candidate-target sensitivity, specificity, prevalence,
+    within-patient coverage, state specificity, state/treatment stability,
+    primary-metastasis concordance, and the target-negative causal fraction?
+    Retain assay level and denominator semantics; do not infer ADC surface
+    availability or intervention benefit.
+  evidence_policy:
+    may_use:
+    - Passed clinical_context_endpoint GateResult with endpoint_definition.
+    - Usable endpoint_driving_population GateResult with an explicit target-independent population_id.
+    - Version-bound Candidate and TargetOpportunityContext for target and indication consistency.
+    - Evidence type target_population_mapping_evidence_v1 bound to ADC_target_population_mapping_evidence@0.1.0.
+    - Direct 0-1 measurements or valid numerator/denominator counts with prespecified assay metadata.
+    must_not_invent:
+    - target-positive or evaluable cell counts
+    - patient counts, prevalence, coverage threshold, or within-patient aggregation
+    - assay, antibody, panel, classifier, threshold, cohort, time point, or anatomical site
+    - state specificity, longitudinal stability, treatment stability, or primary-metastasis concordance
+    - target-negative causal fraction
+    - membrane localization, extracellular-domain availability, antigen density, or antibody bindability
+    - intervention causality, endpoint benefit, clinical response, or safety
+    - probability that the target successfully maps the population
+  fallback_policy:
+    mode: neutral_common_score_with_nullable_domain_outputs
+    confidence_cap: 0.55
+    complete_when_evidence_missing: true
+    nullable_domain_fields_when_unknown: true
+  version_roadmap:
+  - stage: v0.1
+    target: Deterministic identity-locked mapping ontology, fraction audit, and evidence index
+  - stage: v0.2
+    target: Versioned adapters for single-cell, spatial, pathology, flow, and patient-level result objects
+  - stage: v0.3
+    target: Assay-specific measurement-error, dropout, threshold-sensitivity, and cohort-transport analyses
+  - stage: v1
+    target: Independent blinded pathology, computational, translational, and statistical validation
+  - stage: v2
+    target: Prospective endpoint-specific calibration, drift monitoring, and governed stable promotion
+  model_card:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    summary: >-
+      Deterministic T2 Model that binds one candidate target to the exact
+      target-independent population frozen by T1 and endpoint frozen by T0. It
+      audits nine mapping measurements, enforces explicit denominator and assay
+      semantics, rejects fraction/count conflicts, requires paired evidence for
+      stability, returns all ten frozen Gate outputs, and protects the T2/T7
+      boundary.
+    intended_use:
+    - Quantify whether the candidate target marks the endpoint-driving population at cell and patient levels.
+    - Separate sensitivity from specificity and patient prevalence from within-patient coverage.
+    - Identify target-negative parts of the causal population and evidence gaps relevant to escape.
+    - Preserve state, treatment, and anatomical stability as separate paired-evidence questions.
+    - Provide a versioned mapping result for downstream T3, T4, T7, and biomarker co-design without answering their Gate responsibilities.
+    decision_role: >-
+      Low-confidence evidence-synthesis challenger for hard Gate T2. A high
+      mapping index means the supplied, identity-matched components align under
+      prespecified weights; it does not validate surface availability,
+      intervention causality, therapeutic benefit, or clinical utility.
+    method_summary: >-
+      The Model requires a passed T0 endpoint and a usable, explicitly
+      target-independent T1 population. It selects the newest exact-policy
+      evidence bundle, requires exact target/indication/endpoint/population
+      identity, accepts direct fractions or auditable counts, validates
+      denominator and assay metadata, prevents cross-sectional stability
+      claims, nulls material conflicts, and computes a coverage-normalized
+      weighted index only when mandatory evidence is complete.
+    input_requirements:
+    - Passed clinical_context_endpoint@0.2.0 GateResult with endpoint_definition.
+    - Usable endpoint_driving_population@0.2.0 GateResult with target_population_definition.population_id and target_independent_definition true.
+    - Version-bound Candidate target gene/protein and TargetOpportunityContext indication.
+    - One target_population_mapping_evidence_v1 bundle bound to ADC_target_population_mapping_evidence@0.1.0.
+    - Measurement-level assay, threshold, cohort, sampling-time, denominator, and source metadata.
+    output_interpretation: >-
+      Each 0-1 output is local to its declared measurement context. The
+      primary-metastasis field retains paired-sample metadata.
+      mapping_confidence is an uncalibrated mapping-completeness index, while
+      Model confidence is a separate capped governance value. Neither is a
+      probability or clinical recommendation.
+    evidence_boundary:
+    - T0 owns the clinical indication and endpoint lock.
+    - T1 owns the target-independent endpoint-driving population definition.
+    - T2 maps the candidate target to that frozen population without redefining it.
+    - T3 owns whether target intervention changes the endpoint-driving biology.
+    - T4 owns residual disease and escape consequences.
+    - T7 owns tumor-cell membrane localization, extracellular-domain availability, density, surface-positive fraction, and antibody bindability.
+    - RNA, total protein, and surface protein remain explicitly labeled and are not treated as interchangeable.
+    known_failure_modes:
+    - Single-cell RNA sparsity and classifier error can bias sensitivity and target-negative fractions.
+    - Batch effects, tissue dissociation, spatial sampling, fixation, antibody specificity, and threshold selection can change estimates.
+    - Cell-rich samples and easy-to-biopsy lesions can overstate patient prevalence or within-patient coverage.
+    - Unpaired cross-sectional cohorts can conceal treatment, state, or anatomical discordance.
+    - A target may mark the population without being causally important or accessible to an ADC.
+    - Renormalizing over known optional components can make two evidence bundles with different missing fields appear numerically similar.
+    prohibited_uses:
+    - Defining or changing the T1 population using the candidate target.
+    - Treating a transcript-positive cell as membrane-protein positive without independent evidence.
+    - Treating bulk average expression as sensitivity, specificity, or within-patient coverage.
+    - Inferring stability from unpaired cross-sectional samples.
+    - Claiming surface accessibility, antibody bindability, ADC suitability, efficacy, safety, or clinical utility.
+    - Treating mapping_confidence or Model confidence as probability.
+    - Replacing pathology, computational, translational, statistical, or clinical review.
+  lifecycle:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    artifact_stage: formal_candidate
+    release_kind: first_formal
+    released_at: '2026-07-30T03:26:46Z'
+    record_root: components/model_governance/target_population_mapping_evidence_v1/v0.1.0
+    change_summary:
+    - Replaced generative T2 completion with deterministic identity-locked evidence synthesis.
+    - Added exact T0, T1, target, indication, endpoint, and population consistency checks.
+    - Added direct/count-derived fraction auditing with explicit denominator semantics.
+    - Added mandatory metadata and measurement-level preservation.
+    - Added paired/longitudinal requirements for stability and primary-metastasis concordance.
+    - Added sensitivity/target-negative complement conflict detection.
+    - Added package-local tests, source verification, internal review, reproducibility validation, and calibration-gap records.

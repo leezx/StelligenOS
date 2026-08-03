@@ -1,0 +1,148 @@
+gate:
+  gate_id: epitope_landscape
+  gate_family: adc.v0_2.product_realization.epitope_landscape
+  gate_version: 0.2.0
+  sequence: 21
+  name: Epitope Landscape Definition
+  purpose: Map native extracellular epitope regions, membrane distance, glycans, shedding, isoforms, tumor conformations,
+    conservation, and normal-tissue exposure.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - upstream_gate_results
+    outputs:
+    - candidate_epitope_regions
+    - native_surface_exposure
+    - membrane_distance
+    - glycan_masking_risk
+    - shedding_risk
+    - isoform_discrimination
+    - tumor_specific_conformation_potential
+    - species_cross_reactivity_potential
+    - epitope_evidence_confidence
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium_high
+    default_model_ids:
+    - epitope_landscape_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: product_realization
+    group_code: P
+    priority: P2
+    dependencies:
+    - product_design_objective
+    output_defaults:
+      candidate_epitope_regions: []
+      native_surface_exposure: null
+      membrane_distance: null
+      glycan_masking_risk: null
+      shedding_risk: null
+      isoform_discrimination: null
+      tumor_specific_conformation_potential: null
+      species_cross_reactivity_potential: null
+      epitope_evidence_confidence: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      candidate_epitope_regions:
+        type: list[object]
+        description: 'Frozen epitope_landscape@0.2.0 output field: candidate_epitope_regions.'
+        required: true
+        nullable: true
+      native_surface_exposure:
+        type: number[0,1]
+        description: 'Frozen epitope_landscape@0.2.0 output field: native_surface_exposure.'
+        required: true
+        nullable: true
+      membrane_distance:
+        type: string_or_structured_object
+        description: 'Frozen epitope_landscape@0.2.0 output field: membrane_distance.'
+        required: true
+        nullable: true
+      glycan_masking_risk:
+        type: number[0,1]
+        description: 'Frozen epitope_landscape@0.2.0 output field: glycan_masking_risk.'
+        required: true
+        nullable: true
+      shedding_risk:
+        type: number[0,1]
+        description: 'Frozen epitope_landscape@0.2.0 output field: shedding_risk.'
+        required: true
+        nullable: true
+      isoform_discrimination:
+        type: string_or_structured_object
+        description: 'Frozen epitope_landscape@0.2.0 output field: isoform_discrimination.'
+        required: true
+        nullable: true
+      tumor_specific_conformation_potential:
+        type: number[0,1]
+        description: 'Frozen epitope_landscape@0.2.0 output field: tumor_specific_conformation_potential.'
+        required: true
+        nullable: true
+      species_cross_reactivity_potential:
+        type: number[0,1]
+        description: 'Frozen epitope_landscape@0.2.0 output field: species_cross_reactivity_potential.'
+        required: true
+        nullable: true
+      epitope_evidence_confidence:
+        type: number[0,1]
+        description: 'Frozen epitope_landscape@0.2.0 output field: epitope_evidence_confidence.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

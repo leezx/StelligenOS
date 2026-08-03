@@ -1,0 +1,153 @@
+gate:
+  gate_id: commercial_opportunity_threshold
+  gate_family: adc.v0_2.commercial_executability.commercial_opportunity_threshold
+  gate_version: 0.2.0
+  sequence: 40
+  name: Commercial Opportunity Threshold
+  purpose: Determine whether the indication-patient-endpoint opportunity exceeds a prespecified probability-adjusted value
+    threshold.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - commercial_execution_context
+    - upstream_gate_results
+    outputs:
+    - unmet_need_score
+    - clinical_gap_definition
+    - eligible_patient_population
+    - biomarker_segment_size
+    - treatment_setting_value
+    - development_cost_tier
+    - commercial_value_range
+    - commercial_confidence
+    - minimum_value_threshold_pass
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: low
+    default_model_ids:
+    - commercial_opportunity_threshold_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: commercial_executability
+    group_code: C
+    priority: P0
+    dependencies: []
+    output_defaults:
+      unmet_need_score: null
+      clinical_gap_definition: null
+      eligible_patient_population: null
+      biomarker_segment_size: null
+      treatment_setting_value: null
+      development_cost_tier: null
+      commercial_value_range: null
+      commercial_confidence: null
+      minimum_value_threshold_pass: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      commercial_execution_context:
+        type: CommercialExecutionContext
+        description: 'Version-bound v0.2 input object: commercial_execution_context.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      unmet_need_score:
+        type: number[0,1]
+        description: 'Frozen commercial_opportunity_threshold@0.2.0 output field: unmet_need_score.'
+        required: true
+        nullable: true
+      clinical_gap_definition:
+        type: string_or_structured_object
+        description: 'Frozen commercial_opportunity_threshold@0.2.0 output field: clinical_gap_definition.'
+        required: true
+        nullable: true
+      eligible_patient_population:
+        type: string_or_structured_object
+        description: 'Frozen commercial_opportunity_threshold@0.2.0 output field: eligible_patient_population.'
+        required: true
+        nullable: true
+      biomarker_segment_size:
+        type: string_or_structured_object
+        description: 'Frozen commercial_opportunity_threshold@0.2.0 output field: biomarker_segment_size.'
+        required: true
+        nullable: true
+      treatment_setting_value:
+        type: string_or_structured_object
+        description: 'Frozen commercial_opportunity_threshold@0.2.0 output field: treatment_setting_value.'
+        required: true
+        nullable: true
+      development_cost_tier:
+        type: string_or_structured_object
+        description: 'Frozen commercial_opportunity_threshold@0.2.0 output field: development_cost_tier.'
+        required: true
+        nullable: true
+      commercial_value_range:
+        type: string_or_structured_object
+        description: 'Frozen commercial_opportunity_threshold@0.2.0 output field: commercial_value_range.'
+        required: true
+        nullable: true
+      commercial_confidence:
+        type: number[0,1]
+        description: 'Frozen commercial_opportunity_threshold@0.2.0 output field: commercial_confidence.'
+        required: true
+        nullable: true
+      minimum_value_threshold_pass:
+        type: boolean
+        description: 'Frozen commercial_opportunity_threshold@0.2.0 output field: minimum_value_threshold_pass.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

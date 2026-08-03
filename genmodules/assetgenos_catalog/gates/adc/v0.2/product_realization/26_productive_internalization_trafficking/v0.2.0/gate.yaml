@@ -1,0 +1,151 @@
+gate:
+  gate_id: productive_internalization_trafficking
+  gate_family: adc.v0_2.product_realization.productive_internalization_trafficking
+  gate_version: 0.2.0
+  sequence: 26
+  name: Productive Internalization and Trafficking
+  purpose: Evaluate the concrete epitope-antibody-affinity-valency-conjugation construct for productive intracellular payload
+    delivery per target cell.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - upstream_gate_results
+    outputs:
+    - surface_binding_fraction
+    - internalization_rate
+    - internalized_ADC_per_cell
+    - endosomal_entry
+    - lysosomal_delivery
+    - recycling_fraction
+    - degradation_fraction
+    - productive_payload_delivery
+    - trafficking_saturation_risk
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium_high
+    default_model_ids:
+    - productive_internalization_trafficking_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: product_realization
+    group_code: P
+    priority: P2
+    dependencies:
+    - epitope_function
+    - binding_geometry_kinetics
+    - antibody_format_fc_design
+    - antibody_sequence_developability
+    output_defaults:
+      surface_binding_fraction: null
+      internalization_rate: null
+      internalized_ADC_per_cell: null
+      endosomal_entry: null
+      lysosomal_delivery: null
+      recycling_fraction: null
+      degradation_fraction: null
+      productive_payload_delivery: null
+      trafficking_saturation_risk: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      surface_binding_fraction:
+        type: number[0,1]
+        description: 'Frozen productive_internalization_trafficking@0.2.0 output field: surface_binding_fraction.'
+        required: true
+        nullable: true
+      internalization_rate:
+        type: string_or_structured_object
+        description: 'Frozen productive_internalization_trafficking@0.2.0 output field: internalization_rate.'
+        required: true
+        nullable: true
+      internalized_ADC_per_cell:
+        type: string_or_structured_object
+        description: 'Frozen productive_internalization_trafficking@0.2.0 output field: internalized_ADC_per_cell.'
+        required: true
+        nullable: true
+      endosomal_entry:
+        type: string_or_structured_object
+        description: 'Frozen productive_internalization_trafficking@0.2.0 output field: endosomal_entry.'
+        required: true
+        nullable: true
+      lysosomal_delivery:
+        type: string_or_structured_object
+        description: 'Frozen productive_internalization_trafficking@0.2.0 output field: lysosomal_delivery.'
+        required: true
+        nullable: true
+      recycling_fraction:
+        type: number[0,1]
+        description: 'Frozen productive_internalization_trafficking@0.2.0 output field: recycling_fraction.'
+        required: true
+        nullable: true
+      degradation_fraction:
+        type: number[0,1]
+        description: 'Frozen productive_internalization_trafficking@0.2.0 output field: degradation_fraction.'
+        required: true
+        nullable: true
+      productive_payload_delivery:
+        type: string_or_structured_object
+        description: 'Frozen productive_internalization_trafficking@0.2.0 output field: productive_payload_delivery.'
+        required: true
+        nullable: true
+      trafficking_saturation_risk:
+        type: number[0,1]
+        description: 'Frozen productive_internalization_trafficking@0.2.0 output field: trafficking_saturation_risk.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

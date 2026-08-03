@@ -1,0 +1,171 @@
+gate:
+  gate_id: biomarker_clinical_assay_codesign
+  gate_family: adc.v0_2.product_realization.biomarker_clinical_assay_codesign
+  gate_version: 0.2.0
+  sequence: 34
+  name: Biomarker and Clinical Assay Co-Design
+  purpose: Co-design target-engagement, patient-selection, and response/resistance biomarkers with analyte, assay, scoring,
+    threshold, heterogeneity, tissue, and temporal requirements.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - upstream_gate_results
+    outputs:
+    - biomarker_role
+    - analyte
+    - assay_platform
+    - epitope_assay_compatibility
+    - membrane_specific_detection
+    - scoring_algorithm
+    - positivity_threshold_hypothesis
+    - heterogeneity_measurement
+    - primary_metastasis_concordance
+    - temporal_stability
+    - archival_fresh_tissue_requirements
+    - response_prediction_confidence
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium_high
+    default_model_ids:
+    - biomarker_clinical_assay_codesign_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: product_realization
+    group_code: P
+    priority: P2
+    dependencies:
+    - target_population_mapping
+    - epitope_landscape
+    - bystander_tumor_coverage
+    output_defaults:
+      biomarker_role: null
+      analyte: null
+      assay_platform: null
+      epitope_assay_compatibility: null
+      membrane_specific_detection: null
+      scoring_algorithm: null
+      positivity_threshold_hypothesis: null
+      heterogeneity_measurement: null
+      primary_metastasis_concordance: null
+      temporal_stability: null
+      archival_fresh_tissue_requirements: []
+      response_prediction_confidence: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      biomarker_role:
+        type: string_or_structured_object
+        description: 'Frozen biomarker_clinical_assay_codesign@0.2.0 output field: biomarker_role.'
+        required: true
+        nullable: true
+      analyte:
+        type: string_or_structured_object
+        description: 'Frozen biomarker_clinical_assay_codesign@0.2.0 output field: analyte.'
+        required: true
+        nullable: true
+      assay_platform:
+        type: string_or_structured_object
+        description: 'Frozen biomarker_clinical_assay_codesign@0.2.0 output field: assay_platform.'
+        required: true
+        nullable: true
+      epitope_assay_compatibility:
+        type: string_or_structured_object
+        description: 'Frozen biomarker_clinical_assay_codesign@0.2.0 output field: epitope_assay_compatibility.'
+        required: true
+        nullable: true
+      membrane_specific_detection:
+        type: string_or_structured_object
+        description: 'Frozen biomarker_clinical_assay_codesign@0.2.0 output field: membrane_specific_detection.'
+        required: true
+        nullable: true
+      scoring_algorithm:
+        type: string_or_structured_object
+        description: 'Frozen biomarker_clinical_assay_codesign@0.2.0 output field: scoring_algorithm.'
+        required: true
+        nullable: true
+      positivity_threshold_hypothesis:
+        type: string_or_structured_object
+        description: 'Frozen biomarker_clinical_assay_codesign@0.2.0 output field: positivity_threshold_hypothesis.'
+        required: true
+        nullable: true
+      heterogeneity_measurement:
+        type: string_or_structured_object
+        description: 'Frozen biomarker_clinical_assay_codesign@0.2.0 output field: heterogeneity_measurement.'
+        required: true
+        nullable: true
+      primary_metastasis_concordance:
+        type: string_or_structured_object
+        description: 'Frozen biomarker_clinical_assay_codesign@0.2.0 output field: primary_metastasis_concordance.'
+        required: true
+        nullable: true
+      temporal_stability:
+        type: number[0,1]
+        description: 'Frozen biomarker_clinical_assay_codesign@0.2.0 output field: temporal_stability.'
+        required: true
+        nullable: true
+      archival_fresh_tissue_requirements:
+        type: list[object]
+        description: 'Frozen biomarker_clinical_assay_codesign@0.2.0 output field: archival_fresh_tissue_requirements.'
+        required: true
+        nullable: true
+      response_prediction_confidence:
+        type: number[0,1]
+        description: 'Frozen biomarker_clinical_assay_codesign@0.2.0 output field: response_prediction_confidence.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version

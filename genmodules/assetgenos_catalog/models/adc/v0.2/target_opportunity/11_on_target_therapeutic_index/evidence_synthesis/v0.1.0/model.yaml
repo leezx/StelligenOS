@@ -1,0 +1,92 @@
+model:
+  model_id: on_target_therapeutic_index_evidence_v1
+  model_family: adc.v0_2.target_opportunity.on_target_therapeutic_index.evidence_synthesis
+  model_version: 0.1.0
+  gate_id: on_target_therapeutic_index
+  implementation: on_target_therapeutic_index_evidence_synthesis
+  status: active_challenger
+  runtime:
+    model_name: On-Target Therapeutic Index Evidence v1
+    model_type: rule_based
+    provider: ADC_on_target_therapeutic_index_evidence
+    input_schema: GateInputEnvelope@2.0.0
+    output_schema: GateModelOutput@2.0.0
+    cost_tier: medium
+    limitations:
+      - Requires usable T0, T7, and T8 results plus a version-bound normal-tissue evidence bundle.
+      - Fixed risk weights are transparent heuristics and not prospectively calibrated.
+      - Transcript expression alone does not establish surface protein, accessibility, uptake, or toxicity.
+      - Excludes target-independent payload, linker, Fc, and platform toxicity.
+    calibration_status: uncalibrated_on_target_risk_index
+    training_data_version: ADC_on_target_therapeutic_index_evidence@0.1.0
+    prompt_version: null
+    enabled: true
+    weight: 1.0
+    default_confidence_cap: 0.55
+  contract_refs:
+    gate: components/gates/adc/v0.2/target_opportunity/11_on_target_therapeutic_index/v0.2.0/gate.yaml
+    input: components/contracts/gate_input.v2.yaml
+    output: components/contracts/model_output.v2.yaml
+  question_template: >-
+    Given usable T0, T7, and T8 anchors plus exact Candidate-bound evidence,
+    what target-mediated normal-tissue risk remains relative to the anticipated
+    tumor exposure requirement?
+  evidence_policy:
+    may_use:
+      - Usable T0, T7, and T8 results.
+      - Exact Candidate identity.
+      - Version-bound normal-tissue surface, uptake, regenerative, exposure-requirement, and irreversibility evidence.
+    must_not_invent:
+      - Normal-tissue expression, surface localization, internalization, recovery, required exposure, toxicity, or clinical margin.
+      - PK parameters, patient counts, assays, dose limits, or validation results.
+  fallback_policy:
+    mode: neutral_common_score_with_nullable_domain_outputs
+    confidence_cap: 0.55
+    complete_when_evidence_missing: true
+    nullable_domain_fields_when_unknown: true
+  model_card:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    summary: Deterministic T11 evidence synthesis for target-mediated normal-tissue risk relative to required tumor exposure.
+    intended_use:
+      - Preserve critical normal-cell evidence and expose missing therapeutic-index measurements.
+      - Produce a reproducible, confidence-capped T11 plausibility index.
+    decision_role: Exploratory hard-Gate evidence synthesis; not validated clinical safety prediction.
+    method_summary: Upstream dependency check, identity binding, measurement audit, critical-cell contract, fixed five-risk synthesis, and confidence cap.
+    input_requirements:
+      - Usable clinical-context, tumor-surface, and intratumoral-accessibility results.
+      - Exact target and indication.
+      - Five measurements and a critical normal-cell record with provenance.
+    output_interpretation: Higher score is more favorable; the index is uncalibrated and is not a probability or human dose margin.
+    evidence_boundary:
+      - T7 and T8 own tumor-side availability and access.
+      - T11 owns target-mediated normal-tissue risk.
+      - Product and PK Gates own construct-dependent and target-independent toxicity.
+    known_failure_modes:
+      - RNA-to-surface-protein mismatch.
+      - Rare critical cells absent from reference atlases.
+      - Species differences, inaccessible epitopes, and exposure mismatch.
+    prohibited_uses:
+      - Declaring human safety or a clinical therapeutic window.
+      - Treating atlas RNA as antibody-bindable surface protein.
+      - Combining target-independent payload or platform toxicity into T11.
+  version_roadmap:
+    - stage: v0.1
+      target: Deterministic on-target normal-tissue evidence synthesis with explicit critical-cell provenance
+    - stage: v0.2
+      target: Independent biological and toxicology review plus multi-population evidence support
+    - stage: v0.3
+      target: Endpoint-matched outcome benchmark and risk-weight calibration
+    - stage: v1
+      target: Independent blinded validation and approved intended-use boundary
+    - stage: v2
+      target: Prospective validation, drift monitoring, and governed stable promotion
+  lifecycle:
+    standard_ref: ModelLifecycleStandard@1.0.0
+    artifact_stage: formal_candidate
+    release_kind: first_formal
+    released_at: "2026-07-30T13:15:00Z"
+    record_root: components/model_governance/on_target_therapeutic_index_evidence_v1/v0.1.0
+    change_summary:
+      - Added deterministic normal-tissue on-target risk synthesis.
+      - Added explicit critical-cell and provenance requirements.
+      - Added isolated lifecycle, source, and test artifacts.

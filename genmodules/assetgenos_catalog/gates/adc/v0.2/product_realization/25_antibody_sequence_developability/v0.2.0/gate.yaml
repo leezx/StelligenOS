@@ -1,0 +1,163 @@
+gate:
+  gate_id: antibody_sequence_developability
+  gate_family: adc.v0_2.product_realization.antibody_sequence_developability
+  gate_version: 0.2.0
+  sequence: 25
+  name: Antibody Sequence and Developability
+  purpose: Evaluate specificity, polyspecificity, aggregation, chemical liabilities, immunogenicity, yield, stability, viscosity,
+    conjugation compatibility, and sequence space.
+  runtime:
+    required: true
+    hard_gate: true
+    applicable_modalities:
+    - ADC
+    required_inputs:
+    - target_opportunity
+    - adc_product_candidate
+    - upstream_gate_results
+    outputs:
+    - binding_specificity
+    - off_target_binding_risk
+    - aggregation_risk
+    - polyspecificity_risk
+    - chemical_liabilities
+    - immunogenicity_risk
+    - expression_yield
+    - thermal_stability
+    - viscosity_risk
+    - conjugation_compatibility
+    - sequence_developability_score
+    pass_rule: score >= 0.65 with adequate evidence and no propagated hard failure
+    fail_rule: score < 0.30 with direct or high-confidence evidence
+    uncertainty_rule: missing, inferred, stale, or non-version-bound evidence keeps the Gate in exploration mode
+    cost_tier: medium_high
+    default_model_ids:
+    - antibody_sequence_developability_llm_v0_2
+    thresholds:
+      pass: 0.65
+      fail: 0.3
+    missing_data_policy: exploration_only
+    gate_group: product_realization
+    group_code: P
+    priority: P2
+    dependencies:
+    - binding_geometry_kinetics
+    - antibody_format_fc_design
+    output_defaults:
+      binding_specificity: null
+      off_target_binding_risk: null
+      aggregation_risk: null
+      polyspecificity_risk: null
+      chemical_liabilities: []
+      immunogenicity_risk: null
+      expression_yield: null
+      thermal_stability: null
+      viscosity_risk: null
+      conjugation_compatibility: null
+      sequence_developability_score: null
+  input_contract:
+    envelope_schema: GateInputEnvelope@2.0.0
+    candidate_fields:
+      target_gene:
+        type: string
+        description: Canonical target gene.
+        required: true
+      target_protein:
+        type: string
+        description: Canonical target protein.
+        required: true
+      indication:
+        type: string
+        description: Candidate-level indication retained for backward compatibility.
+        required: true
+      biological_hypothesis:
+        type: string
+        description: Immutable candidate hypothesis.
+        required: true
+    context_fields:
+      target_opportunity:
+        type: TargetOpportunityContext
+        description: 'Version-bound v0.2 input object: target_opportunity.'
+        required: true
+        nullable: false
+      adc_product_candidate:
+        type: ADCProductContext
+        description: 'Version-bound v0.2 input object: adc_product_candidate.'
+        required: true
+        nullable: false
+      upstream_gate_results:
+        type: map[gate_id,GateResult]
+        description: 'Version-bound v0.2 input object: upstream_gate_results.'
+        required: true
+        nullable: false
+  output_contract:
+    envelope_schema: GateModelOutput@2.0.0
+    common_contract_ref: components/contracts/model_output.v2.yaml
+    domain_fields:
+      binding_specificity:
+        type: number[0,1]
+        description: 'Frozen antibody_sequence_developability@0.2.0 output field: binding_specificity.'
+        required: true
+        nullable: true
+      off_target_binding_risk:
+        type: number[0,1]
+        description: 'Frozen antibody_sequence_developability@0.2.0 output field: off_target_binding_risk.'
+        required: true
+        nullable: true
+      aggregation_risk:
+        type: number[0,1]
+        description: 'Frozen antibody_sequence_developability@0.2.0 output field: aggregation_risk.'
+        required: true
+        nullable: true
+      polyspecificity_risk:
+        type: number[0,1]
+        description: 'Frozen antibody_sequence_developability@0.2.0 output field: polyspecificity_risk.'
+        required: true
+        nullable: true
+      chemical_liabilities:
+        type: list[object]
+        description: 'Frozen antibody_sequence_developability@0.2.0 output field: chemical_liabilities.'
+        required: true
+        nullable: true
+      immunogenicity_risk:
+        type: number[0,1]
+        description: 'Frozen antibody_sequence_developability@0.2.0 output field: immunogenicity_risk.'
+        required: true
+        nullable: true
+      expression_yield:
+        type: string_or_structured_object
+        description: 'Frozen antibody_sequence_developability@0.2.0 output field: expression_yield.'
+        required: true
+        nullable: true
+      thermal_stability:
+        type: number[0,1]
+        description: 'Frozen antibody_sequence_developability@0.2.0 output field: thermal_stability.'
+        required: true
+        nullable: true
+      viscosity_risk:
+        type: number[0,1]
+        description: 'Frozen antibody_sequence_developability@0.2.0 output field: viscosity_risk.'
+        required: true
+        nullable: true
+      conjugation_compatibility:
+        type: string_or_structured_object
+        description: 'Frozen antibody_sequence_developability@0.2.0 output field: conjugation_compatibility.'
+        required: true
+        nullable: true
+      sequence_developability_score:
+        type: number[0,1]
+        description: 'Frozen antibody_sequence_developability@0.2.0 output field: sequence_developability_score.'
+        required: true
+        nullable: true
+  variation_policy:
+    frozen_across_profiles:
+    - Gate responsibility
+    - input object names
+    - output field names and direction
+    - hard-failure propagation semantics
+    profiles_may_override:
+    - indication vocabulary
+    - biomarker vocabulary
+    - evidence adapters
+    - thresholds
+    - selected Model version
