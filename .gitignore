@@ -1,1 +1,15 @@
 .DS_Store
+
+# Python 运行时产物。
+# 这些是 runtime artifacts，按仓库边界规则不得进入仓库；
+# 且 tests/test_assetgenos_modules.py 与 tests/test_gen_indication_endpoint_target.py
+# 会把残留的 __pycache__ 判定为 data-bearing runtime artifact 并直接失败。
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 本地开发工具配置和虚拟环境，不属于架构实现。
+.claude/settings.local.json
+.venv/
+venv/
+.pytest_cache/

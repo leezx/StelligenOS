@@ -14,6 +14,7 @@ allowed_top_level=(
   "schemas"
   "src"
   "genmodules"
+  "extensions"
   "code"
   "tests"
   "notebooks"
@@ -31,6 +32,24 @@ allowed_top_level=(
   ".gitignore"
 )
 
+# `.claude` is not an allowed top-level entry. It is tolerated only as the
+# container of the single local tool-config file below, so that unrelated
+# content cannot enter the repository under that directory.
+allowed_dot_claude_paths=(
+  ".claude/settings.local.json"
+)
+
+is_allowed_dot_claude_path() {
+  local candidate="$1"
+  local item
+  for item in "${allowed_dot_claude_paths[@]}"; do
+    if [[ "$item" == "$candidate" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
 is_allowed_top_level() {
   local candidate="$1"
   local item
@@ -46,10 +65,24 @@ violations=()
 while IFS= read -r -d '' entry; do
   name="${entry#$repo_root/}"
   top="${name%%/*}"
+  # A `.claude` directory is checked path by path below. A `.claude` file is not
+  # exempt and falls through to the generic check.
+  if [[ "$top" == ".claude" && -d "$repo_root/.claude" ]]; then
+    continue
+  fi
   if ! is_allowed_top_level "$top"; then
     violations+=("$name")
   fi
 done < <(find "$repo_root" -mindepth 1 -maxdepth 1 -print0)
+
+if [[ -d "$repo_root/.claude" ]]; then
+  while IFS= read -r -d '' nested; do
+    nested_name="${nested#$repo_root/}"
+    if ! is_allowed_dot_claude_path "$nested_name"; then
+      violations+=("$nested_name")
+    fi
+  done < <(find "$repo_root/.claude" -mindepth 1 -print0)
+fi
 
 if (( ${#violations[@]} > 0 )); then
   printf 'Repository boundary violation(s):\n' >&2

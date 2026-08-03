@@ -1,0 +1,51 @@
+extension:
+  extension_id: EXT-03
+  extension_name: asset_search_engine
+  extension_version: 0.1.0
+  extension_type: KernelExtension
+  status: shell_only
+  priority: medium
+
+  source:
+    document: prompts/GPT-Feedback.md
+    section: "v4"
+    risk_id: "一级风险三"
+    risk_title: "Asset Generation 目前仍然是路线，不是搜索"
+
+  purpose: >
+    把 Asset Generation 从两条固定路线扩展成多轴搜索空间。
+    当前 Product Realization Gate 只负责评价 ADC 设计，没有任何模块负责
+    主动搜索 payload、linker、DAR、位点特异偶联、Fc、半衰期、亲和力、
+    表位位移和内吞增强这些维度。
+
+  current_kernel_state: >
+    内核目前有两条已实现的生成路线：existing_binder_asset_engineering
+    和 epitope_conditioned_de_novo_antibody_discovery。
+    这两条路线仍然是权威实现，本扩展不取代它们，只把它们登记为
+    binder 轴上的现有 generator。
+
+  interim_decision: >
+    人类负责人当前的显式决策是：先做第一步 ADC 抗体，
+    下游先用标准 ADC 平台参数垫着，不一次性优化全部搜索轴。
+    本扩展的作用是把被推迟的搜索轴登记下来，避免「标准平台垫着」
+    在无人注意的情况下变成永久默认。
+
+  kernel_contact_surface:
+    reads:
+      - genmodules/antibody_binder_asset_engineering/module.yaml
+      - genmodules/epitope_conditioned_de_novo_antibody_discovery/module.yaml
+      - src/capabilities/binder_adc_routes.py
+    modifies: []
+
+  prohibited:
+    - 不得取代或修改内核已有的两条生成路线。
+    - 不得绕过 Product Realization Gate 直接产出资产。
+    - 不得自动扩大搜索空间；每个 generator 的启用都需要显式决策。
+    - 不得在仓库内保存生成结果、序列库或搜索中间产物。
+
+  execution_policy: disabled
+
+  activation_requirements:
+    - 至少一条 binder 路线在真实项目上跑完并产出可用资产。
+    - 每个待启用 generator 的外部工具依赖和成本被评估。
+    - 独立任务分支、独立 PR 和 ChatGPT APPROVE。

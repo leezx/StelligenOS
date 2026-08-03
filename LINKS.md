@@ -7,6 +7,8 @@
 - [Capabilities](./docs/architecture/capabilities.zh-CN.md)
 - [Lifecycle](./docs/architecture/lifecycle.zh-CN.md)
 - [Legacy Inventory](./docs/architecture/legacy_inventory.zh-CN.md)
+- [Current System And Module Logic](./docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md)
+- [Architecture Doc Versioning](./docs/architecture/versions/README.md)
 - [Phase 0 Prompt](./prompts/system/STELLIGENOS_MIGRATION_MASTER_PROMPT.zh-CN.md)
 - [Phase 0 Report](./docs/phases/PHASE_0_REPORT.zh-CN.md)
 - [Phase 0.5 Report](./docs/phases/PHASE_0_5_REPORT.zh-CN.md)
@@ -15,6 +17,13 @@
 - [Worklog](./logs/worklog.md)
 - [Git Sync Script](./scripts/git_sync.sh)
 - [Handoff Template](./docs/handoff/TEMPLATE.zh-CN.md)
+
+## 扩展提案
+
+- [Extensions Registry](./extensions/README.md)
+- [Extensions Backlog](./extensions/BACKLOG.zh-CN.md)
+
+扩展是尚未进入架构内核的提案。内核不得依赖扩展；扩展不得改写 Gate 结果或推动生命周期。
 
 ## 存储策略
 

@@ -1,15 +1,7 @@
+<!-- FROZEN SNAPSHOT: v1, approved in PR #42 (ChatGPT APPROVE, Round 2). Read-only. Do not edit. -->
+<!-- Canonical latest version: ../CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md -->
+
 # StelligenOS 当前总架构与模块逻辑（专家审核版）
-
-## 0. 文档版本
-
-- 文档 ID：`CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW`
-- 当前版本：`v1`
-- 版本状态：`APPROVED`（PR #42 Round 2 ChatGPT `APPROVE`）
-- 规范路径：本文件路径固定不变，永远指向最新版本。
-- 历史快照：`docs/architecture/versions/`，命名为 `<DOC_ID>.v<N>.zh-CN.md`。
-- 版本规则见 `docs/architecture/versions/README.md`。
-
-本文件描述的是**当前内核**。GPT 反馈中尚未进入内核的扩展提案位于 `extensions/`，不属于本文件的架构承诺。
 
 ## 1. 系统目标
 

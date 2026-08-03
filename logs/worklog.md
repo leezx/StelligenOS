@@ -1813,6 +1813,79 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/chatgpt-review-2026-08-01-global-review-rules-round1.md`
   - `logs/worklog.md`
 
+### 2026-08-03 10:25 EDT
+
+- Action: 建立架构文档版本规则，并按 GPT-Feedback v4 四个一级风险建立 `extensions/` 扩展插件包；修复 `.gitignore` 与 repository boundary 脚本。
+- How: 从 PR #42 已批准 tip `94dc6c8` 创建 `task_20260803_architecture-extensions`（`main` 当前落后，尚不含架构说明文档，故不从 `main` 开分支，沿用 PR #31 先例）。
+- Read: `README.md`、`AGENTS.md`、`architecture.md`、`ChatGPT-Codex-talk.md`、`docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md`、`docs/architecture/*.md`、`docs/handoff/2026-08-02-current-architecture-expert-review-doc.zh-CN.md`、`docs/tasks/CRC_GATE_SCORING_CONTRACT.zh-CN.md`、`prompts/GPT-Feedback.md`（`# v4`，600 行）、`src/`、`genmodules/`、`tests/`、`scripts/verify_repository_boundary.sh`。
+- Finding: 工作区把已批准的架构说明文档重命名为含空格的 `... .zh-CN v1.md`，导致 `docs/handoff/`、`logs/worklog.md`、`prompts/GPT-Feedback.md` 三处路径引用断裂；经 diff 确认为纯改名，正文无改动。
+- Decision: 不采用「文件名带版本号」，因为 worklog 与 `logs/chatgpt-review-*.md` 是追加式审计记录，升版会强迫改写已批准的历史记录。改用「稳定规范路径 + 文档内第 0 节版本区块 + `docs/architecture/versions/` 只读快照」。
+- Finding: `scripts/verify_repository_boundary.sh` 实测 `exit=1`，违规项为顶层 `.claude`；该目录被用户全局 gitignore 忽略，故 `git status` 干净但脚本用 `find` 仍可见。
+- Finding: `.gitignore` 此前只有 `.DS_Store`，跑完测试后 `tests/test_assetgenos_modules.py` 与 `tests/test_gen_indication_endpoint_target.py` 会把自身产生的 `__pycache__` 判定为 data-bearing runtime artifact 而失败（实测 2 个模块各 1 项失败，清理 pycache 后恢复）。
+- Change: 新增 `extensions/`（README 内核不变式、BACKLOG 七个二级风险 BL-01..BL-07、EXT-01..EXT-04 四个插件包）；`EXT-04 stop_rule` 为唯一可执行契约，其余三个为 `shell_only`。
+- Design note: `EXT-04` 把「证据是否充分」与「是否允许继续搜索」分为两个独立维度，裁决三值；搜索预算耗尽产出 `INSUFFICIENT_EXHAUSTED` 并强制升级人类决策，不得转 FAIL，以免把「未找到足够证据」伪装为「target 不好」，符合内核设计原则第 3 条。
+- Change: `.gitignore` 新增 Python 运行时产物与本地工具配置；`scripts/verify_repository_boundary.sh` allowlist 新增 `extensions` 与 `.claude`；`README.md`/`LINKS.md` 增加扩展与版本目录入口。
+- Boundary: 未改动 architecture contract、四阶段生命周期、七类对象、45-Gate 拓扑、`genmodules/` 任何 gate/model/profile、`src/` 内核代码，以及已获批准的 `docs/tasks/CRC_GATE_SCORING_CONTRACT.zh-CN.md`；未改动任何历史审核记录；未执行 CRC Gate scoring、T12、排序或资产生成；仓库仍 data-free。
+- Validation: 23 个测试模块全部 OK（新增 28 项测试：stop_rule 17 项、extension boundary 11 项）；`scripts/verify_repository_boundary.sh` 通过（修复前 exit=1）；`bash tests/test_git_sync.sh` A-D 通过；`git diff --check` 通过。
+- Risk: `EXT-04` 三组 baseline 阈值未经科学校准，标记 `proposed_baseline_requires_expert_calibration`；且依赖「独立证据数」而 `BL-01` 未解决，可能被重复来源虚增而偏向过早判定充分。
+- Next: 推送分支并创建 PR 提交 ChatGPT 审核；`APPROVE` 前不得把扩展提升为 `governed`，不得开始逐 Gate 阈值实例化。
+- PR: 创建 PR #43，base 指向 PR #42 已批准 head `task_20260802_current-architecture-expert-review-doc`（不指向 `main`，避免 aggregate diff 混入未合并历史提交，参照 PR #41 的同类问题）；aggregate diff 为 1 commit、26 files、`+2465/-0`。状态 `PENDING_CHATGPT_REVIEW`。
+
+### 2026-08-03 11:10 EDT
+
+- Action: 处理 ChatGPT 对 PR #43 HEAD `9f7b946` 的 Round 1 `REQUEST_CHANGES`，五条阻断在同一 PR 内做最小修订。
+- How: 先逐条对代码核实，不照单执行。核实方式为 grep/读取实际实现与 `gh pr view` 实测 diff。
+- Verification of blockers: (1) `calibration_status` 在 `extensions/stop_rule/contracts.py` 全文件仅 1 处出现，为字段声明，`evaluate_stop_condition` 从未读取 —— 成立；(2) `opposing_count` 仅出现于字段声明与非负校验，未参与充分性判定 —— 成立；(3) `SufficiencyBaseline.__post_init__` 仅检查 `gate_group` —— 成立；(4) allowlist 确实整目录放行 `.claude` —— 成立；(5) 实测 aggregate diff 为 2 commits/26 files/`+2468/-0`，文档记录 1 commit/`+2465/-0` —— 成立。五条全部成立，无需 pushback。
+- Impact note (blocker 2): 该偏置的实际后果是 10 条独立反对证据、0 条支持时永远返回 `INSUFFICIENT_CONTINUE`，即 Stop Rule 本应防止的无限搜索；属真实缺陷而非风格问题。
+- Change: `StopDecision` 新增 `actionable` 与 `calibration_status`，`actionable = (verdict == SUFFICIENT) AND (calibration_status == expert_calibrated)`，并加三条构造期不变式（未校准不得 actionable、非 SUFFICIENT 不得 actionable、已校准的 SUFFICIENT 不得隐藏 actionable）。
+- Change: 充分性改为方向中立。`min_independent_supporting` 更名 `min_independent_evidence`，`opposing_count` 更名 `independent_opposing_count`，判定改为 `max(支持, 反对) >= 阈值`；两方向不相加（2+2 是冲突不是 4）；新增 `strongest_direction_count` 且刻意不暴露方向，避免充分性退化为裁决。充分的反对证据可结束搜索但不自动转 FAIL。
+- Change: 抽出 `_validate_thresholds()` 供 `EvidenceSufficiencyContract` 与 `SufficiencyBaseline` 共用，两者数值约束完全一致。
+- Change: `.claude` 移出 boundary allowlist，改为精确豁免 `.claude/settings.local.json`；目录内其他路径逐条校验；`.claude` 为文件时不豁免。实测注入 `.claude/rogue.md` 与 `.claude/sub/nested.md` 均被正确拒绝，清理后恢复通过。
+- Change: handoff 声明 GitHub PR #43 实时 HEAD 与 aggregate diff 为唯一权威来源，文档内数字降级为历史快照；同步 README 与 extension.yaml 语义（`SUFFICIENT` 不再解释为「可以进入 Gate 评分」）。
+- Boundary: 修订仍限于 `extensions/stop_rule/`、`tests/test_stop_rule_extension.py`、`scripts/verify_repository_boundary.sh`、handoff 与 worklog；未改内核、未改 Gate 拓扑、未扩大范围、未新起分支。
+- Validation: 23 个测试模块全部 OK，共 122 项（stop_rule 由 17 项增至 34 项）；`scripts/verify_repository_boundary.sh` 通过且负例被拒；`bash tests/test_git_sync.sh` A-D 通过；`git diff --check` 通过；旧字段名 `min_independent_supporting`/`opposing_count` 全仓库无残留。
+- Next: 推送同一 PR #43 并重新提交 ChatGPT 复审；`APPROVE` 前不得提升扩展状态或开始逐 Gate 阈值实例化。
+
+### 2026-08-03 11:52 EDT
+
+- Action: 处理 ChatGPT 对 PR #43 的 Round 2 `REQUEST_CHANGES`，两条阻断在同一 PR 内做最小修订。
+- Verification of blockers: (1) grep `extensions/stop_rule/contracts.py` 确认 `governed`/`governance` 零处出现于判定逻辑，而 `extensions/README.md` 第 23 行定义 `active_design` 为「尚未接入任何真实运行」、第 26 行要求提升 `governed` 须经独立 PR 与 ChatGPT `APPROVE`，且 EXT-04 自身 status 为 `active_design` —— 声明的不变式与代码脱节，成立；(2) handoff 验证段确实仍写 stop-rule 17 项/新增 28 项 —— 成立。两条均无需 pushback。
+- Change: 合同新增 `governance_status`（`NOT_GOVERNED`/`GOVERNED`，默认未治理）与 `governance_approval_ref`；治理时必须给出 `external:` 批准引用，未治理时该字段必须为空。
+- Change: 新增模块级 `EXTENSION_STATUS`（镜像 `extension.yaml` 的 `status`，当前 `active_design`）与 `GOVERNED_EXTENSION_STATUS`，作为 actionability 的硬性上限；抽出纯函数 `is_actionable()`，使 verdict × calibration × governance × extension_status 全部组合可在不改模块状态的前提下测试。
+- Design note: 修订强度高于要求。除合同级治理批准外，扩展自身状态也成为上限，因此当前任何裁决的 `actionable` 必然为 `False`，即使合同已校准且已治理——这是 `extensions/README.md`「`active_design` 尚未接入任何真实运行」的字面强制实现。专家校准（阈值是否可信）与治理批准（是否允许投入使用）是两个独立的门，互不替代。
+- Change: `StopDecision` 的多条单向不变式替换为一条双向约束 `actionable == is_actionable(...)`，因此既不能伪造 `actionable=True`，也不能在门全开时隐藏 `actionable=False` 规避审计；新增 `extension_status` 字段，使归档裁决在 EXT-04 将来提升后仍可追溯当时状态。
+- Change: 反转 Round 2 中语义错误的测试断言（原 `test_expert_calibrated_sufficiency_is_actionable` 断言已校准即 actionable，正是本轮阻断所指的错误语义）。
+- Change: handoff 验证段改为「当前轮次为权威 + 历史数字分轮次列表」；同步 README 三门表格与 extension.yaml 的 `actionability_rule`、`current_actionability`、`governance_reference_rule`、`status_mirror`。
+- Metadata note: 本轮修订使测试数再次变化，Round 2 的 122/34 已被取代；按实测值记录为 Round 3 = 23 modules / 128 tests、stop_rule 40、extension_boundary 11。验证数字权威来源为当前 HEAD 实际运行结果。
+- Boundary: 修订仍限于 `extensions/stop_rule/`、`tests/test_stop_rule_extension.py`、handoff 与 worklog；未改内核、未改 Gate 拓扑、未改三个 shell_only 扩展、未扩大范围、未另起分支；没有任何扩展被提升为 `governed`。
+- Validation: 23 个测试模块全部 OK，共 128 项（stop_rule 由 34 增至 40）；`scripts/verify_repository_boundary.sh` 通过；`bash tests/test_git_sync.sh` A-D 通过；`git diff --check` 通过。
+- Next: 推送同一 PR #43 并重新提交 ChatGPT 复审。
+
+### 2026-08-03 12:20 EDT
+
+- Action: 处理 ChatGPT 对 PR #43 的 Round 3 `REQUEST_CHANGES`，三处元数据冲突同步，按要求不改代码。
+- Verification of blockers: (1) PR 描述第 45 行确实写「allowlist 新增 `extensions` 与 `.claude`」，与代码实际的精确豁免相反 —— 成立；(2) handoff「本次改动」第 48 行确实仍写旧公式 `SUFFICIENT + expert_calibrated` —— 成立；(3) handoff「下一步」确实仍写「推送分支并创建 PR」，而 PR #43 已存在且在 Round 3 复审 —— 成立。三条均无需 pushback。
+- Change: PR 描述改为「allowlist 新增 `extensions`；`.claude` 不进 allowlist，改为精确豁免 `.claude/settings.local.json` 单条路径，其他内容仍判违规，`.claude` 为文件时不豁免」。
+- Change: handoff「本次改动」的 `actionable` 公式更新为四条件合取（`SUFFICIENT` + `expert_calibrated` + 合同 `governed` + `EXTENSION_STATUS == governed`），并补充三门语义、当前 `actionable` 恒为 `False` 的结论，以及双向约束说明。
+- Change: handoff「下一步」更新为 PR #43 已创建、当前 Round 3 复审、三处元数据已同步、merge 目标为 base 分支 `task_20260802_current-architecture-expert-review-doc`。
+- Change: 在 Round 1 修订表上方加注，声明该表记录的是 Round 1 当时内容，其 `actionable` 公式已在 Round 2 被取代，避免历史记录被误读为当前状态。
+- Boundary: 本轮**未改动任何代码、测试、契约或脚本**，仅同步 PR 描述、handoff 与 worklog 文本；HEAD 代码与 Round 3 审核确认通过的 `ed61fc0` 一致。
+- Validation: 23 个测试模块全部 OK，共 128 项；`scripts/verify_repository_boundary.sh` 通过；`bash tests/test_git_sync.sh` A-D 通过；`git diff --check` 通过；元数据与代码一致性经 grep 交叉核对。
+- Next: 提交 ChatGPT 最终审核。`APPROVE` 前不得提升扩展状态或开始逐 Gate 阈值实例化。
+
+### 2026-08-03 12:48 EDT
+
+- Action: 获取 ChatGPT 对 PR #43 的 Round 4 `APPROVE`（由人类负责人转达）。
+- Approved head: `6f52288`；base 为 `task_20260802_current-architecture-expert-review-doc`（PR #42 已批准 head，非 `main`）。
+- Review history: Round 1 五条代码阻断、Round 2 两条阻断、Round 3 三条元数据冲突，共 10 条全部在同一 PR 内做最小修订，无范围扩大，未另起分支。
+- Result: ChatGPT 确认 Round 3 三处元数据已同步且未改动代码（经 `git diff --stat ed61fc0 HEAD -- extensions/ tests/ scripts/ src/ genmodules/` 为空验证），Round 1/Round 2 的代码修复在 `6f52288` 上保持正确。
+- Validation at approved head: 23 个测试模块 / 128 项通过；`scripts/verify_repository_boundary.sh` 通过且负例被拒；`tests/test_git_sync.sh` A-D 通过；`git diff --check` 通过。
+- Action taken: 保存 `logs/chatgpt-review-2026-08-03-architecture-extensions-final.md`，handoff 状态更新为 `APPROVED_WAITING_HUMAN_MERGE`。
+- Authorization: 批准范围限于架构文档版本规则、`extensions/` 目录与四条内核不变式、EXT-01/02/03 的 `shell_only` 壳、EXT-04 的 `active_design` 契约、BL-01..BL-07 登记，以及 `.gitignore` 与边界脚本卫生修复。
+- Not authorized: 提升任何扩展为 `governed`；逐 Gate 阈值实例化；任何内核/Gate 拓扑/Model/Profile/生命周期变更；CRC Gate scoring、T12、排序推荐或资产生成；合并进 `main`。
+- Open prerequisite (记录以防遗忘，不由本任务处理): `main` 自 2026-08-01 `f8206e9` 起未移动，28 个 open PR 堆成从 `main` 到本分支的线性链，`main..HEAD` 87 commits，本 PR 位于链顶且全链 `MERGEABLE`。链底 PR #15/#16/#17 批准状态存疑——三者 worklog 零提及、无 `-final.md` 审核记录、handoff 状态仍为「待创建 PR 并提交 ChatGPT 审核」。按 AGENTS.md「审核前不得继续推进」，需人类负责人核实后决定补审或明确豁免。本 PR 的 `APPROVE` 不构成对链底状态的认可。
+- Next: 由人类负责人决定 merge。合并动作与链底核实均未执行。
+
 ### 2026-08-03 13:30 EDT
 
 - Action: 处理 ChatGPT 对 PR #15（HEAD `4b8d029`）的 Round 1 `REQUEST_CHANGES`，两条阻断在同一 PR 内修订。
