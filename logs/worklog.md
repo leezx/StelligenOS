@@ -1555,7 +1555,24 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Result: ChatGPT 确认 tip 追溯阻断已修复，PR #29 保持 data-free，外部结果未进入仓库，未执行 Gate 评分/排序/资产推荐；允许将枚举结果作为 target-level evidence extraction 输入。
 - Boundary: 下一步必须另建执行契约和独立 PR，不得在 PR #29 中扩大范围。
 - Action taken: 保存最终批准记录至 `logs/chatgpt-review-2026-08-02-crc-target-enumeration-results-final.md`，更新 handoff 状态；本次仅为审计记录，不新增业务代码或数据。
+
+### 2026-08-02 00:35 EDT
+
+- Action: 创建下一步 CRC target-level evidence extraction 执行契约分支。
+- How: 从前置结果审核分支建立 `task_20260802_crc-target-evidence-extraction`，仅新增 contract 和 handoff；输入边界固定为已批准结果中的 9 indications、36 endpoints、41 targets。
+- Result: 定义表面可达性、CRC/状态表达、内吞/溶酶体递送、ADC 先例、正常组织风险、异质性/脱落、反对证据和 unknown 八类证据维度，以及来源审计字段和外部输出路径。
+- Boundary: 尚未抓取文献、公共数据或 ADC 项目资料；未执行 Gate 评分、排序或资产推荐；未向仓库写入数据、cache 或 result。
+- Next: 验证、提交并推送独立 PR，等待 ChatGPT `APPROVE`。
   - `logs/worklog.md`
+
+### 2026-08-01 22:33 EDT
+
+- Action: 获取 ChatGPT 对 PR #30 的 contract-only `APPROVE`。
+- How: 在 Chrome 的 ChatGPT“GitHub PR 信息”对话中保持 GitHub source 选中，提交 PR #30 当前 head `38d45c8` 的完整审核指令；等待 ChatGPT 读取 aggregate diff、执行契约、handoff 和 worklog 后确认结论。
+- Result: ChatGPT 确认 PR #30 正确继承 PR #29 的 9 个 indications、36 个 endpoints 和 41 个 targets，证据维度、来源审计字段、unknown/opposing-evidence 语义、外部输出路径和独立结果审核门完整；明确返回 `APPROVE`。
+- Authorization: 允许开始外部 target-level evidence extraction；禁止 Gate 评分、排序、资产推荐和扩大 indication/endpoint 范围；运行完成后必须提交独立结果审核 PR。
+- Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-target-evidence-extraction-final.md`，将 handoff 更新为 `CONTRACT_APPROVED_EXTERNAL_RUN_AUTHORIZED`。
+- Boundary: 本次仍未抓取外部资料；仓库仍保持 data-free。
 - Files affected:
   - `AGENTS.md`
   - `ChatGPT-Codex-talk.md`
