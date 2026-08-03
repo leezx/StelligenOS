@@ -18,7 +18,7 @@
 
 | 判据 | 含义 |
 |---|---|
-| `min_independent_supporting` | 至少需要多少组**独立**支持性证据。 |
+| `min_independent_evidence` | 至少需要多少组**独立**证据。方向中立，见下。 |
 | `max_unresolved_conflicts` | 允许残留多少条未解决的证据冲突。 |
 | `min_confidence` | 聚合置信度下限。 |
 | `require_major_unknown_cleared` | 是否要求关键未知项已被清空。 |
@@ -26,10 +26,20 @@
 
 前四条决定「证据是否充分」，第五条决定「是否还允许继续找」。两者是独立的维度，这一点是本扩展设计上最关键的地方。
 
+### 充分性必须方向中立
+
+`min_independent_evidence` 的判定是 `max(独立支持证据, 独立反对证据) >= 阈值`，**不是**只看支持方向，也**不是**把两个方向相加。
+
+如果只看支持方向，一个有 10 条独立反对证据、0 条支持证据的 target 永远无法达标，于是被无限继续搜索——而这正是 Stop Rule 要防的失败模式。充分性问的是「现在够不够做判断」，不是「答案是不是肯定的」。
+
+两个方向也不能相加：2 条支持加 2 条反对是冲突，不是 4 份证据，所以取两个方向中较强的那一个。
+
+裁决结果**不携带方向**。`StopDecision` 里没有任何字段说明证据偏向哪边，也没有 pass/fail 信号。方向由 Gate 判断，不由 Stop Rule 判断，因此充分的反对证据能结束搜索，但不会自动变成 FAIL。
+
 ### 三值裁决，而不是二值
 
 ```
-SUFFICIENT              证据达标，停止搜索，可以进入 Gate 评分
+SUFFICIENT              证据达标，停止搜索
 INSUFFICIENT_CONTINUE   证据未达标，但还有搜索预算，继续找
 INSUFFICIENT_EXHAUSTED  证据未达标，且搜索预算已耗尽 -> 升级为人类决策
 ```
@@ -37,6 +47,18 @@ INSUFFICIENT_EXHAUSTED  证据未达标，且搜索预算已耗尽 -> 升级为�
 `INSUFFICIENT_EXHAUSTED` 是本设计的要点。一个朴素的 Stop Rule 会在搜索耗尽时直接判 FAIL，但那等于把「我们没找到足够证据」偷偷变成「这个 target 不好」——这正是内核设计原则第 3 条（`unknown` 不是失败）所禁止的。因此耗尽路径产出的是一个必须由人类裁决的阻断状态，不是 FAIL。
 
 这样做同时满足了两个看起来矛盾的要求：搜索一定会终止（因为有硬上限），但终止不会伪造结论（因为耗尽只能升级，不能定罪）。
+
+### `SUFFICIENT` 不等于「可以进入 Gate 评分」
+
+裁决和授权是两件事。能否据此进入 Gate 评分，只看 `StopDecision.actionable`：
+
+```
+actionable = (verdict == SUFFICIENT) AND (contract 已 expert_calibrated)
+```
+
+`DEFAULT_SUFFICIENCY_BASELINES` 的阈值是未校准的建议值。用这样的契约求值仍然会得到 `SUFFICIENT`——那是有信息量的，它说明「按建议阈值算已经够了」——但 `actionable` 保持 `False`，因为阈值本身还没被专家认可。这与 `extension.yaml` 中「专家校准前不得激活」一致。
+
+`StopDecision` 在构造时强制三条不变式：未校准契约不得产出 `actionable=True`；非 `SUFFICIENT` 裁决不得 `actionable=True`；已校准契约的 `SUFFICIENT` 不得隐藏其 `actionable`。
 
 ### 为什么是 advisory_only
 
@@ -48,9 +70,9 @@ INSUFFICIENT_EXHAUSTED  证据未达标，且搜索预算已耗尽 -> 升级为�
 
 ## 已知限制
 
-`min_independent_supporting` 依赖「独立证据」的定义，而当前这个定义不够严格：一篇综述、它引用的原始论文、以及 PubMed 上的同一条记录可能被计为三组独立证据。这是 `BACKLOG.zh-CN.md` 的 `BL-01`。在 BL-01 解决之前，本判据会偏向过早判定充分。
+`min_independent_evidence` 依赖「独立证据」的定义，而当前这个定义不够严格：一篇综述、它引用的原始论文、以及 PubMed 上的同一条记录可能被计为三组独立证据。这是 `BACKLOG.zh-CN.md` 的 `BL-01`。在 BL-01 解决之前，本判据会偏向过早判定充分，且该偏差对支持与反对两个方向同时存在。
 
-三个 gate group 的 baseline 阈值（`DEFAULT_SUFFICIENCY_BASELINES`）来自外部专家的建议值（独立证据 ≥ 3、冲突已解决、置信度 > 0.8），**不是经过校准的科学阈值**。它们被显式标记为 `proposed_baseline`，激活前必须逐 Gate 由领域专家复核。
+三个 gate group 的 baseline 阈值（`DEFAULT_SUFFICIENCY_BASELINES`）来自外部专家的建议值（独立证据 ≥ 3、冲突已解决、置信度 > 0.8），**不是经过校准的科学阈值**。它们被显式标记为 `proposed_baseline`，据此求值的裁决 `actionable` 恒为 `False`，激活前必须逐 Gate 由领域专家复核。
 
 ## 激活前必须回答
 

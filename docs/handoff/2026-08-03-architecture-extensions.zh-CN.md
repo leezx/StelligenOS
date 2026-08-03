@@ -6,9 +6,10 @@
 - 分支：`task_20260803_architecture-extensions`
 - 分支基点：`94dc6c8`（PR #42 已批准 tip，非 `main`；`main` 当前落后，尚未包含架构说明文档）
 - PR：#43（base 为 PR #42 已批准 head `task_20260802_current-architecture-expert-review-doc`，非 `main`）
-- Aggregate diff：1 commit、26 files、`+2465/-0`
-- 当前状态：`PENDING_CHATGPT_REVIEW`
-- 时间：`2026-08-03 10:25 EDT`
+- **Aggregate diff 权威来源：GitHub PR #43 的实时 HEAD 与 aggregate diff。** 本文件中的任何 commit/文件/行数均为撰写时的历史快照，不作为审核依据；两者不一致时以 GitHub 实时值为准。
+- 历史快照（仅供追溯）：Round 1 首次提交时为 1 commit、26 files、`+2465/-0`；补记 PR 编号后为 2 commits、26 files、`+2468/-0`。
+- 当前状态：`ROUND_2_PENDING_CHATGPT_REVIEW`
+- 时间：`2026-08-03 10:25 EDT`（Round 1）／`2026-08-03 11:10 EDT`（Round 2 修订）
 - 任务性质：documentation + extension shells + repository hygiene
 - Gate 变更：`NO_GATE_CHANGE`
 - 内核代码变更：`NO_KERNEL_CODE_CHANGE`
@@ -42,7 +43,9 @@
 
 `EXT-04` 的设计要点：把「证据是否充分」和「是否还允许继续搜索」分成两个独立维度，裁决为三值。搜索预算耗尽产出 `INSUFFICIENT_EXHAUSTED` 并强制升级为人类决策，**不得转为 FAIL**——否则等于把「没找到足够证据」伪装成「target 不好」，违反内核设计原则第 3 条。
 
-`DEFAULT_SUFFICIENCY_BASELINES` 的阈值来自外部专家建议值，标记为 `proposed_baseline_requires_expert_calibration`，不是经过校准的科学阈值。
+充分性判定方向中立：`max(独立支持, 独立反对) >= min_independent_evidence`。两个方向不相加，裁决不携带方向也不携带 pass/fail 信号。
+
+授权与裁决分离：`actionable = (verdict == SUFFICIENT) AND (calibration_status == expert_calibrated)`。`DEFAULT_SUFFICIENCY_BASELINES` 的阈值来自外部专家建议值，标记为 `proposed_baseline_requires_expert_calibration`，据此求值的裁决 `actionable` 恒为 `False`。
 
 ### 3. 二级风险登记
 
@@ -51,11 +54,25 @@
 ### 4. 仓库卫生
 
 - `.gitignore`：新增 `__pycache__/`、`*.py[cod]`、`.claude/settings.local.json`、`.venv/`、`venv/`、`.pytest_cache/`。此前只有 `.DS_Store`，导致跑完测试后 `tests/test_assetgenos_modules.py` 与 `tests/test_gen_indication_endpoint_target.py` 会把自己产生的 `__pycache__` 判定为 data-bearing runtime artifact 而失败。
-- `scripts/verify_repository_boundary.sh`：allowlist 新增 `extensions` 和 `.claude`。此前该脚本因顶层存在 `.claude/` 而失败（`.claude/settings.local.json` 被用户全局 gitignore 忽略，故 `git status` 干净但 `find` 仍可见），而 AGENTS.md 要求新增顶层目录前必须运行此脚本。
+- `scripts/verify_repository_boundary.sh`：allowlist 新增 `extensions`。此前该脚本因顶层存在 `.claude/` 而失败（`.claude/settings.local.json` 被用户全局 gitignore 忽略，故 `git status` 干净但 `find` 仍可见），而 AGENTS.md 要求新增顶层目录前必须运行此脚本。`.claude` **不进 allowlist**，只精确豁免 `.claude/settings.local.json` 一条路径；该目录下任何其他文件或子目录仍判为违规，`.claude` 若为文件而非目录也不豁免。
 
 ### 5. 导航更新
 
 `README.md` 与 `LINKS.md` 增加 `extensions/` 与版本目录入口。
+
+## Round 1 `REQUEST_CHANGES` 与修订
+
+ChatGPT 对 HEAD `9f7b946` 返回 `REQUEST_CHANGES`，五条阻断经逐条核实全部成立，已在同一 PR 内做最小修订：
+
+| # | 阻断 | 核实结果 | 修订 |
+|---|---|---|---|
+| 1 | `PROPOSED_BASELINE` 可直接产生可执行语义的 `SUFFICIENT`，与「专家校准前不得激活」冲突 | 成立。`calibration_status` 在 `evaluate_stop_condition` 中从未被读取（全文件仅 1 处，为字段声明） | `StopDecision` 新增 `actionable` 与 `calibration_status`；`actionable` 仅在 `SUFFICIENT` 且 `EXPERT_CALIBRATED` 时为真，并由三条构造期不变式强制；README 不再把 `SUFFICIENT` 解释为「可以进入 Gate 评分」 |
+| 2 | 充分性只看 `independent_supporting_count`，不用 `opposing_count`，造成支持方向偏置 | 成立。`opposing_count` 仅出现在字段声明与非负校验中，未参与判定。后果是 10 条独立反对证据、0 条支持时永远 `INSUFFICIENT_CONTINUE`，即 Stop Rule 本应防止的无限搜索 | 改为方向中立：`min_independent_supporting` 更名 `min_independent_evidence`，`opposing_count` 更名 `independent_opposing_count`，判定改为 `max(支持, 反对) >= 阈值`；两方向不相加；裁决不携带方向，充分的反对证据不自动转 FAIL |
+| 3 | `SufficiencyBaseline` 只校验 gate group，可构造非法 baseline | 成立。其 `__post_init__` 仅检查 `gate_group` | 抽出 `_validate_thresholds()` 供 contract 与 baseline 共用，数值约束完全一致 |
+| 4 | 整个 `.claude` 进 allowlist 过宽，其他内容可绕过顶层边界检查 | 成立 | `.claude` 移出 allowlist，改为精确豁免 `.claude/settings.local.json`；目录内其他路径逐条校验；`.claude` 为文件时不豁免 |
+| 5 | PR 描述与 handoff 的 diff 数字（1 commit / `+2465`）与实际（2 commits / `+2468`）不符 | 成立 | 声明 GitHub PR 实时 HEAD 与 aggregate diff 为唯一权威来源，文档内数字降级为历史快照 |
+
+新增回归测试：`actionable` 校准门禁 7 项（含三条不变式各自的构造期拒绝）、opposing-only 与方向中立 5 项、baseline 数值约束 7 项。
 
 ## 明确未改动
 

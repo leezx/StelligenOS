@@ -31,8 +31,20 @@ extension:
     - 不得自动改写 Gate score、status、threshold 或 Profile 绑定。
     - 不得把 unknown、null 或缺失信息转换为 0、negative 或 FAIL。
     - 不得把「达到搜索上限」转换为 FAIL；只能转换为需要人类决策的阻断状态。
+    - 不得把「反对证据充分」转换为 FAIL；充分性只表示可以做判断，方向由 Gate 决定。
+    - 不得在未经专家校准的情况下产出 actionable 裁决。
     - 不得替代人类专家签字，也不得自动推动生命周期晋级。
     - 不得在仓库内保存证据、结果或计数数据；只接受 external 引用和聚合计数。
+
+  sufficiency_semantics:
+    direction_neutral: true
+    rule: max(independent_supporting, independent_opposing) >= min_independent_evidence
+    note: >
+      两个方向不相加；取较强的一方。裁决不携带方向，也不携带 pass/fail 信号。
+    actionability_rule: >
+      actionable = (verdict == SUFFICIENT) AND (calibration_status == expert_calibrated)。
+      未校准契约仍可报告 SUFFICIENT，但 actionable 恒为 false，
+      与「专家校准前不得激活」一致。
 
   execution_policy: advisory_only
 
@@ -42,7 +54,8 @@ extension:
     - >
       本扩展依赖「独立证据数」这个判据，而当前 evidence independence 定义
       不够严格（见 extensions/BACKLOG.zh-CN.md BL-01）。在 BL-01 解决之前，
-      min_independent_supporting 可能被重复来源虚增。
+      min_independent_evidence 可能被重复来源虚增，且该偏差对支持与反对
+      两个方向同时存在。
     - >
       三个 gate group 的 baseline 阈值来自外部专家反馈的建议值，
       不是经过校准的科学阈值，激活前必须逐 Gate 复核。

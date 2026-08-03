@@ -1830,3 +1830,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Risk: `EXT-04` 三组 baseline 阈值未经科学校准，标记 `proposed_baseline_requires_expert_calibration`；且依赖「独立证据数」而 `BL-01` 未解决，可能被重复来源虚增而偏向过早判定充分。
 - Next: 推送分支并创建 PR 提交 ChatGPT 审核；`APPROVE` 前不得把扩展提升为 `governed`，不得开始逐 Gate 阈值实例化。
 - PR: 创建 PR #43，base 指向 PR #42 已批准 head `task_20260802_current-architecture-expert-review-doc`（不指向 `main`，避免 aggregate diff 混入未合并历史提交，参照 PR #41 的同类问题）；aggregate diff 为 1 commit、26 files、`+2465/-0`。状态 `PENDING_CHATGPT_REVIEW`。
+
+### 2026-08-03 11:10 EDT
+
+- Action: 处理 ChatGPT 对 PR #43 HEAD `9f7b946` 的 Round 1 `REQUEST_CHANGES`，五条阻断在同一 PR 内做最小修订。
+- How: 先逐条对代码核实，不照单执行。核实方式为 grep/读取实际实现与 `gh pr view` 实测 diff。
+- Verification of blockers: (1) `calibration_status` 在 `extensions/stop_rule/contracts.py` 全文件仅 1 处出现，为字段声明，`evaluate_stop_condition` 从未读取 —— 成立；(2) `opposing_count` 仅出现于字段声明与非负校验，未参与充分性判定 —— 成立；(3) `SufficiencyBaseline.__post_init__` 仅检查 `gate_group` —— 成立；(4) allowlist 确实整目录放行 `.claude` —— 成立；(5) 实测 aggregate diff 为 2 commits/26 files/`+2468/-0`，文档记录 1 commit/`+2465/-0` —— 成立。五条全部成立，无需 pushback。
+- Impact note (blocker 2): 该偏置的实际后果是 10 条独立反对证据、0 条支持时永远返回 `INSUFFICIENT_CONTINUE`，即 Stop Rule 本应防止的无限搜索；属真实缺陷而非风格问题。
+- Change: `StopDecision` 新增 `actionable` 与 `calibration_status`，`actionable = (verdict == SUFFICIENT) AND (calibration_status == expert_calibrated)`，并加三条构造期不变式（未校准不得 actionable、非 SUFFICIENT 不得 actionable、已校准的 SUFFICIENT 不得隐藏 actionable）。
+- Change: 充分性改为方向中立。`min_independent_supporting` 更名 `min_independent_evidence`，`opposing_count` 更名 `independent_opposing_count`，判定改为 `max(支持, 反对) >= 阈值`；两方向不相加（2+2 是冲突不是 4）；新增 `strongest_direction_count` 且刻意不暴露方向，避免充分性退化为裁决。充分的反对证据可结束搜索但不自动转 FAIL。
+- Change: 抽出 `_validate_thresholds()` 供 `EvidenceSufficiencyContract` 与 `SufficiencyBaseline` 共用，两者数值约束完全一致。
+- Change: `.claude` 移出 boundary allowlist，改为精确豁免 `.claude/settings.local.json`；目录内其他路径逐条校验；`.claude` 为文件时不豁免。实测注入 `.claude/rogue.md` 与 `.claude/sub/nested.md` 均被正确拒绝，清理后恢复通过。
+- Change: handoff 声明 GitHub PR #43 实时 HEAD 与 aggregate diff 为唯一权威来源，文档内数字降级为历史快照；同步 README 与 extension.yaml 语义（`SUFFICIENT` 不再解释为「可以进入 Gate 评分」）。
+- Boundary: 修订仍限于 `extensions/stop_rule/`、`tests/test_stop_rule_extension.py`、`scripts/verify_repository_boundary.sh`、handoff 与 worklog；未改内核、未改 Gate 拓扑、未扩大范围、未新起分支。
+- Validation: 23 个测试模块全部 OK，共 122 项（stop_rule 由 17 项增至 34 项）；`scripts/verify_repository_boundary.sh` 通过且负例被拒；`bash tests/test_git_sync.sh` A-D 通过；`git diff --check` 通过；旧字段名 `min_independent_supporting`/`opposing_count` 全仓库无残留。
+- Next: 推送同一 PR #43 并重新提交 ChatGPT 复审；`APPROVE` 前不得提升扩展状态或开始逐 Gate 阈值实例化。
