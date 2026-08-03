@@ -1600,6 +1600,31 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Result: ChatGPT 确认 Round 1 可审计元数据阻断已修复，仓库保持 data-free，unknown/opposing 边界正确，未执行 Gate scoring、ranking、asset recommendation 或范围扩展；明确返回 `APPROVE`。
 - Authorization: 下一步仅限对外部 evidence units 做人工复核/整理；Gate 评分、排序、资产推荐和下游开发仍需独立契约和审核，当前未授权。
 - Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-target-evidence-results-final.md`，将 handoff 状态更新为 `RESULT_REVIEW_APPROVED_MANUAL_REVIEW_AUTHORIZED`。
+
+### 2026-08-01 22:52 EDT
+
+- Action: 按 PR #31 ChatGPT `APPROVE` 授权，建立下一步 CRC target evidence 人工复核/整理 contract-only 分支。
+- How: 从 PR #31 已批准结果审核分支创建 `task_20260802_crc-target-evidence-manual-review`；新增人工复核契约和 handoff，固定输入 292 evidence units/41 targets，定义允许的来源审计整理和禁止的 Gate/排序/推荐行为。
+- Boundary: 尚未修改任何 evidence unit，尚未执行人工复核，尚未生成新外部结果；仓库仍 data-free。
+- Next: 推送独立 PR 并提交 ChatGPT 审核；只有 `APPROVE` 后才开始外部人工复核/整理。
+
+### 2026-08-01 22:55 EDT
+
+- Action: 获取 ChatGPT 对 PR #32 的 contract-only `APPROVE`。
+- How: 在同一 ChatGPT“GitHub PR 信息”对话中提交 PR #32 head `761cb80` 的完整审核指令；ChatGPT 核对 292 evidence units/41 targets 输入边界、supporting/opposing/unknown 语义、data-free 边界、修改审计字段和独立结果审核门。
+- Result: ChatGPT 明确允许开始外部人工 evidence review/curation；要求保留原始值、修改理由、复核者和时间戳，并在完成后提交独立结果审核 PR。
+- Boundary: Gate scoring、ranking、asset recommendation、new biological claims、scope expansion 和 downstream development 仍禁止。
+- Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-target-evidence-manual-review-final.md`，更新人工复核 handoff 状态。
+
+### 2026-08-01 22:58 EDT
+
+- Action: 执行经 PR #32 ChatGPT `APPROVE` 授权的外部 CRC target evidence 人工复核/整理。
+- How: 读取外部 292 条 evidence units；逐条保留所有原始字段到 `original_*` 列，检查 source audit 字段完整性、证据方向词表、重复 evidence_id 和 unknown negative-language 风险。
+- Result: 292 条保留、0 条 review queue、0 条 conflicts；supporting/opposing/unknown 仍为 88/32/172；未修改 biological statement 或 evidence direction。
+- Review semantics: `expert_review_status` 全部为 `pending_expert_review`；Codex 仅完成可追溯结构预筛，不冒充专家生物学复核；unknown 仍不是 negative。
+- Output: `/Volumes/Stelligen_SSD/Stelligen/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_target_evidence_manual_review_20260801T2258EDT/`，包含 reviewed units、queue、conflicts、manifest、report 和 external worklog。
+- Validation: 记录 6 个外部输出文件的行数/SHA-256；未执行 Gate scoring、ranking、recommendation、范围扩展或下游开发。
+- Next: 创建独立结果审核 PR #33，提交 ChatGPT 审核；未获批准前不得进入下一阶段。
 - Files affected:
   - `AGENTS.md`
   - `ChatGPT-Codex-talk.md`
