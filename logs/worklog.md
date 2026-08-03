@@ -1573,6 +1573,33 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Authorization: 允许开始外部 target-level evidence extraction；禁止 Gate 评分、排序、资产推荐和扩大 indication/endpoint 范围；运行完成后必须提交独立结果审核 PR。
 - Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-target-evidence-extraction-final.md`，将 handoff 更新为 `CONTRACT_APPROVED_EXTERNAL_RUN_AUTHORIZED`。
 - Boundary: 本次仍未抓取外部资料；仓库仍保持 data-free。
+
+### 2026-08-01 22:37 EDT
+
+- Action: 在 ChatGPT `APPROVE` PR #30 后运行 CRC target-level evidence extraction。
+- How: 读取已批准的 41-target 输入目录，以及现有 ADC internalization consensus、HPA/UniProt shedding-soluble-sink 和 ADC precedent 处理层；运行脚本仅在外部 `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_target_evidence_20260801T2235EDT/` 写入结果。
+- Result: 生成 292 条 evidence units：88 条 supporting、32 条 opposing、172 条 unknown；生成 summary、opposing evidence、unknowns、source manifest、run report 和 external worklog。
+- Interpretation boundary: unknown 表示尚未解决，不表示阴性；ADC precedent 不表示 CRC efficacy 或安全窗；没有新增 indication/endpoint/pair。
+- Validation: `StelligenOS/scripts/verify_repository_boundary.sh` 通过；结果目录未执行 Gate scoring、ranking 或 asset recommendation。
+- Next: 从批准的 contract tip 建立独立结果审核分支/PR，要求 ChatGPT 审核外部结果后再进入 Gate 评分或后续阶段。
+
+### 2026-08-01 22:43 EDT
+
+- Action: 获取 ChatGPT 对 PR #31 的结果审核 Round 1 `REQUEST_CHANGES`。
+- How: ChatGPT 使用 GitHub source 读取 PR #31；由于当前审核环境不能直接访问外部 `DATA`，无法独立确认外部文件字段、计数、checksum 和 supporting/opposing/unknown 分离。
+- Required correction: 在 handoff/worklog 增加可审计的 external manifest/checksum、输出文件列结构和统计校验记录；不得把原始数据复制进仓库。
+- Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-target-evidence-results-round1.md`，并把 7 个外部输出文件的行数、列结构、SHA-256、统计交叉校验和 Gate 未执行状态补入 handoff。
+- Validation record: `target_evidence_units.tsv`=292（88 supporting + 32 opposing + 172 unknown）；summary=41 targets，按行计数同样为 88/32/172；separate opposing/unknown files=32/172。
+- Boundary: 仅新增审计元数据和审核记录；外部结果仍只在 DATA，StelligenOS 未新增数据、cache、数据库或结果表。
+- Next: 推送同一 PR #31 并重新提交 ChatGPT 结果审核。
+
+### 2026-08-01 22:50 EDT
+
+- Action: 获取 ChatGPT 对 PR #31 的 Round 2 `APPROVE`。
+- How: 在同一 ChatGPT“GitHub PR 信息”对话中提交 PR #31 最新 head `b6da17e` 的复审；ChatGPT 核对 handoff/worklog 中的外部输出审计元数据、文件列结构、SHA-256 和 292/41/88/32/172 统计记录。
+- Result: ChatGPT 确认 Round 1 可审计元数据阻断已修复，仓库保持 data-free，unknown/opposing 边界正确，未执行 Gate scoring、ranking、asset recommendation 或范围扩展；明确返回 `APPROVE`。
+- Authorization: 下一步仅限对外部 evidence units 做人工复核/整理；Gate 评分、排序、资产推荐和下游开发仍需独立契约和审核，当前未授权。
+- Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-target-evidence-results-final.md`，将 handoff 状态更新为 `RESULT_REVIEW_APPROVED_MANUAL_REVIEW_AUTHORIZED`。
 - Files affected:
   - `AGENTS.md`
   - `ChatGPT-Codex-talk.md`
