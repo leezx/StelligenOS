@@ -471,6 +471,21 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 真实专家复核尚未执行；在独立结果审核 PR 获 `APPROVE` 前，不执行 Gate scoring、ranking、asset recommendation、pair generation 或 downstream development。
 - Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-target-evidence-expert-review-preparation-final.md`，更新 handoff 状态为 `PREPARATION_APPROVED_PENDING_REAL_EXPERT`。
 
+### 2026-08-01 23:00 EDT
+
+- Action: 根据用户要求准备系统性 CRC Gate 评分的 contract-only PR。
+- How: 从 PR #35 执行记录分支创建 `task_20260802_crc-gate-scoring-contract`；固定 45-Gate 冻结拓扑、外部专家复核结果审核双重门、unknown/null 语义、Hard Gate 阻断、per-Gate trace 和外部 DATA 输出边界。
+- Boundary: 当前仅定义契约，未执行任何评分、排序、pair 生成或资产推荐；真实专家复核尚未完成，`pending_expert_review` 不得作为最终评分输入。
+- Next: 提交 PR 给 ChatGPT 审核；只有 Gate 契约批准且专家复核结果独立审核批准后，才进入外部评分运行。
+
+### 2026-08-01 23:03 EDT
+
+- Action: 获取 ChatGPT 对 PR #36 系统性 Gate 评分 contract-only PR 的 `APPROVE`。
+- How: 在同一 `GitHub PR 信息` 对话中提交 head `ffd2d32` 的完整审核指令；ChatGPT 核对 45-Gate 冻结拓扑、既有 Gate/Model/Profile/Rule、Hard Gate、unknown/missing/null、per-Gate trace 和外部 DATA 边界。
+- Result: ChatGPT 确认 PR #36 仅定义评分契约，未执行评分、排序、pair 生成或资产推荐。
+- Authorization: 只有“真实专家复核结果独立审核 PR APPROVE”和“PR #36 APPROVE”两道门均通过后，才允许按冻结拓扑执行外部 Gate 评分；评分完成后还必须提交独立结果审核 PR。
+- Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-gate-scoring-contract-final.md`，更新 handoff 状态为 `CONTRACT_APPROVED_BLOCKED_ON_EXPERT_REVIEW_RESULT_APPROVAL`。
+
 ### 2026-08-01 21:45 EDT
 
 - Action: 完成 ChatGPT 批准后的外部 CRC indication/endpoint/target 枚举运行。
