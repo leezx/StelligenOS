@@ -122,6 +122,21 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Files affected:
   - `logs/worklog.md`
 
+### 2026-08-01 19:11 EDT
+
+- Action: 通过 Chrome 中“GitHub PR 信息”ChatGPT 对话提交并完成 Phase 9 审核。
+- How: 确认聊天框 `+` 菜单的 GitHub 来源已选中；要求 ChatGPT 仅审查 PR #27 的架构冻结/发布合同、冻结 Gate/T/P/C/依赖边界、Gate Extension 治理、external-only 数据边界及 77 项验证。
+- Result: ChatGPT 返回 `APPROVE`，明确“Phase 9 审核通过，可以发布 v1.0.0 架构冻结”。已将 Phase 9 manifest 更新为 `approved_phase_9` 和 `release_ready: true`，但保留真实数据、pilot、T0-T12、资产和 release package 的外部执行边界。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-gen-iet-phase9.md`
+  - `manifests/gen_iet_phase_9_manifest.yaml`
+  - `docs/phases/GEN_IET_PHASE_9_REPORT.zh-CN.md`
+  - `docs/phases/GEN_IET_PHASE_9_REVIEW_CHECKLIST.zh-CN.md`
+  - `logs/decision-log-2026-08-01-gen-iet-phase9.zh-CN.md`
+  - `docs/handoff/2026-08-01-gen-iet-phase-9.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-07-31 17:37 EDT
 
 - Action: Promoted the worklog into the repository navigation and working rules.
@@ -524,6 +539,49 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `manifests/gen_iet_phase_7_manifest.yaml`
   - `docs/phases/GEN_IET_PHASE_7_REPORT.zh-CN.md`
   - `docs/handoff/2026-08-01-gen-iet-phase-7.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 20:25 EDT
+
+- Action: 进入 ChatGPT 已批准的 Phase 7，建立 Phase 8 End-to-End Pilot external-only port。
+- How: 在 `task_20260801_gen-iet-phase8-external-pilot` 分支新增受限 CRC ClinicalFrame pilot request/result、候选 outcome 和全阶段 trace 引用；明确不预设 TWEAKR 胜出，资产生成关闭。
+- Result: 未复制或读取 CRC 数据，未运行真实闭环、T0-T12、Gate/Rule/Model/P-chain 或资产生成。75 个测试、repository boundary、`git diff --check` 通过，Phase 8 停在 ChatGPT PR 审核门。
+- Files affected:
+  - `src/capabilities/end_to_end_pilot.py`
+  - `tests/test_end_to_end_pilot.py`
+  - `docs/phases/GEN_IET_PHASE_8_REPORT.zh-CN.md`
+  - `manifests/gen_iet_phase_8_manifest.yaml`
+  - `docs/handoff/2026-08-01-gen-iet-phase-8.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 20:45 EDT
+
+- Action: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天完成 PR #26 Phase 8 审核。
+- How: 确认 GitHub 来源已选中；要求 ChatGPT 只审查外部 CRC pilot 边界、Phase 0-7 trace、候选结果不偏置、资产生成关闭和 75 项验证，不扩展到 Phase 9。
+- Result: ChatGPT 返回 `APPROVE`，明确“Phase 8 审核通过，可以进入 Phase 9”。审核记录保存到 `logs/chatgpt-review-2026-08-01-gen-iet-phase8.md`；manifest、report、handoff 和 migration log 已更新为 `approved_phase_8`。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-gen-iet-phase8.md`
+  - `manifests/gen_iet_phase_8_manifest.yaml`
+  - `docs/phases/GEN_IET_PHASE_8_REPORT.zh-CN.md`
+  - `docs/handoff/2026-08-01-gen-iet-phase-8.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 21:00 EDT
+
+- Action: 进入 ChatGPT 已批准的 Phase 8，建立 Phase 9 Freeze and Release contract-only boundary。
+- How: 在 `task_20260801_gen-iet-phase9-freeze-release` 分支新增 Architecture Freeze contract、Phase 9 中文审核清单、Decision Log 和 release manifest；固定 45 Gate、T/P/C、依赖图、Phase 0-9 manifest 和 Gate Extension 治理边界。
+- Result: 未发布 release package、数据或资产，未运行 CRC pilot/T0-T12/Gate/Rule/Model/P-chain/C-chain，未修改 Registry/Profile/依赖图。77 个测试、repository boundary、`git diff --check` 通过，Phase 9 停在 ChatGPT 审核门。
+- Files affected:
+  - `src/capabilities/release_freeze.py`
+  - `tests/test_release_freeze.py`
+  - `docs/phases/GEN_IET_PHASE_9_REPORT.zh-CN.md`
+  - `docs/phases/GEN_IET_PHASE_9_REVIEW_CHECKLIST.zh-CN.md`
+  - `logs/decision-log-2026-08-01-gen-iet-phase9.zh-CN.md`
+  - `manifests/gen_iet_phase_9_manifest.yaml`
+  - `docs/handoff/2026-08-01-gen-iet-phase-9.zh-CN.md`
   - `logs/migration_log.zh-CN.md`
   - `logs/worklog.md`
 
@@ -1281,6 +1339,148 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-gen-iet-phase-1.zh-CN.md`
   - `genmodules/README.md`
   - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 19:30 EDT
+
+- Action: 使用当前 AssetGenOS 工作区执行第一轮真实外部运行，目标为 `TNFRSF12A/TWEAKR + CRC`。
+- How: 使用 AssetGenOS 自带 `.venv` 和 v0.2 `adc_factory.cli v2 evaluate`，设置 `ADC_FACTORY_LLM_PROVIDER=mock`；读取外部 `DATA/1.Databases/ADC_surfaceome_reference`、`ADC_internalization_reference` 和 `ADC_clinical_unmet_need_reference`，数据库与输出重定向到 `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_tweakr_crc_mock_20260801/`。未执行 `make demo`，避免重置或写入 AssetGenOS 自身 `data/`。
+- Result: 45 个唯一 Gate、48 次 Gate evaluation 成功完成；生成 `ADC-2026-0001` v0.2，状态为 `M0 / review_pending`，决策为 `gather_data`，overall score `0.23`，confidence `0.0`。运行正确保留 Hard Unknown，未把 mock 推断包装成科学结论或可销售资产。
+- Boundary: AssetGenOS `data/` 未发现本次运行新增文件；StelligenOS 未写入数据库、cache、result、weights 或资产数据。外部运行结果目录为 `/Volumes/Stelligen_SSD/Stelligen/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_tweakr_crc_mock_20260801/`。
+- Limitation: 本次执行的是 AssetGenOS v0.2 运行引擎，不是 StelligenOS Phase 9 contract port 的直接 adapter；下一步需将外部 run manifest、Gate audit 和 unknown/hold 语义映射到 `gen_indication_endpoint_target` external-only contracts。
+
+### 2026-08-01 19:51 EDT
+
+- Action: 将用户与 Codex 关于 `gen_indication_endpoint_target` 的真实产品需求整理为独立的动态需求文档。
+- How: 记录从 clinical unmet need 到 indication/endpoint lock、biomarker hypothesis、ADC target filtering、45-Gate evaluation 和 pair output 的完整目标流程；同时记录 unknown、HOLD、opposing evidence、REJECT、ADVANCE 的语义，以及版本化需求变更规则。
+- Result: 明确当前产品不是“架构能启动”或“手工评估一个 TWEAKR 候选”，而是自动生成可审计 `indication + endpoint + target` pair，并给出 Gate 分数、证据数和明确反对证据。
+- Files affected:
+  - `docs/product/GEN_IET_PRODUCT_PURPOSE_AND_DYNAMIC_REQUIREMENTS.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 19:58 EDT
+
+- Action: 执行 CRC `indication + endpoint + target` 外部试运行。
+- How: 读取本地 ADC Drug Index 的 `Approved`、`Phase 1`、`Phase 2`、`Phase 3` 条目，并逐个读取 ADC 文档的 `Indication`、`Antigen Name` 和临床活动字段；同时读取 C0 临床未满足需求表及旧项目 CRC unmet-need/endpoint 策略文档。结果全部写入外部 `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_trial_20260801/`，没有把数据、结果或数据库写入 StelligenOS。
+- Result: 生成 1 条 canonical C0 CRC 场景、9 条显式标记来源的 CRC indication（包含 derived strategy 与 benchmark subgroup）、36 条 endpoint 层级记录，以及 29 个 Approved/Phase 1/2/3 范围内的 CRC 临床 ADC benchmark 三元组。三元组保留 CRC indication stage、固定 endpoint strategy（早期 ORR+DOR+safety；关键性 PFS；最终 OS）和 source target；同时保留原始文本证据。
+- Correction: 初版脚本错误使用不存在的 C0 字段，导致 canonical 数量暂时报为 0；已改用 `scenario_id`/`cancer_type` 校正为 1，并将 CRC stage 从整条 Indication 行规范化为 `Colorectal cancer Phase N`。重新检查 TSV 行数、manifest 计数和代码仓库边界，验证通过。
+- Limitation: 29 个临床 benchmark 表示本地 ADC Index 中存在 CRC 临床开发记录，不表示疗效已确认；本地 Index/ADC 文档是快照，当前试验状态、实际 primary endpoint 和文献证据仍需后续注册库/原始论文核验。9 条 indication 中只有 1 条进入 C0，其余明确标记为旧 KB 派生策略或 benchmark subgroup，不能直接当作结构化事实。
+- Files affected:
+  - External result: `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_trial_20260801/crc_unmet_need_indications.tsv`
+  - External result: `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_trial_20260801/crc_endpoint_hierarchy.tsv`
+  - External result: `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_trial_20260801/crc_clinical_adc_pairs.tsv`
+  - External result: `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_trial_20260801/crc_pair_trial_report.md`
+  - External result: `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_crc_trial_20260801/run_manifest.json`
+  - `logs/worklog.md`
+
+### 2026-08-01 20:04 EDT
+
+- Action: 根据负责人再次确认，将“所有工作必须经 PR/GPT 审核”和“所有步骤必须持续记录”提升为全局强制配置。
+- How: 先读取现有 `AGENTS.md`、`ChatGPT-Codex-talk.md`、`CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md` 和历史 handoff；在不改变既有 Phase 语义的前提下，补充覆盖架构、文档、代码、脚本、迁移、配置、外部数据处理和试运行的统一 PR 门禁。明确 GPT/ChatGPT `APPROVE` 前不得进入下一工作/Phase、不得执行依赖性外部运行或扩大范围；`REQUEST_CHANGES` 必须留在同一 PR 最小修订并复审；所有动作、命令、来源、结果、失败和修正必须带时间戳写入 worklog。
+- Result: 更新全局 Agent 规则、ChatGPT/Codex 固定交互规范、分阶段 PR 协议，并新增 `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`，当前状态标记为 `PENDING_CHATGPT_APPROVAL`。未新增数据、数据库、cache、result 或业务逻辑。
+- Boundary: 外部数据/结果仍只能留在 `DATA/` 等外部工作区；PR 只提交软件、架构契约、manifest、摘要、校验信息和外部路径引用。
+- Next: 运行边界/格式验证，显式提交并推送当前任务 PR，生成 GPT/ChatGPT 审核指令；在明确 `APPROVE` 前不继续依赖本规则的任何新工作。
+- Files affected:
+  - `AGENTS.md`
+  - `ChatGPT-Codex-talk.md`
+  - `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md`
+  - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 20:51 EDT
+
+- Action: 通过网页版 ChatGPT 的 `GitHub PR 信息` 对话和已选中的 GitHub 来源提交 PR #27 全量审核。
+- How: 要求 ChatGPT 读取当前 PR 的 aggregate diff、全部 commits、AGENTS、交互规范、Phase Gate 协议、治理 handoff、worklog 和验证结果；未创建新对话、未重复发送审核请求。ChatGPT 以 GitHub 当前 PR 为权威进行审核。
+- Result: ChatGPT 返回 `REQUEST_CHANGES`。阻断项为：PR 描述未覆盖治理规则和 handoff；治理 handoff 未收敛到 PR #27/HEAD `93cd662`/验证结果；产品动态需求文档不应混入 Phase 9 治理 PR；历史外部运行/产品需求未标明为规则生效前历史并未有独立 PR；“较大任务”定义存在 handoff 绕过漏洞。
+- Action taken: 留在同一 PR 内修订；删除不属于本治理 PR 范围的 `docs/product/GEN_IET_PRODUCT_PURPOSE_AND_DYNAMIC_REQUIREMENTS.zh-CN.md`，在治理 handoff 中保存完整反馈并记录 PR #27、基线和当前修订状态，明确所有 PR/外部运行必须有 handoff。PR 描述将在本次修订提交后同步更新，随后再次提交 ChatGPT 审核。
+- Boundary: 删除的是本仓库内尚未进入 Phase 9 基线的产品文档；未删除外部数据或结果。CRC/TWEAKR 外部运行仍只存在于外部 `DATA/`，并在 worklog 中作为治理规则生效前的历史记录保留。
+- Files affected:
+  - `docs/product/GEN_IET_PRODUCT_PURPOSE_AND_DYNAMIC_REQUIREMENTS.zh-CN.md` (removed from this PR scope)
+  - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 20:52 EDT
+
+- Action: 按 ChatGPT Round 1 的 `REQUEST_CHANGES` 修订同一 PR #27。
+- How: 删除 `docs/product/GEN_IET_PRODUCT_PURPOSE_AND_DYNAMIC_REQUIREMENTS.zh-CN.md`，将产品需求从 Phase 9 治理 PR 的 aggregate diff 中移出；新增原始审核反馈记录；将 AGENTS、交互规范和 Phase Gate 协议中的“较大任务才需要 handoff”改为“每一个 PR 和每一次外部运行都必须 handoff”，消除主观豁免路径；治理 handoff 改为记录 PR #27、基线和修订状态。
+- Result: 修订前验证通过：`./scripts/verify_repository_boundary.sh`、`bash -n scripts/git_sync.sh`、`bash tests/test_git_sync.sh`（A-D）、`git diff --check`。产品需求文档尚未删除其历史内容，只是移出当前 PR；后续如需保留，必须单独建 PR 审核。
+- Next: 提交并推送修订到 PR #27，更新 PR 描述以覆盖 Phase 9 与全局治理规则，随后再次通过 GitHub 来源提交 ChatGPT 审核；在 `APPROVE` 前不进入其他工作或外部运行。
+
+### 2026-08-01 20:53 EDT
+
+- Action: 完成 PR #27 修订提交并修正 PR 描述。
+- How: 以显式文件清单提交 commit `282c713` 并推送同一分支；使用安全的临时 Markdown body 文件通过 `gh pr edit --body-file` 更新 PR 描述，避免 shell 解释 Markdown 反引号。随后用 `gh pr view` 读取远程 body 和 head，确认内容完整、远程 HEAD 为 `282c713`。
+- Result: PR 描述现在明确覆盖 Phase 9 冻结契约、全局 PR/GPT 审核门禁、每个 PR/外部运行的 handoff、worklog、data-free 边界、验证结果和 Round 1 `REQUEST_CHANGES` 修订状态。临时 body 文件已删除，不进入仓库。
+- Correction: 上一次直接传递 body 的命令曾因 shell 转义导致描述内容被截断；已立即重写并远程核对，未改变代码或架构内容。
+- Next: 在同一 ChatGPT `GitHub PR 信息` 对话中重新提交 PR #27 当前 aggregate diff 审核；在明确 `APPROVE` 前不继续其他工作。
+- Files affected:
+  - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
+  - `logs/worklog.md`
+  - External PR metadata: PR #27 description
+
+### 2026-08-01 20:55 EDT
+
+- Action: 完成 ChatGPT Round 2 复审并记录剩余阻断。
+- How: 在同一 `GitHub PR 信息` 对话中、保持 GitHub 来源选中，要求以远程 PR 实时 HEAD `3c9ba6c` 重新读取 aggregate diff、PR 描述、全部 commits、治理规范、handoff、worklog 和验证结果。
+- Result: ChatGPT 返回 `REQUEST_CHANGES`，确认 Round 1 的 5 个范围阻断已经修复；剩余问题为 PR 仍是 Draft、GitHub 状态 `mergeable=false`，handoff 尚未记录最新 tip `3c9ba6c`，worklog 尚未记录该 tip 的验证/审核状态。
+- Action taken: 新增 Round 2 原始反馈记录；在 handoff 中加入最新观察 tip `3c9ba6c` 和 Round 2 状态；本记录用于当前元数据收敛提交。之后将把 PR 标记为 Ready for review，并再次提交 ChatGPT 审核。
+- Boundary: 没有修改业务代码、Gate、Model、Rule、数据或外部结果；本轮只修正 PR 可审计元数据和远程审核状态。
+- Files affected:
+  - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
+  - `logs/worklog.md`
+  - `logs/chatgpt-review-2026-08-01-global-review-rules-round2.md`
+
+### 2026-08-01 20:57 EDT
+
+- Action: 将 PR #27 标记为 Ready for review，并记录远程状态收敛。
+- How: 推送 Round 2 记录 commit `2f7e6a8` 后执行 `gh pr ready 27`；GitHub 返回 PR 已标记为 Ready for review，读取到 `OPEN / isDraft=false / mergeable=UNKNOWN`，说明 GitHub 正在重新计算 mergeability。
+- Result: 在 handoff 中记录最新观察 tip `2f7e6a8`、PR `OPEN / READY_FOR_REVIEW` 和 mergeability 重算状态；本次只更新审核元数据，没有修改业务代码或外部数据。
+- Next: 重新读取 GitHub 当前 PR 状态后，把 PR #27 当前 aggregate diff 第三次提交给 ChatGPT 审核。
+- Files affected:
+  - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
+  - `logs/worklog.md`
+  - External PR state: PR #27 marked ready for review
+
+### 2026-08-01 21:00 EDT
+
+- Action: 确认 PR #27 已达到第三轮 ChatGPT 审核前的远程门禁条件。
+- How: 推送 Ready-for-review 元数据 commit `66ea509` 后，连续读取 GitHub PR 状态，等待异步 mergeability 计算完成。
+- Result: GitHub 最终确认 `OPEN / READY_FOR_REVIEW / MERGEABLE`，当前观察 HEAD 为 `66ea509`。handoff 增加了该状态，并说明 PR 页面实时 HEAD 是最终权威，handoff 不自引用正在生成的提交。
+- Next: 在同一 `GitHub PR 信息` 对话提交第三轮复审；若 ChatGPT `APPROVE`，停止当前工作并等待负责人决定 merge。
+- Files affected:
+  - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
+  - `logs/worklog.md`
+  - External PR status: `OPEN / READY_FOR_REVIEW / MERGEABLE`
+
+### 2026-08-01 21:05 EDT
+
+- Action: 完成 ChatGPT Round 3 复审并修正唯一剩余元数据阻断。
+- How: ChatGPT 以 PR #27 当前 aggregate diff、11 commits、16 files 和远程 `OPEN / READY_FOR_REVIEW / MERGEABLE` 状态复审；确认 Round 1/2 阻断均已解决，仅发现治理 handoff 的状态值仍为 `REQUEST_CHANGES_PENDING_REVISION`。
+- Result: 将 handoff 状态改为 `PENDING_CHATGPT_APPROVAL`，表示修订已完成、当前只等待本轮 ChatGPT 放行；未修改业务代码、Gate、Model、Rule、数据或外部结果。
+- Next: 提交最小元数据修订并在同一 ChatGPT 对话请求最终审核；若返回 `APPROVE`，停止执行并等待负责人决定 merge。
+- Files affected:
+  - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
+  - `logs/worklog.md`
+  - `logs/chatgpt-review-2026-08-01-global-review-rules-round3.md`
+
+### 2026-08-01 21:03 EDT
+
+- Action: 获取并保存 ChatGPT 对 PR #27 的最终批准。
+- How: 在同一网页版 ChatGPT `GitHub PR 信息` 对话中、GitHub 来源保持选中，提交当前 PR 审核；ChatGPT 读取 PR 当前 aggregate diff、治理规范、handoff、worklog、Round 1/2/3 记录和验证结果。
+- Result: ChatGPT 返回 `APPROVE`，明确“可以合并 PR #27”，并确认 PR 审核、GPT/ChatGPT `APPROVE` 门禁及全程 `worklog`/`handoff` 规则可以作为 StelligenOS 后续所有工作的全局强制配置。
+- Action taken: 新增最终批准记录，将治理 handoff 状态更新为 `APPROVED_WAITING_HUMAN_MERGE`。不自动合并，不进入下一项工作，不执行外部运行。
+- Boundary: 本次只保存审核证据和当前治理状态；没有新增业务代码、数据、数据库、cache、result、weights 或外部运行结果。
+- Files affected:
+  - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-01-global-review-worklog-rules-final.md`
+  - `logs/worklog.md`
+- Files affected:
+  - `AGENTS.md`
+  - `ChatGPT-Codex-talk.md`
+  - `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md`
+  - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
+  - `docs/product/GEN_IET_PRODUCT_PURPOSE_AND_DYNAMIC_REQUIREMENTS.zh-CN.md` (removed from PR #27)
+  - `logs/chatgpt-review-2026-08-01-global-review-rules-round1.md`
   - `logs/worklog.md`
 
 ### 2026-08-03 13:30 EDT

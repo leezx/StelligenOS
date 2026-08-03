@@ -1,0 +1,61 @@
+manifest_version: "1.0.0"
+module_id: gen_indication_endpoint_target
+phase: 8
+status: approved_phase_8
+parent_phase: 7
+parent_approval: logs/chatgpt-review-2026-08-01-gen-iet-phase7.md
+gate_change_declaration: NO_GATE_CHANGE
+
+scope:
+  implementation_type: external_end_to_end_pilot_port
+  execution_enabled: false
+  persistence_enabled: false
+  inputs_external_only: true
+  outputs_external_only: true
+  gates_called_locally: false
+  real_crc_data_in_repository: false
+  asset_generation_enabled: false
+  contracts:
+    - EndToEndPilotRequest
+    - PilotCandidateOutcome
+    - EndToEndPilotResult
+    - EndToEndPilotPort
+
+pilot:
+  restricted_clinical_frame_external_only: true
+  full_phase_0_to_7_trace_required: true
+  candidate_outcomes_unbiased: true
+  allowed_outcomes:
+    - retained
+    - held
+    - rejected
+    - none_advanced
+  tweakr_preselected: false
+
+explicitly_not_executed:
+  - crc_data_read
+  - t0_t12
+  - gate_execution
+  - rule_execution
+  - model_execution
+  - p_chain
+  - pilot_run
+  - candidate_result_creation
+  - asset_generation
+  - database
+  - cache
+  - result_persistence
+  - model_weights
+  - runner
+  - new_gate
+
+validation:
+  tests: 75
+  repository_boundary: passed
+  git_diff_check: passed
+
+decision:
+  requires_chatgpt_review: false
+  proceed_to_phase_9: true
+  approved_by: ChatGPT
+  approval_record: logs/chatgpt-review-2026-08-01-gen-iet-phase8.md

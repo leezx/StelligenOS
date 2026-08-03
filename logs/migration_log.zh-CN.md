@@ -89,3 +89,23 @@
 - 要求 T12 绑定 readiness 与完整 T0-T11 trace，保留四类决策状态；Ranking 不能覆盖 T12/Hard Gate 语义，资产生成资格固定为 false。
 - 未运行 T12/ranking，未读取证据或临床数据，未创建本地 Opportunity/handoff，未进入 Binder 开发，未执行 P-chain 或写入数据库、cache、result、weights、runner 或新 Gate。
 - 73 个 unittest、repository boundary 和 `git diff --check` 均通过；ChatGPT 已返回 `APPROVE`，Phase 7 状态为 `APPROVED_PHASE_7`，可以进入 Phase 8；Phase 8 仍需独立 PR 审核，真实 CRC 数据保持外部。
+
+## 2026-08-01：`gen_indication_endpoint_target` Phase 8
+
+- 基于 ChatGPT 已批准的 Phase 7，在独立分支新增受限 CRC ClinicalFrame external-only End-to-End Pilot port。
+- 保留完整 Phase 0-7 trace、外部 data bundle 和候选结果引用；不预设 TWEAKR 或任何候选胜出，允许保留/HOLD/淘汰/全部不推进。
+- 未复制或读取 CRC 数据，未运行 T0-T12/Gate/Rule/Model/P-chain/真实 pilot，未生成资产或写入数据库、cache、result、weights、runner 或新 Gate。
+- 75 个 unittest、repository boundary 和 `git diff --check` 均通过；ChatGPT 已返回 `APPROVE`，Phase 8 状态为 `APPROVED_PHASE_8`，可以进入 Phase 9；真实 CRC pilot 保持外部。
+
+## 2026-08-01：`gen_indication_endpoint_target` Phase 9
+
+- 基于 ChatGPT 已批准的 Phase 8，在独立分支新增 v1.0 Architecture Freeze and Release contract、Phase 9 审核清单和 Decision Log。
+- 固定 45 个既有 Gate、T/P/C profile、依赖图、Phase 0-9 manifest 与归档 Prompt 引用；未批准 Gate Extension proposal 阻断 release contract。
+- 未发布数据或 release package，未读取数据、运行 CRC pilot、T0-T12/Gate/Rule/Model/P-chain/C-chain，未修改 Registry/Profile/依赖图或创建本地资产。
+- 77 个 unittest、repository boundary 和 `git diff --check` 均通过；Phase 9 初始实现状态为 `COMPLETED_PENDING_REVIEW`，现已由后续 ChatGPT 审核记录收敛为 `APPROVED_PHASE_9`。
+
+## 2026-08-01：`gen_indication_endpoint_target` Phase 9 审核完成
+
+- ChatGPT 通过 GitHub PR #27 审核 Phase 9 freeze/release contract-only，明确回复：`Phase 9 审核通过，可以发布 v1.0.0 架构冻结`。
+- Phase 9 状态更新为 `APPROVED_PHASE_9`，manifest 的 `release_ready` 更新为 `true`；批准范围仅为软件架构冻结，不包含数据读取、pilot、T0-T12、P/C 链、资产或仓库内 release package。
+- 审核记录：`logs/chatgpt-review-2026-08-01-gen-iet-phase9.md`。
