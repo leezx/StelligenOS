@@ -2,7 +2,8 @@
 
 - 任务编号：`task_20260803_chain-merge-audit`
 - 分支：`task_20260803_chain-merge-audit`（从合并后的 `main` 创建）
-- 当前状态：`PENDING_CHATGPT_REVIEW`
+- 当前状态：`APPROVED_PENDING_MERGE`
+- PR：**#44**（base 为 `main`）
 - 任务性质：audit record only
 - 代码变更：`NO_CODE_CHANGE`
 - Gate 变更：`NO_GATE_CHANGE`
@@ -62,5 +63,21 @@
 
 ## 下一步
 
-- 提交 ChatGPT 审核本 PR。
-- 获 `APPROVE` 后由人类负责人决定合并。
+- PR #44 已在 Round 1 获得 ChatGPT `APPROVE`（批准 head `b52e705`），无阻断。批准记录见
+  `logs/chatgpt-review-2026-08-03-chain-merge-audit-final.md`。
+- 经人类负责人授权合并进 `main`。合并后 28-PR 链的审计闭环完成，`main` 成为唯一最新版本。
+
+### 本记录自身的时序说明
+
+本节与批准记录本身是在 `APPROVE` 之后追加提交的，因此合并 head 比批准 head `b52e705`
+多一个 commit。这沿用仓库既有惯例（PR #43 批准 head 为 `6f52288`，合并 head 为
+`6336e4f`，同样是追加自己的批准记录）。此处安全，而 #15／#16／#17 当时不安全，原因是
+后者有「retarget 到 `main` 后确认 aggregate diff 未变」这一审核方指定步骤，追加提交会
+使该步骤失效；本 PR 直接以 `main` 为 base，无 retarget、无下游 PR，不存在依赖其 head
+固定不变的确认。
+
+### 合并后仍未处理（各自另立任务）
+
+- 仓库无 GitHub Actions 或 commit status。
+- 仓库无依赖声明文件，而多个测试依赖 `pyyaml`。
+- 43 个已合并分支仍存在于本地与远端。分支删除属破坏性操作，须由人类负责人明确授权。
