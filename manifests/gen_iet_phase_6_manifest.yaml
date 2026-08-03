@@ -1,0 +1,62 @@
+manifest_version: "1.0.0"
+module_id: gen_indication_endpoint_target
+phase: 6
+status: approved_phase_6
+parent_phase: 5
+parent_approval: logs/chatgpt-review-2026-08-01-gen-iet-phase5.md
+gate_change_declaration: NO_GATE_CHANGE
+
+scope:
+  implementation_type: external_evidence_sufficiency_and_adversarial_review_ports
+  execution_enabled: false
+  persistence_enabled: false
+  inputs_external_only: true
+  outputs_external_only: true
+  gates_called_locally: false
+  t12_enabled: false
+  p_chain_enabled: false
+  contracts:
+    - PositiveEvidencePolicy
+    - EvidenceIndependenceCheckRequest
+    - EvidenceIndependenceCheckResult
+    - AdversarialReviewRequest
+    - AdversarialReviewResult
+    - EvidenceReadinessRequest
+    - EvidenceReadinessResult
+
+readiness:
+  policy_thresholds_external_configured: true
+  adversarial_review_is_not_a_gate: true
+  validation_tasks_external_only: true
+  ready_for_t12_requires_policy_and_review: true
+  t12_forbidden: true
+
+explicitly_not_executed:
+  - evidence_read
+  - clinical_data_read
+  - gate_execution
+  - rule_execution
+  - model_execution
+  - t12
+  - p_chain
+  - evidence_record_creation
+  - adversarial_review_record_creation
+  - validation_task_creation
+  - opportunity_creation
+  - database
+  - cache
+  - result_persistence
+  - model_weights
+  - runner
+  - new_gate
+
+validation:
+  tests: 70
+  repository_boundary: passed
+  git_diff_check: passed
+
+decision:
+  requires_chatgpt_review: false
+  proceed_to_phase_7: true
+  approved_by: ChatGPT
+  approval_record: logs/chatgpt-review-2026-08-01-gen-iet-phase6.md

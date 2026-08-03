@@ -473,6 +473,33 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `logs/migration_log.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 19:20 EDT
+
+- Action: 进入 ChatGPT 已批准的 Phase 5，建立 Phase 6 Evidence Sufficiency and Adversarial Review contract-only ports。
+- How: 在 `task_20260801_gen-iet-phase6-evidence-review` 分支新增可配置 Positive Evidence Policy、证据独立性检查、Adversarial Review、ValidationTask 引用和 T12 前 readiness 状态；明确不新增 Gate。
+- Result: 未读取证据或临床数据，未执行 Gate/Rule/Model/T12/P-chain，未创建本地 Evidence、Review、ValidationTask 或 Opportunity。70 个测试、repository boundary、`git diff --check` 通过，Phase 6 停在 ChatGPT PR 审核门。
+- Files affected:
+  - `src/capabilities/evidence_sufficiency_review.py`
+  - `tests/test_evidence_sufficiency_review.py`
+  - `docs/phases/GEN_IET_PHASE_6_REPORT.zh-CN.md`
+  - `manifests/gen_iet_phase_6_manifest.yaml`
+  - `docs/handoff/2026-08-01-gen-iet-phase-6.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 19:35 EDT
+
+- Action: 通过网页版 ChatGPT 的“GitHub PR 信息”聊天完成 PR #24 Phase 6 审核。
+- How: 确认 GitHub 来源已选中；要求 ChatGPT 只审查 Positive Evidence Policy、independence、非 Gate Adversarial Review、ValidationTask、readiness 前置条件和 70 项验证，不扩展到 Phase 7。
+- Result: ChatGPT 返回 `APPROVE`，明确“Phase 6 审核通过，可以进入 Phase 7”。审核记录保存到 `logs/chatgpt-review-2026-08-01-gen-iet-phase6.md`；manifest、report、handoff 和 migration log 已更新为 `approved_phase_6`。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-gen-iet-phase6.md`
+  - `manifests/gen_iet_phase_6_manifest.yaml`
+  - `docs/phases/GEN_IET_PHASE_6_REPORT.zh-CN.md`
+  - `docs/handoff/2026-08-01-gen-iet-phase-6.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
 - Follow-up: ChatGPT 对最新 HEAD `d87e379` 完成 metadata-only 复核并返回 `APPROVE`，确认没有扩大批准范围或新增执行代码、数据、存储、Gate 或 runtime。
 
 ### 2026-08-01 15:39 EDT
