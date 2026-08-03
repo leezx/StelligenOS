@@ -410,6 +410,15 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - `docs/handoff/2026-08-01-gate-model-rule.zh-CN.md`
 - `logs/worklog.md`
 
+### 2026-08-01 18:31 EDT
+
+- Action: 完成 PR #21 migration log 修复后的 ChatGPT 最终 metadata-only 复核，并补齐审核记录。
+- How: ChatGPT 核对最新 HEAD `4145e97` 的 migration log、manifest、report、专属 handoff、worklog、PR 描述和此前 Phase 3 APPROVE 范围；确认本次仅为元数据收敛。
+- Result: ChatGPT 返回 `APPROVE`，明确“Phase 3 审核通过，可以进入 Phase 4”。review log 已补记两轮 metadata-only 结果，Phase 4 仍需独立 PR 审核。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-gen-iet-phase3.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 15:39 EDT
 
 - Action: 完成 gate-model-rule PR #14 的最终 metadata-only 复审。
@@ -730,6 +739,50 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `manifests/gen_iet_phase_2_manifest.yaml`
   - `docs/phases/GEN_IET_PHASE_2_REPORT.zh-CN.md`
   - `docs/handoff/2026-08-01-gen-iet-phase-2.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 18:18 EDT
+
+- Action: Phase 2 metadata-only 复审获得 ChatGPT 最终 `APPROVE` 后进入 Phase 3。
+- How: 从已批准 Phase 2 tip 创建 `task_20260801_gen-iet-phase3-target-candidates`；根据主提示词只实现单一 ClinicalFrame 内的 external-only target candidate generation port，加入 bounded policy、候选预算、证据范围和正证据组约束。
+- Result: 新增 `TargetCandidateGenerationPolicy`、`TargetCandidateGenerationRequest`、`TargetCandidateGenerationResult` 和 `TargetCandidateGenerationPort`；未读取数据、未执行 P-chain/T-gate、未创建本地候选或证据记录。61 个测试、repository boundary、`git diff --check` 通过，Phase 3 停在 ChatGPT PR 审核门。
+- Files affected:
+  - `src/capabilities/target_candidate_generation.py`
+  - `tests/test_target_candidate_generation.py`
+  - `docs/phases/GEN_IET_PHASE_3_REPORT.zh-CN.md`
+  - `manifests/gen_iet_phase_3_manifest.yaml`
+  - `docs/handoff/2026-08-01-gen-iet-phase-2.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 18:25 EDT
+
+- Action: 根据 ChatGPT 对 PR #21 的 Phase 3 审核反馈修复 handoff 元数据阻断。
+- How: ChatGPT 指出 PR 描述声明有 Phase 3 handoff，但 diff 只有 Phase 2 handoff；新增 Phase 3 专属 handoff，记录父阶段批准、当前分支、contract-only 范围、61 tests、boundary/diff 验证及 Phase 4 审核门。
+- Result: 未修改 Phase 3 合同代码或测试逻辑，准备重新推送 PR #21 并提交复审。
+- Files affected:
+  - `docs/handoff/2026-08-01-gen-iet-phase-3.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 18:26 EDT
+
+- Action: 通过网页版 ChatGPT 完成 PR #21 Phase 3 修复后复审。
+- How: ChatGPT Round 1 的唯一阻断是缺少 Phase 3 专属 handoff；新增 handoff 后，使用 GitHub 来源仅复核该修复及原 Phase 3 external-only 边界。
+- Result: ChatGPT 返回 `APPROVE`，明确“Phase 3 审核通过，可以进入 Phase 4”。审核记录保存到 `logs/chatgpt-review-2026-08-01-gen-iet-phase3.md`；manifest、report 和 handoff 已更新为 `approved_phase_3`，允许进入 Phase 4。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-gen-iet-phase3.md`
+  - `manifests/gen_iet_phase_3_manifest.yaml`
+  - `docs/phases/GEN_IET_PHASE_3_REPORT.zh-CN.md`
+  - `docs/handoff/2026-08-01-gen-iet-phase-3.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 18:29 EDT
+
+- Action: 根据 Phase 3 metadata-only 复审反馈同步 migration log 状态。
+- How: 将 Phase 3 migration log 从 `COMPLETED_PENDING_REVIEW` 更新为 `APPROVED_PHASE_3`，并记录 ChatGPT 已批准、可进入 Phase 4 但仍需独立 PR 审核。
+- Result: 仅修复阶段元数据一致性，未修改 Phase 3 代码或测试。
+- Files affected:
+  - `logs/migration_log.zh-CN.md`
   - `logs/worklog.md`
 
 ### 2026-08-01 18:45 EDT

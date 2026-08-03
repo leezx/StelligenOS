@@ -54,3 +54,10 @@
 - 在 Phase 1 批准分支上新增外部-only T0-T1 Clinical Frame Pipeline port 和 request/result contracts。
 - 强制 clinical unmet need、scope、T0/T1 input、policy、run、ClinicalFrame、Evidence 和 missing information 引用使用 `external:`；未读取数据、未运行 T0/T1、未创建本地记录。
 - 58 个 unittest、repository boundary 和 `git diff --check` 均通过；等待 ChatGPT 审核后才可进入 Phase 3。
+
+## 2026-08-01：`gen_indication_endpoint_target` Phase 3
+
+- 基于 ChatGPT 已批准的 Phase 2，在独立分支新增 external-only Target Candidate Generation port、bounded generation policy 和 request/result contracts。
+- 通过单一 ClinicalFrame 引用、配置化 candidate budget、最少独立正证据组和 external evidence scope 约束候选生成边界；禁止 model-only/rule-only generation。
+- 未读取公共证据或临床数据，未生成本地 TargetCandidate/Evidence，未执行 P-chain/T-gate，未写入数据库、cache、result、weights、runner 或新 Gate。
+- 61 个 unittest、repository boundary 和 `git diff --check` 均通过；ChatGPT 已返回 `APPROVE`，Phase 3 状态为 `APPROVED_PHASE_3`，可以进入 Phase 4；Phase 4 仍需独立 PR 审核。
