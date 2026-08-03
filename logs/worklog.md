@@ -1965,3 +1965,19 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: 五种组合行为实测全部正确；12 个测试模块 / 89 项通过；`git diff --check` 通过。
 - Note on #15/#16 approval records: PR #15（head `80a5bdb`）与 PR #16（head `469c61c`）已获 `APPROVE`。**本轮未在这两个分支写入 `logs/chatgpt-review-*-final.md` 批准记录**，因为审核为 #16 指定的合并程序要求「先合并 #15，再把 #16 的 base 改为 main，确认 aggregate diff 没有变化后再合并」；追加提交会改变已批准的 HEAD 与 aggregate diff，与该程序直接冲突。两份批准记录须在合并之后补写，或以独立 PR 提交。此项已作为未决事项交由人类负责人决定。
 - Next: 推送同一 PR #17 并提交 ChatGPT 复审。合并顺序仍为 #15 → #16 → #17。
+
+### 2026-08-03 17:20 EDT
+
+- Action: 经人类负责人授权，将 28 个已批准的 open PR 全部分批合并进 `main`，使仓库回到单一最新版本。
+- Precondition check: 合并前逐个核对 28 个 PR 的批准状态。25 个在 `logs/chatgpt-review-*.md` 中有记录（按 PR 编号反查并读最终结论；其中 #31 为 Round 2 `APPROVE`、#40 的 handoff 明写「PR #40 已获 ChatGPT `APPROVE`」、#43 因记录写作 `Pull request: #43` 而被首轮 grep 漏判，已单独确认）；#15／#16／#17 为本次会话中转达的 `APPROVE`，记录随本 PR 补写。结论：28 个全部已批准。
+- Precondition check: 按 base→head 关系推导链序，确认 28 个 PR 恰好构成从 `main` 到链顶的完整线性链，无遗漏、无分叉；`main` 是链底 #15 的严格祖先，`#15..main` 为 0 commit。
+- Merge strategy decision: 全程使用 merge commit，禁用 squash。本仓库历史上多数 PR 为 squash 合并（`main` 仅 3 个 merge commit 而已合入 14 个 PR），若沿用 squash 会破坏祖先关系——retarget 后 merge-base 退回旧 `main`，上层 PR 的 aggregate diff 会把已合并内容重新计入。实测量化：#16 正常为 10 files/+484，squash 后将显示 188 files/+19758；#17 正常为 5 files/+761，squash 后将显示 192 files/+20519。
+- Draft state: #18-#26 共 9 个 gen-iet phase PR 处于 Draft（当时 Phase gate 的预防措施，审核记录写明 must not be auto-merged）。三者均已获批准且合并已获授权，故转为 ready 后合并。此为代人类负责人执行的状态变更，已在交付说明中标注。
+- Conflict handling: 链底 #15/#16/#17 的审核修订使 `main` 前进，其余 25 个分支的 merge-base 停留在旧链底，逐个出现冲突。**冲突全部且仅为 `logs/worklog.md` 的追加式冲突**，用专用解析器按 `### 时间戳` 排序合并两侧，并在写回前断言无残留冲突标记且两侧非空行全部保留。脚本设定为一旦出现 worklog 以外的冲突文件即中止，全程未触发。
+- Per-branch validation: 每个需要解决冲突的分支在推送前跑完整测试套件，失败即中止；全程未触发。测试数随层级累积：89（链底）→ 98 → 101 → 104 → 107 → 110 → 113 → 116 → 120（gen-iet 完成）→ 120（CRC 系列均为 contract/handoff-only）→ 171（链顶 extensions）。
+- Result: 28 个 PR 全部合并，`main` HEAD `651dbad`，open PR 归零。
+- Final validation on main: 23 modules / 171 tests 全部通过；`scripts/verify_repository_boundary.sh` 通过；`tests/test_git_sync.sh` A-D 通过；`git diff --check` 通过；工作树干净、零 `__pycache__`。数量核对：45 gate.yaml、59 model.yaml、53 profile.yaml、4 个 extension 子包、57 份审核记录。
+- Action taken: 本 PR 补写 #15／#16／#17 三份 `-final.md` 批准记录。三份均注明是合并后补写及其原因——若在合并前写入会追加提交、改变已批准 HEAD 与 aggregate diff，使审核方自己指定的「retarget 到 main 后确认 aggregate diff 未变」这一步失效。
+- Boundary: 合并过程未改动任何代码、契约、Gate 拓扑或测试；除 worklog 冲突解决外无内容变更；未新增数据、缓存或结果。
+- Open items: 仓库仍无 GitHub Actions 或 commit status，上述测试数字只能由仓库审计记录佐证；仓库仍无依赖声明文件而多个测试依赖 `pyyaml`；43 个已合并分支仍存在于本地与远端，未清理。三项均建议另立任务。
+- Next: 提交本 PR 供 ChatGPT 审核。
