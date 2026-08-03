@@ -1080,3 +1080,11 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 未改动 `boot.py`、`src/capabilities/`、`src/lifecycle/`、Gate 拓扑、生命周期或核心对象；未引入任何第三方依赖；未执行任何真实外部 runtime。
 - Open risk: 本仓库现已完全不具备执行外部 runtime 的能力，这是有意结果；真实运行需先建设实现 `ExternalRuntimePort` 的外部受控环境，该环境尚不存在，需另立任务。
 - Next: 推送同一 PR #17 并提交 ChatGPT 复审。#15/#16 的元数据同步另行处理。
+
+### 2026-08-03 15:55 EDT
+
+- Action: 同步 PR #15／#16／#17 的元数据阻断（Round 2 对 #15／#16 只剩此项）。
+- Verification: 实测三个分支当前 HEAD 的真实测试数 —— #15 为 10 modules / 50 tests、#16 为 11 modules / 65 tests、#17 为 12 modules / 85 tests。
+- Finding: #16 的 handoff 记录 55 项已过期。该数字写于合并 base 之前；合并 PR #15 的 Round 1 修订后其 10 项完整性测试并入，实际为 65 项。已更正并加注历史数字与「权威来源是当前 HEAD 实际运行结果」。
+- Change: #16 handoff 验证段更正为 11 modules / 65 tests，并区分「本 PR 自身新增」与「合并 base 后并入」。
+- Next: 更新三个 PR 描述的测试数字与 boundary 表述；#17 描述需整段重写，因其仍描述已被移除的执行器。
