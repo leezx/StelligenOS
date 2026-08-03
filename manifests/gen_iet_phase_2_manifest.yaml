@@ -1,0 +1,43 @@
+manifest_version: "1.0.0"
+module_id: gen_indication_endpoint_target
+phase: 2
+status: approved_phase_2
+parent_phase: 1
+parent_approval: logs/chatgpt-review-2026-08-01-gen-iet-phase1.md
+gate_change_declaration: NO_GATE_CHANGE
+
+scope:
+  implementation_type: external_clinical_frame_pipeline_port
+  execution_enabled: false
+  persistence_enabled: false
+  inputs_external_only: true
+  outputs_external_only: true
+  gates_called_locally: false
+  contracts:
+    - ClinicalFramePipelineRequest
+    - ClinicalFramePipelineResult
+    - ClinicalFramePipelinePort
+
+explicitly_not_executed:
+  - clinical_unmet_need_data_read
+  - t0_execution
+  - t1_execution
+  - clinical_frame_record_creation
+  - evidence_collection
+  - target_generation
+  - database
+  - cache
+  - result_persistence
+  - runner
+  - new_gate
+
+validation:
+  tests: 58
+  repository_boundary: passed
+  git_diff_check: passed
+
+decision:
+  requires_chatgpt_review: false
+  proceed_to_phase_3: true
+  approved_by: ChatGPT
+  approval_record: logs/chatgpt-review-2026-08-01-gen-iet-phase2.md
