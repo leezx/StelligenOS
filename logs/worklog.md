@@ -147,6 +147,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 这是 ChatGPT provisional review，不是人类专家签字；未执行 Gate scoring、ranking、pair generation、recommendation 或 downstream development；结果只在外部 DATA。
 - Next: 提交 Batch 002 独立结果审核 PR 给 ChatGPT，未获 `APPROVE` 前不得进入任何 Gate 或下游使用。
 
+### 2026-08-02 16:07 EDT
+
+- Action: 按用户要求编写 StelligenOS 当前总架构与模块核心设计逻辑的专家审核版说明。
+- How: 以当前 architecture contract、lifecycle、core objects、45-Gate contract、capability ports、六个 GenModule README、CRC evidence handoff 和当前代码为事实来源；区分已实现、已运行、正在审核和尚未执行状态。
+- Scope: 仅新增架构说明文档和本 worklog；未修改代码、合同、Gate、Model、Profile、模块行为、外部数据或运行结果。
+- Output: `docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md`。
+- Boundary: 文档明确 CRC 292 条 evidence 仍在 provisional review，尚未执行 Gate scoring、T12、pair ranking/recommendation 或 asset generation。
+
 ### 2026-08-02 16:11 EDT
 
 - Action: 完成 PR #41 Batch 002 结果审核的 base 修复与 ChatGPT 复审。
@@ -154,6 +162,21 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Correction: 将 PR #41 base 改为已批准的 `task_20260802_crc-chatgpt-provisional-review-batch001-results`；修复后 aggregate diff 为 2 commits、2 files、`+48/-0`，仅包含 Batch 002 handoff/worklog。
 - Round 2: ChatGPT 明确 `APPROVE`，确认 20/20、4 targets、`retain=19`、`downgrade=1`、SHA-256、provisional、data-free 和禁止 Gate 边界一致。
 - Authorization: 只接受 Batch 002 provisional package 并允许继续下一批；不授权 Gate scoring、ranking、recommendation 或 downstream development。
+
+### 2026-08-02 16:15 EDT
+
+- Action: 获取 ChatGPT 对 PR #42 当前架构专家审核文档的 Round 1 `REQUEST_CHANGES`，并完成最小修订。
+- Finding 1: “每个候选必须同时保存 supporting/opposing/conflict/missing”超过当前合同要求；改为相关合同按存在情况保留 supporting/opposing/mixed、conflict、unknown 和 missing information 引用，缺失不代表阴性。
+- Finding 2: `gen_indication_endpoint_target` 的步骤动词可能被理解为仓库模块已执行完整流程；补充其仅描述外部合同目标顺序，仓库模块只提供 contract/port，不执行候选生成、Gate、T12、排序或持久化。
+- Confirmed accurate: 六层架构、四阶段生命周期、七类对象、45 Gate（13/16/16）及 CRC `9/36/41/292` 状态。
+- Boundary: 仅修正文档表述；未修改代码、合同、Gate、Model、Profile、外部数据或运行结果。
+
+### 2026-08-02 16:17 EDT
+
+- Action: 获取 ChatGPT 对 PR #42 当前架构专家审核文档的 Round 2 `APPROVE`。
+- Result: ChatGPT 确认 Round 1 两项阻断均已在同一 PR 最小修复；最新 aggregate diff 只包含架构文档、handoff、worklog 和审核记录，未修改代码、合同或运行边界。
+- Status: `docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md` 已标记为当前版本、可交付专家审核。
+- Boundary: 本批准只确认当前事实描述，不授权架构修改、Gate execution、ranking、recommendation 或 downstream development。
 
 ### 2026-08-01 19:11 EDT
 
