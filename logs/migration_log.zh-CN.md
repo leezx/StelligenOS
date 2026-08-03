@@ -68,3 +68,10 @@
 - 强制 T2/T7 优先，仅允许既有 T2、T7、T8-T11；保留 `PROVISIONAL_ADVANCE`、`HOLD`、`EXCLUDE` 与原因，禁止把无证据视为 FAIL，明确禁止 T12。
 - 未读取证据或临床数据，未执行 T2-T11/T12/P-chain，未创建本地候选、Gate 结果或 Evidence，未写入数据库、cache、result、weights、runner 或新 Gate。
 - 64 个 unittest、repository boundary 和 `git diff --check` 均通过；ChatGPT 已返回 `APPROVE`，Phase 4 状态为 `APPROVED_PHASE_4`，可以进入 Phase 5；Phase 5 仍需独立 PR 审核。
+
+## 2026-08-01：`gen_indication_endpoint_target` Phase 5
+
+- 基于 ChatGPT 已批准的 Phase 4，在独立分支新增 external-only Endpoint Biology Completion port，定义 T3-T6、历史 ADC Rule、Gate Model 和完整 T0-T11 trace 的引用边界。
+- 要求 trace 按既有 Gate 冻结顺序覆盖 T0-T11，明确排除 T12；未修改 Gate 合同。
+- 未读取证据或临床数据，未执行 T3-T6/Gate/Rule/Model/T12/P-chain，未创建本地 trace、Gate result 或 Evidence，未写入数据库、cache、result、weights、runner 或新 Gate。
+- 67 个 unittest、repository boundary 和 `git diff --check` 均通过；ChatGPT 已返回 `APPROVE`，Phase 5 状态为 `APPROVED_PHASE_5`，可以进入 Phase 6；Phase 6 仍需独立 PR 审核。
