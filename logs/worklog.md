@@ -455,6 +455,22 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: Gate scoring、ranking、asset recommendation 仍未授权；本 PR 未执行专家复核、未生成生物学结论、未复制外部数据。
 - Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-target-evidence-expert-review-contract-final.md`，更新 handoff 状态为 `CONTRACT_APPROVED_EXTERNAL_EXPERT_REVIEW_AUTHORIZED`。
 
+### 2026-08-01 22:55 EDT
+
+- Action: 按 PR #34 ChatGPT `APPROVE` 准备外部专家生物学复核工作包。
+- How: 从外部 manual-review package 读取 292 条 evidence units；生成 `expert_review_assignment.tsv`，保留原始字段并追加空白专家决定、理由、身份/角色、时间戳和来源定位字段；另生成 instructions、report 和统计审计文件。
+- Result: 工作包固定 41 targets，supporting/opposing/unknown 为 88/32/172；专家复核尚未执行，所有专家字段为空。
+- Boundary: 未修改生物学 statement 或 evidence direction；未执行 Gate scoring、ranking、recommendation、pair generation 或 downstream development；所有结果写入外部 DATA。
+- Next: 以独立 PR 记录工作包准备状态；需要真实领域专家填写复核字段，完成后再提交独立结果审核 PR。
+
+### 2026-08-01 22:57 EDT
+
+- Action: 获取 ChatGPT 对 PR #35 工作包准备记录的 `APPROVE`。
+- How: 在同一 `GitHub PR 信息` 对话中提交 head `28cc8c2` 的完整审核指令；ChatGPT 核对工作包仅为准备状态、292 条 evidence units、41 targets、88/32/172 分类和 data-free 边界。
+- Result: ChatGPT 接受该 PR 作为“外部专家复核工作包已准备、等待真实专家填写”的记录。
+- Boundary: 真实专家复核尚未执行；在独立结果审核 PR 获 `APPROVE` 前，不执行 Gate scoring、ranking、asset recommendation、pair generation 或 downstream development。
+- Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-target-evidence-expert-review-preparation-final.md`，更新 handoff 状态为 `PREPARATION_APPROVED_PENDING_REAL_EXPERT`。
+
 ### 2026-08-01 21:45 EDT
 
 - Action: 完成 ChatGPT 批准后的外部 CRC indication/endpoint/target 枚举运行。
