@@ -486,6 +486,21 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Authorization: 只有“真实专家复核结果独立审核 PR APPROVE”和“PR #36 APPROVE”两道门均通过后，才允许按冻结拓扑执行外部 Gate 评分；评分完成后还必须提交独立结果审核 PR。
 - Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-gate-scoring-contract-final.md`，更新 handoff 状态为 `CONTRACT_APPROVED_BLOCKED_ON_EXPERT_REVIEW_RESULT_APPROVAL`。
 
+### 2026-08-01 23:10 EDT
+
+- Action: 根据用户要求，将专家逐条复核工作改写为可由网页版 ChatGPT 执行的结构化 Prompt。
+- How: 创建 `CRC_TARGET_EVIDENCE_CHATGPT_EXPERT_REVIEW_PROMPT.zh-CN.md`，固定 292 条/41 targets 输入、原始字段保留、source verification、direction/strength 建议、unknown/null 语义、逐条输出字段和 summary；明确 ChatGPT 只能标记为 `chatgpt_provisional_review`，不得冒充人类专家。
+- Boundary: 仅新增 Prompt 和 handoff；未上传或复制外部 evidence，未执行逐条复核，未修改 biological statement/direction，未执行 Gate scoring、ranking、pair generation 或 recommendation。
+- Next: 提交 Prompt contract-only PR 给 ChatGPT 审核；获批后再通过网页版 ChatGPT 附加外部 TSV 执行逐条预审，并将输出写入外部 DATA。
+
+### 2026-08-01 23:15 EDT
+
+- Action: 获取 ChatGPT 对 PR #37 ChatGPT 专家复核 Prompt 的 `APPROVE`。
+- How: 在同一 `GitHub PR 信息` 对话中提交 head `b23b4a4` 的完整审核指令；ChatGPT 核对 292 条/41 targets 输入、逐条输出字段、`source_not_verified`、`chatgpt_provisional_review`、unknown/null 语义和独立结果审核门。
+- Result: 允许在网页版 ChatGPT 中使用该 Prompt 生成 provisional review；输出只能写入外部 DATA，必须经过独立结果审核 PR 后才可考虑后续 Gate。
+- Boundary: 本次未执行证据复核，未修改 evidence，未执行 Gate scoring、ranking、pair generation 或 recommendation。
+- Action taken: 保存 `logs/chatgpt-review-2026-08-02-crc-chatgpt-expert-review-prompt-final.md`，更新 handoff 状态为 `PROMPT_APPROVED_READY_FOR_WEB_EXECUTION`。
+
 ### 2026-08-01 21:45 EDT
 
 - Action: 完成 ChatGPT 批准后的外部 CRC indication/endpoint/target 枚举运行。
