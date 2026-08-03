@@ -985,3 +985,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-assetgenos-catalog.zh-CN.md`
   - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-03 13:30 EDT
+
+- Action: 处理 ChatGPT 对 PR #15（HEAD `4b8d029`）的 Round 1 `REQUEST_CHANGES`，两条阻断在同一 PR 内修订。
+- Verification of blockers: (1) `docs/handoff/2026-08-01-assetgenos-catalog.zh-CN.md` 确实仍写「待创建 PR」，而 PR #15 已存在且 OPEN —— 成立；(2) `tests/test_assetgenos_modules.py` 确实只断言 45/59/53/7 计数与禁止目录名，未校验 gate_id、分组、顺序、版本或 YAML 可解析性 —— 成立。两条均无需 pushback。
+- Change: 新增 `MigratedYamlIntegrityTests` 共 10 项，覆盖全部 200 个 genmodules YAML 的可解析性、45 个 Gate 的 ID 集合／分组／相对顺序／sequence 唯一性／semver 版本／路径与身份一致性，以及 59 个 Model 的 gate_id 必须指向冻结 Registry 与 semver 版本。
+- Design note: 目录用稀疏 sequence 编号（0-12／20-35／40-55），`src/capabilities/gates.py` 用连续编号 0-44，两侧数值本就不同。因此顺序校验断言「按 sequence 排序后的序列 == GATE_IDS」，不逐个比对数值；否则测试会失败并诱导去改其中一侧，反而破坏冻结拓扑。该编号差异为既有状态，本 PR 未改动任何一侧。
+- Validation by mutation: 逐个注入缺陷验证新测试确实失败，随后还原 —— 损坏 YAML `failures=1,errors=6`；gate_id 拼错 `failures=3,errors=1`；gate_group 改错 `failures=2`；sequence 7→33 `failures=2`；gate_version 0.2.0→0.2 `failures=1`；model gate_id 指向不存在 Gate `failures=1`；全部还原后 `OK`。
+- Change: handoff 更新为记录 PR #15、base `main`、状态、验证结果、设计取舍、变异测试证据与未决风险。
+- Boundary: 未改动任何 gate/model/profile/contract YAML 内容、`src/` 代码、`module.yaml` 数量声明，也未改动 `.gitignore` 与 `scripts/verify_repository_boundary.sh`。
+- Note on boundary script: 本分支运行 `scripts/verify_repository_boundary.sh` 得 exit=1，违规项为本地 `.claude`；临时移开后 exit=0。该目录在本分支创建之后才出现，修复位于已获批的链顶 PR #43，本 PR 不重复修复以避免同文件合并冲突。
+- Validation: 10 个测试模块 / 50 项通过（修订前 40 项）；`git diff --check` 通过。
+- Open risk: 仓库无依赖声明文件而新测试依赖 pyyaml；GitHub 无 commit status 或 Actions workflow，验证数字无法由 CI 独立复核。两者均建议另立任务，不在本 PR 范围内。
+- Next: 推送同一 PR #15 并提交 ChatGPT 复审；获批后才推进 #16。
