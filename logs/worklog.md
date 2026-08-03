@@ -1845,3 +1845,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 修订仍限于 `extensions/stop_rule/`、`tests/test_stop_rule_extension.py`、`scripts/verify_repository_boundary.sh`、handoff 与 worklog；未改内核、未改 Gate 拓扑、未扩大范围、未新起分支。
 - Validation: 23 个测试模块全部 OK，共 122 项（stop_rule 由 17 项增至 34 项）；`scripts/verify_repository_boundary.sh` 通过且负例被拒；`bash tests/test_git_sync.sh` A-D 通过；`git diff --check` 通过；旧字段名 `min_independent_supporting`/`opposing_count` 全仓库无残留。
 - Next: 推送同一 PR #43 并重新提交 ChatGPT 复审；`APPROVE` 前不得提升扩展状态或开始逐 Gate 阈值实例化。
+
+### 2026-08-03 11:52 EDT
+
+- Action: 处理 ChatGPT 对 PR #43 的 Round 2 `REQUEST_CHANGES`，两条阻断在同一 PR 内做最小修订。
+- Verification of blockers: (1) grep `extensions/stop_rule/contracts.py` 确认 `governed`/`governance` 零处出现于判定逻辑，而 `extensions/README.md` 第 23 行定义 `active_design` 为「尚未接入任何真实运行」、第 26 行要求提升 `governed` 须经独立 PR 与 ChatGPT `APPROVE`，且 EXT-04 自身 status 为 `active_design` —— 声明的不变式与代码脱节，成立；(2) handoff 验证段确实仍写 stop-rule 17 项/新增 28 项 —— 成立。两条均无需 pushback。
+- Change: 合同新增 `governance_status`（`NOT_GOVERNED`/`GOVERNED`，默认未治理）与 `governance_approval_ref`；治理时必须给出 `external:` 批准引用，未治理时该字段必须为空。
+- Change: 新增模块级 `EXTENSION_STATUS`（镜像 `extension.yaml` 的 `status`，当前 `active_design`）与 `GOVERNED_EXTENSION_STATUS`，作为 actionability 的硬性上限；抽出纯函数 `is_actionable()`，使 verdict × calibration × governance × extension_status 全部组合可在不改模块状态的前提下测试。
+- Design note: 修订强度高于要求。除合同级治理批准外，扩展自身状态也成为上限，因此当前任何裁决的 `actionable` 必然为 `False`，即使合同已校准且已治理——这是 `extensions/README.md`「`active_design` 尚未接入任何真实运行」的字面强制实现。专家校准（阈值是否可信）与治理批准（是否允许投入使用）是两个独立的门，互不替代。
+- Change: `StopDecision` 的多条单向不变式替换为一条双向约束 `actionable == is_actionable(...)`，因此既不能伪造 `actionable=True`，也不能在门全开时隐藏 `actionable=False` 规避审计；新增 `extension_status` 字段，使归档裁决在 EXT-04 将来提升后仍可追溯当时状态。
+- Change: 反转 Round 2 中语义错误的测试断言（原 `test_expert_calibrated_sufficiency_is_actionable` 断言已校准即 actionable，正是本轮阻断所指的错误语义）。
+- Change: handoff 验证段改为「当前轮次为权威 + 历史数字分轮次列表」；同步 README 三门表格与 extension.yaml 的 `actionability_rule`、`current_actionability`、`governance_reference_rule`、`status_mirror`。
+- Metadata note: 本轮修订使测试数再次变化，Round 2 的 122/34 已被取代；按实测值记录为 Round 3 = 23 modules / 128 tests、stop_rule 40、extension_boundary 11。验证数字权威来源为当前 HEAD 实际运行结果。
+- Boundary: 修订仍限于 `extensions/stop_rule/`、`tests/test_stop_rule_extension.py`、handoff 与 worklog；未改内核、未改 Gate 拓扑、未改三个 shell_only 扩展、未扩大范围、未另起分支；没有任何扩展被提升为 `governed`。
+- Validation: 23 个测试模块全部 OK，共 128 项（stop_rule 由 34 增至 40）；`scripts/verify_repository_boundary.sh` 通过；`bash tests/test_git_sync.sh` A-D 通过；`git diff --check` 通过。
+- Next: 推送同一 PR #43 并重新提交 ChatGPT 复审。

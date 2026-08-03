@@ -33,6 +33,8 @@ extension:
     - 不得把「达到搜索上限」转换为 FAIL；只能转换为需要人类决策的阻断状态。
     - 不得把「反对证据充分」转换为 FAIL；充分性只表示可以做判断，方向由 Gate 决定。
     - 不得在未经专家校准的情况下产出 actionable 裁决。
+    - 不得把专家校准当成治理批准；两者是独立的门，都必须打开。
+    - 在本扩展 status 提升为 governed 之前，不得产出任何 actionable 裁决。
     - 不得替代人类专家签字，也不得自动推动生命周期晋级。
     - 不得在仓库内保存证据、结果或计数数据；只接受 external 引用和聚合计数。
 
@@ -42,9 +44,21 @@ extension:
     note: >
       两个方向不相加；取较强的一方。裁决不携带方向，也不携带 pass/fail 信号。
     actionability_rule: >
-      actionable = (verdict == SUFFICIENT) AND (calibration_status == expert_calibrated)。
-      未校准契约仍可报告 SUFFICIENT，但 actionable 恒为 false，
-      与「专家校准前不得激活」一致。
+      actionable = (verdict == SUFFICIENT) AND (calibration_status == expert_calibrated)
+      AND (governance_status == governed) AND (EXTENSION_STATUS == governed)。
+      三道门互不替代：充分性由求值给出，校准由领域专家给出，治理由独立 PR 与
+      ChatGPT APPROVE 给出。未校准或未治理的契约仍可报告 SUFFICIENT，
+      但 actionable 恒为 false。
+    current_actionability: >
+      本扩展 status 为 active_design，因此当前任何裁决的 actionable 必然为 false，
+      即使合同已校准且已治理。这是 extensions/README.md 中
+      「active_design 尚未接入任何真实运行」的强制实现。
+    governance_reference_rule: >
+      governance_status 为 governed 时必须提供 external: governance_approval_ref；
+      未治理时该字段必须为空。
+    status_mirror: >
+      contracts.py 的 EXTENSION_STATUS 镜像本文件的 status，
+      提升必须同步进行，由 tests/test_stop_rule_extension.py 断言不漂移。
 
   execution_policy: advisory_only
 

@@ -2,17 +2,29 @@ from __future__ import annotations
 
 import unittest
 
+from pathlib import Path
+
+import yaml
+
 from extensions.stop_rule.contracts import (
     DEFAULT_SUFFICIENCY_BASELINES,
+    EXTENSION_STATUS,
+    GOVERNED_EXTENSION_STATUS,
     CalibrationStatus,
     EvidenceLedgerSnapshot,
     EvidenceSufficiencyContract,
+    GovernanceStatus,
     StopDecision,
     StopVerdict,
     SufficiencyBaseline,
     evaluate_stop_condition,
+    is_actionable,
 )
 from src.capabilities.gates import GATE_GROUPS
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+EXTENSION_MANIFEST = REPO_ROOT / "extensions" / "stop_rule" / "extension.yaml"
 
 
 def _contract(**overrides: object) -> EvidenceSufficiencyContract:
@@ -192,8 +204,30 @@ class DirectionNeutralSufficiencyTests(unittest.TestCase):
         )
 
 
-class CalibrationGatingTests(unittest.TestCase):
-    """An uncalibrated contract may report sufficiency but never authorise action."""
+def _decision(**overrides: object) -> StopDecision:
+    defaults: dict[str, object] = {
+        "gate_id": "tumor_cell_surface_availability",
+        "verdict": StopVerdict.SUFFICIENT,
+        "unmet_criteria": (),
+        "remaining_search_iterations": 2,
+        "requires_human_decision": False,
+        "actionable": False,
+        "calibration_status": CalibrationStatus.EXPERT_CALIBRATED,
+        "governance_status": GovernanceStatus.NOT_GOVERNED,
+        "extension_status": EXTENSION_STATUS,
+        "contract_version": "0.1.0",
+        "ledger_ref": "external:ledger/crc/t7",
+    }
+    defaults.update(overrides)
+    return StopDecision(**defaults)  # type: ignore[arg-type]
+
+
+class ActionabilityGatingTests(unittest.TestCase):
+    """Sufficiency, calibration and governance are three separate gates.
+
+    Expert calibration reviews the numbers. Governance authorises use. Neither
+    substitutes for the other, and EXT-04's own status caps both.
+    """
 
     def test_proposed_baseline_sufficiency_is_not_actionable(self) -> None:
         decision = evaluate_stop_condition(
@@ -206,20 +240,93 @@ class CalibrationGatingTests(unittest.TestCase):
             decision.calibration_status, CalibrationStatus.PROPOSED_BASELINE
         )
 
-    def test_expert_calibrated_sufficiency_is_actionable(self) -> None:
+    def test_calibrated_but_ungoverned_contract_is_not_actionable(self) -> None:
+        """The blocker from PR #43 round 2: calibration alone must not authorise."""
         decision = evaluate_stop_condition(
-            _contract(calibration_status=CalibrationStatus.EXPERT_CALIBRATED),
+            _contract(
+                calibration_status=CalibrationStatus.EXPERT_CALIBRATED,
+                governance_status=GovernanceStatus.NOT_GOVERNED,
+            ),
             _snapshot(),
         )
         self.assertEqual(decision.verdict, StopVerdict.SUFFICIENT)
-        self.assertTrue(decision.actionable)
+        self.assertFalse(decision.actionable)
+        self.assertEqual(decision.governance_status, GovernanceStatus.NOT_GOVERNED)
+
+    def test_calibrated_and_governed_contract_is_still_blocked_by_extension_status(
+        self,
+    ) -> None:
+        """EXT-04 is active_design, so nothing it produces may be acted upon yet."""
+        self.assertNotEqual(EXTENSION_STATUS, GOVERNED_EXTENSION_STATUS)
+        decision = evaluate_stop_condition(
+            _contract(
+                calibration_status=CalibrationStatus.EXPERT_CALIBRATED,
+                governance_status=GovernanceStatus.GOVERNED,
+                governance_approval_ref="external:governance/pr-99-approval",
+            ),
+            _snapshot(),
+        )
+        self.assertEqual(decision.verdict, StopVerdict.SUFFICIENT)
+        self.assertFalse(decision.actionable)
+        self.assertEqual(decision.extension_status, EXTENSION_STATUS)
+
+    def test_module_status_matches_the_extension_manifest(self) -> None:
+        """The mirrored status must not drift from extension.yaml."""
+        manifest = yaml.safe_load(EXTENSION_MANIFEST.read_text())
+        self.assertEqual(manifest["extension"]["status"], EXTENSION_STATUS)
+
+    def test_actionable_requires_all_three_gates_open(self) -> None:
+        matrix = [
+            (StopVerdict.SUFFICIENT, True, True, GOVERNED_EXTENSION_STATUS, True),
+            (StopVerdict.SUFFICIENT, True, True, "active_design", False),
+            (StopVerdict.SUFFICIENT, True, False, GOVERNED_EXTENSION_STATUS, False),
+            (StopVerdict.SUFFICIENT, False, True, GOVERNED_EXTENSION_STATUS, False),
+            (
+                StopVerdict.INSUFFICIENT_CONTINUE,
+                True,
+                True,
+                GOVERNED_EXTENSION_STATUS,
+                False,
+            ),
+            (
+                StopVerdict.INSUFFICIENT_EXHAUSTED,
+                True,
+                True,
+                GOVERNED_EXTENSION_STATUS,
+                False,
+            ),
+        ]
+        for verdict, calibrated, governed, ext_status, expected in matrix:
+            with self.subTest(
+                verdict=verdict,
+                calibrated=calibrated,
+                governed=governed,
+                ext_status=ext_status,
+            ):
+                self.assertEqual(
+                    is_actionable(
+                        verdict=verdict,
+                        calibration_status=(
+                            CalibrationStatus.EXPERT_CALIBRATED
+                            if calibrated
+                            else CalibrationStatus.PROPOSED_BASELINE
+                        ),
+                        governance_status=(
+                            GovernanceStatus.GOVERNED
+                            if governed
+                            else GovernanceStatus.NOT_GOVERNED
+                        ),
+                        extension_status=ext_status,
+                    ),
+                    expected,
+                )
 
     def test_insufficient_verdicts_are_never_actionable(self) -> None:
-        for status in CalibrationStatus:
+        for calibration in CalibrationStatus:
             for iterations in (1, 99):
-                with self.subTest(status=status, iterations=iterations):
+                with self.subTest(calibration=calibration, iterations=iterations):
                     decision = evaluate_stop_condition(
-                        _contract(calibration_status=status),
+                        _contract(calibration_status=calibration),
                         _snapshot(
                             independent_supporting_count=0,
                             completed_search_iterations=iterations,
@@ -227,47 +334,51 @@ class CalibrationGatingTests(unittest.TestCase):
                     )
                     self.assertFalse(decision.actionable)
 
-    def test_uncalibrated_actionable_decision_cannot_be_constructed(self) -> None:
-        with self.assertRaises(ValueError):
-            StopDecision(
-                gate_id="tumor_cell_surface_availability",
-                verdict=StopVerdict.SUFFICIENT,
-                unmet_criteria=(),
-                remaining_search_iterations=2,
-                requires_human_decision=False,
-                actionable=True,
-                calibration_status=CalibrationStatus.PROPOSED_BASELINE,
-                contract_version="0.1.0",
-                ledger_ref="external:ledger/crc/t7",
-            )
+    def test_forged_actionability_is_rejected(self) -> None:
+        for overrides in (
+            {"calibration_status": CalibrationStatus.PROPOSED_BASELINE},
+            {"governance_status": GovernanceStatus.NOT_GOVERNED},
+            {"extension_status": "active_design"},
+            {
+                "verdict": StopVerdict.INSUFFICIENT_CONTINUE,
+                "unmet_criteria": ("min_confidence",),
+            },
+        ):
+            with self.subTest(overrides=overrides):
+                with self.assertRaises(ValueError):
+                    _decision(actionable=True, **overrides)
 
-    def test_insufficient_actionable_decision_cannot_be_constructed(self) -> None:
+    def test_hidden_actionability_is_rejected(self) -> None:
         with self.assertRaises(ValueError):
-            StopDecision(
-                gate_id="tumor_cell_surface_availability",
-                verdict=StopVerdict.INSUFFICIENT_CONTINUE,
-                unmet_criteria=("min_confidence",),
-                remaining_search_iterations=2,
-                requires_human_decision=False,
-                actionable=True,
-                calibration_status=CalibrationStatus.EXPERT_CALIBRATED,
-                contract_version="0.1.0",
-                ledger_ref="external:ledger/crc/t7",
-            )
-
-    def test_calibrated_sufficiency_cannot_hide_its_actionability(self) -> None:
-        with self.assertRaises(ValueError):
-            StopDecision(
-                gate_id="tumor_cell_surface_availability",
-                verdict=StopVerdict.SUFFICIENT,
-                unmet_criteria=(),
-                remaining_search_iterations=2,
-                requires_human_decision=False,
+            _decision(
                 actionable=False,
-                calibration_status=CalibrationStatus.EXPERT_CALIBRATED,
-                contract_version="0.1.0",
-                ledger_ref="external:ledger/crc/t7",
+                governance_status=GovernanceStatus.GOVERNED,
+                extension_status=GOVERNED_EXTENSION_STATUS,
             )
+
+
+class GovernanceReferenceTests(unittest.TestCase):
+    def test_governed_contract_must_cite_an_approval(self) -> None:
+        with self.assertRaises(ValueError):
+            _contract(governance_status=GovernanceStatus.GOVERNED)
+
+    def test_governance_approval_ref_must_be_external(self) -> None:
+        with self.assertRaises(ValueError):
+            _contract(
+                governance_status=GovernanceStatus.GOVERNED,
+                governance_approval_ref="docs/handoff/2026-08-03.md",
+            )
+
+    def test_ungoverned_contract_must_not_cite_an_approval(self) -> None:
+        with self.assertRaises(ValueError):
+            _contract(
+                governance_status=GovernanceStatus.NOT_GOVERNED,
+                governance_approval_ref="external:governance/pr-99-approval",
+            )
+
+    def test_contracts_default_to_ungoverned(self) -> None:
+        self.assertEqual(_contract().governance_status, GovernanceStatus.NOT_GOVERNED)
+        self.assertFalse(_contract().is_governed)
 
 
 class StopRuleContractValidationTests(unittest.TestCase):

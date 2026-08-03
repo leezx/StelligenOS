@@ -8,8 +8,8 @@
 - PR：#43（base 为 PR #42 已批准 head `task_20260802_current-architecture-expert-review-doc`，非 `main`）
 - **Aggregate diff 权威来源：GitHub PR #43 的实时 HEAD 与 aggregate diff。** 本文件中的任何 commit/文件/行数均为撰写时的历史快照，不作为审核依据；两者不一致时以 GitHub 实时值为准。
 - 历史快照（仅供追溯）：Round 1 首次提交时为 1 commit、26 files、`+2465/-0`；补记 PR 编号后为 2 commits、26 files、`+2468/-0`。
-- 当前状态：`ROUND_2_PENDING_CHATGPT_REVIEW`
-- 时间：`2026-08-03 10:25 EDT`（Round 1）／`2026-08-03 11:10 EDT`（Round 2 修订）
+- 当前状态：`ROUND_3_PENDING_CHATGPT_REVIEW`
+- 时间：`2026-08-03 10:25 EDT`（Round 1）／`11:10 EDT`（Round 2 修订）／`11:52 EDT`（Round 3 修订）
 - 任务性质：documentation + extension shells + repository hygiene
 - Gate 变更：`NO_GATE_CHANGE`
 - 内核代码变更：`NO_KERNEL_CODE_CHANGE`
@@ -74,6 +74,21 @@ ChatGPT 对 HEAD `9f7b946` 返回 `REQUEST_CHANGES`，五条阻断经逐条核�
 
 新增回归测试：`actionable` 校准门禁 7 项（含三条不变式各自的构造期拒绝）、opposing-only 与方向中立 5 项、baseline 数值约束 7 项。
 
+## Round 2 `REQUEST_CHANGES` 与修订
+
+ChatGPT 确认 Round 1 五条代码修复均已落实，但提出两条新阻断，均经核实成立：
+
+| # | 阻断 | 核实结果 | 修订 |
+|---|---|---|---|
+| 1 | `actionable` 仍可绕过扩展级治理门禁：`extensions/README.md` 要求 `active_design` 须经独立 PR 与 ChatGPT `APPROVE` 才能 `governed`，但代码只要 `SUFFICIENT` + `EXPERT_CALIBRATED` 即返回 `actionable=True` | 成立。`contracts.py` 中 `governed`/`governance` 零处出现于判定逻辑；而 README 第 23 行定义 `active_design` 为「尚未接入任何真实运行」，EXT-04 正是 `active_design`。声明的不变式与代码脱节 | 合同新增 `governance_status` 与 `governance_approval_ref`（治理时必须给出 `external:` 批准引用，未治理时必须为空）；新增模块级 `EXTENSION_STATUS`（镜像 `extension.yaml`）作为硬性上限；`actionable` 需四条件合取。抽出纯函数 `is_actionable()` 使全部组合可测 |
+| 2 | 验证元数据未收敛：PR 描述与 handoff 验证段仍写 stop-rule 17 项、新增 28 项 | 成立 | 验证段改为「当前轮次为权威 + 历史数字分轮次列表」。本轮修订使实际数字再次变化为 23 modules / 128 tests、stop_rule 40，已按实测值写入 |
+
+第 1 条的修订比要求更强：除合同级治理批准外，还让扩展自身状态成为上限。因此**当前任何裁决的 `actionable` 必然为 `False`**，即使合同已校准且已治理——因为 EXT-04 自身仍是 `active_design`。这是 README 第 23 行的字面强制实现。
+
+`StopDecision` 的多条单向不变式被替换为**一条双向约束**：`actionable` 必须恰好等于四个条件的合取，因此既不能伪造 `actionable=True`，也不能在门全开时隐藏 `actionable=False` 规避审计。裁决新增 `extension_status` 字段，使归档裁决在 EXT-04 将来提升后仍可追溯当时状态。
+
+新增回归测试 6 项：已校准但未治理不可行动、已校准且已治理仍被扩展状态阻断、四门组合矩阵 6 组、伪造 `actionable` 的 4 类拒绝、隐藏 `actionable` 的拒绝、以及 `EXTENSION_STATUS` 与 `extension.yaml` 不漂移的断言。
+
 ## 明确未改动
 
 - 未修改 `docs/architecture/contract.zh-CN.md`、`capabilities.zh-CN.md`、`lifecycle.zh-CN.md`、`release.zh-CN.md`。
@@ -88,24 +103,43 @@ ChatGPT 对 HEAD `9f7b946` 返回 `REQUEST_CHANGES`，五条阻断经逐条核�
 
 ## 验证
 
+### 当前验证（Round 3，权威）
+
 ```text
-命令：PYTHONDONTWRITEBYTECODE=1，逐模块运行 tests/test_*.py（23 个模块）
-结果：ALL 23 TEST MODULES OK（新增 tests/test_stop_rule_extension.py 17 项、
-      tests/test_extension_boundary.py 11 项，共 28 项新测试全部通过）
+命令：PYTHONDONTWRITEBYTECODE=1，逐模块运行 tests/test_*.py
+结果：ALL OK —— 23 modules / 128 tests
+      tests/test_stop_rule_extension.py    40 项
+      tests/test_extension_boundary.py     11 项
 
 命令：bash scripts/verify_repository_boundary.sh
-结果：Repository boundary check passed.（修复前为 exit=1，违规项 .claude）
+结果：Repository boundary check passed.
+      （修复前 exit=1，违规项 .claude；负例 .claude/rogue.md 与
+        .claude/sub/nested.md 均实测被拒绝）
 
 命令：bash tests/test_git_sync.sh
 结果：git_sync behavior tests passed (A-D).
 
 命令：git diff --check
 结果：通过，无空白错误
+
+命令：grep 旧字段名 min_independent_supporting / opposing_count
+结果：全仓库无残留
 ```
+
+### 历史验证数字（仅供追溯，不作为审核依据）
+
+| 轮次 | 测试模块 / 总项数 | stop_rule | extension_boundary |
+|---|---|---:|---:|
+| Round 1 | 23 / 未记录（新增 28 项） | 17 | 11 |
+| Round 2 | 23 / 122 | 34 | 11 |
+| **Round 3（当前）** | **23 / 128** | **40** | **11** |
+
+Round 1 与 Round 2 的数字已被本轮修订取代。测试数随每轮回归测试增加而变化，因此**验证数字的权威来源是当前 HEAD 上实际运行的结果**，任何文档中的数字都是撰写时快照。
 
 ## 未决问题与风险
 
 - `EXT-04` 的三组 baseline 阈值未经科学校准，激活前必须逐 Gate 由领域专家复核。
+- `EXT-04` 当前 `EXTENSION_STATUS` 为 `active_design`，因此任何裁决的 `actionable` 必然为 `False`。这是设计意图（治理门禁未开），不是缺陷；提升需在 `extension.yaml` 与 `contracts.py` 同步进行，且只能通过独立治理任务。
 - `EXT-04` 依赖「独立证据数」，而 `BL-01` 未解决，该判据可能被重复来源虚增，偏向过早判定充分。
 - 规范路径文档当前版本 `v1` 与快照 `v1` 之间存在且仅存在第 0 节版本元数据这一处差异，已在 `docs/architecture/versions/README.md` 中显式说明。
 - 扩展目录未加 `__init__.py`，依赖 Python 3 命名空间包，与 `src/` 现状一致（`src/` 亦无顶层 `__init__.py`）。

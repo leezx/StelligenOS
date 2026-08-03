@@ -50,15 +50,30 @@ INSUFFICIENT_EXHAUSTED  证据未达标，且搜索预算已耗尽 -> 升级为�
 
 ### `SUFFICIENT` 不等于「可以进入 Gate 评分」
 
-裁决和授权是两件事。能否据此进入 Gate 评分，只看 `StopDecision.actionable`：
+裁决和授权是两件事。能否据此进入 Gate 评分，只看 `StopDecision.actionable`，而它需要**三道独立的门同时打开**：
 
 ```
-actionable = (verdict == SUFFICIENT) AND (contract 已 expert_calibrated)
+actionable = (verdict == SUFFICIENT)
+         AND (calibration_status == expert_calibrated)
+         AND (governance_status == governed)
+         AND (EXTENSION_STATUS == governed)
 ```
 
-`DEFAULT_SUFFICIENCY_BASELINES` 的阈值是未校准的建议值。用这样的契约求值仍然会得到 `SUFFICIENT`——那是有信息量的，它说明「按建议阈值算已经够了」——但 `actionable` 保持 `False`，因为阈值本身还没被专家认可。这与 `extension.yaml` 中「专家校准前不得激活」一致。
+三道门问的是不同的问题，互不替代：
 
-`StopDecision` 在构造时强制三条不变式：未校准契约不得产出 `actionable=True`；非 `SUFFICIENT` 裁决不得 `actionable=True`；已校准契约的 `SUFFICIENT` 不得隐藏其 `actionable`。
+| 门 | 问题 | 由谁开 |
+|---|---|---|
+| 充分性 | 现在的证据够不够做判断？ | `evaluate_stop_condition()` |
+| 校准 | 这些阈值本身可信吗？ | 领域专家复核 |
+| 治理 | 允许拿它做真事吗？ | 独立 PR + ChatGPT `APPROVE` |
+
+**专家校准不等于治理批准。** 阈值被科学复核过，不代表这个扩展已经获准投入使用；`extensions/README.md` 要求的是后者。所以合同上有 `governance_status` 和 `governance_approval_ref`（治理时必须给出 `external:` 批准引用，未治理时必须为空）。
+
+最外层还有一道硬性上限：`EXTENSION_STATUS` 镜像 `extension.yaml` 的 `status`，当前是 `active_design`。**因此今天任何裁决的 `actionable` 都必然是 `False`**，即使合同已校准且已治理——因为 EXT-04 自身还没被提升为 `governed`。这正是 `extensions/README.md` 第 23 行「`active_design` 尚未接入任何真实运行」的字面含义。提升必须在 `extension.yaml` 和 `contracts.py` 同步进行，且只能通过独立治理任务；有测试断言两者不漂移。
+
+`DEFAULT_SUFFICIENCY_BASELINES` 的阈值是未校准的建议值。用这样的契约求值仍然会得到 `SUFFICIENT`——那是有信息量的，它说明「按建议阈值算已经够了」——但 `actionable` 保持 `False`。
+
+`StopDecision` 用**一条双向约束**替代一串单向检查：`actionable` 必须恰好等于上面四个条件的合取。这样既不能伪造 `actionable=True`，也不能在门全开时隐藏 `actionable=False` 来规避审计。`extension_status` 也被记录进裁决，使归档的裁决在 EXT-04 将来被提升后仍然可追溯当时的状态。
 
 ### 为什么是 advisory_only
 

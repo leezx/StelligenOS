@@ -18,6 +18,11 @@ Boundaries enforced here:
 - Uncalibrated contracts are never actionable. A ``PROPOSED_BASELINE`` contract
   can report sufficiency, but ``StopDecision.actionable`` stays ``False`` until
   the contract is expert-calibrated.
+- Ungoverned extensions are never actionable. Expert calibration is a scientific
+  review of thresholds; it is not the governance approval that
+  ``extensions/README.md`` requires before an extension may be used for real.
+  Both gates must be open, and while EXT-04 itself is ``active_design`` the
+  second one cannot be.
 - Data-free. Snapshots carry aggregate counts and ``external:`` references only.
 
 Dependency direction is extension -> kernel. Nothing under ``src/`` may import
@@ -37,6 +42,14 @@ EXTENSION_ID: Final[str] = "EXT-04"
 EXTENSION_VERSION: Final[str] = "0.1.0"
 EXECUTION_POLICY: Final[str] = "advisory_only"
 
+#: Mirrors ``extension.yaml``'s ``status``. Promotion happens there and here
+#: together, only via a separate approved governance task. A test asserts the
+#: two never drift.
+EXTENSION_STATUS: Final[str] = "active_design"
+
+#: The only extension status under which a decision may be acted upon.
+GOVERNED_EXTENSION_STATUS: Final[str] = "governed"
+
 
 class StopVerdict(str, Enum):
     """Three-valued outcome of a stop-condition evaluation.
@@ -51,8 +64,49 @@ class StopVerdict(str, Enum):
 
 
 class CalibrationStatus(str, Enum):
+    """Whether the thresholds have had a scientific review."""
+
     PROPOSED_BASELINE = "proposed_baseline"
     EXPERT_CALIBRATED = "expert_calibrated"
+
+
+class GovernanceStatus(str, Enum):
+    """Whether use of this contract has had a governance approval.
+
+    Orthogonal to calibration. Correct numbers reviewed by a domain expert still
+    do not authorise real use until the governance gate in
+    ``extensions/README.md`` has been passed.
+    """
+
+    NOT_GOVERNED = "not_governed"
+    GOVERNED = "governed"
+
+
+def is_actionable(
+    *,
+    verdict: StopVerdict,
+    calibration_status: CalibrationStatus,
+    governance_status: GovernanceStatus,
+    extension_status: str = EXTENSION_STATUS,
+) -> bool:
+    """Whether a decision may justify proceeding to Gate scoring.
+
+    Three independent gates, all of which must be open:
+
+    1. the evidence is sufficient,
+    2. the thresholds are expert-calibrated,
+    3. both this contract and EXT-04 itself are governed.
+
+    Kept a pure function so every combination is testable without mutating
+    module state.
+    """
+
+    return (
+        verdict is StopVerdict.SUFFICIENT
+        and calibration_status is CalibrationStatus.EXPERT_CALIBRATED
+        and governance_status is GovernanceStatus.GOVERNED
+        and extension_status == GOVERNED_EXTENSION_STATUS
+    )
 
 
 def _require_external_reference(reference: str, field: str) -> str:
@@ -105,6 +159,8 @@ class EvidenceSufficiencyContract:
     max_evidence_search_iterations: int
     calibration_status: CalibrationStatus
     rationale_ref: str
+    governance_status: GovernanceStatus = GovernanceStatus.NOT_GOVERNED
+    governance_approval_ref: str | None = None
 
     def __post_init__(self) -> None:
         if self.gate_id not in GATE_IDS:
@@ -118,10 +174,26 @@ class EvidenceSufficiencyContract:
             max_evidence_search_iterations=self.max_evidence_search_iterations,
         )
         _require_external_reference(self.rationale_ref, "rationale_ref")
+        if self.governance_status is GovernanceStatus.GOVERNED:
+            if self.governance_approval_ref is None:
+                raise ValueError(
+                    "a governed contract must cite its governance_approval_ref"
+                )
+            _require_external_reference(
+                self.governance_approval_ref, "governance_approval_ref"
+            )
+        elif self.governance_approval_ref is not None:
+            raise ValueError(
+                "only a governed contract may carry a governance_approval_ref"
+            )
 
     @property
     def is_expert_calibrated(self) -> bool:
         return self.calibration_status is CalibrationStatus.EXPERT_CALIBRATED
+
+    @property
+    def is_governed(self) -> bool:
+        return self.governance_status is GovernanceStatus.GOVERNED
 
 
 @dataclass(frozen=True)
@@ -180,8 +252,11 @@ class StopDecision:
     """Advisory outcome. Never a Gate result.
 
     ``actionable`` is the only field a caller may use to justify proceeding to
-    Gate scoring. A sufficient verdict from an uncalibrated contract is
-    informational.
+    Gate scoring. A sufficient verdict from an uncalibrated or ungoverned
+    contract is informational.
+
+    ``extension_status`` records which EXT-04 status the decision was computed
+    under, so an archived decision stays auditable after EXT-04 is promoted.
     """
 
     gate_id: str
@@ -191,6 +266,8 @@ class StopDecision:
     requires_human_decision: bool
     actionable: bool
     calibration_status: CalibrationStatus
+    governance_status: GovernanceStatus
+    extension_status: str
     contract_version: str
     ledger_ref: str
 
@@ -206,22 +283,18 @@ class StopDecision:
             and not self.requires_human_decision
         ):
             raise ValueError("an exhausted verdict must require a human decision")
-        if self.actionable and self.verdict is not StopVerdict.SUFFICIENT:
-            raise ValueError("only a sufficient verdict may be actionable")
-        if (
-            self.actionable
-            and self.calibration_status is not CalibrationStatus.EXPERT_CALIBRATED
-        ):
+        # One biconditional replaces a list of one-way checks, so actionability
+        # can be neither forged nor hidden.
+        expected = is_actionable(
+            verdict=self.verdict,
+            calibration_status=self.calibration_status,
+            governance_status=self.governance_status,
+            extension_status=self.extension_status,
+        )
+        if self.actionable != expected:
             raise ValueError(
-                "an uncalibrated contract must not produce an actionable decision"
-            )
-        if (
-            self.verdict is StopVerdict.SUFFICIENT
-            and self.calibration_status is CalibrationStatus.EXPERT_CALIBRATED
-            and not self.actionable
-        ):
-            raise ValueError(
-                "a sufficient verdict from a calibrated contract must be actionable"
+                "actionable must equal the sufficiency, calibration and "
+                "governance gates taken together"
             )
 
 
@@ -271,10 +344,14 @@ def evaluate_stop_condition(
         unmet_criteria=tuple(unmet),
         remaining_search_iterations=remaining,
         requires_human_decision=requires_human_decision,
-        actionable=(
-            verdict is StopVerdict.SUFFICIENT and contract.is_expert_calibrated
+        actionable=is_actionable(
+            verdict=verdict,
+            calibration_status=contract.calibration_status,
+            governance_status=contract.governance_status,
         ),
         calibration_status=contract.calibration_status,
+        governance_status=contract.governance_status,
+        extension_status=EXTENSION_STATUS,
         contract_version=contract.contract_version,
         ledger_ref=snapshot.ledger_ref,
     )
