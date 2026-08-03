@@ -10,6 +10,7 @@ from .gates import (
     GateModelOutput,
     gate_definition,
 )
+from .registry import CAPABILITY_IDS, CAPABILITY_NAMES
 from .opportunity_generation import (
     OpportunityGenerationPort,
     OpportunityGenerationRequest,
@@ -27,6 +28,8 @@ from .binder_adc_routes import (
 )
 
 __all__ = [
+    "CAPABILITY_IDS",
+    "CAPABILITY_NAMES",
     "GATE_CATALOG",
     "GATE_GROUPS",
     "GATE_IDS",
