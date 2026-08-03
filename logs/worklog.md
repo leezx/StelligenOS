@@ -958,6 +958,27 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-os-boot-smoke.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 20:55 EDT
+
+- Action: 实现外部 Runtime Adapter，连接 StelligenOS Boot 与外部 AssetGenOS runtime 边界。
+- How: 新增 `ExternalRuntimeRequest`、`ExternalRuntimeResult` 和 `SubprocessExternalRuntime`；强制 runtime/input/run/output 使用 `external:` 引用，workspace/output 路径必须位于仓库外，默认拒绝执行，只有显式 `execution_enabled`/`--execute` 才启动外部命令；stdout/stderr 不写入仓库或结果对象。
+- Result: 46 个 unittest 通过；repository boundary check 通过；`git diff --check` 通过；未创建数据、缓存、结果或持久化目录。
+- Files affected:
+  - `src/repository/external_runtime.py`
+  - `scripts/run_external_runtime.py`
+  - `tests/test_external_runtime.py`
+  - `docs/handoff/2026-08-01-os-boot-smoke.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 21:10 EDT
+
+- Action: 核查 AssetGenOS 实际运行入口和 StelligenOS 接入边界。
+- How: 读取 AssetGenOS `pyproject.toml`、`src/adc_factory/cli.py` 和 `config.py`；确认 `adc-factory v2 evaluate` 需要 target/gene/indication/endpoint 等明确业务输入，并会管理 SQLite、cache、output 和外部数据索引。没有执行真实资产生成，也没有猜测业务输入。
+- Result: 通用外部 Runtime Adapter 已足以接入外部命令；下一次真实运行前必须由人类确定生成路线和外部输入引用。该决策不能由代码安全推断。
+- Files affected:
+  - `docs/handoff/2026-08-01-os-boot-smoke.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 17:25 EDT
 
 - Action: 处理 ChatGPT 第二轮复审发现的 PR 元数据不一致。
@@ -1027,6 +1048,39 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: 11 个测试模块 / 55 项通过（修订前 43 项）；`git diff --check` 通过。
 - Next: 推送同一 PR #16 并提交 ChatGPT 复审；获批后才推进 #17。
 
+### 2026-08-03 14:50 EDT
+
+- Action: 处理 ChatGPT 对 PR #17（HEAD `17404dc`）的 Round 1 `REQUEST_CHANGES`，五条阻断（两条安全、三条其他）在同一 PR 内修订。
+- Verification of blockers: (1) `SubprocessExternalRuntime` 确实可执行任意命令，`_require_external_path` 只校验 workspace/output 路径，命令内绝对路径可写回仓库，而其 docstring 当时声称「with no repository writes」—— 成立，且该断言本身即为缺陷；(2) 确实使用 `os.environ.copy()`，父进程凭据全量继承 —— 成立；(3) `output_root` 确实只查 `exists()` —— 成立；(4) 该 PR 确实没有独立 handoff，内容并入 os-boot-smoke 且把 adapter 写成未来步骤 —— 成立；(5) 测试确实未覆盖写入仓库、敏感环境隔离与非目录 output root —— 成立。
+- Decision (technical pushback on the suggested remedy): 审核建议引入「仓库不可见或只读挂载的受控执行环境」。方向正确但未在本 PR 内实现容器沙箱，原因是本仓库当前无任何依赖声明文件，引入容器运行时会改变仓库性质，且缺少容器运行时的环境无法运行该测试；进程内阻止任意子进程写盘在 Python 中无法可移植实现。改为不伪造做不到的保证，采用分层并写明每层性质：执行需显式启用（预防）、必填 sandbox_profile_ref 声明受控环境（治理，仓库无法验证故仅记录为外部引用且缺失即拒绝）、环境变量最小允许清单（预防）、运行前后仓库内容指纹比对（检测，非预防）。模块 docstring 明确写出本模块不提供沙箱，真正隔离必须来自 sandbox_profile_ref 所指环境。
+- Change: 新增 `sandbox_profile_ref` 必填字段与 `RepositoryMutationError`；`_repository_fingerprint()` 对仓库全部文件做 SHA-256 内容哈希（非 size+mtime，避免同长度原位改写漏过），排除 `.git`、`__pycache__`、`.DS_Store`；变更即抛错并列出 created/modified/deleted 路径。
+- Change: 环境改为 `INHERITED_ENVIRONMENT_KEYS = ("PATH","LANG","LC_ALL","TZ","TMPDIR")`；刻意排除 `HOME` 并将其重定向到外部 workspace，使写 `$HOME` 的工具也留在仓库之外。
+- Change: `output_root` 与 `workspace` 统一要求 `is_dir()`，抛 `NotADirectoryError`；`scripts/run_external_runtime.py` 新增必填 `--sandbox-profile-ref`。
+- Change: 新建独立 handoff `docs/handoff/2026-08-01-external-runtime-adapter.zh-CN.md`。
+- Change: 测试由 3 项增至 17 项，覆盖默认禁用、仓库路径拒绝、目录校验、sandbox 声明必填、命令写入仓库被检测（新建与修改两种）、五类凭据不被继承、HOME 重定向、无父进程变量越过允许清单。
+- Finding: 环境隔离测试初版断言「子进程环境键全部落在允许清单内」实测失败于 `__CF_USER_TEXT_ENCODING`。经实证：即使传 `env={}`，macOS 仍注入 `__CF_USER_TEXT_ENCODING`、`SDKROOT`、`CPATH`、`LIBRARY_PATH`、`MANPATH`、`LC_CTYPE`，属平台注入非父进程泄漏。改为先用 `env={}` 探测平台注入基线，再断言子进程环境 ⊆（允许清单 ∪ STELLIGEN_* ∪ 平台基线），使断言针对「泄漏」这一真正安全属性且不硬编码 macOS 特例。
+- Validation by mutation: 环境退回 `os.environ.copy()` `failures=8`；移除仓库变更检测 `failures=2`；`output_root` 退回只查 `exists()` `failures=1`；全部还原后 `OK`。
+- Boundary: 未改动 `boot.py`、`src/capabilities/`、`src/lifecycle/`、任何 Gate/Model/Profile 定义、45-Gate 拓扑、生命周期或核心对象；未引入任何第三方依赖；未执行任何真实外部 runtime。
+- Validation: 12 个测试模块 / 60 项通过（修订前 46 项）；CLI 缺 `--sandbox-profile-ref` 报参数缺失，带 ref 但不加 `--execute` 抛 PermissionError；`git diff --check` 通过。
+- Open risk: 仓库变更检测是检测而非预防，触发时写入已发生；真正写入隔离需由外部环境提供，仓库无法验证该声明。若需真正沙箱执行环境，建议另立任务并同时决定该执行器是否应继续留在本仓库内。
+- Next: 推送同一 PR #17 并提交 ChatGPT 复审。三个链底 PR 的修订至此完成，依赖顺序仍为 #15 → #16 → #17。
+
+### 2026-08-03 15:40 EDT
+
+- Action: 处理 ChatGPT 对 PR #17（HEAD `b6d7321`）的 Round 2 `REQUEST_CHANGES`。Round 2 确认 Round 1 的环境隔离、目录校验、独立 handoff 与测试扩充均已真实修复，但指出仍有实质性安全阻断：`sandbox_profile_ref` 只是未经验证的字符串，`SubprocessExternalRuntime` 并未据此建立容器或只读挂载，仍直接执行任意子进程。
+- Verification by exploit: 四条攻击路径中两条已实证复现。(a) 写入 `.git/hooks/evil-probe` 后 `status=completed`、未抛错、文件确实存在 —— `.git` 被指纹排除，而 git hook 会在后续 checkout/commit 时执行，等于任意代码执行；(b) 命令「写入 README.md → 读走原内容到 /tmp/exfil → 结束前还原」后 `status=completed`、未抛错，且仓库内容已被完整读出 —— 同时证明事后指纹可被绕过且环境白名单不提供文件系统隔离。另两条（写入后才被检测、可读宿主凭据）Round 1 已承认或由上述实证覆盖。
+- Root cause note: `.git` 排除是 Round 1 修订**引入**的漏洞。当时为避免 `.git` 频繁变动造成误报而排除，结果留下最危险的一块；属漏掉 `.git/hooks` 攻击面，非取舍失当。
+- Decision: 采纳审核推荐的方案 1，将本 PR 降级为 contract-only。理由：`src/` 现有约 2000 行几乎全是 frozen dataclass 与方法体为 `...` 的 Protocol，`SubprocessExternalRuntime` 是唯一真实执行器、本身即异类；架构契约要求一切数据处理发生在仓库之外；方案 2 需引入容器运行时依赖而本仓库无任何依赖声明文件，且缺容器运行时的环境无法运行其测试；Round 1 handoff 已把「执行器是否应留在本仓库」列为未决问题，本轮审核给出答案。
+- Precondition check: 移除前确认链上后续分支（gen-iet-phase0、crc-target-enumeration、architecture-extensions）中只有这三个文件本身引用 `SubprocessExternalRuntime`，无其他模块导入，移除不破坏上层分支。
+- Change: 移除 `SubprocessExternalRuntime`、`RepositoryMutationError`、`_repository_fingerprint`、`_describe_mutations`、`INHERITED_ENVIRONMENT_KEYS` 及 `os`/`subprocess`/`hashlib` 导入；保留 Request/Result/Port 与全部契约校验；`ExternalRuntimeResult` 状态受限于 completed/failed；新增 `ExternalRuntimeRequest.envelope` 交接载荷，显式声明 `executed_by: external_controlled_runtime` 与 `executed_in_repository: false`。
+- Change: `scripts/run_external_runtime.py` 移除 `--execute` 与全部执行路径，改为与 `scripts/boot_os.py` 同形态——校验契约后打印 JSON 信封。
+- Change: 测试重写为 20 项，其中 `NoExecutionCapabilityTests` 6 项为防回归闸门：模块不得导出 `SubprocessExternalRuntime`、不得导入 subprocess/os/hashlib、不得再定义指纹与 `RepositoryMutationError`、公开符号集合被精确固定、Port 方法体为 stub、CLI 源码不得出现 subprocess/--execute/execution_enabled。
+- Validation post-downgrade: `SubprocessExternalRuntime` 与 `RepositoryMutationError` 均不存在；模块源码不含 subprocess/os.environ/hashlib；CLI 传入会写文件的命令后探针文件未被创建。12 个测试模块 / 85 项通过；`git diff --check` 通过。
+- Incident: 更新 handoff 验证段时误用过宽的字符串替换区间，把「Round 2 修订」与「AssetGenOS 运行边界核查」两节一并删除。已确认丢失后整份重写 handoff，两节均已恢复并核验存在。
+- Boundary: 未改动 `boot.py`、`src/capabilities/`、`src/lifecycle/`、Gate 拓扑、生命周期或核心对象；未引入任何第三方依赖；未执行任何真实外部 runtime。
+- Open risk: 本仓库现已完全不具备执行外部 runtime 的能力，这是有意结果；真实运行需先建设实现 `ExternalRuntimePort` 的外部受控环境，该环境尚不存在，需另立任务。
+- Next: 推送同一 PR #17 并提交 ChatGPT 复审。#15/#16 的元数据同步另行处理。
+
 ### 2026-08-03 15:55 EDT
 
 - Action: 同步 PR #15／#16／#17 的元数据阻断（Round 2 对 #15／#16 只剩此项）。
@@ -1034,3 +1088,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Finding: #16 的 handoff 记录 55 项已过期。该数字写于合并 base 之前；合并 PR #15 的 Round 1 修订后其 10 项完整性测试并入，实际为 65 项。已更正并加注历史数字与「权威来源是当前 HEAD 实际运行结果」。
 - Change: #16 handoff 验证段更正为 11 modules / 65 tests，并区分「本 PR 自身新增」与「合并 base 后并入」。
 - Next: 更新三个 PR 描述的测试数字与 boundary 表述；#17 描述需整段重写，因其仍描述已被移除的执行器。
+
+### 2026-08-03 16:30 EDT
+
+- Action: 处理 ChatGPT 对 PR #17（HEAD `75bae7a`）的 Round 3 `REQUEST_CHANGES`。Round 3 确认执行安全阻断已正确解决（`SubprocessExternalRuntime` 完全移除、CLI 只生成交接信封、仓库内不存在 subprocess／指纹／伪沙箱逻辑、确为 contract-only、三处数字统一为 85），但指出结果合同存在矛盾状态漏洞。
+- Verification: 实证确认 `ExternalRuntimeResult` 当时只校验 `status ∈ {completed, failed}`，未校验其与 `exit_code` 的一致性；`status='completed', exit_code=3` 与 `status='failed', exit_code=0` 两种矛盾组合均可合法构造 —— 成立，无需 pushback。
+- Causal note: 审核指出的因果关系准确。该漏洞是降级为 contract-only 之后才变得重要：以前结果由仓库内执行器生成、`status` 由 `exit_code` 派生，两者不可能不一致；现在结果完全由外部实现提交，属不可信入站输入，必须在合同入口拒绝矛盾结果，否则会把自相矛盾的运行结论当成事实记录。
+- Change: `ExternalRuntimeResult.__post_init__` 增加两条一致性约束 —— `completed` 必须 `exit_code == 0`，`failed` 必须 `exit_code != 0`；docstring 说明这是入站合同及补上该校验的原因。
+- Change: 新增 4 项测试（`test_external_runtime.py` 20 → 24）：completed 配 1/3/255/-9 全部拒绝、failed 配 0 拒绝、completed/0 与 failed/3 接受、以及 failed/-9 接受。最后一项刻意加入 —— 被信号杀死的进程返回 `-N`，若把「非零」错写成「正数」会误拒该合法结果。
+- Validation: 五种组合行为实测全部正确；12 个测试模块 / 89 项通过；`git diff --check` 通过。
+- Note on #15/#16 approval records: PR #15（head `80a5bdb`）与 PR #16（head `469c61c`）已获 `APPROVE`。**本轮未在这两个分支写入 `logs/chatgpt-review-*-final.md` 批准记录**，因为审核为 #16 指定的合并程序要求「先合并 #15，再把 #16 的 base 改为 main，确认 aggregate diff 没有变化后再合并」；追加提交会改变已批准的 HEAD 与 aggregate diff，与该程序直接冲突。两份批准记录须在合并之后补写，或以独立 PR 提交。此项已作为未决事项交由人类负责人决定。
+- Next: 推送同一 PR #17 并提交 ChatGPT 复审。合并顺序仍为 #15 → #16 → #17。
