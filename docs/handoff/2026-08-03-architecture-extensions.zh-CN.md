@@ -5,7 +5,9 @@
 - 任务编号：`task_20260803_architecture-extensions`
 - 分支：`task_20260803_architecture-extensions`
 - 分支基点：`94dc6c8`（PR #42 已批准 tip，非 `main`；`main` 当前落后，尚未包含架构说明文档）
-- PR：待创建
+- PR：#43（base 为 PR #42 已批准 head `task_20260802_current-architecture-expert-review-doc`，非 `main`）
+- Aggregate diff：1 commit、26 files、`+2465/-0`
+- 当前状态：`PENDING_CHATGPT_REVIEW`
 - 时间：`2026-08-03 10:25 EDT`
 - 任务性质：documentation + extension shells + repository hygiene
 - Gate 变更：`NO_GATE_CHANGE`

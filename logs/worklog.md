@@ -1829,3 +1829,4 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: 23 个测试模块全部 OK（新增 28 项测试：stop_rule 17 项、extension boundary 11 项）；`scripts/verify_repository_boundary.sh` 通过（修复前 exit=1）；`bash tests/test_git_sync.sh` A-D 通过；`git diff --check` 通过。
 - Risk: `EXT-04` 三组 baseline 阈值未经科学校准，标记 `proposed_baseline_requires_expert_calibration`；且依赖「独立证据数」而 `BL-01` 未解决，可能被重复来源虚增而偏向过早判定充分。
 - Next: 推送分支并创建 PR 提交 ChatGPT 审核；`APPROVE` 前不得把扩展提升为 `governed`，不得开始逐 Gate 阈值实例化。
+- PR: 创建 PR #43，base 指向 PR #42 已批准 head `task_20260802_current-architecture-expert-review-doc`（不指向 `main`，避免 aggregate diff 混入未合并历史提交，参照 PR #41 的同类问题）；aggregate diff 为 1 commit、26 files、`+2465/-0`。状态 `PENDING_CHATGPT_REVIEW`。
