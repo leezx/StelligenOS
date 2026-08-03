@@ -1474,6 +1474,55 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-global-review-worklog-rules.zh-CN.md`
   - `logs/chatgpt-review-2026-08-01-global-review-worklog-rules-final.md`
   - `logs/worklog.md`
+
+### 2026-08-01 21:26 EDT
+
+- Action: 启动下一任务的审核前准备：CRC indication/endpoint/target 全靶点枚举。
+- How: 先读取 PR #27 合并状态和远程分支；确认 PR #27 已合并到 `task_20260801_gen-iet-phase8-external-pilot`，但 `origin/main` 尚未包含 merge commit `46cda05`。因此从实际已合并治理基线创建 `task_20260802_crc-target-enumeration`，没有假装 main 已同步。
+- Result: 新增执行契约和 handoff，只定义 indication、endpoint、target 的范围、公共来源、证据字段、外部输出规划、禁止事项和验收标准。当前状态为 `PENDING_CHATGPT_APPROVAL`。
+- Boundary: 尚未读取公共文献、临床注册库或公共数据；尚未运行分析、生成 pair、下载数据或写入外部结果目录；StelligenOS 未新增数据、cache、result、database、weights 或业务逻辑。
+- Next: 完成边界/格式验证，提交并推送 PR；在 ChatGPT `APPROVE` 前不执行任何外部枚举。
+- Files affected:
+  - `docs/tasks/CRC_TARGET_ENUMERATION_REQUEST.zh-CN.md`
+  - `docs/handoff/2026-08-02-crc-target-enumeration.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 21:28 EDT
+
+- Action: 创建 CRC 全靶点枚举执行契约 PR #28。
+- How: 显式提交 commit `f4ecbe5` 并推送分支 `task_20260802_crc-target-enumeration`；PR #28 指向实际包含 PR #27 的 `task_20260801_gen-iet-phase8-external-pilot`，PR 描述明确写明该基线事实、contract-only 范围、data-free 边界和 ChatGPT 审核门。
+- Result: PR #28 已创建并保持 `OPEN / READY_FOR_REVIEW`，当前审核 tip 为 `f4ecbe5`。新增 handoff PR 链接、tip 快照和实时 PR 权威说明。
+- Boundary: 未抓取文献、未读取公共数据、未运行分析、未生成 pair、未写入外部结果；临时 PR body 文件已删除。
+- Next: 将 PR #28 的完整 diff、契约、handoff、worklog 和验证结果提交 ChatGPT 审核；在 `APPROVE` 前不执行外部枚举。
+- Files affected:
+  - `docs/tasks/CRC_TARGET_ENUMERATION_REQUEST.zh-CN.md`
+  - `docs/handoff/2026-08-02-crc-target-enumeration.zh-CN.md`
+  - `logs/worklog.md`
+  - External PR: `https://github.com/leezx/StelligenOS/pull/28`
+
+### 2026-08-01 21:35 EDT
+
+- Action: 完成 ChatGPT 对 PR #28 的首轮契约审核并处理元数据阻断。
+- How: 使用同一 `GitHub PR 信息` 对话和 GitHub 来源，要求读取 PR #28 当前 aggregate diff、执行契约、handoff、worklog、AGENTS、交互规范和 Phase Gate 协议。
+- Result: ChatGPT 返回 `REQUEST_CHANGES`；确认 contract 内容、实际 base 和 data-free 边界符合要求，但指出任务文档仍写“PR 待创建”，handoff 仍写“待创建/待验证”，与 PR #28、tip `2f1c17b` 和已完成 boundary/diff 验证不一致。
+- Action taken: 更新任务契约和 handoff，补齐 PR #28、review tip `2f1c17b`、`scripts/verify_repository_boundary.sh` 和 `git diff --check` 的通过记录；新增本轮审核原始记录。仍未执行外部文献、公共数据或 pair 生成。
+- Next: 推送同一 PR 的最小元数据修订并再次提交 ChatGPT 审核；只有 `APPROVE` 后才开始外部枚举。
+- Files affected:
+  - `docs/tasks/CRC_TARGET_ENUMERATION_REQUEST.zh-CN.md`
+  - `docs/handoff/2026-08-02-crc-target-enumeration.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-02-crc-target-enumeration-round1.md`
+
+### 2026-08-01 21:33 EDT
+
+- Action: 获取 PR #28 的 ChatGPT Round 2 `APPROVE`，获得外部 CRC 枚举运行授权。
+- How: 在同一 `GitHub PR 信息` 对话中提交 PR #28 最新 tip `41ac89e` 的复审；ChatGPT 确认 Round 1 元数据阻断已修复，PR 为 `OPEN / MERGEABLE`，contract-only、data-free，实际 base 和运行门禁一致。
+- Result: ChatGPT 明确允许开始外部 CRC 文献/公共数据枚举，但限定所有输入、缓存、处理结果和报告只能写入指定外部 `DATA`，运行完成后必须通过独立结果审核 PR。
+- Action taken: 保存最终批准记录并将 CRC 任务 handoff 状态更新为 `APPROVED_EXTERNAL_RUN_AUTHORIZED`；下一步开始外部枚举，不向 StelligenOS 写入数据。
+- Files affected:
+  - `docs/handoff/2026-08-02-crc-target-enumeration.zh-CN.md`
+  - `logs/chatgpt-review-2026-08-02-crc-target-enumeration-final.md`
+  - `logs/worklog.md`
+  - `logs/worklog.md`
 - Files affected:
   - `AGENTS.md`
   - `ChatGPT-Codex-talk.md`
