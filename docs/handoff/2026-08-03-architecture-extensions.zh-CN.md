@@ -8,8 +8,10 @@
 - PR：#43（base 为 PR #42 已批准 head `task_20260802_current-architecture-expert-review-doc`，非 `main`）
 - **Aggregate diff 权威来源：GitHub PR #43 的实时 HEAD 与 aggregate diff。** 本文件中的任何 commit/文件/行数均为撰写时的历史快照，不作为审核依据；两者不一致时以 GitHub 实时值为准。
 - 历史快照（仅供追溯）：Round 1 首次提交时为 1 commit、26 files、`+2465/-0`；补记 PR 编号后为 2 commits、26 files、`+2468/-0`。
-- 当前状态：`ROUND_3_PENDING_CHATGPT_REVIEW`
-- 时间：`2026-08-03 10:25 EDT`（Round 1）／`11:10 EDT`（Round 2 修订）／`11:52 EDT`（Round 3 修订）
+- 当前状态：`APPROVED_WAITING_HUMAN_MERGE`
+- 批准：Round 4 获 ChatGPT `APPROVE`，批准 head `6f52288`
+- 审核记录：`logs/chatgpt-review-2026-08-03-architecture-extensions-final.md`
+- 时间：`2026-08-03 10:25 EDT`（Round 1）／`11:10 EDT`（Round 2 修订）／`11:52 EDT`（Round 3 修订）／`12:20 EDT`（Round 4 元数据同步）／`12:48 EDT`（`APPROVE`）
 - 任务性质：documentation + extension shells + repository hygiene
 - Gate 变更：`NO_GATE_CHANGE`
 - 内核代码变更：`NO_KERNEL_CODE_CHANGE`
@@ -161,10 +163,22 @@ Round 1 与 Round 2 的数字已被本轮修订取代。测试数随每轮回归
 
 ## 下一步
 
-- PR #43 已创建并推送，当前处于 Round 3 复审。Round 1 五条与 Round 2 两条阻断均已在同一 PR 内修订完毕；Round 3 反馈的三处元数据冲突（PR 描述的 `.claude` allowlist 表述、本文件的旧 `actionable` 公式、本节的过期「创建 PR」表述）已同步，未改动代码。
-- 提交 ChatGPT 最终审核。
-- 在获得 `APPROVE` 前，不得把任何扩展从 `shell_only`/`active_design` 提升为 `governed`，不得开始 `EXT-04` 的逐 Gate 阈值实例化，也不得继续 CRC 批次审核以外的工作。
-- 获得 `APPROVE` 后由人类负责人决定 merge 或打回；merge 目标为本 PR 的 base 分支 `task_20260802_current-architecture-expert-review-doc`，最终并入 `main` 仍取决于 PR #42 的合并。
+- PR #43 已在 Round 4 获得 ChatGPT `APPROVE`（批准 head `6f52288`）。四轮审核共 10 条阻断（Round 1 五条代码、Round 2 两条、Round 3 三条元数据）全部在同一 PR 内修订完毕，无范围扩大，未另起分支。
+- **等待人类负责人决定 merge。** 本 PR base 为 `task_20260802_current-architecture-expert-review-doc`，merge 只会进入该分支，不会直接进入 `main`。
+
+### 合并前的未决前提（不属本 PR 范围，但会阻塞入 main）
+
+`main` 最后一次移动为 2026-08-01（`f8206e9`），此后 28 个 PR 堆成一条从 `main` 到本分支的线性链，`main..HEAD` 为 87 个 commit。本 PR 位于链顶。
+
+链底 PR #15、#16、#17（`assetgenos-contracts`、`os-boot-smoke`、`external-runtime-adapter`）的批准状态存疑：三者在 `logs/worklog.md` 中零提及，`logs/` 下无对应 `chatgpt-review-*-final.md`，且其 handoff 状态仍停在「待创建 PR 并提交 ChatGPT 审核」。按 AGENTS.md「审核前不得继续推进」，若链底确未放行，则其上各层均建立在未放行基础上。
+
+此事需人类负责人核实并决定（补审或明确豁免），不由本任务处理。本 PR 的 `APPROVE` 不构成对链底状态的认可。
+
+### 仍然禁止
+
+- 不得把任何扩展提升为 `governed`；四个扩展仍为 `shell_only` 或 `active_design`。
+- 不得开始 `EXT-04` 的逐 Gate 阈值实例化，阈值仍需领域专家校准。
+- 不得执行 CRC Gate scoring、T12、pair ranking/recommendation 或 asset generation。
 
 ## 数据边界声明
 

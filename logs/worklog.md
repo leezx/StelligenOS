@@ -1872,3 +1872,16 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 本轮**未改动任何代码、测试、契约或脚本**，仅同步 PR 描述、handoff 与 worklog 文本；HEAD 代码与 Round 3 审核确认通过的 `ed61fc0` 一致。
 - Validation: 23 个测试模块全部 OK，共 128 项；`scripts/verify_repository_boundary.sh` 通过；`bash tests/test_git_sync.sh` A-D 通过；`git diff --check` 通过；元数据与代码一致性经 grep 交叉核对。
 - Next: 提交 ChatGPT 最终审核。`APPROVE` 前不得提升扩展状态或开始逐 Gate 阈值实例化。
+
+### 2026-08-03 12:48 EDT
+
+- Action: 获取 ChatGPT 对 PR #43 的 Round 4 `APPROVE`（由人类负责人转达）。
+- Approved head: `6f52288`；base 为 `task_20260802_current-architecture-expert-review-doc`（PR #42 已批准 head，非 `main`）。
+- Review history: Round 1 五条代码阻断、Round 2 两条阻断、Round 3 三条元数据冲突，共 10 条全部在同一 PR 内做最小修订，无范围扩大，未另起分支。
+- Result: ChatGPT 确认 Round 3 三处元数据已同步且未改动代码（经 `git diff --stat ed61fc0 HEAD -- extensions/ tests/ scripts/ src/ genmodules/` 为空验证），Round 1/Round 2 的代码修复在 `6f52288` 上保持正确。
+- Validation at approved head: 23 个测试模块 / 128 项通过；`scripts/verify_repository_boundary.sh` 通过且负例被拒；`tests/test_git_sync.sh` A-D 通过；`git diff --check` 通过。
+- Action taken: 保存 `logs/chatgpt-review-2026-08-03-architecture-extensions-final.md`，handoff 状态更新为 `APPROVED_WAITING_HUMAN_MERGE`。
+- Authorization: 批准范围限于架构文档版本规则、`extensions/` 目录与四条内核不变式、EXT-01/02/03 的 `shell_only` 壳、EXT-04 的 `active_design` 契约、BL-01..BL-07 登记，以及 `.gitignore` 与边界脚本卫生修复。
+- Not authorized: 提升任何扩展为 `governed`；逐 Gate 阈值实例化；任何内核/Gate 拓扑/Model/Profile/生命周期变更；CRC Gate scoring、T12、排序推荐或资产生成；合并进 `main`。
+- Open prerequisite (记录以防遗忘，不由本任务处理): `main` 自 2026-08-01 `f8206e9` 起未移动，28 个 open PR 堆成从 `main` 到本分支的线性链，`main..HEAD` 87 commits，本 PR 位于链顶且全链 `MERGEABLE`。链底 PR #15/#16/#17 批准状态存疑——三者 worklog 零提及、无 `-final.md` 审核记录、handoff 状态仍为「待创建 PR 并提交 ChatGPT 审核」。按 AGENTS.md「审核前不得继续推进」，需人类负责人核实后决定补审或明确豁免。本 PR 的 `APPROVE` 不构成对链底状态的认可。
+- Next: 由人类负责人决定 merge。合并动作与链底核实均未执行。
