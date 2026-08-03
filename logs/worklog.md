@@ -1812,3 +1812,20 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/product/GEN_IET_PRODUCT_PURPOSE_AND_DYNAMIC_REQUIREMENTS.zh-CN.md` (removed from PR #27)
   - `logs/chatgpt-review-2026-08-01-global-review-rules-round1.md`
   - `logs/worklog.md`
+
+### 2026-08-03 10:25 EDT
+
+- Action: 建立架构文档版本规则，并按 GPT-Feedback v4 四个一级风险建立 `extensions/` 扩展插件包；修复 `.gitignore` 与 repository boundary 脚本。
+- How: 从 PR #42 已批准 tip `94dc6c8` 创建 `task_20260803_architecture-extensions`（`main` 当前落后，尚不含架构说明文档，故不从 `main` 开分支，沿用 PR #31 先例）。
+- Read: `README.md`、`AGENTS.md`、`architecture.md`、`ChatGPT-Codex-talk.md`、`docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md`、`docs/architecture/*.md`、`docs/handoff/2026-08-02-current-architecture-expert-review-doc.zh-CN.md`、`docs/tasks/CRC_GATE_SCORING_CONTRACT.zh-CN.md`、`prompts/GPT-Feedback.md`（`# v4`，600 行）、`src/`、`genmodules/`、`tests/`、`scripts/verify_repository_boundary.sh`。
+- Finding: 工作区把已批准的架构说明文档重命名为含空格的 `... .zh-CN v1.md`，导致 `docs/handoff/`、`logs/worklog.md`、`prompts/GPT-Feedback.md` 三处路径引用断裂；经 diff 确认为纯改名，正文无改动。
+- Decision: 不采用「文件名带版本号」，因为 worklog 与 `logs/chatgpt-review-*.md` 是追加式审计记录，升版会强迫改写已批准的历史记录。改用「稳定规范路径 + 文档内第 0 节版本区块 + `docs/architecture/versions/` 只读快照」。
+- Finding: `scripts/verify_repository_boundary.sh` 实测 `exit=1`，违规项为顶层 `.claude`；该目录被用户全局 gitignore 忽略，故 `git status` 干净但脚本用 `find` 仍可见。
+- Finding: `.gitignore` 此前只有 `.DS_Store`，跑完测试后 `tests/test_assetgenos_modules.py` 与 `tests/test_gen_indication_endpoint_target.py` 会把自身产生的 `__pycache__` 判定为 data-bearing runtime artifact 而失败（实测 2 个模块各 1 项失败，清理 pycache 后恢复）。
+- Change: 新增 `extensions/`（README 内核不变式、BACKLOG 七个二级风险 BL-01..BL-07、EXT-01..EXT-04 四个插件包）；`EXT-04 stop_rule` 为唯一可执行契约，其余三个为 `shell_only`。
+- Design note: `EXT-04` 把「证据是否充分」与「是否允许继续搜索」分为两个独立维度，裁决三值；搜索预算耗尽产出 `INSUFFICIENT_EXHAUSTED` 并强制升级人类决策，不得转 FAIL，以免把「未找到足够证据」伪装为「target 不好」，符合内核设计原则第 3 条。
+- Change: `.gitignore` 新增 Python 运行时产物与本地工具配置；`scripts/verify_repository_boundary.sh` allowlist 新增 `extensions` 与 `.claude`；`README.md`/`LINKS.md` 增加扩展与版本目录入口。
+- Boundary: 未改动 architecture contract、四阶段生命周期、七类对象、45-Gate 拓扑、`genmodules/` 任何 gate/model/profile、`src/` 内核代码，以及已获批准的 `docs/tasks/CRC_GATE_SCORING_CONTRACT.zh-CN.md`；未改动任何历史审核记录；未执行 CRC Gate scoring、T12、排序或资产生成；仓库仍 data-free。
+- Validation: 23 个测试模块全部 OK（新增 28 项测试：stop_rule 17 项、extension boundary 11 项）；`scripts/verify_repository_boundary.sh` 通过（修复前 exit=1）；`bash tests/test_git_sync.sh` A-D 通过；`git diff --check` 通过。
+- Risk: `EXT-04` 三组 baseline 阈值未经科学校准，标记 `proposed_baseline_requires_expert_calibration`；且依赖「独立证据数」而 `BL-01` 未解决，可能被重复来源虚增而偏向过早判定充分。
+- Next: 推送分支并创建 PR 提交 ChatGPT 审核；`APPROVE` 前不得把扩展提升为 `governed`，不得开始逐 Gate 阈值实例化。

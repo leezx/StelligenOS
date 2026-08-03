@@ -14,6 +14,7 @@ allowed_top_level=(
   "schemas"
   "src"
   "genmodules"
+  "extensions"
   "code"
   "tests"
   "notebooks"
@@ -29,6 +30,7 @@ allowed_top_level=(
   "scripts"
   ".git"
   ".gitignore"
+  ".claude"
 )
 
 is_allowed_top_level() {

@@ -1,0 +1,42 @@
+extension:
+  extension_id: EXT-01
+  extension_name: ground_truth_learning_loop
+  extension_version: 0.1.0
+  extension_type: KernelExtension
+  status: shell_only
+  priority: low
+
+  source:
+    document: prompts/GPT-Feedback.md
+    section: "v4"
+    risk_id: "一级风险一"
+    risk_title: "缺少真正的 Ground Truth Learning Loop"
+
+  purpose: >
+    定义真实世界结局（临床试验结果、实验失败、平台经验）如何回写 Rule、Model
+    和 Gate calibration，并规定每一类回写各自需要什么级别的治理。
+    没有这条闭环，Gate 只会越积越多，不会越来越准。
+
+  deferral_reason: >
+    当前尚未产生真实药物实验结局数据，闭环无输入。本扩展先固化改动分类和
+    治理级别，防止将来有数据时临时决定、绕过治理。
+
+  kernel_contact_surface:
+    reads:
+      - genmodules/gate_model_rule/contracts/gate_model_rule.v1.yaml
+      - genmodules/assetgenos_catalog/contracts/model_lifecycle.v1.0.yaml
+      - src/cross_cutting/knowledge_ledger.py
+    modifies: []
+
+  prohibited:
+    - 不得自动应用任何 calibration；所有回写都是提案，必须经治理批准。
+    - 不得让单个结局直接改写 Gate threshold。
+    - 不得在仓库内保存临床结局数据、模型权重或校准结果。
+    - 不得绕过 gate_model_rule 的「自然语言 if/then 只是描述性知识」原则。
+
+  execution_policy: disabled
+
+  activation_requirements:
+    - 存在至少一批可追溯的真实结局数据（外部工作区）。
+    - 每一类 change class 的治理级别经人类负责人确认。
+    - 独立任务分支、独立 PR 和 ChatGPT APPROVE。

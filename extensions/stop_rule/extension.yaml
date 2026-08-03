@@ -1,0 +1,53 @@
+extension:
+  extension_id: EXT-04
+  extension_name: stop_rule
+  extension_version: 0.1.0
+  extension_type: KernelExtension
+  status: active_design
+  priority: highest
+
+  source:
+    document: prompts/GPT-Feedback.md
+    section: "v4"
+    risk_id: "一级风险四"
+    risk_title: "没有定义 Stop Rule"
+
+  purpose: >
+    为每个 Gate 定义 Evidence Sufficiency Contract，回答「证据到什么程度算够、
+    什么时候必须停止继续收集」。没有这条规则，所有 Gate 都会无限优化，
+    资产永远无法产出。
+
+  kernel_contact_surface:
+    reads:
+      - GateInputEnvelope@2.0.0
+      - GateModelOutput@2.0.0
+      - genmodules/assetgenos_catalog/gates/**/gate.yaml
+    modifies: []
+    note: >
+      本扩展只读取内核 Gate 身份和输出语义，不修改任何 gate.yaml、
+      阈值、Profile 绑定或 45-Gate 拓扑。
+
+  prohibited:
+    - 不得自动改写 Gate score、status、threshold 或 Profile 绑定。
+    - 不得把 unknown、null 或缺失信息转换为 0、negative 或 FAIL。
+    - 不得把「达到搜索上限」转换为 FAIL；只能转换为需要人类决策的阻断状态。
+    - 不得替代人类专家签字，也不得自动推动生命周期晋级。
+    - 不得在仓库内保存证据、结果或计数数据；只接受 external 引用和聚合计数。
+
+  execution_policy: advisory_only
+
+  calibration_status: proposed_baseline_requires_expert_calibration
+
+  known_limitations:
+    - >
+      本扩展依赖「独立证据数」这个判据，而当前 evidence independence 定义
+      不够严格（见 extensions/BACKLOG.zh-CN.md BL-01）。在 BL-01 解决之前，
+      min_independent_supporting 可能被重复来源虚增。
+    - >
+      三个 gate group 的 baseline 阈值来自外部专家反馈的建议值，
+      不是经过校准的科学阈值，激活前必须逐 Gate 复核。
+
+  activation_requirements:
+    - 逐 Gate 实例化 EvidenceSufficiencyContract 并由领域专家复核阈值。
+    - 解决 BL-01 evidence independence，或明确接受其偏差。
+    - 独立任务分支、独立 PR 和 ChatGPT APPROVE。

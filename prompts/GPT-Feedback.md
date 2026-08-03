@@ -1,4 +1,604 @@
 
+# v4
+/Volumes/Stelligen_SSD/Stelligen/StelligenOS/docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md
+审核这一套，是否有什么重大缺陷
+
+整体评价：没有发现足以推翻整个架构的致命设计错误。这套架构已经从“一个 ADC pipeline”演化成了一个资产操作系统（Asset Operating System），对象、生命周期、Gate、能力模块和治理边界基本已经分离，软件工程上是成立的。 CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md
+
+但是，如果我是一个有 ADC 开发经验的技术负责人或投资人，我会提出 4 个一级风险（Major Design Risks） 和 7 个二级风险（Important Improvements）。
+
+⸻
+
+一级风险一：缺少真正的“Ground Truth Learning Loop”
+
+这是我认为目前最大的缺陷。
+
+你的系统目前是：
+
+Evidence → Gate → Asset Generation → Due Diligence
+
+但是真正优秀的平台应该还有：
+
+Clinical Outcome → 回写 Rule → 回写 Model → 回写 Gate Calibration
+
+否则 Rule 永远停留在”经验总结”。
+
+目前文档提到了：
+
+* calibration
+* Knowledge Ledger
+* model lifecycle
+
+但是没有定义：
+
+哪一种真实结果可以改变系统。
+
+例如：
+
+一个 ADC III 期失败。
+
+到底应该：
+
+* 修改 Rule？
+* 修改 Gate threshold？
+* 修改某个 Model？
+* 还是只是新增 evidence？
+
+目前没有治理。
+
+建议新增：
+
+Learning Engine（Calibration Engine）
+
+专门负责：
+
+* Clinical outcome ingestion
+* Rule calibration
+* Model retraining
+* Gate threshold validation
+
+否则 Gate 很容易越积越多，却不会越来越准。
+
+⸻
+
+一级风险二：Gate 是静态的，而 Biology 是动态的
+
+你目前：
+
+45 Gate
+
+几乎全部假设：
+
+Target 是固定对象。
+
+但是真实 ADC：
+
+Target 的意义完全依赖：
+
+* indication
+* stage
+* line of therapy
+* biomarker
+* combination therapy
+
+例如：
+
+HER2：
+
+乳腺癌：
+
+完全不同。
+
+CRC：
+
+又完全不同。
+
+HER2-low：
+
+又不同。
+
+因此真正评分对象其实不是：
+
+Target
+
+而应该是：
+
+Target × Clinical Context
+
+严格来说应该是：
+
+Clinical Hypothesis
+
+不是 Target。
+
+虽然你前面已经强调：
+
+Clinical first
+
+但是 Gate 输入对象仍然偏向：
+
+TargetHypothesis
+
+建议未来逐步把 Gate 输入改成：
+
+ClinicalOpportunity
+
+而不是：
+
+Target。
+
+这样未来：
+
+ADC
+
+TCE
+
+Radioligand
+
+都会统一。
+
+⸻
+
+一级风险三：Asset Generation 目前仍然是”路线”，不是”搜索”
+
+这一点比较关键。
+
+目前：
+
+Asset Generation
+
+实际上只有两条：
+
+* Existing Binder
+* de novo Binder
+
+但是真实 ADC Optimization：
+
+远不止 Binder。
+
+例如：
+
+Payload
+
+Linker
+
+DAR
+
+Site-specific conjugation
+
+Fc engineering
+
+Half-life tuning
+
+Affinity tuning
+
+Epitope shifting
+
+Internalization enhancement
+
+都属于 Asset Search Space。
+
+现在：
+
+Product Gate
+
+负责评价。
+
+但是没有负责：
+
+主动搜索。
+
+换句话说：
+
+目前：
+
+Generation：
+
+几乎只生成 Binder。
+
+未来真正的平台应该是：
+
+Asset Search Engine
+
+里面包括：
+
+多个 Generator：
+
+Binder Generator
+
+Payload Generator
+
+Linker Generator
+
+ADC Architecture Generator
+
+Developability Optimizer
+
+然后统一进入：
+
+Product Gate。
+
+这一块未来扩展空间非常大。
+
+⸻
+
+一级风险四：没有定义 “Stop Rule”
+
+目前：
+
+系统一直在：
+
+Evidence越来越多
+
+Gate越来越多
+
+Review越来越多
+
+但是：
+
+什么时候：
+
+Enough?
+
+没有定义。
+
+例如：
+
+T7：
+
+到底：
+
+多少证据：
+
+可以认为：
+
+Ready?
+
+不知道。
+
+建议：
+
+每个 Gate：
+
+增加：
+
+Evidence Sufficiency Contract
+
+例如：
+
+至少：
+
+Independent evidence >=3
+
+Conflict resolved
+
+Confidence>0.8
+
+Major unknown cleared
+
+否则：
+
+永远可以继续搜索文献。
+
+这是很多 AI Scientist 最后掉进去的大坑。
+
+⸻
+
+七个二级风险
+
+① Evidence Independence 定义仍然不够严格
+
+例如：
+
+Nature Review
+
+引用：
+
+Nature Paper。
+
+PubMed：
+
+又引用：
+
+Nature。
+
+实际上：
+
+还是：
+
+一份证据。
+
+建议未来：
+
+Knowledge Graph
+
+真正追踪：
+
+Primary Source。
+
+⸻
+
+② Opportunity Ranking 太晚
+
+目前：
+
+T12
+
+最后才排序。
+
+实际上：
+
+搜索空间巨大时。
+
+最好：
+
+每完成几个 Hard Gate。
+
+就：
+
+动态排序。
+
+类似：
+
+Beam Search。
+
+否则：
+
+计算浪费。
+
+⸻
+
+③ Due Diligence 可以更早介入
+
+目前：
+
+DD：
+
+最后。
+
+实际上：
+
+FTO
+
+很多时候：
+
+Target 阶段：
+
+就已经决定。
+
+建议：
+
+IP Risk
+
+早点出现。
+
+⸻
+
+④ Commercial Gate 可以动态更新
+
+市场：
+
+不断变化。
+
+例如：
+
+昨天：
+
+HER3
+
+没人。
+
+今天：
+
+十家公司。
+
+Commercial：
+
+应该：
+
+实时刷新。
+
+⸻
+
+⑤ Asset 没有 Probability
+
+目前：
+
+Gate：
+
+更多：
+
+Pass
+
+Hold
+
+Fail
+
+建议：
+
+整个系统：
+
+始终维护：
+
+一个：
+
+Success Probability
+
+方便：
+
+Portfolio。
+
+⸻
+
+⑥ 缺少 Resource-aware Planning
+
+现实研发：
+
+不是：
+
+最佳方案。
+
+而是：
+
+预算内最佳方案。
+
+例如：
+
+实验：
+
+5万美元
+
+还是：
+
+100万美元。
+
+建议：
+
+Experiment Branch：
+
+增加：
+
+Cost
+
+Time
+
+Information Gain
+
+Expected Value。
+
+以后：
+
+AI 自动排实验。
+
+⸻
+
+⑦ 缺少 Portfolio Learning
+
+如果：
+
+100 个项目：
+
+失败：
+
+真正应该学习：
+
+为什么：
+
+整个 Portfolio：
+
+失败。
+
+目前：
+
+Learning：
+
+还是：
+
+单项目。
+
+未来：
+
+Portfolio Analytics：
+
+价值很大。
+
+⸻
+
+我最欣赏的三个设计
+
+第一：Clinical First
+
+这是整个系统最重要的地方。
+
+很多 AI Drug Discovery：
+
+都是：
+
+Target First。
+
+你的：
+
+Clinical unmet need
+
+↓
+
+Endpoint
+
+↓
+
+Target
+
+这个方向更符合临床开发逻辑。 CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md
+
+⸻
+
+第二：Rule 不允许直接控制 Gate
+
+这是非常成熟的软件治理思想。
+
+否则：
+
+Rule
+
+越来越多。
+
+最后：
+
+没人知道：
+
+为什么通过。
+
+这一条建议保留。 CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md
+
+⸻
+
+第三：Binder 双轴 Pareto
+
+这一点我认为比很多论文更合理。
+
+Sequence Quality
+
+和
+
+Carrier Phenotype
+
+不能互相补偿。
+
+现实研发里也确实经常出现：
+
+一个 developability 很好的抗体，
+
+结果：
+
+完全不内吞。
+
+如果加权平均：
+
+反而会被误判。
+
+因此 Pareto 是合理选择。 CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md
+
+⸻
+
+我的结论是：
+
+如果按 10 分制评分：
+
+* 软件架构：9.3/10
+* 软件工程规范：9.7/10
+* ADC 研发流程抽象：8.8/10
+* AI Agent 可执行性：9.0/10
+* 生物学真实性：8.3/10
+* 长期可扩展性：9.5/10
+
+我认为目前没有必须推倒重来的重大缺陷，可以继续推进下一阶段。
+
+不过，在真正开始大规模生成资产之前，我会优先补齐两件事，而不是增加新的 Gate：
+
+1. 建立 Calibration / Learning Engine，明确真实世界结果如何更新 Rule、Model 和 Gate。
+2. 为每个 Gate 制定 Evidence Sufficiency Contract，定义“什么情况下证据已经足够，可以停止继续收集”。
+
+这两项会直接决定系统能否随着项目推进不断提高判断质量，而不是仅仅积累越来越多的信息。
 
 # v3
 

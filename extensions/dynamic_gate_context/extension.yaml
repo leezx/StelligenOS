@@ -1,0 +1,49 @@
+extension:
+  extension_id: EXT-02
+  extension_name: dynamic_gate_context
+  extension_version: 0.1.0
+  extension_type: KernelExtension
+  status: shell_only
+  priority: medium
+
+  source:
+    document: prompts/GPT-Feedback.md
+    section: "v4"
+    risk_id: "一级风险二"
+    risk_title: "Gate 是静态的，而 Biology 是动态的"
+
+  purpose: >
+    让被评分的对象从 Target 变成 Target x Clinical Context。同一个 target
+    在不同 indication、疾病阶段、治疗线、biomarker 状态和联合用药背景下
+    含义完全不同（HER2 在乳腺癌、CRC 和 HER2-low 是三件事），
+    因此 Gate 结果必须按 context 限定的身份存放，不能按 target 折叠。
+
+  design_constraint: >
+    以适配器方式实现，不改内核。45-Gate 拓扑、gate.yaml、
+    GateInputEnvelope@2.0.0 和 GateModelOutput@2.0.0 全部保持不变；
+    本扩展只提供 context 限定的复合身份，用来 key 内核的输入与结果。
+
+  kernel_contact_surface:
+    reads:
+      - GateInputEnvelope@2.0.0
+      - src/objects/core.py
+      - genmodules/gen_indication_endpoint_target/contracts.py
+    modifies: []
+
+  prohibited:
+    - 不得修改 45-Gate 拓扑、gate_id、gate.yaml 或 envelope schema。
+    - 不得新增顶层生命周期阶段。
+    - 不得把不同 clinical context 下的 Gate 结果合并或相互继承。
+    - 不得让 context 的改变自动重置或自动继承既有 Gate 结论。
+
+  execution_policy: disabled
+
+  future_direction: >
+    专家建议最终把 Gate 输入抽象成 ClinicalOpportunity 而不是 Target，
+    这样 ADC、TCE、Radioligand 可以统一。这是内核级变更，
+    必须另立治理任务，不在本扩展范围内。
+
+  activation_requirements:
+    - 五个 context 轴的取值域由领域专家确认。
+    - 明确 context 变化时既有 Gate 结果的失效规则。
+    - 独立任务分支、独立 PR 和 ChatGPT APPROVE。
