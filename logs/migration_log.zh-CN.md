@@ -40,3 +40,11 @@
 - 确认 AssetGenOS target generation 与 SQLite、数据索引、cache、output 和 runtime 耦合；只保留软件定义、字段语义和外部引用边界，不迁移任何数据实例。
 - 生成 `GEN_IET_PHASE_0_REPORT.zh-CN.md`、`GEN_IET_PHASE_0_REVIEW_CHECKLIST.zh-CN.md` 和 `manifests/gen_iet_phase_0_manifest.yaml`。
 - 未执行真实候选生成、Gate/Rule/Model 评估、P-chain/C-chain 或数据处理；当前状态为 `COMPLETED_PENDING_REVIEW`，等待批准后才进入 Phase 1。
+
+## 2026-08-01：`gen_indication_endpoint_target` Phase 1
+
+- 基于已批准的 Phase 0，在独立分支实现 data-free 合同包：Scope、ClinicalFrame、TargetCandidate、CandidateFilterResult、EvidenceRecord、AdversarialReview 和 T12 handoff。
+- 为合同增加外部引用、四元组 opportunity identity、unknown/not-evaluated 保留、非 Gate filter 和 provenance 字段约束。
+- 未实现候选生成、证据采集、Rule/Model/Gate evaluator、ranking、P/C chain、数据库、数据、cache、result 或 runner。
+- 55 个 unittest、repository boundary 和 `git diff --check` 均通过；Phase 1 合同已提交并完成审核闭环。
+- ChatGPT Round 1/2 提出的外部引用与回归测试问题已修复；Round 3 返回 `APPROVE`，Phase 1 审核通过，可以进入下一阶段。执行适配仍必须另开分支和 PR。

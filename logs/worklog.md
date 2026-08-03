@@ -720,6 +720,32 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-phase-7-tweakr-closure.zh-CN.md`
   - `logs/worklog.md`
 
+### 2026-08-01 18:45 EDT
+
+- Action: 处理 ChatGPT 对 Phase 1 PR #19 Round 1 的 `REQUEST_CHANGES`。
+- How: 将 `OpportunitySearchScope.source_policy_id`、`evaluation_plan_id`、ClinicalFrame source evidence、TargetCandidate positive/negative evidence、CandidateFilterResult evidence、AdversarialReview counter-evidence 和 T12 handoff evidence 全部统一为 `external:` 引用校验；新增 scope、frame、handoff 本地引用失败测试。
+- Result: 55 个 unittest 通过；repository boundary 和 `git diff --check` 通过；更新 Phase 1 report、manifest、handoff 和 worklog，准备推送后重新请求 ChatGPT 审核。
+- Files affected:
+  - `genmodules/gen_indication_endpoint_target/contracts.py`
+  - `tests/test_gen_indication_endpoint_target.py`
+  - `docs/phases/GEN_IET_PHASE_1_REPORT.zh-CN.md`
+  - `manifests/gen_iet_phase_1_manifest.yaml`
+  - `docs/handoff/2026-08-01-gen-iet-phase-1.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 18:03 EDT
+
+- Action: 完成 ChatGPT 对 Phase 1 PR #19 的 Round 3 复审闭环。
+- How: 在同一“GitHub PR 信息”对话中使用 GitHub 来源，提交最新 tip `089de0e` 的修复摘要；ChatGPT 核对 external reference guards、回归测试、55 tests 元数据和仓库边界。
+- Result: ChatGPT 返回 `APPROVE`，明确“Phase 1 审核通过，可以进入下一阶段”。审核记录已保存；下一阶段只能从独立分支开始，不得把执行适配或真实资产生成混入当前 PR。
+- Files affected:
+  - `logs/chatgpt-review-2026-08-01-gen-iet-phase1.md`
+  - `manifests/gen_iet_phase_1_manifest.yaml`
+  - `docs/phases/GEN_IET_PHASE_1_REPORT.zh-CN.md`
+  - `docs/handoff/2026-08-01-gen-iet-phase-1.zh-CN.md`
+  - `logs/migration_log.zh-CN.md`
+  - `logs/worklog.md`
+
 ### 2026-08-01 18:35 EDT
 
 - Action: 完成本地验证并创建 Phase 8 最终草稿 PR。
@@ -1051,6 +1077,21 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `manifests/gen_iet_phase_0_manifest.yaml`
   - `docs/phases/GEN_IET_PHASE_0_REVIEW_CHECKLIST.zh-CN.md`
   - `docs/handoff/2026-08-01-gen-iet-phase-0.zh-CN.md`
+  - `logs/worklog.md`
+
+### 2026-08-01 18:20 EDT
+
+- Action: 进入 ChatGPT 已批准的 Phase 1，建立 `gen_indication_endpoint_target` data-free 合同包。
+- How: 在独立分支新增 Scope、ClinicalFrame、TargetCandidate、非 Gate CandidateFilterResult、EvidenceRecord、AdversarialReview 和 T12 handoff；通过枚举和构造校验保留 unknown/not-evaluated 语义，所有跨边界运行/来源/结果引用要求 `external:`。
+- Result: 55 个 unittest 通过；repository boundary 和 `git diff --check` 通过；未新增 Gate、数据、数据库、cache、result、weights、runner 或真实生成逻辑。新增 Phase 1 报告、manifest 和 handoff，已进入 ChatGPT 审核闭环。
+- Files affected:
+  - `genmodules/gen_indication_endpoint_target/`
+  - `tests/test_gen_indication_endpoint_target.py`
+  - `docs/phases/GEN_IET_PHASE_1_REPORT.zh-CN.md`
+  - `manifests/gen_iet_phase_1_manifest.yaml`
+  - `docs/handoff/2026-08-01-gen-iet-phase-1.zh-CN.md`
+  - `genmodules/README.md`
+  - `logs/migration_log.zh-CN.md`
   - `logs/worklog.md`
 
 ### 2026-08-03 13:30 EDT

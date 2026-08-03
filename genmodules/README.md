@@ -18,6 +18,9 @@ are not lifecycle stages or Gate implementations.
 - `gate_model_rule@0.1.0`: defines the software-only identity and audit
   boundary for historical Gate Model Rules. It is not a Gate implementation;
   rule instances, cases, execution, and governance records remain external.
+- `gen_indication_endpoint_target@0.1.0`: defines data-free contracts for
+  constrained ADC indication, endpoint, and target opportunity generation;
+  generation, evaluation, ranking, and evidence remain external.
 
 ## Repository boundary
 
