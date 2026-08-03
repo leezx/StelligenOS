@@ -2,7 +2,7 @@
 
 - 任务编号：`task_20260802_crc-target-evidence-manual-review`
 - 前置结果审核：PR #31，ChatGPT `APPROVE`
-- 当前状态：`CONTRACT_APPROVED_EXTERNAL_MANUAL_REVIEW_AUTHORIZED`
+- 当前状态：`RESULT_REVIEW_APPROVED_PENDING_EXPERT_REVIEW`
 - 输入：外部 evidence extraction 结果目录；固定 292 条 evidence units、41 targets
 - 当前 tip：以 PR 页面实时 HEAD 为准；本 handoff 自引用后续提交不预先自列
 - ChatGPT 审核：PR #32，明确 `APPROVE`；允许开始外部人工 evidence review/curation
@@ -15,9 +15,9 @@
 
 ## 下一步
 
-1. 提交本契约独立 PR 给 ChatGPT 审核。
-2. 获 `APPROVE` 后才在外部 DATA 生成人工复核结果。
-3. 运行完成后创建独立结果审核 PR。
+1. 等待独立结果审核 PR #33 的 ChatGPT 结论；当前外部整理结果已经生成，本 handoff 不再表示“等待批准后才执行人工复核”。
+2. 获 `APPROVE` 后，仅将整理结果作为 `pending_expert_review` 的 evidence package 接受；不得据此执行 Gate 评分、排序、资产推荐或下游开发。
+3. 若进入专家生物学复核，必须另建明确的执行契约和独立审核门，并继续保留所有原始值、理由、复核者和时间戳。
 
 ## 审核门禁
 
@@ -35,6 +35,7 @@
 - 原始值：全部保留在 `original_*` 列；`expert_review_status` 全部为 `pending_expert_review`。
 - 输出文件：`target_evidence_units_reviewed.tsv`、`target_evidence_review_queue.tsv`、`target_evidence_conflicts.tsv`、`source_manifest.json`、`review_report.md`、`external_review_worklog.md`。
 - 运行限制：未执行 Gate scoring、ranking、recommendation、范围扩展或下游开发。
+- 独立结果审核：PR #33 已获 ChatGPT `APPROVE`；整理结果只能作为 `pending_expert_review` evidence package，未经新的执行契约和审核门不得用于 Gate 评分、排序、推荐或下游开发。
 
 ### 外部输出审计元数据
 
