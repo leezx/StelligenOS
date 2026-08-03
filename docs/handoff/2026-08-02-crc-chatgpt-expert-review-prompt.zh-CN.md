@@ -2,7 +2,7 @@
 
 - 任务编号：`task_20260802_crc-chatgpt-expert-review-prompt`
 - 前置 Gate 契约：PR #36，ChatGPT `APPROVE`
-- 当前状态：`PROMPT_APPROVED_READY_FOR_WEB_EXECUTION`
+- 当前状态：`WEB_EXECUTION_BLOCKED_USER_ATTACHMENT_REQUIRED`
 - 输入：外部专家复核工作包中的 292 条 evidence units、41 targets
 
 ## 目的
@@ -19,5 +19,5 @@
 ## 下一步
 
 1. PR #37 已获 ChatGPT `APPROVE`。
-2. 在网页版 ChatGPT 中附加外部 `expert_review_assignment.tsv`，逐条生成 `chatgpt_provisional_review`。
-3. 将 ChatGPT 输出保存到外部 `DATA`，再创建独立结果审核 PR；结果审核批准前不得进入 Gate 评分。
+2. 当前网页版 ChatGPT 对话已准备，但自动上传外部 `expert_review_assignment.tsv` 被浏览器安全层拒绝；需要用户在该对话中手动附加文件，或提供可用的文件上传入口。
+3. 文件附加后，逐条生成 `chatgpt_provisional_review`，将输出保存到外部 `DATA`，再创建独立结果审核 PR；结果审核批准前不得进入 Gate 评分。
