@@ -15,6 +15,17 @@ class LifecycleStage(StrEnum):
     ASSET_DEVELOPMENT = "Asset Development"
 
 
+LIFECYCLE_STAGE_IDS: Final[tuple[str, ...]] = tuple(
+    stage.name.lower() for stage in LifecycleStage
+)
+"""Machine-readable stage IDs, derived from the enum rather than restated.
+
+``LifecycleStage`` carries operator-facing names; consumers that need IDs take
+them from here, so a renamed or reordered stage cannot leave a second copy
+behind.
+"""
+
+
 ALLOWED_TRANSITIONS: Final[dict[LifecycleStage, frozenset[LifecycleStage]]] = {
     LifecycleStage.OPPORTUNITY_GENERATION: frozenset(
         {LifecycleStage.OPPORTUNITY_VALIDATION}
