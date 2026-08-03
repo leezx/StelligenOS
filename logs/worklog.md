@@ -1019,3 +1019,20 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-assetgenos-catalog.zh-CN.md`
   - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-03 14:50 EDT
+
+- Action: 处理 ChatGPT 对 PR #17（HEAD `17404dc`）的 Round 1 `REQUEST_CHANGES`，五条阻断（两条安全、三条其他）在同一 PR 内修订。
+- Verification of blockers: (1) `SubprocessExternalRuntime` 确实可执行任意命令，`_require_external_path` 只校验 workspace/output 路径，命令内绝对路径可写回仓库，而其 docstring 当时声称「with no repository writes」—— 成立，且该断言本身即为缺陷；(2) 确实使用 `os.environ.copy()`，父进程凭据全量继承 —— 成立；(3) `output_root` 确实只查 `exists()` —— 成立；(4) 该 PR 确实没有独立 handoff，内容并入 os-boot-smoke 且把 adapter 写成未来步骤 —— 成立；(5) 测试确实未覆盖写入仓库、敏感环境隔离与非目录 output root —— 成立。
+- Decision (technical pushback on the suggested remedy): 审核建议引入「仓库不可见或只读挂载的受控执行环境」。方向正确但未在本 PR 内实现容器沙箱，原因是本仓库当前无任何依赖声明文件，引入容器运行时会改变仓库性质，且缺少容器运行时的环境无法运行该测试；进程内阻止任意子进程写盘在 Python 中无法可移植实现。改为不伪造做不到的保证，采用分层并写明每层性质：执行需显式启用（预防）、必填 sandbox_profile_ref 声明受控环境（治理，仓库无法验证故仅记录为外部引用且缺失即拒绝）、环境变量最小允许清单（预防）、运行前后仓库内容指纹比对（检测，非预防）。模块 docstring 明确写出本模块不提供沙箱，真正隔离必须来自 sandbox_profile_ref 所指环境。
+- Change: 新增 `sandbox_profile_ref` 必填字段与 `RepositoryMutationError`；`_repository_fingerprint()` 对仓库全部文件做 SHA-256 内容哈希（非 size+mtime，避免同长度原位改写漏过），排除 `.git`、`__pycache__`、`.DS_Store`；变更即抛错并列出 created/modified/deleted 路径。
+- Change: 环境改为 `INHERITED_ENVIRONMENT_KEYS = ("PATH","LANG","LC_ALL","TZ","TMPDIR")`；刻意排除 `HOME` 并将其重定向到外部 workspace，使写 `$HOME` 的工具也留在仓库之外。
+- Change: `output_root` 与 `workspace` 统一要求 `is_dir()`，抛 `NotADirectoryError`；`scripts/run_external_runtime.py` 新增必填 `--sandbox-profile-ref`。
+- Change: 新建独立 handoff `docs/handoff/2026-08-01-external-runtime-adapter.zh-CN.md`。
+- Change: 测试由 3 项增至 17 项，覆盖默认禁用、仓库路径拒绝、目录校验、sandbox 声明必填、命令写入仓库被检测（新建与修改两种）、五类凭据不被继承、HOME 重定向、无父进程变量越过允许清单。
+- Finding: 环境隔离测试初版断言「子进程环境键全部落在允许清单内」实测失败于 `__CF_USER_TEXT_ENCODING`。经实证：即使传 `env={}`，macOS 仍注入 `__CF_USER_TEXT_ENCODING`、`SDKROOT`、`CPATH`、`LIBRARY_PATH`、`MANPATH`、`LC_CTYPE`，属平台注入非父进程泄漏。改为先用 `env={}` 探测平台注入基线，再断言子进程环境 ⊆（允许清单 ∪ STELLIGEN_* ∪ 平台基线），使断言针对「泄漏」这一真正安全属性且不硬编码 macOS 特例。
+- Validation by mutation: 环境退回 `os.environ.copy()` `failures=8`；移除仓库变更检测 `failures=2`；`output_root` 退回只查 `exists()` `failures=1`；全部还原后 `OK`。
+- Boundary: 未改动 `boot.py`、`src/capabilities/`、`src/lifecycle/`、任何 Gate/Model/Profile 定义、45-Gate 拓扑、生命周期或核心对象；未引入任何第三方依赖；未执行任何真实外部 runtime。
+- Validation: 12 个测试模块 / 60 项通过（修订前 46 项）；CLI 缺 `--sandbox-profile-ref` 报参数缺失，带 ref 但不加 `--execute` 抛 PermissionError；`git diff --check` 通过。
+- Open risk: 仓库变更检测是检测而非预防，触发时写入已发生；真正写入隔离需由外部环境提供，仓库无法验证该声明。若需真正沙箱执行环境，建议另立任务并同时决定该执行器是否应继续留在本仓库内。
+- Next: 推送同一 PR #17 并提交 ChatGPT 复审。三个链底 PR 的修订至此完成，依赖顺序仍为 #15 → #16 → #17。

@@ -27,6 +27,14 @@ def main() -> int:
     parser.add_argument("--input-ref", required=True)
     parser.add_argument("--run-context-ref", required=True)
     parser.add_argument("--output-ref", required=True)
+    parser.add_argument(
+        "--sandbox-profile-ref",
+        required=True,
+        help=(
+            "external: reference attesting the controlled environment the command "
+            "runs in; this repository cannot verify it and refuses to run without it"
+        ),
+    )
     parser.add_argument("--timeout-seconds", type=int, default=1800)
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--command", nargs="+", required=True)
@@ -41,6 +49,7 @@ def main() -> int:
             input_ref=args.input_ref,
             run_context_ref=args.run_context_ref,
             output_ref=args.output_ref,
+            sandbox_profile_ref=args.sandbox_profile_ref,
             execution_enabled=args.execute,
             timeout_seconds=args.timeout_seconds,
         )
