@@ -3,7 +3,7 @@
 - 任务编号：`task_20260801_external-runtime-adapter`
 - 分支：`task_20260801_external-runtime-adapter`
 - PR：**#17**（base 为 `task_20260801_os-boot-smoke`，即 PR #16 的 head）
-- 当前状态：`ROUND_2_REQUEST_CHANGES_ADDRESSED_PENDING_REVIEW`
+- 当前状态：`ROUND_3_REQUEST_CHANGES_ADDRESSED_PENDING_REVIEW`
 - 任务性质：**contract-only**（Round 2 后已移除仓库内执行器）
 - 目标：为外部工作区拥有的 runtime 定义请求／结果信封与 Port 契约。**本仓库不执行任何命令**，执行由外部受控运行环境实现该 Port。
 - **HEAD 与 aggregate diff 的权威来源是 GitHub PR #17 的实时值**；本文件中的数字均为撰写时快照。
@@ -19,7 +19,7 @@
 - `src/repository/external_runtime.py` —— **纯契约，无执行能力**
   - `ExternalRuntimeRequest`：强制 `runtime_ref`、`input_ref`、`run_context_ref`、`output_ref`、`sandbox_profile_ref` 为 `external:` 引用；`workspace_path` 与 `output_root_path` 必须位于仓库之外；命令非空；timeout 为正。
   - `ExternalRuntimeRequest.envelope`：交给外部运行环境的交接载荷，显式声明 `executed_by: external_controlled_runtime` 与 `executed_in_repository: false`。
-  - `ExternalRuntimeResult`：状态受限于 `completed`／`failed`，全部引用必须外部。
+  - `ExternalRuntimeResult`：状态受限于 `completed`／`failed`，全部引用必须外部，且 **`status` 与 `exit_code` 必须一致**（`completed` 必须 `exit_code == 0`，`failed` 必须非零）。
   - `ExternalRuntimePort`：Protocol，方法体为 `...`，由外部**具备真实隔离能力**的运行环境实现。
 - `scripts/run_external_runtime.py` —— **只校验并打印交接信封，不执行**
   - 与 `scripts/boot_os.py` 同形态：校验契约后输出 JSON，不调用任何子进程。
@@ -86,6 +86,32 @@ CLI 传入会写文件的命令 -> 探针文件未被创建（CLI 不执行任�
 
 新增 `NoExecutionCapabilityTests` 6 项作为防回归闸门：模块不得导出 `SubprocessExternalRuntime`、不得 `import subprocess`／`os`／`hashlib`、不得再定义指纹与 `RepositoryMutationError`、公开符号集合被精确固定、Port 方法体为 stub、CLI 源码不得出现 `subprocess`／`--execute`／`execution_enabled`。
 
+## Round 3 `REQUEST_CHANGES` 与修订：结果合同的矛盾状态
+
+Round 3 确认执行安全阻断已正确解决（执行器完全移除、CLI 只生成交接信封、仓库内不存在 subprocess／指纹／伪沙箱逻辑），但指出**结果合同仍存在一个真实的矛盾状态漏洞**。
+
+`ExternalRuntimeResult` 当时只校验 `status ∈ {completed, failed}`，未校验它与 `exit_code` 的一致性。实证确认两种矛盾组合都能合法构造：
+
+```text
+status='completed', exit_code=3  -> 可构造（应被拒）
+status='failed',    exit_code=0  -> 可构造（应被拒）
+```
+
+这个漏洞是**降级为 contract-only 之后才变得重要的**，审核指出的因果关系准确：以前结果由仓库内执行器生成，`status` 由 `exit_code` 派生，两者不可能不一致；现在结果完全由外部实现提交，属于**不可信入站输入**，StelligenOS 必须在合同入口拒绝矛盾结果，否则会把自相矛盾的运行结论当成事实记录下来。
+
+修订：`ExternalRuntimeResult.__post_init__` 增加两条一致性约束——`completed` 必须 `exit_code == 0`，`failed` 必须 `exit_code != 0`。docstring 说明这是入站合同、以及为何在移除执行器后必须补上这项校验。
+
+新增 4 项测试（`test_external_runtime.py` 20 → 24 项）：
+
+| 测试 | 覆盖 |
+|---|---|
+| `test_completed_with_a_non_zero_exit_code_is_rejected` | `completed` 配 `1`／`3`／`255`／`-9` 全部拒绝 |
+| `test_failed_with_a_zero_exit_code_is_rejected` | `failed` 配 `0` 拒绝 |
+| `test_consistent_results_are_accepted` | `completed/0` 与 `failed/3` 接受 |
+| `test_signal_termination_is_a_valid_failure` | `failed/-9` 接受——被信号杀死的进程返回 `-N`，属非零，不应误拒 |
+
+最后一项是刻意加的：如果把「非零」错写成「正数」，信号终止的合法结果会被拒绝。实测五种组合行为全部正确。
+
 ## AssetGenOS 运行边界核查
 
 本节内容原先误置于 `2026-08-01-os-boot-smoke.zh-CN.md`（PR #16 的 handoff），实际属于本 PR 的运行边界，Round 1 修订时随独立 handoff 迁入此处。
@@ -110,8 +136,8 @@ CLI 传入会写文件的命令 -> 探针文件未被创建（CLI 不执行任�
 
 ```text
 命令：PYTHONDONTWRITEBYTECODE=1，逐模块运行 tests/test_*.py
-结果：ALL OK —— 12 modules / 85 tests
-      tests/test_external_runtime.py 20 项（形态已完全改变，非 Round 1 的 17 项之增量）
+结果：ALL OK —— 12 modules / 89 tests
+      tests/test_external_runtime.py 24 项（形态已完全改变，非 Round 1 的 17 项之增量）
 
 命令：scripts/run_external_runtime.py 传入会写文件的命令
 结果：探针文件未被创建；CLI 只输出交接信封，不执行任何命令
@@ -134,7 +160,8 @@ CLI 传入会写文件的命令 -> 探针文件未被创建（CLI 不执行任�
 |---|---|---:|---|
 | 初始 | 12 / 46 | 3 | 含 subprocess 执行器 |
 | Round 1 | 12 / 60 | 17 | 执行器 + 四层防护 |
-| **Round 2（当前）** | **12 / 85** | **20** | **contract-only，无执行能力** |
+| Round 2 | 12 / 85 | 20 | contract-only，无执行能力 |
+| **Round 3（当前）** | **12 / 89** | **24** | **contract-only + 结果一致性校验** |
 
 验证数字的权威来源是当前 HEAD 上实际运行的结果。
 

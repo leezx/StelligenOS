@@ -116,6 +116,12 @@ class ExternalRuntimeResult:
 
     Process output is not carried. Results live in the external workspace and
     appear here only as ``output_ref``.
+
+    This is an **inbound** contract: the result is submitted by an external
+    implementation, not produced here. So ``status`` and ``exit_code`` must be
+    checked against each other. While an in-repository executor derived the two
+    together they could not disagree; now nothing upstream guarantees that, and a
+    contradictory result would otherwise be accepted and recorded as fact.
     """
 
     runtime_ref: str
@@ -135,6 +141,15 @@ class ExternalRuntimeResult:
             _require_external_ref(reference)
         if self.status not in ("completed", "failed"):
             raise ValueError("External runtime status must be completed or failed")
+        if self.status == "completed" and self.exit_code != 0:
+            raise ValueError(
+                "a completed external runtime must report exit_code 0, "
+                f"got {self.exit_code}"
+            )
+        if self.status == "failed" and self.exit_code == 0:
+            raise ValueError(
+                "a failed external runtime must report a non-zero exit_code"
+            )
 
 
 class ExternalRuntimePort(Protocol):

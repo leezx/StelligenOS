@@ -1088,3 +1088,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Finding: #16 的 handoff 记录 55 项已过期。该数字写于合并 base 之前；合并 PR #15 的 Round 1 修订后其 10 项完整性测试并入，实际为 65 项。已更正并加注历史数字与「权威来源是当前 HEAD 实际运行结果」。
 - Change: #16 handoff 验证段更正为 11 modules / 65 tests，并区分「本 PR 自身新增」与「合并 base 后并入」。
 - Next: 更新三个 PR 描述的测试数字与 boundary 表述；#17 描述需整段重写，因其仍描述已被移除的执行器。
+
+### 2026-08-03 16:30 EDT
+
+- Action: 处理 ChatGPT 对 PR #17（HEAD `75bae7a`）的 Round 3 `REQUEST_CHANGES`。Round 3 确认执行安全阻断已正确解决（`SubprocessExternalRuntime` 完全移除、CLI 只生成交接信封、仓库内不存在 subprocess／指纹／伪沙箱逻辑、确为 contract-only、三处数字统一为 85），但指出结果合同存在矛盾状态漏洞。
+- Verification: 实证确认 `ExternalRuntimeResult` 当时只校验 `status ∈ {completed, failed}`，未校验其与 `exit_code` 的一致性；`status='completed', exit_code=3` 与 `status='failed', exit_code=0` 两种矛盾组合均可合法构造 —— 成立，无需 pushback。
+- Causal note: 审核指出的因果关系准确。该漏洞是降级为 contract-only 之后才变得重要：以前结果由仓库内执行器生成、`status` 由 `exit_code` 派生，两者不可能不一致；现在结果完全由外部实现提交，属不可信入站输入，必须在合同入口拒绝矛盾结果，否则会把自相矛盾的运行结论当成事实记录。
+- Change: `ExternalRuntimeResult.__post_init__` 增加两条一致性约束 —— `completed` 必须 `exit_code == 0`，`failed` 必须 `exit_code != 0`；docstring 说明这是入站合同及补上该校验的原因。
+- Change: 新增 4 项测试（`test_external_runtime.py` 20 → 24）：completed 配 1/3/255/-9 全部拒绝、failed 配 0 拒绝、completed/0 与 failed/3 接受、以及 failed/-9 接受。最后一项刻意加入 —— 被信号杀死的进程返回 `-N`，若把「非零」错写成「正数」会误拒该合法结果。
+- Validation: 五种组合行为实测全部正确；12 个测试模块 / 89 项通过；`git diff --check` 通过。
+- Note on #15/#16 approval records: PR #15（head `80a5bdb`）与 PR #16（head `469c61c`）已获 `APPROVE`。**本轮未在这两个分支写入 `logs/chatgpt-review-*-final.md` 批准记录**，因为审核为 #16 指定的合并程序要求「先合并 #15，再把 #16 的 base 改为 main，确认 aggregate diff 没有变化后再合并」；追加提交会改变已批准的 HEAD 与 aggregate diff，与该程序直接冲突。两份批准记录须在合并之后补写，或以独立 PR 提交。此项已作为未决事项交由人类负责人决定。
+- Next: 推送同一 PR #17 并提交 ChatGPT 复审。合并顺序仍为 #15 → #16 → #17。

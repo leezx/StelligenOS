@@ -189,7 +189,26 @@ class ResultContractTests(unittest.TestCase):
             with self.subTest(status=value):
                 with self.assertRaises(ValueError):
                     _result(status=value)
+
+    def test_completed_with_a_non_zero_exit_code_is_rejected(self) -> None:
+        """Results are submitted by an external implementation, so they are
+        untrusted input and must be internally consistent."""
+        for exit_code in (1, 3, 255, -9):
+            with self.subTest(exit_code=exit_code):
+                with self.assertRaises(ValueError):
+                    _result(status="completed", exit_code=exit_code)
+
+    def test_failed_with_a_zero_exit_code_is_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            _result(status="failed", exit_code=0)
+
+    def test_consistent_results_are_accepted(self) -> None:
+        self.assertEqual(_result(status="completed", exit_code=0).exit_code, 0)
         self.assertEqual(_result(status="failed", exit_code=3).exit_code, 3)
+
+    def test_signal_termination_is_a_valid_failure(self) -> None:
+        """A process killed by signal N reports -N, which is non-zero."""
+        self.assertEqual(_result(status="failed", exit_code=-9).exit_code, -9)
 
 
 class CliTests(unittest.TestCase):
