@@ -5,25 +5,12 @@ from typing import Final
 
 from src.capabilities.binder_adc_routes import ROUTE_IDS
 from src.capabilities.gates import GATE_GROUPS
+from src.capabilities.registry import CAPABILITY_IDS
+from src.lifecycle.state_machine import LIFECYCLE_STAGE_IDS
 
 
-LIFECYCLE_STAGES: Final[tuple[str, ...]] = (
-    "opportunity_generation",
-    "opportunity_validation",
-    "asset_generation",
-    "asset_development",
-)
-CAPABILITY_IDS: Final[tuple[str, ...]] = (
-    "opportunity_discovery",
-    "knowledge_mining",
-    "rule_learning",
-    "evidence_extraction",
-    "adc_design",
-    "binder_engineering",
-    "patent_analysis",
-    "due_diligence",
-    "portfolio_management",
-)
+LIFECYCLE_STAGES: Final[tuple[str, ...]] = LIFECYCLE_STAGE_IDS
+"""Re-exported for callers that boot the OS; not a second definition."""
 
 
 def require_external_reference(reference: str) -> str:
