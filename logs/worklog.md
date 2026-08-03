@@ -998,3 +998,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   - `docs/handoff/2026-08-01-assetgenos-catalog.zh-CN.md`
   - `docs/handoff/2026-08-01-biotech-asset-due-diligence.zh-CN.md`
   - `logs/worklog.md`
+
+### 2026-08-03 14:05 EDT
+
+- Action: 处理 ChatGPT 对 PR #16（HEAD `df8c851`）的 Round 1 `REQUEST_CHANGES`，三条阻断在同一 PR 内修订。
+- Verification of blockers: (1) `src/repository/boot.py` 确实本地重新声明 `LIFECYCLE_STAGES` 与 `CAPABILITY_IDS`，测试只断言 4/9/3/2 数量 —— 成立；(2) handoff 确实写「待创建 PR」并把 external runtime adapter 写成未来步骤，而 PR #16/#17 均已存在 —— 成立；(3) 外部引用测试确实只覆盖 `workspace_ref` —— 成立。三条均无需 pushback。
+- Finding: 进一步核查发现，生命周期虽在 `src/lifecycle/state_machine.py` 有权威枚举，但其值是展示名（`"Opportunity Generation"`）而非机器可读 ID，这是当时被重写一份的原因；而 9 个能力在整个 `src/` 下没有任何权威定义，`boot.py` 是唯一出处，真正的契约权威是 `docs/architecture/capabilities.zh-CN.md`。
+- Change: `state_machine.py` 新增由枚举派生的 `LIFECYCLE_STAGE_IDS`；新增 `src/capabilities/registry.py`（`CAPABILITY_NAMES` 为契约名，`CAPABILITY_IDS` 由其派生）；`boot.py` 改为导入两者并删除本地副本；两个 `__init__.py` 导出新常量。
+- Change: `tests/test_os_boot.py` 由 3 项增至 15 项。精确断言四组完整 ID 元组与顺序；新增 `SingleSourceOfTruthTests` 六项，其中一项断言 `boot.py` 源码中不得再出现任何生命周期或能力 ID 字面量，另一项解析架构文档能力列表与注册表逐项比对，使文档成为最终权威；`test_each_reference_field_rejects_a_local_path` 对三个引用字段各用三种本地形式交叉验证，共 9 组 subTest。
+- Incident: 首轮变异测试脚本用 `git checkout -- <file>` 还原，对未提交修改是破坏性的，导致 `boot.py` 与 `state_machine.py` 的修复被回滚，而新文件 `registry.py` 因未跟踪 checkout 失败、残留变异后的顺序。已逐一修复三个文件，并改用文件备份还原后重做变异测试。
+- Validation by mutation: 生命周期阶段重命名 `failures=2`；调换两个 capability 顺序 `failures=2`；架构文档删掉一项能力 `failures=1`；`boot.py` 重新硬编码清单 `failures=1`；全部还原后 `OK`。
+- Change: handoff 更新为记录 PR #16、base、状态、依赖与阻断关系（明确 PR #17 在本 PR 获批前仍被阻断）、修订内容、变异测试证据与未决风险。
+- Boundary: 未改动 `ALLOWED_TRANSITIONS`、`can_transition`、`LifecycleStage` 成员与取值、45-Gate 拓扑、`GATE_GROUPS`、`ROUTE_IDS`、任何 Gate/Model/Profile 定义、`docs/architecture/capabilities.zh-CN.md`、`scripts/boot_os.py`，也未改动 `.gitignore` 与边界脚本。
+- Validation: 11 个测试模块 / 55 项通过（修订前 43 项）；`git diff --check` 通过。
+- Next: 推送同一 PR #16 并提交 ChatGPT 复审；获批后才推进 #17。
