@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 import unittest
@@ -7,9 +8,26 @@ from pathlib import Path
 
 import yaml
 
+from src.capabilities.gates import GATE_CATALOG, GATE_GROUPS, GATE_IDS
+
 
 ROOT = Path(__file__).resolve().parents[1]
 GENMODULES = ROOT / "genmodules"
+CATALOG = GENMODULES / "assetgenos_catalog"
+
+SEMVER = re.compile(r"^\d+\.\d+\.\d+$")
+
+
+def _load_catalog_gates() -> list[dict[str, object]]:
+    """Every migrated gate.yaml, as its inner ``gate`` mapping."""
+
+    gates = []
+    for path in sorted(CATALOG.rglob("gate.yaml")):
+        document = yaml.safe_load(path.read_text())
+        gate = document["gate"]
+        gate["__path"] = str(path.relative_to(ROOT))
+        gates.append(gate)
+    return gates
 
 
 class AssetGenOSModuleMigrationTests(unittest.TestCase):
@@ -104,6 +122,86 @@ class AssetGenOSModuleMigrationTests(unittest.TestCase):
                 self.fail(f"legacy runtime state migrated: {path}")
             if path.is_file() and path.suffix in forbidden_suffixes:
                 self.fail(f"data-bearing file migrated: {path}")
+
+
+class MigratedYamlIntegrityTests(unittest.TestCase):
+    """Counting files cannot show that 19k+ migrated lines are intact.
+
+    A corrupt document, a renamed Gate or a drifted version would all pass a
+    count-only check, so the migrated content is parsed and compared against the
+    frozen Gate registry in ``src/capabilities/gates.py``.
+    """
+
+    def test_every_migrated_yaml_document_parses(self) -> None:
+        unparsable: list[str] = []
+        for path in sorted(GENMODULES.rglob("*.yaml")):
+            try:
+                yaml.safe_load(path.read_text())
+            except yaml.YAMLError as error:
+                unparsable.append(f"{path.relative_to(ROOT)}: {error}")
+        self.assertEqual(unparsable, [])
+
+    def test_migrated_yaml_count_is_not_silently_reduced(self) -> None:
+        """Guards the parse test above from passing on an emptied tree."""
+        self.assertGreaterEqual(len(list(GENMODULES.rglob("*.yaml"))), 200)
+
+    def test_catalog_gate_ids_match_the_frozen_registry_exactly(self) -> None:
+        catalog_ids = {gate["gate_id"] for gate in _load_catalog_gates()}
+        self.assertEqual(catalog_ids, set(GATE_IDS))
+
+    def test_catalog_gate_groups_match_the_frozen_registry(self) -> None:
+        frozen_group = {entry.gate_id: entry.group for entry in GATE_CATALOG}
+        for gate in _load_catalog_gates():
+            with self.subTest(gate=gate["gate_id"]):
+                self.assertIn(gate["runtime"]["gate_group"], GATE_GROUPS)
+                self.assertEqual(
+                    gate["runtime"]["gate_group"],
+                    frozen_group[gate["gate_id"]],
+                    gate["__path"],
+                )
+
+    def test_catalog_gate_order_matches_the_frozen_registry(self) -> None:
+        """Relative order, not absolute numbering.
+
+        The catalog numbers Gates sparsely (0-12, 20-35, 40-55) while the frozen
+        registry numbers them contiguously (0-44). The invariant that must hold
+        is the ordering, so comparing raw sequence values would be wrong.
+        """
+        ordered = [
+            gate["gate_id"]
+            for gate in sorted(_load_catalog_gates(), key=lambda g: g["sequence"])
+        ]
+        self.assertEqual(ordered, list(GATE_IDS))
+
+    def test_catalog_gate_sequences_are_unique(self) -> None:
+        sequences = [gate["sequence"] for gate in _load_catalog_gates()]
+        self.assertEqual(len(sequences), len(set(sequences)))
+
+    def test_catalog_gate_versions_are_semver(self) -> None:
+        for gate in _load_catalog_gates():
+            with self.subTest(gate=gate["gate_id"]):
+                self.assertRegex(str(gate["gate_version"]), SEMVER, gate["__path"])
+
+    def test_catalog_gate_identity_is_consistent_with_its_path(self) -> None:
+        """A Gate moved into the wrong directory would otherwise go unnoticed."""
+        for gate in _load_catalog_gates():
+            with self.subTest(gate=gate["gate_id"]):
+                self.assertIn(gate["gate_id"], gate["__path"])
+                self.assertIn(gate["runtime"]["gate_group"], gate["__path"])
+
+    def test_every_model_binds_a_gate_in_the_frozen_registry(self) -> None:
+        dangling: list[str] = []
+        for path in sorted(CATALOG.rglob("model.yaml")):
+            model = yaml.safe_load(path.read_text())["model"]
+            if model["gate_id"] not in GATE_IDS:
+                dangling.append(f"{path.relative_to(ROOT)} -> {model['gate_id']}")
+        self.assertEqual(dangling, [])
+
+    def test_every_model_version_is_semver(self) -> None:
+        for path in sorted(CATALOG.rglob("model.yaml")):
+            model = yaml.safe_load(path.read_text())["model"]
+            with self.subTest(model=model["model_id"]):
+                self.assertRegex(str(model["model_version"]), SEMVER)
 
 
 if __name__ == "__main__":
