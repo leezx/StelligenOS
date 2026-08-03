@@ -87,8 +87,12 @@ ChatGPT 对 HEAD `df8c851` 返回 `REQUEST_CHANGES`，三条阻断经核实均�
 
 ```text
 命令：PYTHONDONTWRITEBYTECODE=1，逐模块运行 tests/test_*.py
-结果：ALL OK —— 11 modules / 55 tests
-      （修订前 43 项；tests/test_os_boot.py 由 3 项增至 15 项）
+结果：ALL OK —— 11 modules / 65 tests
+      本 PR 自身新增：tests/test_os_boot.py 由 3 项增至 15 项
+      合并 base（PR #15 的 Round 1 修订）后又并入其 10 项完整性测试
+
+历史数字（仅供追溯）：修订前 43 项；本 PR 修订后、合并 base 前为 55 项。
+验证数字的权威来源是当前 HEAD 上实际运行的结果。
 
 命令：bash scripts/verify_repository_boundary.sh
 结果：本地工作区 exit=1，违规项 `.claude`

@@ -1026,3 +1026,11 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 未改动 `ALLOWED_TRANSITIONS`、`can_transition`、`LifecycleStage` 成员与取值、45-Gate 拓扑、`GATE_GROUPS`、`ROUTE_IDS`、任何 Gate/Model/Profile 定义、`docs/architecture/capabilities.zh-CN.md`、`scripts/boot_os.py`，也未改动 `.gitignore` 与边界脚本。
 - Validation: 11 个测试模块 / 55 项通过（修订前 43 项）；`git diff --check` 通过。
 - Next: 推送同一 PR #16 并提交 ChatGPT 复审；获批后才推进 #17。
+
+### 2026-08-03 15:55 EDT
+
+- Action: 同步 PR #15／#16／#17 的元数据阻断（Round 2 对 #15／#16 只剩此项）。
+- Verification: 实测三个分支当前 HEAD 的真实测试数 —— #15 为 10 modules / 50 tests、#16 为 11 modules / 65 tests、#17 为 12 modules / 85 tests。
+- Finding: #16 的 handoff 记录 55 项已过期。该数字写于合并 base 之前；合并 PR #15 的 Round 1 修订后其 10 项完整性测试并入，实际为 65 项。已更正并加注历史数字与「权威来源是当前 HEAD 实际运行结果」。
+- Change: #16 handoff 验证段更正为 11 modules / 65 tests，并区分「本 PR 自身新增」与「合并 base 后并入」。
+- Next: 更新三个 PR 描述的测试数字与 boundary 表述；#17 描述需整段重写，因其仍描述已被移除的执行器。
