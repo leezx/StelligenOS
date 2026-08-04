@@ -1991,3 +1991,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 本次仅新增／修改审计文本，无任何代码、契约、Gate 拓扑、Model、Profile、生命周期或测试变更；未新增数据、缓存或结果。
 - Result: PR #44 合并后，28-PR 链的审计闭环完成，open PR 归零，`main` 为唯一最新版本。
 - Open items（均建议另立任务，本次不处理）: 无 CI／commit status；无依赖声明文件而多个测试依赖 `pyyaml`；43 个已合并分支未清理，分支删除属破坏性操作需明确授权。
+
+### 2026-08-03 20:20 EDT
+
+- Action: 重新读取 `main`、`HANDOFF`、架构契约、测试和 `prompts/GPT-Feedback.md#v5`。确认 `HEAD` 与 `origin/main` 同步，但反馈文件存在用户未提交修改；未回退、未覆盖。
+- Decision: 将 v5 解释为架构修订，而非单纯文档润色。保留 45-Gate 身份和顺序，改造早期研发单元为 `Target x Anchor Clinical Context x Intended Benefit/Product Hypothesis`，采用递进锁定。
+- Branch: 创建 `task_20260803_v5-clinical-hypothesis-architecture`。
+- Change: 新增 `ClinicalHypothesis` 核心对象及 `AnchorClinicalContext`、`IntendedBenefitHypothesis`、`BiomarkerHypothesis`、`ProductHypothesis`、`ClinicalLockState` 数据无关契约；全部跨边界引用要求 `external:`。
+- Change: `GateInputEnvelope` 增加可选 hypothesis/context/benefit/biomarker/product 引用和 `clinical_lock_state`；保留 `contract_version=2.0.0`、Gate ID 和拓扑不变。
+- Change: 更新 canonical architecture、contract、lifecycle、module README、core object registry 和 opportunity-generation outputs；旧 v1 快照不修改，v2 暂不创建快照，等待 ChatGPT PR `APPROVE`。
+- Test incident: 为语法检查运行 `compileall` 生成 `__pycache__`，全量测试因此出现 3 个仓库边界失败；已删除所有本轮生成的缓存目录。边界检查本身通过，后续不用 `compileall`。
+- Next: 无缓存方式复跑全量测试；通过后提交、推送并在 Chrome 的 ChatGPT「ADC研发靶点选择」对话中提交 PR 审核。

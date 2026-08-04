@@ -10,6 +10,7 @@ contract:
     - run_context_ref
   outputs:
     - opportunity_refs
+    - clinical_hypothesis_refs
     - target_hypothesis_refs
     - evidence_refs
     - missing_information_refs

@@ -64,6 +64,131 @@ class ReviewStatus(str, Enum):
     DISPUTED = "DISPUTED"
 
 
+class ClinicalLockState(str, Enum):
+    """Progressive maturity of the clinical/product hypothesis."""
+
+    EXPLORATORY = "exploratory"
+    PROVISIONAL = "provisional"
+    ANCHORED = "anchored"
+    PRODUCT_LOCKED = "product-locked"
+    PROTOCOL_LOCKED = "protocol-locked"
+    REGULATORY_LOCKED = "regulatory-locked"
+
+
+@dataclass(frozen=True)
+class AnchorClinicalContext:
+    """Design context used before a final indication label exists."""
+
+    context_id: str
+    anchor_indication: str
+    disease_setting: str
+    line_of_therapy: str
+    treatment_context: str
+    patient_population: str
+    comparator: str
+    expansion_indications: tuple[str, ...]
+    source_refs: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        for name in (
+            "context_id", "anchor_indication", "disease_setting",
+            "line_of_therapy", "treatment_context", "patient_population",
+            "comparator",
+        ):
+            _require_non_empty(getattr(self, name), name)
+        _require_ids(self.expansion_indications, "expansion_indications")
+        _require_external_ids(self.source_refs, "source_refs")
+
+
+@dataclass(frozen=True)
+class IntendedBenefitHypothesis:
+    """Early clinical value direction, separate from measured results."""
+
+    benefit_id: str
+    benefit_class: str
+    rationale: str
+    endpoint_class: str
+    endpoint_measurement_plan_ref: str
+    source_refs: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        for name in ("benefit_id", "benefit_class", "rationale", "endpoint_class"):
+            _require_non_empty(getattr(self, name), name)
+        _require_external(self.endpoint_measurement_plan_ref, "endpoint_measurement_plan_ref")
+        _require_external_ids(self.source_refs, "source_refs")
+
+
+@dataclass(frozen=True)
+class BiomarkerHypothesis:
+    """Early biology and assay feasibility; cutoff and CDx remain deferred."""
+
+    biomarker_id: str
+    biological_feature: str
+    specimen_type: str
+    assay_method: str
+    measurement_scale: str
+    heterogeneity_risk: str
+    assay_feasibility: str
+    final_cutoff_deferred: bool
+    source_refs: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        for name in (
+            "biomarker_id", "biological_feature", "specimen_type", "assay_method",
+            "measurement_scale", "heterogeneity_risk", "assay_feasibility",
+        ):
+            _require_non_empty(getattr(self, name), name)
+        _require_external_ids(self.source_refs, "source_refs")
+
+
+@dataclass(frozen=True)
+class ProductHypothesis:
+    """ADC design constraints derived from the clinical context."""
+
+    product_id: str
+    modality: str
+    payload_class: str
+    linker_profile: str
+    bystander_requirement: str
+    desired_internalization_profile: str
+    acceptable_toxicity_envelope: str
+    source_refs: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        for name in (
+            "product_id", "modality", "payload_class", "linker_profile",
+            "bystander_requirement", "desired_internalization_profile",
+            "acceptable_toxicity_envelope",
+        ):
+            _require_non_empty(getattr(self, name), name)
+        if self.modality != "ADC":
+            raise ValueError("ProductHypothesis requires modality=ADC")
+        _require_external_ids(self.source_refs, "source_refs")
+
+
+@dataclass(frozen=True)
+class ClinicalHypothesis:
+    """The v5 development unit: target x anchor context x intended benefit."""
+
+    hypothesis_id: str
+    target_ref: str
+    anchor_context_ref: str
+    intended_benefit_ref: str
+    biomarker_hypothesis_ref: str
+    product_hypothesis_ref: str
+    lock_state: ClinicalLockState
+    source_refs: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        _require_non_empty(self.hypothesis_id, "hypothesis_id")
+        for name in (
+            "target_ref", "anchor_context_ref", "intended_benefit_ref",
+            "biomarker_hypothesis_ref", "product_hypothesis_ref",
+        ):
+            _require_external(getattr(self, name), name)
+        _require_external_ids(self.source_refs, "source_refs")
+
+
 class CandidateLifecycle(str, Enum):
     SCOPE_DEFINED = "SCOPE_DEFINED"
     CLINICAL_FRAME_GENERATED = "CLINICAL_FRAME_GENERATED"

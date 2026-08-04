@@ -3,13 +3,16 @@
 ## 0. 文档版本
 
 - 文档 ID：`CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW`
-- 当前版本：`v1`
-- 版本状态：`APPROVED`（PR #42 Round 2 ChatGPT `APPROVE`）
+- 当前版本：`v2-draft`
+- 版本状态：`PENDING_CHATGPT_APPROVAL`（v5 架构修订 PR）
 - 规范路径：本文件路径固定不变，永远指向最新版本。
 - 历史快照：`docs/architecture/versions/`，命名为 `<DOC_ID>.v<N>.zh-CN.md`。
 - 版本规则见 `docs/architecture/versions/README.md`。
 
-本文件描述的是**当前内核**。GPT 反馈中尚未进入内核的扩展提案位于 `extensions/`，不属于本文件的架构承诺。
+本文件描述的是**当前内核修订草案**。v5 不再把早期研发单元定义为一次性固定的
+`target-indication-endpoint` 三元组，而定义为：
+`Target x Anchor Clinical Context x Intended Benefit/Product Hypothesis`。
+精确 endpoint、最终标签、biomarker cutoff 和 CDx 按开发阶段递进锁定。
 
 ## 1. 系统目标
 
@@ -17,13 +20,14 @@ StelligenOS 的目标是把未满足临床需求逐步转化为可验证、可�
 
 系统的核心产出链是：
 
-`Clinical unmet need -> Indication -> Endpoint -> Target -> Binder -> ADC construct -> Lead series -> Development candidate -> Asset`
+`Clinical unmet need -> ClinicalHypothesis -> Binder -> ADC construct -> Lead series -> Development candidate -> Asset`
 
 系统负责定义对象、流程、证据要求、决策门、模块接口和审计规则；真实数据、证据、模型权重、运行结果和决策记录全部位于外部工作区。StelligenOS 是软件，不是数据库。
 
 ## 2. 总体设计原则
 
-1. **临床问题先行**：先固定 indication 和需要改善的 endpoint，再寻找能够改变该 endpoint 的 target，避免从热门靶点反推适应症。
+1. **临床上下文与靶点协同**：默认选择 `target x anchor clinical context`，并由 intended benefit/product hypothesis 约束 ADC 设计；成熟靶点可走 target-first，临床表型也可先行。
+2. **递进锁定**：endpoint class 是早期设计输入，精确 endpoint 是 protocol 阶段输入，observed endpoint performance 是试验输出；biomarker biology/assay feasibility 早做，cutoff/CDx 后置。
 2. **证据与判断分离**：原始证据、机器提取、专家复核、Gate 评分和最终决策分别记录，不允许相互冒充。
 3. **未知不是失败**：`unknown/null` 表示证据不足，不得自动转换为 0、FAIL 或负面证据。
 4. **支持与反对证据并存**：相关合同分别保留 supporting/opposing/mixed、conflict、unknown 和 missing information（如存在）的引用；缺失不代表阴性。
@@ -41,23 +45,24 @@ StelligenOS 的目标是把未满足临床需求逐步转化为可验证、可�
 | Lifecycle | 规定资产从机会生成到开发的合法状态变化。 |
 | Capabilities | 提供机会发现、证据提取、Gate、抗体/ADC 设计等可插拔能力接口。 |
 | Cross-cutting | 提供 Knowledge Ledger、模型治理、IP/FTO、尽调、审计和版本控制。 |
-| Objects | 定义系统中七类核心对象的稳定身份。 |
+| Objects | 定义核心对象及其稳定身份。 |
 | Repository implementation | 连接外部工作区和外部运行时，不在仓库内保存业务数据。 |
 
 ### 3.2 四阶段生命周期
 
-1. **Opportunity Generation**：从临床需求生成 indication-endpoint-target 机会假设。
+1. **Opportunity Generation**：从临床需求生成带 anchor context、intended benefit、biomarker 和 product hypothesis 的 `ClinicalHypothesis`。
 2. **Opportunity Validation**：用证据、Rule、Model 和 Gate 判断机会是否值得推进；AssetGenOS 属于本阶段。
 3. **Asset Generation**：选择现有 binder 工程化或表位条件化 de novo 发现路线，形成可验证的抗体/ADC 资产包。
 4. **Asset Development**：围绕候选物开展后续实验、转化、临床、监管和交易准备。
 
 合法状态只允许按上述顺序前进；当前代码只验证“是否允许转换”，不自动保存或执行转换。
 
-### 3.3 七类核心对象
+### 3.3 核心对象
 
-`Opportunity -> TargetHypothesis -> BinderCandidate -> ADCConstruct -> LeadSeries -> DevelopmentCandidate -> Asset`
+`Opportunity -> ClinicalHypothesis -> TargetHypothesis -> BinderCandidate -> ADCConstruct -> LeadSeries -> DevelopmentCandidate -> Asset`
 
-每个对象当前只定义 `object_type`、`object_id` 和 `schema_version` 等身份合同，不承担数据库功能。`Asset` 是最终可进入 BD、合作、许可、融资或商业讨论的对象。
+`ClinicalHypothesis` 是 v5 的早期研发组合对象；`TargetHypothesis` 保留为兼容的靶点子对象。每个对象当前只定义身份合同，不承担数据库功能。
+`Asset` 是最终可进入 BD、合作、许可、融资或商业讨论的对象。
 
 ### 3.4 45 Gate 决策系统
 
@@ -75,17 +80,19 @@ StelligenOS 的目标是把未满足临床需求逐步转化为可验证、可�
 
 ### 4.1 `gen_indication_endpoint_target`
 
-目的：生成并验证 `indication + endpoint + target` 机会组合。
+目的：生成并验证 `Target x Anchor Clinical Context x Intended Benefit/Product Hypothesis`。
 
 逻辑：下列内容是分阶段外部合同规定的目标运行顺序。当前仓库中的 `gen_indication_endpoint_target` 只提供 contract/port，不在仓库内执行候选生成、证据读取、Gate、T12、排序或持久化。
 
-1. 从临床 unmet need 建立 `ClinicalFrame`，固定患者亚群、疾病状态、现有治疗缺口和目标 endpoint。
-2. 从 ADC 临床先例、公共数据和文献中枚举 target；候选必须有明确身份，并达到外部策略规定的独立正向证据组数量，禁止仅凭 Model 或 Rule 生成。
-3. 先运行早期关键 Target Gates：人群映射、肿瘤细胞表面可用性、组织内可及性、抗体依赖内吞、表位可实现性和治疗指数；证据不足进入 `HOLD`，不是自动淘汰。
-4. 完成 endpoint biology：干预因果性、基线覆盖与逃逸、治疗诱导状态和净 endpoint 获益，形成 T0-T11 完整证据轨迹。
+1. 从临床 unmet need 建立 anchor clinical context：适应症、分期、线次、治疗背景、患者群和 comparator；允许保留 expansion indications。
+2. 定义 intended clinical benefit 与 endpoint class；不把最终注册 endpoint 当作早期永久锁定变量。
+3. 同步形成 biomarker biology/assay feasibility 与 ADC product hypothesis；最终 cutoff、CDx 和完整 TPP 可后置。
+4. 从 ADC 临床先例、公共数据和文献中枚举 target；候选必须有明确身份和外部证据，禁止仅凭 Model 或 Rule 生成。
+5. 运行早期关键 Target Gates：人群映射、肿瘤细胞表面可用性、组织内可及性、抗体依赖内吞、表位可实现性和治疗指数；证据不足进入 `HOLD`。
+6. 完成 endpoint biology：干预因果性、基线覆盖与逃逸、治疗诱导状态和净 endpoint 获益，形成 T0-T11 完整证据轨迹。
 5. 检查证据独立性并执行对抗性审核；模型支持、重复来源或相互依赖证据不能虚增可信度。
 6. 只有证据充分且重大冲突得到解决，才允许进入 T12 综合决策；T12 后的排序不能覆盖 Hard Gate 或 T12 结论。
-7. 输出 Opportunity handoff：indication、endpoint、target、各 Gate 状态、支持/反对证据、关键未知、下一步最具判别力的验证任务。
+9. 输出 Opportunity handoff：ClinicalHypothesis、各 Gate 状态、支持/反对证据、关键未知和下一步最具判别力的验证任务。
 
 当前 CRC 外部试运行已固定 9 个 indication、36 个 endpoint、41 个 target，并提取 292 条 target-level evidence；这些证据仍在分批 provisional review，尚未执行 Gate 评分、排序或最终 pair 推荐。
 
@@ -141,7 +148,8 @@ StelligenOS 的目标是把未满足临床需求逐步转化为可验证、可�
 Human strategy + external evidence
         |
         v
-Clinical unmet need -> ClinicalFrame -> indication + endpoint
+        Clinical unmet need -> ClinicalHypothesis
+        (target + anchor context + intended benefit + biomarker/product hypotheses)
         |
         v
 Target enumeration -> evidence extraction -> expert/adversarial review
@@ -167,7 +175,7 @@ Stage-aware DD + IP/FTO + portfolio review + explicit human decision
 
 ## 6. 当前版本的真实完成度
 
-- 已完成：顶层架构、四阶段生命周期、七类对象、45 Gate 拓扑、Model/Profile 软件目录、两条抗体/ADC 生成路线、尽调合同、外部运行和审计边界。
+- 已完成：顶层架构、四阶段生命周期、ClinicalHypothesis 及兼容对象、45 Gate 拓扑、Model/Profile 软件目录、两条抗体/ADC 生成路线、尽调合同、外部运行和审计边界。
 - 已具备真实运行实现：existing-binder engineering 和 epitope-conditioned discovery 的外部输出流水线；前者功能更完整，后者仍依赖外部科学工具补足真实序列设计。
 - 已完成 CRC 外部试运行的一部分：indication/endpoint/target 枚举和 target-level evidence extraction。
 - 正在进行：292 条 CRC target evidence 的分批 ChatGPT provisional review，真实专家复核尚未完成。

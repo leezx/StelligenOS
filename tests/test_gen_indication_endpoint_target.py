@@ -2,9 +2,12 @@ import unittest
 
 from genmodules.gen_indication_endpoint_target import (
     AdversarialReview,
+    BiomarkerHypothesis,
     CandidateDisposition,
     CandidateFilterResult,
     ClinicalFrame,
+    ClinicalHypothesis,
+    ClinicalLockState,
     EvaluationStatus,
     OpportunitySearchScope,
     TargetCandidate,
@@ -13,6 +16,37 @@ from genmodules.gen_indication_endpoint_target import (
 
 
 class GenIndicationEndpointTargetContractTests(unittest.TestCase):
+    def test_v5_clinical_hypothesis_is_composed_from_external_refs(self):
+        hypothesis = ClinicalHypothesis(
+            hypothesis_id="hypothesis-1",
+            target_ref="external:target/1",
+            anchor_context_ref="external:anchor/1",
+            intended_benefit_ref="external:benefit/1",
+            biomarker_hypothesis_ref="external:biomarker/1",
+            product_hypothesis_ref="external:product/1",
+            lock_state=ClinicalLockState.PROVISIONAL,
+            source_refs=("external:source/1",),
+        )
+        self.assertEqual(hypothesis.lock_state, ClinicalLockState.PROVISIONAL)
+        with self.assertRaises(ValueError):
+            ClinicalHypothesis(
+                **{**hypothesis.__dict__, "target_ref": "local:target/1"}
+            )
+
+    def test_v5_biomarker_cutoff_is_explicitly_deferred(self):
+        biomarker = BiomarkerHypothesis(
+            biomarker_id="bm-1",
+            biological_feature="surface expression",
+            specimen_type="archived_tissue",
+            assay_method="IHC",
+            measurement_scale="continuous",
+            heterogeneity_risk="unknown",
+            assay_feasibility="feasible",
+            final_cutoff_deferred=True,
+            source_refs=("external:source/1",),
+        )
+        self.assertTrue(biomarker.final_cutoff_deferred)
+
     def test_scope_requires_adc_and_external_policy_inputs(self):
         scope = OpportunitySearchScope(
             scope_id="scope-1",

@@ -3,6 +3,7 @@ name: stelligenos-core-objects
 description: Architecture-level object type registry; contains no object records.
 objects:
   - Opportunity
+  - ClinicalHypothesis
   - TargetHypothesis
   - BinderCandidate
   - ADCConstruct

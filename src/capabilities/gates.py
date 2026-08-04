@@ -113,6 +113,13 @@ class GateInputEnvelope:
     upstream_result_refs: Mapping[str, str]
     graph_context_ref: str
     run_context_ref: str
+    # T0 is progressive: these refs do not imply a final label or endpoint.
+    clinical_hypothesis_ref: str | None = None
+    anchor_clinical_context_ref: str | None = None
+    intended_benefit_ref: str | None = None
+    biomarker_hypothesis_ref: str | None = None
+    product_hypothesis_ref: str | None = None
+    clinical_lock_state: str = "provisional"
     contract_version: str = "2.0.0"
 
 
