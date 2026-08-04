@@ -237,13 +237,13 @@ class ClinicalHypothesis:
     """The v5 development unit: target x anchor context x intended benefit."""
 
     hypothesis_id: str
-    target_ref: str | None
-    anchor_context_ref: str | None
-    intended_benefit_ref: str | None
-    biomarker_hypothesis_ref: str | None
-    product_hypothesis_ref: str | None
-    lock_state: ClinicalLockState
-    source_refs: tuple[str, ...]
+    target_ref: str | None = None
+    anchor_context_ref: str | None = None
+    intended_benefit_ref: str | None = None
+    biomarker_hypothesis_ref: str | None = None
+    product_hypothesis_ref: str | None = None
+    lock_state: ClinicalLockState = ClinicalLockState.EXPLORATORY
+    source_refs: tuple[str, ...] = ()
     entry_mode: ClinicalHypothesisEntryMode = ClinicalHypothesisEntryMode.TARGET_CONTEXT_COSELECTION
     protocol_endpoint_ref: str | None = None
     final_indication_ref: str | None = None
@@ -273,11 +273,21 @@ class ClinicalHypothesis:
             if value is not None:
                 _require_external(value, name)
         required_by_state = {
+            ClinicalLockState.EXPLORATORY: (),
             ClinicalLockState.PROVISIONAL: ("target_ref", "anchor_context_ref", "intended_benefit_ref"),
             ClinicalLockState.ANCHORED: ("target_ref", "anchor_context_ref", "intended_benefit_ref", "biomarker_hypothesis_ref"),
             ClinicalLockState.PRODUCT_LOCKED: ("target_ref", "anchor_context_ref", "intended_benefit_ref", "biomarker_hypothesis_ref", "product_hypothesis_ref"),
-            ClinicalLockState.PROTOCOL_LOCKED: ("protocol_endpoint_ref",),
-            ClinicalLockState.REGULATORY_LOCKED: ("protocol_endpoint_ref", "final_indication_ref", "registrational_endpoint_ref", "biomarker_cutoff_ref", "cdx_ref"),
+            ClinicalLockState.PROTOCOL_LOCKED: (
+                "target_ref", "anchor_context_ref", "intended_benefit_ref",
+                "biomarker_hypothesis_ref", "product_hypothesis_ref",
+                "protocol_endpoint_ref",
+            ),
+            ClinicalLockState.REGULATORY_LOCKED: (
+                "target_ref", "anchor_context_ref", "intended_benefit_ref",
+                "biomarker_hypothesis_ref", "product_hypothesis_ref",
+                "protocol_endpoint_ref", "final_indication_ref",
+                "registrational_endpoint_ref", "biomarker_cutoff_ref", "cdx_ref",
+            ),
         }
         for name in required_by_state.get(self.lock_state, ()):
             if getattr(self, name) is None:
@@ -286,6 +296,11 @@ class ClinicalHypothesis:
             raise ValueError("mature-target-first requires target_ref")
         if self.entry_mode == ClinicalHypothesisEntryMode.CLINICAL_PROBLEM_FIRST and self.intended_benefit_ref is None:
             raise ValueError("clinical-problem-first requires intended_benefit_ref")
+        if (
+            self.entry_mode == ClinicalHypothesisEntryMode.TARGET_CONTEXT_COSELECTION
+            and not any((self.target_ref, self.anchor_context_ref, self.intended_benefit_ref))
+        ):
+            raise ValueError("target-context-co-selection requires a target, anchor, or benefit seed")
 
 
 class CandidateLifecycle(str, Enum):
@@ -426,50 +441,55 @@ class TargetCandidate:
 
     candidate_id: str
     clinical_frame_id: str
-    indication: str
-    patient_population: str
-    clinical_endpoint: str
-    adc_target: str
-    disease_setting: str
-    line_of_therapy: str
-    treatment_context: str
-    comparator: str
-    endpoint_time_horizon: str
-    biological_hypothesis: str
-    adc_hypothesis: str
-    generation_method: str
-    source_run_ref: str
+    indication: str | None = None
+    patient_population: str | None = None
+    clinical_endpoint: str | None = None
+    adc_target: str | None = None
+    disease_setting: str | None = None
+    line_of_therapy: str | None = None
+    treatment_context: str | None = None
+    comparator: str | None = None
+    endpoint_time_horizon: str | None = None
+    biological_hypothesis: str | None = None
+    adc_hypothesis: str | None = None
+    generation_method: str | None = None
+    source_run_ref: str = ""
     positive_evidence_ids: tuple[str, ...] = ()
     negative_evidence_ids: tuple[str, ...] = ()
     unknown_claims: tuple[str, ...] = ()
     lifecycle: CandidateLifecycle = CandidateLifecycle.TARGET_CANDIDATE_GENERATED
     clinical_hypothesis_ref: str | None = None
     lock_state: ClinicalLockState = ClinicalLockState.PROVISIONAL
+    legacy_compatibility: bool = False
 
     def __post_init__(self) -> None:
-        for name in (
-            "candidate_id",
-            "clinical_frame_id",
-            "indication",
-            "patient_population",
-            "clinical_endpoint",
-            "adc_target",
-            "disease_setting",
-            "line_of_therapy",
-            "treatment_context",
-            "comparator",
-            "endpoint_time_horizon",
-            "biological_hypothesis",
-            "adc_hypothesis",
-            "generation_method",
-        ):
+        for name in ("candidate_id", "clinical_frame_id"):
+            _require_non_empty(getattr(self, name), name)
+        if self.clinical_hypothesis_ref is None:
+            if not self.legacy_compatibility:
+                raise ValueError("legacy candidate path requires legacy_compatibility=True")
+            for name in (
+                "indication", "patient_population", "clinical_endpoint", "adc_target",
+                "disease_setting", "line_of_therapy", "treatment_context", "comparator",
+                "endpoint_time_horizon",
+            ):
+                _require_non_empty(getattr(self, name), name)
+        else:
+            _require_external(self.clinical_hypothesis_ref, "clinical_hypothesis_ref")
+            for name in (
+                "indication", "patient_population", "clinical_endpoint", "adc_target",
+                "disease_setting", "line_of_therapy", "treatment_context", "comparator",
+                "endpoint_time_horizon",
+            ):
+                value = getattr(self, name)
+                if value is not None:
+                    _require_non_empty(value, name)
+        for name in ("biological_hypothesis", "adc_hypothesis", "generation_method"):
             _require_non_empty(getattr(self, name), name)
         _require_external(self.source_run_ref, "source_run_ref")
         _require_external_ids(self.positive_evidence_ids, "positive_evidence_ids")
         _require_external_ids(self.negative_evidence_ids, "negative_evidence_ids")
         _require_ids(self.unknown_claims, "unknown_claims")
-        if self.clinical_hypothesis_ref:
-            _require_external(self.clinical_hypothesis_ref, "clinical_hypothesis_ref")
         if not isinstance(self.lock_state, ClinicalLockState):
             raise ValueError("lock_state must be a ClinicalLockState")
 
@@ -597,6 +617,7 @@ class TargetOpportunityHandoff:
     clinical_hypothesis_ref: str | None = None
     clinical_lock_state: ClinicalLockState | None = None
     anchor_context_ref: str | None = None
+    legacy_compatibility: bool = False
 
     def __post_init__(self) -> None:
         _require_non_empty(self.handoff_id, "handoff_id")
@@ -613,5 +634,12 @@ class TargetOpportunityHandoff:
             value = getattr(self, name)
             if value is not None:
                 _require_external(value, name)
+        if self.clinical_hypothesis_ref is None:
+            if not self.legacy_compatibility:
+                raise ValueError("legacy T12 path requires legacy_compatibility=True")
+            if self.clinical_lock_state is not None:
+                raise ValueError("legacy T12 path cannot carry clinical_lock_state")
+        elif self.clinical_lock_state is None:
+            raise ValueError("v5 T12 path requires clinical_hypothesis_ref and clinical_lock_state")
         if self.clinical_lock_state is not None and not isinstance(self.clinical_lock_state, ClinicalLockState):
             raise ValueError("clinical_lock_state must be a ClinicalLockState")

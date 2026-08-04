@@ -8,6 +8,7 @@ from src.capabilities.gates import (
     ClinicalLockState,
     gate_definition,
 )
+from genmodules.gen_indication_endpoint_target import ClinicalLockState as GenModuleClinicalLockState
 
 
 class Phase3GateContractTests(unittest.TestCase):
@@ -74,6 +75,16 @@ class Phase3GateContractTests(unittest.TestCase):
             ClinicalLockState.PROVISIONAL,
         )
         self.assertEqual(envelope.contract_version, "2.1.0")
+        self.assertIs(ClinicalLockState, GenModuleClinicalLockState)
+
+    def test_t0_accepts_the_canonical_genmodule_lock_state(self):
+        envelope = GateInputEnvelope(
+            "external:candidate/1", "external:opportunity/1", "external:adc/1",
+            "external:commercial/1", (), {}, "external:graph/1", "external:run/1",
+            clinical_hypothesis_ref="external:clinical-hypothesis/1",
+            clinical_lock_state=GenModuleClinicalLockState.PROVISIONAL,
+        )
+        self.assertIs(envelope.clinical_lock_state, GenModuleClinicalLockState.PROVISIONAL)
 
 
 if __name__ == "__main__":

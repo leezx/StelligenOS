@@ -105,6 +105,9 @@ context、intended benefit、biomarker hypothesis 和 product hypothesis。
 它支持 `mature-target-first`、`target-context-co-selection` 和
 `clinical-problem-first` 三种入口；探索态允许 seed 不完整，正式锁定状态
 按最低必填条件校验。
+v5 Candidate/T12 路径必须传递 `ClinicalHypothesis` 身份；旧的精确
+indication-endpoint-target 路径只能通过显式 `legacy_compatibility` 标记
+使用，不能继续作为默认不变量。
 它采用 `exploratory -> provisional -> anchored -> product-locked ->
 protocol-locked -> regulatory-locked` 递进锁定；未知不等于失败。
 

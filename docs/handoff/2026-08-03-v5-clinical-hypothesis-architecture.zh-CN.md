@@ -4,7 +4,7 @@
 
 - Branch: `task_20260803_v5-clinical-hypothesis-architecture`
 - Base: `main` at `b474d13`, synchronized with `origin/main` at start
-- Review: Round 1 `REQUEST_CHANGES`; remediation is complete and Round 2 approval is required before merge
+- Review: Round 1 and Round 2 `REQUEST_CHANGES`; Round 3 approval is required before merge
 - Data boundary: no data, cache, result, model weight, or runtime output added
 
 ## What Changed
@@ -43,7 +43,7 @@ endpoints, final biomarker cutoff, and CDx remain stage-dependent.
 
 ## Validation
 
-- `PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'`: 179 passed
+- `PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'`: 183 passed
 - `bash scripts/verify_repository_boundary.sh`: passed
 - `git diff --check`: passed
 
@@ -63,3 +63,15 @@ architecture PR unless explicitly requested.
    ChatGPT returns `APPROVE`.
 5. Only after approval may the v2 architecture snapshot be created and the
    PR be merged.
+
+## Round 2 Remediation
+
+- `TargetCandidate` now has an explicit `legacy_compatibility` path; the v5
+  path can omit exact legacy snapshots but requires `clinical_hypothesis_ref`.
+- `TargetOpportunityHandoff` requires hypothesis and lock state as a pair for
+  v5; legacy T12 requires an explicit compatibility flag.
+- All higher lock-state requirements are cumulative, and the Gate capability
+  imports the canonical GenModule `ClinicalLockState`.
+- Co-selection exploratory hypotheses require at least one target, anchor, or
+  intended-benefit seed; tests instantiate all three entry modes and negative
+  higher-state and identity cases.

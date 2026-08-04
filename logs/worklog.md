@@ -2028,3 +2028,22 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: `PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'` passed with 179 tests; `git diff --check` passed; repository data-boundary scan passed.
 - Boundary: `prompts/GPT-Feedback.md` remains an unstaged user change and was not modified, staged, or reverted by this work.
 - Next: explicitly stage only the PR remediation files, commit and push to PR #45, then submit the Round 2 review request in the existing ChatGPT conversation.
+
+### 2026-08-03 22:20 EDT
+
+- Action: Submitted the Round 2 PR review request through Chrome ChatGPT conversation `ADC研发靶点选择` with the GitHub connector selected, targeting PR #45 head `2b4ab3e`.
+- Browser incident: An intermediate connector-menu keyboard action submitted the search word `GitHub` as an empty chat request. The response was stopped immediately; no PR review instruction or code change was associated with that accidental request.
+- Review result: ChatGPT returned `REQUEST_CHANGES` after inspecting the PR and explicitly confirmed several Round 1 fixes.
+- Blocking findings: legacy `TargetCandidate`/T12 paths still remain the default invariant; lock requirements are not cumulative; GenModule and Gate code define incompatible duplicate `ClinicalLockState` enums; co-selection permits an empty hypothesis and lacks full three-mode tests.
+- Record: Saved the complete Round 2 review to `logs/chatgpt-review-2026-08-03-pr45-round2.md`; browser tab retained as handoff for the next review cycle.
+- Boundary: No data, cache, result, model weight, or runtime artifact was added. No merge or snapshot was performed.
+- Next: remediate all four blocking findings on the same PR, run local tests and boundary checks, push, and submit Round 3 review through the same ChatGPT conversation.
+
+### 2026-08-03 21:34 EDT
+
+- Action: Implemented the Round 2 remediation on the same task branch.
+- Change: Made `ClinicalHypothesis` exploratory refs optional with meaningful entry-mode minima; made lock requirements cumulative through protocol and regulatory states.
+- Change: Replaced the duplicate Gate-side lock enum with the canonical GenModule enum; added cross-module identity and envelope tests.
+- Change: Added explicit `legacy_compatibility` paths to `TargetCandidate` and `TargetOpportunityHandoff`; v5 paths now require hypothesis identity and paired lock state. Added v5-only candidate and T12 negative tests.
+- Validation: Full test suite passed with 183 tests; repository boundary check passed; `git diff --check` passed.
+- Next: stage the Round 2 remediation and records, commit/push PR #45, then submit Round 3 review through the same ChatGPT conversation.

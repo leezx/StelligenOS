@@ -5,8 +5,9 @@ not execute a Gate, persist an input envelope, or contain domain records.
 """
 
 from dataclasses import dataclass
-from enum import Enum
 from typing import Final, Mapping, Protocol
+
+from genmodules.gen_indication_endpoint_target.contracts import ClinicalLockState
 
 
 GATE_GROUPS: Final[tuple[str, ...]] = (
@@ -68,15 +69,6 @@ _COMMERCIAL_GATES: Final[tuple[str, ...]] = (
 )
 
 GATE_IDS: Final[tuple[str, ...]] = _TARGET_GATES + _PRODUCT_GATES + _COMMERCIAL_GATES
-
-
-class ClinicalLockState(str, Enum):
-    EXPLORATORY = "exploratory"
-    PROVISIONAL = "provisional"
-    ANCHORED = "anchored"
-    PRODUCT_LOCKED = "product-locked"
-    PROTOCOL_LOCKED = "protocol-locked"
-    REGULATORY_LOCKED = "regulatory-locked"
 
 
 def _require_external_ref(value: str | None, field_name: str) -> None:

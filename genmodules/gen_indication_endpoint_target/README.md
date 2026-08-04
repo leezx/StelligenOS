@@ -47,6 +47,11 @@ must not be converted into PASS or FAIL by this package.
 - `AdversarialReview`
 - `TargetOpportunityHandoff`
 
+`TargetCandidate` and `TargetOpportunityHandoff` use an explicit
+`legacy_compatibility=True` flag for the pre-v5 exact tuple path. The v5 path
+requires the clinical hypothesis identity; T12 additionally requires its lock
+state. The canonical `ClinicalLockState` is shared with the Gate envelope.
+
 External generation and evaluation implementations may consume these shapes
 through the Opportunity Generation capability port. They must keep inputs,
 observations, evidence, and run outputs outside this repository.
