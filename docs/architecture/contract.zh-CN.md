@@ -144,4 +144,11 @@ Phase 1:
 - 架构契约：`docs/architecture/contract.zh-CN.md`
 - 能力说明：`docs/architecture/capabilities.zh-CN.md`
 - 生命周期说明：`docs/architecture/lifecycle.zh-CN.md`
+- 核心对象清单：`src/contracts/core_objects.yaml`
 - 运行 Prompt：`prompts/system/STELLIGENOS_MIGRATION_MASTER_PROMPT.zh-CN.md`
+
+## 7. 尚未进入内核的扩展
+
+外部专家反馈产生的改进提案登记在 `extensions/`，**不属于本契约**，也不构成架构变更授权。注册表见 `extensions/README.md`，二级风险清单见 `extensions/BACKLOG.zh-CN.md`。
+
+只读本契约不会看到这些提案，因此此处留指针。扩展进入内核必须另立治理任务、独立 PR 和 ChatGPT `APPROVE`；内核不得引用或导入任何扩展。

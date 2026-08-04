@@ -15,10 +15,14 @@ KERNEL_ROOT = REPO_ROOT / "src"
 
 EXPECTED_EXTENSIONS = {
     "ground_truth_learning_loop": ("EXT-01", "shell_only"),
-    "dynamic_gate_context": ("EXT-02", "shell_only"),
+    "dynamic_gate_context": ("EXT-02", "partially_absorbed"),
     "asset_search_engine": ("EXT-03", "shell_only"),
     "stop_rule": ("EXT-04", "active_design"),
 }
+
+ALLOWED_STATUSES = frozenset(
+    {"shell_only", "active_design", "partially_absorbed", "governed"}
+)
 
 ALLOWED_NAME_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+$")
 
@@ -36,6 +40,15 @@ DATA_LIKE_SUFFIXES = {
     ".fastq",
     ".vcf",
 }
+
+
+def _documented_statuses() -> set[str]:
+    """Statuses defined in the `## 扩展状态语义` table of extensions/README.md."""
+
+    readme = (EXTENSIONS_ROOT / "README.md").read_text()
+    section = re.split(r"^## ", readme, flags=re.MULTILINE)
+    table = next((part for part in section if part.startswith("扩展状态语义")), "")
+    return set(re.findall(r"^\|\s*`([a-z_]+)`\s*\|", table, re.MULTILINE))
 
 
 def _extension_dirs() -> list[Path]:
@@ -75,6 +88,38 @@ class ExtensionRegistryTests(unittest.TestCase):
         for path in _extension_dirs():
             manifest = yaml.safe_load((path / "extension.yaml").read_text())
             self.assertNotEqual(manifest["extension"]["status"], "governed")
+
+    def test_every_status_is_defined_in_the_status_semantics_table(self) -> None:
+        """A status the README does not define is undefined, not merely new.
+
+        The check targets the status-semantics table, not the whole file: the
+        registry table below it also names every status, so a whole-file search
+        would pass even with the definition deleted.
+        """
+        defined = _documented_statuses()
+        self.assertTrue(defined, "the status semantics table was not found")
+        for path in _extension_dirs():
+            with self.subTest(extension=path.name):
+                status = yaml.safe_load((path / "extension.yaml").read_text())[
+                    "extension"
+                ]["status"]
+                self.assertIn(status, ALLOWED_STATUSES)
+                self.assertIn(status, defined)
+
+    def test_partially_absorbed_extensions_declare_what_is_left(self) -> None:
+        """Absorbed core concept plus unstated remainder would silently retire it."""
+        for path in _extension_dirs():
+            manifest = yaml.safe_load((path / "extension.yaml").read_text())
+            extension = manifest["extension"]
+            if extension["status"] != "partially_absorbed":
+                continue
+            with self.subTest(extension=path.name):
+                self.assertIn("absorbed_by_kernel", extension)
+                remaining = extension.get("remaining_scope")
+                self.assertTrue(remaining, "remaining_scope must not be empty")
+                for entry in remaining:
+                    self.assertIn("id", entry)
+                    self.assertIn("item", entry)
 
     def test_no_extension_modifies_the_kernel(self) -> None:
         for path in _extension_dirs():

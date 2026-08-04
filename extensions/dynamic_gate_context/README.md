@@ -1,8 +1,43 @@
 # EXT-02 `dynamic_gate_context`
 
-- 状态：`shell_only`
+- 状态：`partially_absorbed`（核心概念已进内核，剩余范围未做）
 - 优先级：中
 - 来源：`prompts/GPT-Feedback.md` `# v4` 一级风险二
+
+## 状态变更说明（2026-08-04）
+
+本扩展的核心论点**已经由内核实现**，而且是改在内核里，不是像本扩展原先设想的那样用适配器绕过去。
+
+v5 clinical hypothesis 架构（PR #45，合并为 `a5bf77f`）把早期研发单元从
+`target-indication-endpoint` 三元组改成了：
+
+`Target × Anchor Clinical Context × Intended Benefit/Product Hypothesis`
+
+也就是下文「要解决的问题」一节所主张的那件事。因此：
+
+- 状态从 `shell_only` 改为 `partially_absorbed`。
+- 原先的 `design_constraint`「以适配器方式实现，不改内核」不再是对现实的描述，已改为只约束**剩余范围**。
+- 下文的论证和五轴设计**原样保留**，作为这次内核变更的来源记录，不删。
+
+### 内核已经覆盖的部分
+
+| 本扩展原主张 | v5 内核实现 |
+|---|---|
+| 评分对象不应是裸 `Target` | `ClinicalHypothesis` 组合 target、anchor context、intended benefit、biomarker、product hypothesis |
+| context 应是身份的一部分，不是属性 | `AnchorClinicalContext` 是独立对象，`ClinicalHypothesis` 按引用组合 |
+| Gate 输入需带 context | Gate 输入携带 `clinical_hypothesis_ref` 与递进 lock state |
+
+### 剩余范围（本扩展仍然负责）
+
+| ID | 项 | 为什么 v5 没覆盖 |
+|---|---|---|
+| `RS-01` | 五个 context 轴的取值域 | v5 给了 `AnchorClinicalContext` 这个容器，没定义各轴是自由文本、受控词表还是外部本体。 |
+| `RS-02` | 逐 Gate 的跨 context 复用策略 | v5 完全没触及。`contracts.py` 的 `GateContextBinding` 默认 `undecided`，45 个 Gate 需专家逐个标注。 |
+| `RS-03` | context 变化时既有 Gate 结果的失效规则 | v5 引入的 lock state 表达的是承诺程度，不是 context 失效；「既不自动继承也不自动重置」仍未实现。 |
+| `RS-04` | context 粒度 | 「三线 CRC」与「三线 MSS CRC」是一个还是两个 context，仍未定。 |
+| `RS-05` | 既有 CRC 试运行结果的映射 | 9 indication / 36 endpoint / 41 target 如何映射到 `ClinicalHypothesis` 身份，仍未定。 |
+
+`RS-02` 是剩余范围里工作量最大也最不能自动化的一项。
 
 ## 要解决的问题
 
@@ -36,11 +71,15 @@ HER2 在乳腺癌、在 CRC、在 HER2-low，是三件不同的事。同一个 g
 
 ## 未来方向（不在本扩展范围）
 
-专家建议最终把 Gate 输入抽象成 `ClinicalOpportunity` 而不是 `Target`，这样 ADC、TCE、Radioligand 可以统一到同一套 Gate 上。这是内核级变更，必须另立治理任务。本扩展只做到「复合身份」这一层，为那次变更铺路而不代替它。
+专家建议最终把 Gate 输入抽象成 `ClinicalOpportunity` 而不是 `Target`，这样 ADC、TCE、Radioligand 可以统一到同一套 Gate 上。
+
+v5 的 `ClinicalHypothesis` 已经朝这个方向走了一步，但它仍以 ADC 为唯一落地形态，没有抽象到跨模态。跨模态统一仍是内核级变更，必须另立治理任务。
 
 ## 激活前必须回答
 
-1. 五个轴各自的取值域是什么？是自由文本、受控词表，还是引用外部本体？
-2. 哪些 Gate 的结果可以跨 context 复用？（例如表位可实现性可能可以，肿瘤表面可及性肯定不行。）
-3. context 的粒度到哪一层？「三线 CRC」和「三线 MSS CRC」是同一个 context 还是两个？
-4. 已经产出的 CRC 试运行结果（9 indication / 36 endpoint / 41 target）如何映射到复合身份？
+1. 五个轴各自的取值域是什么？是自由文本、受控词表，还是引用外部本体？（`RS-01`）
+2. 哪些 Gate 的结果可以跨 context 复用？（例如表位可实现性可能可以，肿瘤表面可及性肯定不行。）（`RS-02`）
+3. context 的粒度到哪一层？「三线 CRC」和「三线 MSS CRC」是同一个 context 还是两个？（`RS-04`）
+4. 已经产出的 CRC 试运行结果（9 indication / 36 endpoint / 41 target）如何映射到 v5 的 `ClinicalHypothesis` 身份？（`RS-05`）
+
+上述四问在 v5 之后**全部仍然成立**，v5 没有回答其中任何一个。

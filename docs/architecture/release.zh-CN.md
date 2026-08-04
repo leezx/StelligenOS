@@ -3,7 +3,7 @@
 ## 冻结范围
 
 - 顶层生命周期固定为 Opportunity Generation、Opportunity Validation、Asset Generation、Asset Development。
-- 七类核心对象、45 Gate 拓扑、两条 Binder/ADC 路线和三类跨阶段服务合同是稳定边界。
+- 核心对象、45 Gate 拓扑、两条 Binder/ADC 路线和三类跨阶段服务合同是稳定边界。核心对象的权威清单是 `src/contracts/core_objects.yaml`，当前为八类；本文件不复述清单，以免两处计数漂移。
 - 本仓库只保存架构、合同、Prompt、代码、脚本、测试和必要说明，不保存任何数据。
 
 ## 开发规则
