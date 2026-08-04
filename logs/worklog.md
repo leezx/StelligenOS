@@ -2261,6 +2261,59 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 无任何代码、契约、Gate 拓扑、Model、Profile、生命周期、核心对象或测试变更；未改动 `AGENTS.md` 与两份治理文本（#51 已定稿，本 PR 只记录其批准事实）；未改动 `prompts/GPT-Feedback.md`；未改写 Round 1／Round 2 既有记录及任何历史条目；**未追认 #49**（该 PR 在过宽表述下合并，#51 的记录如实写明此事，本 PR 不改变其状态）；未新增数据、缓存、结果或运行产物。
 - Validation: 207 tests 全部通过（与 `main` 相同）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。
 - Next: 推送并创建 PR 供 ChatGPT 审核。合并后 2026-08-04 全部六个 PR（#46..#51）的审计闭环完成。
+
+### 2026-08-04 21:20 EDT
+
+- Instruction: Apply ChatGPT Round 1 `REQUEST_CHANGES` feedback for the target-safety prescreen PR.
+- Scope correction: Rebuilt the implementation from `origin/main` in a clean worktree; the CRC clinical-frame handoff is not included in the replacement PR.
+- Change: Non-fatal material risk now produces `HOLD`; `GO` requires all six axes resolved, no material risk, and no conflict. `CONDITIONAL_GO` requires material risk plus an explicit structured exploitable differential.
+- Change: `direction=UNKNOWN` automatically propagates to `unresolved`; unresolved and incomplete axes force `HOLD`.
+- Change: Fatal evaluation aggregates high-quality surface risk with critical-tissue risk across claims. Density fatality now requires density, accessible surface, and critical tissue evidence together.
+- Change: Replaced free-form `widespread_no_differential` tag logic with structured `DifferentialStatus`; added `material_risk_refs` to the result and bumped module/contracts to `0.2.0`.
+- Tests: Added regression coverage for non-fatal risk, unknown direction, cross-claim aggregation, density false-positive prevention, GO completeness, free-tag rejection, and structured differential fatality.
+- Validation: 12 module tests and 219 full-suite tests passed; repository boundary check passed; `git diff --check` passed; no `__pycache__` remains.
+- Next: commit and push the clean replacement branch, create a replacement PR, and submit the remediation for ChatGPT review.
+
+### 2026-08-04 21:35 EDT
+
+- Action: Pushed the clean remediation branch `task_20260804_target-safety-prescreen-fix` and created replacement PR #56: `https://github.com/leezx/StelligenOS/pull/56`.
+- Scope verification: final PR diff is based on `origin/main` and contains only the target-safety module, its tests, GenModule registry/docs, handoff, and worklog; no CRC clinical-frame handoff is present.
+- Head: `d36e4a4`.
+- Boundary: No data, cache, result, model weight, or runtime artifact was added. Original PR #55 was not force-rewritten.
+- Next: submit PR #56 remediation to ChatGPT manually for another review cycle.
+
+### 2026-08-04 22:05 EDT
+
+- Action: Read ChatGPT Round 2 review for PR #56; result remained `REQUEST_CHANGES` with two blockers and one additional risk.
+- Blocker 1 fix: Added `hazard_context_ref` and context-aware aggregation. Surface, criticality, and density evidence only combine within the same hazard context or `(tissue, cell_type)`; unscoped claims cannot trigger fatal.
+- Blocker 2 fix: Added `mitigates_claim_refs` and context matching. `CONDITIONAL_GO` now requires all material-risk claims to be covered by relevant structured differentials; unrelated or partial coverage remains `HOLD`.
+- Additional fix: `NO_EXPLOITABLE_DIFFERENTIAL` now requires `differential_assessment_ref`; an unreferenced single observation becomes `UNKNOWN` rather than fatal.
+- Contract: Bumped module and contract versions from `0.2.0` to `0.3.0`.
+- Tests: Added context mismatch, unscoped fatal, unrelated differential, and partial coverage cases. Full suite now passes 223 tests.
+- Validation: 16 module tests passed; 223 full-suite tests passed; repository boundary check passed; `git diff --check` passed; no `__pycache__` remains.
+- Next: push the Round 2 remediation to PR #56 and request another ChatGPT review.
+
+### 2026-08-04 17:28 EDT
+
+- Instruction: Apply ChatGPT Round 3 `REQUEST_CHANGES` feedback for PR #56.
+- Finding: `AssessmentRequest` did not enforce unique `claim_ref` values or
+  `evidence_refs`, did not define the evidence-to-claim relation strictly, and
+  accepted mitigation references that were missing or not risk claims. These
+  gaps could make risk coverage sets misleading and permit a false
+  `CONDITIONAL_GO` path.
+- Change: Enforced unique claim references and evidence references, requiring
+  `evidence_refs` to exactly match the request claim references. Enforced that
+  every `mitigates_claim_ref` resolves to a `SUPPORTS_RISK` claim in the same
+  request.
+- Tests: Added five contract-integrity tests for duplicate claims, duplicate
+  evidence, missing mitigation targets, non-risk mitigation targets, and the
+  duplicate-reference conditional-go path.
+- Contract: Bumped module and contract versions from `0.3.0` to `0.4.0`.
+- Boundary: Changed only the target-safety module contract/version metadata,
+  its tests and documentation, handoff, and this worklog; no data, cache,
+  result, model weight, or runtime artifact was added.
+- Next: Run the module/full-suite/boundary checks, push the same PR #56, and
+  request the next ChatGPT review. Do not merge until `APPROVE`.
 ## 2026-08-04T16:16:05-04:00 — Target-centered ADC Seed Playbook v0.1 实施与压力测试（外部 run 留痕）
 
 - Instruction: 人类负责人指示读取 `5.Archive/ChatGPT/2026-GPT-Biotech#Target-centered ADC Seed Playbook v0.1`，**分步骤分模块做完后再一起审核**（不逐模块送审）。
