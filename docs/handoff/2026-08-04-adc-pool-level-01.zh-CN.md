@@ -25,7 +25,7 @@
 |---|---|
 | `docs/pools/ADC_POOL_FUNNEL_LEVEL_01.zh-CN.md` | Level 01 的完整定义与执行契约（面向操作者，中文） |
 | `docs/pools/adc_pool_gate_usage.yaml` | **每层用了什么判据的权威机器可读记录**，即人类负责人要求「记录下来」的那份记录。每新增一层在 `levels` 下追加一个条目 |
-| `tests/test_adc_pool_gate_usage.py` | 14 项校验，把上面那份记录钉在冻结的 45-Gate 拓扑与 `CandidateFilterResult` 语义上 |
+| `tests/test_adc_pool_gate_usage.py` | 23 项校验，把上面那份记录钉在冻结的 45-Gate 拓扑与 `CandidateFilterResult` 语义上 |
 
 ## 三、Level 01 的核心结论
 
@@ -37,7 +37,7 @@
 | 2 | `LOCK-01` target_identity_eligibility | target 级 | `tumor_cell_surface_availability`（T7，`medium`） |
 | 3 | `LOCK-03` target_context_linkage_existence | pair 级 | `target_population_mapping`（T2，`medium`） |
 
-`Universe Index`（完整笛卡尔积，用于证明覆盖范围）与 `Pool Level 01 active`（只有至少一项 linkage 证据的 pair）分成两层；未录入的 pair 不删除，状态为 `reactivation-eligible`。
+Level 01 产出三个对象（见第四节决策 6）：`Raw Enumeration Matrix`、`Eligible Universe Index`、`Pool Level 01`。未录入 active pool 的 pair 不删除，留在 Eligible Universe Index，状态为 `reactivation-eligible`。
 
 ## 四、关键设计决策
 
@@ -47,11 +47,14 @@
 **2. 明确「便宜本身不够，必须同时具备否决力」。**
 这条来自实测反例而非推理：45 个 Gate 中 `cost_tier = low` 的只有 7 个——T0 与 C40–C45。`competitive_position_entry_window`、`patent_landscape`、`preliminary_technical_fto` 全是 `low`，**比 T2／T7／T11 的 `medium` 更便宜**；但来源文档第二节明确竞争拥挤不得单独 KILL（已有成功竞争者同时也是靶点与 modality 可行的证据）。所以它们尽管最便宜也不能排在最前。完整表述是：**在阴性结果具有否决力的判据里，先跑边际成本最低的那个。**
 
-**3. 每个锁输出必须同时记录 `pool_state`。**
-`CandidateDisposition` 只有三值，来源文档的锁输出是四值，且第七节要求「无 linkage 的 pair 留在 Universe Index 不删除」——这是「未录入但仍存活」，既不是 EXCLUDE（已淘汰）也不是 DEFER（等证据）。只写 disposition 会丢信息，所以 12 个 outcome 全部同时写 `disposition` 与 `pool_state`，并登记为 `GAP-P04`。
+**3. 每个锁输出必须同时记录 `disposition_semantics`、`resulting_state` 与 `evidence_state`。**
+`CandidateDisposition` 只有三值，无法区分两种性质完全不同的 EXCLUDE：`EXCLUDE_DEFINITIONALLY_INELIGIBLE`（`killed`／`superseded`，不可复活）与 `EXCLUDE_FROM_ACTIVE_POOL`（`reactivation-eligible`，非科学证伪）。只写 disposition 会丢信息，所以 13 个 outcome 全部同时写这三个字段，并登记为 `GAP-P04`。
 
-**4. 每个 EXCLUDE 都必须写明排除依据，且只有定义性依据才允许排除。**
-Level 01 的错误偏好是召回优先。因此只有 `not_surface_target`（纯胞内蛋白不可能是 ADC 靶点）与 `redundant_context`（可判定的集合包含关系）允许排除；`no_known_linkage` 虽记为 EXCLUDE，但 `pool_state` 强制为 `reactivation-eligible`，因为无关联证据不等于已证伪。由 `test_every_exclusion_declares_its_basis` 强制。
+**4. 每个 EXCLUDE 都必须写明排除依据与语义，且只有两类依据允许排除。**
+Level 01 的错误偏好是召回优先。允许排除的只有：定义性不合格（`not_surface_target` 纯胞内蛋白不可能是 ADC 靶点、`redundant_context` 可判定的集合包含关系），以及**完整检索后确证无关联**（`no_known_linkage_after_complete_search`，语义仅限移出 active pool、强制 `reactivation-eligible`）。由 `test_every_exclusion_declares_its_basis`、`test_only_a_completed_search_may_remove_a_pair_from_the_active_pool` 与 `test_definitional_exclusions_are_never_reactivation_eligible` 三项强制。
+
+**6. Level 01 产出三个对象，而不是两个。**
+只分 Universe Index 与 Pool Level 01 会让计数失去唯一的 denominator——被判 `not_surface_target` 的靶点按定义已不属于「合格 surface targets」。因此拆成 `Raw Enumeration Matrix`（raw × raw，可含被排除项）、`Eligible Universe Index`（eligible contexts × eligible targets）、`Pool Level 01`（pair 级 `active`／`hold`／`reactivation-eligible`），状态词表按 context／target／pair 三种粒度分开，`killed` 与 `superseded` 属资格审计历史、不参与 pair 级对账。五条计数恒等式 `CNT-01`..`CNT-05` 由测试在算例上实际求值验证。
 
 **5. `DEVIATION-01`（唯一的实质偏离，明示待审核方裁决）。**
 来源文档把 weak 与 redundant 合成一个 `weak_or_redundant_context` 输出，本契约拆成 `redundant_context`（EXCLUDE）与 `weak_context`（DEFER）。理由：`redundant` 可判定，`weak` 是价值判断；若合并并映射为 EXCLUDE，本层就会因价值判断丢候选，直接违反它自己声明的错误偏好。明示以便审核方接受或否决，而不是静默改写来源文档。
@@ -104,12 +107,12 @@ Level 01 的错误偏好是召回优先。因此只有 `not_surface_target`（�
 
 ## 九、验证结果
 
-- `Ran 242 tests` 全部通过（`main` 基线 228 + 本次新增 14）。
+- `Ran 251 tests` 全部通过（`main` 基线 228 + 本次新增 23）。
 - `scripts/verify_repository_boundary.sh`：`Repository boundary check passed.`
 - `git diff --check`：通过。
 - 零 `__pycache__`（全程 `PYTHONDONTWRITEBYTECODE=1`）。
-- **新增测试做过变异检验**，不是只看绿灯。5 个变异各自被捕获、随后精确回滚：把 `LOCK-02` 的 `borrowed_gate_cost_tier` 由 `low` 改成 `medium`（`FAILED`）；允许 RNA 满足 `LOCK-01`（`FAILED`）；从 `gates_not_run` 删掉 `transaction_readiness`（`FAILED`）；把 pair 级锁的 `run_order` 提到第一（`FAILED`）；删掉一个 EXCLUDE 的 `exclusion_basis`（`FAILED`）。回滚后与备份 `diff -q` 一致、测试恢复 `OK`。
-- 数值对账：`snapshot_columns` 25 列、`gates_not_run` 45 项、3 把锁 12 个 outcome、6 条缺口、catalogue 中 `cost_tier = low` 的 Gate 7 个——全部由脚本实测，不是估计。
+- **新增测试做过变异检验**，不是只看绿灯。首轮 5 个 + 复审轮 10 个，共 15 个变异各自被捕获、随后精确回滚，回滚后与备份 `diff -q` 一致、测试恢复 `OK`。首轮：`borrowed_gate_cost_tier` 由 `low` 改 `medium`、允许 RNA 满足 `LOCK-01`、从 `gates_not_run` 删掉 `transaction_readiness`、把 pair 级锁 `run_order` 提到第一、删掉一个 EXCLUDE 的 `exclusion_basis`。复审轮见第十二节。
+- 数值对账：`snapshot_columns` 31 列、`gates_not_run` 45 项、3 把锁 13 个 outcome、5 个 pool object、5 条计数恒等式、6 条缺口、catalogue 中 `cost_tier = low` 的 Gate 7 个——全部由脚本实测，不是估计。
 
 ## 十、当前阻断
 
@@ -118,6 +121,50 @@ Level 01 的错误偏好是召回优先。因此只有 `not_surface_target`（�
 
 ## 十一、请审核方重点看的三点
 
-1. `DEVIATION-01` 是否接受：把来源文档的 `weak_or_redundant_context` 拆成 `redundant_context`（EXCLUDE）与 `weak_context`（DEFER）。
+1. `DEVIATION-01` 是否接受：把来源文档的 `weak_or_redundant_context` 拆成 `redundant_context`（EXCLUDE）与 `weak_context`（DEFER）。**已于第一轮审核获接受。**
 2. 第六节的 `NO_ARCHITECTURE_CHANGE` 判断是否成立。这一次的依据是 diff 范围而非推导结论，与 PR #54 被降级的那个断言性质不同；若仍认为它只能是待审假设，请指出。
 3. `BLOCK-02` 的处理是否正确：Level 01 的定义可以先冻结，但执行必须等 CRC clinical frame 重跑被接受。
+
+## 十二、第一轮审核裁决与修订（`REQUEST_CHANGES`，2026-08-04）
+
+ChatGPT 对 PR #57（HEAD `0e39ef5`）返回 `REQUEST_CHANGES`，两条阻断**全部接受**。两条都会改变实际运行语义，不是文字问题。已在同一 PR 内做最小修订，未夹带任何无关改动。
+
+### 阻断 1（接受）：`no_known_linkage` 的 disposition 与证据标准自相矛盾
+
+契约同时写着「证据缺失一律 DEFER，永不 EXCLUDE」和 `absent_evidence_may_exclude: false`，却又把 `no_known_linkage` 定为 EXCLUDE。这是同一契约内的直接矛盾。审核方指出的后果是实质性的：「没有发现 linkage」混合了「尚未充分检索／未评估」与「已完成规定范围检索仍无发现」两种完全不同的情况，执行者可以任选一种编码，**直接影响 Pool Level 01 的规模**。
+
+修订如下：
+
+- `LOCK-03` 的 outcome 由 3 个拆成 4 个，并给每个 outcome 增加 `evidence_state` 字段：
+  - `linkage_unassessed`（`not_assessed`）→ DEFER／`hold`
+  - `linkage_evidence_missing`（`absent_incomplete_search`）→ DEFER／`hold`（新增）
+  - `no_known_linkage_after_complete_search`（`absent_after_complete_search`）→ EXCLUDE／`reactivation-eligible`（由 `no_known_linkage` 更名并收紧）
+- 明确该 EXCLUDE 的语义只能是 **`EXCLUDE_FROM_ACTIVE_POOL`**，并写入 `is_scientific_disproof: false`、`is_killed: false`、`retained_in_eligible_universe_index: true`。
+- 该 outcome 必须附六项检索完整性记录才允许输出：`search_complete`、`search_policy_ref`、`source_coverage_ref`、`search_scope`、`searched_at`、`search_policy_version`。**缺任何一项即必须退回 `linkage_evidence_missing`（DEFER）。** 快照相应新增 6 列（25 → 31）。
+- `evidence_standard` 显式列出 `absent_evidence_states: [not_assessed, absent_incomplete_search]`，并把「完整检索后无发现」单独列为不属于证据缺失的一类。
+
+按审核方给出的验收标准新增测试：`test_missing_or_unassessed_evidence_can_never_exclude`（缺失与未评估都不能 EXCLUDE）、`test_only_a_completed_search_may_remove_a_pair_from_the_active_pool`（只有完整检索才允许该 outcome，且六项字段齐备）、`test_completeness_fields_are_carried_by_the_snapshot`、`test_definitional_exclusions_are_never_reactivation_eligible`（定义性排除不得被当成可复活，反向亦然）。
+
+### 阻断 2（接受）：Universe Index 的定义与计数公式不一致
+
+原公式把 `killed`（含 `not_surface_target`）与 `superseded`（含 `redundant_context`）算进 Universe Index 的 pair-state 总和，但被判 `not_surface_target` 的靶点按定义已不属于「合格 surface targets」。**结果是 context 级资格结论、target 级资格结论与 pair 级池状态被混进同一个总和，运行时得不到唯一正确的 denominator。** 这条我原先没看出来，审核方是对的。
+
+修订如下：
+
+- 拆成三个对象：`Raw Enumeration Matrix`（raw contexts × raw targets，**可以**含 `undefined_context`／`redundant_context`／`not_surface_target`／`identity_unresolved`）、`Eligible Universe Index`（eligible contexts × eligible surface targets）、`Pool Level 01`（pair 级 `active`／`hold`／`reactivation-eligible`）。另加两份资格审计产物，共五份，不得合并成一张表。
+- 状态词表按粒度分开：context 级 `eligible`／`hold`／`superseded`；target 级 `eligible`／`hold`／`killed`；pair 级 `active`／`hold`／`reactivation-eligible`。原来那份混合的五值 `pool_states` 已删除。
+- **`killed` 与 `superseded` 明确不参与 pair 级对账**，写入 `excluded_from_pair_reconciliation`。
+- 五条计数恒等式 `CNT-01`..`CNT-05` 写成机器可读形式（`lhs` + `rhs_product`／`rhs_sum`），测试**在算例上实际求值**，不是只检查字段存在：`test_counting_identities_are_consistent_on_a_worked_example`、`test_superseding_a_context_removes_exactly_one_column`（context 被 superseded 时 Eligible Universe Index 恰好减少 `|eligible_targets|`，Raw Matrix 不变）、`test_killing_a_target_removes_exactly_one_row`（恰好减少 `|eligible_contexts|`）、`test_pair_reconciliation_excludes_killed_and_superseded`。
+- `GAP-P03` 与 `GAP-P04` 的表述据此更新：三对象结构与两种 EXCLUDE 语义目前只能靠外部编码约定表达，**仍是未解决的契约缺口**，没有在本 PR 内实现。
+
+### 复审轮的变异检验
+
+10 个变异全部被捕获，随后精确回滚，回滚后与备份 `diff -q` 一致、测试恢复 `OK`：把 `linkage_unassessed` 改成 EXCLUDE、把 `linkage_evidence_missing` 改成 EXCLUDE、把完整检索排除的 `resulting_state` 由 `reactivation-eligible` 改成 `active`、把它声明为科学证伪且 `is_killed: true`、删掉一项检索完整性字段、删掉快照里一列检索完整性列、把 `killed_targets` 混进 `CNT-03` 的求和、把 `CNT-02` 的乘数由 `eligible_contexts` 换成 `raw_contexts`、把资格审计对象声明为产生 pair 状态、给 target 级 outcome 赋一个 pair 级状态值。
+
+### 审核方认可、本轮未改动的部分
+
+Level 01 运行零个正式 Gate、`CandidateFilterResult` 不构成 Gate PASS、三把锁按 context → target → pair 的粒度顺序、endpoint 不在 Level 01 锁死、Universe Index 与 evidence-linked active pool 需要区分、`DEVIATION-01` 获接受、45 个 Gate 全列为 `gates_not_run`、P Gate 未提前运行、数据与结果留在仓库外、contract-only PR 不授权执行 Level 01、被隔离的 #53 产物未被重新作为输入。
+
+### 审核回写状态
+
+审核方尝试通过 GitHub 连接器提交正式 `REQUEST_CHANGES` review，连接器返回 403，未写回 GitHub。裁决内容以人类负责人转述为准，已完整记录于本节与 `logs/worklog.md`。

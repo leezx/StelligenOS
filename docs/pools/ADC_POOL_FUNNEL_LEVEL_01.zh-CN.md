@@ -27,14 +27,27 @@ Level 01 的一个候选是一个 pair，其 clinical context 至少包含 disea
 
 此时 **endpoint 不锁定**，只记录 intended clinical benefit、endpoint class、endpoint maturity、unresolved endpoint assumptions。若在 Level 01 就要求 protocol endpoint，本层会退化成临床方案设计，而不是候选枚举。这与 v5 的六级递进锁一致：Level 01 对应 `exploratory`／`provisional`，不对应 `protocol-locked`。
 
-### Universe Index 与 Pool Level 01 是两层，不是一层
+### Level 01 有三个对象，不是两个
 
-| | 内容 | 用途 |
+来源文档区分了 Universe Index 与 Pool Level 01。但只分两层会让计数失去唯一的 denominator：被 `LOCK-01` 判为 `not_surface_target` 的靶点按定义就不属于「合格 surface targets」，被 `LOCK-02` 判为 `redundant_context` 的情境是否还算「合格 clinical contexts」也没有答案。**context 级资格结论、target 级资格结论与 pair 级池状态是三种不同粒度的对象，混进一个总和里就无法对账。** 因此本契约拆成三个：
+
+| 对象 | 内容 | 用途 |
 |---|---|---|
-| **Universe Index** | 所有可枚举 CRC clinical contexts × 所有合格 surface targets 的完整笛卡尔积 | 证明覆盖范围 |
-| **Pool Level 01（active）** | 只有**至少存在一项 target–context linkage 证据**的 pair | 真正进入后续层的候选 |
+| **A. Raw Enumeration Matrix** | 所有被枚举、准备评估的 raw contexts × raw targets。**可以**包含 `undefined_context`、`redundant_context`、`not_surface_target`、`identity_unresolved` | 记录评估范围本身 |
+| **B. Eligible Universe Index** | 只有通过两把身份资格锁的 eligible contexts × eligible surface targets | 证明覆盖范围 |
+| **C. Pool Level 01** | Eligible Universe Index 经 `LOCK-03` 后的 pair 级状态：`active`／`hold`／`reactivation-eligible` | 真正进入后续层的候选 |
 
-不做这个区分，就会把算力花在成千上万个毫无生物学关联的组合上，并让 `unknown` 淹没有意义的候选。**未进入 active pool 的 pair 不删除**，留在 Universe Index，状态为 `reactivation-eligible`。
+不做 B 与 C 的区分，就会把算力花在成千上万个毫无生物学关联的组合上，并让 `unknown` 淹没有意义的候选。**未进入 active pool 的 pair 不删除**，留在 Eligible Universe Index，状态为 `reactivation-eligible`。
+
+### 状态词表按粒度分开
+
+| 粒度 | 状态 | 由哪把锁赋值 |
+|---|---|---|
+| clinical context 级 | `eligible`／`hold`／`superseded` | `LOCK-02` |
+| target 级 | `eligible`／`hold`／`killed` | `LOCK-01` |
+| pair 级 | `active`／`hold`／`reactivation-eligible` | `LOCK-03` |
+
+**`killed` 与 `superseded` 属资格审计历史，从不产生 pair 行，因此不参与 pair 级对账。** 一个 context 被 `superseded`，Eligible Universe Index 减少 `|eligible_targets|` 个 pair；一个 target 被 `killed`，减少 `|eligible_contexts|` 个 pair；两种情况下 Raw Enumeration Matrix 都不变——排除是审计记录，不是删除。
 
 ## 二、Level 01 运行的判据：三把锁，零个 Gate
 
@@ -62,42 +75,55 @@ tumor_cell_surface_availability (T7)
 
 ### 每把锁的输出与 disposition 映射
 
-`CandidateDisposition` 只有 `RETAIN`／`EXCLUDE`／`DEFER` 三值，来源文档的锁输出是四值，因此每一行都必须同时记录 `pool_state`，否则会丢信息（见 `GAP-P04`）。
+`CandidateDisposition` 只有 `RETAIN`／`EXCLUDE`／`DEFER` 三值，无法区分两种性质完全不同的 EXCLUDE，因此每一行都必须同时记录 `disposition_semantics` 与 `resulting_state`，否则会丢信息（见 `GAP-P04`）：
+
+- **`EXCLUDE_DEFINITIONALLY_INELIGIBLE`**：定义性不合格，落到 `killed` 或 `superseded`，**不可复活**。
+- **`EXCLUDE_FROM_ACTIVE_POOL`**：只是移出 active pool，落到 `reactivation-eligible`，**不构成科学证伪**。
 
 **LOCK-02 clinical context 级**
 
-| 输出 | disposition | pool_state | 排除依据 |
-|---|---|---|---|
-| `validated_unmet_context` | RETAIN | `active` | — |
-| `plausible_unmet_context` | DEFER | `hold` | — |
-| `redundant_context` | EXCLUDE | `superseded` | 定义性（集合包含关系），必须写出取代它的 context 引用 |
-| `weak_context` | DEFER | `hold` | — |
-| `undefined_context` | DEFER | `hold` | — |
+| 输出 | disposition | resulting_state | evidence_state | 排除依据 |
+|---|---|---|---|---|
+| `validated_unmet_context` | RETAIN | `eligible` | `present` | — |
+| `plausible_unmet_context` | DEFER | `hold` | `absent_incomplete_search` | — |
+| `redundant_context` | EXCLUDE（定义性） | `superseded` | `present` | 可判定的集合包含关系，必须写出取代它的 context 引用 |
+| `weak_context` | DEFER | `hold` | `present` | — |
+| `undefined_context` | DEFER | `hold` | `not_assessed` | — |
 
 > **DEVIATION-01（需审核确认）**：来源文档把 weak 与 redundant 合成一个 `weak_or_redundant_context` 输出。本契约把它拆成两个。理由是二者的排除依据强度不同：`redundant` 是可判定的集合包含关系；`weak` 是价值判断，在一个以召回为先的层里不足以据此排除。若合并保留并映射为 EXCLUDE，本层就会因为价值判断而丢候选，直接违反它自己声明的错误偏好。这是本契约对来源文档唯一的实质偏离，明示以便审核方接受或否决。
 
 **LOCK-01 target 级**
 
-| 输出 | disposition | pool_state | 排除依据 |
-|---|---|---|---|
-| `eligible_surface_target` | RETAIN | `active` | — |
-| `possible_surface_target` | DEFER | `hold` | — |
-| `not_surface_target` | EXCLUDE | `killed` | 定义性（纯胞内蛋白不可能是 ADC 靶点） |
-| `identity_unresolved` | DEFER | `hold` | — |
+| 输出 | disposition | resulting_state | evidence_state | 排除依据 |
+|---|---|---|---|---|
+| `eligible_surface_target` | RETAIN | `eligible` | `present` | — |
+| `possible_surface_target` | DEFER | `hold` | `absent_incomplete_search` | — |
+| `not_surface_target` | EXCLUDE（定义性） | `killed` | `present` | 纯胞内蛋白不可能是 ADC 靶点 |
+| `identity_unresolved` | DEFER | `hold` | `not_assessed` | — |
 
 **LOCK-03 pair 级**
 
-| 输出 | disposition | pool_state | 排除依据 |
-|---|---|---|---|
-| `linkage_evidence_exists` | RETAIN | `active` | — |
-| `no_known_linkage` | EXCLUDE | `reactivation-eligible` | 无关联证据不等于已证伪；**留在 Universe Index，不删除** |
-| `linkage_unassessed` | DEFER | `hold` | — |
+「没有发现 linkage」包含两种性质完全不同的情况，必须严格区分，否则执行者可以把普通的证据缺失编码成排除，直接改变 Pool Level 01 的规模。
+
+| 输出 | disposition | resulting_state | evidence_state | 说明 |
+|---|---|---|---|---|
+| `linkage_evidence_exists` | RETAIN | `active` | `present` | — |
+| `linkage_unassessed` | DEFER | `hold` | `not_assessed` | **尚未评估**，属证据缺失 |
+| `linkage_evidence_missing` | DEFER | `hold` | `absent_incomplete_search` | **检索未达规定范围**，属证据缺失 |
+| `no_known_linkage_after_complete_search` | EXCLUDE（仅 `EXCLUDE_FROM_ACTIVE_POOL`） | `reactivation-eligible` | `absent_after_complete_search` | **已按规定范围检索完毕仍无 linkage**，这是阳性检索结论，不是证据缺失 |
+
+`no_known_linkage_after_complete_search` 的约束是硬性的：
+
+- 它**只**表示移出 active pool，**不表示科学证伪**，`is_scientific_disproof: false`，`is_killed: false`。
+- pair **留在 Eligible Universe Index**，状态恒为 `reactivation-eligible`，不得解读为 `killed`。
+- 必须同时具备六项检索完整性记录：`search_complete`、`search_policy_ref`、`source_coverage_ref`、`search_scope`、`searched_at`、`search_policy_version`。**缺任何一项即不得输出本 outcome，必须退回 `linkage_evidence_missing`（DEFER）。**
 
 ### 录入规则
 
 - pair 进入 active pool 的条件是**三把锁全部 RETAIN**。
 - 任一锁 DEFER → `hold`。
-- 任一锁 EXCLUDE → 未录入 active pool；按上表决定是 `killed`、`superseded` 还是 `reactivation-eligible`。
+- 任一锁定义性排除 → 该 context 或 target 不进入 Eligible Universe Index（`superseded` 或 `killed`）。
+- `LOCK-03` 完整检索后无 linkage → pair 留在 Eligible Universe Index，状态 `reactivation-eligible`。
 
 ## 三、顺序原则
 
@@ -131,22 +157,32 @@ tumor_cell_surface_availability (T7)
 - **只用公开证据。**
 - **RNA 证据不得满足 `LOCK-01`。** 这是仓库硬规则，无例外：RNA 不得当作蛋白层面验证。RNA 可以支持 `LOCK-03`——该锁只问「是否存在关联」，不问蛋白是否在表面——但必须标注 `rna_only`，且不得据此给出 `eligible_surface_target`。
 - **模型领域知识单独不足以录入一个 pair。** 这与 `src/capabilities/target_candidate_generation.py` 的 `TargetCandidateGenerationPolicy` 一致，该契约已把 `permit_model_only_generation` 与 `permit_rule_only_generation` 硬编码为禁止。这也正是 PR #53 被阻断的那一点：未经原始来源验证的模型领域知识只能形成待验证假设，不支撑正式筛选排序。
-- **证据缺失一律 DEFER，永不 EXCLUDE。** `null` 不得转为 0，缺失信息必须显式，`NOT_EVALUATED` 与 `UNRESOLVED` 全程保留、不得静默转成 PASS。
+- **证据缺失一律 DEFER，永不 EXCLUDE。** 「证据缺失」在本契约中严格限于两种 `evidence_state`：`not_assessed`（尚未评估）与 `absent_incomplete_search`（检索未达规定范围）。二者一律 DEFER，落到 `hold`。`null` 不得转为 0，缺失信息必须显式，`NOT_EVALUATED` 与 `UNRESOLVED` 全程保留、不得静默转成 PASS。
+- **「已按规定范围检索完毕仍无 linkage」不属于证据缺失。** 它是一项阳性的检索结论（`evidence_state = absent_after_complete_search`），可以把 pair 移出 active pool，但**仅限于此**：语义只能是 `EXCLUDE_FROM_ACTIVE_POOL`，不构成科学证伪，不置为 `killed`，pair 留在 Eligible Universe Index 且恒为 `reactivation-eligible`，并必须附六项检索完整性记录。这条与上一条的界线是执行者唯一可以缩小 Pool Level 01 规模的地方，因此它由测试机械把守。
 
 ## 六、输出与验证
 
-Level 01 的输出是外部工作区的一份层级快照，字段见 `adc_pool_gate_usage.yaml` 的 `snapshot_columns`（25 列），涵盖来源文档第六节要求的全部状态历史字段。**候选即使被淘汰也不删除**，只改 `pool_state`，取值限于 `active`／`hold`／`killed`／`superseded`／`reactivation-eligible`。
+Level 01 必须产出**五份**外部产物，不得合并成一张表：Raw Enumeration Matrix、Context Eligibility Audit、Target Eligibility Audit、Eligible Universe Index、Pool Level 01 Snapshot。快照字段见 `adc_pool_gate_usage.yaml` 的 `snapshot_columns`（31 列），涵盖来源文档第六节要求的全部状态历史字段，外加 `LOCK-03` 的六项检索完整性记录。**候选即使被排除也不删除**，只改状态，取值限于对应粒度的词表。
 
 执行后必须逐条验证，任一条不通过即不得提交结果 PR：
 
 1. 每个 pair 都有三把锁各自的 outcome、disposition 与 `evaluation_status`；未评估的必须显式写 `NOT_EVALUATED`，不得留空。
 2. `decision = RETAIN` 的行，三把锁必须全部 RETAIN。
-3. 任何 EXCLUDE 行都必须有非空 `decision_reason_refs`，且其 `pool_state` 与本契约第二节的映射表一致。
+3. 任何 EXCLUDE 行都必须有非空 `decision_reason_refs`，且其 `disposition_semantics` 与 `resulting_state` 与本契约第二节的映射表一致。
 4. 所有证据引用都是可追溯的外部引用；仓库内不出现任何证据数据。
-5. 计数对账：`|Universe Index| = |active| + |hold| + |killed| + |superseded| + |reactivation-eligible|`，且 Universe Index 的 pair 数等于合格 context 数 × 合格 target 数。
-6. 输出中不出现任何 Gate 分数、Gate 状态或 Gate PASS/FAIL 字样。
-7. 每个产物文件的 **SHA-256 逐文件记录**并写入结果 PR 的 handoff。这是 PR #53／#54 审核的第 3／4 条要求，此后为常规要求。
-8. 结果 PR 在获得 ChatGPT `APPROVE` 前，不得发布任何排序、推荐或资产决策。
+5. **凡 `evidence_state ∈ {not_assessed, absent_incomplete_search}` 的行，disposition 必须是 DEFER。** 出现任何一行以证据缺失为由 EXCLUDE，即为验证失败。
+6. **凡输出 `no_known_linkage_after_complete_search` 的行，六项检索完整性字段必须齐备且 `search_complete = true`。** 缺任何一项即必须改回 `linkage_evidence_missing`。
+7. 计数对账，五条恒等式全部成立：
+   - `CNT-01`：`|raw_matrix| = |raw_contexts| × |raw_targets|`
+   - `CNT-02`：`|eligible_universe_index| = |eligible_contexts| × |eligible_targets|`
+   - `CNT-03`：`|eligible_universe_index| = |active| + |hold_pairs| + |reactivation_eligible_pairs|`
+   - `CNT-04`：`|raw_contexts| = |eligible_contexts| + |hold_contexts| + |superseded_contexts|`
+   - `CNT-05`：`|raw_targets| = |eligible_targets| + |hold_targets| + |killed_targets|`
+
+   `killed` 与 `superseded` **不得**出现在 `CNT-03` 的求和里——它们是 context 级与 target 级的资格审计历史，从不产生 pair 行。
+8. 输出中不出现任何 Gate 分数、Gate 状态或 Gate PASS/FAIL 字样。
+9. 每个产物文件的 **SHA-256 逐文件记录**并写入结果 PR 的 handoff。这是 PR #53／#54 审核的第 3／4 条要求，此后为常规要求。
+10. 结果 PR 在获得 ChatGPT `APPROVE` 前，不得发布任何排序、推荐或资产决策。
 
 ## 七、已记录但本次不解决的契约缺口
 
@@ -156,8 +192,8 @@ Level 01 的输出是外部工作区的一份层级快照，字段见 `adc_pool_
 |---|---|---|
 | `GAP-P01` | 内核没有 pool level 身份或层级快照对象，来源文档第六节的状态历史目前只能以外部 TSV 表达 | 01 |
 | `GAP-P02` | 内核没有 `active`／`hold`／`killed`／`superseded`／`reactivation-eligible` 这组 pool 生命周期状态 | 01 |
-| `GAP-P03` | 内核没有与 Pool Level 01 相区分的 Universe Index 对象，「未录入但仍存活」只能靠 `pool_state` 字段承载 | 01 |
-| `GAP-P04` | `CandidateDisposition` 只有三值，无法表达来源文档四值 lock 输出与 Level 02 五值输出，也无法区分「淘汰」与「未录入但可复活」 | 01 |
+| `GAP-P03` | 内核没有 Raw Enumeration Matrix／Eligible Universe Index／Pool Level 01 这三个对象，也没有把 context 级与 target 级资格审计与 pair 级池状态分开的结构，故三对象与 `CNT-01`..`CNT-05` 只能靠外部产物加本注册表约束表达 | 01 |
+| `GAP-P04` | `CandidateDisposition` 只有三值，无法表达来源文档四值 lock 输出与 Level 02 五值输出；尤其无法区分 `EXCLUDE_DEFINITIONALLY_INELIGIBLE`（`killed`／`superseded`）与 `EXCLUDE_FROM_ACTIVE_POOL`（`reactivation-eligible`，非科学证伪）。本契约靠 `disposition_semantics` 与 `resulting_state` 两个字段补足，属外部编码约定而非契约支持 | 01 |
 | `GAP-P05` | `src/capabilities/early_t_gate_reduction.py` 的 `EarlyReductionSchedule` **强制 T2 先于 T7**，而来源文档第四节要求 Level 02 先跑 T7。既有内核与来源文档直接冲突 | 02 |
 | `GAP-P06` | `EARLY_REDUCTION_GATE_IDS` 只含 T2/T7/T8/T9/T10/T11，不含任何 C Gate，故来源文档 Level 02 的 C2/C4/C5 quick scan 无法通过既有能力调度 | 02 |
 

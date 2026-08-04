@@ -79,17 +79,23 @@ levels:
         outcomes:
           - outcome: eligible_surface_target
             disposition: RETAIN
-            pool_state: active
+            resulting_state: eligible
+            evidence_state: present
           - outcome: possible_surface_target
             disposition: DEFER
-            pool_state: hold
+            resulting_state: hold
+            evidence_state: absent_incomplete_search
           - outcome: not_surface_target
             disposition: EXCLUDE
-            pool_state: killed
+            resulting_state: killed
+            evidence_state: present
             exclusion_basis: definitional
+            disposition_semantics: EXCLUDE_DEFINITIONALLY_INELIGIBLE
+            is_scientific_disproof: true
           - outcome: identity_unresolved
             disposition: DEFER
-            pool_state: hold
+            resulting_state: hold
+            evidence_state: not_assessed
 
       - lock_id: LOCK-02
         run_order: 1
@@ -104,24 +110,31 @@ levels:
         outcomes:
           - outcome: validated_unmet_context
             disposition: RETAIN
-            pool_state: active
+            resulting_state: eligible
+            evidence_state: present
           - outcome: plausible_unmet_context
             disposition: DEFER
-            pool_state: hold
+            resulting_state: hold
+            evidence_state: absent_incomplete_search
           # DEVIATION-01：来源文档把 weak 与 redundant 合为一个 weak_or_redundant_context
           # 输出。本注册表把它拆成两个，因为二者的排除依据强度不同：redundant 是集合
           # 包含关系，可判定；weak 是价值判断，在一个以召回为先的层里不足以据此排除。
           - outcome: redundant_context
             disposition: EXCLUDE
-            pool_state: superseded
+            resulting_state: superseded
+            evidence_state: present
             exclusion_basis: definitional
+            disposition_semantics: EXCLUDE_DEFINITIONALLY_INELIGIBLE
+            is_scientific_disproof: false
             requires_superseding_context_ref: true
           - outcome: weak_context
             disposition: DEFER
-            pool_state: hold
+            resulting_state: hold
+            evidence_state: present
           - outcome: undefined_context
             disposition: DEFER
-            pool_state: hold
+            resulting_state: hold
+            evidence_state: not_assessed
 
       - lock_id: LOCK-03
         run_order: 3
@@ -135,18 +148,40 @@ levels:
         outcomes:
           - outcome: linkage_evidence_exists
             disposition: RETAIN
-            pool_state: active
-          # 来源文档第七节要求无 linkage 的 pair 留在 Universe Index，不进入
-          # active pool，也不删除。三值 CandidateDisposition 无法表达
-          # 「未录入但仍存活」，故此处必须同时写 pool_state 才不丢信息。见 GAP-P04。
-          - outcome: no_known_linkage
-            disposition: EXCLUDE
-            pool_state: reactivation-eligible
-            exclusion_basis: absence_of_linkage_not_disproof
-            retained_in_universe_index: true
+            resulting_state: active
+            evidence_state: present
+          # 「未评估」与「检索不完整」都属于证据缺失，一律 DEFER。
+          # 只有完成规定范围检索后仍无 linkage 才是一项阳性检索结论，见下一条。
           - outcome: linkage_unassessed
             disposition: DEFER
-            pool_state: hold
+            resulting_state: hold
+            evidence_state: not_assessed
+          - outcome: linkage_evidence_missing
+            disposition: DEFER
+            resulting_state: hold
+            evidence_state: absent_incomplete_search
+          # 这一条不是证据缺失，而是「已按规定范围检索完毕、未发现任何 linkage」。
+          # 它只把 pair 移出 active pool，不构成科学证伪，也不置为 killed。
+          # 三值 CandidateDisposition 无法表达「移出 active pool 但仍存活」，
+          # 故必须同时写 disposition_semantics 与 resulting_state 才不丢信息。见 GAP-P04。
+          - outcome: no_known_linkage_after_complete_search
+            disposition: EXCLUDE
+            disposition_semantics: EXCLUDE_FROM_ACTIVE_POOL
+            resulting_state: reactivation-eligible
+            evidence_state: absent_after_complete_search
+            exclusion_basis: complete_search_found_no_linkage
+            is_scientific_disproof: false
+            is_killed: false
+            retained_in_eligible_universe_index: true
+            requires_search_completeness_record: true
+            # 缺任何一项即不得输出本 outcome，必须退回 linkage_evidence_missing。
+            required_search_fields:
+              - search_complete
+              - search_policy_ref
+              - source_coverage_ref
+              - search_scope
+              - searched_at
+              - search_policy_version
 
     # 本层不运行的 Gate：全部 45 个。逐一列出而不写「其余」，
     # 以便测试能断言这份清单与冻结拓扑完全相等。
@@ -205,9 +240,22 @@ levels:
       rna_may_not_satisfy:
         - LOCK-01
       model_domain_knowledge_alone_admits_pair: false
+      null_is_not_zero: true
+      # 「证据缺失」在本契约中严格限于两种情况：未评估（not_assessed）与
+      # 检索不完整（absent_incomplete_search）。二者一律 DEFER，永不 EXCLUDE。
+      absent_evidence_states:
+        - not_assessed
+        - absent_incomplete_search
       absent_evidence_disposition: DEFER
       absent_evidence_may_exclude: false
-      null_is_not_zero: true
+      # 「已按规定范围检索完毕、仍未发现 linkage」不属于证据缺失。它是一项阳性的
+      # 检索结论，可以把 pair 移出 active pool，但仅限于此：不构成科学证伪、
+      # 不置为 killed、仍留在 Eligible Universe Index 且 reactivation-eligible。
+      complete_search_absence_state: absent_after_complete_search
+      complete_search_absence_disposition: EXCLUDE
+      complete_search_absence_semantics: EXCLUDE_FROM_ACTIVE_POOL
+      complete_search_absence_is_scientific_disproof: false
+      complete_search_requires_completeness_record: true
 
     admission_rule:
       pair_enters_active_pool_when: 三把锁全部 RETAIN
@@ -220,7 +268,7 @@ levels:
       - target_ref
       - pool_entry_level
       - current_pool_level
-      - pool_state
+      - pair_pool_state
       - lock_01_outcome
       - lock_01_disposition
       - lock_01_evaluation_status
@@ -230,6 +278,14 @@ levels:
       - lock_03_outcome
       - lock_03_disposition
       - lock_03_evaluation_status
+      # LOCK-03 检索完整性记录。只有这六列齐备，才允许输出
+      # no_known_linkage_after_complete_search；否则必须退回 linkage_evidence_missing。
+      - lock_03_search_complete
+      - lock_03_search_policy_ref
+      - lock_03_source_coverage_ref
+      - lock_03_search_scope
+      - lock_03_searched_at
+      - lock_03_search_policy_version
       - decision
       - decision_reason_refs
       - fatal_flags
@@ -241,12 +297,97 @@ levels:
       - last_assessed_at
       - policy_version
 
-    pool_states:
-      - active
-      - hold
+    # 状态词表按粒度分开。混用会让计数失去唯一的 denominator：
+    # context 级与 target 级的排除是资格审计历史，从不产生 pair 行；
+    # 只有通过两把身份资格锁的 context 与 target 才配对成 pair。
+    state_vocabularies:
+      clinical_context_level:
+        - eligible
+        - hold
+        - superseded
+      target_level:
+        - eligible
+        - hold
+        - killed
+      pair_level:
+        - active
+        - hold
+        - reactivation-eligible
+
+    # Level 01 的三个对象，必须分开产出，不得合并成一张表。
+    pool_objects:
+      - id: raw_enumeration_matrix
+        definition: 所有被枚举、准备评估的 raw contexts x raw targets。
+        may_contain:
+          - undefined_context
+          - redundant_context
+          - not_surface_target
+          - identity_unresolved
+        assigns_pair_state: false
+      - id: context_eligibility_audit
+        definition: LOCK-02 对每个 raw context 的判定与依据，含被 superseded 的 context。
+        granularity: clinical_context_level
+        assigns_pair_state: false
+      - id: target_eligibility_audit
+        definition: LOCK-01 对每个 raw target 的判定与依据，含被 killed 的 target。
+        granularity: target_level
+        assigns_pair_state: false
+      - id: eligible_universe_index
+        definition: eligible contexts x eligible surface targets。用于证明覆盖范围。
+        granularity: pair_level
+        assigns_pair_state: true
+      - id: pool_level_01_snapshot
+        definition: Eligible Universe Index 经 LOCK-03 后的 pair 级状态快照。
+        granularity: pair_level
+        assigns_pair_state: true
+
+    # 计数恒等式。CNT-02 与 CNT-03 共同给出唯一 denominator。
+    counting_identities:
+      - id: CNT-01
+        subject: raw_enumeration_matrix
+        identity: "|raw_matrix| = |raw_contexts| * |raw_targets|"
+        lhs: raw_matrix
+        rhs_product:
+          - raw_contexts
+          - raw_targets
+      - id: CNT-02
+        subject: eligible_universe_index
+        identity: "|eligible_universe_index| = |eligible_contexts| * |eligible_targets|"
+        lhs: eligible_universe_index
+        rhs_product:
+          - eligible_contexts
+          - eligible_targets
+      - id: CNT-03
+        subject: pool_level_01_snapshot
+        identity: "|eligible_universe_index| = |active| + |hold_pairs| + |reactivation_eligible_pairs|"
+        lhs: eligible_universe_index
+        rhs_sum:
+          - active
+          - hold_pairs
+          - reactivation_eligible_pairs
+      - id: CNT-04
+        subject: context_eligibility_audit
+        identity: "|raw_contexts| = |eligible_contexts| + |hold_contexts| + |superseded_contexts|"
+        lhs: raw_contexts
+        rhs_sum:
+          - eligible_contexts
+          - hold_contexts
+          - superseded_contexts
+      - id: CNT-05
+        subject: target_eligibility_audit
+        identity: "|raw_targets| = |eligible_targets| + |hold_targets| + |killed_targets|"
+        lhs: raw_targets
+        rhs_sum:
+          - eligible_targets
+          - hold_targets
+          - killed_targets
+
+    # killed 与 superseded 属资格审计历史，不参与 pair 级对账。
+    # 一个 context 被 superseded，Eligible Universe Index 减少 |eligible_targets| 个 pair；
+    # 一个 target 被 killed，减少 |eligible_contexts| 个 pair。二者都不产生 pair 行。
+    excluded_from_pair_reconciliation:
       - killed
       - superseded
-      - reactivation-eligible
 
     execution_status: not_authorized_not_executed
     execution_blockers:
@@ -268,10 +409,17 @@ recorded_gaps:
     statement: 内核没有 active/hold/killed/superseded/reactivation-eligible 这组 pool 生命周期状态。
     affects_level: "01"
   - id: GAP-P03
-    statement: 内核没有与 Pool Level 01 相区分的 Universe Index 对象，故「未录入但仍存活」只能靠 pool_state 字段承载。
+    statement: >-
+      内核没有 Raw Enumeration Matrix / Eligible Universe Index / Pool Level 01
+      这三个对象，也没有把 context 级与 target 级资格审计与 pair 级池状态分开的结构，
+      故三个对象与 CNT-01..CNT-05 目前只能以外部产物加本注册表约束表达。
     affects_level: "01"
   - id: GAP-P04
-    statement: CandidateDisposition 只有三值，无法表达来源文档四值 lock 输出与 Level 02 五值输出，也无法区分「淘汰」与「未录入但可复活」。
+    statement: >-
+      CandidateDisposition 只有三值，无法表达来源文档四值 lock 输出与 Level 02 五值输出；
+      尤其无法区分 EXCLUDE_DEFINITIONALLY_INELIGIBLE（killed／superseded）与
+      EXCLUDE_FROM_ACTIVE_POOL（reactivation-eligible，非科学证伪）。
+      本契约靠 disposition_semantics 与 resulting_state 两个字段补足，属外部编码约定而非契约支持。
     affects_level: "01"
   - id: GAP-P05
     statement: >-
