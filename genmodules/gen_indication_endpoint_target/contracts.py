@@ -8,6 +8,17 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Final
 
+from src.lifecycle.clinical_lock import (
+    LOCK_ORDER,
+    ClinicalLockState,
+    can_transition_clinical_lock,
+)
+
+# ``ClinicalLockState``, ``LOCK_ORDER`` and ``can_transition_clinical_lock`` are
+# kernel definitions, re-exported here so this module's public API is unchanged.
+# They must not be restated: the Gate contracts in ``src/capabilities/gates.py``
+# need the identical type, and the dependency has to run genmodules -> src, never
+# the reverse.
 
 EXTERNAL_PREFIX: Final[str] = "external:"
 
@@ -64,17 +75,6 @@ class ReviewStatus(str, Enum):
     DISPUTED = "DISPUTED"
 
 
-class ClinicalLockState(str, Enum):
-    """Progressive maturity of the clinical/product hypothesis."""
-
-    EXPLORATORY = "exploratory"
-    PROVISIONAL = "provisional"
-    ANCHORED = "anchored"
-    PRODUCT_LOCKED = "product-locked"
-    PROTOCOL_LOCKED = "protocol-locked"
-    REGULATORY_LOCKED = "regulatory-locked"
-
-
 class ClinicalHypothesisEntryMode(str, Enum):
     MATURE_TARGET_FIRST = "mature-target-first"
     TARGET_CONTEXT_COSELECTION = "target-context-co-selection"
@@ -94,26 +94,6 @@ class CDxStatus(str, Enum):
     CONCEPT = "concept"
     VALIDATING = "validating"
     LOCKED = "locked"
-
-
-_LOCK_ORDER: Final[tuple[ClinicalLockState, ...]] = (
-    ClinicalLockState.EXPLORATORY,
-    ClinicalLockState.PROVISIONAL,
-    ClinicalLockState.ANCHORED,
-    ClinicalLockState.PRODUCT_LOCKED,
-    ClinicalLockState.PROTOCOL_LOCKED,
-    ClinicalLockState.REGULATORY_LOCKED,
-)
-
-
-def can_transition_clinical_lock(
-    current: ClinicalLockState, target: ClinicalLockState
-) -> bool:
-    """Allow only monotonic, single-step maturity transitions."""
-
-    if not isinstance(current, ClinicalLockState) or not isinstance(target, ClinicalLockState):
-        return False
-    return _LOCK_ORDER.index(target) == _LOCK_ORDER.index(current) + 1
 
 
 @dataclass(frozen=True)

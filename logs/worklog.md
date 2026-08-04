@@ -2096,3 +2096,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 未改写 Round 1／Round 2 记录，未改写任何既有 worklog 条目；本次仅删除一处越界文件、修正一处不实声明、追加说明。无任何代码、契约、Gate 拓扑或测试变更。
 - Validation: 183 tests 全部通过；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git diff main -- prompts/GPT-Feedback.md` 为空。
 - Next: 推送同一 PR #46 并提交 ChatGPT 复审。PR #47 已获 `APPROVE`；PR #48 的版本升级另行处理。
+
+### 2026-08-04 10:05 EDT
+
+- Action: 建立 `task_20260804_kernel-dependency-direction`（从 `main` `a5bf77f` 创建），修复 PR #45 引入的 `src/ -> genmodules/` 依赖方向倒置，并补上缺失的对称边界守卫。人类负责人已将此列为 P1。
+- Finding: `src/capabilities/gates.py` 的模块级 `from genmodules.gen_indication_endpoint_target.contracts import ClinicalLockState` 使 Capabilities 层依赖模块实现。实测 `import src.repository.boot` 连带加载 `genmodules.gen_indication_endpoint_target.contracts`，即 OS 启动路径离开该 GenModule 无法加载。反向边 `genmodules/gate_model_rule/core/contracts.py` 的函数内 `from src.capabilities.gates import gate_definition` 未形成硬循环，但逻辑上环已闭合。
+- Root cause note: 这是 Round 2 阻断 3「两个不兼容的 ClinicalLockState 必须统一成一份」的修复落点错误。要求正确，唯一那份被放在层边界的模块侧。且当时无任何测试守护该方向——`tests/test_extension_boundary.py` 只禁止 `src/ -> extensions/`，没有 `src/ -> genmodules/` 的对称守卫，因此这条边未被拦下。
+- Change: 新增 `src/lifecycle/clinical_lock.py`，作为 `ClinicalLockState`、`LOCK_ORDER`、`can_transition_clinical_lock` 的唯一权威定义；`src/lifecycle/__init__.py` 导出三者；`gates.py` 改为从内核导入；GenModule 删除本地定义改为再导出。落点选 `src/lifecycle/` 因 `state_machine.py` 已是「枚举 + 顺序 + can_transition 同处内核一模块」的先例；`_LOCK_ORDER` 因跨模块可见改名 `LOCK_ORDER`。
+- Change: 新增 `tests/test_kernel_dependency_direction.py` 6 项。守卫用 AST 遍历而非行首匹配，因为函数体内的延迟导入同样是依赖；其中 `test_the_guard_also_catches_deferred_imports` 断言已知的函数内 `genmodules -> src` 导入必须被扫描看见，作为该守卫非空转的自检。另有一项在子进程实测内核导入后 `sys.modules` 不含任何 `genmodules` 顶级包。
+- API preservation: 四条路径 `src.lifecycle.clinical_lock` / `src.capabilities.gates` / `genmodules...` / `genmodules...contracts` 取到同一类型对象，`is` 实测全为真；`tests/test_phase3_gate_contracts.py:78` 的跨模块 `assertIs` 继续成立，未改动该测试。
+- Validation by mutation: `gates.py` 改回导入 genmodule `failures=2`；GenModule 重新定义枚举 `failures=2`；GenModule 重述 `LOCK_ORDER` `failures=1`；全部还原后 `OK`。还原用文件备份而非 `git checkout --`（后者曾在 PR #16 造成未提交修改丢失）。
+- Boundary: 未改动 45-Gate 拓扑、gate_id、顺序、`GATE_GROUPS`、任何 gate/model/profile；未改动 `ClinicalLockState` 成员／取值／顺序／迁移规则，语义逐字保留；未改动四阶段生命周期、核心对象、`ClinicalHypothesis` 锁定门槛与 `legacy_compatibility` 路径；未改动任何既有测试；未改动 `extensions/`；未新增数据、缓存、结果或运行产物。
+- Validation: 189 tests 全部通过（183 + 新增 6）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`src/` 下 genmodules 导入 0 处；零 `__pycache__`。
+- Open risk: 新守卫只覆盖 `src/ -> genmodules/`；`genmodules/` 之间的横向依赖仍无守卫。反向边保留为函数内导入未上提到模块级，属与本 PR 目标无关的整理。
+- Next: 推送并创建 PR A 供 ChatGPT 审核。与 PR C、PR B 互相独立，均从 `a5bf77f` 创建；三者都追加 worklog，合并时按时间戳顺序解决追加式冲突。
