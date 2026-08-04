@@ -4,6 +4,20 @@
 - PR: https://github.com/leezx/StelligenOS/pull/45
 - Reviewed head: `20a2328`
 - Decision: `APPROVE`
+- **Record type: decision summary, not a verbatim transcript.**
+
+## Record Type
+
+This file is a faithful summary of the Round 3 decision and its stated grounds.
+It is **not** the reviewer's verbatim reply: the wording below is reported speech
+("ChatGPT reported", "confirmed"), and the original reply's full structure and
+phrasing are not reproduced here.
+
+The verbatim reply exists only in the Chrome ChatGPT conversation named above and
+was not captured at review time. It is therefore not recoverable into this
+repository after the fact, so this record is labelled for what it is rather than
+claiming a fidelity it does not have. The decision, the reviewed head and the
+grounds listed below are accurate.
 
 ## Final Conclusion
 

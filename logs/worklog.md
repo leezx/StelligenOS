@@ -2083,3 +2083,16 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 未改写 Round 1／Round 2 记录，未改写任何历史 worklog 条目或 handoff 已有内容；追加式审计历史保持不变。无任何代码、契约、Gate 拓扑、Model、Profile、生命周期或测试变更。未新增数据、缓存、结果或运行产物。
 - Validation: 183 tests 全部通过；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。
 - Next: 推送并创建 PR C 供 ChatGPT 审核；按人类负责人指示关闭 PR #45 并注明其内容已由 `a5bf77f` 并入。P1（内核依赖修复）与 P2（文档同步）各自独立分支、独立 PR。
+
+### 2026-08-04 11:35 EDT
+
+- Action: 处理 ChatGPT 对 PR #46（PR C，审计闭环）的 Round 1 `REQUEST_CHANGES`。两条阻断均经核实成立，无 pushback。
+- Verification of blocker 1: 成立，且证据就在本 PR 修改的那份 handoff 里——`docs/handoff/2026-08-03-v5-clinical-hypothesis-architecture.zh-CN.md` 的「Important Working-Tree Note」写明 `prompts/GPT-Feedback.md` `must not be reverted or staged as part of the architecture PR unless explicitly requested`。把 419 行研发架构反馈并入一个定义为「审计闭环 only」的 PR，使其同时承担 source-document 发布，扩大了范围。
+- Root cause note: 上一轮我把该文件的去留当作可自行裁量的判断题并在 PR 描述中标注，但仓库内已有明文约束覆盖该问题，因此这不是取舍失当而是漏读既有约束。
+- Change: `prompts/GPT-Feedback.md` 恢复为 `main` 版本，PR #46 的 aggregate diff 中该文件归零。内容已完整保留在会话 scratchpad，未丢失；是否纳入仓库改由独立 source-document PR 决定。
+- Verification of blocker 2: 成立。`logs/chatgpt-review-2026-08-03-pr45-round3.md` 通篇为转述语气（`ChatGPT reported`、`confirmed`），未复现原批准回复的结构与表述，PR 描述称其 `verbatim as reviewed` 属不实声明。
+- Decision: 审核给出的两个选项中取第二个。逐字原文只存在于 Chrome ChatGPT 对话，审核当时未捕获，事后无法恢复进仓库；因此不伪造逐字记录，而是明确标注记录类型。
+- Change: 记录文件头部新增 `Record type: decision summary, not a verbatim transcript` 与「Record Type」一节，说明为何逐字原文不可得；PR #46 描述删除全部 verbatim 声明。handoff 新增一节记录这两条阻断的核实与修订。
+- Boundary: 未改写 Round 1／Round 2 记录，未改写任何既有 worklog 条目；本次仅删除一处越界文件、修正一处不实声明、追加说明。无任何代码、契约、Gate 拓扑或测试变更。
+- Validation: 183 tests 全部通过；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git diff main -- prompts/GPT-Feedback.md` 为空。
+- Next: 推送同一 PR #46 并提交 ChatGPT 复审。PR #47 已获 `APPROVE`；PR #48 的版本升级另行处理。

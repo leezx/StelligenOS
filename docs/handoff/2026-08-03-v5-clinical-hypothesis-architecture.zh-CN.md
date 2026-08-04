@@ -106,5 +106,30 @@ branched from `main` at `a5bf77f`.
 - Round 1 and Round 2 records are not rewritten. No existing worklog entry or
   handoff section is rewritten. Append-only audit history is preserved.
 - Follow-up work is deliberately **not** in this PR: the `src/` → `genmodules/`
-  dependency inversion introduced by v5 is PR A, and the EXT-02 / seven-object
-  documentation drift is PR B.
+  dependency inversion introduced by v5 is PR A (#47), and the EXT-02 /
+  seven-object documentation drift is PR B (#48).
+
+### Round 1 `REQUEST_CHANGES` on PR C itself, and the revision
+
+ChatGPT returned `REQUEST_CHANGES` on PR #46 with two blockers. Both were
+verified and are real.
+
+**Blocker 1 — `prompts/GPT-Feedback.md` does not belong in an audit-only PR.**
+Confirmed against this very file: the "Important Working-Tree Note" above states
+the file `must not be reverted or staged as part of the architecture PR unless
+explicitly requested`. Including it made a 419-line development-architecture
+feedback document part of a PR defined as audit closure, and turned that PR into
+a source-document release. The judgment call recorded in the first revision was
+wrong, because a written constraint already covered the question. The file is
+reverted to its `main` state; PR #46 now contains only the Round 3 record, this
+handoff, and the worklog entries. Publishing the v5 feedback, if wanted, is a
+separate source-document PR.
+
+**Blocker 2 — the "verbatim as reviewed" claim was false.**
+Confirmed. `logs/chatgpt-review-2026-08-03-pr45-round3.md` is reported speech
+("ChatGPT reported", "confirmed") and does not reproduce the original reply's
+structure or phrasing. The verbatim reply exists only in the Chrome ChatGPT
+conversation and was not captured at review time, so it cannot be recovered into
+the repository after the fact. Of the reviewer's two permitted resolutions, the
+second applies: the record is now explicitly labelled a decision summary, and
+every verbatim claim is removed from both the record and the PR description.
