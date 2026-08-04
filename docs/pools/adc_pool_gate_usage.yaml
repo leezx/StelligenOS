@@ -1,0 +1,434 @@
+# ADC Pool 漏斗——每层判据使用记录（machine-readable）
+#
+# 这份文件是 ADC Pool 漏斗每一层「用了什么」的权威机器可读记录。
+# 它只记录判据身份、顺序、语义和排除清单；不含任何候选、证据、分数或结果。
+# 候选池本身是数据，按仓库边界必须留在外部工作区。
+#
+# 由 tests/test_adc_pool_gate_usage.py 对照 src/capabilities/gates.py 的冻结
+# 45-Gate 拓扑与 genmodules/assetgenos_catalog/gates/adc/v0.2 的 cost_tier 校验。
+# 每新增一层都必须在 levels 下追加一个条目，并同时通过该测试。
+
+registry:
+  registry_id: adc_pool_gate_usage
+  registry_version: 0.1.0
+  modality: ADC
+  disease_scope: CRC
+  source_ref: "Zhixins-KB/2.Biotech/Asset-Generation-OS-architecture.md#ADC pool漏斗gating"
+  gate_topology_ref: src/contracts/gate_system.yaml
+  gate_catalog_ref: genmodules/assetgenos_catalog/gates/adc/v0.2
+  gate_count: 45
+  topology_change: none
+  status: contract_only_pending_review
+  defined_levels:
+    - "01"
+
+# 分层顺序原则。
+#
+# 人类负责人的原则是「先用最低成本的高可信 gate 去筛，比较难的 gate 放到后面」。
+# 本注册表把「成本」定义为每淘汰一个候选的边际成本，而不是 catalogue 的 cost_tier，
+# 因为边际成本主要由判据的作用粒度决定：淘汰一个 clinical context 会一次性移除
+# 候选矩阵的一整列，淘汰一个 target 会移除一整行，而 pair 级判据每次只处理一格。
+ordering_principle:
+  cost_metric: marginal_cost_per_candidate_eliminated
+  granularity_order:
+    - clinical_context_level
+    - target_level
+    - pair_level
+  cheapness_alone_is_insufficient: true
+  # 反例，由 catalogue 实测得到：C40-C45 的 cost_tier 全部是 low，比 T0 之外所有
+  # T Gate 的 medium 更便宜，但它们不得单独 KILL——竞争拥挤同时也是靶点与 modality
+  # 可行的证据。因此「便宜」必须与「阴性结果具有否决力」同时成立才排在前面。
+  cheap_but_non_decisive_examples:
+    - competitive_position_entry_window
+    - patent_landscape
+    - preliminary_technical_fto
+
+levels:
+  - level: "01"
+    level_id: adc_pool_level_01
+    name: Evidence-linked seeds
+    purpose: 在当前公开知识下高召回枚举可定义的 clinical context x target seed，并只排除定义性不可能项。
+    error_preference: recall_over_precision
+    contract_ref: docs/pools/ADC_POOL_FUNNEL_LEVEL_01.zh-CN.md
+
+    # 本层运行的 Gate 数量为零。这不是省略，而是本层的定义。
+    # Level 01 只运行 eligibility lock，产出 CandidateFilterResult，
+    # 按契约明确不是 Gate 结果，因此不得写入任何 Gate 分数或状态。
+    gates_executed: []
+    gates_executed_count: 0
+    result_contract: CandidateFilterResult
+    result_is_gate_result: false
+    gate_scores_written: none
+    evaluation_status_preserved:
+      - EVALUATED
+      - NOT_EVALUATED
+      - UNRESOLVED
+
+    # 三把锁各自借用一个 Gate 的「职责」，但都不是该 Gate 的简化执行，
+    # 更不构成该 Gate 的 PASS。来源文档第二节亦明确「不能把它当成完整 T7 PASS」。
+    locks:
+      - lock_id: LOCK-01
+        run_order: 2
+        name: target_identity_eligibility
+        granularity: target_level
+        gate_responsibility_borrowed: tumor_cell_surface_availability
+        borrowed_gate_cost_tier: medium
+        borrowed_gate_is_hard_gate: true
+        constitutes_gate_pass: false
+        question: 这个靶点是否存在有合理依据的细胞外可及蛋白形式，且身份能映射到统一 gene/protein identifier。
+        outcomes:
+          - outcome: eligible_surface_target
+            disposition: RETAIN
+            resulting_state: eligible
+            evidence_state: present
+          - outcome: possible_surface_target
+            disposition: DEFER
+            resulting_state: hold
+            evidence_state: absent_incomplete_search
+          - outcome: not_surface_target
+            disposition: EXCLUDE
+            resulting_state: killed
+            evidence_state: present
+            exclusion_basis: definitional
+            disposition_semantics: EXCLUDE_DEFINITIONALLY_INELIGIBLE
+            is_scientific_disproof: true
+          - outcome: identity_unresolved
+            disposition: DEFER
+            resulting_state: hold
+            evidence_state: not_assessed
+
+      - lock_id: LOCK-02
+        run_order: 1
+        name: crc_clinical_context_eligibility
+        granularity: clinical_context_level
+        gate_responsibility_borrowed: clinical_context_endpoint
+        borrowed_gate_cost_tier: low
+        borrowed_gate_is_hard_gate: true
+        constitutes_gate_pass: false
+        endpoint_locked: false
+        question: 这个 CRC 临床情境是否真实存在、当前疗效或人群覆盖是否有明确不足、人群是否可界定、是否有大致 intended benefit。
+        outcomes:
+          - outcome: validated_unmet_context
+            disposition: RETAIN
+            resulting_state: eligible
+            evidence_state: present
+          - outcome: plausible_unmet_context
+            disposition: DEFER
+            resulting_state: hold
+            evidence_state: absent_incomplete_search
+          # DEVIATION-01：来源文档把 weak 与 redundant 合为一个 weak_or_redundant_context
+          # 输出。本注册表把它拆成两个，因为二者的排除依据强度不同：redundant 是集合
+          # 包含关系，可判定；weak 是价值判断，在一个以召回为先的层里不足以据此排除。
+          - outcome: redundant_context
+            disposition: EXCLUDE
+            resulting_state: superseded
+            evidence_state: present
+            exclusion_basis: definitional
+            disposition_semantics: EXCLUDE_DEFINITIONALLY_INELIGIBLE
+            is_scientific_disproof: false
+            requires_superseding_context_ref: true
+          - outcome: weak_context
+            disposition: DEFER
+            resulting_state: hold
+            evidence_state: present
+          - outcome: undefined_context
+            disposition: DEFER
+            resulting_state: hold
+            evidence_state: not_assessed
+
+      - lock_id: LOCK-03
+        run_order: 3
+        name: target_context_linkage_existence
+        granularity: pair_level
+        gate_responsibility_borrowed: target_population_mapping
+        borrowed_gate_cost_tier: medium
+        borrowed_gate_is_hard_gate: true
+        constitutes_gate_pass: false
+        question: 是否至少存在一项公开证据表明该靶点与该 CRC 情境有关，不要求证明有效。
+        outcomes:
+          - outcome: linkage_evidence_exists
+            disposition: RETAIN
+            resulting_state: active
+            evidence_state: present
+          # 「未评估」与「检索不完整」都属于证据缺失，一律 DEFER。
+          # 只有完成规定范围检索后仍无 linkage 才是一项阳性检索结论，见下一条。
+          - outcome: linkage_unassessed
+            disposition: DEFER
+            resulting_state: hold
+            evidence_state: not_assessed
+          - outcome: linkage_evidence_missing
+            disposition: DEFER
+            resulting_state: hold
+            evidence_state: absent_incomplete_search
+          # 这一条不是证据缺失，而是「已按规定范围检索完毕、未发现任何 linkage」。
+          # 它只把 pair 移出 active pool，不构成科学证伪，也不置为 killed。
+          # 三值 CandidateDisposition 无法表达「移出 active pool 但仍存活」，
+          # 故必须同时写 disposition_semantics 与 resulting_state 才不丢信息。见 GAP-P04。
+          - outcome: no_known_linkage_after_complete_search
+            disposition: EXCLUDE
+            disposition_semantics: EXCLUDE_FROM_ACTIVE_POOL
+            resulting_state: reactivation-eligible
+            evidence_state: absent_after_complete_search
+            exclusion_basis: complete_search_found_no_linkage
+            is_scientific_disproof: false
+            is_killed: false
+            retained_in_eligible_universe_index: true
+            requires_search_completeness_record: true
+            # 缺任何一项即不得输出本 outcome，必须退回 linkage_evidence_missing。
+            required_search_fields:
+              - search_complete
+              - search_policy_ref
+              - source_coverage_ref
+              - search_scope
+              - searched_at
+              - search_policy_version
+
+    # 本层不运行的 Gate：全部 45 个。逐一列出而不写「其余」，
+    # 以便测试能断言这份清单与冻结拓扑完全相等。
+    gates_not_run:
+      - clinical_context_endpoint
+      - endpoint_driving_population
+      - target_population_mapping
+      - intervention_causality
+      - baseline_coverage_and_escape
+      - treatment_induced_state_response
+      - net_endpoint_benefit
+      - tumor_cell_surface_availability
+      - intratumoral_antigen_accessibility
+      - antibody_dependent_internalization
+      - antibody_epitope_realizability
+      - on_target_therapeutic_index
+      - target_opportunity_decision
+      - product_design_objective
+      - epitope_landscape
+      - epitope_function
+      - binding_geometry_kinetics
+      - antibody_format_fc_design
+      - antibody_sequence_developability
+      - productive_internalization_trafficking
+      - conjugation_platform_site
+      - dar_molecular_property_balance
+      - payload_cell_state_match
+      - linker_release_match
+      - bystander_tumor_coverage
+      - integrated_pk_stability_exposure
+      - construct_therapeutic_index
+      - biomarker_clinical_assay_codesign
+      - integrated_adc_product_decision
+      - commercial_opportunity_threshold
+      - regulatory_development_path
+      - competitive_position_entry_window
+      - product_claim_decomposition
+      - patent_landscape
+      - preliminary_technical_fto
+      - blocking_claim_severity
+      - design_around_opportunity
+      - access_strategy
+      - fto_product_configuration
+      - own_ip_inventive_concept
+      - patentability_enablement
+      - claim_architecture_patent_estate
+      - disclosure_filing_strategy
+      - lifecycle_exclusivity_strategy
+      - transaction_readiness
+
+    evidence_standard:
+      public_evidence_only: true
+      # 仓库硬规则，无例外：RNA 证据不得当作蛋白层面验证。
+      rna_may_satisfy:
+        - LOCK-03
+      rna_may_not_satisfy:
+        - LOCK-01
+      model_domain_knowledge_alone_admits_pair: false
+      null_is_not_zero: true
+      # 「证据缺失」在本契约中严格限于两种情况：未评估（not_assessed）与
+      # 检索不完整（absent_incomplete_search）。二者一律 DEFER，永不 EXCLUDE。
+      absent_evidence_states:
+        - not_assessed
+        - absent_incomplete_search
+      absent_evidence_disposition: DEFER
+      absent_evidence_may_exclude: false
+      # 「已按规定范围检索完毕、仍未发现 linkage」不属于证据缺失。它是一项阳性的
+      # 检索结论，可以把 pair 移出 active pool，但仅限于此：不构成科学证伪、
+      # 不置为 killed、仍留在 Eligible Universe Index 且 reactivation-eligible。
+      complete_search_absence_state: absent_after_complete_search
+      complete_search_absence_disposition: EXCLUDE
+      complete_search_absence_semantics: EXCLUDE_FROM_ACTIVE_POOL
+      complete_search_absence_is_scientific_disproof: false
+      complete_search_requires_completeness_record: true
+
+    admission_rule:
+      pair_enters_active_pool_when: 三把锁全部 RETAIN
+      any_lock_defer_result: hold
+      any_lock_exclude_result: not_admitted
+
+    snapshot_columns:
+      - pair_id
+      - clinical_context_ref
+      - target_ref
+      - pool_entry_level
+      - current_pool_level
+      - pair_pool_state
+      - lock_01_outcome
+      - lock_01_disposition
+      - lock_01_evaluation_status
+      - lock_02_outcome
+      - lock_02_disposition
+      - lock_02_evaluation_status
+      - lock_03_outcome
+      - lock_03_disposition
+      - lock_03_evaluation_status
+      # LOCK-03 检索完整性记录。只有这六列齐备，才允许输出
+      # no_known_linkage_after_complete_search；否则必须退回 linkage_evidence_missing。
+      - lock_03_search_complete
+      - lock_03_search_policy_ref
+      - lock_03_source_coverage_ref
+      - lock_03_search_scope
+      - lock_03_searched_at
+      - lock_03_search_policy_version
+      - decision
+      - decision_reason_refs
+      - fatal_flags
+      - material_risks
+      - unknowns
+      - conflicts
+      - next_required_evidence
+      - evidence_refs
+      - last_assessed_at
+      - policy_version
+
+    # 状态词表按粒度分开。混用会让计数失去唯一的 denominator：
+    # context 级与 target 级的排除是资格审计历史，从不产生 pair 行；
+    # 只有通过两把身份资格锁的 context 与 target 才配对成 pair。
+    state_vocabularies:
+      clinical_context_level:
+        - eligible
+        - hold
+        - superseded
+      target_level:
+        - eligible
+        - hold
+        - killed
+      pair_level:
+        - active
+        - hold
+        - reactivation-eligible
+
+    # Level 01 的三个对象，必须分开产出，不得合并成一张表。
+    pool_objects:
+      - id: raw_enumeration_matrix
+        definition: 所有被枚举、准备评估的 raw contexts x raw targets。
+        may_contain:
+          - undefined_context
+          - redundant_context
+          - not_surface_target
+          - identity_unresolved
+        assigns_pair_state: false
+      - id: context_eligibility_audit
+        definition: LOCK-02 对每个 raw context 的判定与依据，含被 superseded 的 context。
+        granularity: clinical_context_level
+        assigns_pair_state: false
+      - id: target_eligibility_audit
+        definition: LOCK-01 对每个 raw target 的判定与依据，含被 killed 的 target。
+        granularity: target_level
+        assigns_pair_state: false
+      - id: eligible_universe_index
+        definition: eligible contexts x eligible surface targets。用于证明覆盖范围。
+        granularity: pair_level
+        assigns_pair_state: true
+      - id: pool_level_01_snapshot
+        definition: Eligible Universe Index 经 LOCK-03 后的 pair 级状态快照。
+        granularity: pair_level
+        assigns_pair_state: true
+
+    # 计数恒等式。CNT-02 与 CNT-03 共同给出唯一 denominator。
+    counting_identities:
+      - id: CNT-01
+        subject: raw_enumeration_matrix
+        identity: "|raw_matrix| = |raw_contexts| * |raw_targets|"
+        lhs: raw_matrix
+        rhs_product:
+          - raw_contexts
+          - raw_targets
+      - id: CNT-02
+        subject: eligible_universe_index
+        identity: "|eligible_universe_index| = |eligible_contexts| * |eligible_targets|"
+        lhs: eligible_universe_index
+        rhs_product:
+          - eligible_contexts
+          - eligible_targets
+      - id: CNT-03
+        subject: pool_level_01_snapshot
+        identity: "|eligible_universe_index| = |active| + |hold_pairs| + |reactivation_eligible_pairs|"
+        lhs: eligible_universe_index
+        rhs_sum:
+          - active
+          - hold_pairs
+          - reactivation_eligible_pairs
+      - id: CNT-04
+        subject: context_eligibility_audit
+        identity: "|raw_contexts| = |eligible_contexts| + |hold_contexts| + |superseded_contexts|"
+        lhs: raw_contexts
+        rhs_sum:
+          - eligible_contexts
+          - hold_contexts
+          - superseded_contexts
+      - id: CNT-05
+        subject: target_eligibility_audit
+        identity: "|raw_targets| = |eligible_targets| + |hold_targets| + |killed_targets|"
+        lhs: raw_targets
+        rhs_sum:
+          - eligible_targets
+          - hold_targets
+          - killed_targets
+
+    # killed 与 superseded 属资格审计历史，不参与 pair 级对账。
+    # 一个 context 被 superseded，Eligible Universe Index 减少 |eligible_targets| 个 pair；
+    # 一个 target 被 killed，减少 |eligible_contexts| 个 pair。二者都不产生 pair 行。
+    excluded_from_pair_reconciliation:
+      - killed
+      - superseded
+
+    execution_status: not_authorized_not_executed
+    execution_blockers:
+      - id: BLOCK-01
+        statement: 本契约未获 ChatGPT APPROVE 前不得执行 Level 01。
+      - id: BLOCK-02
+        statement: >-
+          LOCK-02 需要 CRC clinical context 清单，而目前唯一的枚举来自被隔离的
+          2026-08-04 运行（PR #53，UNAUTHORIZED_QUARANTINED_NOT_ACCEPTED），
+          不得作为输入。必须先按裁决重跑并被接受。
+
+# 已记录但本次不解决的契约缺口。每一条都需要独立的架构任务与月度额度，
+# 不得在本 PR 内顺手实现。
+recorded_gaps:
+  - id: GAP-P01
+    statement: 内核没有 pool level 身份或层级快照对象，来源文档第六节的状态历史目前只能以外部 TSV 表达。
+    affects_level: "01"
+  - id: GAP-P02
+    statement: 内核没有 active/hold/killed/superseded/reactivation-eligible 这组 pool 生命周期状态。
+    affects_level: "01"
+  - id: GAP-P03
+    statement: >-
+      内核没有 Raw Enumeration Matrix / Eligible Universe Index / Pool Level 01
+      这三个对象，也没有把 context 级与 target 级资格审计与 pair 级池状态分开的结构，
+      故三个对象与 CNT-01..CNT-05 目前只能以外部产物加本注册表约束表达。
+    affects_level: "01"
+  - id: GAP-P04
+    statement: >-
+      CandidateDisposition 只有三值，无法表达来源文档四值 lock 输出与 Level 02 五值输出；
+      尤其无法区分 EXCLUDE_DEFINITIONALLY_INELIGIBLE（killed／superseded）与
+      EXCLUDE_FROM_ACTIVE_POOL（reactivation-eligible，非科学证伪）。
+      本契约靠 disposition_semantics 与 resulting_state 两个字段补足，属外部编码约定而非契约支持。
+    affects_level: "01"
+  - id: GAP-P05
+    statement: >-
+      src/capabilities/early_t_gate_reduction.py 的 EarlyReductionSchedule 强制
+      target_population_mapping 先于 tumor_cell_surface_availability，而来源文档第四节
+      要求 Level 02 先跑 T7。这是既有内核与来源文档的直接冲突，须在定义 Level 02 时解决。
+    affects_level: "02"
+  - id: GAP-P06
+    statement: >-
+      EARLY_REDUCTION_GATE_IDS 只含 T2/T7/T8/T9/T10/T11，不含任何 C Gate，
+      故来源文档 Level 02 的 C2/C4/C5 quick scan 无法通过既有能力调度。
+    affects_level: "02"
