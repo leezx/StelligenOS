@@ -13,8 +13,8 @@ import re
 from typing import Final
 
 
-MODULE_VERSION: Final = "0.2.0"
-CONTRACT_VERSION: Final = "0.2.0"
+MODULE_VERSION: Final = "0.3.0"
+CONTRACT_VERSION: Final = "0.3.0"
 _EXTERNAL_REF = re.compile(r"^external:[^\s]+$")
 _GENE_SYMBOL = re.compile(r"^[A-Za-z0-9][A-Za-z0-9-]*$")
 
@@ -118,6 +118,9 @@ class EvidenceClaim:
     surface_exposed: bool | None = None
     normal_density_relation: str | None = None
     differential_status: DifferentialStatus = DifferentialStatus.NOT_ASSESSED
+    differential_assessment_ref: str | None = None
+    hazard_context_ref: str | None = None
+    mitigates_claim_refs: tuple[str, ...] = ()
     toxicity_attribution: str | None = None
     severe: bool = False
     clinically_demonstrated: bool = False
@@ -148,6 +151,20 @@ class EvidenceClaim:
             raise ValueError("toxicity_attribution is invalid")
         if not isinstance(self.differential_status, DifferentialStatus):
             raise ValueError("differential_status is invalid")
+        for value, label in (
+            (self.differential_assessment_ref, "differential_assessment_ref"),
+            (self.hazard_context_ref, "hazard_context_ref"),
+        ):
+            if value is not None:
+                _external(value, label)
+        for value in self.mitigates_claim_refs:
+            _external(value, "mitigates_claim_ref")
+        if (
+            self.differential_status == DifferentialStatus.ABSENT
+            and self.differential_assessment_ref is None
+        ):
+            # A single observation cannot establish a cross-axis absence.
+            object.__setattr__(self, "differential_status", DifferentialStatus.UNKNOWN)
         if self.direction == RiskDirection.UNKNOWN and not self.unresolved:
             object.__setattr__(self, "unresolved", True)
 

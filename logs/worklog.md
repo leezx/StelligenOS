@@ -2281,3 +2281,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Head: `d36e4a4`.
 - Boundary: No data, cache, result, model weight, or runtime artifact was added. Original PR #55 was not force-rewritten.
 - Next: submit PR #56 remediation to ChatGPT manually for another review cycle.
+
+### 2026-08-04 22:05 EDT
+
+- Action: Read ChatGPT Round 2 review for PR #56; result remained `REQUEST_CHANGES` with two blockers and one additional risk.
+- Blocker 1 fix: Added `hazard_context_ref` and context-aware aggregation. Surface, criticality, and density evidence only combine within the same hazard context or `(tissue, cell_type)`; unscoped claims cannot trigger fatal.
+- Blocker 2 fix: Added `mitigates_claim_refs` and context matching. `CONDITIONAL_GO` now requires all material-risk claims to be covered by relevant structured differentials; unrelated or partial coverage remains `HOLD`.
+- Additional fix: `NO_EXPLOITABLE_DIFFERENTIAL` now requires `differential_assessment_ref`; an unreferenced single observation becomes `UNKNOWN` rather than fatal.
+- Contract: Bumped module and contract versions from `0.2.0` to `0.3.0`.
+- Tests: Added context mismatch, unscoped fatal, unrelated differential, and partial coverage cases. Full suite now passes 223 tests.
+- Validation: 16 module tests passed; 223 full-suite tests passed; repository boundary check passed; `git diff --check` passed; no `__pycache__` remains.
+- Next: push the Round 2 remediation to PR #56 and request another ChatGPT review.

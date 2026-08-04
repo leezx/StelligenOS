@@ -43,5 +43,12 @@ It does not claim product-specific therapeutic-window prediction.
 ## Round 1 remediation
 
 - Rebuilt the PR from `origin/main` so the CRC clinical-frame commit is not in scope.
-- Bumped the module and contract version to `0.2.0` for the new structured differential and material-risk output fields.
+- Bumped the module and contract version to `0.3.0` for the structured differential, material-risk output, and hazard-context fields.
 - Replacement PR: `https://github.com/leezx/StelligenOS/pull/56`, head `d36e4a4`.
+
+## Round 2 remediation
+
+- Fatal aggregation is now context-aligned by shared `hazard_context_ref` or `(tissue, cell_type)`; unscoped claims cannot combine into a fatal decision.
+- `CONDITIONAL_GO` now requires every material-risk claim to be covered by a context-matched differential or explicit `mitigates_claim_refs`.
+- `NO_EXPLOITABLE_DIFFERENTIAL` requires an external comprehensive assessment reference; a single observation is downgraded to unresolved.
+- Added cross-context, unrelated-differential, partial-coverage, and unscoped-fatal regression tests.

@@ -62,6 +62,7 @@ class TargetSafetyPreScreenTests(unittest.TestCase):
                         direction=RiskDirection.SUPPORTS_RISK,
                         criticality=Criticality.CRITICAL_NON_REGENERATIVE,
                         surface_exposed=True,
+                        hazard_context_ref="external:hazard/heart",
                     ),
                     claim(
                         claim_ref="external:claim/unknown-density",
@@ -94,6 +95,24 @@ class TargetSafetyPreScreenTests(unittest.TestCase):
         self.assertEqual(result.decision, Decision.HOLD)
         self.assertIn("external:claim/critical-conflict", result.conflict_refs)
 
+    def test_fatal_claim_without_hazard_context_holds(self):
+        result = assess_target(
+            request(
+                [
+                    claim(
+                        claim_ref="external:claim/unscoped-fatal",
+                        axis=EvidenceAxis.SURFACE_ACCESSIBILITY,
+                        level=EvidenceLevel.B,
+                        direction=RiskDirection.SUPPORTS_RISK,
+                        criticality=Criticality.CRITICAL_NON_REGENERATIVE,
+                        surface_exposed=True,
+                    )
+                ]
+            )
+        )
+        self.assertEqual(result.fatal_flags, ())
+        self.assertEqual(result.decision, Decision.HOLD)
+
     def test_plausible_differential_is_conditional_go(self):
         claims = complete_resolved_claims()
         claims[1] = claim(
@@ -103,6 +122,7 @@ class TargetSafetyPreScreenTests(unittest.TestCase):
             direction=RiskDirection.SUPPORTS_SAFETY,
             surface_exposed=False,
             differential_status=DifferentialStatus.PRESENT,
+            hazard_context_ref="external:hazard/conditional",
         )
         claims[2] = claim(
             claim_ref="external:claim/density-differential",
@@ -111,6 +131,8 @@ class TargetSafetyPreScreenTests(unittest.TestCase):
             direction=RiskDirection.SUPPORTS_SAFETY,
             normal_density_relation="lower",
             differential_status=DifferentialStatus.PRESENT,
+            hazard_context_ref="external:hazard/conditional",
+            mitigates_claim_refs=("external:claim/conditional-material-risk",),
         )
         claims.append(
             claim(
@@ -119,6 +141,7 @@ class TargetSafetyPreScreenTests(unittest.TestCase):
                 level=EvidenceLevel.B,
                 direction=RiskDirection.SUPPORTS_RISK,
                 criticality=Criticality.REGENERATIVE,
+                hazard_context_ref="external:hazard/conditional",
             )
         )
         result = assess_target(
@@ -170,6 +193,7 @@ class TargetSafetyPreScreenTests(unittest.TestCase):
                         level=EvidenceLevel.B,
                         direction=RiskDirection.SUPPORTS_RISK,
                         surface_exposed=True,
+                        hazard_context_ref="external:hazard/heart",
                     ),
                     claim(
                         claim_ref="external:claim/critical-tissue-risk",
@@ -177,6 +201,7 @@ class TargetSafetyPreScreenTests(unittest.TestCase):
                         level=EvidenceLevel.B,
                         direction=RiskDirection.SUPPORTS_RISK,
                         criticality=Criticality.CRITICAL_NON_REGENERATIVE,
+                        hazard_context_ref="external:hazard/heart",
                     ),
                 ]
             )
@@ -193,6 +218,7 @@ class TargetSafetyPreScreenTests(unittest.TestCase):
                         level=EvidenceLevel.B,
                         direction=RiskDirection.SUPPORTS_RISK,
                         normal_density_relation="higher",
+                        hazard_context_ref="external:hazard/kidney",
                     ),
                     claim(
                         claim_ref="external:claim/inaccessible-surface",
@@ -200,6 +226,7 @@ class TargetSafetyPreScreenTests(unittest.TestCase):
                         level=EvidenceLevel.B,
                         direction=RiskDirection.SUPPORTS_RISK,
                         surface_exposed=False,
+                        hazard_context_ref="external:hazard/kidney",
                     ),
                     claim(
                         claim_ref="external:claim/critical-tissue",
@@ -207,6 +234,7 @@ class TargetSafetyPreScreenTests(unittest.TestCase):
                         level=EvidenceLevel.B,
                         direction=RiskDirection.SUPPORTS_RISK,
                         criticality=Criticality.CRITICAL_NON_REGENERATIVE,
+                        hazard_context_ref="external:hazard/kidney",
                     ),
                 ]
             )
@@ -238,11 +266,97 @@ class TargetSafetyPreScreenTests(unittest.TestCase):
                         level=EvidenceLevel.B,
                         direction=RiskDirection.SUPPORTS_RISK,
                         differential_status=DifferentialStatus.ABSENT,
+                        differential_assessment_ref="external:assessment/no-differential",
                     )
                 ]
             )
         )
         self.assertIn("no_exploitable_target_differential", [flag.value for flag in result.fatal_flags])
+
+    def test_cross_context_surface_and_criticality_do_not_kill(self):
+        result = assess_target(
+            request(
+                [
+                    claim(
+                        claim_ref="external:claim/liver-surface",
+                        axis=EvidenceAxis.SURFACE_ACCESSIBILITY,
+                        level=EvidenceLevel.B,
+                        direction=RiskDirection.SUPPORTS_RISK,
+                        surface_exposed=True,
+                        hazard_context_ref="external:hazard/liver",
+                    ),
+                    claim(
+                        claim_ref="external:claim/heart-critical",
+                        axis=EvidenceAxis.NORMAL_TISSUE_EXPRESSION,
+                        level=EvidenceLevel.B,
+                        direction=RiskDirection.SUPPORTS_RISK,
+                        criticality=Criticality.CRITICAL_NON_REGENERATIVE,
+                        hazard_context_ref="external:hazard/heart",
+                    ),
+                ]
+            )
+        )
+        self.assertNotIn("critical_surface_hazard", [flag.value for flag in result.fatal_flags])
+        self.assertEqual(result.decision, Decision.HOLD)
+
+    def test_unrelated_differential_does_not_cover_material_risk(self):
+        claims = complete_resolved_claims()
+        claims[1] = claim(
+            claim_ref="external:claim/unrelated-differential",
+            axis=EvidenceAxis.SURFACE_ACCESSIBILITY,
+            level=EvidenceLevel.B,
+            direction=RiskDirection.SUPPORTS_SAFETY,
+            surface_exposed=False,
+            differential_status=DifferentialStatus.PRESENT,
+            hazard_context_ref="external:hazard/gut",
+        )
+        claims.append(
+            claim(
+                claim_ref="external:claim/heart-material-risk",
+                axis=EvidenceAxis.NORMAL_TISSUE_EXPRESSION,
+                level=EvidenceLevel.B,
+                direction=RiskDirection.SUPPORTS_RISK,
+                criticality=Criticality.CRITICAL_NON_REGENERATIVE,
+                hazard_context_ref="external:hazard/heart",
+            )
+        )
+        result = assess_target(request(claims))
+        self.assertEqual(result.decision, Decision.HOLD)
+
+    def test_partial_differential_coverage_does_not_conditionally_go(self):
+        claims = complete_resolved_claims()
+        claims[1] = claim(
+            claim_ref="external:claim/covered-differential",
+            axis=EvidenceAxis.SURFACE_ACCESSIBILITY,
+            level=EvidenceLevel.B,
+            direction=RiskDirection.SUPPORTS_SAFETY,
+            surface_exposed=False,
+            differential_status=DifferentialStatus.PRESENT,
+            hazard_context_ref="external:hazard/shared",
+            mitigates_claim_refs=("external:claim/risk-a",),
+        )
+        claims.extend(
+            [
+                claim(
+                    claim_ref="external:claim/risk-a",
+                    axis=EvidenceAxis.NORMAL_TISSUE_EXPRESSION,
+                    level=EvidenceLevel.B,
+                    direction=RiskDirection.SUPPORTS_RISK,
+                    criticality=Criticality.REGENERATIVE,
+                    hazard_context_ref="external:hazard/shared",
+                ),
+                claim(
+                    claim_ref="external:claim/risk-b",
+                    axis=EvidenceAxis.NORMAL_TISSUE_EXPRESSION,
+                    level=EvidenceLevel.B,
+                    direction=RiskDirection.SUPPORTS_RISK,
+                    criticality=Criticality.REGENERATIVE,
+                    hazard_context_ref="external:hazard/other",
+                ),
+            ]
+        )
+        result = assess_target(request(claims))
+        self.assertEqual(result.decision, Decision.HOLD)
 
     def test_empty_evidence_is_hold_and_requests_next_experiments(self):
         result = assess_target(request([]))

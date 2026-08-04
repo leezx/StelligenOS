@@ -21,7 +21,10 @@ Unknown remains unresolved; it is never converted into safety.
 Material risk claims that do not meet a fatal threshold produce `HOLD`, not
 `GO`. A target reaches `GO` only when all six axes are represented and resolved
 with no material risk or conflict. Differential status is a structured field;
-free-form tags cannot create a fatal flag.
+free-form tags cannot create a fatal flag. Fatal aggregation requires a shared
+`hazard_context_ref` or `(tissue, cell_type)` context; unscoped evidence cannot
+be combined into a fatal decision. A differential must either share that
+context or explicitly list the risk claims it mitigates.
 
 ## Decision semantics
 

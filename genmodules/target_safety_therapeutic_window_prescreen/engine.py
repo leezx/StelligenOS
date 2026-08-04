@@ -7,6 +7,7 @@ interpretation, and persistence belong to the external runtime.
 from __future__ import annotations
 
 from collections import defaultdict
+from typing import Hashable
 
 from .contracts import (
     AssessmentRequest,
@@ -83,20 +84,28 @@ def _axis_summaries(claims: tuple[EvidenceClaim, ...]) -> tuple[AxisSummary, ...
 
 def _fatal_flags(claims: tuple[EvidenceClaim, ...]) -> tuple[FatalFlag, ...]:
     flags: list[FatalFlag] = []
-    high_quality_surface_risk = any(
-        claim.axis == EvidenceAxis.SURFACE_ACCESSIBILITY
-        and claim.surface_exposed is True
-        and claim.level in {EvidenceLevel.A, EvidenceLevel.B}
-        and claim.direction == RiskDirection.SUPPORTS_RISK
-        for claim in claims
-    )
-    high_quality_critical_tissue_risk = any(
-        claim.criticality
-        in {Criticality.CRITICAL_NON_REGENERATIVE, Criticality.CRITICAL_REVERSIBLE}
-        and claim.level in {EvidenceLevel.A, EvidenceLevel.B}
-        and claim.direction == RiskDirection.SUPPORTS_RISK
-        for claim in claims
-    )
+    grouped: dict[Hashable, list[EvidenceClaim]] = defaultdict(list)
+    for claim in claims:
+        if claim.hazard_context_ref is not None:
+            grouped[("ref", claim.hazard_context_ref)].append(claim)
+        elif claim.tissue and claim.cell_type:
+            grouped[("cell", claim.tissue, claim.cell_type)].append(claim)
+
+    def context_has_surface_and_critical(context_claims: list[EvidenceClaim]) -> bool:
+        return any(
+            claim.axis == EvidenceAxis.SURFACE_ACCESSIBILITY
+            and claim.surface_exposed is True
+            and claim.level in {EvidenceLevel.A, EvidenceLevel.B}
+            and claim.direction == RiskDirection.SUPPORTS_RISK
+            for claim in context_claims
+        ) and any(
+            claim.criticality
+            in {Criticality.CRITICAL_NON_REGENERATIVE, Criticality.CRITICAL_REVERSIBLE}
+            and claim.level in {EvidenceLevel.A, EvidenceLevel.B}
+            and claim.direction == RiskDirection.SUPPORTS_RISK
+            for claim in context_claims
+        )
+
     if any(
         (
             claim.axis == EvidenceAxis.SURFACE_ACCESSIBILITY
@@ -104,11 +113,12 @@ def _fatal_flags(claims: tuple[EvidenceClaim, ...]) -> tuple[FatalFlag, ...]:
             and claim.criticality == Criticality.CRITICAL_NON_REGENERATIVE
             and claim.level in {EvidenceLevel.A, EvidenceLevel.B}
             and claim.direction == RiskDirection.SUPPORTS_RISK
+            and (claim.hazard_context_ref is not None or (claim.tissue and claim.cell_type))
         )
         for claim in claims
     ):
         flags.append(FatalFlag.CRITICAL_SURFACE_HAZARD)
-    elif high_quality_surface_risk and high_quality_critical_tissue_risk:
+    elif any(context_has_surface_and_critical(items) for items in grouped.values()):
         flags.append(FatalFlag.CRITICAL_SURFACE_HAZARD)
     if any(
         claim.axis == EvidenceAxis.EXISTING_MODALITY_TOXICITY
@@ -119,14 +129,30 @@ def _fatal_flags(claims: tuple[EvidenceClaim, ...]) -> tuple[FatalFlag, ...]:
         for claim in claims
     ):
         flags.append(FatalFlag.CONFIRMED_ON_TARGET_TOXICITY)
-    high_quality_density_risk = any(
-        claim.axis == EvidenceAxis.ANTIGEN_DENSITY
-        and claim.normal_density_relation in {"similar", "higher"}
-        and claim.level in {EvidenceLevel.A, EvidenceLevel.B}
-        and claim.direction == RiskDirection.SUPPORTS_RISK
-        for claim in claims
-    )
-    if high_quality_density_risk and high_quality_surface_risk and high_quality_critical_tissue_risk:
+    if any(
+        any(
+            claim.axis == EvidenceAxis.ANTIGEN_DENSITY
+            and claim.normal_density_relation in {"similar", "higher"}
+            and claim.level in {EvidenceLevel.A, EvidenceLevel.B}
+            and claim.direction == RiskDirection.SUPPORTS_RISK
+            for claim in items
+        )
+        and any(
+            claim.axis == EvidenceAxis.SURFACE_ACCESSIBILITY
+            and claim.surface_exposed is True
+            and claim.level in {EvidenceLevel.A, EvidenceLevel.B}
+            and claim.direction == RiskDirection.SUPPORTS_RISK
+            for claim in items
+        )
+        and any(
+            claim.criticality
+            in {Criticality.CRITICAL_NON_REGENERATIVE, Criticality.CRITICAL_REVERSIBLE}
+            and claim.level in {EvidenceLevel.A, EvidenceLevel.B}
+            and claim.direction == RiskDirection.SUPPORTS_RISK
+            for claim in items
+        )
+        for items in grouped.values()
+    ):
         flags.append(FatalFlag.NORMAL_DENSITY_NOT_LOWER)
     if any(
         claim.axis == EvidenceAxis.SOLUBLE_SINK
@@ -140,6 +166,7 @@ def _fatal_flags(claims: tuple[EvidenceClaim, ...]) -> tuple[FatalFlag, ...]:
     if any(
         claim.axis == EvidenceAxis.NORMAL_TISSUE_EXPRESSION
         and claim.differential_status == DifferentialStatus.ABSENT
+        and claim.differential_assessment_ref is not None
         and claim.level in {EvidenceLevel.A, EvidenceLevel.B}
         and claim.direction == RiskDirection.SUPPORTS_RISK
         for claim in claims
@@ -181,8 +208,10 @@ def assess_target(request: AssessmentRequest) -> AssessmentResult:
         if claim.direction == RiskDirection.SUPPORTS_RISK
     )
     incomplete_axes = any(summary.unresolved for summary in summaries)
-    has_plausible_differential = any(
-        claim.differential_status == DifferentialStatus.PRESENT
+    differential_claims = tuple(
+        claim
+        for claim in request.claims
+        if claim.differential_status == DifferentialStatus.PRESENT
         and claim.direction == RiskDirection.SUPPORTS_SAFETY
         and claim.axis
         in {
@@ -191,8 +220,18 @@ def assess_target(request: AssessmentRequest) -> AssessmentResult:
             EvidenceAxis.TISSUE_CONSEQUENCE,
         }
         and claim.level in {EvidenceLevel.B, EvidenceLevel.C}
-        for claim in request.claims
     )
+    covered_risk_refs = {
+        risk.claim_ref
+        for differential in differential_claims
+        for risk in request.claims
+        if risk.claim_ref in differential.mitigates_claim_refs
+        or (
+            differential.hazard_context_ref is not None
+            and differential.hazard_context_ref == risk.hazard_context_ref
+        )
+    }
+    all_material_risks_covered = bool(material_risk_refs) and set(material_risk_refs) <= covered_risk_refs
     if fatal_flags:
         decision = Decision.KILL
     elif (
@@ -206,7 +245,7 @@ def assess_target(request: AssessmentRequest) -> AssessmentResult:
     elif material_risk_refs:
         decision = (
             Decision.CONDITIONAL_GO
-            if has_plausible_differential
+            if all_material_risks_covered
             else Decision.HOLD
         )
     else:
@@ -225,7 +264,7 @@ def assess_target(request: AssessmentRequest) -> AssessmentResult:
     if decision == Decision.CONDITIONAL_GO and confidence == "high":
         confidence = "medium"
     return AssessmentResult(
-        contract_version="0.2.0",
+        contract_version="0.3.0",
         request_ref=request.request_ref,
         target_ref=request.target.target_ref,
         axis_summaries=summaries,
