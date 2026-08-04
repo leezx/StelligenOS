@@ -27,3 +27,6 @@
 | 文档 ID | 版本 | 快照 | 审核状态 |
 |---|---|---|---|
 | `CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW` | `v1` | `CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.v1.zh-CN.md` | PR #42 `APPROVE` |
+
+The `v2-draft` revision is intentionally not snapshotted until the dedicated
+ChatGPT PR review reaches `APPROVE`.

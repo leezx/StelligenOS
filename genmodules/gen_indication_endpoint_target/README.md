@@ -1,7 +1,8 @@
 # `gen_indication_endpoint_target`
 
-Software-only Phase 1 contracts for constrained ADC indication, endpoint, and
-target opportunity generation.
+Software-only contracts for constrained ADC opportunity generation. The v5
+development unit is `Target x Anchor Clinical Context x Product/Benefit
+Hypothesis`; it is not a permanently fixed indication-endpoint-target tuple.
 
 ## Boundary
 
@@ -20,7 +21,23 @@ references that cross the execution boundary must use `external:` references.
 contracts. `NOT_EVALUATED` and `UNRESOLVED` preserve insufficient evidence and
 must not be converted into PASS or FAIL by this package.
 
-## Phase 1 contracts
+## Progressive hypothesis contracts
+
+- `AnchorClinicalContext`: anchor indication, setting, line, population and
+  comparator used for design and validation; expansion indications remain open.
+- `IntendedBenefitHypothesis`: clinical value direction and endpoint class;
+  observed effect size is never represented as an input.
+- `BiomarkerHypothesis`: biology and assay feasibility; final cutoff/CDx may be
+  deferred.
+- `ProductHypothesis`: ADC design constraints derived from the clinical use.
+- `ClinicalHypothesis`: the auditable composition of the external refs and a
+  progressive lock state from `exploratory` to `regulatory-locked`.
+- `ClinicalHypothesisEntryMode`: the supported mature-target-first,
+  target-context-co-selection, and clinical-problem-first entry modes.
+- Lock transitions and stage requirements are validated by the contract; a
+  maturity label alone cannot create a regulatory-ready hypothesis.
+
+## Existing contracts
 
 - `OpportunitySearchScope`
 - `ClinicalFrame`
@@ -30,7 +47,11 @@ must not be converted into PASS or FAIL by this package.
 - `AdversarialReview`
 - `TargetOpportunityHandoff`
 
+`TargetCandidate` and `TargetOpportunityHandoff` use an explicit
+`legacy_compatibility=True` flag for the pre-v5 exact tuple path. The v5 path
+requires the clinical hypothesis identity; T12 additionally requires its lock
+state. The canonical `ClinicalLockState` is shared with the Gate envelope.
+
 External generation and evaluation implementations may consume these shapes
 through the Opportunity Generation capability port. They must keep inputs,
 observations, evidence, and run outputs outside this repository.
-

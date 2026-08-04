@@ -7,6 +7,8 @@ not execute a Gate, persist an input envelope, or contain domain records.
 from dataclasses import dataclass
 from typing import Final, Mapping, Protocol
 
+from genmodules.gen_indication_endpoint_target.contracts import ClinicalLockState
+
 
 GATE_GROUPS: Final[tuple[str, ...]] = (
     "target_opportunity",
@@ -69,6 +71,11 @@ _COMMERCIAL_GATES: Final[tuple[str, ...]] = (
 GATE_IDS: Final[tuple[str, ...]] = _TARGET_GATES + _PRODUCT_GATES + _COMMERCIAL_GATES
 
 
+def _require_external_ref(value: str | None, field_name: str) -> None:
+    if value is not None and (not value.startswith("external:") or not value[9:]):
+        raise ValueError(f"{field_name} must be an external reference")
+
+
 @dataclass(frozen=True)
 class GateDefinition:
     """Immutable identity and topology metadata for one Gate."""
@@ -113,7 +120,26 @@ class GateInputEnvelope:
     upstream_result_refs: Mapping[str, str]
     graph_context_ref: str
     run_context_ref: str
-    contract_version: str = "2.0.0"
+    # T0 is progressive: these refs do not imply a final label or endpoint.
+    contract_version: str = "2.1.0"
+    clinical_hypothesis_ref: str | None = None
+    anchor_clinical_context_ref: str | None = None
+    intended_benefit_ref: str | None = None
+    biomarker_hypothesis_ref: str | None = None
+    product_hypothesis_ref: str | None = None
+    clinical_lock_state: ClinicalLockState | None = None
+
+    def __post_init__(self) -> None:
+        for name in (
+            "clinical_hypothesis_ref", "anchor_clinical_context_ref",
+            "intended_benefit_ref", "biomarker_hypothesis_ref",
+            "product_hypothesis_ref",
+        ):
+            _require_external_ref(getattr(self, name), name)
+        if self.clinical_lock_state is not None and not isinstance(self.clinical_lock_state, ClinicalLockState):
+            raise ValueError("clinical_lock_state must be a ClinicalLockState")
+        if self.clinical_lock_state is not None and self.clinical_hypothesis_ref is None:
+            raise ValueError("clinical_lock_state requires clinical_hypothesis_ref")
 
 
 @dataclass(frozen=True)
@@ -130,7 +156,27 @@ class GateModelOutput:
     missing_information_refs: tuple[str, ...]
     recommended_validation_refs: tuple[str, ...]
     details_ref: str | None
-    contract_version: str = "2.0.0"
+    contract_version: str = "2.1.0"
+    resulting_clinical_hypothesis_ref: str | None = None
+    resulting_clinical_lock_state: ClinicalLockState | None = None
+
+    def __post_init__(self) -> None:
+        _require_external_ref(
+            self.resulting_clinical_hypothesis_ref,
+            "resulting_clinical_hypothesis_ref",
+        )
+        if (
+            self.resulting_clinical_lock_state is not None
+            and not isinstance(self.resulting_clinical_lock_state, ClinicalLockState)
+        ):
+            raise ValueError("resulting_clinical_lock_state must be a ClinicalLockState")
+        if (
+            self.resulting_clinical_lock_state is not None
+            and self.resulting_clinical_hypothesis_ref is None
+        ):
+            raise ValueError(
+                "resulting_clinical_lock_state requires resulting_clinical_hypothesis_ref"
+            )
 
 
 class ExternalGate(Protocol):

@@ -1991,3 +1991,59 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 本次仅新增／修改审计文本，无任何代码、契约、Gate 拓扑、Model、Profile、生命周期或测试变更；未新增数据、缓存或结果。
 - Result: PR #44 合并后，28-PR 链的审计闭环完成，open PR 归零，`main` 为唯一最新版本。
 - Open items（均建议另立任务，本次不处理）: 无 CI／commit status；无依赖声明文件而多个测试依赖 `pyyaml`；43 个已合并分支未清理，分支删除属破坏性操作需明确授权。
+
+### 2026-08-03 20:20 EDT
+
+- Action: 重新读取 `main`、`HANDOFF`、架构契约、测试和 `prompts/GPT-Feedback.md#v5`。确认 `HEAD` 与 `origin/main` 同步，但反馈文件存在用户未提交修改；未回退、未覆盖。
+- Decision: 将 v5 解释为架构修订，而非单纯文档润色。保留 45-Gate 身份和顺序，改造早期研发单元为 `Target x Anchor Clinical Context x Intended Benefit/Product Hypothesis`，采用递进锁定。
+- Branch: 创建 `task_20260803_v5-clinical-hypothesis-architecture`。
+- Change: 新增 `ClinicalHypothesis` 核心对象及 `AnchorClinicalContext`、`IntendedBenefitHypothesis`、`BiomarkerHypothesis`、`ProductHypothesis`、`ClinicalLockState` 数据无关契约；全部跨边界引用要求 `external:`。
+- Change: `GateInputEnvelope` 增加可选 hypothesis/context/benefit/biomarker/product 引用和 `clinical_lock_state`；保留 `contract_version=2.0.0`、Gate ID 和拓扑不变。
+- Change: 更新 canonical architecture、contract、lifecycle、module README、core object registry 和 opportunity-generation outputs；旧 v1 快照不修改，v2 暂不创建快照，等待 ChatGPT PR `APPROVE`。
+- Test incident: 为语法检查运行 `compileall` 生成 `__pycache__`，全量测试因此出现 3 个仓库边界失败；已删除所有本轮生成的缓存目录。边界检查本身通过，后续不用 `compileall`。
+- Next: 无缓存方式复跑全量测试；通过后提交、推送并在 Chrome 的 ChatGPT「ADC研发靶点选择」对话中提交 PR 审核。
+
+### 2026-08-03 21:05 EDT
+
+- Action: 推送分支并创建 GitHub PR #45：`https://github.com/leezx/StelligenOS/pull/45`。
+- Action: 在 Chrome ChatGPT「ADC研发靶点选择」对话中打开 `+` 菜单，搜索并选中 GitHub 连接器，提交 PR 审核指令。
+- Review scope sent: v5 研发单元、T0 递进锁定、endpoint 三层语义、biomarker 时序、external-only 边界、45-Gate 不变性、契约/测试/handoff 一致性。
+- ChatGPT intermediate findings: (1) `GateInputEnvelope.clinical_lock_state` 是自由字符串且没有校验；(2) 递进锁定目前只有枚举，没有合法转换、阶段必填项或一致性约束；(3) 旧 `OpportunitySearchScope`、`ClinicalFrame`、`TargetCandidate`、`TargetOpportunityHandoff` 仍以精确 indication/endpoint 为主身份，`ClinicalHypothesis` 尚未接管真实 generation-evaluation-handoff 链。最终结论尚未出现，不能视为 `APPROVE`。
+- Browser state: 审核对话已保留为 handoff，便于下一轮继续读取；PR 不合并，v2 快照不创建，代码不继续修改，直到获得完整结论。
+
+### 2026-08-04 00:20 EDT
+
+- Action: 重新读取 Chrome「ADC研发靶点选择」对话，获得 ChatGPT 对 PR #45 的完整 Round 1 结论：`REQUEST_CHANGES`。
+- Blocking feedback: `ClinicalHypothesis` 尚未接管旧 generation-validation-handoff 链；六级 lock 只有枚举、没有转换和阶段最低要求；endpoint/biomarker 层级字段不足；三种 entry mode 只有文档说明、契约不能表达 exploratory seed。
+- Additional feedback: `GateInputEnvelope` 的 lock state 是未校验字符串，新增字段破坏潜在位置参数兼容且未升级版本；YAML 合同版本未升级；测试缺少状态、入口、时序、envelope、handoff 传播覆盖；架构文档编号和对象关系需修正。
+- Change started on same PR: add entry-mode, cutoff/CDx status, monotonic lock transition and state-specific minimum validation; make legacy exact indication/endpoint fields compatibility snapshots; propagate `clinical_hypothesis_ref` and lock state through frame, candidate and T12 handoff; type and validate Gate envelope extensions; bump contract versions; add tests and save the review record.
+- Boundary: no data, cache, results, model weights or runtime artifacts added; `prompts/GPT-Feedback.md` remains the user's unstaged local change and is not included.
+- Next: run the complete test suite and boundary check, commit/push the same PR, then submit Round 2 review in the same ChatGPT conversation.
+
+### 2026-08-03 21:20 EDT
+
+- Action: Continued from the completed browser run and reread the Round 1 `REQUEST_CHANGES` record.
+- Fix: Corrected exploratory `OpportunitySearchScope` validation so a seed reference does not require complete clinical fields or a cutoff date; optional non-empty values are still validated when supplied.
+- Fix: Added typed resulting clinical hypothesis and lock-state fields to `GateModelOutput`, with external-reference and state consistency validation; bumped its contract version while preserving the existing positional field order.
+- Validation: `PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'` passed with 179 tests; `git diff --check` passed; repository data-boundary scan passed.
+- Boundary: `prompts/GPT-Feedback.md` remains an unstaged user change and was not modified, staged, or reverted by this work.
+- Next: explicitly stage only the PR remediation files, commit and push to PR #45, then submit the Round 2 review request in the existing ChatGPT conversation.
+
+### 2026-08-03 22:20 EDT
+
+- Action: Submitted the Round 2 PR review request through Chrome ChatGPT conversation `ADC研发靶点选择` with the GitHub connector selected, targeting PR #45 head `2b4ab3e`.
+- Browser incident: An intermediate connector-menu keyboard action submitted the search word `GitHub` as an empty chat request. The response was stopped immediately; no PR review instruction or code change was associated with that accidental request.
+- Review result: ChatGPT returned `REQUEST_CHANGES` after inspecting the PR and explicitly confirmed several Round 1 fixes.
+- Blocking findings: legacy `TargetCandidate`/T12 paths still remain the default invariant; lock requirements are not cumulative; GenModule and Gate code define incompatible duplicate `ClinicalLockState` enums; co-selection permits an empty hypothesis and lacks full three-mode tests.
+- Record: Saved the complete Round 2 review to `logs/chatgpt-review-2026-08-03-pr45-round2.md`; browser tab retained as handoff for the next review cycle.
+- Boundary: No data, cache, result, model weight, or runtime artifact was added. No merge or snapshot was performed.
+- Next: remediate all four blocking findings on the same PR, run local tests and boundary checks, push, and submit Round 3 review through the same ChatGPT conversation.
+
+### 2026-08-03 21:34 EDT
+
+- Action: Implemented the Round 2 remediation on the same task branch.
+- Change: Made `ClinicalHypothesis` exploratory refs optional with meaningful entry-mode minima; made lock requirements cumulative through protocol and regulatory states.
+- Change: Replaced the duplicate Gate-side lock enum with the canonical GenModule enum; added cross-module identity and envelope tests.
+- Change: Added explicit `legacy_compatibility` paths to `TargetCandidate` and `TargetOpportunityHandoff`; v5 paths now require hypothesis identity and paired lock state. Added v5-only candidate and T12 negative tests.
+- Validation: Full test suite passed with 183 tests; repository boundary check passed; `git diff --check` passed.
+- Next: stage the Round 2 remediation and records, commit/push PR #45, then submit Round 3 review through the same ChatGPT conversation.

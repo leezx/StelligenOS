@@ -89,15 +89,27 @@ Capabilities 是操作系统提供的能力集合，不是生命周期，也不�
 
 ### 3.4 Objects
 
-七类核心对象：
+核心对象：
 
 1. Opportunity
-2. TargetHypothesis
-3. BinderCandidate
-4. ADCConstruct
-5. LeadSeries
-6. DevelopmentCandidate
-7. Asset
+2. ClinicalHypothesis
+3. TargetHypothesis
+4. BinderCandidate
+5. ADCConstruct
+6. LeadSeries
+7. DevelopmentCandidate
+8. Asset
+
+`ClinicalHypothesis` 是 v5 的早期研发单元，组合 target、anchor clinical
+context、intended benefit、biomarker hypothesis 和 product hypothesis。
+它支持 `mature-target-first`、`target-context-co-selection` 和
+`clinical-problem-first` 三种入口；探索态允许 seed 不完整，正式锁定状态
+按最低必填条件校验。
+v5 Candidate/T12 路径必须传递 `ClinicalHypothesis` 身份；旧的精确
+indication-endpoint-target 路径只能通过显式 `legacy_compatibility` 标记
+使用，不能继续作为默认不变量。
+它采用 `exploratory -> provisional -> anchored -> product-locked ->
+protocol-locked -> regulatory-locked` 递进锁定；未知不等于失败。
 
 `Asset` 必须能够进入商业讨论，能被 partner、investor、BD 或 licensing 语境使用。
 

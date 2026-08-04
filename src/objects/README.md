@@ -3,6 +3,7 @@
 Core object implementations follow the architecture contract:
 
 - Opportunity
+- ClinicalHypothesis
 - TargetHypothesis
 - BinderCandidate
 - ADCConstruct

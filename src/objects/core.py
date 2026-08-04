@@ -10,6 +10,7 @@ from typing import Final
 
 CORE_OBJECT_TYPES: Final[tuple[str, ...]] = (
     "Opportunity",
+    "ClinicalHypothesis",
     "TargetHypothesis",
     "BinderCandidate",
     "ADCConstruct",

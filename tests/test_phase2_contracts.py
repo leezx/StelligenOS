@@ -14,6 +14,7 @@ class Phase2ContractTests(unittest.TestCase):
             CORE_OBJECT_TYPES,
             (
                 "Opportunity",
+                "ClinicalHypothesis",
                 "TargetHypothesis",
                 "BinderCandidate",
                 "ADCConstruct",
