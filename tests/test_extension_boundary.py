@@ -106,6 +106,27 @@ class ExtensionRegistryTests(unittest.TestCase):
                 self.assertIn(status, ALLOWED_STATUSES)
                 self.assertIn(status, defined)
 
+    def test_manifest_and_contracts_declare_the_same_version(self) -> None:
+        """Two copies of a version number are two chances to disagree.
+
+        EXT-02 carried its version in both ``extension.yaml`` and
+        ``contracts.py`` with nothing checking they matched, so a manifest
+        revision could leave the module claiming the old version.
+        """
+        pattern = re.compile(r'^EXTENSION_VERSION:\s*Final\[str\]\s*=\s*"([^"]+)"', re.MULTILINE)
+        for path in _extension_dirs():
+            with self.subTest(extension=path.name):
+                manifest_version = str(
+                    yaml.safe_load((path / "extension.yaml").read_text())["extension"][
+                        "extension_version"
+                    ]
+                )
+                match = pattern.search((path / "contracts.py").read_text())
+                self.assertIsNotNone(
+                    match, "contracts.py must declare EXTENSION_VERSION"
+                )
+                self.assertEqual(match.group(1), manifest_version)
+
     def test_partially_absorbed_extensions_declare_what_is_left(self) -> None:
         """Absorbed core concept plus unstated remainder would silently retire it."""
         for path in _extension_dirs():

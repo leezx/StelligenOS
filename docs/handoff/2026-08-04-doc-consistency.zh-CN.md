@@ -3,8 +3,8 @@
 - 任务编号：`task_20260804_doc-consistency`
 - 分支：`task_20260804_doc-consistency`（从 `main` `a5bf77f` 创建）
 - PR：**PR B**，base 为 `main`
-- 当前状态：`PENDING_CHATGPT_REVIEW`
-- 变更性质：文档与扩展元数据同步 + 两项新守卫测试，**无内核变更、无行为变更**
+- 当前状态：`ROUND_1_REQUEST_CHANGES_ADDRESSED_PENDING_REVIEW`
+- 变更性质：文档与扩展元数据同步 + 三项新守卫测试 + EXT-02 升版 `0.1.0` → `0.2.0`，**无内核变更、无行为变更**
 - Gate 变更：`NO_GATE_CHANGE`
 
 ## 三个不一致
@@ -42,12 +42,13 @@ Gate 输入携带 `clinical_hypothesis_ref` 与递进 lock state。
 
 | 文件 | 变更 |
 |---|---|
-| `extensions/dynamic_gate_context/extension.yaml` | `status` → `partially_absorbed`；新增 `absorbed_by_kernel` 与 `remaining_scope`（`RS-01`..`RS-05`）；`design_constraint` 改为只约束剩余范围；`future_direction` 与 `activation_requirements` 按 v5 后的现实更新。 |
+| `extensions/dynamic_gate_context/extension.yaml` | `status` → `partially_absorbed`；`extension_version` `0.1.0` → `0.2.0`；新增 `absorbed_by_kernel` 与 `remaining_scope`（`RS-01`..`RS-05`）；`design_constraint` 改为只约束剩余范围；`future_direction` 与 `activation_requirements` 按 v5 后的现实更新。 |
+| `extensions/dynamic_gate_context/contracts.py` | `EXTENSION_VERSION` 同步为 `0.2.0`；模块 docstring 首行由 `shell only` 改为 `partially absorbed into the v5 kernel` 并指向 `remaining_scope`。合同本身未改。 |
 | `extensions/dynamic_gate_context/README.md` | 顶部新增「状态变更说明」，列出内核已覆盖与仍属本扩展的部分。**原有论证与五轴设计原样保留**，作为这次内核变更的来源记录。 |
 | `extensions/README.md` | 状态语义表新增 `partially_absorbed` 并说明其与 `governed` 的区别；注册表 EXT-02 行更新；内核不变式 2 的对象计数改为引用权威清单。 |
 | `docs/architecture/release.zh-CN.md` | 冻结范围不再复述对象计数，改为指向 `src/contracts/core_objects.yaml`。 |
 | `docs/architecture/contract.zh-CN.md` | §6 新增核心对象清单指针；新增 §7「尚未进入内核的扩展」，指向 `extensions/README.md` 与 `extensions/BACKLOG.zh-CN.md`。 |
-| `tests/test_extension_boundary.py` | 期望状态更新；新增 2 项守卫。 |
+| `tests/test_extension_boundary.py` | 期望状态更新；新增 3 项守卫。 |
 
 ## 为什么不删 EXT-02
 
@@ -100,7 +101,7 @@ README 的「激活前必须回答」四问在 v5 之后全部仍然成立。
 - 未改动任何内核代码。`src/` 下只改了两份文档，未改任何 `.py`。
 - 未改动 45-Gate 拓扑、`gate_id`、顺序、任何 gate/model/profile 定义。
 - 未改动四阶段生命周期、核心对象定义、`ClinicalHypothesis` 及其锁定门槛。
-- 未改动 EXT-02 的 `contracts.py`，也未改动 EXT-01／EXT-03／EXT-04 的任何文件。
+- 未改动 EXT-01／EXT-03／EXT-04 的任何文件。（EXT-02 的 `contracts.py` **已改动**，见下方 Round 1 修订；本条初版写「未改动 EXT-02 的 `contracts.py`」，在 Round 1 修订后已不成立，故更正。）
 - 未改动 `extensions/BACKLOG.zh-CN.md`。
 - 未改写任何历史审计记录（`logs/`、`docs/handoff/` 既有内容、`docs/phases/`、
   `docs/architecture/versions/`）。
@@ -113,7 +114,7 @@ README 的「激活前必须回答」四问在 v5 之后全部仍然成立。
 
 ```text
 命令：PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'
-结果：Ran 185 tests —— OK（183 + 新增 2）
+结果：Ran 186 tests —— OK（183 + 新增 3）
 
 命令：bash scripts/verify_repository_boundary.sh
 结果：Repository boundary check passed.
@@ -125,6 +126,51 @@ README 的「激活前必须回答」四问在 v5 之后全部仍然成立。
 （历史审计记录中的同类表述按设计保留，未计入）
 ```
 
+## Round 1 `REQUEST_CHANGES` 与修订
+
+ChatGPT 对本 PR 返回 `REQUEST_CHANGES`，一条阻断，经核实成立。
+
+### 阻断：EXT-02 的 `extension_version` 必须升版
+
+成立。本 PR 对 manifest 的改动不是 prose 级别：`status` 语义变了、新增 `absorbed_by_kernel`、
+新增结构化 `remaining_scope`、`design_constraint` 与 `activation_requirements` 改写、全局状态语义表
+新增一个状态。这是 manifest 语义与结构的实质变化，继续声明 `0.1.0` 不成立。初版 handoff 用「只改
+元数据与说明」作为不升版的理由，该理由错误——**status 语义本身就是 manifest 的实质内容**。
+
+修订：`extension_version` 升为 `0.2.0`。
+
+### 版本引用的同步核查（审核要求的第二步）
+
+按要求逐处核查版本引用，结果如下：
+
+| 位置 | 是否含版本 | 处理 |
+|---|---|---|
+| `extensions/dynamic_gate_context/extension.yaml` | 是，`extension_version` | 升为 `0.2.0` |
+| `extensions/dynamic_gate_context/contracts.py` | 是，`EXTENSION_VERSION` | 升为 `0.2.0` |
+| `extensions/README.md` 注册表 | 无版本列 | 无需改 |
+| `extensions/dynamic_gate_context/README.md` | 无版本 | 无需改 |
+| `tests/test_extension_boundary.py` | 只断言 `extension_version` 键存在，不断言取值 | 见下 |
+
+### 核查中发现的两个额外问题
+
+**其一：两处版本号此前无任何测试约束其一致。** 既有测试只检查 `extension_version` 键存在。
+也就是说这次的漂移能发生，正是因为缺少这条守卫；只把数字改对而不加守卫，下次会重复。已新增
+`test_manifest_and_contracts_declare_the_same_version`，对每个扩展断言
+`extension.yaml` 的 `extension_version` 与 `contracts.py` 的 `EXTENSION_VERSION` 相等。
+
+**其二：`contracts.py` 的模块 docstring 首行仍写 `shell only`。** 与本 PR 把 status 改为
+`partially_absorbed` 直接矛盾，属同一次漂移的第二处。已改写首段，说明核心概念已由 v5 在内核实现、
+本文件剩下的是 v5 未做的部分，并指向 `remaining_scope` 与 `RS-02`。
+
+因此本 PR 确实改动了 EXT-02 的 `contracts.py`（版本 + docstring），上文「明确未改动」一节相应更正。
+
+### 变异测试证据
+
+| 注入的缺陷 | 结果 |
+|---|---|
+| 两处版本号不一致（`contracts.py` 退回 `0.1.0`） | `FAILED (failures=1)` |
+| 还原 | `OK` |
+
 ## 未决问题与风险
 
 - 仓库仍无 GitHub Actions 或 commit status，上述数字只能由仓库审计记录佐证。
@@ -132,7 +178,6 @@ README 的「激活前必须回答」四问在 v5 之后全部仍然成立。
   其中加扩展指针，理由见上。该文件的 `v2` 审核完成后，建议在同一次或紧随的任务中补一行指针。
 - EXT-01 与 EXT-03 未复核是否也被 v5 部分吸收。初步看不像：EXT-01 依赖真实结局数据，EXT-03 关于
   资产搜索轴，v5 都没触及。如需正式复核可另立任务。
-- `extension_version` 未升版（仍 `0.1.0`），因为本次只改元数据与说明，未改任何契约。
 
 ## 下一步
 

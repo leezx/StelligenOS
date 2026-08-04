@@ -1,7 +1,7 @@
 extension:
   extension_id: EXT-02
   extension_name: dynamic_gate_context
-  extension_version: 0.1.0
+  extension_version: 0.2.0
   extension_type: KernelExtension
   status: partially_absorbed
   priority: medium

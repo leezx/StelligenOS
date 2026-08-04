@@ -2065,3 +2065,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: 185 tests 全部通过（183 + 新增 2）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；规范性文档中残留「七类核心对象」声明 0 处（历史记录中的同类表述按设计保留）。
 - Open risk: EXT-01 与 EXT-03 未正式复核是否也被 v5 部分吸收；初步看不像（EXT-01 依赖真实结局数据，EXT-03 关于资产搜索轴，v5 均未触及），如需正式复核可另立任务。`extension_version` 未升版，因本次只改元数据与说明。
 - Next: 推送并创建 PR B 供 ChatGPT 审核。与 PR C（#46）、PR A（#47）互相独立，均从 `a5bf77f` 创建；三者都追加 worklog，合并时按时间戳顺序解决追加式冲突。
+
+### 2026-08-04 11:55 EDT
+
+- Action: 处理 ChatGPT 对 PR #48（PR B，文档同步）的 Round 1 `REQUEST_CHANGES`。一条阻断，经核实成立，无 pushback。
+- Verification: 成立。本 PR 对 EXT-02 manifest 的改动不是 prose 级别——`status` 语义改变、新增 `absorbed_by_kernel`、新增结构化 `remaining_scope`、`design_constraint` 与 `activation_requirements` 改写、全局状态语义表新增一个状态。初版 handoff 以「只改元数据与说明」为不升版理由，该理由错误：status 语义本身就是 manifest 的实质内容。
+- Change: `extensions/dynamic_gate_context/extension.yaml` 的 `extension_version` 由 `0.1.0` 升为 `0.2.0`；`contracts.py` 的 `EXTENSION_VERSION` 同步为 `0.2.0`。
+- Verification of version references: 按审核要求逐处核查。含版本的只有上述两处；`extensions/README.md` 注册表与 EXT-02 README 均无版本字段，无需改；既有测试只断言 `extension_version` 键存在，不断言取值。
+- Finding: 两处版本号此前无任何测试约束其一致——这次漂移能发生正是因为缺这条守卫，只改数字不加守卫下次会重复。已新增 `test_manifest_and_contracts_declare_the_same_version`，逐扩展断言 `extension.yaml` 的 `extension_version` 与 `contracts.py` 的 `EXTENSION_VERSION` 相等。
+- Finding: 核查中发现同一次漂移的第二处——`contracts.py` 模块 docstring 首行仍写 `shell only`，与本 PR 把 status 改为 `partially_absorbed` 直接矛盾。已改写首段，说明核心概念已由 v5 在内核实现、本文件剩下的是 v5 未做的部分，并指向 `remaining_scope` 与 `RS-02`。
+- Correction: handoff 的「明确未改动」一节初版写「未改动 EXT-02 的 `contracts.py`」，在本轮修订后已不成立，已更正并注明原因；同时同步 handoff 头部的变更性质、变更表与测试计数。
+- Validation by mutation: 两处版本号不一致（`contracts.py` 退回 `0.1.0`）`failures=1`；还原后 `OK`。
+- Boundary: 未改动任何内核代码；未改动 45-Gate 拓扑、gate/model/profile、四阶段生命周期、核心对象定义；未改动 EXT-02 的合同定义本身（只改版本常量与 docstring）；未改动 EXT-01／03／04 任何文件；未改写任何历史审计记录；未新增数据、缓存、结果或运行产物。
+- Validation: 186 tests 全部通过（183 + 新增 3）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
+- Next: 推送同一 PR #48 并提交 ChatGPT 复审。PR #46 的两条阻断已于 11:35 修订完毕；PR #47 已获 `APPROVE`。
