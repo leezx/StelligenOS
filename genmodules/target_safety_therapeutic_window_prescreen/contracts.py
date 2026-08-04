@@ -7,14 +7,14 @@ represented by external references so an execution service can resolve it from
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import StrEnum
 import re
 from typing import Final
 
 
-MODULE_VERSION: Final = "0.1.0"
-CONTRACT_VERSION: Final = "0.1.0"
+MODULE_VERSION: Final = "0.2.0"
+CONTRACT_VERSION: Final = "0.2.0"
 _EXTERNAL_REF = re.compile(r"^external:[^\s]+$")
 _GENE_SYMBOL = re.compile(r"^[A-Za-z0-9][A-Za-z0-9-]*$")
 
@@ -46,6 +46,13 @@ class RiskDirection(StrEnum):
     SUPPORTS_RISK = "supports_risk"
     CONFLICTING = "conflicting"
     UNKNOWN = "unknown"
+
+
+class DifferentialStatus(StrEnum):
+    PRESENT = "present"
+    ABSENT = "absent"
+    UNKNOWN = "unknown"
+    NOT_ASSESSED = "not_assessed"
 
 
 class Criticality(StrEnum):
@@ -110,6 +117,7 @@ class EvidenceClaim:
     criticality: Criticality = Criticality.UNKNOWN
     surface_exposed: bool | None = None
     normal_density_relation: str | None = None
+    differential_status: DifferentialStatus = DifferentialStatus.NOT_ASSESSED
     toxicity_attribution: str | None = None
     severe: bool = False
     clinically_demonstrated: bool = False
@@ -138,6 +146,10 @@ class EvidenceClaim:
             "unresolved",
         }:
             raise ValueError("toxicity_attribution is invalid")
+        if not isinstance(self.differential_status, DifferentialStatus):
+            raise ValueError("differential_status is invalid")
+        if self.direction == RiskDirection.UNKNOWN and not self.unresolved:
+            object.__setattr__(self, "unresolved", True)
 
 
 @dataclass(frozen=True)
@@ -184,6 +196,7 @@ class AssessmentResult:
     fatal_flags: tuple[FatalFlag, ...]
     unresolved_refs: tuple[str, ...]
     conflict_refs: tuple[str, ...]
+    material_risk_refs: tuple[str, ...]
     mitigation_refs: tuple[str, ...]
     next_experiment_refs: tuple[str, ...]
     decision: Decision
@@ -199,10 +212,10 @@ class AssessmentResult:
         for ref in (
             *self.unresolved_refs,
             *self.conflict_refs,
+            *self.material_risk_refs,
             *self.mitigation_refs,
             *self.next_experiment_refs,
         ):
             _external(ref, "result reference")
         if self.confidence not in {"high", "medium", "low"}:
             raise ValueError("confidence must be high, medium, or low")
-

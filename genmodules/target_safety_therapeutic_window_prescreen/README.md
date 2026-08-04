@@ -18,6 +18,11 @@ Evidence levels are `A` (human causal), `B` (human protein/cell-resolved), `C`
 (multi-omic concordance), `D` (single or indirect), and `U` (unknown).
 Unknown remains unresolved; it is never converted into safety.
 
+Material risk claims that do not meet a fatal threshold produce `HOLD`, not
+`GO`. A target reaches `GO` only when all six axes are represented and resolved
+with no material risk or conflict. Differential status is a structured field;
+free-form tags cannot create a fatal flag.
+
 ## Decision semantics
 
 The evaluator applies fatal flags first:

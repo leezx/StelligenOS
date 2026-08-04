@@ -4,6 +4,7 @@ from genmodules.target_safety_therapeutic_window_prescreen import (
     AssessmentRequest,
     Criticality,
     Decision,
+    DifferentialStatus,
     EvidenceAxis,
     EvidenceClaim,
     EvidenceLevel,
@@ -35,6 +36,18 @@ def request(claims):
         policy_ref="external:policy/target-safety-v0.1",
         run_context_ref="external:run/context-1",
     )
+
+
+def complete_resolved_claims():
+    return [
+        claim(
+            claim_ref=f"external:claim/complete-{index}",
+            axis=axis,
+            level=EvidenceLevel.C,
+            direction=RiskDirection.SUPPORTS_SAFETY,
+        )
+        for index, axis in enumerate(EvidenceAxis, start=1)
+    ]
 
 
 class TargetSafetyPreScreenTests(unittest.TestCase):
@@ -82,29 +95,154 @@ class TargetSafetyPreScreenTests(unittest.TestCase):
         self.assertIn("external:claim/critical-conflict", result.conflict_refs)
 
     def test_plausible_differential_is_conditional_go(self):
-        result = assess_target(
-            request(
-                [
-                    claim(
-                        claim_ref="external:claim/surface-differential",
-                        axis=EvidenceAxis.SURFACE_ACCESSIBILITY,
-                        level=EvidenceLevel.B,
-                        direction=RiskDirection.SUPPORTS_SAFETY,
-                        surface_exposed=False,
-                    ),
-                    claim(
-                        claim_ref="external:claim/density-differential",
-                        axis=EvidenceAxis.ANTIGEN_DENSITY,
-                        level=EvidenceLevel.C,
-                        direction=RiskDirection.SUPPORTS_SAFETY,
-                        normal_density_relation="lower",
-                    ),
-                ]
+        claims = complete_resolved_claims()
+        claims[1] = claim(
+            claim_ref="external:claim/surface-differential",
+            axis=EvidenceAxis.SURFACE_ACCESSIBILITY,
+            level=EvidenceLevel.B,
+            direction=RiskDirection.SUPPORTS_SAFETY,
+            surface_exposed=False,
+            differential_status=DifferentialStatus.PRESENT,
+        )
+        claims[2] = claim(
+            claim_ref="external:claim/density-differential",
+            axis=EvidenceAxis.ANTIGEN_DENSITY,
+            level=EvidenceLevel.C,
+            direction=RiskDirection.SUPPORTS_SAFETY,
+            normal_density_relation="lower",
+            differential_status=DifferentialStatus.PRESENT,
+        )
+        claims.append(
+            claim(
+                claim_ref="external:claim/conditional-material-risk",
+                axis=EvidenceAxis.NORMAL_TISSUE_EXPRESSION,
+                level=EvidenceLevel.B,
+                direction=RiskDirection.SUPPORTS_RISK,
+                criticality=Criticality.REGENERATIVE,
             )
+        )
+        result = assess_target(
+            request(claims)
         )
         self.assertEqual(result.decision, Decision.CONDITIONAL_GO)
         self.assertEqual(result.confidence, "medium")
         self.assertTrue(result.mitigation_refs)
+
+    def test_go_requires_all_axes_resolved_and_no_material_risk(self):
+        result = assess_target(request(complete_resolved_claims()))
+        self.assertEqual(result.decision, Decision.GO)
+        self.assertEqual(result.material_risk_refs, ())
+
+    def test_nonfatal_material_risk_is_hold_not_go(self):
+        claims = complete_resolved_claims()
+        claims.append(
+            claim(
+                claim_ref="external:claim/nonfatal-risk",
+                axis=EvidenceAxis.NORMAL_TISSUE_EXPRESSION,
+                level=EvidenceLevel.B,
+                direction=RiskDirection.SUPPORTS_RISK,
+                criticality=Criticality.REGENERATIVE,
+            )
+        )
+        result = assess_target(request(claims))
+        self.assertEqual(result.decision, Decision.HOLD)
+        self.assertIn("external:claim/nonfatal-risk", result.material_risk_refs)
+
+    def test_unknown_direction_is_unresolved_and_holds(self):
+        claims = complete_resolved_claims()
+        claims[0] = claim(
+            claim_ref="external:claim/unknown-direction",
+            axis=EvidenceAxis.NORMAL_TISSUE_EXPRESSION,
+            level=EvidenceLevel.B,
+            direction=RiskDirection.UNKNOWN,
+        )
+        result = assess_target(request(claims))
+        self.assertEqual(result.decision, Decision.HOLD)
+        self.assertIn("external:claim/unknown-direction", result.unresolved_refs)
+
+    def test_surface_and_critical_tissue_claims_aggregate_to_fatal(self):
+        result = assess_target(
+            request(
+                [
+                    claim(
+                        claim_ref="external:claim/surface-risk",
+                        axis=EvidenceAxis.SURFACE_ACCESSIBILITY,
+                        level=EvidenceLevel.B,
+                        direction=RiskDirection.SUPPORTS_RISK,
+                        surface_exposed=True,
+                    ),
+                    claim(
+                        claim_ref="external:claim/critical-tissue-risk",
+                        axis=EvidenceAxis.NORMAL_TISSUE_EXPRESSION,
+                        level=EvidenceLevel.B,
+                        direction=RiskDirection.SUPPORTS_RISK,
+                        criticality=Criticality.CRITICAL_NON_REGENERATIVE,
+                    ),
+                ]
+            )
+        )
+        self.assertIn("critical_surface_hazard", [flag.value for flag in result.fatal_flags])
+
+    def test_density_alone_does_not_kill_when_surface_is_inaccessible(self):
+        result = assess_target(
+            request(
+                [
+                    claim(
+                        claim_ref="external:claim/density-risk",
+                        axis=EvidenceAxis.ANTIGEN_DENSITY,
+                        level=EvidenceLevel.B,
+                        direction=RiskDirection.SUPPORTS_RISK,
+                        normal_density_relation="higher",
+                    ),
+                    claim(
+                        claim_ref="external:claim/inaccessible-surface",
+                        axis=EvidenceAxis.SURFACE_ACCESSIBILITY,
+                        level=EvidenceLevel.B,
+                        direction=RiskDirection.SUPPORTS_RISK,
+                        surface_exposed=False,
+                    ),
+                    claim(
+                        claim_ref="external:claim/critical-tissue",
+                        axis=EvidenceAxis.NORMAL_TISSUE_EXPRESSION,
+                        level=EvidenceLevel.B,
+                        direction=RiskDirection.SUPPORTS_RISK,
+                        criticality=Criticality.CRITICAL_NON_REGENERATIVE,
+                    ),
+                ]
+            )
+        )
+        self.assertNotIn("normal_density_not_lower_than_tumor", [flag.value for flag in result.fatal_flags])
+        self.assertEqual(result.decision, Decision.HOLD)
+
+    def test_free_tag_cannot_create_no_differential_fatal(self):
+        result = assess_target(
+            request(
+                [
+                    claim(
+                        claim_ref="external:claim/free-tag",
+                        level=EvidenceLevel.B,
+                        direction=RiskDirection.SUPPORTS_RISK,
+                        tags=("widespread_no_differential",),
+                    )
+                ]
+            )
+        )
+        self.assertNotIn("no_exploitable_target_differential", [flag.value for flag in result.fatal_flags])
+
+    def test_structured_absent_differential_can_create_fatal(self):
+        result = assess_target(
+            request(
+                [
+                    claim(
+                        claim_ref="external:claim/structured-no-differential",
+                        level=EvidenceLevel.B,
+                        direction=RiskDirection.SUPPORTS_RISK,
+                        differential_status=DifferentialStatus.ABSENT,
+                    )
+                ]
+            )
+        )
+        self.assertIn("no_exploitable_target_differential", [flag.value for flag in result.fatal_flags])
 
     def test_empty_evidence_is_hold_and_requests_next_experiments(self):
         result = assess_target(request([]))
