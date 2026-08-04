@@ -2421,6 +2421,13 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**，须经 ChatGPT `APPROVE`。
 - Next: 推送并创建 PR 送审；请审核方重点看 `DEVIATION-01` 是否接受、`NO_ARCHITECTURE_CHANGE` 判断是否成立、`BLOCK-02` 的处理是否正确。
 
+### 2026-08-04 19:09 EDT
+
+- Instruction: Read `Zhixins-KB/2.Biotech/Asset-Generation-OS-architecture.md#Biotech基础设施` and record which existing public infrastructure StelligenOS can reuse in the future without rebuilding it.
+- Action: Added `docs/architecture/BIOTECH_INFRASTRUCTURE_CATALOG.zh-CN.md` to the `main` worktree. The document records the provider groups, recommended implementation order, future provider interface names, current internal repository capabilities, and the boundary between reusable data infrastructure and StelligenOS-owned ADC semantics, evidence adjudication, Gate, Rule, FTO, and asset decisions.
+- Boundary: This was documentation-only. No public data, database, cache, result, runtime dependency, provider adapter, or execution code was added. The catalog explicitly states that future data and processing remain outside the repository under external `DATA`.
+- Workflow: Per the explicit instruction for this catalog, it is being committed directly to `main` without the normal PR review cycle; the required worklog trace is retained.
+
 ## 2026-08-04T19:10:00-04:00 — PR #57 第一轮审核裁决与最小修订（两条阻断全部接受）
 
 - Review: ChatGPT 对 PR #57（HEAD `0e39ef5`，可合并、CI 成功）返回 `REQUEST_CHANGES`，两条阻断。**两条全部接受**，且都会改变实际运行语义，不是文字问题。已在同一 PR 内做最小修订，未夹带无关改动。
