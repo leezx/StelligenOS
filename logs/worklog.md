@@ -2171,3 +2171,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: 192 tests 全部通过（非 207 —— PR #50 新增的 15 项边界测试尚未合并进 `main`，本分支从 `main` 创建）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git diff -- prompts/GPT-Feedback.md` 为空。
 - Open risk: `AGENTS.md` 无任何测试守卫，「审核豁免」一节将来被改宽或删除不会有机制报警，与 45-Gate 拓扑、扩展状态等已被测试锁定的对象形成对比。是否给治理文档加守卫测试建议另立任务。豁免第 2 条依赖执行者自觉，CI 不区分 PR 是否声明豁免，若要强制需 CI 侧判断改动文件集。
 - Next: 推送并创建 PR 供 ChatGPT 审核。与 PR #50 互相独立，均从 `3708024` 创建。
+
+### 2026-08-04 18:05 EDT
+
+- Action: 处理 ChatGPT 对 PR #51（豁免收窄入 AGENTS.md）的 Round 1 `REQUEST_CHANGES`。两条治理阻断均经核实成立，无 pushback。
+- Verification of blocker 1: 成立，且是硬矛盾而非表述不清。初版第 2 条写「该 PR 只能改这一个文件」，但 `AGENTS.md` 第 26 条与第 38 行、Phase Gate 协议 1.1、`ChatGPT-Codex-talk.md` 1.1 四处都要求每个 PR 更新 `docs/handoff/`，初版第 3 条自己还要求写 `logs/worklog.md`。三者不可能同时满足，该豁免按字面无法执行。初版括注「含 `logs/worklog.md` 之外的任何内容」语义混乱，既没澄清也没解决。
+- Change: 改为封闭的三路径集合表——`prompts/GPT-Feedback.md`（恰好 1）＋ `logs/worklog.md`（恰好 1，只追加）＋ `docs/handoff/<日期>-<任务名>.zh-CN.md`（恰好 1，新增），并明确 **handoff 不在豁免之列**，收窄的是「谁来审核」不是「要不要留痕」。原五条边界相应压缩为四条。
+- Decision rationale: 选「允许 handoff」而非「豁免 handoff」。后者需同时修改四处既有留痕要求，属扩大范围；前者不动任何既有留痕规则，只把允许集合定义清楚。
+- Verification of blocker 2: 成立。`ChatGPT-Codex-talk.md` 1.1「任何工作都必须进入 PR 审核流程」与 Phase Gate 协议 1.1「以下工作全部必须通过 GitHub PR 提交 GPT/ChatGPT 审核」均为无例外表述，与新增豁免直接冲突。
+- Change: 两份文本各加一处指向 `AGENTS.md`「审核豁免」的说明，明确该例外只豁免审核、不豁免 PR／worklog／handoff。未删改任何既有规则。
+- Decision rationale: 采「同步指针」而非「三处复述」。**刻意不复制那四条边界** —— 复制会产生三份可各自漂移的副本，而本次工作中已出现完全同型的故障：EXT-02 版本号写在 `extension.yaml` 与 `contracts.py` 两处且无一致性约束，结果漂移，那正是 PR #48 Round 1 的阻断。审核给的两个选项中取「同步例外」而非「明确优先级」，因为优先级规则会把两句绝对表述原样留在文中，未来读者仍会先撞上矛盾再去别处找优先级。
+- Correction: handoff「明确未改动」一节初版写「未改动 `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md` 与 `ChatGPT-Codex-talk.md`」，Round 1 修订后已不成立，已更正为「除 1.1 全局门禁一处外未改动，两处均为加入指针」。
+- Boundary: 未改动任何代码、契约、Gate 拓扑、Model、Profile、生命周期、核心对象或测试；未改动 `prompts/GPT-Feedback.md` 本身；未删改两份治理文本的任何既有规则；未删改原 handoff 任何原有文字。
+- Validation: 192 tests 全部通过；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git diff -- prompts/GPT-Feedback.md` 为空。
+- Next: 推送同一 PR #51 并提交 ChatGPT 复审。PR #50 的数字阻断已于 17:40 修订完毕。
