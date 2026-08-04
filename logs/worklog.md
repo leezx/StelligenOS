@@ -2393,3 +2393,30 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: `#53` 分支 207 tests 通过；`#55` 分支 212 tests 通过；两者 `scripts/verify_repository_boundary.sh` 与 `git diff --check` 均通过；零 `__pycache__`。
 - Deliberately not done: 未事后追认任何 run；未撤回 M1 映射内容（只降级效力）；未删除任何科学内容；**未创建两个 contract-only PR**（#53 上游的、Playbook 六模块的），它们需预先冻结范围与语义、属新范围须另立任务授权。
 - Next: 重新提交 PR #53 与 #54 复审；#55 由人类负责人决定是否单独送审及如何处理其架构问题。
+
+## 2026-08-04T18:32:39-04:00 — ADC Pool 漏斗 Level 01 定义与执行契约（contract-only，未执行）
+
+- Instruction: 人类负责人指示读取 `2.Biotech/Asset-Generation-OS-architecture#ADC pool漏斗gating`，开始构建 ADC Pool，**先做 Level 01，审核完了再做下一个**；核心原理是先用一些 gate 锁定漏斗的最大可能性集合，再逐级加层加入新 gate 下筛；**每层用了什么 gate 都要记录下来**；先用最低成本的高可信 gate，较难的放后面。
+- Read: 解析 Obsidian heading link，目标为 `Zhixins-KB/2.Biotech/Asset-Generation-OS-architecture.md` 第 2–602 行（`# ADC pool漏斗gating` 至下一个一级标题前），全文读取，未修改来源文件。
+- Decision: 交付 Level 01 的**定义与执行契约**，不执行 Level 01。此顺序即 2026-08-04 对 PR #53／#54 的裁决所要求的「contract-only PR 预先冻结范围与语义 → `APPROVE` → 再运行」，本 PR 就是 Level 01 的那个前置契约。候选池是数据，按硬边界留在外部工作区；仓库只冻结判据身份、顺序与语义。
+- Measured: 用脚本抽取全部 45 个 `gate.yaml` 的 `cost_tier`／`hard_gate`／`priority`／`dependencies`，不靠假设。`cost_tier = low` 的只有 7 个（T0 与 C40–C45）。
+- Finding (high): 实测依赖链 `tumor_cell_surface_availability → target_population_mapping → {clinical_context_endpoint, endpoint_driving_population}`。来源文档第五节明确 T1 不适合作 Level 01–03 的普遍筛选器，冻结拓扑又要求按依赖顺序执行、不得跳过前置 Gate，故**在不跑 T1 的前提下 Level 01 结构上不可能产生合法的 T7 结果**。三把锁写成 `CandidateFilterResult` 是唯一与冻结拓扑相容的表达，不是图省事。
+- Finding (high, Level 02, `GAP-P05`): `src/capabilities/early_t_gate_reduction.py` 的 `EarlyReductionSchedule.__post_init__` 硬性要求 `gate_ids[:2] == (T2, T7)`，即 **T2 必须先于 T7**；来源文档第四节要求 Level 02 **先跑 T7**。既有内核与来源文档直接冲突，须在定义 Level 02 时解决。现在登记以免下一层重新发现。
+- Finding (medium, Level 02, `GAP-P06`): `EARLY_REDUCTION_GATE_IDS` 只含 T2/T7/T8/T9/T10/T11，不含任何 C Gate，来源文档 Level 02 的 C2/C4/C5 quick scan 无法通过既有能力调度。
+- Finding (medium): Level 01 三把锁不需要任何新契约。对照实际文件的映射：锁结果→`CandidateFilterResult`（`filter_id` 承载 lock id）；三值→`CandidateDisposition`；未评估／未解决→`EvaluationStatus`；context→v5 `AnchorClinicalContext`＋`IntendedBenefitHypothesis`；「至少一项 linkage 证据」→`TargetCandidateGenerationPolicy.minimum_distinct_positive_evidence_groups`；笛卡尔积上限→`maximum_candidates_per_clinical_frame` 与 `candidate_budget`；证据出处→`EvidenceRecord`。
+- Finding (medium): `TargetCandidateGenerationPolicy.__post_init__` 已对 `permit_model_only_generation` 与 `permit_rule_only_generation` 一律抛错，即**契约层已禁止模型单独生成候选**——正是 PR #53 被阻断的那一点。据此把「模型领域知识单独不足以录入一个 pair」写入证据标准。
+- Design 1: 把「成本」定义为**每淘汰一个候选的边际成本**，而非 catalogue `cost_tier`；边际成本由作用粒度决定（淘汰一个 context 移除一整列，一个 target 移除一整行，pair 级每次一格），故顺序必为 context 级 → target 级 → pair 级。与来源文档第四节独立一致，并解释了它为什么对。由测试机械保证，顺序退化即失败。
+- Design 2: 明确**便宜本身不够，必须同时具备否决力**。反例来自实测：C42／C44／C45 全是 `low`，比 T2／T7／T11 的 `medium` 更便宜，但竞争拥挤不得单独 KILL（已有成功竞争者同时也是靶点与 modality 可行的证据），故不能排在最前。完整表述：在阴性结果具有否决力的判据里，先跑边际成本最低的那个。
+- Design 3: 12 个 lock outcome 全部同时写 `disposition` 与 `pool_state`。因为 `CandidateDisposition` 只有三值、来源文档锁输出是四值，且第七节要求无 linkage 的 pair 留在 Universe Index 不删除——那是「未录入但仍存活」，既非 EXCLUDE 也非 DEFER。只写 disposition 会丢信息，登记为 `GAP-P04`。
+- Design 4: Level 01 召回优先，故只有定义性依据允许排除——`not_surface_target`（纯胞内蛋白不可能是 ADC 靶点）与 `redundant_context`（可判定的集合包含关系）；`no_known_linkage` 虽记 EXCLUDE 但 `pool_state` 强制 `reactivation-eligible`，因无关联证据不等于已证伪。由测试强制每个 EXCLUDE 写明 `exclusion_basis`。
+- Deviation recorded, not silent (`DEVIATION-01`): 把来源文档的 `weak_or_redundant_context` 拆成 `redundant_context`（EXCLUDE）与 `weak_context`（DEFER）。理由：`redundant` 可判定、`weak` 是价值判断；合并并映射为 EXCLUDE 会让本层因价值判断丢候选，直接违反它自己声明的错误偏好。明示待审核方接受或否决，不静默改写来源文档。
+- Delivered: `docs/pools/ADC_POOL_FUNNEL_LEVEL_01.zh-CN.md`（定义与执行契约）、`docs/pools/adc_pool_gate_usage.yaml`（每层判据使用的权威机器可读记录，即人类负责人要求「记录下来」的那份）、`tests/test_adc_pool_gate_usage.py`（14 项校验）。
+- Gate boundary: **Level 01 运行的 Gate 数量是零**，`gates_not_run` 逐一列出全部 45 个并由测试断言与冻结拓扑完全相等；`result_is_gate_result: false`；`gate_scores_written: none`；`EVALUATED`／`NOT_EVALUATED`／`UNRESOLVED` 全域保留。三把锁只借用 T0／T7／T2 的**职责**，`constitutes_gate_pass` 全为 `false`。
+- Validation: `Ran 242 tests` 全部通过（`main` 基线 228 + 新增 14）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。数值全部脚本实测：`snapshot_columns` 25 列、`gates_not_run` 45 项、12 个 outcome、6 条缺口、`cost_tier = low` 的 Gate 7 个。
+- Mutation-tested, not just green: 5 个变异各自被捕获后精确回滚——`LOCK-02` 的 `borrowed_gate_cost_tier` 由 `low` 改 `medium`、允许 RNA 满足 `LOCK-01`、从 `gates_not_run` 删掉 `transaction_readiness`、把 pair 级锁 `run_order` 提到第一、删掉一个 EXCLUDE 的 `exclusion_basis`，全部 `FAILED`；回滚后与备份 `diff -q` 一致、恢复 `OK`。
+- Blockers recorded: `BLOCK-01` 本契约获 `APPROVE` 前不得执行 Level 01。`BLOCK-02` `LOCK-02` 需要 CRC clinical context 清单，而唯一的枚举来自被隔离的 PR #53 运行，按裁决不得作为后续输入，**故即使本契约获批 Level 01 仍不能执行**，必须先重跑 CRC clinical frame 并被接受。这是隔离裁决的直接后果，明示而非绕过。
+- Architecture: 改动五个文件（上述三个＋本条 worklog＋一份 handoff）。未触碰 `src/`、`src/contracts/`、`genmodules/`、`genmodules/assetgenos_catalog/`、`extensions/`、`docs/architecture/`、`AGENTS.md`、`prompts/`；未新增 Gate、未改 45-Gate 拓扑与身份、四阶段生命周期、八类核心对象、`GateInputEnvelope@2.0.0`、`GateModelOutput@2.0.0`、任何 Model 或 Profile。可由 `git diff --stat main...HEAD` 核验。据此不构成架构变更、不消耗 8 月月度额度；六条缺口确实是架构问题且**仍未解决**，需独立任务与额度，执行者不代为裁决。
+- Deliberately not done: 未执行 Level 01（无候选、无 pair、无 disposition、无排序、无推荐）；未定义 Level 02／03（`defined_levels` 只有 `"01"` 并由测试断言）；未实现六条缺口，未为「看起来完整」私自扩展 `CandidateDisposition` 或新增 pool 生命周期枚举；**未引用被隔离运行的任何产物**（#53 的 20 场景／45 靶点／Tier A／payload 结论、#54 的 Seed Admission Standard 与靶点 disposition 一条都未作输入）；未创建仍然欠着的两个 contract-only PR，未补 #53／#54 的批准记录。
+- Noticed, not fixed: `requirements.txt` 注释写「the full suite (207 tests)」，实测 228（本分支 242）。属本次范围外，按第 25 条不在本 PR 顺手改，只记录。
+- Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**，须经 ChatGPT `APPROVE`。
+- Next: 推送并创建 PR 送审；请审核方重点看 `DEVIATION-01` 是否接受、`NO_ARCHITECTURE_CHANGE` 判断是否成立、`BLOCK-02` 的处理是否正确。
