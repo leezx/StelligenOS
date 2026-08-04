@@ -7,7 +7,7 @@ not execute a Gate, persist an input envelope, or contain domain records.
 from dataclasses import dataclass
 from typing import Final, Mapping, Protocol
 
-from genmodules.gen_indication_endpoint_target.contracts import ClinicalLockState
+from src.lifecycle.clinical_lock import ClinicalLockState
 
 
 GATE_GROUPS: Final[tuple[str, ...]] = (
