@@ -20,7 +20,7 @@
 - 现有遗留文本默认只作为参考材料，除非已被正式提升到架构契约。
 - Phase 0 = 仓库审计；Phase 0.5 = 旧系统盘点与迁移映射。
 - 每次完成较大的任务后，都要追加一条时间戳记录到 `logs/worklog.md`。
-- **全局 PR 审核门禁：任何任务类型都必须通过 GitHub PR 交付并提交 GPT/ChatGPT 审核，包括架构、文档、代码、脚本、迁移、外部数据运行、试运行和配置变更；不得以“只是试运行”或“只改文档”为由绕过 PR。**
+- **全局 PR 审核门禁：任何任务类型都必须通过 GitHub PR 交付并提交 GPT/ChatGPT 审核，包括架构、文档、代码、脚本、迁移、外部数据运行、试运行和配置变更；不得以“只是试运行”或“只改文档”为由绕过 PR。唯一例外见「审核豁免」一节，仅限 `prompts/GPT-Feedback.md` 一个文件。**
 - **审核前不得继续推进：GPT/ChatGPT 未对当前 PR 明确给出 `APPROVE` 前，不得进入下一阶段、开始下一项工作、执行依赖该变更的外部运行，或自行扩展/修改范围。**
 - **审核反馈后的修改必须留在同一个 PR：收到 `REQUEST_CHANGES` 后，只按当前反馈做最小必要修订，重新验证、更新 handoff/worklog 并再次提交同一 PR；不得另起无关变更或跳过复审。**
 - **全程留痕：每一步读取、决策、修改、命令、验证、外部运行、失败、修正、审核反馈和结果都必须带时间戳写入 `logs/worklog.md`；每一个 PR 和每一次外部运行都必须更新 `docs/handoff/`，不以“较大任务”作为豁免条件。**
@@ -28,9 +28,32 @@
 - 机器可读 ID、路径和 Schema 名保持英文。
 - 面向操作者的说明优先使用中文。
 
+## 审核豁免
+
+全局 PR 审核门禁只有一个例外，由人类负责人于 2026-08-04 授权：
+
+- **`prompts/GPT-Feedback.md` 的改动默认通过，无需 ChatGPT 审核。**
+
+理由：该文件记录的是人类负责人作为审核方与 ChatGPT 对话后确定的反馈需求。它是纯文本反馈记录，不是
+架构契约、不是代码、不产生任何决策，因此让审核方去审核自己的反馈没有意义。
+
+豁免的确切范围，任一条不满足即回落到正常门禁：
+
+1. **只限这一个路径。** `prompts/GPT-Feedback.md`，不含 `prompts/` 下任何其他文件。
+2. **该 PR 只能改这一个文件。** 一旦同一个 PR 里出现任何其他文件的改动（含 `logs/worklog.md` 之外的
+   任何内容），整个 PR 回落到正常门禁。
+3. **不豁免留痕。** 仍须走 PR、仍须按时间戳写入 `logs/worklog.md`。豁免的是审核，不是可追溯性。
+4. **不豁免实施。** 把该文件里的反馈变成架构、内核、Gate、扩展或代码改动，一律走完整门禁。
+   记录反馈 ≠ 获得实施授权，这一点与 `extensions/README.md`「反馈本身不是架构变更授权」一致。
+5. **不自我扩展。** 本豁免不适用于修改 `AGENTS.md` 本身，也不适用于扩大本豁免的范围。用「默认通过」
+   去改「默认通过」的规则属自我指涉，须由人类负责人单独授权。
+
+本节是该豁免的唯一权威表述。`docs/handoff/2026-08-04-audit-records-and-v5-source.zh-CN.md` 曾记录过一个
+更宽的表述（覆盖 handoff、worklog、`prompts/*` 等全部纯文本），那是执行者的过度推广，已被本节收窄取代。
+
 ## 遗留文件
 
-- `prompts/GPT-Feedback.md` 是用户反馈，不是 canonical architecture。
+- `prompts/GPT-Feedback.md` 是用户反馈，不是 canonical architecture。审核豁免见上一节。
 - `architecture.md` 是入口页；正式契约在 `docs/architecture/` 下。
 - `ChatGPT-Codex-talk.md` 是 ChatGPT/Codex 的固定交互规范；以后需要“只负责执行、由外部模型审核”时，优先遵守这份文件。
 - `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md` 是分阶段执行、PR 反复审核和 Phase 放行的独立协作协议；任何复杂任务都必须遵守其 Phase gate。

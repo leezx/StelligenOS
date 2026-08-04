@@ -2156,3 +2156,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 无任何代码、契约、Gate 拓扑、Model、Profile、生命周期或测试变更；未改写任何历史审计记录；未新增数据、缓存、结果或运行产物。
 - Validation: 192 tests 全部通过（与 `main` 相同，因本 PR 不含代码或测试变更）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`prompts/GPT-Feedback.md` 为纯追加 419／0；零 `__pycache__`。
 - Result: #46／#47／#48 的审计闭环完成，v5 来源文档入库。
+
+### 2026-08-04 17:05 EDT
+
+- Action: 建立 `task_20260804_gpt-feedback-waiver`（从 `main` `3708024` 创建），把审核豁免写入 `AGENTS.md`，并收窄我此前记录的过宽表述。
+- Correction of my own record: 2026-08-04 13:20 那条 worklog 与 PR #49 的 handoff 把人类负责人的授权记为「不涉及任何代码修改的纯文本 PR 默认通过」，覆盖 `logs/chatgpt-review-*.md`、`docs/handoff/*`、`logs/worklog.md`、`prompts/*`。**这是过度推广，不是授权内容。** 人类负责人的原意只针对 `prompts/GPT-Feedback.md` 一个文件，理由是该文件记录的是其作为审核方与 ChatGPT 对话后确定的反馈需求，是纯文本反馈记录。
+- Change: `AGENTS.md` 新增「审核豁免」一节，作为该豁免的唯一权威表述；第 23 条全局 PR 门禁加一句指向该节，使只读门禁的人也能看到唯一例外。
+- Change: 该节写明五条边界，任一条不满足即回落正常门禁 —— 只限该单一路径；该 PR 只能改这一个文件；不豁免留痕（仍须走 PR、仍须写 worklog）；不豁免实施（把反馈变成架构／内核／Gate／扩展／代码改动一律走完整门禁）；不自我扩展（不适用于修改 `AGENTS.md` 本身或扩大本豁免）。
+- Rationale for the extra clauses: 第 2 条堵「顺手夹带」——若允许同一 PR 兼含其他文件，挂上这个文件名就能把任意改动带进去，PR #49 正是该形态实例。第 4 条堵「记录即授权」——该文件历史作用恰恰是驱动重大变更（`# v4` 产生四个扩展包，`# v5` 直接改内核 PR #45），不写明则「反馈默认通过」易被读成「反馈里的方案已获批准」。第 5 条堵自我指涉。
+- Change: 在 `docs/handoff/2026-08-04-audit-records-and-v5-source.zh-CN.md` 的「常设授权」一节**节首插入**更正块，原文一字未删。做法理由：该 handoff 是已合并的带时间戳审计记录，不得改写；但只在文末追加则读者读到那张边界表就会停下并可能据以执行，一条已失效的执行规则留在原位不加标注有实际危害。插入是增量而非隐藏，原始表述与其失效事实同时可见。
+- Recorded without ratification: 更正块中如实写明 PR #49 本身包含三份审计记录与 handoff，按收窄后的规则不在豁免范围内，当时应当送审。该事实照实记录，不作追认。
+- Boundary: 未改动任何代码、契约、Gate 拓扑、Model、Profile、生命周期、核心对象或测试；未改动 `prompts/GPT-Feedback.md` 本身；未改动 `AGENTS.md` 的硬性边界、留痕要求、`git add` 禁令与校验一节；未删改原 handoff 任何原有文字；未改写记录旧宽表述的历史 worklog 条目（本条为追加更正）。
+- Governance note: **本 PR 不适用任何豁免**，须经 ChatGPT `APPROVE`。收窄后的豁免明确排除对 `AGENTS.md` 自身的修改。
+- Validation: 192 tests 全部通过（非 207 —— PR #50 新增的 15 项边界测试尚未合并进 `main`，本分支从 `main` 创建）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git diff -- prompts/GPT-Feedback.md` 为空。
+- Open risk: `AGENTS.md` 无任何测试守卫，「审核豁免」一节将来被改宽或删除不会有机制报警，与 45-Gate 拓扑、扩展状态等已被测试锁定的对象形成对比。是否给治理文档加守卫测试建议另立任务。豁免第 2 条依赖执行者自觉，CI 不区分 PR 是否声明豁免，若要强制需 CI 侧判断改动文件集。
+- Next: 推送并创建 PR 供 ChatGPT 审核。与 PR #50 互相独立，均从 `3708024` 创建。
