@@ -4,7 +4,7 @@
 
 - Branch: `task_20260804_target-safety-prescreen`
 - Base: latest `origin/main` at task start
-- Review: Round 1 returned `REQUEST_CHANGES`; remediation is in progress on a clean replacement PR
+- Review: Round 1 returned `REQUEST_CHANGES`; remediation is in clean replacement PR #56
 - Data boundary: no source data, cache, result, model weight, or runtime output in the repository
 
 ## Scope
@@ -44,3 +44,4 @@ It does not claim product-specific therapeutic-window prediction.
 
 - Rebuilt the PR from `origin/main` so the CRC clinical-frame commit is not in scope.
 - Bumped the module and contract version to `0.2.0` for the new structured differential and material-risk output fields.
+- Replacement PR: `https://github.com/leezx/StelligenOS/pull/56`, head `d36e4a4`.
