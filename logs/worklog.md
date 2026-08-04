@@ -2273,3 +2273,23 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: 207 tests 全部通过（与 `main` 相同）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。六份模块 TSV 列数 9／9／14／7／8／7 各自一致；`source_manifest.json` 为合法 JSON。
 - Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**，须经 ChatGPT `APPROVE`。
 - Next: 推送并创建 PR，重点审核授权裁决与「不需要改架构」的结论是否成立。
+
+## 2026-08-04T17:20:00-04:00 — PR #54 审核裁决与隔离修订，及分支事故更正
+
+- Review: ChatGPT 对 PR #54 返回 `REQUEST_CHANGES`，并指出阻断比 #53 更明确。五条**全部接受**。
+- Finding 1 accepted: 六模块外部运行无 authorizing PR，且在 #52、#53 均未批准时继续执行，**违反依赖工作顺序门禁**。
+- Finding 2 accepted: 本次不仅记录结果，还新增 Seed Admission 决策规则、抗体进入条件、17-target disposition、压力测试与实验建议，属**实质性外部 policy／analysis 运行**，不能按「审计记录」事后放行。
+- Finding 3 accepted: 部分结论依赖未获批准的 #53 运行，**单独批准 #54 无法洗净其上游来源**。已具体标出污染点：本运行消费了 #53 的 anchor clinical context，M5 的 AE-01 正是据此对三靶点全部标 `MET`，故即使本运行日后获授权，AE-01 也不能视为 MET。
+- Finding 4 accepted: 缺逐文件 SHA-256。已在全部隔离标记写入**之后**计算 9 个文件校验和并写入 handoff 附录 A。
+- Finding 5 accepted: **「不需要架构变化」降级为待审核假设**，不再是已确认结论；`source_manifest.json` 的 `headline_result.status` 改为 `UNVERIFIED_HYPOTHESIS_NOT_CONFIRMED`。同时删去据此得出的「本次不消耗月度架构修复额度」断言，改为**额度是否被消耗未定**。保留映射内容而非撤回，因其对照真实契约文件做出、可独立复核；但明确禁止用它作为跳过架构问题或论证冻结的依据——推导质量不能替代授权。
+- Action: 外部 run 状态改为 **`UNAUTHORIZED_QUARANTINED_NOT_ACCEPTED`**，新增 `quarantine` 块含五项裁决、不被接受清单、上游污染与解决路径；`run_report.md` 加 QUARANTINE NOTICE；外部 worklog 追加 6 条。
+- Not accepted (explicit): M2 决策规则／类别准则／致命否决、M4 十条进入条件、M3 十七靶点 disposition、M5 压力测试判定与决策、M6 十四条发现与全部实验建议、M1 架构结论。**不得作为任何后续工作的输入。**
+- Merged: PR #52 已获 `APPROVE` 并以 merge commit `985edf8` 合入 `main`，2026-08-04 的 #46..#51 审计闭环完成。
+- Branch incident, recorded not concealed: 人类负责人 16:57 的提交 `108931b`（`target_safety_therapeutic_window_prescreen` GenModule，684 行）落在了 **#53 的分支**上，而其自身 worklog 记明本意是从最新 `origin/main` 创建独立分支；随后 PR #55 在第二个指向同一提交的分支上创建，导致 **#53 与 #55 内容完全相同**，且给处于 `REQUEST_CHANGES` 的 #53 混入了无关代码（违反第 25 条「不得另起无关变更」）。
+- Executor error: 隔离修订提交因共享工作树的 HEAD 在 `checkout` 与 `commit` 之间被移动而落在错误分支。**未推送到任何远端**（已用 `git branch -r --contains` 核验），已先移至保留分支 `wip_pr53_quarantine_fix` 再复位，人类负责人的提交未受损。执行者应在提交前复核分支而未做。
+- Correction, authorised by human lead: 拆分两个分支。#53 重置为 `3a4462d` + 隔离修订（`da81934`，仅审计 2 文件 +299）；#55 将 `108931b` 变基到 `origin/main` 去掉审计提交（`0fac7c9`，仅模块 9 文件 +684）。两次 `--force-with-lease`；恢复点已留存于 scratchpad。worklog 冲突按「取目标分支基线 + 仅追加本分支应有条目」解决，并断言无残留冲突标记、无跨分支内容泄漏。
+- Prevention adopted: 此后每次 `git add`／`commit` 前断言分支名，不匹配即中止。
+- Flagged for human lead: #55 新增了带自有 `contracts.py` 的 GenModule。在今日生效的架构冻结下，这属于需显式提出的架构问题，不宜作为模块新增顺带通过。执行者不代为裁决。
+- Validation: `#53` 分支 207 tests 通过；`#55` 分支 212 tests 通过；两者 `scripts/verify_repository_boundary.sh` 与 `git diff --check` 均通过；零 `__pycache__`。
+- Deliberately not done: 未事后追认任何 run；未撤回 M1 映射内容（只降级效力）；未删除任何科学内容；**未创建两个 contract-only PR**（#53 上游的、Playbook 六模块的），它们需预先冻结范围与语义、属新范围须另立任务授权。
+- Next: 重新提交 PR #53 与 #54 复审；#55 由人类负责人决定是否单独送审及如何处理其架构问题。

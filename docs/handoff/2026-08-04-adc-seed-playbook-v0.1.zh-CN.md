@@ -1,14 +1,63 @@
 # 任务交接备忘：Target-centered ADC Seed Playbook v0.1 实施与压力测试（外部 run 留痕）
 
+> ## 审核裁决与隔离声明（2026-08-04 插入，下方原文一字未删）
+>
+> ChatGPT 于 2026-08-04 对本 PR 返回 **`REQUEST_CHANGES`**，并指出阻断比 #53 更明确。五条全部接受：
+>
+> 1. 六模块外部运行无 authorizing PR，且在 **#52、#53 均未批准**时继续执行，**违反依赖工作顺序门禁**。
+> 2. 本次不仅记录结果，还新增了 Seed Admission 决策规则、抗体进入条件、17-target disposition、压力测试
+>    与实验建议，属**实质性外部 policy／analysis 运行**，不能按「审计记录」事后放行。
+> 3. **部分结论依赖未获批准的 #53 运行，单独批准 #54 无法洗净其上游来源。**
+> 4. 外部产物缺少逐文件 SHA-256，无法从 GitHub 锁定确切审核对象。
+> 5. **「不需要架构变化」只能作为待审核假设，不能依据未授权运行直接成为已确认结论。**
+>
+> ### 本次运行状态已改为 `UNAUTHORIZED_QUARANTINED_NOT_ACCEPTED`
+>
+> **不得作为任何后续工作的输入。** 明确不被接受的内容：
+>
+> - M2 Seed Admission Standard 的决策规则、类别准则与致命否决；
+> - M4 抗体开发进入的 10 条条件；
+> - M3 的 17 靶点 disposition；
+> - M5 的压力测试判定与 `EXPLORATION`／`HOLD` 决策；
+> - M6 的 14 条发现与**全部**实验建议；
+> - **M1「不需要架构变化」的结论，已降级为未经验证的假设。**
+>
+> ### 第 5 条如何处理：降级而非撤回
+>
+> 原文把它写成已确认结论，且据此声称「本次不消耗月度架构修复额度」。两处均已更正：结论降为**待审核假设**，
+> 并明确写出**月度额度是否被消耗同样未定**，不得以本 run 为据记为未使用。
+>
+> 保留而非撤回的理由：该映射是对照真实契约文件与 Gate 目录做出的，可独立复核。但**不得用它作为跳过架构
+> 问题的依据，也不得引用它作为冻结已被论证的证据**。这正是审核第 5 条的要点——推导质量不能替代授权。
+>
+> ### 第 3 条：上游污染已具体标出
+>
+> 本运行**消费了** #53 运行的 anchor clinical context（MSS/pMMR mCRC 3L+ 与持久缩瘤收益）。M5 的
+> AE-01 正是据此对三个靶点全部标为 `MET`。因此**即使本运行日后单独获得授权，AE-01 也不能视为 MET**；
+> 必须先重跑并接受上游运行。已在两份外部 manifest 与两份 handoff 中互相记录。
+>
+> ### 解决路径（不走事后追认）
+>
+> 1. 本 run 隔离为审计证据；
+> 2. **先**完成 #52 审计闭环（已于 2026-08-04 合并为 `985edf8`）；
+> 3. **再**通过 #53 自己的 contract-only PR 与重跑解决上游运行；
+> 4. **然后**为 Playbook 六模块另建独立 contract-only PR，预先冻结范围、规则语义、证据标准与输出验证；
+> 5. 获 `APPROVE` 后重新执行。
+>
+> 下方为原始交接文本，保留不改，用于对照裁决前后的差异。
+
+---
+
 - 任务编号：`task_20260804_adc-seed-playbook-v0.1`
 - 分支：`task_20260804_adc-seed-playbook-v0.1`（从 `main` `dcc94a7` 创建）
-- 当前状态：`PENDING_CHATGPT_REVIEW`
+- 当前状态：`REQUEST_CHANGES_ADDRESSED_PENDING_RE_REVIEW`
+- 外部 run 状态：`UNAUTHORIZED_QUARANTINED_NOT_ACCEPTED`（原记为 `draft_pending_repo_review`）
 - 任务性质：外部运行留痕（audit record for an external run）
 - 代码变更：`NO_CODE_CHANGE`
 - Gate 变更：`NO_GATE_CHANGE`
 - 测试变更：`NO_TEST_CHANGE`
 - 契约变更：`NO_CONTRACT_CHANGE`
-- 架构变更：`NO_ARCHITECTURE_CHANGE`（结论，非假设，见第 3 节）
+- 架构变更：`NO_ARCHITECTURE_CHANGE`（~~结论，非假设~~ → **已按审核第 5 条降级为待审核假设**，见顶部裁决声明）
 
 **本 PR 不适用 `AGENTS.md`「审核豁免」。** 该豁免只覆盖 `prompts/GPT-Feedback.md`；本 PR 提交的是
 handoff 与 worklog，落在允许集合之外，须经 ChatGPT `APPROVE` 后方可合并。
@@ -38,9 +87,12 @@ handoff 与 worklog，落在允许集合之外，须经 ChatGPT `APPROVE` 后方
 
 **M1 将 playbook 完整映射到冻结拓扑，34 行中需要新契约的为 0 行**（32 行 full coverage，2 行 partial）。
 
+> **本节标题与结论已被 2026-08-04 审核裁决第 5 条降级**（见本文件顶部裁决声明）。它现在是**待审核假设**，
+> 不是已确认结论；**月度架构修复额度是否被消耗同样未定**，不得以本 run 为据记为未使用。原文保留以对照。
+
 这一点关键，因为架构今日刚冻结、每月只有一次修复额度；而 playbook 自己的第七节也明确说「框架已经足够」、
-当前更高价值的动作是跑通一个真实闭环而不是继续扩框架。两个约束方向一致，M1 是**独立验证**这一致性而非
-假设它。**本次不消耗月度架构修复额度。**
+当前更高价值的动作是跑通一个真实闭环而不是继续扩框架。两个约束方向一致。~~本次不消耗月度架构修复额度。~~
+**更正：额度是否被消耗未定**，须待授权重跑后判定。
 
 映射要点：
 
@@ -195,3 +247,66 @@ M4 的 AE-06 内吞**故意设为非阻断**，因为 playbook 明确说只有�
 
 - 提交 ChatGPT 审核本 PR，重点为第 2 节授权裁决与第 3 节「不需要改架构」的结论是否成立。
 - 获 `APPROVE` 后由人类负责人决定合并。
+
+---
+
+## 附录 A：外部产物 SHA-256（2026-08-04 补充，回应审核第 4 条）
+
+在**全部隔离标记写入之后**计算，因此锁定的是被裁决为不接受的这一确切版本，可防静默替换。
+
+外部目录：
+`/Volumes/Stelligen_SSD/Stelligen/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/gen_iet_adc_seed_playbook_v0.1_20260804T201605Z/`
+
+| 文件 | SHA-256 |
+|---|---|
+| `external_run_worklog.md` | `f550be77ece7537064ae2513667189c1eecf68b6a35dfdf6290cee8d622f7f23` |
+| `m1_playbook_to_gate_map.tsv` | `e4e149cbb7a491b4e5fea8b55c8008b9fd05d286bda602d89573cc8bbe747613` |
+| `m2_seed_admission_standard.tsv` | `c73029db10ba5c333aacf38c20fcdc92c0cacfe8052f5cd64213fcab66ef654d` |
+| `m3_seed_discovery_sprint.tsv` | `bf170cb64f142afbcb913ef6c296e280e5383ce77921523d2251952601b63d72` |
+| `m4_antibody_entry_threshold.tsv` | `e0cb309ddf667776c5971ab6047d0924e54f28ff22379e9bd353af55d92dab82` |
+| `m5_three_target_stress_test.tsv` | `99d6a837c88cac76e821ec8501f80c9784c1b5d42ebfb289404678d47df6ebc7` |
+| `m6_gate_decision_value.tsv` | `ccc1b3d058387d0f06965c23971a001220a62060a6ad556d2da8940472254d3f` |
+| `run_report.md` | `15307f3fa46af521d9c297a3fec3da74870ebae3f6199caac3b1e5b2d8339cdf` |
+| `source_manifest.json` | `29b0637b0bad928129927c81301ce8d0db49bdd22410d82731c0045ee33a458f` |
+
+复核命令（在上述目录下执行）：`shasum -a 256 *`
+
+## 附录 B：本次修订做了什么、没做什么
+
+**做了：**
+
+1. 外部 run `status` 与 `authorisation_status` 改为 `UNAUTHORIZED_QUARANTINED_NOT_ACCEPTED`，新增
+   `quarantine` 块，逐条记录五项裁决、不被接受清单、上游污染与解决路径。
+2. `source_manifest.json` 的 `headline_result.status` 改为 `UNVERIFIED_HYPOTHESIS_NOT_CONFIRMED`。
+3. `run_report.md` 头部加入 QUARANTINE NOTICE；标题「The headline result」改为明示其为待审核假设；
+   删去「不消耗月度修复额度」的断言；改写 Governance 一节。
+4. 外部 `external_run_worklog.md` 追加 6 条时间戳记录。
+5. 本 handoff 顶部**插入**裁决声明（原文一字未删），正文第 3 节与元数据行加入降级标注，补附录 A 校验和。
+6. `logs/worklog.md` 追加一条记录本次裁决与修订。
+
+**没做：**
+
+- **没有事后追认该 run。**
+- **没有撤回 M1 的映射内容**，只降级其效力。映射对照真实文件做出、可独立复核，销毁它会丢失可复核证据；
+  但已明确禁止用它作为跳过架构问题或论证冻结的依据。
+- 没有删除任何科学内容。隔离是标注不接受，不是销毁审计材料。
+- **没有创建那两个 contract-only PR**（#53 上游的、以及本 Playbook 六模块的）。它们需要预先冻结范围与
+  语义，属新范围，须另立任务授权；在本 PR 内顺手做掉正是本次被阻断的那类越界。
+- 没有任何代码、契约、Gate 拓扑、Model、Profile、生命周期、核心对象或测试变更。
+
+## 附录 C：分支事故与更正（2026-08-04）
+
+本 PR 送审后、修订期间发生一次分支错置，如实记录：
+
+- 人类负责人于 16:57 的提交 `108931b`（`target_safety_therapeutic_window_prescreen` GenModule，684 行）
+  落在了 **#53 的分支**上，而其自身 worklog 记明本意是「从最新 `origin/main` 创建
+  `task_20260804_target-safety-prescreen`」。随后 PR #55 在第二个指向同一提交的分支上创建，导致
+  **#53 与 #55 内容完全相同**。
+- 执行者的隔离修订提交也因共享工作树的 HEAD 在 `checkout` 与 `commit` 之间被移动而落在错误分支。
+  **未推送到任何远端**（已核验），已先移至保留分支再复位，人类负责人的提交未受损。
+- 经人类负责人授权后拆分：#53 分支重置为 `3a4462d` + 隔离修订（仅审计，2 文件）；#55 分支将
+  `108931b` 变基到 `origin/main` 并去掉审计提交（仅模块，9 文件）。两次 `--force-with-lease`。
+  恢复点已留存。
+- 已采纳的预防措施：此后每次 `git add`／`commit` 前断言分支名，不匹配即中止。
+- **另需人类负责人注意**：#55 新增了一个带自有 `contracts.py` 的 GenModule。在今日生效的架构冻结下，
+  这属于需要显式提出的架构问题，不宜作为模块新增顺带通过。执行者不代为裁决。
