@@ -75,6 +75,47 @@ class ClinicalLockState(str, Enum):
     REGULATORY_LOCKED = "regulatory-locked"
 
 
+class ClinicalHypothesisEntryMode(str, Enum):
+    MATURE_TARGET_FIRST = "mature-target-first"
+    TARGET_CONTEXT_COSELECTION = "target-context-co-selection"
+    CLINICAL_PROBLEM_FIRST = "clinical-problem-first"
+
+
+class BiomarkerCutoffStatus(str, Enum):
+    DEFERRED = "deferred"
+    EXPLORATORY = "exploratory"
+    PROVISIONAL = "provisional"
+    LOCKED = "locked"
+    NOT_REQUIRED = "not_required"
+
+
+class CDxStatus(str, Enum):
+    NOT_REQUIRED = "not_required"
+    CONCEPT = "concept"
+    VALIDATING = "validating"
+    LOCKED = "locked"
+
+
+_LOCK_ORDER: Final[tuple[ClinicalLockState, ...]] = (
+    ClinicalLockState.EXPLORATORY,
+    ClinicalLockState.PROVISIONAL,
+    ClinicalLockState.ANCHORED,
+    ClinicalLockState.PRODUCT_LOCKED,
+    ClinicalLockState.PROTOCOL_LOCKED,
+    ClinicalLockState.REGULATORY_LOCKED,
+)
+
+
+def can_transition_clinical_lock(
+    current: ClinicalLockState, target: ClinicalLockState
+) -> bool:
+    """Allow only monotonic, single-step maturity transitions."""
+
+    if not isinstance(current, ClinicalLockState) or not isinstance(target, ClinicalLockState):
+        return False
+    return _LOCK_ORDER.index(target) == _LOCK_ORDER.index(current) + 1
+
+
 @dataclass(frozen=True)
 class AnchorClinicalContext:
     """Design context used before a final indication label exists."""
@@ -108,13 +149,22 @@ class IntendedBenefitHypothesis:
     benefit_class: str
     rationale: str
     endpoint_class: str
-    endpoint_measurement_plan_ref: str
     source_refs: tuple[str, ...]
+    endpoint_measurement_plan_ref: str | None = None
+    protocol_endpoint_ref: str | None = None
+    observed_endpoint_performance_ref: str | None = None
 
     def __post_init__(self) -> None:
         for name in ("benefit_id", "benefit_class", "rationale", "endpoint_class"):
             _require_non_empty(getattr(self, name), name)
-        _require_external(self.endpoint_measurement_plan_ref, "endpoint_measurement_plan_ref")
+        for name in (
+            "endpoint_measurement_plan_ref",
+            "protocol_endpoint_ref",
+            "observed_endpoint_performance_ref",
+        ):
+            value = getattr(self, name)
+            if value is not None:
+                _require_external(value, name)
         _require_external_ids(self.source_refs, "source_refs")
 
 
@@ -129,8 +179,12 @@ class BiomarkerHypothesis:
     measurement_scale: str
     heterogeneity_risk: str
     assay_feasibility: str
-    final_cutoff_deferred: bool
     source_refs: tuple[str, ...]
+    final_cutoff_deferred: bool = True
+    cutoff_status: BiomarkerCutoffStatus = BiomarkerCutoffStatus.DEFERRED
+    final_cutoff_ref: str | None = None
+    cdx_status: CDxStatus = CDxStatus.NOT_REQUIRED
+    cdx_ref: str | None = None
 
     def __post_init__(self) -> None:
         for name in (
@@ -139,6 +193,18 @@ class BiomarkerHypothesis:
         ):
             _require_non_empty(getattr(self, name), name)
         _require_external_ids(self.source_refs, "source_refs")
+        if not isinstance(self.cutoff_status, BiomarkerCutoffStatus):
+            raise ValueError("cutoff_status must be a BiomarkerCutoffStatus")
+        if not isinstance(self.cdx_status, CDxStatus):
+            raise ValueError("cdx_status must be a CDxStatus")
+        if self.final_cutoff_ref is not None:
+            _require_external(self.final_cutoff_ref, "final_cutoff_ref")
+        if self.cdx_ref is not None:
+            _require_external(self.cdx_ref, "cdx_ref")
+        if self.cutoff_status == BiomarkerCutoffStatus.LOCKED and self.final_cutoff_ref is None:
+            raise ValueError("locked cutoff status requires final_cutoff_ref")
+        if self.cdx_status == CDxStatus.LOCKED and self.cdx_ref is None:
+            raise ValueError("locked CDx status requires cdx_ref")
 
 
 @dataclass(frozen=True)
@@ -171,22 +237,55 @@ class ClinicalHypothesis:
     """The v5 development unit: target x anchor context x intended benefit."""
 
     hypothesis_id: str
-    target_ref: str
-    anchor_context_ref: str
-    intended_benefit_ref: str
-    biomarker_hypothesis_ref: str
-    product_hypothesis_ref: str
+    target_ref: str | None
+    anchor_context_ref: str | None
+    intended_benefit_ref: str | None
+    biomarker_hypothesis_ref: str | None
+    product_hypothesis_ref: str | None
     lock_state: ClinicalLockState
     source_refs: tuple[str, ...]
+    entry_mode: ClinicalHypothesisEntryMode = ClinicalHypothesisEntryMode.TARGET_CONTEXT_COSELECTION
+    protocol_endpoint_ref: str | None = None
+    final_indication_ref: str | None = None
+    registrational_endpoint_ref: str | None = None
+    biomarker_cutoff_ref: str | None = None
+    cdx_ref: str | None = None
 
     def __post_init__(self) -> None:
         _require_non_empty(self.hypothesis_id, "hypothesis_id")
+        if not isinstance(self.lock_state, ClinicalLockState):
+            raise ValueError("lock_state must be a ClinicalLockState")
+        if not isinstance(self.entry_mode, ClinicalHypothesisEntryMode):
+            raise ValueError("entry_mode must be a ClinicalHypothesisEntryMode")
         for name in (
             "target_ref", "anchor_context_ref", "intended_benefit_ref",
             "biomarker_hypothesis_ref", "product_hypothesis_ref",
         ):
-            _require_external(getattr(self, name), name)
+            value = getattr(self, name)
+            if value is not None:
+                _require_external(value, name)
         _require_external_ids(self.source_refs, "source_refs")
+        for name in (
+            "protocol_endpoint_ref", "final_indication_ref",
+            "registrational_endpoint_ref", "biomarker_cutoff_ref", "cdx_ref",
+        ):
+            value = getattr(self, name)
+            if value is not None:
+                _require_external(value, name)
+        required_by_state = {
+            ClinicalLockState.PROVISIONAL: ("target_ref", "anchor_context_ref", "intended_benefit_ref"),
+            ClinicalLockState.ANCHORED: ("target_ref", "anchor_context_ref", "intended_benefit_ref", "biomarker_hypothesis_ref"),
+            ClinicalLockState.PRODUCT_LOCKED: ("target_ref", "anchor_context_ref", "intended_benefit_ref", "biomarker_hypothesis_ref", "product_hypothesis_ref"),
+            ClinicalLockState.PROTOCOL_LOCKED: ("protocol_endpoint_ref",),
+            ClinicalLockState.REGULATORY_LOCKED: ("protocol_endpoint_ref", "final_indication_ref", "registrational_endpoint_ref", "biomarker_cutoff_ref", "cdx_ref"),
+        }
+        for name in required_by_state.get(self.lock_state, ()):
+            if getattr(self, name) is None:
+                raise ValueError(f"{self.lock_state.value} requires {name}")
+        if self.entry_mode == ClinicalHypothesisEntryMode.MATURE_TARGET_FIRST and self.target_ref is None:
+            raise ValueError("mature-target-first requires target_ref")
+        if self.entry_mode == ClinicalHypothesisEntryMode.CLINICAL_PROBLEM_FIRST and self.intended_benefit_ref is None:
+            raise ValueError("clinical-problem-first requires intended_benefit_ref")
 
 
 class CandidateLifecycle(str, Enum):
@@ -212,42 +311,57 @@ class OpportunitySearchScope:
 
     scope_id: str
     version: str
-    indication: str
-    disease_setting: str
-    line_of_therapy: str
-    treatment_context: str
-    comparator: str
-    patient_segment_constraints: tuple[str, ...]
-    endpoint_definition: str
-    endpoint_time_horizon: str
-    clinical_success_condition: str
-    modality: str
-    evidence_cutoff_date: str
-    candidate_budget: int
-    source_policy_id: str
-    evaluation_plan_id: str
+    indication: str | None = None
+    disease_setting: str | None = None
+    line_of_therapy: str | None = None
+    treatment_context: str | None = None
+    comparator: str | None = None
+    patient_segment_constraints: tuple[str, ...] = ()
+    endpoint_definition: str | None = None
+    endpoint_time_horizon: str | None = None
+    clinical_success_condition: str | None = None
+    modality: str = "ADC"
+    evidence_cutoff_date: str = ""
+    candidate_budget: int = 1
+    source_policy_id: str = ""
+    evaluation_plan_id: str = ""
+    clinical_hypothesis_seed_ref: str | None = None
+    entry_mode: ClinicalHypothesisEntryMode = ClinicalHypothesisEntryMode.TARGET_CONTEXT_COSELECTION
 
     def __post_init__(self) -> None:
         for name in (
             "scope_id",
             "version",
-            "indication",
-            "disease_setting",
-            "line_of_therapy",
-            "treatment_context",
-            "comparator",
-            "endpoint_definition",
-            "endpoint_time_horizon",
-            "clinical_success_condition",
             "modality",
-            "evidence_cutoff_date",
-            "source_policy_id",
-            "evaluation_plan_id",
         ):
-            _require_non_empty(getattr(self, name), name)
+            value = getattr(self, name)
+            if value is not None:
+                _require_non_empty(value, name)
         _require_ids(self.patient_segment_constraints, "patient_segment_constraints")
-        _require_external(self.source_policy_id, "source_policy_id")
-        _require_external(self.evaluation_plan_id, "evaluation_plan_id")
+        for name in ("source_policy_id", "evaluation_plan_id", "clinical_hypothesis_seed_ref"):
+            value = getattr(self, name)
+            if value:
+                _require_external(value, name)
+        if not isinstance(self.entry_mode, ClinicalHypothesisEntryMode):
+            raise ValueError("entry_mode must be a ClinicalHypothesisEntryMode")
+        if self.clinical_hypothesis_seed_ref is None:
+            for name in (
+                "indication", "disease_setting", "line_of_therapy", "treatment_context",
+                "comparator", "endpoint_definition", "endpoint_time_horizon",
+                "clinical_success_condition", "evidence_cutoff_date", "source_policy_id",
+                "evaluation_plan_id",
+            ):
+                _require_non_empty(getattr(self, name), name)
+        else:
+            for name in (
+                "indication", "disease_setting", "line_of_therapy", "treatment_context",
+                "comparator", "endpoint_definition", "endpoint_time_horizon",
+                "clinical_success_condition", "evidence_cutoff_date", "source_policy_id",
+                "evaluation_plan_id",
+            ):
+                value = getattr(self, name)
+                if value:
+                    _require_non_empty(value, name)
         if self.modality != "ADC":
             raise ValueError("gen_indication_endpoint_target requires modality=ADC")
         if self.candidate_budget < 1:
@@ -260,18 +374,23 @@ class ClinicalFrame:
 
     frame_id: str
     scope_id: str
-    indication: str
-    disease_setting: str
-    line_of_therapy: str
-    treatment_context: str
-    comparator: str
-    endpoint_definition: str
-    endpoint_time_horizon: str
-    endpoint_driving_population: str
-    source_evidence_ids: tuple[str, ...]
-    t0_gate_result_ref: str
-    t1_gate_result_ref: str
+    indication: str | None = None
+    disease_setting: str | None = None
+    line_of_therapy: str | None = None
+    treatment_context: str | None = None
+    comparator: str | None = None
+    endpoint_definition: str | None = None
+    endpoint_time_horizon: str | None = None
+    endpoint_driving_population: str | None = None
+    source_evidence_ids: tuple[str, ...] = ()
+    t0_gate_result_ref: str = ""
+    t1_gate_result_ref: str = ""
     status: EvaluationStatus = EvaluationStatus.EVALUATED
+    clinical_hypothesis_ref: str | None = None
+    lock_state: ClinicalLockState = ClinicalLockState.PROVISIONAL
+    endpoint_class: str | None = None
+    protocol_endpoint_ref: str | None = None
+    observed_endpoint_performance_ref: str | None = None
 
     def __post_init__(self) -> None:
         for name in (
@@ -286,10 +405,19 @@ class ClinicalFrame:
             "endpoint_time_horizon",
             "endpoint_driving_population",
         ):
-            _require_non_empty(getattr(self, name), name)
+            value = getattr(self, name)
+            if value is not None:
+                _require_non_empty(value, name)
         _require_external_ids(self.source_evidence_ids, "source_evidence_ids")
-        _require_external(self.t0_gate_result_ref, "t0_gate_result_ref")
-        _require_external(self.t1_gate_result_ref, "t1_gate_result_ref")
+        for name in ("t0_gate_result_ref", "t1_gate_result_ref", "clinical_hypothesis_ref", "protocol_endpoint_ref", "observed_endpoint_performance_ref"):
+            value = getattr(self, name)
+            if value:
+                _require_external(value, name)
+        if self.clinical_hypothesis_ref is None:
+            for name in ("indication", "endpoint_definition", "t0_gate_result_ref", "t1_gate_result_ref"):
+                _require_non_empty(getattr(self, name), name)
+        if not isinstance(self.lock_state, ClinicalLockState):
+            raise ValueError("lock_state must be a ClinicalLockState")
 
 
 @dataclass(frozen=True)
@@ -315,6 +443,8 @@ class TargetCandidate:
     negative_evidence_ids: tuple[str, ...] = ()
     unknown_claims: tuple[str, ...] = ()
     lifecycle: CandidateLifecycle = CandidateLifecycle.TARGET_CANDIDATE_GENERATED
+    clinical_hypothesis_ref: str | None = None
+    lock_state: ClinicalLockState = ClinicalLockState.PROVISIONAL
 
     def __post_init__(self) -> None:
         for name in (
@@ -338,6 +468,10 @@ class TargetCandidate:
         _require_external_ids(self.positive_evidence_ids, "positive_evidence_ids")
         _require_external_ids(self.negative_evidence_ids, "negative_evidence_ids")
         _require_ids(self.unknown_claims, "unknown_claims")
+        if self.clinical_hypothesis_ref:
+            _require_external(self.clinical_hypothesis_ref, "clinical_hypothesis_ref")
+        if not isinstance(self.lock_state, ClinicalLockState):
+            raise ValueError("lock_state must be a ClinicalLockState")
 
     @property
     def opportunity_identity(self) -> tuple[str, str, str, str]:
@@ -460,6 +594,9 @@ class TargetOpportunityHandoff:
     adversarial_review_ref: str
     lifecycle: CandidateLifecycle
     readiness: EvaluationStatus
+    clinical_hypothesis_ref: str | None = None
+    clinical_lock_state: ClinicalLockState | None = None
+    anchor_context_ref: str | None = None
 
     def __post_init__(self) -> None:
         _require_non_empty(self.handoff_id, "handoff_id")
@@ -472,3 +609,9 @@ class TargetOpportunityHandoff:
         ):
             _require_external(getattr(self, name), name)
         _require_external_ids(self.evidence_refs, "evidence_refs")
+        for name in ("clinical_hypothesis_ref", "anchor_context_ref"):
+            value = getattr(self, name)
+            if value is not None:
+                _require_external(value, name)
+        if self.clinical_lock_state is not None and not isinstance(self.clinical_lock_state, ClinicalLockState):
+            raise ValueError("clinical_lock_state must be a ClinicalLockState")

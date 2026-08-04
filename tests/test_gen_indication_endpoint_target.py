@@ -3,15 +3,20 @@ import unittest
 from genmodules.gen_indication_endpoint_target import (
     AdversarialReview,
     BiomarkerHypothesis,
+    BiomarkerCutoffStatus,
+    CDxStatus,
+    CandidateLifecycle,
     CandidateDisposition,
     CandidateFilterResult,
     ClinicalFrame,
     ClinicalHypothesis,
+    ClinicalHypothesisEntryMode,
     ClinicalLockState,
     EvaluationStatus,
     OpportunitySearchScope,
     TargetCandidate,
     TargetOpportunityHandoff,
+    can_transition_clinical_lock,
 )
 
 
@@ -46,6 +51,81 @@ class GenIndicationEndpointTargetContractTests(unittest.TestCase):
             source_refs=("external:source/1",),
         )
         self.assertTrue(biomarker.final_cutoff_deferred)
+
+    def test_v5_cutoff_and_cdx_lock_require_external_refs(self):
+        with self.assertRaises(ValueError):
+            BiomarkerHypothesis(
+                biomarker_id="bm-locked",
+                biological_feature="surface expression",
+                specimen_type="tissue",
+                assay_method="IHC",
+                measurement_scale="continuous",
+                heterogeneity_risk="unknown",
+                assay_feasibility="feasible",
+                source_refs=("external:source/1",),
+                cutoff_status=BiomarkerCutoffStatus.LOCKED,
+                cdx_status=CDxStatus.LOCKED,
+            )
+
+    def test_v5_lock_transitions_are_monotonic_single_step(self):
+        self.assertTrue(
+            can_transition_clinical_lock(
+                ClinicalLockState.EXPLORATORY,
+                ClinicalLockState.PROVISIONAL,
+            )
+        )
+        self.assertFalse(
+            can_transition_clinical_lock(
+                ClinicalLockState.REGULATORY_LOCKED,
+                ClinicalLockState.EXPLORATORY,
+            )
+        )
+        self.assertFalse(
+            can_transition_clinical_lock(
+                ClinicalLockState.EXPLORATORY,
+                ClinicalLockState.PRODUCT_LOCKED,
+            )
+        )
+
+    def test_v5_entry_modes_define_valid_exploratory_seeds(self):
+        seed_scope = OpportunitySearchScope(
+            scope_id="seed-scope",
+            version="2.0",
+            modality="ADC",
+            candidate_budget=1,
+            clinical_hypothesis_seed_ref="external:seed/1",
+            entry_mode=ClinicalHypothesisEntryMode.MATURE_TARGET_FIRST,
+        )
+        self.assertEqual(seed_scope.entry_mode, ClinicalHypothesisEntryMode.MATURE_TARGET_FIRST)
+        with self.assertRaises(ValueError):
+            ClinicalHypothesis(
+                hypothesis_id="bad",
+                target_ref=None,
+                anchor_context_ref=None,
+                intended_benefit_ref=None,
+                biomarker_hypothesis_ref=None,
+                product_hypothesis_ref=None,
+                lock_state=ClinicalLockState.PROVISIONAL,
+                source_refs=(),
+                entry_mode=ClinicalHypothesisEntryMode.CLINICAL_PROBLEM_FIRST,
+            )
+
+    def test_v5_hypothesis_flows_to_t12_handoff(self):
+        handoff = TargetOpportunityHandoff(
+            handoff_id="handoff-v5",
+            candidate_id="candidate-1",
+            opportunity_ref="external:opportunity/1",
+            target_hypothesis_ref="external:hypothesis/target-1",
+            t12_gate_result_ref="external:t12/1",
+            evidence_refs=("external:evidence/1",),
+            adversarial_review_ref="external:review/1",
+            lifecycle=CandidateLifecycle.READY_FOR_T12_DECISION,
+            readiness=EvaluationStatus.EVALUATED,
+            clinical_hypothesis_ref="external:hypothesis/clinical-1",
+            clinical_lock_state=ClinicalLockState.PRODUCT_LOCKED,
+            anchor_context_ref="external:anchor/1",
+        )
+        self.assertEqual(handoff.clinical_hypothesis_ref, "external:hypothesis/clinical-1")
 
     def test_scope_requires_adc_and_external_policy_inputs(self):
         scope = OpportunitySearchScope(

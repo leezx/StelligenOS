@@ -32,6 +32,10 @@ must not be converted into PASS or FAIL by this package.
 - `ProductHypothesis`: ADC design constraints derived from the clinical use.
 - `ClinicalHypothesis`: the auditable composition of the external refs and a
   progressive lock state from `exploratory` to `regulatory-locked`.
+- `ClinicalHypothesisEntryMode`: the supported mature-target-first,
+  target-context-co-selection, and clinical-problem-first entry modes.
+- Lock transitions and stage requirements are validated by the contract; a
+  maturity label alone cannot create a regulatory-ready hypothesis.
 
 ## Existing contracts
 

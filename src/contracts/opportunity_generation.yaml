@@ -1,6 +1,6 @@
 contract:
   contract_id: opportunity_generation
-  contract_version: "0.1.0"
+  contract_version: "0.2.0"
   lifecycle_stage: Opportunity Generation
   inputs:
     - knowledge_scope_ref

@@ -102,6 +102,9 @@ Capabilities 是操作系统提供的能力集合，不是生命周期，也不�
 
 `ClinicalHypothesis` 是 v5 的早期研发单元，组合 target、anchor clinical
 context、intended benefit、biomarker hypothesis 和 product hypothesis。
+它支持 `mature-target-first`、`target-context-co-selection` 和
+`clinical-problem-first` 三种入口；探索态允许 seed 不完整，正式锁定状态
+按最低必填条件校验。
 它采用 `exploratory -> provisional -> anchored -> product-locked ->
 protocol-locked -> regulatory-locked` 递进锁定；未知不等于失败。
 

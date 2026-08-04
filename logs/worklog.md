@@ -2002,3 +2002,29 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Change: 更新 canonical architecture、contract、lifecycle、module README、core object registry 和 opportunity-generation outputs；旧 v1 快照不修改，v2 暂不创建快照，等待 ChatGPT PR `APPROVE`。
 - Test incident: 为语法检查运行 `compileall` 生成 `__pycache__`，全量测试因此出现 3 个仓库边界失败；已删除所有本轮生成的缓存目录。边界检查本身通过，后续不用 `compileall`。
 - Next: 无缓存方式复跑全量测试；通过后提交、推送并在 Chrome 的 ChatGPT「ADC研发靶点选择」对话中提交 PR 审核。
+
+### 2026-08-03 21:05 EDT
+
+- Action: 推送分支并创建 GitHub PR #45：`https://github.com/leezx/StelligenOS/pull/45`。
+- Action: 在 Chrome ChatGPT「ADC研发靶点选择」对话中打开 `+` 菜单，搜索并选中 GitHub 连接器，提交 PR 审核指令。
+- Review scope sent: v5 研发单元、T0 递进锁定、endpoint 三层语义、biomarker 时序、external-only 边界、45-Gate 不变性、契约/测试/handoff 一致性。
+- ChatGPT intermediate findings: (1) `GateInputEnvelope.clinical_lock_state` 是自由字符串且没有校验；(2) 递进锁定目前只有枚举，没有合法转换、阶段必填项或一致性约束；(3) 旧 `OpportunitySearchScope`、`ClinicalFrame`、`TargetCandidate`、`TargetOpportunityHandoff` 仍以精确 indication/endpoint 为主身份，`ClinicalHypothesis` 尚未接管真实 generation-evaluation-handoff 链。最终结论尚未出现，不能视为 `APPROVE`。
+- Browser state: 审核对话已保留为 handoff，便于下一轮继续读取；PR 不合并，v2 快照不创建，代码不继续修改，直到获得完整结论。
+
+### 2026-08-04 00:20 EDT
+
+- Action: 重新读取 Chrome「ADC研发靶点选择」对话，获得 ChatGPT 对 PR #45 的完整 Round 1 结论：`REQUEST_CHANGES`。
+- Blocking feedback: `ClinicalHypothesis` 尚未接管旧 generation-validation-handoff 链；六级 lock 只有枚举、没有转换和阶段最低要求；endpoint/biomarker 层级字段不足；三种 entry mode 只有文档说明、契约不能表达 exploratory seed。
+- Additional feedback: `GateInputEnvelope` 的 lock state 是未校验字符串，新增字段破坏潜在位置参数兼容且未升级版本；YAML 合同版本未升级；测试缺少状态、入口、时序、envelope、handoff 传播覆盖；架构文档编号和对象关系需修正。
+- Change started on same PR: add entry-mode, cutoff/CDx status, monotonic lock transition and state-specific minimum validation; make legacy exact indication/endpoint fields compatibility snapshots; propagate `clinical_hypothesis_ref` and lock state through frame, candidate and T12 handoff; type and validate Gate envelope extensions; bump contract versions; add tests and save the review record.
+- Boundary: no data, cache, results, model weights or runtime artifacts added; `prompts/GPT-Feedback.md` remains the user's unstaged local change and is not included.
+- Next: run the complete test suite and boundary check, commit/push the same PR, then submit Round 2 review in the same ChatGPT conversation.
+
+### 2026-08-03 21:20 EDT
+
+- Action: Continued from the completed browser run and reread the Round 1 `REQUEST_CHANGES` record.
+- Fix: Corrected exploratory `OpportunitySearchScope` validation so a seed reference does not require complete clinical fields or a cutoff date; optional non-empty values are still validated when supplied.
+- Fix: Added typed resulting clinical hypothesis and lock-state fields to `GateModelOutput`, with external-reference and state consistency validation; bumped its contract version while preserving the existing positional field order.
+- Validation: `PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'` passed with 179 tests; `git diff --check` passed; repository data-boundary scan passed.
+- Boundary: `prompts/GPT-Feedback.md` remains an unstaged user change and was not modified, staged, or reverted by this work.
+- Next: explicitly stage only the PR remediation files, commit and push to PR #45, then submit the Round 2 review request in the existing ChatGPT conversation.

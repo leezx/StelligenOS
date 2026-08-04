@@ -5,6 +5,7 @@ from src.capabilities.gates import (
     GATE_GROUPS,
     GATE_IDS,
     GateInputEnvelope,
+    ClinicalLockState,
     gate_definition,
 )
 
@@ -49,6 +50,30 @@ class Phase3GateContractTests(unittest.TestCase):
     def test_unknown_gate_is_rejected(self):
         with self.assertRaises(KeyError):
             gate_definition("not_a_real_gate")
+
+    def test_t0_extension_requires_typed_state_and_hypothesis_ref(self):
+        with self.assertRaises(ValueError):
+            GateInputEnvelope(
+                "external:candidate/1", "external:opportunity/1", "external:adc/1",
+                "external:commercial/1", (), {}, "external:graph/1", "external:run/1",
+                "2.1.0", None, None, None, None, None, "invalid",
+            )
+        with self.assertRaises(ValueError):
+            GateInputEnvelope(
+                "external:candidate/1", "external:opportunity/1", "external:adc/1",
+                "external:commercial/1", (), {}, "external:graph/1", "external:run/1",
+                "2.1.0", None, None, None, None, None, ClinicalLockState.PROVISIONAL,
+            )
+
+    def test_t0_extension_keeps_contract_version_before_new_fields(self):
+        envelope = GateInputEnvelope(
+            "external:candidate/1", "external:opportunity/1", "external:adc/1",
+            "external:commercial/1", (), {}, "external:graph/1", "external:run/1",
+            "2.1.0", "external:clinical-hypothesis/1", "external:anchor/1",
+            "external:benefit/1", "external:biomarker/1", "external:product/1",
+            ClinicalLockState.PROVISIONAL,
+        )
+        self.assertEqual(envelope.contract_version, "2.1.0")
 
 
 if __name__ == "__main__":

@@ -28,12 +28,12 @@ StelligenOS 的目标是把未满足临床需求逐步转化为可验证、可�
 
 1. **临床上下文与靶点协同**：默认选择 `target x anchor clinical context`，并由 intended benefit/product hypothesis 约束 ADC 设计；成熟靶点可走 target-first，临床表型也可先行。
 2. **递进锁定**：endpoint class 是早期设计输入，精确 endpoint 是 protocol 阶段输入，observed endpoint performance 是试验输出；biomarker biology/assay feasibility 早做，cutoff/CDx 后置。
-2. **证据与判断分离**：原始证据、机器提取、专家复核、Gate 评分和最终决策分别记录，不允许相互冒充。
-3. **未知不是失败**：`unknown/null` 表示证据不足，不得自动转换为 0、FAIL 或负面证据。
-4. **支持与反对证据并存**：相关合同分别保留 supporting/opposing/mixed、conflict、unknown 和 missing information（如存在）的引用；缺失不代表阴性。
-5. **规则和模型不能直接改写决策**：历史 Rule、Model 或自然语言 if/then 只能提供参考；只有受治理的 Gate 执行才能产生 Gate 结果。
-6. **状态不能自动晋级**：脚本成功、模型高分或单个 Gate 通过都不能自动推动生命周期；晋级需要显式决策及其证据和审计记录。
-7. **全过程可追溯**：对象、合同、模型、Gate、输入、输出、证据和审核均使用版本化身份和外部引用。
+3. **证据与判断分离**：原始证据、机器提取、专家复核、Gate 评分和最终决策分别记录，不允许相互冒充。
+4. **未知不是失败**：`unknown/null` 表示证据不足，不得自动转换为 0、FAIL 或负面证据。
+5. **支持与反对证据并存**：相关合同分别保留 supporting/opposing/mixed、conflict、unknown 和 missing information（如存在）的引用；缺失不代表阴性。
+6. **规则和模型不能直接改写决策**：历史 Rule、Model 或自然语言 if/then 只能提供参考；只有受治理的 Gate 执行才能产生 Gate 结果。
+7. **状态不能自动晋级**：脚本成功、模型高分或单个 Gate 通过都不能自动推动生命周期；晋级需要显式决策及其证据和审计记录。
+8. **全过程可追溯**：对象、合同、模型、Gate、输入、输出、证据和审核均使用版本化身份和外部引用。
 
 ## 3. 总架构
 
@@ -84,15 +84,15 @@ StelligenOS 的目标是把未满足临床需求逐步转化为可验证、可�
 
 逻辑：下列内容是分阶段外部合同规定的目标运行顺序。当前仓库中的 `gen_indication_endpoint_target` 只提供 contract/port，不在仓库内执行候选生成、证据读取、Gate、T12、排序或持久化。
 
-1. 从临床 unmet need 建立 anchor clinical context：适应症、分期、线次、治疗背景、患者群和 comparator；允许保留 expansion indications。
-2. 定义 intended clinical benefit 与 endpoint class；不把最终注册 endpoint 当作早期永久锁定变量。
-3. 同步形成 biomarker biology/assay feasibility 与 ADC product hypothesis；最终 cutoff、CDx 和完整 TPP 可后置。
-4. 从 ADC 临床先例、公共数据和文献中枚举 target；候选必须有明确身份和外部证据，禁止仅凭 Model 或 Rule 生成。
-5. 运行早期关键 Target Gates：人群映射、肿瘤细胞表面可用性、组织内可及性、抗体依赖内吞、表位可实现性和治疗指数；证据不足进入 `HOLD`。
-6. 完成 endpoint biology：干预因果性、基线覆盖与逃逸、治疗诱导状态和净 endpoint 获益，形成 T0-T11 完整证据轨迹。
-5. 检查证据独立性并执行对抗性审核；模型支持、重复来源或相互依赖证据不能虚增可信度。
-6. 只有证据充分且重大冲突得到解决，才允许进入 T12 综合决策；T12 后的排序不能覆盖 Hard Gate 或 T12 结论。
-9. 输出 Opportunity handoff：ClinicalHypothesis、各 Gate 状态、支持/反对证据、关键未知和下一步最具判别力的验证任务。
+1. 根据 entry mode 接收 target seed、clinical-problem seed 或 target/context co-selection seed；探索态允许组成部分暂缺。
+2. 形成 anchor clinical context、intended benefit 和 endpoint class；不把最终注册 endpoint 当作早期永久锁定变量。
+3. 同步形成 biomarker biology/assay feasibility 与 ADC product hypothesis；最终 cutoff、CDx 和完整 TPP 按 lock state 后置。
+4. 生成 `ClinicalHypothesis`，并通过 lock-state-specific validation；旧 indication/endpoint 字段只作为 legacy/derived snapshot。
+5. 从 ADC 临床先例、公共数据和文献中枚举 target；候选必须有明确身份和外部证据，禁止仅凭 Model 或 Rule 生成。
+6. 运行早期关键 Target Gates；证据不足进入 `HOLD`，不是自动淘汰。
+7. 完成 endpoint biology，形成 T0-T11 完整证据轨迹；精确 protocol endpoint 和 observed performance 只在对应阶段进入外部引用。
+8. 检查证据独立性并执行对抗性审核；只有证据充分且重大冲突得到解决，才允许进入 T12 综合决策。
+9. 输出包含 `clinical_hypothesis_ref`、`clinical_lock_state`、anchor context、各 Gate 状态、支持/反对证据、关键未知和验证任务的 Opportunity handoff。
 
 当前 CRC 外部试运行已固定 9 个 indication、36 个 endpoint、41 个 target，并提取 292 条 target-level evidence；这些证据仍在分批 provisional review，尚未执行 Gate 评分、排序或最终 pair 推荐。
 
@@ -141,6 +141,14 @@ StelligenOS 的目标是把未满足临床需求逐步转化为可验证、可�
 - **Model lifecycle**：模型以 `model_id@SemVer` 管理；模型注册、权重、验证和晋级决定留在外部治理系统。
 - **IP/FTO、Due Diligence、Portfolio**：均通过外部服务接口返回 decision package，不在仓库内保存法律意见、尽调档案或资本配置记录。
 - **Audit/versioning**：所有运行必须记录输入版本、合同版本、模型/Gate 版本、证据引用、缺失信息、审核者和时间戳。
+
+### 4.8 三种研发入口
+
+- `mature-target-first`：target seed 可先存在，随后补齐 anchor context、benefit 和 product hypothesis。
+- `target-context-co-selection`：target 与 anchor context 同步形成，是默认入口。
+- `clinical-problem-first`：clinical problem/intended benefit 可先存在，target 在后续证据阶段补齐。
+
+正式 `ClinicalHypothesis` 必须遵守 entry mode 与 lock state 的最低组成要求；不得用一个全字段必填的对象假装支持三种入口。
 
 ## 5. 模块如何共同运作
 
