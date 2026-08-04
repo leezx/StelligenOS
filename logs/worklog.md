@@ -2156,3 +2156,25 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 无任何代码、契约、Gate 拓扑、Model、Profile、生命周期或测试变更；未改写任何历史审计记录；未新增数据、缓存、结果或运行产物。
 - Validation: 192 tests 全部通过（与 `main` 相同，因本 PR 不含代码或测试变更）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`prompts/GPT-Feedback.md` 为纯追加 419／0；零 `__pycache__`。
 - Result: #46／#47／#48 的审计闭环完成，v5 来源文档入库。
+
+### 2026-08-04 14:40 EDT
+
+- Action: 建立 `task_20260804_ci-and-dependencies`（从 `main` `3708024` 创建），引入 GitHub Actions CI 与依赖声明，处理自 PR #15 起每份 handoff 都携带的两条残余风险。经人类负责人指示自行执行。
+- Governance note: 本任务**不适用**「纯文本默认通过」常设授权，因含 CI 配置、依赖声明与脚本逻辑变更，须经 ChatGPT `APPROVE` 后方可合并。
+- Verification before declaring: 仓库实际第三方导入不止 `pyyaml`。逐个映射到文件后确认 —— `PyYAML` 被 `tests/` 下 5 个测试模块导入，属本仓库测试依赖；`dagster`、`anarci`、`abnumber`、`Bio`、`ImmuneBuilder` 只出现在 `genmodules/antibody_binder_asset_engineering/` 与 `epitope_conditioned_de_novo_antibody_discovery/` 的 pipeline 代码，无任何测试导入。
+- Decision rationale: 后五个不写入 `requirements.txt`，理由不是「暂时不装」而是「装了会造成错误声明」——仓库内不执行任何 pipeline，`external_runtime.py` 已降级为 contract-only 且有 6 项防回归测试；把 pipeline 依赖写进本仓库依赖文件等于声称本仓库能跑 pipeline。该判断与理由写入 `requirements.txt` 注释，避免将来被当成遗漏而补上。
+- Validation by clean environment: 在只装 `PyYAML==6.0.3`（除 pip/setuptools 外无其他包）的干净 venv 中跑完整套件，207 tests 全部通过。依赖划分为实证结论而非阅读代码推断。
+- Finding: `tests/test_git_sync.sh` 使用 `rg`（ripgrep）3 处，属不能假定 runner 自带的隐藏依赖。CI 显式安装 ripgrep，**未修改该测试**——为迁就 CI 去改已批准的测试是反向的。
+- Validation of version floor: `enum.StrEnum` 要求 3.11+。该下限由三重手段确认而非仅写文档 —— CI 矩阵同跑 3.11／3.12（下限判断有误则 3.11 任务直接失败）；本地用 `ast.parse(..., feature_version=(3,11))` 扫过全部 92 个 `.py` 无不兼容语法；扫过 3.12 独有 stdlib API 无命中。
+- Change: 新增 `.github/workflows/ci.yml`。`permissions: contents: read` 最小权限；检查顺序刻意为「测试 → git_sync → boundary → 无 `__pycache__` → 工作树未被改动」，后三项放在测试之后才有意义，只有套件跑过一遍才可能留下产物。末项把 data-free 原则变成 CI 断言：跑完整套测试后仓库必须逐字节不变。
+- Note on a known trap: CI 必须设 `PYTHONDONTWRITEBYTECODE=1`，否则 `__pycache__` 会被两个测试模块与 boundary check 判为运行产物，CI 会自己把自己弄失败。该陷阱 2026-08-01 已踩过一次。
+- Change: `.github` 与 `requirements.txt` 均不在 `allowed_top_level` 中，CI 文件加入后 boundary check 会先行失败。`.github` **未**整目录加入 allowlist —— PR #43 Round 1 曾明确阻断「整个 `.claude` 目录进 allowlist 过宽」，同样判断适用于 `.github`（整体放开则 CODEOWNERS、issue 模板、缓存均可随后进入而无人察觉）。因此把原先专用于 `.claude` 的机制推广为共用 restricted-directory 机制，目录与文件都须精确命中白名单；`requirements.txt` 以精确文件名入 allowlist。原脚本「同名文件不豁免」的行为予以保留。
+- Change: 新增 `tests/test_repository_boundary.py` 15 项。该脚本此前无任何测试，负面用例靠人工核对；本次改动了它的执行规则本身，推广强制规则却不留测试等于此后不再知道其行为。做法是把脚本复制进临时目录——脚本从自身位置推导 repo_root，故临时目录成为被测根，全部用例跑在合成树上不触碰本仓库。这一点是必需的：用「在仓库里造越界文件」测它属于以违规验证合规，也会与 CI 末项断言直接冲突。
+- Change: `README.md` 新增「本地运行验证」一节（含 `PYTHONDONTWRITEBYTECODE` 为何必须），关键入口补 `requirements.txt` 与 CI 两条。
+- Validation by mutation: 删除 `.claude` 许可 `failures=1`；跳过 nested restricted-path 扫描 `failures=5`；从 allowlist 删 `requirements.txt` `failures=1`；把 `.github` 移出 `restricted_dirs` `failures=4`；同时加白名单且移出 `restricted_dirs` `failures=3`；全部还原 `OK`。还原用文件备份。
+- Finding on a non-failing mutation: 「把 `.github` 加进 `allowed_top_level`」注入后测试仍 `OK`。已单独查明原因并实证 —— `.github` 仍在 `restricted_dirs` 中，顶层循环先 `continue` 短路，该条目成为死代码；注入后在 `.github/` 下放探针文件仍被拒绝，行为未变。因此属无效变异而非测试漏洞，真正危险的组合已由上表最后一条覆盖。
+- Boundary: 未改动 `src/` 下任何 `.py`；未改动任何契约、Gate 拓扑、gate_id、Model、Profile、生命周期或核心对象；未改动 `tests/test_git_sync.sh`；未改动 `extensions/` 与 `.gitignore`；未改写任何历史审计记录；未新增数据、缓存、结果或运行产物。
+- Validation: 207 tests 全部通过（192 + 新增 15），干净 venv 中同样 207 通过；`tests/test_git_sync.sh` A-D 通过；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`；跑完整套件后工作树除本次改动外无变化。
+- Open risk: **CI 尚未在真实 GitHub Actions 上跑过** —— 本 PR 就是引入该 workflow 的 PR，其首次实际执行即在本 PR 上，失败须在同一 PR 内修订。本地已尽可能预演（干净 venv、3.11 语法扫描、逐步骤手工执行、YAML 解析校验），但 runner 环境差异无法完全消除。
+- Open risk: CI 只跑 `ubuntu-24.04`，不覆盖 macOS（本仓库实际开发环境，`bash` 3.2，`find`／`bash` 行为有差异）。`PyYAML` 采用 `>=6.0,<7` 而非精确钉版，若要求完全可复现构建需另立任务引入锁文件。Python 下限由 CI 矩阵、README、`requirements.txt` 注释三处表达，无单一机器可读来源；引入 `pyproject.toml` 可解决但会暗示本仓库是可打包项目，与现状不符，故未做。
+- Next: 推送并创建 PR 供 ChatGPT 审核。合并后「仓库无 CI」这条残余风险可从后续 handoff 移除；历史记录中的该表述属既往事实，不回写。
