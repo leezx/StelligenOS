@@ -2,7 +2,7 @@
 #
 # This repository holds contracts, ports, prompts, scripts and documentation. It
 # executes no pipeline and stores no data, so this list is deliberately minimal.
-# Verified empirically: the full suite (192 tests) passes in a clean virtual
+# Verified empirically: the full suite (207 tests) passes in a clean virtual
 # environment with only PyYAML installed.
 #
 # Python 3.11 or newer is required. `src/lifecycle/state_machine.py` uses

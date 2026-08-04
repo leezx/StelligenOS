@@ -2187,3 +2187,16 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Change: handoff 中「CI 尚未在真实 GitHub Actions 上跑过」由未决风险改为已解除，并新增「CI 首次真实执行结果」一节记录 run ID 与逐步骤结论。
 - Boundary: 本次仅更新记录文本，无任何代码、配置、契约或测试变更。
 - Next: 提交 ChatGPT 审核本 PR。本 PR 不适用「纯文本默认通过」常设授权。
+
+### 2026-08-04 17:40 EDT
+
+- Action: 处理 ChatGPT 对 PR #50（CI 与依赖声明）的 Round 1 `REQUEST_CHANGES`。一条阻断，经核实成立，无 pushback。
+- Verification: 成立。`requirements.txt:5` 写「the full suite (192 tests) passes in a clean virtual environment」，而本 PR、handoff 与 CI 均为 207。
+- Root cause: 该注释写于新增 `tests/test_repository_boundary.py` **之前**，当时干净 venv 实测确为 192；随后新增 15 项边界测试使总数变为 207，未回头同步这一处。
+- Method: 未直接改数字，先在干净 venv（仅 `PyYAML==6.0.3`）重新实测，得 `Ran 207 tests —— OK`，确认 207 为正确值后再改。
+- Change: `requirements.txt` 注释 192 → 207。
+- Verification of the same class: 扫过本 PR 全部改动文件中的测试数声明，确认无第二处过期 —— handoff 的「Ran 207 tests（192 + 新增 15）」中 192 是新增前基数而非声称当前值，正确；`.github/workflows/ci.yml` 与 `README.md` 刻意不含硬编码测试数，因为 CI 输出的实际计数才是权威，写进配置只会再造一处漂移源。
+- Note: 审核明确指出当前 HEAD 的 GitHub Actions 已成功，依赖声明、CI 与仓库边界修改未发现阻断。
+- Boundary: 本次仅改一处注释数字与记录文本，无代码、配置、契约或测试变更。
+- Validation: 207 tests 全部通过；干净 venv 中同样 207；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
+- Next: 推送同一 PR #50 并提交 ChatGPT 复审。PR #51 的两条治理阻断另行处理。

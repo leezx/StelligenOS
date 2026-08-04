@@ -2,7 +2,7 @@
 
 - 任务编号：`task_20260804_ci-and-dependencies`
 - 分支：`task_20260804_ci-and-dependencies`（从 `main` `3708024` 创建）
-- 当前状态：`PENDING_CHATGPT_REVIEW`
+- 当前状态：`ROUND_1_REQUEST_CHANGES_ADDRESSED_PENDING_REVIEW`
 - 变更性质：新增 CI、依赖声明、边界脚本机制推广、边界行为测试
 - Gate 变更：`NO_GATE_CHANGE`
 - 内核变更：`NO_KERNEL_CHANGE`（未改动 `src/` 下任何 `.py`）
@@ -41,6 +41,9 @@ commit status，因此所有测试数字只能由仓库自身的审计记录佐�
 venv 内已安装：PyYAML==6.0.3（除 pip/setuptools 外无其他包）
 结果：Ran 207 tests —— OK
 ```
+
+该数字也写进 `requirements.txt` 注释。Round 1 审核指出该处仍写 192，已更正为 207——见下方
+「Round 1 `REQUEST_CHANGES` 与修订」。
 
 ### 非 Python 依赖
 
@@ -199,6 +202,38 @@ verify (3.12)  pass  22s   —  10/10 步骤 success
 
 **这是本仓库第一次拥有独立于自身审计记录的测试证据。** 自 PR #15 起每轮审核都会附一句「GitHub 上没有
 与该 head 关联的 Actions run，因此测试数字只能由仓库记录佐证」——该条件自本 head 起不再成立。
+
+## Round 1 `REQUEST_CHANGES` 与修订
+
+ChatGPT 返回 `REQUEST_CHANGES`，一条阻断，经核实成立。
+
+### 阻断：`requirements.txt` 注释中的测试数过期
+
+成立。`requirements.txt:5` 写「the full suite (192 tests) passes in a clean virtual environment」，而
+本 PR、handoff 与 CI 均为 207。
+
+成因：该注释写于新增 `tests/test_repository_boundary.py` **之前**，当时干净 venv 实测确为 192；随后
+新增 15 项边界测试使总数变为 207，但未回头同步这一处。
+
+修订前重新实测而非直接改数字——干净 venv（仅 `PyYAML==6.0.3`）当前实际为 `Ran 207 tests —— OK`，
+故 207 是正确值。已改。
+
+### 同类声明的全量核查
+
+按同一模式扫过本 PR 全部改动文件中的测试数声明，确认无第二处过期：
+
+| 文件 | 声明 | 状态 |
+|---|---|---|
+| `requirements.txt` | 207 | 已修正 |
+| `docs/handoff/2026-08-04-ci-and-dependencies.zh-CN.md` | `Ran 207 tests（192 + 新增 15）` | 正确（192 是新增前的基数，非声称当前值） |
+| `.github/workflows/ci.yml` | 不含硬编码测试数 | 无需改 |
+| `README.md` | 不含硬编码测试数 | 无需改 |
+
+`ci.yml` 与 `README.md` 刻意不写具体数字：CI 输出的实际计数才是权威，写进配置只会再造一处漂移源。
+
+### 审核确认的其余部分
+
+审核明确指出当前 HEAD 的 GitHub Actions 已成功，依赖声明、CI 与仓库边界修改未发现阻断。
 
 ## 未决问题与风险
 
