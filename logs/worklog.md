@@ -2200,3 +2200,48 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 本次仅改一处注释数字与记录文本，无代码、配置、契约或测试变更。
 - Validation: 207 tests 全部通过；干净 venv 中同样 207；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
 - Next: 推送同一 PR #50 并提交 ChatGPT 复审。PR #51 的两条治理阻断另行处理。
+
+### 2026-08-04 17:05 EDT
+
+- Action: 建立 `task_20260804_gpt-feedback-waiver`（从 `main` `3708024` 创建），把审核豁免写入 `AGENTS.md`，并收窄我此前记录的过宽表述。
+- Correction of my own record: 2026-08-04 13:20 那条 worklog 与 PR #49 的 handoff 把人类负责人的授权记为「不涉及任何代码修改的纯文本 PR 默认通过」，覆盖 `logs/chatgpt-review-*.md`、`docs/handoff/*`、`logs/worklog.md`、`prompts/*`。**这是过度推广，不是授权内容。** 人类负责人的原意只针对 `prompts/GPT-Feedback.md` 一个文件，理由是该文件记录的是其作为审核方与 ChatGPT 对话后确定的反馈需求，是纯文本反馈记录。
+- Change: `AGENTS.md` 新增「审核豁免」一节，作为该豁免的唯一权威表述；第 23 条全局 PR 门禁加一句指向该节，使只读门禁的人也能看到唯一例外。
+- Change: 该节写明五条边界，任一条不满足即回落正常门禁 —— 只限该单一路径；该 PR 只能改这一个文件；不豁免留痕（仍须走 PR、仍须写 worklog）；不豁免实施（把反馈变成架构／内核／Gate／扩展／代码改动一律走完整门禁）；不自我扩展（不适用于修改 `AGENTS.md` 本身或扩大本豁免）。
+- Rationale for the extra clauses: 第 2 条堵「顺手夹带」——若允许同一 PR 兼含其他文件，挂上这个文件名就能把任意改动带进去，PR #49 正是该形态实例。第 4 条堵「记录即授权」——该文件历史作用恰恰是驱动重大变更（`# v4` 产生四个扩展包，`# v5` 直接改内核 PR #45），不写明则「反馈默认通过」易被读成「反馈里的方案已获批准」。第 5 条堵自我指涉。
+- Change: 在 `docs/handoff/2026-08-04-audit-records-and-v5-source.zh-CN.md` 的「常设授权」一节**节首插入**更正块，原文一字未删。做法理由：该 handoff 是已合并的带时间戳审计记录，不得改写；但只在文末追加则读者读到那张边界表就会停下并可能据以执行，一条已失效的执行规则留在原位不加标注有实际危害。插入是增量而非隐藏，原始表述与其失效事实同时可见。
+- Recorded without ratification: 更正块中如实写明 PR #49 本身包含三份审计记录与 handoff，按收窄后的规则不在豁免范围内，当时应当送审。该事实照实记录，不作追认。
+- Boundary: 未改动任何代码、契约、Gate 拓扑、Model、Profile、生命周期、核心对象或测试；未改动 `prompts/GPT-Feedback.md` 本身；未改动 `AGENTS.md` 的硬性边界、留痕要求、`git add` 禁令与校验一节；未删改原 handoff 任何原有文字；未改写记录旧宽表述的历史 worklog 条目（本条为追加更正）。
+- Governance note: **本 PR 不适用任何豁免**，须经 ChatGPT `APPROVE`。收窄后的豁免明确排除对 `AGENTS.md` 自身的修改。
+- Validation: 192 tests 全部通过（非 207 —— PR #50 新增的 15 项边界测试尚未合并进 `main`，本分支从 `main` 创建）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git diff -- prompts/GPT-Feedback.md` 为空。
+- Open risk: `AGENTS.md` 无任何测试守卫，「审核豁免」一节将来被改宽或删除不会有机制报警，与 45-Gate 拓扑、扩展状态等已被测试锁定的对象形成对比。是否给治理文档加守卫测试建议另立任务。豁免第 2 条依赖执行者自觉，CI 不区分 PR 是否声明豁免，若要强制需 CI 侧判断改动文件集。
+- Next: 推送并创建 PR 供 ChatGPT 审核。与 PR #50 互相独立，均从 `3708024` 创建。
+
+### 2026-08-04 18:05 EDT
+
+- Action: 处理 ChatGPT 对 PR #51（豁免收窄入 AGENTS.md）的 Round 1 `REQUEST_CHANGES`。两条治理阻断均经核实成立，无 pushback。
+- Verification of blocker 1: 成立，且是硬矛盾而非表述不清。初版第 2 条写「该 PR 只能改这一个文件」，但 `AGENTS.md` 第 26 条与第 38 行、Phase Gate 协议 1.1、`ChatGPT-Codex-talk.md` 1.1 四处都要求每个 PR 更新 `docs/handoff/`，初版第 3 条自己还要求写 `logs/worklog.md`。三者不可能同时满足，该豁免按字面无法执行。初版括注「含 `logs/worklog.md` 之外的任何内容」语义混乱，既没澄清也没解决。
+- Change: 改为封闭的三路径集合表——`prompts/GPT-Feedback.md`（恰好 1）＋ `logs/worklog.md`（恰好 1，只追加）＋ `docs/handoff/<日期>-<任务名>.zh-CN.md`（恰好 1，新增），并明确 **handoff 不在豁免之列**，收窄的是「谁来审核」不是「要不要留痕」。原五条边界相应压缩为四条。
+- Decision rationale: 选「允许 handoff」而非「豁免 handoff」。后者需同时修改四处既有留痕要求，属扩大范围；前者不动任何既有留痕规则，只把允许集合定义清楚。
+- Verification of blocker 2: 成立。`ChatGPT-Codex-talk.md` 1.1「任何工作都必须进入 PR 审核流程」与 Phase Gate 协议 1.1「以下工作全部必须通过 GitHub PR 提交 GPT/ChatGPT 审核」均为无例外表述，与新增豁免直接冲突。
+- Change: 两份文本各加一处指向 `AGENTS.md`「审核豁免」的说明，明确该例外只豁免审核、不豁免 PR／worklog／handoff。未删改任何既有规则。
+- Decision rationale: 采「同步指针」而非「三处复述」。**刻意不复制那四条边界** —— 复制会产生三份可各自漂移的副本，而本次工作中已出现完全同型的故障：EXT-02 版本号写在 `extension.yaml` 与 `contracts.py` 两处且无一致性约束，结果漂移，那正是 PR #48 Round 1 的阻断。审核给的两个选项中取「同步例外」而非「明确优先级」，因为优先级规则会把两句绝对表述原样留在文中，未来读者仍会先撞上矛盾再去别处找优先级。
+- Correction: handoff「明确未改动」一节初版写「未改动 `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md` 与 `ChatGPT-Codex-talk.md`」，Round 1 修订后已不成立，已更正为「除 1.1 全局门禁一处外未改动，两处均为加入指针」。
+- Boundary: 未改动任何代码、契约、Gate 拓扑、Model、Profile、生命周期、核心对象或测试；未改动 `prompts/GPT-Feedback.md` 本身；未删改两份治理文本的任何既有规则；未删改原 handoff 任何原有文字。
+- Validation: 192 tests 全部通过；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git diff -- prompts/GPT-Feedback.md` 为空。
+- Next: 推送同一 PR #51 并提交 ChatGPT 复审。PR #50 的数字阻断已于 17:40 修订完毕。
+
+### 2026-08-04 18:50 EDT
+
+- Action: 合并 PR #50（CI 与依赖声明）。ChatGPT 在 head `076c5ff` 返回 `APPROVE`，GitHub Actions run #3 在 Python 3.11／3.12 全部检查通过。用 merge commit 合并为 `927aebf`，未用 squash。
+- Result: 仓库自此拥有独立 CI。「仓库无 GitHub Actions，测试数字只能由自身审计记录佐证」这条自 PR #15 起携带的残余风险到此解除；历史记录中的该表述属既往事实，不回写。
+- Action: 处理 ChatGPT 对 PR #51 的 Round 2 `REQUEST_CHANGES`。一条治理语义冲突，经核实成立，无 pushback。
+- Verification: 成立，且是逻辑上把自己否掉而非措辞瑕疵。Round 1 修订虽封闭了文件集合，但表格设「是否豁免」一列，把 `logs/worklog.md` 与 handoff 标为「不豁免」并写「handoff 不在豁免之列」。PR 审核以整个 PR 为单位，若配套文件不豁免，则含这两个文件的 PR 仍需审核；而按同一张表这两个文件是必需的——于是每个合规的豁免 PR 都需要审核，豁免恒不生效。
+- Root cause: 我把两条不同的轴挤进了同一列。审核豁免属于**整个 PR**（豁免／不豁免），留痕要求属于**单个文件**（必须写／不必写）。「handoff 必须写」是留痕轴上的真命题，我却写成了审核轴上的「handoff 不豁免」，两者含义完全不同。
+- Change: 表格「是否豁免」列改为「角色」，取值为「反馈正文」与「必需的配套审计文件」，不再按文件标注豁免与否；明确写出「worklog 与 handoff 是豁免 PR 必需的配套审计文件，它们的出现不触发正常审核门禁」，并限定只能承载规定内容（worklog 只追加一条本次条目，handoff 只描述本次反馈更新），写入无关内容即超出允许集合。
+- Change: 四条边界中含「不豁免」字样的表述一并改写——「不豁免留痕」→「留痕照常」，「不豁免实施」→「实施不在豁免范围内」，使「豁免」一词只用于 PR 层面。
+- Change: `ChatGPT-Codex-talk.md` 与 Phase Gate 协议中的指针原写「不豁免 PR、worklog 与 handoff」，同属混轴表述，一并改为「只豁免审核；PR、worklog 与 handoff 仍须照常提交，且这两个配套文件的出现不会使该 PR 重新落入审核门禁」。三处表述至此一致。
+- Note: 审核确认三文件集合已封闭、两份治理文本已同步例外，这两项无需再改。
+- Merge-base handling: PR #50 合并使本分支 merge-base 前移，出现冲突。**冲突全部且仅为 `logs/worklog.md` 的追加式冲突**，按时间戳顺序合并两侧，写回前断言无残留标记且两侧内容全保留。
+- Boundary: 未改动任何代码、契约、Gate 拓扑、Model、Profile、生命周期、核心对象或测试；未改动 `prompts/GPT-Feedback.md` 本身；未删改两份治理文本的任何既有规则；未删改原 handoff 任何原有文字。
+- Validation: 207 tests 全部通过（Round 1 时为 192，本分支已并入 PR #50 的 15 项边界测试）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git diff -- prompts/GPT-Feedback.md` 为空。
+- Next: 推送同一 PR #51 并提交 ChatGPT 复审。本 PR 现在也受 CI 覆盖。
