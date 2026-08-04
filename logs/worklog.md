@@ -2245,3 +2245,31 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 未改动任何代码、契约、Gate 拓扑、Model、Profile、生命周期、核心对象或测试；未改动 `prompts/GPT-Feedback.md` 本身；未删改两份治理文本的任何既有规则；未删改原 handoff 任何原有文字。
 - Validation: 207 tests 全部通过（Round 1 时为 192，本分支已并入 PR #50 的 15 项边界测试）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git diff -- prompts/GPT-Feedback.md` 为空。
 - Next: 推送同一 PR #51 并提交 ChatGPT 复审。本 PR 现在也受 CI 覆盖。
+
+## 2026-08-04T16:16:05-04:00 — Target-centered ADC Seed Playbook v0.1 实施与压力测试（外部 run 留痕）
+
+- Instruction: 人类负责人指示读取 `5.Archive/ChatGPT/2026-GPT-Biotech#Target-centered ADC Seed Playbook v0.1`，**分步骤分模块做完后再一起审核**（不逐模块送审）。
+- Reference resolution: 引用中的 `#` 是 Obsidian 标题链接，实际目标为 `Zhixins-KB/5.Archive/ChatGPT/2026-GPT-Biotech.md` 的同名标题一节，即该 45,830 行文件第 1-382 行；已全文读取。
+- Governance conflict raised before acting: 与前一 run 相同的两条冲突仍成立——第 23 行把「外部数据运行」列入必须走 PR 审核的范围；第 24 行禁止在当前 PR 获 `APPROVE` 前开始下一项工作，而 PR #52 与 #53 均 `OPEN` 未批准。已提出，人类负责人指示继续并完成后统一审核。
+- Action: 执行外部 run `gen_iet_adc_seed_playbook_v0.1_20260804T201605Z`，产物全部位于仓库之外；已验证仓库工作树未被触碰。run `status` = `draft_pending_repo_review`，`authorising_pr` = `null`，冲突全文记入 manifest 与报告。**执行者不主张既成事实**；若裁决为不可追认，产物应作废重跑。
+- Headline result: **M1 将 playbook 完整映射到冻结的 45-Gate 拓扑，34 行中需要新契约的为 0 行**（32 full／2 partial）。这独立验证了 playbook 第七节自己的判断（框架已足够，当前应跑通真实闭环而非扩框架），也意味着**本次不消耗月度架构修复额度**。
+- M1 detail: 左链 10 步 → T0-T7 加 P34；右链 17 步 → T7-T11 再 P20-P35，FTO 落 C45/C46/C49；第六节五个停顿点 → T12/P20/P27/P32-P33/P35，均不隐含新 Gate。**Seed 即 v5 `ClinicalHypothesis` + `entry_mode = mature-target-first`**（该重构已于 08-03 被 v5 吸收）；**Seed Admission Standard 即 `CandidateFilterResult`**，其 `filter_policy_ref` 必须为 `external:`，故 policy 按设计属仓库之外而非让步；第八节「Gate 是资本分配而非评分」是对既有 `output_semantics` 的重述而非改动。
+- M1 partial recorded not resolved: R-05 shedding／soluble antigen 无专属 Gate；S-02 playbook 把 ADC-grade antibody 放进 Seed，而 `BinderCandidate` 在 `TargetHypothesis` 下游，`ProductHypothesis` 以约束形式表达该要求。
+- Change M2: Seed Admission Standard 落为 36 行可审计规则（5 决策规则／21 类别准则／8 致命否决／2 排序规则）。补了三条 playbook 隐含但未写明的规则：RNA 永不满足任一类别（外部工作区规则 3 无例外）；证据缺失记为未满足且永不构成否决；disposition 三值化，2/4 且无否决时 DEFER。
+- Change M3: sprint 覆盖 17 靶点（8 class A／5 class B／4 class C，class C 占 23.5%，在 playbook 20-30% 上限内），结果 8 RETAIN／7 DEFER／2 EXCLUDE。
+- Change M4: 抗体开发进入门槛落为 10 条件。AE-06 内吞**故意非阻断**（playbook 明确只有抗体实验能回答，设为阻断会制造其自身警告的无限研究）；AE-10 为决定性条件。**未复述**第五节排序规则，改为指向 M2 SEQ-01／SEQ-02，理由是 EXT-02 曾因同一值存在两处而漂移。
+- Change M5: 按第七节以同一模板压力测试三靶点。GUCY2C 7/10 `EXPLORATION`、CDH17 5/10 `EXPLORATION`、TNFRSF12A 2/10 `HOLD`——**无一进入 `PROVISIONAL_ADVANCE`**。实测三者阻断集合交集恰为 AE-02、AE-03、AE-10。
+- Correction: M5 两个决策行原写 met-count 为 6 与 1，与实测 5 与 2 不符，已按实测值更正而非保留原文。
+- Finding (high): **组合受限于数据集而非 Gate。** 一次跨靶点的配对原发／转移 MSS CRC 组织 IHC panel 可同时解锁全部已录入 seed；在该 panel 存在前，继续设计规则不推动任何事。这是两次 run 中最高杠杆的动作。
+- Finding (high): **AE-10 是唯一改变了结论的条件**——完全 derisk、无竞争否决、且为既有 consensus 首选的 GUCY2C 被它挡在 `EXPLORATION`，避免了花钱去学一件 IHC 就能回答的问题。
+- Finding (high): **结构性缺陷——全部 4 个 class C 靶点均未获录入。** playbook 给 novel／atlas／cell-state 靶点分配 20-30% 额度，而录入标准要求 3/4 类别由蛋白级或临床 modality 证据满足，新靶点按定义缺此类已发表证据，故 class C 无法走同一道门，该额度按现写法是装饰性的。修法不是放宽标准，而是给 class C 一条基于**内部** atlas 证据的独立路径（这正是 Cancer Atlas 的用途），否则应删掉该额度。
+- Finding (medium): 两个淘汰（MET、ERBB2）各满足 4/4 类别，仅因竞争否决 FV-06 出局——seed 阶段 C-chain 杀掉的比 T-chain 生物学 Gate 更多。
+- Finding (medium): 决策价值 ≠ 信息可得性。T7/T11/T2/C42/T12 改变了 disposition；T3 与 T10 没有且结构上不能（ADC 靶点不必是 driver，故 T3 阴性不杀 seed；几乎任何表面蛋白都有抗体，故 T10 几乎总过）。填充它们不可误认为进展，此即第四节警告的「退化成数据库工程」。
+- Finding (high): 五类证据永远无法由公开数据关闭——治疗后／耐药灶保留、分布而非均值、内吞通量、单细胞表面拷贝数、原位表位可及性；后两者对每个保留靶点都是决定性的。
+- Finding (medium): 系统过松处仅一处——shedding／soluble antigen 无专属决策点，而它是 CEACAM5、MUC1、MSLN 的既载失败模式，占 17 个 sprint 靶点约 18%。**建议不加 Gate**（拓扑已冻结，冻结价值高于整齐），改为在 T7 下定义显式 shedding 证据 claim class，属 policy 变更、无需契约变更。
+- Gate boundary: 未运行任何 Gate，未赋任何 Gate score；`RETAIN`/`DEFER`/`EXCLUDE` 属 `CandidateFilterResult` 语义，按契约明确不是 Gate 结果；`NOT_EVALUATED` 与 `UNRESOLVED` 全程保留；T0-T12 未执行，45-Gate 拓扑未触碰。
+- Limits stated: **M1 映射对照实际契约文件与 Gate 目录做出、可复核；M3 与 M5 的靶点判断不是**，两者不可等同置信。DPEP1 与 TSPAN8 是为填满 class C 额度纳入、非既有实证且均 DEFER，此举本身即 F-03 的证据。未执行 skeptic review，故 8 个已录入 seed 是待审候选而非推荐。三靶点每类 n=1。
+- Boundary: 本 PR 只提交本条 worklog 与一份 handoff；无任何代码、契约、Gate 拓扑、Model、Profile、生命周期、核心对象或测试变更；未改动 `AGENTS.md`、`ChatGPT-Codex-talk.md`、Phase Gate 协议、`prompts/GPT-Feedback.md`；未改动来源 KB 文件（仅读取）；未改写任何历史条目；未把数据加入仓库。
+- Validation: 207 tests 全部通过（与 `main` 相同）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。六份模块 TSV 列数 9／9／14／7／8／7 各自一致；`source_manifest.json` 为合法 JSON。
+- Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**，须经 ChatGPT `APPROVE`。
+- Next: 推送并创建 PR，重点审核授权裁决与「不需要改架构」的结论是否成立。
