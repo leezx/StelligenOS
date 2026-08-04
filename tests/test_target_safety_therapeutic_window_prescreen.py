@@ -368,6 +368,82 @@ class TargetSafetyPreScreenTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             claim(source_ref="local:source/1")
 
+    def test_contract_rejects_duplicate_claim_ref(self):
+        with self.assertRaises(ValueError):
+            request(
+                [
+                    claim(claim_ref="external:claim/duplicate"),
+                    claim(
+                        claim_ref="external:claim/duplicate",
+                        axis=EvidenceAxis.SURFACE_ACCESSIBILITY,
+                    ),
+                ]
+            )
+
+    def test_contract_rejects_duplicate_evidence_ref(self):
+        item = claim()
+        with self.assertRaises(ValueError):
+            AssessmentRequest(
+                request_ref="external:request/duplicate-evidence",
+                target=TargetProfile(
+                    target_ref="external:target/duplicate-evidence",
+                    gene_symbol="GUCY2C",
+                ),
+                evidence_refs=(item.claim_ref, item.claim_ref),
+                claims=(item,),
+                policy_ref="external:policy/target-safety-v0.1",
+                run_context_ref="external:run/context-duplicate-evidence",
+            )
+
+    def test_contract_rejects_mitigation_for_missing_claim(self):
+        with self.assertRaises(ValueError):
+            request(
+                [
+                    claim(
+                        claim_ref="external:claim/differential-missing",
+                        axis=EvidenceAxis.SURFACE_ACCESSIBILITY,
+                        level=EvidenceLevel.B,
+                        direction=RiskDirection.SUPPORTS_SAFETY,
+                        differential_status=DifferentialStatus.PRESENT,
+                        mitigates_claim_refs=("external:claim/missing",),
+                    )
+                ]
+            )
+
+    def test_contract_rejects_mitigation_for_nonrisk_claim(self):
+        with self.assertRaises(ValueError):
+            request(
+                [
+                    claim(claim_ref="external:claim/safety"),
+                    claim(
+                        claim_ref="external:claim/differential-nonrisk",
+                        axis=EvidenceAxis.SURFACE_ACCESSIBILITY,
+                        level=EvidenceLevel.B,
+                        direction=RiskDirection.SUPPORTS_SAFETY,
+                        differential_status=DifferentialStatus.PRESENT,
+                        mitigates_claim_refs=("external:claim/safety",),
+                    ),
+                ]
+            )
+
+    def test_duplicate_refs_cannot_produce_conditional_go(self):
+        with self.assertRaises(ValueError):
+            request(
+                [
+                    claim(
+                        claim_ref="external:claim/reused",
+                        direction=RiskDirection.SUPPORTS_RISK,
+                        criticality=Criticality.REGENERATIVE,
+                    ),
+                    claim(
+                        claim_ref="external:claim/reused",
+                        axis=EvidenceAxis.SURFACE_ACCESSIBILITY,
+                        direction=RiskDirection.SUPPORTS_SAFETY,
+                        differential_status=DifferentialStatus.PRESENT,
+                    ),
+                ]
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,10 +1,10 @@
 module:
   module_id: target_safety_therapeutic_window_prescreen
-  module_version: 0.3.0
+  module_version: 0.4.0
   module_type: GenModule
   name: Public-Evidence Target Safety and Therapeutic-Window Pre-screen Engine
-  input_contract: TargetSafetyAssessmentRequest@0.3.0
-  output_contract: TargetSafetyAssessmentResult@0.3.0
+  input_contract: TargetSafetyAssessmentRequest@0.4.0
+  output_contract: TargetSafetyAssessmentResult@0.4.0
   execution_policy: external_input_and_output_only
   persistence: forbidden
   database: forbidden

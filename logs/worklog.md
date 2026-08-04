@@ -2292,3 +2292,25 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Tests: Added context mismatch, unscoped fatal, unrelated differential, and partial coverage cases. Full suite now passes 223 tests.
 - Validation: 16 module tests passed; 223 full-suite tests passed; repository boundary check passed; `git diff --check` passed; no `__pycache__` remains.
 - Next: push the Round 2 remediation to PR #56 and request another ChatGPT review.
+
+### 2026-08-04 17:28 EDT
+
+- Instruction: Apply ChatGPT Round 3 `REQUEST_CHANGES` feedback for PR #56.
+- Finding: `AssessmentRequest` did not enforce unique `claim_ref` values or
+  `evidence_refs`, did not define the evidence-to-claim relation strictly, and
+  accepted mitigation references that were missing or not risk claims. These
+  gaps could make risk coverage sets misleading and permit a false
+  `CONDITIONAL_GO` path.
+- Change: Enforced unique claim references and evidence references, requiring
+  `evidence_refs` to exactly match the request claim references. Enforced that
+  every `mitigates_claim_ref` resolves to a `SUPPORTS_RISK` claim in the same
+  request.
+- Tests: Added five contract-integrity tests for duplicate claims, duplicate
+  evidence, missing mitigation targets, non-risk mitigation targets, and the
+  duplicate-reference conditional-go path.
+- Contract: Bumped module and contract versions from `0.3.0` to `0.4.0`.
+- Boundary: Changed only the target-safety module contract/version metadata,
+  its tests and documentation, handoff, and this worklog; no data, cache,
+  result, model weight, or runtime artifact was added.
+- Next: Run the module/full-suite/boundary checks, push the same PR #56, and
+  request the next ChatGPT review. Do not merge until `APPROVE`.

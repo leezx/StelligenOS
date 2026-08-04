@@ -2,7 +2,7 @@
 
 ## Status
 
-- Branch: `task_20260804_target-safety-prescreen`
+- Branch: `task_20260804_target-safety-prescreen-fix`
 - Base: latest `origin/main` at task start
 - Review: Round 1 returned `REQUEST_CHANGES`; remediation is in clean replacement PR #56
 - Data boundary: no source data, cache, result, model weight, or runtime output in the repository
@@ -24,12 +24,14 @@ It does not claim product-specific therapeutic-window prediction.
 - Decision semantics: `KILL`, `HOLD`, `CONDITIONAL_GO`, `GO`.
 - Unknown, unresolved, and conflicting claims remain visible and produce next-experiment references.
 - All cross-boundary identities and evidence references require `external:` references.
+- `claim_ref` and `evidence_refs` are unique and must match exactly; mitigation
+  references must point to a `SUPPORTS_RISK` claim in the same request.
 - Runtime location is declared as `${BIOWORKSPACE_ROOT}/DATA/target_safety_therapeutic_window_prescreen/{raw,processed,result}`; no runtime writer is enabled in the repository.
 
 ## Validation
 
 - Module tests pass.
-- Full suite: 212 tests pass.
+- Module tests: 21 pass; full suite: 228 tests pass.
 - `scripts/verify_repository_boundary.sh` passes.
 - `git diff --check` passes.
 - No `__pycache__` directory remains.
@@ -52,3 +54,16 @@ It does not claim product-specific therapeutic-window prediction.
 - `CONDITIONAL_GO` now requires every material-risk claim to be covered by a context-matched differential or explicit `mitigates_claim_refs`.
 - `NO_EXPLOITABLE_DIFFERENTIAL` requires an external comprehensive assessment reference; a single observation is downgraded to unresolved.
 - Added cross-context, unrelated-differential, partial-coverage, and unscoped-fatal regression tests.
+
+## Round 3 remediation
+
+- Read ChatGPT Round 3 `REQUEST_CHANGES`; the remaining blocker was that duplicate
+  claim/evidence references and invalid mitigation references could corrupt risk
+  coverage and permit a false `CONDITIONAL_GO`.
+- Tightened `AssessmentRequest` to require unique claim references, unique
+  evidence references, exact equality between the two reference sets, and
+  mitigation references that resolve to in-request `SUPPORTS_RISK` claims.
+- Added five contract-integrity regression tests covering duplicate claims,
+  duplicate evidence, missing mitigation targets, non-risk mitigation targets,
+  and the duplicate-reference conditional-go path.
+- Bumped module and contract versions from `0.3.0` to `0.4.0`.

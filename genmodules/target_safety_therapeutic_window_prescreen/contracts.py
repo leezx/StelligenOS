@@ -13,8 +13,8 @@ import re
 from typing import Final
 
 
-MODULE_VERSION: Final = "0.3.0"
-CONTRACT_VERSION: Final = "0.3.0"
+MODULE_VERSION: Final = "0.4.0"
+CONTRACT_VERSION: Final = "0.4.0"
 _EXTERNAL_REF = re.compile(r"^external:[^\s]+$")
 _GENE_SYMBOL = re.compile(r"^[A-Za-z0-9][A-Za-z0-9-]*$")
 
@@ -186,9 +186,30 @@ class AssessmentRequest:
         _external(self.run_context_ref, "run_context_ref")
         for evidence_ref in self.evidence_refs:
             _external(evidence_ref, "evidence_ref")
-        claim_refs = {claim.claim_ref for claim in self.claims}
-        if claim_refs - set(self.evidence_refs):
-            raise ValueError("every claim_ref must be declared in evidence_refs")
+        claim_refs = tuple(claim.claim_ref for claim in self.claims)
+        if len(set(claim_refs)) != len(claim_refs):
+            raise ValueError("claim_ref values must be unique")
+        if len(set(self.evidence_refs)) != len(self.evidence_refs):
+            raise ValueError("evidence_refs must be unique")
+        if set(self.evidence_refs) != set(claim_refs):
+            raise ValueError("evidence_refs must exactly match claim_refs")
+
+        claim_ref_set = set(claim_refs)
+        risk_refs = {
+            claim.claim_ref
+            for claim in self.claims
+            if claim.direction == RiskDirection.SUPPORTS_RISK
+        }
+        for claim in self.claims:
+            for mitigated_ref in claim.mitigates_claim_refs:
+                if mitigated_ref not in claim_ref_set:
+                    raise ValueError(
+                        "mitigates_claim_ref must reference a claim in the request"
+                    )
+                if mitigated_ref not in risk_refs:
+                    raise ValueError(
+                        "mitigates_claim_ref must reference a SUPPORTS_RISK claim"
+                    )
 
 
 @dataclass(frozen=True)

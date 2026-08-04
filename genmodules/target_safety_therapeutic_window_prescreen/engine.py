@@ -264,7 +264,7 @@ def assess_target(request: AssessmentRequest) -> AssessmentResult:
     if decision == Decision.CONDITIONAL_GO and confidence == "high":
         confidence = "medium"
     return AssessmentResult(
-        contract_version="0.3.0",
+        contract_version="0.4.0",
         request_ref=request.request_ref,
         target_ref=request.target.target_ref,
         axis_summaries=summaries,

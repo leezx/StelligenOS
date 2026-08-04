@@ -25,6 +25,9 @@ free-form tags cannot create a fatal flag. Fatal aggregation requires a shared
 `hazard_context_ref` or `(tissue, cell_type)` context; unscoped evidence cannot
 be combined into a fatal decision. A differential must either share that
 context or explicitly list the risk claims it mitigates.
+Request contracts require unique claim and evidence references, exact equality
+between those reference sets, and mitigation references to resolve to
+in-request risk claims.
 
 ## Decision semantics
 
