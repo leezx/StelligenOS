@@ -2229,3 +2229,19 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 未改动任何代码、契约、Gate 拓扑、Model、Profile、生命周期、核心对象或测试；未改动 `prompts/GPT-Feedback.md` 本身；未删改两份治理文本的任何既有规则；未删改原 handoff 任何原有文字。
 - Validation: 192 tests 全部通过；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git diff -- prompts/GPT-Feedback.md` 为空。
 - Next: 推送同一 PR #51 并提交 ChatGPT 复审。PR #50 的数字阻断已于 17:40 修订完毕。
+
+### 2026-08-04 18:50 EDT
+
+- Action: 合并 PR #50（CI 与依赖声明）。ChatGPT 在 head `076c5ff` 返回 `APPROVE`，GitHub Actions run #3 在 Python 3.11／3.12 全部检查通过。用 merge commit 合并为 `927aebf`，未用 squash。
+- Result: 仓库自此拥有独立 CI。「仓库无 GitHub Actions，测试数字只能由自身审计记录佐证」这条自 PR #15 起携带的残余风险到此解除；历史记录中的该表述属既往事实，不回写。
+- Action: 处理 ChatGPT 对 PR #51 的 Round 2 `REQUEST_CHANGES`。一条治理语义冲突，经核实成立，无 pushback。
+- Verification: 成立，且是逻辑上把自己否掉而非措辞瑕疵。Round 1 修订虽封闭了文件集合，但表格设「是否豁免」一列，把 `logs/worklog.md` 与 handoff 标为「不豁免」并写「handoff 不在豁免之列」。PR 审核以整个 PR 为单位，若配套文件不豁免，则含这两个文件的 PR 仍需审核；而按同一张表这两个文件是必需的——于是每个合规的豁免 PR 都需要审核，豁免恒不生效。
+- Root cause: 我把两条不同的轴挤进了同一列。审核豁免属于**整个 PR**（豁免／不豁免），留痕要求属于**单个文件**（必须写／不必写）。「handoff 必须写」是留痕轴上的真命题，我却写成了审核轴上的「handoff 不豁免」，两者含义完全不同。
+- Change: 表格「是否豁免」列改为「角色」，取值为「反馈正文」与「必需的配套审计文件」，不再按文件标注豁免与否；明确写出「worklog 与 handoff 是豁免 PR 必需的配套审计文件，它们的出现不触发正常审核门禁」，并限定只能承载规定内容（worklog 只追加一条本次条目，handoff 只描述本次反馈更新），写入无关内容即超出允许集合。
+- Change: 四条边界中含「不豁免」字样的表述一并改写——「不豁免留痕」→「留痕照常」，「不豁免实施」→「实施不在豁免范围内」，使「豁免」一词只用于 PR 层面。
+- Change: `ChatGPT-Codex-talk.md` 与 Phase Gate 协议中的指针原写「不豁免 PR、worklog 与 handoff」，同属混轴表述，一并改为「只豁免审核；PR、worklog 与 handoff 仍须照常提交，且这两个配套文件的出现不会使该 PR 重新落入审核门禁」。三处表述至此一致。
+- Note: 审核确认三文件集合已封闭、两份治理文本已同步例外，这两项无需再改。
+- Merge-base handling: PR #50 合并使本分支 merge-base 前移，出现冲突。**冲突全部且仅为 `logs/worklog.md` 的追加式冲突**，按时间戳顺序合并两侧，写回前断言无残留标记且两侧内容全保留。
+- Boundary: 未改动任何代码、契约、Gate 拓扑、Model、Profile、生命周期、核心对象或测试；未改动 `prompts/GPT-Feedback.md` 本身；未删改两份治理文本的任何既有规则；未删改原 handoff 任何原有文字。
+- Validation: 207 tests 全部通过（Round 1 时为 192，本分支已并入 PR #50 的 15 项边界测试）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git diff -- prompts/GPT-Feedback.md` 为空。
+- Next: 推送同一 PR #51 并提交 ChatGPT 复审。本 PR 现在也受 CI 覆盖。
