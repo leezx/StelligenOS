@@ -28,21 +28,41 @@ allowed_top_level=(
   "manifests"
   "prompts"
   "scripts"
+  "requirements.txt"
   ".git"
   ".gitignore"
 )
 
-# `.claude` is not an allowed top-level entry. It is tolerated only as the
-# container of the single local tool-config file below, so that unrelated
-# content cannot enter the repository under that directory.
-allowed_dot_claude_paths=(
-  ".claude/settings.local.json"
+# Neither `.claude` nor `.github` is an allowed top-level entry. Each is
+# tolerated only as the container of the exact paths enumerated below, so that
+# unrelated content cannot enter the repository under a dot-directory. Allowing
+# such a directory wholesale was rejected during the review of PR #43.
+restricted_dirs=(
+  ".claude"
+  ".github"
 )
 
-is_allowed_dot_claude_path() {
+allowed_restricted_paths=(
+  ".claude/settings.local.json"
+  ".github/workflows"
+  ".github/workflows/ci.yml"
+)
+
+is_restricted_dir() {
   local candidate="$1"
   local item
-  for item in "${allowed_dot_claude_paths[@]}"; do
+  for item in "${restricted_dirs[@]}"; do
+    if [[ "$item" == "$candidate" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+is_allowed_restricted_path() {
+  local candidate="$1"
+  local item
+  for item in "${allowed_restricted_paths[@]}"; do
     if [[ "$item" == "$candidate" ]]; then
       return 0
     fi
@@ -65,9 +85,9 @@ violations=()
 while IFS= read -r -d '' entry; do
   name="${entry#$repo_root/}"
   top="${name%%/*}"
-  # A `.claude` directory is checked path by path below. A `.claude` file is not
-  # exempt and falls through to the generic check.
-  if [[ "$top" == ".claude" && -d "$repo_root/.claude" ]]; then
+  # A restricted directory is checked path by path below. A file of the same
+  # name is not exempt and falls through to the generic check.
+  if is_restricted_dir "$top" && [[ -d "$repo_root/$top" ]]; then
     continue
   fi
   if ! is_allowed_top_level "$top"; then
@@ -75,14 +95,16 @@ while IFS= read -r -d '' entry; do
   fi
 done < <(find "$repo_root" -mindepth 1 -maxdepth 1 -print0)
 
-if [[ -d "$repo_root/.claude" ]]; then
-  while IFS= read -r -d '' nested; do
-    nested_name="${nested#$repo_root/}"
-    if ! is_allowed_dot_claude_path "$nested_name"; then
-      violations+=("$nested_name")
-    fi
-  done < <(find "$repo_root/.claude" -mindepth 1 -print0)
-fi
+for restricted in "${restricted_dirs[@]}"; do
+  if [[ -d "$repo_root/$restricted" ]]; then
+    while IFS= read -r -d '' nested; do
+      nested_name="${nested#$repo_root/}"
+      if ! is_allowed_restricted_path "$nested_name"; then
+        violations+=("$nested_name")
+      fi
+    done < <(find "$repo_root/$restricted" -mindepth 1 -print0)
+  fi
+done
 
 if (( ${#violations[@]} > 0 )); then
   printf 'Repository boundary violation(s):\n' >&2
