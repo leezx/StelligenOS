@@ -177,11 +177,32 @@ __pycache__：0
 工作树：跑完整套件后除本次改动外无变化
 ```
 
+## CI 首次真实执行结果
+
+本 PR 就是引入该 workflow 的 PR，因此其首次真实执行发生在本 PR 上。结果：
+
+```text
+Run ID: 30928103518   event: pull_request   conclusion: success
+
+verify (3.11)  pass  25s   —  10/10 步骤 success
+verify (3.12)  pass  22s   —  10/10 步骤 success
+
+两个任务的日志均含：
+  Ran 207 tests ... OK
+  git_sync behavior tests passed (A-D).
+  Repository boundary check passed.
+以及 "No bytecode artifacts left behind" 与
+   "Working tree unchanged by the test run" 两步 success。
+```
+
+3.11 任务通过，证实 `enum.StrEnum` 推出的版本下限判断正确，而非只是文档声明。
+
+**这是本仓库第一次拥有独立于自身审计记录的测试证据。** 自 PR #15 起每轮审核都会附一句「GitHub 上没有
+与该 head 关联的 Actions run，因此测试数字只能由仓库记录佐证」——该条件自本 head 起不再成立。
+
 ## 未决问题与风险
 
-- **CI 尚未在真实 GitHub Actions 上跑过。** 本 PR 是引入该 workflow 的 PR，因此它首次实际执行就是在
-  本 PR 上。若失败须在同一 PR 内修订。本地已尽可能预演（干净 venv、3.11 语法扫描、逐步骤手工执行、
-  YAML 解析校验），但 runner 环境差异无法完全消除。
+- ~~CI 尚未在真实 GitHub Actions 上跑过。~~ **已解除**，见上方「CI 首次真实执行结果」。
 - CI 只跑 `ubuntu-24.04`。仓库开发实际发生在 macOS（`bash` 3.2），两者的 `find`／`bash` 行为存在差异
   而 CI 不覆盖 macOS。如需可另立任务加 matrix。
 - `PyYAML` 采用 `>=6.0,<7` 而非精确钉版。取舍：本仓库不是可分发包，精确钉版会带来持续维护而收益有限；

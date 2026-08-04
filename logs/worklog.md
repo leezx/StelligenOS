@@ -2178,3 +2178,12 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Open risk: **CI 尚未在真实 GitHub Actions 上跑过** —— 本 PR 就是引入该 workflow 的 PR，其首次实际执行即在本 PR 上，失败须在同一 PR 内修订。本地已尽可能预演（干净 venv、3.11 语法扫描、逐步骤手工执行、YAML 解析校验），但 runner 环境差异无法完全消除。
 - Open risk: CI 只跑 `ubuntu-24.04`，不覆盖 macOS（本仓库实际开发环境，`bash` 3.2，`find`／`bash` 行为有差异）。`PyYAML` 采用 `>=6.0,<7` 而非精确钉版，若要求完全可复现构建需另立任务引入锁文件。Python 下限由 CI 矩阵、README、`requirements.txt` 注释三处表达，无单一机器可读来源；引入 `pyproject.toml` 可解决但会暗示本仓库是可打包项目，与现状不符，故未做。
 - Next: 推送并创建 PR 供 ChatGPT 审核。合并后「仓库无 CI」这条残余风险可从后续 handoff 移除；历史记录中的该表述属既往事实，不回写。
+
+### 2026-08-04 16:15 EDT
+
+- Action: 记录 CI 在真实 GitHub Actions 上的首次执行结果。本 PR 即引入该 workflow 的 PR，故其首次真实执行发生在本 PR 上。
+- Result: Run ID `30928103518`，event `pull_request`，conclusion `success`。`verify (3.11)` 25s 通过、`verify (3.12)` 22s 通过，两个任务各 10/10 步骤 success。日志均含 `Ran 207 tests ... OK`、`git_sync behavior tests passed (A-D).`、`Repository boundary check passed.`，以及「无 `__pycache__` 残留」与「工作树未被测试运行改动」两步 success。
+- Significance: 3.11 任务通过，证实由 `enum.StrEnum` 推出的版本下限判断正确，而非仅文档声明。这也是本仓库第一次拥有独立于自身审计记录的测试证据——自 PR #15 起每轮审核附带的「GitHub 上没有与该 head 关联的 Actions run」这一条件，自本 head 起不再成立。
+- Change: handoff 中「CI 尚未在真实 GitHub Actions 上跑过」由未决风险改为已解除，并新增「CI 首次真实执行结果」一节记录 run ID 与逐步骤结论。
+- Boundary: 本次仅更新记录文本，无任何代码、配置、契约或测试变更。
+- Next: 提交 ChatGPT 审核本 PR。本 PR 不适用「纯文本默认通过」常设授权。
