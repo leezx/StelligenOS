@@ -2393,3 +2393,9 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: `#53` 分支 207 tests 通过；`#55` 分支 212 tests 通过；两者 `scripts/verify_repository_boundary.sh` 与 `git diff --check` 均通过；零 `__pycache__`。
 - Deliberately not done: 未事后追认任何 run；未撤回 M1 映射内容（只降级效力）；未删除任何科学内容；**未创建两个 contract-only PR**（#53 上游的、Playbook 六模块的），它们需预先冻结范围与语义、属新范围须另立任务授权。
 - Next: 重新提交 PR #53 与 #54 复审；#55 由人类负责人决定是否单独送审及如何处理其架构问题。
+### 2026-08-04 19:09 EDT
+
+- Instruction: Read `Zhixins-KB/2.Biotech/Asset-Generation-OS-architecture.md#Biotech基础设施` and record which existing public infrastructure StelligenOS can reuse in the future without rebuilding it.
+- Action: Added `docs/architecture/BIOTECH_INFRASTRUCTURE_CATALOG.zh-CN.md` to the `main` worktree. The document records the provider groups, recommended implementation order, future provider interface names, current internal repository capabilities, and the boundary between reusable data infrastructure and StelligenOS-owned ADC semantics, evidence adjudication, Gate, Rule, FTO, and asset decisions.
+- Boundary: This was documentation-only. No public data, database, cache, result, runtime dependency, provider adapter, or execution code was added. The catalog explicitly states that future data and processing remain outside the repository under external `DATA`.
+- Workflow: Per the explicit instruction for this catalog, it is being committed directly to `main` without the normal PR review cycle; the required worklog trace is retained.
