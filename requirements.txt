@@ -1,0 +1,28 @@
+# Dependencies required to run this repository's test suite.
+#
+# This repository holds contracts, ports, prompts, scripts and documentation. It
+# executes no pipeline and stores no data, so this list is deliberately minimal.
+# Verified empirically: the full suite (207 tests) passes in a clean virtual
+# environment with only PyYAML installed.
+#
+# Python 3.11 or newer is required. `src/lifecycle/state_machine.py` uses
+# `enum.StrEnum`, added in 3.11. CI runs 3.11 and 3.12 so that floor is enforced
+# rather than merely asserted.
+#
+# NOT listed here, on purpose
+# --------------------------
+# `genmodules/antibody_binder_asset_engineering/` and
+# `genmodules/epitope_conditioned_de_novo_antibody_discovery/` import `dagster`,
+# `anarci`, `abnumber`, `Bio` (biopython) and `ImmuneBuilder`. Those are pipeline
+# execution dependencies of the external controlled runtime, not of this
+# repository: no test imports those modules, nothing here executes them, and
+# `src/repository/external_runtime.py` is contract-only by design. Installing
+# them here would imply this repository can run the pipeline, which it cannot.
+# They belong to the external workspace that implements `ExternalRuntimePort`.
+#
+# Non-Python tool dependency
+# --------------------------
+# `tests/test_git_sync.sh` uses `rg` (ripgrep). It is installed explicitly in
+# `.github/workflows/ci.yml` rather than assumed present on the runner.
+
+PyYAML>=6.0,<7

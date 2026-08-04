@@ -12,6 +12,28 @@ StelligenOS 是一个 biotechnology asset operating system 的实现仓库。
 - 禁止放入：large datasets、raw sequencing、intermediate files、caches、outputs、temporary artifacts、data-bearing working files。
 - 所有数据和数据处理必须放在仓库外部的工作区。
 
+## 本地运行验证
+
+需要 Python 3.11 或更新版本（`src/lifecycle/state_machine.py` 使用 `enum.StrEnum`）。
+
+```bash
+python3 -m pip install -r requirements.txt
+
+# 单元测试。PYTHONDONTWRITEBYTECODE 是必须的：
+# __pycache__ 会被 boundary check 判为运行产物。
+PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'
+
+bash tests/test_git_sync.sh            # 需要 rg（ripgrep）
+bash scripts/verify_repository_boundary.sh
+git diff --check
+```
+
+依赖只有 `PyYAML`。`genmodules/` 下 pipeline 代码引用的 `dagster`、`anarci`、`abnumber`、
+`biopython`、`ImmuneBuilder` **不是本仓库的依赖**，属于外部受控运行环境；原因见
+`requirements.txt` 注释。
+
+`.github/workflows/ci.yml` 在 Python 3.11 与 3.12 上独立复核以上全部检查。
+
 ## 当前阶段
 
 - Phase 0 已完成
@@ -45,6 +67,8 @@ StelligenOS 是一个 biotechnology asset operating system 的实现仓库。
 - `LINKS.md`
 - `scripts/verify_repository_boundary.sh`
 - `scripts/git_sync.sh`
+- `requirements.txt`
+- `.github/workflows/ci.yml`
 - `src/README.md`
 - `genmodules/README.md`
 - `docs/phases/PHASE_1_REPORT.zh-CN.md`
