@@ -2142,3 +2142,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 未改动任何内核代码；未改动 45-Gate 拓扑、gate/model/profile、四阶段生命周期、核心对象定义；未改动 EXT-02 的合同定义本身（只改版本常量与 docstring）；未改动 EXT-01／03／04 任何文件；未改写任何历史审计记录；未新增数据、缓存、结果或运行产物。
 - Validation: 186 tests 全部通过（183 + 新增 3）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
 - Next: 推送同一 PR #48 并提交 ChatGPT 复审。PR #46 的两条阻断已于 11:35 修订完毕；PR #47 已获 `APPROVE`。
+
+### 2026-08-04 13:20 EDT
+
+- Action: 建立 `task_20260804_audit-records-and-v5-source`（从 `main` `8298bdf` 创建），补写 #46／#47／#48 三份批准记录，并把 v5 反馈来源文档纳入仓库。
+- Precondition: 三个 PR 已于本日合并进 `main`（#46 head `2a0057a` → merge `fd018ce`；#47 head `50a3e26` → merge `8d5d808`；#48 head `a1ec4bd` → merge `8298bdf`），但仓库内无对应 `-final.md`，审计轨迹停在 `REQUEST_CHANGES`，与 #46 刚修复的断层同类且为三处。
+- Rationale for post-merge: 批准记录未在合并前写入各自分支，因为追加提交会改变刚获批准的 HEAD，并使已解决冲突的上层 PR 再冲突一轮。沿用 #46 建立并获批准的「合并后独立 PR 补写」模式。
+- Change: 新增三份 `-final.md`。各自「Final conclusion」一节标注为 `verbatim as relayed by the human lead` 并逐字转载收到的原文。这是对 #46 阻断 2 的直接回应——该阻断成因是把转述记录声称为逐字记录，因此本次凡逐字者明确标注、凡不可得者不伪造。
+- Change: `prompts/GPT-Feedback.md` 补入 `# v5` 一节，纯追加 419／0，置于 `# v4` 之上，与该文件既有「新版在前」惯例一致，未改动任何既有段落。补入前 `main` 的状态是「有 v5 代码，无产生它的反馈」；该文件 v4 内容早已提交，四个 `extension.yaml` 均以其为 `source.document`。
+- Deviation from review, by explicit human decision: #46 的审核要求 `prompts/GPT-Feedback.md` 不得与审计记录混在同一个 PR（「如确实需要把 v5 反馈纳入仓库，单独建立一个 source-document PR」）。人类负责人在被告知该意见后决定合并为一个 PR。记录在此以免将来被读成漏读审核意见。实际影响有限：该阻断的核心是「定义为 audit-only 的 PR 不应同时承担 source-document 发布」，而本 PR 从标题到状态均声明自己同时是这两件事，不存在名实不符，范围仍为纯文本。
+- Standing waiver: 人类负责人给出常设授权——不涉及任何代码修改的纯文本 PR 以后默认通过，无需 ChatGPT 审核。本 PR 为该授权下首次执行，合并未经 ChatGPT 审核。授权边界按字面含义收窄记录：适用于 `logs/chatgpt-review-*.md`、`docs/handoff/*`、`logs/worklog.md`、`prompts/*`；不适用于任何 `.py`、`src/`／`genmodules/`／`extensions/` 下的合同或 manifest、任何 gate/model/profile 定义、任何测试，以及 `AGENTS.md` 等治理文档本身。最后一项刻意排除——用「默认通过」修改「默认通过」的规则属自我指涉，须单独授权。
+- Open risk: 该常设授权目前只记录在本条与本任务 handoff，未写入 `AGENTS.md`，对未来会话不具备可发现性。若需长期生效，建议另立治理 PR 写入 `AGENTS.md`，且该 PR 不适用本授权。
+- Boundary: 无任何代码、契约、Gate 拓扑、Model、Profile、生命周期或测试变更；未改写任何历史审计记录；未新增数据、缓存、结果或运行产物。
+- Validation: 192 tests 全部通过（与 `main` 相同，因本 PR 不含代码或测试变更）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`prompts/GPT-Feedback.md` 为纯追加 419／0；零 `__pycache__`。
+- Result: #46／#47／#48 的审计闭环完成，v5 来源文档入库。
