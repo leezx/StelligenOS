@@ -2110,3 +2110,35 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: 189 tests 全部通过（183 + 新增 6）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`src/` 下 genmodules 导入 0 处；零 `__pycache__`。
 - Open risk: 新守卫只覆盖 `src/ -> genmodules/`；`genmodules/` 之间的横向依赖仍无守卫。反向边保留为函数内导入未上提到模块级，属与本 PR 目标无关的整理。
 - Next: 推送并创建 PR A 供 ChatGPT 审核。与 PR C、PR B 互相独立，均从 `a5bf77f` 创建；三者都追加 worklog，合并时按时间戳顺序解决追加式冲突。
+
+### 2026-08-04 10:50 EDT
+
+- Action: 建立 `task_20260804_doc-consistency`（从 `main` `a5bf77f` 创建），同步 v5 之后出现的三处架构／文档不一致。人类负责人已将此列为 P2。
+- Finding 1: EXT-02 `dynamic_gate_context` 的核心论点「评分对象应为 Target x Clinical Context」已由 v5 在内核内实现（`ClinicalHypothesis` 组合 target／anchor context／intended benefit／biomarker／product hypothesis，Gate 输入携带 `clinical_hypothesis_ref` 与 lock state），但 `extension.yaml` 仍写 `status: shell_only` 与 `design_constraint: 不改内核`，已非事实描述。
+- Finding 2: `src/contracts/core_objects.yaml`（version 1.1）已列八类核心对象，而两份**规范性**文档仍声明「七类核心对象是稳定边界」：`docs/architecture/release.zh-CN.md` 冻结范围、`extensions/README.md` 内核不变式 2。
+- Finding 3: `docs/architecture/` 下零处提及 `extensions/`，只读架构契约的专家看不到 EXT-01..04 与 BL-01..07。
+- Change: EXT-02 status 改为新引入的 `partially_absorbed`，并新增 `absorbed_by_kernel` 与 `remaining_scope`（RS-01 五轴取值域／RS-02 逐 Gate 跨 context 复用策略／RS-03 context 失效规则／RS-04 context 粒度／RS-05 既有 CRC 结果映射）；README 顶部加状态变更说明，原有论证与五轴设计原样保留作为该次内核变更的来源记录。
+- Decision rationale: 不删也不标 `governed`。`governed` 表示该扩展被内核正式引用；`partially_absorbed` 表示内核自行实现了同一想法而扩展从未被引用，剩余范围仍未受治理。标 `governed` 会谎称其受过治理，删除会丢掉来源论证。
+- Change: `extensions/README.md` 状态语义表新增 `partially_absorbed` 并说明与 `governed` 的区别；注册表 EXT-02 行更新；内核不变式 2 的对象计数改为引用 `src/contracts/core_objects.yaml` 而不复述。`docs/architecture/release.zh-CN.md` 同样改为指向权威清单，避免两处计数各自漂移。`docs/architecture/contract.zh-CN.md` §6 加核心对象清单指针，新增 §7 指向扩展注册表与 BACKLOG。
+- Change: `tests/test_extension_boundary.py` 期望状态更新，新增 2 项守卫——每个 status 必须在状态语义表里有定义；`partially_absorbed` 必须同时声明 `absorbed_by_kernel` 与非空 `remaining_scope`，防止「核心已被吸收」变成静默退役。
+- Self-correction: 第一项新测试的初版在整个 README 里搜 status 字面量。变异测试证明该写法无效——注册表那一行也含同一字面量，删掉语义表定义仍然通过（`OK`）。已改为只在 `## 扩展状态语义` 小节的表格行内匹配，重跑同一变异后 `FAILED (failures=1)`。
+- Validation by mutation: 语义表定义行改名 `failures=1`；删除语义表定义行但保留注册表行 `failures=1`；`remaining_scope` 置空 `failures=1`；删除 `absorbed_by_kernel` `failures=1`；全部还原后 `OK`。还原用文件备份而非 `git checkout --`。
+- Boundary: 未改动任何内核代码（`src/` 下只改两份文档，未改任何 `.py`）；未改动 45-Gate 拓扑、gate/model/profile、四阶段生命周期、核心对象定义、`ClinicalHypothesis` 锁定门槛；未改动 EXT-02 的 `contracts.py` 及 EXT-01／03／04 任何文件；未改动 `extensions/BACKLOG.zh-CN.md`；未改写任何历史审计记录（`logs/`、`docs/handoff/` 既有内容、`docs/phases/`、`docs/architecture/versions/`）；未新增数据、缓存、结果或运行产物。
+- Deliberate omission: 未在 `CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md` 中加扩展指针。该文件当前为 `v2-draft` / `PENDING_CHATGPT_APPROVAL`，正在自己的审核流程里，在别的 PR 里改动会让那次审核对象漂移。指针因此放在稳定的 `contract.zh-CN.md`；建议其 v2 审核完成后补一行。
+- Validation: 185 tests 全部通过（183 + 新增 2）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；规范性文档中残留「七类核心对象」声明 0 处（历史记录中的同类表述按设计保留）。
+- Open risk: EXT-01 与 EXT-03 未正式复核是否也被 v5 部分吸收；初步看不像（EXT-01 依赖真实结局数据，EXT-03 关于资产搜索轴，v5 均未触及），如需正式复核可另立任务。`extension_version` 未升版，因本次只改元数据与说明。
+- Next: 推送并创建 PR B 供 ChatGPT 审核。与 PR C（#46）、PR A（#47）互相独立，均从 `a5bf77f` 创建；三者都追加 worklog，合并时按时间戳顺序解决追加式冲突。
+
+### 2026-08-04 11:55 EDT
+
+- Action: 处理 ChatGPT 对 PR #48（PR B，文档同步）的 Round 1 `REQUEST_CHANGES`。一条阻断，经核实成立，无 pushback。
+- Verification: 成立。本 PR 对 EXT-02 manifest 的改动不是 prose 级别——`status` 语义改变、新增 `absorbed_by_kernel`、新增结构化 `remaining_scope`、`design_constraint` 与 `activation_requirements` 改写、全局状态语义表新增一个状态。初版 handoff 以「只改元数据与说明」为不升版理由，该理由错误：status 语义本身就是 manifest 的实质内容。
+- Change: `extensions/dynamic_gate_context/extension.yaml` 的 `extension_version` 由 `0.1.0` 升为 `0.2.0`；`contracts.py` 的 `EXTENSION_VERSION` 同步为 `0.2.0`。
+- Verification of version references: 按审核要求逐处核查。含版本的只有上述两处；`extensions/README.md` 注册表与 EXT-02 README 均无版本字段，无需改；既有测试只断言 `extension_version` 键存在，不断言取值。
+- Finding: 两处版本号此前无任何测试约束其一致——这次漂移能发生正是因为缺这条守卫，只改数字不加守卫下次会重复。已新增 `test_manifest_and_contracts_declare_the_same_version`，逐扩展断言 `extension.yaml` 的 `extension_version` 与 `contracts.py` 的 `EXTENSION_VERSION` 相等。
+- Finding: 核查中发现同一次漂移的第二处——`contracts.py` 模块 docstring 首行仍写 `shell only`，与本 PR 把 status 改为 `partially_absorbed` 直接矛盾。已改写首段，说明核心概念已由 v5 在内核实现、本文件剩下的是 v5 未做的部分，并指向 `remaining_scope` 与 `RS-02`。
+- Correction: handoff 的「明确未改动」一节初版写「未改动 EXT-02 的 `contracts.py`」，在本轮修订后已不成立，已更正并注明原因；同时同步 handoff 头部的变更性质、变更表与测试计数。
+- Validation by mutation: 两处版本号不一致（`contracts.py` 退回 `0.1.0`）`failures=1`；还原后 `OK`。
+- Boundary: 未改动任何内核代码；未改动 45-Gate 拓扑、gate/model/profile、四阶段生命周期、核心对象定义；未改动 EXT-02 的合同定义本身（只改版本常量与 docstring）；未改动 EXT-01／03／04 任何文件；未改写任何历史审计记录；未新增数据、缓存、结果或运行产物。
+- Validation: 186 tests 全部通过（183 + 新增 3）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
+- Next: 推送同一 PR #48 并提交 ChatGPT 复审。PR #46 的两条阻断已于 11:35 修订完毕；PR #47 已获 `APPROVE`。

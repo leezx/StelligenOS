@@ -1,9 +1,16 @@
-"""EXT-02 dynamic_gate_context: shell only.
+"""EXT-02 dynamic_gate_context: partially absorbed into the v5 kernel.
 
 Provides a context-qualified identity so that Gate results are keyed by
 ``Target x Clinical Context`` instead of by target alone.
 
-This is an adapter shell. It does not modify the 45-Gate topology, any
+The core concept is no longer a proposal. The v5 clinical hypothesis architecture
+implemented it *in the kernel*: ``ClinicalHypothesis`` composes target, anchor
+clinical context, intended benefit, biomarker and product hypothesis. What is
+left here is the part v5 did not do — see ``remaining_scope`` in
+``extension.yaml``, of which ``RS-02`` (per-Gate cross-context reuse policy, the
+``GateContextBinding`` below) is the largest.
+
+This is still an adapter shell. It does not modify the 45-Gate topology, any
 ``gate.yaml``, ``GateInputEnvelope@2.0.0`` or ``GateModelOutput@2.0.0``. The
 port method bodies are ``...`` on purpose.
 
@@ -20,7 +27,7 @@ from src.capabilities.gates import GATE_IDS
 
 
 EXTENSION_ID: Final[str] = "EXT-02"
-EXTENSION_VERSION: Final[str] = "0.1.0"
+EXTENSION_VERSION: Final[str] = "0.2.0"
 EXECUTION_POLICY: Final[str] = "disabled"
 
 
