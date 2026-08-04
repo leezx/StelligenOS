@@ -2263,3 +2263,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: 207 tests 全部通过（与 `main` 相同）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。外部产物四份 TSV 列数 16／9／11／19 各自一致，筛选表 45 行 = 41 + 4，`source_manifest.json` 为合法 JSON。
 - Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**。该豁免只覆盖 `prompts/GPT-Feedback.md`，本 PR 提交的是 handoff 与 worklog，落在允许集合之外，须经 ChatGPT `APPROVE`。
 - Next: 推送并创建 PR 供 ChatGPT 审核，重点为该外部 run 的授权裁决——可追认为已授权，或必须作废重跑。
+
+## 2026-08-04T17:05:00-04:00 — PR #53 审核裁决与隔离修订
+
+- Review: ChatGPT 对 PR #53 返回 `REQUEST_CHANGES`，四条阻断，**全部接受，未作辩解**。真实阻断是运行授权而非代码。
+- Finding 1 accepted: 外部筛选在无 authorizing PR 的情况下执行，且执行时 #52 尚未批准。**「开始做内容」不等于规则要求的、范围明确的运行授权 PR；事后追认会形成先做后审的门禁漏洞。** 这一点执行者在提交时已提出但仍继续执行，审核的判断更严格且正确。
+- Finding 2 accepted: 本次运行**扩大了既有范围**（9→20 场景、41→45 靶点）并实际产生 RETAIN／DEFER／EXCLUDE 结果，不属于单纯读取或整理，因此不能按「审计记录」放行。
+- Finding 3 accepted: 审计材料缺少逐文件 SHA-256，无法锁定审核对应的确切结果版本。已实测确认修订前两份 handoff 中 SHA-256 出现次数为 0。
+- Finding 4 accepted: 原文「未经原始来源验证的模型领域知识足以支撑排序与定框」不成立。**已更正为「仅足以形成待验证的假设，不支撑正式筛选排序」**，而非软化措辞。理由写入报告：排序断言候选之间的关系，未验证的输入无法建立该关系，只能提出哪些关系值得检验。
+- Action: 外部 run 状态由 `draft_pending_repo_review` 改为 **`UNAUTHORIZED_QUARANTINED_NOT_ACCEPTED`**；`source_manifest.json` 新增 `quarantine` 块；`run_report.md` 头部加入 QUARANTINE NOTICE 并改写 Governance 一节；外部 worklog 追加 5 条。
+- Not accepted (explicit): `membrane_target_screen.tsv` 全部 RETAIN／DEFER／EXCLUDE；报告全部科学结论含载荷类别结论、Tier A 选择、建议 anchor hypothesis；20 场景枚举、7 类收益排序、12 条终点门槛。**不得作为任何后续工作的输入。**
+- Checksums: 在全部隔离标记写入**之后**计算 8 个外部文件的 SHA-256 并写入 handoff 附录 A，锁定的是被裁决为不接受的这一确切版本，可防静默替换。
+- Downstream: PR #54 的六模块运行已消费本 run 的 anchor clinical context，故该运行同样不被接受，其 M5 的 AE-01 不能视为 MET。已在两份 handoff 与两份外部 manifest 中互相记录。
+- Deliberately not done: **未事后追认该 run**；未删除或改写任何科学内容（隔离是标注不接受而非销毁证据，被裁决不接受的样本本身即审计材料）；**未创建 contract-only PR**——它需预先冻结输入范围、筛选语义、证据标准与输出验证，属新范围，须另立任务授权，在本 PR 内顺手做掉正是本次被阻断的那类越界。
+- Boundary: 无任何代码、契约、Gate 拓扑、Model、Profile、生命周期、核心对象或测试变更；handoff 顶部为**插入**，原文一字未删。
+- Next: 重新提交 PR #53 复审。
