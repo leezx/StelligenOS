@@ -2246,18 +2246,32 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: 207 tests 全部通过（Round 1 时为 192，本分支已并入 PR #50 的 15 项边界测试）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git diff -- prompts/GPT-Feedback.md` 为空。
 - Next: 推送同一 PR #51 并提交 ChatGPT 复审。本 PR 现在也受 CI 覆盖。
 
-### 2026-08-04 19:30 EDT
+## 2026-08-04T15:10:53-04:00 — CRC 临床框架与膜蛋白靶点筛选（外部 run 留痕）
 
-- Action: 合并 PR #51（豁免收窄写入 `AGENTS.md`）。ChatGPT 在 head `e9eced8` 返回 Round 3 `APPROVE`，CI run #5 在 3.11／3.12 全部检查通过、207 tests。用 merge commit 合并为 `dcc94a7`，未用 squash。
-- Result: `prompts/GPT-Feedback.md` 的反馈更新自此可直接提交（配 worklog 一条 + handoff 一份），无需送审。该规则写在 `AGENTS.md` 第 31 行「审核豁免」一节，并由第 23 行门禁、`ChatGPT-Codex-talk.md:19`、Phase Gate 协议 `:13` 三处指针指向，对未来会话可发现。
-- Validation on main: 207 tests 全部通过；`scripts/verify_repository_boundary.sh` 通过；`tests/test_git_sync.sh` A-D 通过；`git diff --check` 通过。
-- Action: 建立 `task_20260804_pr50-51-approval-records`（从 `main` `dcc94a7` 创建），补写 #50 与 #51 的批准记录。
-- Precondition: 两个 PR 已合并（#50 head `076c5ff` → merge `927aebf`；#51 head `e9eced8` → merge `dcc94a7`），但仓库内无对应 `-final.md`，审计轨迹停在 `REQUEST_CHANGES`，与 #46 修复过的断层同类，本次两处。
-- Rationale for post-merge: 未在合并前写入各自分支，因为追加提交会改变刚获批准的 HEAD。沿用 #46 建立并获批准的「合并后独立 PR 补写」模式。
-- Change: 新增两份 `-final.md`。各轮结论标注 `verbatim as relayed by the human lead` 并逐字转载，遵循 #46 阻断 2 立下的做法——凡逐字者明确标注，凡不可得者不伪造。两份均含完整审核轮次、阻断项、根因、修订方式与「本批准不授权什么」一节。
-- Recorded for the long term: #50 是仓库第一次拥有独立于自身审计记录的测试证据。自 PR #15 起每轮审核附带的「GitHub 上没有与该 head 关联的 Actions run」这一条件到此终止，跨越 36 个 PR，值得单独留档。
-- Recorded for the long term: #51 两轮阻断是同一类错误的两种形态——Round 1「只能改一个文件」与「必须写 worklog 与 handoff」冲突，按字面无法执行；Round 2 改为封闭集合后按文件标注「是否豁免」，而审核以整个 PR 为单位，规则把自己否掉。根因是把「审核豁免」（属整个 PR）与「留痕要求」（属单个文件）两条轴挤进同一列，非措辞问题。
-- Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**。该豁免只覆盖 `prompts/GPT-Feedback.md`，本 PR 提交的是 `logs/chatgpt-review-*.md` 与 handoff，落在允许集合之外，须经 ChatGPT `APPROVE`。
-- Boundary: 无任何代码、契约、Gate 拓扑、Model、Profile、生命周期、核心对象或测试变更；未改动 `AGENTS.md` 与两份治理文本（#51 已定稿，本 PR 只记录其批准事实）；未改动 `prompts/GPT-Feedback.md`；未改写 Round 1／Round 2 既有记录及任何历史条目；**未追认 #49**（该 PR 在过宽表述下合并，#51 的记录如实写明此事，本 PR 不改变其状态）；未新增数据、缓存、结果或运行产物。
-- Validation: 207 tests 全部通过（与 `main` 相同）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。
-- Next: 推送并创建 PR 供 ChatGPT 审核。合并后 2026-08-04 全部六个 PR（#46..#51）的审计闭环完成。
+- Instruction: 人类负责人指示架构冻结生效（此后一个月最多修复一次积累的架构问题），并**开始做内容**。第一项内容任务四步：列出 CRC 所有 clinical unmet needs、列举最合适的临床收益、大致决定临床终点、开始筛选潜在膜蛋白 ADC 靶点。
+- Governance conflict raised before acting: 两项实质冲突。第 24 行禁止在当前 PR 获 `APPROVE` 前开始下一项工作，而 PR #52 当时（现在仍）`OPEN` 未批准；第 23 行把「外部数据运行」列入必须通过 PR 交付并送审的范围，而本次 run 无授权 PR。已就两条明确提出，人类负责人以「现在开始做内容」直接指示继续。
+- Action: 执行外部 run `gen_iet_crc_clinical_frame_and_membrane_target_screen_20260804T191053Z`，产物全部位于仓库之外 `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/` 之下；已验证仓库工作树未被触碰。
+- Recorded not concealed: run `status` = `draft_pending_repo_review`；`source_manifest.json` 的 `authorising_pr` = `null` 且 `authorisation_status` 全文记录上述两条冲突；`run_report.md` 与外部 worklog 各设一节陈述同一事实。**执行者不自行认定该 run 已获授权，也不因产物已存在而主张既成事实**；若审核裁决为不可追认，产物应作废重跑而非事后补授权。
+- Contract conformance: 产出前读取 `genmodules/gen_indication_endpoint_target/contracts.py` 与 `README.md`，使产物贴合 v5 `ClinicalHypothesis`、`clinical-problem-first` entry mode 与六级 lock。已核对 `dcc94a7` 与 run 执行时的 tip `bfc04be` 之间 `src`／`genmodules`／`tests`／`extensions` 差异为 0 个文件，契约完全一致。
+- Gate boundary: 未运行任何 Gate，未赋任何 Gate score；`RETAIN`/`DEFER`/`EXCLUDE` 属 `CandidateFilterResult` 语义，按契约明确不是 Gate 结果；`NOT_EVALUATED` 与 `UNRESOLVED` 全程保留未降级为 PASS；T0-T12 未执行，45-Gate 拓扑未触碰。
+- Finding on scope: 第 1-3 步此前已由 `gen_iet_crc_target_enumeration_20260802`（PR #28 授权）大体做过（9 场景／36 endpoint／41 靶点／1476 pair），**第 4 步完全没做**——41 行全部 `gate_score_status = not_scored_in_enumeration_run`、`gate_pass_status = not_assessed`。该产物是枚举而非筛选，枚举与推荐之间缺少筛选一步，推荐实际依托 KB consensus 文档而非 catalog。因此本次继承并扩展，把筛选作为实质内容。
+- Change: 20 个 unmet need 场景（继承 9 + 新增 11，按 setting／分子／线数／解剖腔室／转录状态／宿主耐受／组织学显式坐标轴枚举）；7 类临床收益排序，选定 BEN-1「难治 MSS 的持久客观缩瘤，确证阶段转 OS」；12 条终点并给出量化门槛（Ph1b/2 单臂 ORR ≥20% 且 95%CI 下界 >10%，DoR 中位 ≥6 个月，Ph3 OS HR ≤0.75）；45 个靶点经 4 道硬门筛选，得 4 RETAIN／25 DEFER／16 EXCLUDE，Tier A 为 GUCY2C、CDH17、GPA33、LY6G6D。
+- Finding on prior artefacts: 三项。GPA33 与 LY6G6D 为真实覆盖缺口，其中 LY6G6D 特异富集于 MSS——枚举漏掉了与自身所选战略最匹配的候选；TNFRSF12A 为内部矛盾（`indication_endpoint_universe.tsv` 引用其 watch 文件而 catalog 从未收录，属两表未对账的流水线缺陷，非科学判断）；catalog 含相当比例泛 ADC benchmark 行（CLDN18 胃、PRLR 乳腺、IL2RA 淋巴、MELTF 黑色素瘤、FOLR1 卵巢、LAMP1 溶酶体、RNF43 胞内、SLC3A2 近乎普遍、CA19-9 非蛋白），CRC 特异候选池从来小于 41。
+- Recorded for the long term: 一条不由任何单步推出的结论——ABBV-400（c-MET）与 M9140（CEACAM5）这两个推进最快的 CRC ADC 载荷均为 Top1i，2026 年立项将在 Top1i 暴露人群中读数据，故**载荷不应默认 Top1i**；通行的 deruxtecan 类默认会把无关靶点变成交叉耐药负债，差异化决策在载荷不在靶点。已作为 UN-20 与 GAP-14 记录。同一条重构 GUCY2C：indusatumab vedotin 败在疗效而非毒性，正确反应是先测递送能力再据以选载荷。此结论与 KB consensus 将 GUCY2C 列为首选存在张力，已在报告中明确写出而非抹平。
+- Limits stated, not implied: 本次 run **没有任何一条论断被原始来源验证过**，所有百分比与基准在 TSV 中标为 `unverified_domain_prior` 或 `derived_not_calibrated`，属模型领域知识而非抽取证据，足以支撑排序与定框但不足以作为决策记录；四个 Tier A 的 `h2_mss_crc_protein_expression` 全为 `UNRESOLVED`，即在未测量的属性上排序；unmet need 分数未校准（参考数据集中 CRC 仅 1 行）；继承而未关闭的缺口为 41 靶点仅 6 行 opposing evidence、292 行证据中 172 行 unknown、20 个 review batch 仅审 2 个；未执行 skeptic review，故 Tier A 四行是待审候选而非推荐。
+- Boundary: 本 PR 只提交本条 worklog 与一份 handoff，无任何代码、契约、Gate 拓扑、Model、Profile、生命周期、核心对象或测试变更；未改动 `AGENTS.md`、`ChatGPT-Codex-talk.md`、Phase Gate 协议、`prompts/GPT-Feedback.md`；未改写任何历史条目；未把数据、结果或运行产物加入仓库；未回写覆盖 08-02 run 的既有产物（对其发现以外部新文件 `coverage_gaps_vs_prior_run.tsv` 记录）。
+- Validation: 207 tests 全部通过（与 `main` 相同）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。外部产物四份 TSV 列数 16／9／11／19 各自一致，筛选表 45 行 = 41 + 4，`source_manifest.json` 为合法 JSON。
+- Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**。该豁免只覆盖 `prompts/GPT-Feedback.md`，本 PR 提交的是 handoff 与 worklog，落在允许集合之外，须经 ChatGPT `APPROVE`。
+- Next: 推送并创建 PR 供 ChatGPT 审核，重点为该外部 run 的授权裁决——可追认为已授权，或必须作废重跑。
+
+### 2026-08-04 19:45 EDT
+
+- Instruction: Read `Zhixins-KB/2.Biotech/Asset-Generation-OS-architecture.md#Public-Evidence Target Safety and Therapeutic-Window Pre-screen Engine` and independently implement the module in `GenModule`, with runtime data/results outside the repository and PR review required.
+- Context: Re-read workspace rules, current `origin/main`, GenModule registry, existing contract patterns, and the full KB section. Confirmed the module must perform target-intrinsic public-evidence pre-screening, not product-specific therapeutic-window prediction.
+- Branch: Created `task_20260804_target-safety-prescreen` from latest `origin/main`.
+- Change: Added `genmodules/target_safety_therapeutic_window_prescreen/` with data-free contracts, six-axis evidence ontology, fatal-first deterministic evaluator, module manifest, and README.
+- Change: Added five regression tests covering fatal precedence, unknown/conflicting HOLD, conditional GO, empty-evidence HOLD, and rejection of non-external references.
+- Boundary: Added no source data, database, cache, results, model weights, or runtime artifacts. Runtime location is declared under `${BIOWORKSPACE_ROOT}/DATA/target_safety_therapeutic_window_prescreen/`.
+- Bug found and fixed: Initial empty-evidence evaluation incorrectly returned `GO`; the rule was corrected so empty evidence returns `HOLD` and requests all six next experiments.
+- Validation: module tests passed; full suite passed with 212 tests; repository boundary check passed; `git diff --check` passed; no `__pycache__` remains.
+- Next: update the PR with the implementation, push the branch, create the PR, and submit the complete PR review request to ChatGPT before any merge.
