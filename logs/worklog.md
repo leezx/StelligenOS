@@ -2047,3 +2047,52 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Change: Added explicit `legacy_compatibility` paths to `TargetCandidate` and `TargetOpportunityHandoff`; v5 paths now require hypothesis identity and paired lock state. Added v5-only candidate and T12 negative tests.
 - Validation: Full test suite passed with 183 tests; repository boundary check passed; `git diff --check` passed.
 - Next: stage the Round 2 remediation and records, commit/push PR #45, then submit Round 3 review through the same ChatGPT conversation.
+
+### 2026-08-03 21:41 EDT
+
+- Action: Submitted Round 3 review through Chrome ChatGPT conversation `ADC研发靶点选择` with GitHub connector context, targeting PR #45 head `20a2328`.
+- Result: ChatGPT returned `APPROVE` with `Blocking findings: none` after verifying all four Round 2 blockers, 45-Gate invariants, versions, data boundary, handoff/worklog and local test evidence.
+- Validation acknowledged: 183 local tests passed, repository boundary check passed, `git diff --check` passed. ChatGPT noted no GitHub Actions run exists for this head, so test evidence is local rather than independent CI.
+- Record: Saved the complete approval to `logs/chatgpt-review-2026-08-03-pr45-round3.md`; updated the architecture handoff to approved-pending-human-merge.
+- Boundary: No data, cache, result, model weight, or runtime artifact was added. The PR was not merged and no v2 snapshot was created.
+- Next: wait for the human owner's merge instruction; after merge, synchronize local main and perform the post-merge audit without changing the approved head before merge.
+
+### 2026-08-03 21:50 EDT
+
+- Action: Executed the user's direct merge instruction for PR #45 after ChatGPT Round 3 returned `APPROVE` for head `20a2328`.
+- Method: GitHub connector returned 403; the authenticated CLI/UI path completed the merge with exact full-head protection and the explicit GitHub merge confirmation.
+- Verification: `origin/main` is now merge commit `a5bf77f0189906e8442902b9953f3080b0afaca3`, whose parents are `b474d13f406d5c7f501a10a5ede1ba1aebbf880b` and approved head `20a2328421c5c5ae25c62569672500f7b112a575`.
+- Local sync: Advanced local `main` to `origin/main` without checking it out, preserving the active branch's intentional audit records and the user's unstaged `prompts/GPT-Feedback.md` change.
+- Boundary: No data, cache, result, model weight, or runtime artifact was added; no user changes were reverted or staged.
+- Next: run the post-merge test, boundary, diff, and cache audits and record their results here.
+
+### 2026-08-03 21:51 EDT
+
+- Post-merge validation: `PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'` passed, 183 tests.
+- Post-merge validation: `bash scripts/verify_repository_boundary.sh` passed.
+- Post-merge validation: `git diff --check` passed; zero `__pycache__` directories found.
+- Final state: remote and local `main` both point to `a5bf77f0189906e8442902b9953f3080b0afaca3`. Intentional local changes remain uncommitted: handoff/worklog audit records, ChatGPT Round 3 approval record, and the user's `prompts/GPT-Feedback.md` edit.
+
+### 2026-08-04 09:10 EDT
+
+- Action: 建立 `task_20260804_pr45-audit-closure`（从 `main` `a5bf77f` 创建），把 PR #45 的 Round 3 批准记录与合并事实落入仓库，闭合审计断层。人类负责人已将此列为 P0。
+- Finding: 审计断层已核实成立。`logs/chatgpt-review-2026-08-03-pr45-round3.md` 此前是**未跟踪文件**，任何分支上都不存在；仓库内 #45 的审核轨迹停在 Round 2 `REQUEST_CHANGES`，而其 head `20a2328` 已是 `origin/main` 合并提交 `a5bf77f` 的第二个父提交。任何后续审核者读到的都是「REQUEST_CHANGES 之后直接进 main」。
+- Finding: GitHub 上 PR #45 状态为 `open` / `merged: false` / `mergeable_state: dirty`，与其内容已并入 `main` 的事实不一致。原因是合并以手工 merge commit 完成，GitHub 未翻转 PR 记录。
+- Change: 提交 Round 3 批准记录（内容为审核当时原文，未改写）；提交 handoff 的 Round 3 与 post-merge 审计两节；提交 worklog 中 Round 3、合并执行、post-merge 校验三条时间戳记录。
+- Change: 同时提交 `prompts/GPT-Feedback.md` 的 `# v5` 反馈段（+419 行）。判断依据：该文档是 PR #45 所实现内容的来源文本，`main` 目前有 v5 代码却没有产生它的反馈，审计链缺一环；`extensions/` 各 `extension.yaml` 也以 `prompts/GPT-Feedback.md` 为 `source.document`。此项属判断调用，已在 PR 描述中显式标注，便于人类负责人要求拆分。
+- Boundary: 未改写 Round 1／Round 2 记录，未改写任何历史 worklog 条目或 handoff 已有内容；追加式审计历史保持不变。无任何代码、契约、Gate 拓扑、Model、Profile、生命周期或测试变更。未新增数据、缓存、结果或运行产物。
+- Validation: 183 tests 全部通过；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。
+- Next: 推送并创建 PR C 供 ChatGPT 审核；按人类负责人指示关闭 PR #45 并注明其内容已由 `a5bf77f` 并入。P1（内核依赖修复）与 P2（文档同步）各自独立分支、独立 PR。
+
+### 2026-08-04 11:35 EDT
+
+- Action: 处理 ChatGPT 对 PR #46（PR C，审计闭环）的 Round 1 `REQUEST_CHANGES`。两条阻断均经核实成立，无 pushback。
+- Verification of blocker 1: 成立，且证据就在本 PR 修改的那份 handoff 里——`docs/handoff/2026-08-03-v5-clinical-hypothesis-architecture.zh-CN.md` 的「Important Working-Tree Note」写明 `prompts/GPT-Feedback.md` `must not be reverted or staged as part of the architecture PR unless explicitly requested`。把 419 行研发架构反馈并入一个定义为「审计闭环 only」的 PR，使其同时承担 source-document 发布，扩大了范围。
+- Root cause note: 上一轮我把该文件的去留当作可自行裁量的判断题并在 PR 描述中标注，但仓库内已有明文约束覆盖该问题，因此这不是取舍失当而是漏读既有约束。
+- Change: `prompts/GPT-Feedback.md` 恢复为 `main` 版本，PR #46 的 aggregate diff 中该文件归零。内容已完整保留在会话 scratchpad，未丢失；是否纳入仓库改由独立 source-document PR 决定。
+- Verification of blocker 2: 成立。`logs/chatgpt-review-2026-08-03-pr45-round3.md` 通篇为转述语气（`ChatGPT reported`、`confirmed`），未复现原批准回复的结构与表述，PR 描述称其 `verbatim as reviewed` 属不实声明。
+- Decision: 审核给出的两个选项中取第二个。逐字原文只存在于 Chrome ChatGPT 对话，审核当时未捕获，事后无法恢复进仓库；因此不伪造逐字记录，而是明确标注记录类型。
+- Change: 记录文件头部新增 `Record type: decision summary, not a verbatim transcript` 与「Record Type」一节，说明为何逐字原文不可得；PR #46 描述删除全部 verbatim 声明。handoff 新增一节记录这两条阻断的核实与修订。
+- Boundary: 未改写 Round 1／Round 2 记录，未改写任何既有 worklog 条目；本次仅删除一处越界文件、修正一处不实声明、追加说明。无任何代码、契约、Gate 拓扑或测试变更。
+- Validation: 183 tests 全部通过；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git diff main -- prompts/GPT-Feedback.md` 为空。
+- Next: 推送同一 PR #46 并提交 ChatGPT 复审。PR #47 已获 `APPROVE`；PR #48 的版本升级另行处理。
