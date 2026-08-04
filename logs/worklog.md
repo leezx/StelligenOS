@@ -2246,6 +2246,21 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: 207 tests 全部通过（Round 1 时为 192，本分支已并入 PR #50 的 15 项边界测试）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git diff -- prompts/GPT-Feedback.md` 为空。
 - Next: 推送同一 PR #51 并提交 ChatGPT 复审。本 PR 现在也受 CI 覆盖。
 
+### 2026-08-04 19:30 EDT
+
+- Action: 合并 PR #51（豁免收窄写入 `AGENTS.md`）。ChatGPT 在 head `e9eced8` 返回 Round 3 `APPROVE`，CI run #5 在 3.11／3.12 全部检查通过、207 tests。用 merge commit 合并为 `dcc94a7`，未用 squash。
+- Result: `prompts/GPT-Feedback.md` 的反馈更新自此可直接提交（配 worklog 一条 + handoff 一份），无需送审。该规则写在 `AGENTS.md` 第 31 行「审核豁免」一节，并由第 23 行门禁、`ChatGPT-Codex-talk.md:19`、Phase Gate 协议 `:13` 三处指针指向，对未来会话可发现。
+- Validation on main: 207 tests 全部通过；`scripts/verify_repository_boundary.sh` 通过；`tests/test_git_sync.sh` A-D 通过；`git diff --check` 通过。
+- Action: 建立 `task_20260804_pr50-51-approval-records`（从 `main` `dcc94a7` 创建），补写 #50 与 #51 的批准记录。
+- Precondition: 两个 PR 已合并（#50 head `076c5ff` → merge `927aebf`；#51 head `e9eced8` → merge `dcc94a7`），但仓库内无对应 `-final.md`，审计轨迹停在 `REQUEST_CHANGES`，与 #46 修复过的断层同类，本次两处。
+- Rationale for post-merge: 未在合并前写入各自分支，因为追加提交会改变刚获批准的 HEAD。沿用 #46 建立并获批准的「合并后独立 PR 补写」模式。
+- Change: 新增两份 `-final.md`。各轮结论标注 `verbatim as relayed by the human lead` 并逐字转载，遵循 #46 阻断 2 立下的做法——凡逐字者明确标注，凡不可得者不伪造。两份均含完整审核轮次、阻断项、根因、修订方式与「本批准不授权什么」一节。
+- Recorded for the long term: #50 是仓库第一次拥有独立于自身审计记录的测试证据。自 PR #15 起每轮审核附带的「GitHub 上没有与该 head 关联的 Actions run」这一条件到此终止，跨越 36 个 PR，值得单独留档。
+- Recorded for the long term: #51 两轮阻断是同一类错误的两种形态——Round 1「只能改一个文件」与「必须写 worklog 与 handoff」冲突，按字面无法执行；Round 2 改为封闭集合后按文件标注「是否豁免」，而审核以整个 PR 为单位，规则把自己否掉。根因是把「审核豁免」（属整个 PR）与「留痕要求」（属单个文件）两条轴挤进同一列，非措辞问题。
+- Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**。该豁免只覆盖 `prompts/GPT-Feedback.md`，本 PR 提交的是 `logs/chatgpt-review-*.md` 与 handoff，落在允许集合之外，须经 ChatGPT `APPROVE`。
+- Boundary: 无任何代码、契约、Gate 拓扑、Model、Profile、生命周期、核心对象或测试变更；未改动 `AGENTS.md` 与两份治理文本（#51 已定稿，本 PR 只记录其批准事实）；未改动 `prompts/GPT-Feedback.md`；未改写 Round 1／Round 2 既有记录及任何历史条目；**未追认 #49**（该 PR 在过宽表述下合并，#51 的记录如实写明此事，本 PR 不改变其状态）；未新增数据、缓存、结果或运行产物。
+- Validation: 207 tests 全部通过（与 `main` 相同）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。
+- Next: 推送并创建 PR 供 ChatGPT 审核。合并后 2026-08-04 全部六个 PR（#46..#51）的审计闭环完成。
 ## 2026-08-04T15:10:53-04:00 — CRC 临床框架与膜蛋白靶点筛选（外部 run 留痕）
 
 - Instruction: 人类负责人指示架构冻结生效（此后一个月最多修复一次积累的架构问题），并**开始做内容**。第一项内容任务四步：列出 CRC 所有 clinical unmet needs、列举最合适的临床收益、大致决定临床终点、开始筛选潜在膜蛋白 ADC 靶点。
