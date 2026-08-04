@@ -179,7 +179,9 @@ KB consensus 把 GUCY2C 列为首选的结论存在张力，已在 `run_report.m
 
 ```text
 命令：PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'
-结果：Ran 207 tests —— OK（与 `main` 相同，本 PR 不含代码或测试变更）
+结果：Ran 228 tests —— OK（与 `main` 相同，本 PR 不含代码或测试变更）
+
+> **测试数已重新实测更正。** 原记 207，为本分支从 `dcc94a7` 切出时的数字；合并 `main`（现含 PR #56 的模块与测试）后实测为 228。按「先重新测量、再写入」处理，未把数字改成看起来一致而未验证的值。
 
 命令：bash scripts/verify_repository_boundary.sh
 结果：Repository boundary check passed.
