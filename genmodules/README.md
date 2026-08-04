@@ -21,6 +21,10 @@ are not lifecycle stages or Gate implementations.
 - `gen_indication_endpoint_target@0.1.0`: defines data-free contracts for
   constrained ADC indication, endpoint, and target opportunity generation;
   generation, evaluation, ranking, and evidence remain external.
+- `target_safety_therapeutic_window_prescreen@0.4.0`: applies conservative,
+  fatal-first rules to externally supplied public-evidence claims for target-
+  intrinsic ADC safety pre-screening; it does not predict a product-specific
+  therapeutic window.
 
 ## Repository boundary
 

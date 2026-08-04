@@ -1,0 +1,69 @@
+# Target Safety and Therapeutic-Window Pre-screen Handoff
+
+## Status
+
+- Branch: `task_20260804_target-safety-prescreen-fix`
+- Base: latest `origin/main` at task start
+- Review: Round 1 returned `REQUEST_CHANGES`; remediation is in clean replacement PR #56
+- Data boundary: no source data, cache, result, model weight, or runtime output in the repository
+
+## Scope
+
+This GenModule is a target-level public-evidence pre-screen for ADC development.
+It asks whether public evidence contains a target-intrinsic hazard strong enough
+to kill, hold, or downgrade investment before antibody discovery and ADC assembly.
+It does not claim product-specific therapeutic-window prediction.
+
+## Implemented
+
+- Six evidence axes: normal tissue expression, surface accessibility, antigen density, soluble antigen/shedding/sink, existing modality toxicity, and tissue consequence/recoverability.
+- Evidence levels `A/B/C/D/U` and explicit risk directions.
+- Fatal-first rules for critical surface hazard, confirmed severe on-target toxicity, non-lower normal density, clinically demonstrated sink/exposure failure, and no exploitable differential.
+- Non-fatal material risk is explicitly retained and produces `HOLD`; `GO` requires all six axes to be resolved with no material risk or conflict.
+- Unknown direction auto-propagates to unresolved; surface, tissue criticality, and density evidence are aggregated across claims; differential status is structured rather than tag-driven.
+- Decision semantics: `KILL`, `HOLD`, `CONDITIONAL_GO`, `GO`.
+- Unknown, unresolved, and conflicting claims remain visible and produce next-experiment references.
+- All cross-boundary identities and evidence references require `external:` references.
+- `claim_ref` and `evidence_refs` are unique and must match exactly; mitigation
+  references must point to a `SUPPORTS_RISK` claim in the same request.
+- Runtime location is declared as `${BIOWORKSPACE_ROOT}/DATA/target_safety_therapeutic_window_prescreen/{raw,processed,result}`; no runtime writer is enabled in the repository.
+
+## Validation
+
+- Module tests pass.
+- Module tests: 21 pass; full suite: 228 tests pass.
+- `scripts/verify_repository_boundary.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directory remains.
+
+## Known limitations
+
+- Evidence retrieval, source normalization, citation resolution, scoring calibration, and persistence remain external runtime responsibilities.
+- The first ruleset is deterministic and conservative; it is not a clinical safety model and must not be used as a product-level therapeutic-window claim.
+- The next implementation phase should add an external runtime adapter and benchmark fixtures under `DATA`, only after this contract PR is reviewed.
+
+## Round 1 remediation
+
+- Rebuilt the PR from `origin/main` so the CRC clinical-frame commit is not in scope.
+- Bumped the module and contract version to `0.3.0` for the structured differential, material-risk output, and hazard-context fields.
+- Replacement PR: `https://github.com/leezx/StelligenOS/pull/56`, head `d36e4a4`.
+
+## Round 2 remediation
+
+- Fatal aggregation is now context-aligned by shared `hazard_context_ref` or `(tissue, cell_type)`; unscoped claims cannot combine into a fatal decision.
+- `CONDITIONAL_GO` now requires every material-risk claim to be covered by a context-matched differential or explicit `mitigates_claim_refs`.
+- `NO_EXPLOITABLE_DIFFERENTIAL` requires an external comprehensive assessment reference; a single observation is downgraded to unresolved.
+- Added cross-context, unrelated-differential, partial-coverage, and unscoped-fatal regression tests.
+
+## Round 3 remediation
+
+- Read ChatGPT Round 3 `REQUEST_CHANGES`; the remaining blocker was that duplicate
+  claim/evidence references and invalid mitigation references could corrupt risk
+  coverage and permit a false `CONDITIONAL_GO`.
+- Tightened `AssessmentRequest` to require unique claim references, unique
+  evidence references, exact equality between the two reference sets, and
+  mitigation references that resolve to in-request `SUPPORTS_RISK` claims.
+- Added five contract-integrity regression tests covering duplicate claims,
+  duplicate evidence, missing mitigation targets, non-risk mitigation targets,
+  and the duplicate-reference conditional-go path.
+- Bumped module and contract versions from `0.3.0` to `0.4.0`.

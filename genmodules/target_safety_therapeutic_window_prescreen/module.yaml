@@ -1,0 +1,24 @@
+module:
+  module_id: target_safety_therapeutic_window_prescreen
+  module_version: 0.4.0
+  module_type: GenModule
+  name: Public-Evidence Target Safety and Therapeutic-Window Pre-screen Engine
+  input_contract: TargetSafetyAssessmentRequest@0.4.0
+  output_contract: TargetSafetyAssessmentResult@0.4.0
+  execution_policy: external_input_and_output_only
+  persistence: forbidden
+  database: forbidden
+  data_files_in_repository: forbidden
+  runtime_root: BIOWORKSPACE_ROOT/DATA/target_safety_therapeutic_window_prescreen
+  evidence_axes:
+  - normal_tissue_expression
+  - surface_accessibility
+  - antigen_density
+  - soluble_antigen_shedding_sink
+  - existing_modality_toxicity
+  - tissue_consequence_recoverability
+  decision_policy:
+    ordering: fatal_first
+    unknown_is_not_safe: true
+    product_therapeutic_window_claim: forbidden
+  decisions: [GO, CONDITIONAL_GO, HOLD, KILL]
