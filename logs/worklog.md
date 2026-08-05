@@ -2579,6 +2579,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**，须经 ChatGPT `APPROVE`。本 PR 只含本条 worklog 与一份 handoff，无代码、契约或测试变更。
 - Next: 起 `EVGAP-02` 契约（Track A，优先），与 `SRCADM-01`（Track B）并行。`EVGAP-02` 需新增来源文档 C 类依据（CRC-specific target-directed modality evidence：naked antibody／CAR-T／bispecific／RIT／immunotoxin／imaging antibody），现有契约尚未涵盖。
 
+### 2026-08-05 12:45 EDT
+
+- Instruction: Read the user-updated `docs/architecture/BIOTECH_INFRASTRUCTURE_CATALOG.zh-CN.md#2026-08-05补充` and incorporate the patient-data infrastructure section into the repository architecture.
+- Action: Preserved and promoted the complete `Cancer Patient–Anchored Data Infrastructure` section on `main`, including P1 direct patient observation, P2 patient-derived living models, P3 model perturbation, P4 clinical intervention and outcome, canonical resource families, dataset/portal separation, evidence lineage, two-dimensional evidence strength, Gate mapping, and staged registry boundaries.
+- Boundary: Documentation and audit trail only. No patient data, public datasets, raw files, cache, result, download, provider adapter, runtime dependency, or analysis was added.
+- Decision: Patient direct observation, patient-derived models, long-term cell-line perturbation, and clinical intervention evidence remain separate layers. Database presence does not automatically authorize a Gate claim.
+- Verification: Ran `scripts/verify_repository_boundary.sh` and `git diff --check` before the direct `main` commit. The current task branch's unrelated EVGAP-02 changes were not copied into `main`.
+
 ## 2026-08-05T14:10:00-04:00 — PR #60 第一轮审核裁决与修订（两条阻断全部接受，preview 升为 revision 2）
 
 - Review: ChatGPT 对 PR #60（HEAD `6778a6b`）返回 `REQUEST_CHANGES`。对账部分全部确认正确——9／41／369 无重复、22／19、22／347、LOCK-03 369/369 `unresolved`、`may_advance_to_level_02=false` 369/369、无 active、manifest 六个哈希与上传包一致、#53／#54 仍列 barred inputs、无 Gate score／排序／资产推荐。两条阻断**全部接受，两条都是执行者的错**。
