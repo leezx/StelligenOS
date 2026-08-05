@@ -2443,3 +2443,23 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Review write-back: 审核方尝试通过 GitHub 连接器提交正式 `REQUEST_CHANGES` review，连接器返回 403 未写回 GitHub。裁决以人类负责人转述为准，已完整记录于本条与 `docs/handoff/2026-08-04-adc-pool-level-01.zh-CN.md` 第十二节。
 - Scope: 本轮只改 `docs/pools/adc_pool_gate_usage.yaml`、`docs/pools/ADC_POOL_FUNNEL_LEVEL_01.zh-CN.md`、`tests/test_adc_pool_gate_usage.py`、本条 worklog 与该 handoff。仍未触碰 `src/`、`src/contracts/`、`genmodules/`、`extensions/`、`docs/architecture/`、`AGENTS.md`、`prompts/`；仍未新增 Gate、未改 45-Gate 拓扑。`NO_ARCHITECTURE_CHANGE` 判断不变。
 - Next: 推送同一 PR 并同步 PR 描述，请求复审。
+
+## 2026-08-04T19:35:00-04:00 — ADC Pool Level 01 输入绑定与执行契约（contract-only，未执行）
+
+- Instruction: 人类负责人要求「直接给我 ADC Pool Level 01，这个最终的 output」。核实后说明 Level 01 从未执行——PR #57 合并的是定义不是结果，`BLOCK-02` 挡着执行。人类负责人选择「先起 CRC context 契约 PR」。本条记录该契约。
+- Correction (executor error): PR #57 的 `BLOCK-02` 写「唯一的 context 枚举来自被隔离的 2026-08-04 运行」，**这句话不准确**。核实发现 2026-08-02 枚举早已通过 **PR #29 `APPROVE`**（记录明写「Authorized: use external enumeration output as input to a new target-level evidence extraction task」），target 级证据抽取又通过 **PR #31 `APPROVE`**，存在完整的未被隔离输入链。正确表述是「不得使用 2026-08-04 那次运行的产物」，不是「没有可用 context」。执行者把「被隔离」过度推广为「无可用输入」，与 PR #53 上「把针对 `ff943e7` 的检查推广成全局结论」是同一类错误。**后果：不需要任何新的枚举运行**，原先告知的「两个契约 + 两次运行」缩减为「一个契约 + 一次 Level 01 执行」。未回写 PR #57 已获批准的原文，更正写在本 PR。
+- Delivered: `docs/tasks/ADC_POOL_LEVEL_01_INPUT_BINDING_CONTRACT.zh-CN.md`、`docs/pools/adc_pool_level_01_input_binding.yaml`、`tests/test_adc_pool_level_01_input_binding.py`（13 项校验）。
+- Bound inputs: `gen_iet_crc_target_enumeration_20260802`（PR #29，9 indications／36 endpoint 行／41 targets）与 `gen_iet_crc_target_evidence_20260801T2235EDT`（PR #31，292 units／41 genes）。10 个输入文件的 SHA-256 用 `shasum -a 256` 实算并逐一记录，执行前必须校验、任一不一致即中止（`VAL-B05`）。`indication_endpoint_target_pairs.tsv`（1,476 行）不作输入，因其按旧 `indication+endpoint+target` 单元构建。
+- Barred inputs: #53、#54 两次被隔离运行列为 `barred_sources` 并逐条写出禁止内容；`VAL-B06` 禁止 GPA33／LY6G6D／TNFRSF12A／CEACAM6 出现在输出。
+- Scope consequence, stated not hidden: contexts 20 → **9**、targets 45 → **41**、Raw Enumeration Matrix **369 pairs**。首次执行范围小于被隔离运行，差额正是未经授权扩大的部分，属正确结果而非退步。
+- Finding (high): **LOCK-02 最多只有 1 个 context 能 `eligible`。** 实测 9 个 context 为 1 `canonical_c0`(conf 0.93)／7 `derived_strategy`(`not_calibrated`)／1 `benchmark_subgroup`(`benchmark_only`)。继承 PR #28 契约自身禁令「不得将 derived strategy 自动升级为 canonical clinical fact」为 outcome 上限，未校准来源**强制 DEFER**，由测试机械保证不可能 RETAIN。Eligible Universe Index 上限 1 × |eligible_targets| ≤ 41 pairs。
+- Finding (high): **既有 `disposition` 列不可继承为 LOCK-01 输出。** 取值为 `benchmark`(19)／`candidate`(16)／`hold`(6)，不是 `CandidateFilterResult`；由 PR #28 五条最小筛选层产生、判据与 LOCK-01 不同；41 行 `gate_score_status` 全为 `not_scored_in_enumeration_run`、`gate_pass_status` 全为 `not_assessed`。测试断言三个标签与 `CandidateDisposition` 取值无交集。
+- Finding (high): **linkage 证据只有 target 级、疾病级。** 实测 292 units = 41 genes × 7 dimensions + 5 opposing，**无 indication／context 列**；direction supporting 88／opposing 32／unknown 172；**292 个单元全部 `machine_extracted_requires_human_review`**；20 个专家复核批次只完成 2 个、覆盖 4 靶点。故疾病级证据只能支撑 canonical context，不能建立亚群特异 linkage（`LNK-02`）。`no_known_linkage_after_complete_search` 本次不可用（检索范围未闭合，`VAL-B03` 禁止输出）。
+- `DECISION-02` recorded for adjudication: 未经专家复核的 machine-extracted 证据**满足** LOCK-03 存在性，附两条硬约束——每个 pair 必须带 `linkage_evidence_review_status`；仅 machine-extracted 的 pair 可进 active pool 但**不得晋级 Level 02**。理由：LOCK-03 问存在性不问有效性，每单元有 `source_id`／`source_path_or_url`／`evidence_locator` 可回溯，Level 01 召回优先。被否决的严格方案会让 41 靶点只剩 4 个可用、报出接近空池而失真。若审核方要严格方案，只需把 `machine_extracted_evidence_satisfies_existence` 置 `false`。
+- Predicted result shape, written in advance: 1 个 `eligible` context、8 个 `hold`；active pool 上限 41 pair 全部集中在 canonical MSS/pMMR mCRC 3L+；其余 328 pair 落 `hold`。真正瓶颈在**剩余 18 个专家复核批次**，不在漏斗设计，与 PR #54 M6「受数据集限制而非 Gate 限制」一致但这次建立在已批准证据上。预先写明以免结果被误读为 Level 01 失效。
+- Validation: `Ran 264 tests` 全部通过（`main` 基线 251 + 新增 13）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。所有规模数字由脚本读取外部产物实测，非估计。
+- Deliberately not done: 未执行 Level 01；无新枚举运行；未抓取文献／下载数据／运行分析；未引用被隔离运行任何产物；未定义 Level 02／03；未实现 `GAP-P01`..`GAP-P06`；未回写 PR #57 历史原文。
+- Interrupted task, facts preserved: #52／#53／#54／#57 的批准记录 PR 中断在事实收集阶段、**未写任何文件**。已查明：#52 也缺记录（原以为只缺三份）；**四个 PR 在 GitHub 上都没有 review 记录**（`/reviews` 返回空）；获批 head／merge commit 为 #52 `bfc04be`／`985edf8`、#53 `5318eca`／`09990c8`、#54 `8992563`／`58984e7`、#57 `6036c01`／`5e0458b`，其中 #54、#57 合并 head 与获批 head 不同、差异仅为 main 经合并进入；四轮转述评审逐字文本可从会话 transcript 恢复。
+- Noticed, not fixed: `requirements.txt` 注释仍写「207 tests」，实测 264。属无关改动，只记录。
+- Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**，须经 ChatGPT `APPROVE`。
+- Next: 推送并创建 PR 送审；请审核方裁决 `DECISION-02`，以及确认对 `BLOCK-02` 的更正是否成立。
