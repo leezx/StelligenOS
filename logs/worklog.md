@@ -2557,3 +2557,24 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Accepted by reviewer, unchanged: `AUD-01`..`AUD-09` 足以覆盖 builder／raw manifest／license／family independence／去重／discordance／行级 provenance／重建；`admission_record_ref = null` 时不得执行抽取；自声明守卫仅作 pending claim；RQ-02 分解自洽（34 = 22 + 6 + 6）；`ECD-b` 路径合理；reference-absent 靶点不再被迫伪造 source evidence；precedence 已解决 `TM4SF1`／`TDGF1`；不执行 Level 01；不评估 T7；不新增 target／context；不读取被禁文件；`EVGAP-02` 仍未解除；仓库内无 evidence 或结果数据。
 - Review write-back: 连接器 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本条与 handoff 第十一节。
 - Next: 推送同一 PR 并同步 PR 描述请求复审。
+
+## 2026-08-05T12:04:00-04:00 — ADC Pool Level 01 Preview 生成（外部运行留痕，PROVISIONAL）
+
+- Instruction: 人类负责人给出十项约束的明确指令——基于已合并的 #57／#58／#59 契约生成 **ADC Pool Level 01 Preview**，六个指定输出，**不得声明为正式执行结果**，完成后只提结果审核 PR，不更新 Level 01 binding、不解除 `EVGAP-01` 或 `EVGAP-02`。
+- Read: 指令来源为 `Zhixins-KB/2.Biotech/Asset-Generation-OS-architecture.md` 的 `# ADC pool Level 01` 一节（第 20915–21257 行，文件已增至 21,257 行，只读未改）。该节引入 Preview／Accepted 两层拆分，并批评执行者把治理链造得过于串行——「一直在造审核链，而不是造 candidate pool」。**该批评成立，本次按其方案执行。**
+- Correction to my own prior advice: 上一轮我建议「先做 SRCADM-01」。来源文档给出的优先级是 **优先 EVGAP-02、SRCADM-01 并行**，理由是 Level 01 的价值主要来自「target 为什么与 CRC clinical context 有关」——22 个靶点即使全部通过 surface identity，没有 CRC linkage 仍只是泛癌 surface targets。我把顺序倒了，会先做完一堆审核才发现拿到的东西不可用。
+- Run: `gen_iet_adc_pool_level_01_preview_20260805T160125Z`，七个产物全部写入外部 `DATA`，**仓库零写入**（运行期间 `git status --short` 保持干净）。
+- Governance stated up front: 本 Preview 读取了 `ADC_surfaceome_reference@0.3.0`，而**该库尚未通过审核**（`SRCADM-01` 未完成，PR #59 `admission_record_ref` 为空）。这正是 22 个靶点只能标 `provisional_surface_eligible`、不能标 `eligible_surface_target` 的根本原因，也是整份 Preview 为 provisional 的原因。manifest 中该来源记为 `NOT_ADMITTED_PENDING_SRCADM_01`。已批准来源只有 `gen_iet_crc_target_enumeration_20260802`（PR #29）。#53／#54 列为 `barred_inputs` 且 `used: false`。
+- Result: raw contexts **9**（eligible 1／hold 8）；raw targets **41**（`provisional_surface_eligible` **22**／`hold_surface_evidence` **19**）；Raw Enumeration Matrix **369** 全部保留；provisional eligible universe index **22**；`HOLD_PENDING_CRC_LINKAGE` **22**／`RAW_MATRIX_ONLY` **347**；LOCK-03 `unresolved` **369／369**；active-for-Level-02 **0**；被排除候选 **0**。
+- Semantics preserved: **`active = 0` 不等于 pool 为空**——它表示目前没有任何 pair 同时满足三把锁，但已有 22 个 pair 通过 provisional context × target identity、正在等待 CRC linkage。`HOLD` 是待证据，不是否定。
+- LOCK-02: 按 #58 冻结的 projection 求值，状态上限照旧（1 `canonical_c0` eligible；7 `not_calibrated` 与 1 `benchmark_only` 强制 DEFER）；endpoint 未锁定，`endpoint_maturity = not_locked_at_level_01`。
+- LOCK-01: 按 #59 冻结优先级 `E1-05`→`E1-04`→`E1-04b`→`E1-03`→`E1-02`→`E1-01` 求值，每靶点恰好命中一条。实测分布 22／6／3／6／**0**／4，**与 #59 契约的 `predicted_result_shape` 逐项一致**。
+- LOCK-03: 全部 369 个 pair 保持 `unresolved`——`EVGAP-02` 未完成，该锁无法求值；未猜测、未取默认值、未跳过。
+- Mandatory findings recorded: **`MF-01` GUCY2C 落 hold**（只有 `curated_knowledge` 一个独立家族，`supported_surface` 而非 `confirmed_surface`；**与此前多模型共识首选及被隔离运行 Tier A 相反**，按实测原样写出未弱化）；`MF-02` `provisional_surface_eligible` 只是身份与拓扑层面结论，每行带 `t7_tumor_surface_validated = not_assessed_level_02_scope`；`MF-03` 零排除。
+- Carried to downstream, not cleared at Level 01: **FAP** 可能主要在 stromal compartment（属 T7）；**CD274／EGFR／EPCAM** 有正常组织或 immune-cell expression（属 T11）。两条同一纪律——Level 01 不代替 Level 02 做判断。
+- Mechanical guards against the five confusions: 每个 TSV 的每一行都带 `provisional_only = true` 与 `may_advance_to_level_02 = false`；`pool_state` 只有两种取值、不存在任何 `active` 态；manifest 顶层 `result_status = PROVISIONAL_NOT_AUTHORIZED_FOR_ADVANCEMENT`、`authorises_level_02 = false`、`evgap_01_status = pending_source_admission_and_extraction`、`evgap_02_status = not_completed`，另加 `is_formal_level_01_execution_result: false`、`may_be_used_as_gate_input: false`、`may_be_used_for_asset_decisions: false`。
+- Validation: 十项指令约束逐条脚本核验，全部 `PASS`。仓库侧 `Ran 309 tests` 全部通过、`scripts/verify_repository_boundary.sh` 通过。七个产物文件 SHA-256 已实算并写入 `source_manifest.json` 与 handoff 附录 A。
+- Boundary: 未运行任何 Gate、未赋分数、未排序、未推荐资产、未给实验建议；未评估 T7；未新增靶点或 context（0／0）；零排除；未读 #59 禁读的四个 Level 02 文件与禁读字段；未引用被隔离运行任何产物；**未更新 Level 01 binding、未解除任何 EVGAP**（`main` 上两者仍为 `pending_source_admission_and_extraction` 与 `not_completed`）；未把 `ADC_surfaceome_reference` 纳入已批准来源。
+- Deliberately not done: 未生成 `ADC_POOL_LEVEL_01_ACCEPTED`（须待五项批准齐备）；未补 #52／#53／#54／#57／#58／#59 的批准记录（现为六份，事实已查全未写文件）。
+- Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**，须经 ChatGPT `APPROVE`。本 PR 只含本条 worklog 与一份 handoff，无代码、契约或测试变更。
+- Next: 起 `EVGAP-02` 契约（Track A，优先），与 `SRCADM-01`（Track B）并行。`EVGAP-02` 需新增来源文档 C 类依据（CRC-specific target-directed modality evidence：naked antibody／CAR-T／bispecific／RIT／immunotoxin／imaging antibody），现有契约尚未涵盖。
