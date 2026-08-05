@@ -2601,3 +2601,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: `Ran 334 tests` 全部通过；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。
 - Review write-back: 连接器 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本条与 handoff 第十一节。
 - Next: 推送同一 PR 并同步 PR 描述请求复审。
+
+## 2026-08-05T15:05:00-04:00 — PR #60 第二轮审核裁决：交付包版本不匹配（接受）
+
+- Review: ChatGPT 对 PR #60（HEAD `75f7e83`）返回 `REQUEST_CHANGES`，并明确指出**这不是修复逻辑仍有问题，而是被审核的实际结果包版本不匹配**——上传的 ZIP 仍是 revision 1：22 行仍只带 `EVGAP-02`、`raw_clinical_contexts.tsv` 仍缺 `may_advance_to_level_02`、`raw_enumeration_matrix.tsv` 仍缺两列、`source_manifest.json` 没有 `revision: 2`。审核方同时确认 PR 层面的修订方案本身正确。
+- Finding accepted, executor error in the delivery step: revision 2 修订后我只更新了仓库侧的 handoff、PR 描述与校验和，**没有产出一个与之对应的、可上传的结果包**。结果审核必须核验实际文件而不是文档对文件的描述；只同步描述而不同步被审对象，等于让审核方审一份看不到的东西。
+- Verified on disk against the six acceptance criteria, all `PASS`: manifest `revision: 2`；七个文件 SHA-256 与 handoff 附录 A 完全一致；四个 TSV 两个 guard 列齐备且全行分别为 `true`／`false`（行数 9／41／369／369）；369 个 pool rows 全部 `EVGAP-01;EVGAP-02`；22／19、22／347、369 `unresolved` 计数不变；无 active／accepted／Gate score／T7 validation／Level 02 推进授权（`t7_tumor_surface_validated` 唯一取值 `not_assessed_level_02_scope`）。
+- Action: 产出 `external:result/gen_iet_adc_pool_level_01_preview_20260805T160125Z_revision2.zip`，24,904 bytes，ZIP SHA-256 `8687e8774b53fda1d3a6fdac38fc56cb0cc2fd198677db5a1f7d5d50a449e823`，含且仅含七个产物文件。**已从包内回读验证** `manifest revision = 2`、`blocking_evidence_gaps = {'EVGAP-01;EVGAP-02': 369}`、四个 TSV 行数与 guard 列齐备。路径与校验和已写入 handoff 附录 A。
+- Self-imposed rule going forward: 结果审核 PR 每次修订外部产物，都必须同时产出带版本标识的打包并记录其 SHA-256；只改 handoff 与 PR 描述不算完成交付。
+- Boundary unchanged: 仓库仍零写入产物（ZIP 在外部 `DATA`）；未运行 Gate、未赋分数、未排序、未推荐、未评估 T7；未新增靶点或 context；零排除；**未解除任何 EVGAP、未更新 Level 01 binding**。
+- Review write-back: 连接器 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本条与 handoff 第十二节。
+- Next: 推送同一 PR 并同步 PR 描述，请人类负责人上传该 ZIP 后复审。

@@ -180,3 +180,38 @@ manifest 已升为 `revision: 2` 并记录原因；**revision 1 的全部校验�
 | `source_manifest.json` | `fbf3c6a4c8eb3b039231394270762de51f788ef52e07ffcdc73e1a4509cfc483` |
 
 运行目录：`external:result/gen_iet_adc_pool_level_01_preview_20260805T160125Z`
+
+### 供上传审核的 revision 2 打包
+
+`external:result/gen_iet_adc_pool_level_01_preview_20260805T160125Z_revision2.zip`
+
+- ZIP SHA-256：`8687e8774b53fda1d3a6fdac38fc56cb0cc2fd198677db5a1f7d5d50a449e823`
+- 24,904 bytes，含且仅含上表七个文件
+- 已从包内回读验证：`manifest revision = 2`、`blocking_evidence_gaps = {'EVGAP-01;EVGAP-02': 369}`、四个 TSV 行数 9／41／369／369 且两个 guard 列齐备
+
+## 十二、第二轮审核裁决：交付包版本不匹配（接受）
+
+ChatGPT 对 PR #60（HEAD `75f7e83`）返回 `REQUEST_CHANGES`，并明确指出**这不是修复逻辑仍有问题，而是被审核的实际结果包版本不匹配**：上传的 ZIP 仍是 revision 1，其中 22 行仍只带 `EVGAP-02`、两个 TSV 仍缺 guard 列、manifest 没有 `revision: 2`。
+
+**裁决成立，问题在交付环节。** 我在 revision 2 修订后只更新了仓库侧的 handoff、PR 描述与校验和，**没有产出一个与之对应的、可上传的结果包**。结果审核必须核验实际文件而不是文档对文件的描述——只同步描述而不同步被审对象，等于让审核方审一份看不到的东西。
+
+### 按六条验收标准对磁盘上的 revision 2 逐条复核
+
+| 验收项 | 结果 |
+|---|---|
+| manifest 明确为 `revision: 2` | `PASS` |
+| 七个文件 SHA-256 与本附录 A 完全一致 | `PASS` |
+| 四个 TSV 两个 guard 列齐备且全行 `true`／`false` | `PASS`（9／41／369／369） |
+| 369 个 pool rows 全部 `EVGAP-01;EVGAP-02` | `PASS`（`{'EVGAP-01;EVGAP-02': 369}`） |
+| 22／19、22／347、369 unresolved 计数不变 | `PASS` |
+| 无 active、accepted、Gate score、T7 validation 或 Level 02 推进授权 | `PASS`（`t7_tumor_surface_validated` 唯一取值 `not_assessed_level_02_scope`） |
+
+### 修订
+
+新增上一节的 revision 2 打包，并记录其自身 SHA-256，使「上传的是哪一版」成为可核对的事实而不是口头声明。包内内容已回读验证。
+
+**此后的规则（自我约束）：** 结果审核 PR 每次修订外部产物，都必须同时产出带版本标识的打包并记录其 SHA-256；只改 handoff 与 PR 描述不算完成交付。
+
+### 审核回写状态
+
+审核方尝试通过 GitHub 连接器提交正式 `REQUEST_CHANGES` review，连接器返回 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本节与 `logs/worklog.md`。
