@@ -1,0 +1,192 @@
+# SRCADM-01：ADC_surfaceome_reference@0.3.0 来源准入审计（machine-readable）
+#
+# 审计范围 AUD-01..AUD-09 由 PR #59 冻结并获 ChatGPT APPROVE，即本审计的授权依据。
+# 本文件记录逐项审计结论与其可复核依据。它不含任何证据数据。
+#
+# 由 tests/test_srcadm_01_surfaceome_admission.py 校验。
+# 本文件**不**授予准入：准入由本 PR 获 APPROVE 后成立，届时另开 PR 把
+# evgap_01_surface_localization_extraction.yaml 的 admission_record_ref 指向审核记录。
+
+admission:
+  admission_id: SRCADM-01
+  dataset_id: ADC_surfaceome_reference
+  dataset_version: 0.3.0
+  snapshot_id: 2026-07-29-quant-topology-mm
+  audit_scope_frozen_by_pr: 59
+  audit_scope_items: 9
+  status: pending_review
+  # 结论是「有条件可纳入」，不是无条件可纳入。四项条件见 admission_conditions。
+  recommendation: admissible_with_conditions
+  grants_admission_by_itself: false
+  admission_record_ref: null
+  next_step: 获 APPROVE 后另开 PR 把 EVGAP-01 契约的 admission_record_ref 指向审核记录
+
+# 逐项审计结论。每一条都必须有可复核的依据，不接受「已阅读」这类断言。
+audit_findings:
+  - id: AUD-01
+    item: builder 实现与版本
+    verdict: PASS
+    evidence: >-
+      AssetGenOS/scripts/build_t7_surfaceome_reference.py 存在，2,721 行，可读。
+      family 计数、discordance 生成、consensus 打分均为显式条件分支，无隐藏启发式。
+    residual_note: >-
+      builder_version 由 config 传入而非脚本内常量，故「0.3.0」这个版本号依赖
+      build_manifest 的自述，不能由脚本自身独立确证。
+
+  - id: AUD-02
+    item: raw manifest 与 raw_manifest_sha256 的对应关系
+    verdict: PASS
+    evidence: >-
+      对 raw/2026-07-29-quant-topology-mm/download_manifest.json 实算 SHA-256，
+      得 884f419118302ae39c3e50292d03295ff676434868e1061b39ead50f9cc977bb，
+      与 build_manifest.json 声明的 raw_manifest_sha256 逐字符一致。
+    verification_method: recomputed
+
+  - id: AUD-03
+    item: 原始来源清单与各自 release 版本
+    verdict: PASS_WITH_FINDING
+    evidence: >-
+      manifest 列出 19 个文件、19 个不同 source_id。processed 表的 source_release
+      有实义取值：cspa「PLOS ONE 2015 supplementary file S2」、
+      hpa_subcellular_location「HPA 25.1; Ensembl 109」、
+      goa_human「current_at_download; ontology=releases/2026-06-15」、
+      uniprot_reviewed_human「current_at_download」。
+    finding: >-
+      manifest 的 files 条目里 release 字段全部为 null；release 字符串由 builder
+      另行赋值。且 EVGAP-01 实际使用的四个来源中，**uniprot_reviewed_human 与
+      goa_human 的 release 是 current_at_download，不是版本号**——它们只钉住下载
+      时刻，不钉住上游版本。
+    consequence: 见 AUD-09 的可复现性边界
+
+  - id: AUD-04
+    item: 每个原始来源的 license 与再分发条件
+    verdict: PASS_WITH_FINDING
+    evidence: >-
+      19 个来源全部声明 license，无缺失。进入 source_evidence.tsv 的四个来源中
+      goa_human、hpa_subcellular_location、uniprot_reviewed_human 为 CC BY 4.0。
+    finding: >-
+      六个来源的 license 有歧义：cellphonedb_gene/protein/complex/interaction
+      「not declared in cellphonedb…」、cellchatdb_human「GPL-3.0 repository
+      license」、omnipath_intercell_receptor「per-resource licenses retained」。
+      另有一处命名不一致：processed 表用 source_id「cspa」，manifest 用
+      「cspa_validated_surfaceome」与「cspa_cell_type_matrix」，无法直接 join。
+    decisive_check: >-
+      实测：这六个 license 歧义来源**没有任何一个出现在 source_evidence.tsv 中**。
+      它们只喂 cci_receptor_* 字段，而该字段已被 PR #59 的 barred_fields 禁用。
+      因此再分发歧义不触及 EVGAP-01 读取的任何字段。
+    load_bearing_boundary: >-
+      该结论依赖 PR #59 的字段白名单。若白名单日后扩大到 cci_receptor_*，
+      本准入必须重新审。
+
+  - id: AUD-05
+    item: independent_evidence_family 的独立性是否真实成立
+    verdict: PASS
+    evidence: >-
+      三个家族的来源映射为 curated_knowledge <- {goa_human,
+      uniprot_reviewed_human}；imaging <- {hpa_subcellular_location}；
+      cell_surface_capture_ms <- {cspa}。
+    same_origin_pair_handled: >-
+      goa_human 与 uniprot_reviewed_human 同源（GOA human 由 UniProt 策展流程产出）。
+      builder 把二者收进**同一个** curated_knowledge 家族，因此不会被重复计成两个
+      独立家族——这正是审核方点名的「同源数据重复计数」失效模式，builder 避开了它。
+      实例：GUCY2C 两个来源都 supported，family_count 仍为 1。
+    counting_requires_support: true
+    counting_requires_support_evidence: >-
+      family 由 consensus 的 support 布尔值推出（builder 第 2112–2118 行），
+      不是「有行即计」。实测反例检验：HPA 有行但 hpa_plasma_membrane=false 的基因
+      共 11,334 个，其中 imaging 被计入家族的为 **0 个**。
+    structural_guarantee: >-
+      由于 curated_knowledge 是唯一可由两个来源喂养但只计一次的家族，
+      family_count >= 2 必然包含至少一个实验型家族（imaging 或
+      cell_surface_capture_ms）。RQ-01 的两家族门槛因此不是形式门槛。
+
+  - id: AUD-06
+    item: 来源去重逻辑
+    verdict: PASS_WITH_FINDING
+    finding: >-
+      builder 中检索不到显式去重例程。实测 processed 表存在重复键：
+      source_evidence.tsv 在 (gene_symbol, source_id, evidence_kind) 上有 6 个重复键，
+      membrane_topology_evidence.tsv 在 (gene_symbol, source_id) 上有 5 个。
+      surfaceome_consensus.tsv 在 gene_symbol 上无重复。
+    bounded_impact: >-
+      重复键涉及的基因为 HERC3、MATR3、NPIPA9、PINX1、POLR2J3、PRODH、
+      ERVK-7、NRXN1、NRXN2、NRXN3、SIRPB1，**没有一个属于 EVGAP-01 的 41 个靶点**。
+      且 family 计数取自 consensus 的 support 布尔值而非 source_evidence 行数，
+      故重复行在结构上不可能抬高 RQ-01 的家族数；41 个靶点的 family_count 与
+      families 列表实测 100% 一致。
+
+  - id: AUD-07
+    item: discordance_flags 的生成规则与覆盖范围
+    verdict: PASS
+    evidence: builder 第 2121–2129 行，四条确定性规则，条件与标记一一对应。
+    rules:
+      - hpa_plasma_membrane_uncertain：HPA reliability 为 uncertain
+      - cspa_support_without_uniprot_explicit_surface：MS 支持但 UniProt 未显式标注表面
+      - hpa_only_vs_curated_knowledge：仅影像支持、策展来源不支持
+      - generic_membrane_without_surface_localization：仅泛膜注释、无任何表面定位支持
+    relevance_to_evgap_01: >-
+      PR #59 的 E1-04 把 discordance_flags 非空一律判 DEFER，故这四条规则的作用
+      只是把冲突显式化并触发 DEFER，不会产生 RETAIN。
+
+  - id: AUD-08
+    item: 代表性靶点的逐行来源回溯
+    verdict: PASS
+    evidence: >-
+      对三个代表性靶点逐行回溯成功，每条主张都能落到 source_id + surface_supported
+      + source_release + source_url：CDH17（ECD-a 路径，families
+      cell_surface_capture_ms+curated_knowledge，n=2）、CEACAM5（ECD-b GPI 路径，
+      families curated_knowledge+imaging，n=2）、GUCY2C（families 仅
+      curated_knowledge，n=1，故在 PR #59 规则下落 E1-02 hold）。
+    targets_traced:
+      - CDH17
+      - CEACAM5
+      - GUCY2C
+
+  - id: AUD-09
+    item: snapshot 是否可由 builder 与 raw manifest 复现
+    verdict: PASS_WITH_FINDING
+    integrity_verified: >-
+      `shasum -a 256 -c checksums.sha256` 对 raw snapshot 的 19 个文件全部 OK。
+    determinism: >-
+      builder 中唯一的时间依赖是第 268 行 datetime.now() 用于 processed_at_utc
+      时间戳字段，不参与任何计算；无 random、无 shuffle。给定同一 raw snapshot，
+      构建结果确定。
+    finding: >-
+      **但 raw snapshot 本身对 uniprot_reviewed_human 与 goa_human 未钉版本**
+      （release 为 current_at_download）。因此从上游重新下载并重建**不能**保证
+      逐字节复现该 snapshot。可复现性成立的前提是使用已归档的 raw snapshot，
+      而不是从来源重新获取。
+
+# 有条件准入的四项条件。任一条被破坏即须重新审。
+admission_conditions:
+  - id: COND-01
+    condition: 准入仅限这一个 snapshot
+    detail: >-
+      dataset_version 0.3.0 与 snapshot_id 2026-07-29-quant-topology-mm，
+      由 19 个 raw 文件校验和与 4 个 processed 文件校验和共同钉住。
+      不覆盖该数据集的其他版本，也不覆盖任何后续重建。
+  - id: COND-02
+    condition: 准入仅限 PR #59 的字段白名单
+    detail: >-
+      license 歧义来源只喂已被禁用的 cci_receptor_* 字段，这是 AUD-04 结论成立的
+      前提。若白名单扩大到这些字段，本准入立即失效、须重新审。
+  - id: COND-03
+    condition: 准入基于已归档 snapshot，不基于可从上游复现
+    detail: >-
+      两个来源为 current_at_download，重新下载不保证逐字节一致。归档副本即事实来源。
+  - id: COND-04
+    condition: 重复键不得进入 EVGAP-01 的判据
+    detail: >-
+      已实测 11 个受影响基因全部在 41 个靶点之外，且 family 计数不按行数累加。
+      若 EVGAP-01 的靶点轴日后扩大，须重新检查重复键是否触及新靶点。
+
+# 本审计明确不做什么。
+not_authorised:
+  - 授予准入（准入由本 PR 获 APPROVE 后成立）
+  - 修改 evgap_01_surface_localization_extraction.yaml 的 admission_record_ref
+  - 执行 EVGAP-01 抽取
+  - 执行 Level 01
+  - 解除 EVGAP-01 或 EVGAP-02
+  - 把该数据集的其他版本或后续重建纳入
+  - 扩大 PR #59 的字段白名单
+  - 纳入 SRCADM-02..SRCADM-05 的任何派生库
