@@ -2496,3 +2496,15 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Accepted by reviewer, unchanged: context identity 只由 `indication_id` 决定；endpoint 不进 identity 也未锁定；顺序与重复行不改投影；冲突与残缺 context 进 DEFER；每个 source row 有 provenance；#53／#54 来源禁止；输入 SHA-256 固定；`no_known_linkage_after_complete_search` 本轮不可用；machine-extracted 证据可满足存在性但不得直接晋级 Level 02；不运行 Gate、不评分、不排序；仓库未写入候选／证据／结果。
 - Review write-back: 连接器 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本条与 handoff 第十二节。
 - Next: 推送同一 PR 并同步 PR 描述，请求复审。后续两个证据抽取契约需人类负责人决定先做哪个。
+
+## 2026-08-04T21:10:00-04:00 — PR #58 第三轮审核裁决与修订（VAL-B07 旧计数残留）
+
+- Review: ChatGPT 对 PR #58（HEAD `6720edb`，可合并、CI 成功）返回 `REQUEST_CHANGES`。第二轮两个科学语义问题确认已正确修复；降级为 `raw_axis_binding_only`、`authorises_level_01_execution: false` 被认可；`EVGAP-01`／`EVGAP-02` 被确认足以作为后续两个受控抽取契约的范围依据。仅剩一处残留矛盾。
+- Finding accepted: **`VAL-B07` 仍保留旧计数 `32 eligible + 9 hold + 0 killed`**，而主体契约、`lock_01_derivation.coverage` 与 `predicted_result_shape` 都已改为 `0 eligible + 41 hold + 0 killed`。同一份机器可读契约同时规定两套互斥结果，未来验证无法确定权威值。**这是第二轮修订的漏改，执行者错误。**
+- Fix: `VAL-B07` 散文改为 `0 eligible + 41 hold + 0 killed` 并注明 `41 hold = 32 (L1-02) + 9 (L1-03)`；新增结构化字段 `expected_target_eligibility` 使计数可机械比对而不依赖解析散文；新增 `validates: evidence_insufficient_binding_state` 与 `authorises_result_generation: false`，明确该规则验证「证据不足导致无法执行」的绑定状态、不授权生成 Level 01 结果。
+- Tests: 新增 `test_target_eligibility_counts_agree_in_all_three_places`——断言 `VAL-B07`、`lock_01_derivation.coverage`、`predicted_result_shape.target_eligibility` 三处逐键相等，且散文与结构化计数不矛盾。新增 `test_no_validation_rule_asserts_eligible_targets_while_blocked`——未授权执行时任何验证规则都不得要求存在 eligible target，且每条非空 LOCK-01 规则必须 DEFER。测试 30 → 32。
+- Full-text sweep per acceptance criterion: 仓库内已不存在任何把跨膜段对应的 32 个靶点写成 eligible 的**执行或验证要求**。剩余提到「32」的位置全部为描述性：绑定 YAML 第 318 行说明 `41 hold = 32 + 9`；契约第 81 行把旧映射描述为错误；handoff 第十一节为第一轮历史记录并已加取代标记指向第十二节；第十二节的对照表与变异清单本身即修订记录。
+- Validation: `Ran 283 tests` 全部通过（`main` 基线 251 + 新增 32）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。
+- Mutation-tested (本轮 5 个，全部 `FAILED` 后精确回滚，与备份 `diff -q` 一致、恢复 `OK`): `VAL-B07` 结构化计数改回 32、只改散文回 32 使其与结构化字段矛盾、`coverage` 改成与 `VAL-B07` 不一致、`predicted_result_shape` 改成与 `VAL-B07` 不一致、声明该规则可授权生成结果。
+- Review write-back: 连接器 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本条与 handoff 第十三节。
+- Next: 推送同一 PR 并同步 PR 描述，请求复审。

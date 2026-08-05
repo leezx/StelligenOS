@@ -32,7 +32,7 @@ PR #57 的 `BLOCK-02` 写的是「唯一的 context 枚举来自被隔离的 202
 |---|---|
 | `docs/tasks/ADC_POOL_LEVEL_01_INPUT_BINDING_CONTRACT.zh-CN.md` | 输入绑定与执行契约（面向操作者，中文） |
 | `docs/pools/adc_pool_level_01_input_binding.yaml` | 机器可读绑定：允许来源＋SHA-256、禁止来源、状态上限、linkage 规则、输出验证 |
-| `tests/test_adc_pool_level_01_input_binding.py` | 30 项校验，把绑定钉在已合并的 Level 01 契约与实际存在的批准记录上 |
+| `tests/test_adc_pool_level_01_input_binding.py` | 32 项校验，把绑定钉在已合并的 Level 01 契约与实际存在的批准记录上 |
 
 ## 四、绑定的输入
 
@@ -80,11 +80,11 @@ PR #57 的 `BLOCK-02` 写的是「唯一的 context 枚举来自被隔离的 202
 - 没有定义 Level 02／03；没有实现 PR #57 记录的六条缺口（`GAP-P01`..`GAP-P06`）。
 - 没有改 `BLOCK-02` 在 PR #57 文件里的原文——那是已获批准的历史记录，更正写在本 PR，不回写历史。
 - **没有补 #52／#53／#54／#57 的批准记录。** 人类负责人先要 Level 01，那件事中断在事实收集阶段、未写任何文件。已查明的事实一并留在这里，避免重做：#52 也没有记录（原以为只缺三份）；**四个 PR 在 GitHub 上都没有 review 记录**（`/reviews` 返回空）；已批准 head 与 merge commit 分别是 #52 `bfc04be`／`985edf8`、#53 `5318eca`／`09990c8`、#54 `8992563`／`58984e7`、#57 `6036c01`／`5e0458b`，其中 #54 与 #57 的合并 head 与获批 head 不同，差异都只是 main 经合并进入。四轮转述评审的逐字文本可从会话 transcript 恢复。
-- 没有修 `requirements.txt` 注释里过期的「207 tests」（实测 281）。仍属无关改动。
+- 没有修 `requirements.txt` 注释里过期的「207 tests」（实测 283）。仍属无关改动。
 
 ## 九、验证结果
 
-- `Ran 281 tests` 全部通过（`main` 基线 251 + 本次新增 30）。
+- `Ran 283 tests` 全部通过（`main` 基线 251 + 本次新增 32）。
 - `scripts/verify_repository_boundary.sh`：`Repository boundary check passed.`
 - `git diff --check`：通过；零 `__pycache__`。
 - 所有规模数字均由脚本读取外部产物实测：9 contexts、41 targets、369 pairs、36 endpoint 行、292 evidence units、41 genes、7 dimensions、supporting/opposing/unknown = 88/32/172、专家复核 2/20 批次覆盖 4 靶点、`cost_tier = low` 的 Gate 7 个。
@@ -110,6 +110,8 @@ ChatGPT 对 PR #58（HEAD `8f5c85d`）返回 `REQUEST_CHANGES`，两条阻断**�
 
 **两个 outcome 声明为本次不可用**：`not_surface_target` 需要阳性的 negative topology 证据，已批准层没有任何一条断言某靶点不是表面蛋白，故**本次不得排除任何靶点**；`identity_unresolved` 需要身份解析结论字段，已批准层没有。完备性 32 + 9 = 41，零自由裁量、零排除。另加 `VAL-B07`／`VAL-B08`。
 
+  > **本段的 32 eligible 已被第十二节推翻。** 第二轮审核裁定跨膜段不足以判 eligible，现值为 **0 eligible + 41 hold + 0 killed**。原文保留以对照裁决前后差异。
+
 ### 阻断 2（接受）：36 endpoint rows → 9 clinical contexts 的转换规则未冻结
 
 审核方指出 369 的算术没问题但语义不唯一——不同执行者都能产出 9 个 context 而 identity 与字段内容不同。
@@ -129,6 +131,8 @@ ChatGPT 对 PR #58（HEAD `8f5c85d`）返回 `REQUEST_CHANGES`，两条阻断**�
 ### 预期结果形状改为逐项精确值
 
 原写「active pool 上限 41 个 pair」——技术上是上界但严重误导。改为算出的精确值并加入 `predicted_result_shape` 与对账测试：Raw Matrix **369**、context eligible **1**／hold **8**、target eligible **32**／hold **9**／killed **0**、Eligible Universe Index **32**、active **27**／hold **5**／reactivation-eligible **0**，`CNT-03` 对账 32 = 27 + 5 + 0。
+
+  > **本段数字已被第十二节推翻**，现值为 target eligible **0**／hold **41**、Eligible Universe Index **0**、active **0**。原文保留以对照。
 
 同时写入必须出现在结果报告里的结构性限制：**27 个 active pair 的 linkage 全部只有「已有临床 ADC 针对该靶点」这一类，没有任何一条 CRC 表达证据**，`adc_precedent` 原始 statement 也自述不建立 CRC 疗效或安全窗。因此本次的 `active` 仅表示「存在一条可回溯的 CRC-scoped ADC precedent」。
 
@@ -202,3 +206,30 @@ context identity 只由 `indication_id` 决定；endpoint 不进入 identity 也
 ### 审核回写状态
 
 审核方尝试通过 GitHub 连接器提交正式 `REQUEST_CHANGES` review，连接器返回 403，未写回 GitHub。裁决以人类负责人转述为准，已完整记录于本节与 `logs/worklog.md`。
+
+## 十三、第三轮审核裁决与修订（`REQUEST_CHANGES`，2026-08-04）
+
+ChatGPT 对 PR #58（HEAD `6720edb`）返回 `REQUEST_CHANGES`。第二轮两个科学语义问题确认已正确修复，降级为 `raw_axis_binding_only` 被认可，`EVGAP-01`／`EVGAP-02` 被确认足以作为后续两个受控抽取契约的范围依据。仅剩一处残留矛盾。
+
+### 阻断（接受）：`VAL-B07` 仍保留旧计数
+
+主体契约已改为 `eligible = 0`／`hold = 41`／`killed = 0`，`lock_01_derivation.coverage` 与 `predicted_result_shape` 都用这组值，但 `output_validation.additional_rules.VAL-B07` 仍写着 `32 eligible + 9 hold + 0 killed`。同一份机器可读契约同时规定两套互斥结果，未来验证无法确定权威值。**这是第二轮修订的漏改，执行者的错误。**
+
+修订：
+
+1. `VAL-B07` 的散文改为 `0 eligible + 41 hold + 0 killed`，并注明 `41 hold = 32 (L1-02，仅有跨膜拓扑) + 9 (L1-03，无任何注释)`。
+2. 新增结构化字段 `expected_target_eligibility`，使计数可被机械比对而不必解析散文；并加 `validates: evidence_insufficient_binding_state` 与 `authorises_result_generation: false`，明确该规则用于验证「证据不足导致无法执行」的绑定状态，不代表授权生成 Level 01 结果。
+3. 新增 `test_target_eligibility_counts_agree_in_all_three_places`，直接断言 `VAL-B07`、`lock_01_derivation.coverage`、`predicted_result_shape.target_eligibility` 三处逐键相等，并断言散文与结构化计数不矛盾。
+4. 新增 `test_no_validation_rule_asserts_eligible_targets_while_blocked`：在未授权执行时，任何验证规则都不得要求存在 eligible target，且每条非空 LOCK-01 规则都必须 DEFER。
+
+### 全文扫描结果
+
+按验收标准逐处核对，仓库内已不存在任何把跨膜段对应的 32 个靶点写成 eligible 的**执行或验证要求**。剩余提到「32」的位置全部是描述性的：绑定 YAML 第 318 行说明 `41 hold = 32 + 9`；契约第 81 行把旧映射描述为错误；本 handoff 第十一节是第一轮的历史记录，已加取代标记指向第十二节；第十二节的对照表与变异清单本身就是记录修订的。
+
+### 本轮变异检验
+
+5 个变异全部被捕获后精确回滚，与备份 `diff -q` 一致、测试恢复 `OK`：把 `VAL-B07` 的结构化计数改回 32、只把散文改回 32 使其与结构化字段矛盾、把 `coverage` 改成与 `VAL-B07` 不一致、把 `predicted_result_shape` 改成与 `VAL-B07` 不一致、声明该规则可授权生成结果。
+
+### 审核回写状态
+
+审核方尝试通过 GitHub 连接器提交正式 `REQUEST_CHANGES` review，连接器返回 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本节与 `logs/worklog.md`。

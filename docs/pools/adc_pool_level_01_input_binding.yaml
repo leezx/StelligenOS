@@ -524,10 +524,20 @@ output_validation:
     - id: VAL-B06
       rule: 输出中不得出现任何被隔离运行独有的场景 ID 或靶点（GPA33、LY6G6D、TNFRSF12A、CEACAM6）。
     - id: VAL-B07
+      # 本规则当前用于验证「证据不足导致无法执行」的绑定状态，
+      # 不代表授权生成 Level 01 结果。三处计数必须一致：本规则、
+      # lock_01_derivation.coverage、predicted_result_shape.target_eligibility。
+      validates: evidence_insufficient_binding_state
+      authorises_result_generation: false
+      expected_target_eligibility:
+        eligible: 0
+        hold: 41
+        killed: 0
       rule: >-
         每个 LOCK-01 结果行必须记录命中的 lock_01_derivation 规则 ID 与
         required_provenance 全部字段；不得出现 not_surface_target 或
-        identity_unresolved；41 个靶点必须恰好分为 32 eligible + 9 hold + 0 killed。
+        identity_unresolved；41 个靶点必须恰好分为 0 eligible + 41 hold + 0 killed，
+        其中 41 hold = 32 (L1-02，仅有跨膜拓扑) + 9 (L1-03，无任何注释)。
     - id: VAL-B08
       rule: >-
         LOCK-01 推导不得读取 barred_fields 中的任何字段；结果不得与

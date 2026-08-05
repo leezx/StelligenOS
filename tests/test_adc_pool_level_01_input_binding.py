@@ -585,6 +585,53 @@ class InputBindingTests(unittest.TestCase):
             {k: v["clinical_context_ref"] for k, v in altered.items()},
         )
 
+    def test_target_eligibility_counts_agree_in_all_three_places(self) -> None:
+        """VAL-B07, the derivation coverage and the predicted shape must match."""
+
+        rule = next(
+            r for r in self.binding["output_validation"]["additional_rules"]
+            if r["id"] == "VAL-B07"
+        )
+        expected = rule["expected_target_eligibility"]
+        coverage = self.binding["lock_01_derivation"]["coverage"]
+        predicted = self.binding["predicted_result_shape"]["target_eligibility"]
+
+        keys = ("eligible", "hold", "killed")
+        self.assertEqual(set(expected), set(keys))
+        for key in keys:
+            with self.subTest(key=key):
+                self.assertEqual(expected[key], coverage[key])
+                self.assertEqual(expected[key], predicted[key])
+        # The prose of the rule must not contradict its structured counts.
+        for key in keys:
+            self.assertIn(f"{expected[key]} {key}", rule["rule"])
+        # This rule validates a blocked state; it authorises no result.
+        self.assertIs(rule["authorises_result_generation"], False)
+        self.assertEqual(rule["validates"], "evidence_insufficient_binding_state")
+
+    def test_no_validation_rule_asserts_eligible_targets_while_blocked(self) -> None:
+        """No rule may require eligible targets when execution is not authorised."""
+
+        if self.binding["binding"]["authorises_level_01_execution"]:
+            self.skipTest("execution is authorised; this guard does not apply")
+        self.assertEqual(
+            self.binding["lock_01_derivation"]["coverage"]["eligible"], 0
+        )
+        for rule in self.binding["output_validation"]["additional_rules"]:
+            counts = rule.get("expected_target_eligibility")
+            if counts is None:
+                continue
+            with self.subTest(rule=rule["id"]):
+                self.assertEqual(counts["eligible"], 0)
+        # Every non-vacuous LOCK-01 rule must defer while requirements are unmet.
+        for lock_rule in self.binding["lock_01_derivation"]["rules"]:
+            if lock_rule.get("vacuous_this_run"):
+                continue
+            with self.subTest(rule=lock_rule["id"]):
+                self.assertEqual(
+                    lock_rule["disposition"], CandidateDisposition.DEFER.value
+                )
+
     def test_validation_rules_bar_quarantine_only_targets(self) -> None:
         rules = " ".join(
             r["rule"] for r in self.binding["output_validation"]["additional_rules"]
