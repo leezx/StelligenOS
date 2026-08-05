@@ -2557,3 +2557,10 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Accepted by reviewer, unchanged: `AUD-01`..`AUD-09` 足以覆盖 builder／raw manifest／license／family independence／去重／discordance／行级 provenance／重建；`admission_record_ref = null` 时不得执行抽取；自声明守卫仅作 pending claim；RQ-02 分解自洽（34 = 22 + 6 + 6）；`ECD-b` 路径合理；reference-absent 靶点不再被迫伪造 source evidence；precedence 已解决 `TM4SF1`／`TDGF1`；不执行 Level 01；不评估 T7；不新增 target／context；不读取被禁文件；`EVGAP-02` 仍未解除；仓库内无 evidence 或结果数据。
 - Review write-back: 连接器 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本条与 handoff 第十一节。
 - Next: 推送同一 PR 并同步 PR 描述请求复审。
+### 2026-08-05 12:45 EDT
+
+- Instruction: Read the user-updated `docs/architecture/BIOTECH_INFRASTRUCTURE_CATALOG.zh-CN.md#2026-08-05补充` and incorporate the patient-data infrastructure section into the repository architecture.
+- Action: Preserved and promoted the complete `Cancer Patient–Anchored Data Infrastructure` section on `main`, including P1 direct patient observation, P2 patient-derived living models, P3 model perturbation, P4 clinical intervention and outcome, canonical resource families, dataset/portal separation, evidence lineage, two-dimensional evidence strength, Gate mapping, and staged registry boundaries.
+- Boundary: Documentation and audit trail only. No patient data, public datasets, raw files, cache, result, download, provider adapter, runtime dependency, or analysis was added.
+- Decision: Patient direct observation, patient-derived models, long-term cell-line perturbation, and clinical intervention evidence remain separate layers. Database presence does not automatically authorize a Gate claim.
+- Verification: Ran `scripts/verify_repository_boundary.sh` and `git diff --check` before the direct `main` commit. The current task branch's unrelated EVGAP-02 changes were not copied into `main`.
