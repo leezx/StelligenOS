@@ -305,6 +305,7 @@ class Evgap01ExtractionContractTests(unittest.TestCase):
         conditions = {
             "E1-05": target["absent"],
             "E1-04": not target["absent"] and target["conflict"],
+            "E1-04b": not target["absent"] and not target["rq3"],
             "E1-03": not target["absent"] and not target["rq2"],
             "E1-02": not target["absent"] and target["families"] < 2,
             "E1-01": True,
@@ -320,19 +321,98 @@ class Evgap01ExtractionContractTests(unittest.TestCase):
         ]
         # Cases chosen to exercise every overlap the reviewer named.
         cases = [
-            ({"absent": True, "conflict": False, "rq2": False, "families": 0}, "E1-05"),
-            ({"absent": True, "conflict": True, "rq2": False, "families": 0}, "E1-05"),
-            ({"absent": False, "conflict": True, "rq2": True, "families": 3}, "E1-04"),
-            ({"absent": False, "conflict": True, "rq2": True, "families": 1}, "E1-04"),
-            ({"absent": False, "conflict": True, "rq2": False, "families": 0}, "E1-04"),
-            ({"absent": False, "conflict": False, "rq2": False, "families": 3}, "E1-03"),
-            ({"absent": False, "conflict": False, "rq2": False, "families": 1}, "E1-03"),
-            ({"absent": False, "conflict": False, "rq2": True, "families": 1}, "E1-02"),
-            ({"absent": False, "conflict": False, "rq2": True, "families": floor}, "E1-01"),
+            ({"absent": True, "conflict": False, "rq2": False, "rq3": False, "families": 0}, "E1-05"),
+            ({"absent": True, "conflict": True, "rq2": False, "rq3": False, "families": 0}, "E1-05"),
+            ({"absent": False, "conflict": True, "rq2": True, "rq3": True, "families": 3}, "E1-04"),
+            ({"absent": False, "conflict": True, "rq2": True, "rq3": True, "families": 1}, "E1-04"),
+            ({"absent": False, "conflict": True, "rq2": False, "rq3": True, "families": 0}, "E1-04"),
+            # discordance outranks a provenance failure.
+            ({"absent": False, "conflict": True, "rq2": True, "rq3": False, "families": 3}, "E1-04"),
+            # The gap the reviewer found: RQ-01 and RQ-02 hold, no conflict, RQ-03 fails.
+            ({"absent": False, "conflict": False, "rq2": True, "rq3": False, "families": 3}, "E1-04b"),
+            ({"absent": False, "conflict": False, "rq2": False, "rq3": False, "families": 3}, "E1-04b"),
+            ({"absent": False, "conflict": False, "rq2": True, "rq3": False, "families": 1}, "E1-04b"),
+            ({"absent": False, "conflict": False, "rq2": False, "rq3": True, "families": 3}, "E1-03"),
+            ({"absent": False, "conflict": False, "rq2": False, "rq3": True, "families": 1}, "E1-03"),
+            ({"absent": False, "conflict": False, "rq2": True, "rq3": True, "families": 1}, "E1-02"),
+            ({"absent": False, "conflict": False, "rq2": True, "rq3": True, "families": floor}, "E1-01"),
         ]
         for target, expected in cases:
             with self.subTest(**target):
                 self.assertEqual(self._assign(target), expected)
+
+    def test_provenance_failure_on_a_covered_target_has_its_own_rule(self) -> None:
+        """Blocker 1: RQ-03 failure on a covered target must land somewhere."""
+
+        rules = {r["id"]: r for r in self.doc["derivation_rules"]}
+        self.assertIn("E1-04b", rules)
+        rule = rules["E1-04b"]
+        self.assertEqual(rule["lock_01_outcome"], "possible_surface_target")
+        self.assertEqual(rule["disposition"], CandidateDisposition.DEFER.value)
+        self.assertEqual(rule["resulting_state"], "hold")
+        # Vacuous on this snapshot, but it must be declared and justified.
+        self.assertEqual(rule["expected_count"], 0)
+        self.assertIs(rule["vacuous_this_run"], True)
+        self.assertTrue(rule["vacuous_reason"].strip())
+        # It must sit in the precedence, after discordance.
+        precedence = self.doc["derivation_precedence"]
+        self.assertIn("E1-04b", precedence)
+        self.assertLess(precedence.index("E1-04"), precedence.index("E1-04b"))
+        self.assertLess(precedence.index("E1-04b"), precedence.index("E1-01"))
+        # RQ-03 must name this rule as the failure route.
+        rq3 = self.doc["rq_03_protein_level_provenance"]
+        self.assertEqual(rq3["covered_row_failure_rule"], "E1-04b")
+        self.assertEqual(
+            rq3["covered_row_failure_disposition"], CandidateDisposition.DEFER.value
+        )
+        self.assertEqual(rq3["measured_covered_targets_failing_rq_03"], 0)
+        self.assertEqual(
+            rq3["measured_covered_targets_satisfying_rq_03"],
+            self.doc["scope"]["measured_coverage_in_reference"],
+        )
+
+    def test_absence_fields_are_all_present_in_the_output_schema(self) -> None:
+        """Blocker 2: VAL-E05b cannot demand columns the schema does not have."""
+
+        required = set(
+            self.doc["rq_03_protein_level_provenance"]["absent_rows"][
+                "required_absence_fields"
+            ]
+        )
+        columns = set(self.doc["output_schema"]["per_target_columns"])
+        self.assertTrue(required <= columns, f"missing columns: {required - columns}")
+        for field in ("reference_dataset_id", "reference_dataset_version",
+                      "reference_snapshot_id"):
+            with self.subTest(field=field):
+                self.assertIn(field, columns)
+
+    def test_conditional_columns_pin_the_admission_snapshot(self) -> None:
+        blocks = {
+            b["when_provenance_kind"]: b
+            for b in self.doc["output_schema"]["conditionally_required_columns"]
+        }
+        self.assertEqual(set(blocks), {"reference_absent", "source_supported"})
+        absent = blocks["reference_absent"]
+        required = set(
+            self.doc["rq_03_protein_level_provenance"]["absent_rows"][
+                "required_absence_fields"
+            ]
+        )
+        self.assertEqual(set(absent["required_columns"]), required)
+        for field in ("source_ids", "source_releases", "source_urls", "licenses"):
+            self.assertIn(field, absent["may_be_empty_columns"])
+        # The three reference columns must equal the admission snapshot, not be free text.
+        dep = self.doc["source_admission_dependency"]
+        pinned = absent["pinned_to_admission_snapshot"]
+        self.assertEqual(pinned["reference_dataset_id"], dep["dataset_id"])
+        self.assertEqual(str(pinned["reference_dataset_version"]), str(dep["dataset_version"]))
+        self.assertEqual(pinned["reference_snapshot_id"], dep["snapshot_id"])
+        ids = {r["id"] for r in self.doc["output_validation"]}
+        self.assertIn("VAL-E05d", ids)
+        # And source-supported rows must still carry real source provenance.
+        supported = blocks["source_supported"]
+        for field in ("source_ids", "source_releases", "source_urls", "licenses"):
+            self.assertIn(field, supported["required_columns"])
 
     def test_multi_condition_targets_resolve_to_the_higher_rule(self) -> None:
         recorded = self.doc["measured_multi_condition_targets"]

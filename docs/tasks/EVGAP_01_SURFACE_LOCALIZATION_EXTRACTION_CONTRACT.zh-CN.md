@@ -105,7 +105,9 @@ PR #58 的实测结论是：已批准证据层里 `plasma membrane`／`extracell
 
 **库中覆盖的靶点**：要求 `source_evidence.tsv` 有对应行，且 `source_id`、`source_release`、`evidence_family`、`source_url`、`license` 均非空。
 
-**库中未覆盖的靶点（`E1-05`）**：`source_evidence.tsv` 里本就没有它们的行。**初稿要求所有行都有来源 provenance，那会让合法的 `E1-05` hold 行无法通过验证，或迫使执行者伪造 provenance**——已按审核裁决更正。改为要求「缺失 provenance」：`reference_dataset_id`、`reference_dataset_version`、`reference_snapshot_id`、`target_axis_ref`、`absence_reason`（只能取 `gene_symbol_not_present_in_reference`）、`lookup_at`。
+**覆盖靶点若 `RQ-03` 不成立** → 归入 `E1-04b`，DEFER（见第五、六节）。
+
+**库中未覆盖的靶点（`E1-05`）**：`source_evidence.tsv` 里本就没有它们的行。**初稿要求所有行都有来源 provenance，那会让合法的 `E1-05` hold 行无法通过验证，或迫使执行者伪造 provenance**——已按审核裁决更正。改为要求「缺失 provenance」六列：`reference_dataset_id`、`reference_dataset_version`、`reference_snapshot_id`、`target_axis_ref`、`absence_reason`（只能取 `gene_symbol_not_present_in_reference`）、`lookup_at`。**这六列全部在 `output_schema.per_target_columns` 之内**（初稿只加了后三列，导致 `VAL-E05b` 要求的字段 schema 里没有——已按审核裁决补齐）。前三列必须分别等于 admission snapshot 的 `ADC_surfaceome_reference`／`0.3.0`／`2026-07-29-quant-topology-mm`，不得自由填写（`VAL-E05d`）。
 
 `source_*` 字段允许为空，但**禁止伪造 source evidence**，也**禁止把缺失表述为 source-supported**：`provenance_kind = reference_absent` 的行若出现非空 `source_ids` 即为验证失败（`VAL-E05b`／`VAL-E05c`）。
 
@@ -115,9 +117,9 @@ PR #58 的实测结论是：已批准证据层里 `plasma membrane`／`extracell
 
 冻结顺序，取第一个命中者：
 
-> `E1-05` 不在库中 → `E1-04` 定位证据冲突 → `E1-03` 无细胞外结构域 → `E1-02` 独立家族数不足 → `E1-01` eligible
+> `E1-05` 不在库中 → `E1-04` 定位证据冲突 → `E1-04b` provenance 不成立 → `E1-03` 无细胞外结构域 → `E1-02` 独立家族数不足 → `E1-01` eligible
 
-理由：先判「不在库中」，因为无数据时其余条件都无法求值；再判冲突，因为冲突使后续判据不可信；再判细胞外结构域，再判独立家族数；全部通过才 eligible。
+理由：先判「不在库中」，因为无数据时其余条件都无法求值；再判冲突，因为冲突使后续判据不可信；**再判 provenance 是否成立，因为 provenance 不成立时该行证据本身不可引用，再谈拓扑与家族数没有意义**；再判细胞外结构域，再判独立家族数；全部通过才 eligible。
 
 `TM4SF1` 与 `TDGF1` 同时命中 `E1-03` 与 `E1-02`，按优先级解析到 **`E1-03`**，并须在结果中记录被压制的条件（`VAL-E11`）。测试用等价 fixture 覆盖了每一种重叠组合，逐例证明恰好命中一条。
 
@@ -129,9 +131,14 @@ PR #58 的实测结论是：已批准证据层里 `plasma membrane`／`extracell
 | `E1-02` | `RQ-02` 满足但独立家族数 < 2 | `possible_surface_target` | DEFER | **6** |
 | `E1-03` | 两条 `RQ-02` 路径都不满足（含腔内结构域） | `possible_surface_target` | DEFER | **3** |
 | `E1-04` | `discordance_flags` 非空 | `possible_surface_target` | DEFER | **6** |
+| `E1-04b` | 在库中但 `RQ-03` provenance 不成立 | `possible_surface_target` | DEFER | **0**（空规则） |
 | `E1-05` | 靶点不在参考库中 | `possible_surface_target` | DEFER | **4** |
 
-22 + 6 + 3 + 6 + 4 = 41。**零自由裁量、零排除。**
+22 + 6 + 3 + 6 + 0 + 4 = 41。**零自由裁量、零排除。**
+
+**`E1-04b` 是按审核裁决新增的。** 初稿漏了一种组合：覆盖靶点 `RQ-01` 与 `RQ-02` 满足、无冲突，但 `source_evidence.tsv` 字段不全导致 `RQ-03` 不满足——它不命中 `E1-01`（RQ-03 未满足）、不命中 `E1-02`（家族数不低）、不命中 `E1-03`（RQ-02 满足）、不命中 `E1-04`（无冲突）、不命中 `E1-05`（在库中），因此 `VAL-E01` 的「恰好命中一条」无从满足；`VAL-E05` 只写「降为 hold」却没说降到哪条规则、也没有对应 `rule_id`。
+
+实测 **37 个覆盖靶点全部满足 `RQ-03`**，故本规则在本 snapshot 下为空规则，计数不变。但它必须存在——provenance 完整性不由本契约保证，抽取时可能失败。其 disposition 只能是 DEFER：既不得 RETAIN（无可回溯来源），也不得 EXCLUDE（缺 provenance 不是否定证据）。
 
 - `E1-02`：`CLDN18`、`GUCY2C`、`LGR5`、`PRLR`、`RNF43`、`SLC44A4`
 - `E1-03`：`LAMP1`、`TDGF1`、`TM4SF1`
@@ -159,9 +166,9 @@ PR #58 的实测结论是：已批准证据层里 `plasma membrane`／`extracell
 
 ## 九、输出与验证
 
-输出为每靶点一行、**26 列**（见 YAML `output_schema`），必含 `rule_id`、`rq_02_path`、`evaluation_status`、`provenance_kind`、`absence_reason`、`target_axis_ref`、`lookup_at` 与 `row_checksum`。
+输出为每靶点一行、**29 列**（见 YAML `output_schema`），必含 `rule_id`、`rq_02_path`、`evaluation_status`、`provenance_kind`、`absence_reason`、`target_axis_ref`、`lookup_at` 与 `row_checksum`。
 
-**15 条**验证规则 `VAL-E01`..`VAL-E13` 见 YAML。要点：41 行且每行按优先级命中且仅命中一条规则（`VAL-E01`／`VAL-E11`）；计数等于第七节且 `RQ-02` 分解恒等式成立（`VAL-E02`／`VAL-E12`）；不得出现 `not_surface_target` 或 `identity_unresolved`；每个 eligible 必记 `rq_02_path`；覆盖行须有完整来源 provenance、未覆盖行须有完整缺失 provenance 且禁止伪造（`VAL-E05`／`E05b`／`E05c`）；输入 SHA-256 不一致即中止；不得读取被禁文件或字段；输出中不得出现任何 Gate 分数、Gate 状态、T7 判定或肿瘤表面定量；三条 `mandatory_findings` 必须原样出现；每个产物文件逐文件记录 SHA-256；**抽取前 `admission_record_ref` 必须指向实际存在的独立 `APPROVE` 记录，为空即不得执行（`VAL-E13`）**。
+**16 条**验证规则 `VAL-E01`..`VAL-E13`（含 `VAL-E05b`／`c`／`d`） 见 YAML。要点：41 行且每行按优先级命中且仅命中一条规则（`VAL-E01`／`VAL-E11`）；计数等于第七节且 `RQ-02` 分解恒等式成立（`VAL-E02`／`VAL-E12`）；不得出现 `not_surface_target` 或 `identity_unresolved`；每个 eligible 必记 `rq_02_path`；覆盖行须有完整来源 provenance、未覆盖行须有完整缺失 provenance 且禁止伪造（`VAL-E05`／`E05b`／`E05c`）；输入 SHA-256 不一致即中止；不得读取被禁文件或字段；输出中不得出现任何 Gate 分数、Gate 状态、T7 判定或肿瘤表面定量；三条 `mandatory_findings` 必须原样出现；每个产物文件逐文件记录 SHA-256；**抽取前 `admission_record_ref` 必须指向实际存在的独立 `APPROVE` 记录，为空即不得执行（`VAL-E13`）**。
 
 ## 十、本契约授权与不授权
 

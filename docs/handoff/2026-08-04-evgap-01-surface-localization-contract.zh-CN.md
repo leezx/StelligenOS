@@ -49,7 +49,7 @@
 |---|---|
 | `docs/tasks/EVGAP_01_SURFACE_LOCALIZATION_EXTRACTION_CONTRACT.zh-CN.md` | 抽取契约（面向操作者，中文） |
 | `docs/pools/evgap_01_surface_localization_extraction.yaml` | 机器可读绑定：来源依赖项 `SRCADM-01`＋完整性校验和、字段白名单、禁读清单、RQ 映射、求值优先级、五条判据规则、输出 schema 与 15 条验证 |
-| `tests/test_evgap_01_surface_localization.py` | 23 项校验 |
+| `tests/test_evgap_01_surface_localization.py` | 26 项校验 |
 
 ## 四、确定性映射与实测结果
 
@@ -85,11 +85,11 @@
 - 没有引用被隔离运行（PR #53、#54）的任何产物。
 - 没有新增靶点或 clinical context。
 - **没有补 #52／#53／#54／#57／#58 的批准记录**（现在是五份）。事实已查全，未写文件。
-- 没有修 `requirements.txt` 注释里过期的「207 tests」（实测 306）。属无关改动。
+- 没有修 `requirements.txt` 注释里过期的「207 tests」（实测 309）。属无关改动。
 
 ## 七、验证结果
 
-- `Ran 306 tests` 全部通过（`main` 基线 283 + 本次新增 23）。
+- `Ran 309 tests` 全部通过（`main` 基线 283 + 本次新增 26）。
 - `scripts/verify_repository_boundary.sh`：`Repository boundary check passed.`
 - `git diff --check`：通过；零 `__pycache__`。
 - 所有计数由脚本读取外部数据库实测，非估计：41 靶点中 37 覆盖 / 4 未覆盖；`consensus_class` 为 29 `confirmed_surface` / 7 `supported_surface` / 1 `no_surface_support`；独立家族数分布 3 家族 10 个、2 家族 19 个、1 家族 7 个、0 家族 1 个；`discordance_flags` 非空 6 个；最终 22 eligible（`ECD-a` 18 + `ECD-b` 4）/ 19 hold / 0 killed。
@@ -149,6 +149,40 @@ ChatGPT 对 PR #59（HEAD `570562c`）返回 `REQUEST_CHANGES`。四条阻断**�
 ### 审核方认可、本轮未改动的部分
 
 `ECD-b` 路径（在 GPI 注释可靠、同时有信号肽、零跨膜段与蛋白级 provenance 的前提下）可作为 extracellular topology 路径；跨膜段不再单独满足 `RQ-01`；GPI 路径没被当成普通跨膜蛋白规则；`LAMP1` 的腔内结构域不被当成胞外；缺失与冲突均 DEFER 不 EXCLUDE；`not_surface_target` 仍不可用；T7 与肿瘤定量文件明确禁止；不执行 Level 01；不新增 target／context；仓库不存 evidence／result；`EVGAP-02` 继续未解除。
+
+### 审核回写状态
+
+审核方尝试通过 GitHub 连接器提交正式 `REQUEST_CHANGES` review，连接器返回 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本节与 `logs/worklog.md`。
+
+## 十一、第二轮审核裁决与修订（`REQUEST_CHANGES`，两条阻断全部接受）
+
+ChatGPT 对 PR #59（HEAD `f236287`）返回 `REQUEST_CHANGES`。上一轮四条确认已基本修复；本轮两条**契约缺口**全部接受。两条都是我留下的洞。
+
+### 阻断 1（接受）：covered target 的 RQ-03 缺失没有对应 derivation rule
+
+审核方构造的组合是对的：一个在库中的靶点，`RQ-01` 满足、`RQ-02` 满足、无 discordance，但 `source_evidence.tsv` 字段不全导致 `RQ-03` 不满足——它不命中 `E1-01`（RQ-03 未满足）、不命中 `E1-02`（家族数不低）、不命中 `E1-03`（RQ-02 满足）、不命中 `E1-04`（无冲突）、不命中 `E1-05`（在库中）。**`VAL-E01` 的「恰好命中一条」因此无从满足**，而 `VAL-E05` 只写「缺失即该行降为 hold」，没说降到哪条规则，也没有对应 `rule_id`。
+
+修订：新增 `E1-04b`——「在库中但 `RQ-03` provenance 不成立」→ `possible_surface_target` DEFER `hold`。插入优先级第三位：`E1-05` → `E1-04` → **`E1-04b`** → `E1-03` → `E1-02` → `E1-01`。理由写入契约：provenance 不成立时该行证据本身不可引用，再谈拓扑与家族数没有意义，所以排在两个 RQ 判据之前、冲突之后。其 disposition 只能是 DEFER——既不得 RETAIN（无可回溯来源），也不得 EXCLUDE（缺 provenance 不是否定证据）。
+
+**实测 37 个覆盖靶点全部满足 `RQ-03`**，故 `E1-04b` 在本 snapshot 下 `expected_count: 0`、`vacuous_this_run: true`，**计数不变**（22／6／3／6／0／4 = 41）。但它必须存在：provenance 完整性不由本契约保证，抽取时可能失败。
+
+测试新增按验收标准的组合：`RQ-01=true, RQ-02=true, RQ-03=false` → `E1-04b`；`discordance=true 且 RQ-03=false` → `E1-04`（冲突优先）；`RQ-02=false 且 RQ-03=false` → `E1-04b`；共 13 种组合逐例证明恰好命中一条，且 provenance 缺失只能 DEFER。
+
+### 阻断 2（接受）：`VAL-E05b` 要求的字段没有全部进入 output schema
+
+`VAL-E05b` 要求六列，而 `per_target_columns` 初稿只加了 `absence_reason`、`target_axis_ref`、`lookup_at` 三列，缺 `reference_dataset_id`、`reference_dataset_version`、`reference_snapshot_id`。**执行者无法同时遵守 output schema 与 validation rule。** 这是我上一轮补 blocker 3 时漏改的。
+
+修订：三列补入 `per_target_columns`（21 → 26 → **29** 列）。新增 `conditionally_required_columns` 明确条件必填——`provenance_kind = reference_absent` 时六列必填、`source_*` 可空；`provenance_kind = source_supported` 时 `source_*` 必填、这六列可空。并加 `pinned_to_admission_snapshot`：三列必须分别等于 `ADC_surfaceome_reference`／`0.3.0`／`2026-07-29-quant-topology-mm`，不得自由填写；新增 `VAL-E05d` 强制。
+
+测试直接断言 `required_absence_fields ⊆ per_target_columns`，并断言 pinned 值与 `source_admission_dependency` 的 `dataset_id`／`dataset_version`／`snapshot_id` 逐项相等——admission 版本一变，pinned 值不同步就会失败。
+
+### 本轮变异检验
+
+8 个变异全部被捕获后精确回滚，与备份 `diff -q` 一致、测试恢复 `OK`：从优先级里删掉 `E1-04b`、把 `E1-04b` 改判 RETAIN、把 `E1-04b` 排到 `E1-01` 之后、让 RQ-03 不指向失败规则、删掉 `reference_dataset_id` 列、让 pinned 值与 admission 不符、让 `source_supported` 不要求来源字段、谎报 RQ-03 有失败靶点。
+
+### 审核方认可、本轮未改动的部分
+
+`AUD-01`..`AUD-09` 足以覆盖 builder、raw manifest、license、family independence、去重、discordance、行级 provenance 与重建；`admission_record_ref = null` 时不得执行抽取；自声明守卫仅作 pending claim；RQ-02 分解自洽（34 = 22 + 6 + 6）；`ECD-b` 路径合理；reference-absent 靶点不再被迫伪造 source evidence；precedence 已解决 `TM4SF1`／`TDGF1` 的多条件命中；不执行 Level 01；不评估 T7；不新增 target／context；不读取被禁文件；`EVGAP-02` 仍未解除；仓库内无 evidence 或结果数据。
 
 ### 审核回写状态
 

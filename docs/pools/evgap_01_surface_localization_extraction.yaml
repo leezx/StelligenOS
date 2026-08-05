@@ -255,6 +255,11 @@ rq_03_protein_level_provenance:
     absence_reason_allowed_values:
       - gene_symbol_not_present_in_reference
   never_present_absence_as_source_supported: true
+  # 覆盖靶点 RQ-03 不成立时的归属规则。
+  covered_row_failure_rule: E1-04b
+  covered_row_failure_disposition: DEFER
+  measured_covered_targets_satisfying_rq_03: 37
+  measured_covered_targets_failing_rq_03: 0
 
 # 规则求值优先级。五条规则的条件并非天然互斥——同一靶点可能同时满足
 # 「两条 ECD 路径都不满足」与「独立家族数 < 2」。实测本 snapshot 下有 2 个
@@ -263,13 +268,15 @@ rq_03_protein_level_provenance:
 derivation_precedence:
   - E1-05
   - E1-04
+  - E1-04b
   - E1-03
   - E1-02
   - E1-01
 precedence_rationale: >-
   先判「不在库中」，因为无数据时其余条件都无法求值；再判定位证据冲突，
-  因为冲突使后续判据不可信；再判细胞外结构域，再判独立家族数；
-  全部通过才 eligible。
+  因为冲突使后续判据不可信；再判 provenance 是否成立，因为 provenance 不成立时
+  该行的证据本身不可引用，再谈拓扑与家族数没有意义；再判细胞外结构域，
+  再判独立家族数；全部通过才 eligible。
 measured_multi_condition_targets:
   - gene_symbol: TM4SF1
     conditions_matched:
@@ -327,6 +334,20 @@ derivation_rules:
       - MET
       - MST1R
       - TACSTD2
+  # 覆盖靶点的 RQ-03 不成立时必须有归属规则，否则 VAL-E01 的「恰好命中一条」
+  # 无从满足。实测本 snapshot 下 37 个覆盖靶点全部满足 RQ-03，故本规则为空规则；
+  # 但它必须存在，因为 provenance 完整性不由本契约保证，抽取时可能失败。
+  - id: E1-04b
+    condition: 靶点在参考库中，但 RQ-03 provenance 不成立
+    lock_01_outcome: possible_surface_target
+    disposition: DEFER
+    resulting_state: hold
+    reason: >-
+      provenance 不成立时该行证据不可引用，只能 DEFER；
+      既不得 RETAIN（无可回溯来源），也不得 EXCLUDE（缺 provenance 不是否定证据）。
+    expected_count: 0
+    vacuous_this_run: true
+    vacuous_reason: 实测 37 个覆盖靶点在 source_evidence.tsv 中均有齐备的 source_id／source_release／evidence_family／source_url／license。
   - id: E1-05
     condition: 靶点不在参考库中
     lock_01_outcome: possible_surface_target
@@ -384,6 +405,38 @@ mandatory_findings:
       hold 不是淘汰，是待证据。
 
 output_schema:
+  # provenance_kind 决定哪一组列必填。
+  conditionally_required_columns:
+    - when_provenance_kind: reference_absent
+      required_columns:
+        - reference_dataset_id
+        - reference_dataset_version
+        - reference_snapshot_id
+        - absence_reason
+        - target_axis_ref
+        - lookup_at
+      may_be_empty_columns:
+        - source_ids
+        - source_releases
+        - source_urls
+        - licenses
+      # 这三列必须分别等于 admission snapshot 的对应值，不得自由填写。
+      pinned_to_admission_snapshot:
+        reference_dataset_id: ADC_surfaceome_reference
+        reference_dataset_version: 0.3.0
+        reference_snapshot_id: 2026-07-29-quant-topology-mm
+    - when_provenance_kind: source_supported
+      required_columns:
+        - source_ids
+        - source_releases
+        - source_urls
+        - licenses
+      may_be_empty_columns:
+        - reference_dataset_id
+        - reference_dataset_version
+        - reference_snapshot_id
+        - absence_reason
+        - lookup_at
   per_target_columns:
     - gene_symbol
     - uniprot_accessions
@@ -408,6 +461,9 @@ output_schema:
     - row_checksum
     - extracted_at
     - provenance_kind
+    - reference_dataset_id
+    - reference_dataset_version
+    - reference_snapshot_id
     - absence_reason
     - target_axis_ref
     - lookup_at
@@ -431,6 +487,12 @@ output_validation:
       但必须有完整的缺失 provenance：reference_dataset_id、reference_dataset_version、
       reference_snapshot_id、target_axis_ref、absence_reason、lookup_at。
       absence_reason 只能取 gene_symbol_not_present_in_reference。
+      这六列全部在 output_schema.per_target_columns 之内。
+  - id: VAL-E05d
+    rule: >-
+      reference_dataset_id、reference_dataset_version、reference_snapshot_id 必须分别
+      等于 admission snapshot 的 ADC_surfaceome_reference、0.3.0、
+      2026-07-29-quant-topology-mm，不得自由填写。
   - id: VAL-E05c
     rule: >-
       禁止为未覆盖靶点伪造 source evidence，也禁止把缺失表述为 source-supported：
@@ -449,7 +511,8 @@ output_validation:
     rule: >-
       规则求值必须按 derivation_precedence 顺序取第一个命中者；每个靶点恰好命中
       一条规则。同时满足多条条件的靶点必须落在优先级更高的那条，并在结果中
-      记录其余被压制的条件。
+      记录其余被压制的条件。覆盖靶点若 RQ-03 不成立，必须归入 E1-04b，
+      不得因无归属规则而落空。
   - id: VAL-E12
     rule: >-
       RQ-02 阳性靶点数必须满足 rq_02_positive_decomposition 的恒等式；
