@@ -1,0 +1,466 @@
+# EVGAP-02：CRC-specific target–context linkage 证据抽取绑定（machine-readable）
+#
+# 目的：解除 PR #58 登记的 EVGAP-02，使 Level 01 的 LOCK-03 可以真正求值。
+# 本文件不含任何证据数据，只含来源分层、四类 linkage 判据、求值优先级、
+# 检索范围冻结、输出 schema 与验证规则。
+#
+# 由 tests/test_evgap_02_crc_linkage.py 校验。
+# LOCK-03 的 outcome 词表见 docs/pools/adc_pool_gate_usage.yaml（PR #57）。
+# 来源文档：Zhixins-KB/2.Biotech/Asset-Generation-OS-architecture.md#EVGAP-02 应该具体抽取什么
+
+extraction:
+  extraction_id: evgap_02_crc_linkage
+  extraction_version: 0.1.0
+  discharges_gap: EVGAP-02
+  gap_source: docs/pools/adc_pool_level_01_input_binding.yaml
+  serves_lock: LOCK-03
+  status: contract_only_pending_review
+  execution_status: not_authorized_not_executed
+  # 与 EVGAP-01 不同：本抽取不依赖任何未获准入的派生数据库，
+  # Tier 1 原始公开来源即可支撑，故获 APPROVE 后即可执行。
+  authorises_extraction_run_after_approve: true
+  authorises_level_01_execution: false
+  blocked_by:
+    - contract_approval
+  requires_followup_binding_pr: true
+  # 本抽取与 EVGAP-01／SRCADM-01 完全独立，可并行执行。
+  independent_of:
+    - EVGAP-01
+    - SRCADM-01
+  independence_reason: >-
+    LOCK-03 问的是「target 为什么与这个 CRC clinical context 有关」，
+    与表面拓扑无关，因此不读取 surfaceome 参考库，也不受其准入状态影响。
+
+# ---------------------------------------------------------------- 来源分层
+#
+# 治理事实：仓库内 logs/chatgpt-review-*.md 中**没有任何一条**提及过任何本地
+# 派生数据库。surfaceome 的准入问题不是个例，而是普遍状况。因此本契约把来源
+# 分成两层：原始公开来源可直接使用；派生本地库一律须各自取得 admission。
+source_tiers:
+  tier_1_primary_public:
+    admissible_without_separate_admission: true
+    rationale: >-
+      原始公开来源不是派生数据库，其内容可由 source_locator 直接回溯到原始记录，
+      不存在「构建逻辑是否遵守声明」的问题。这正是 PR #59 审核所作的区分。
+    sources:
+      - source_class: peer_reviewed_literature
+        endpoints:
+          - PubMed
+          - PMC
+        must_record:
+          - pmid_or_pmcid
+          - title
+          - journal
+          - year
+          - retrieved_at
+      - source_class: clinical_trial_registry
+        endpoints:
+          - ClinicalTrials.gov
+        must_record:
+          - nct_id
+          - phase
+          - status
+          - indication_text
+          - retrieved_at
+      - source_class: public_molecular_dataset
+        endpoints:
+          - TCGA
+          - GEO
+          - Human Protein Atlas
+        must_record:
+          - dataset_accession
+          - dataset_version_or_release
+          - query_expression
+          - retrieved_at
+      - source_class: approved_internal_result
+        endpoints:
+          - external:result/gen_iet_crc_target_enumeration_20260802
+        authorising_pr: 29
+        role: target 轴与 clinical context 轴，唯一用途是定义抽取范围
+        must_record:
+          - source_id
+          - sha256
+
+  tier_2_derived_local_databases:
+    admissible_without_separate_admission: false
+    barred_until_admitted: true
+    reason: >-
+      派生数据库的构建逻辑未经审计，自声明不等于已验证——PR #59 已就此裁决。
+      每一个都必须有自己的 admission 记录才能作为 EVGAP-02 的来源。
+    pending_admissions:
+      - id: SRCADM-02
+        dataset_id: ADCdb
+        would_serve_linkage_class: B
+        admission_record_ref: null
+      - id: SRCADM-03
+        dataset_id: CRC_journal_whitelist_literature
+        would_serve_linkage_class: A
+        admission_record_ref: null
+      - id: SRCADM-04
+        dataset_id: CRC_Atlas_fulltext_accession_ledger
+        would_serve_linkage_class: A
+        admission_record_ref: null
+      - id: SRCADM-05
+        dataset_id: ADC_competitive_landscape_reference
+        would_serve_linkage_class: B
+        admission_record_ref: null
+    # 本次抽取不使用它们；使用即为违约。
+    used_by_this_extraction: false
+    consequence_of_exclusion: >-
+      检索完整性只能按 Tier 1 声明范围判定。若将来某个派生库获准入，
+      需另开 PR 扩大 declared_search_scope 并重跑，不得静默扩大。
+
+# ---------------------------------------------------------------- 抽取范围
+scope:
+  unit: pair
+  pair_definition: clinical_context_id x target
+  clinical_context_axis: external:result/gen_iet_crc_target_enumeration_20260802#indication_endpoint_universe.tsv
+  clinical_context_axis_sha256: b0b9506644df5453b97982f8c934b10795890b9c602342d7716124948c55d727
+  clinical_context_count: 9
+  target_axis: external:result/gen_iet_crc_target_enumeration_20260802#target_evidence_catalog.tsv
+  target_axis_sha256: 27bb81ebe5f1048b732f62c530095e0007212f818f3844e004118bb94525cc28
+  target_count: 41
+  pair_count: 369
+  new_targets_allowed: false
+  new_contexts_allowed: false
+  # 覆盖全部 369 个 pair，而不是只覆盖 EVGAP-01 之后可能 eligible 的 22 个。
+  covers_all_pairs: true
+  does_not_depend_on_lock_01_status: true
+  scope_reason: >-
+    若只覆盖 22 个 pair，本抽取就会依赖尚未获准入的 surfaceome 判定结果，
+    既污染来源，也使两条 track 无法并行。全部 369 个 pair 独立于 LOCK-01。
+  # 检索粒度：疾病级证据按 target 检索一次，情境特异性按 pair 判定。
+  search_granularity:
+    disease_level_search_unit: target
+    disease_level_search_count: 41
+    context_specific_assessment_unit: pair
+    context_specific_assessment_count: 369
+    reason: >-
+      A/B/C 三类的疾病级检索对同一 target 在 9 个 context 下结果相同，
+      按 target 检索一次即可，避免 369 次冗余检索；
+      D 类情境特异性富集必须按 pair 判定。
+
+# ------------------------------------------------- 四类 linkage 判据（来源文档）
+linkage_classes:
+  - class_id: A
+    name: crc_human_tumor_expression
+    accepts:
+      - CRC patient samples
+      - primary tumour
+      - metastatic lesion
+      - treatment-resistant context
+    must_record_when_available:
+      - positive_fraction_or_prevalence
+      - malignant_cell_attribution
+    protein_preferred_over_rna: true
+    # RNA 可以证明 linkage 存在，但绝不得替代 LOCK-01 的蛋白层面判据。
+    rna_admissible_for_linkage_existence: true
+    rna_may_satisfy_lock_01: false
+    rna_must_be_labelled: true
+  - class_id: B
+    name: crc_specific_adc_precedent
+    accepts:
+      - CRC clinical trial
+      - CRC preclinical ADC
+      - CRC cell line
+      - CRC PDO
+      - CRC PDX
+      - CRC animal model
+    other_cancer_only_precedent_counts_as_linkage: false
+    other_cancer_only_precedent_disposition: metadata_only_hold
+  - class_id: C
+    name: crc_specific_target_directed_modality
+    accepts:
+      - naked antibody
+      - CAR-T
+      - bispecific
+      - radioimmunotherapy
+      - immunotoxin
+      - imaging antibody
+    proves: target 在 CRC 中可接近或可干预
+    # 必须显式标注：这不是 ADC 疗效证据。
+    is_adc_efficacy_evidence: false
+    must_be_labelled_not_adc_efficacy: true
+    counts_as_linkage_existence: true
+    counts_as_linkage_reason: >-
+      LOCK-03 只问「是否存在公开证据表明该 target 与该 CRC context 有关」，
+      不问 ADC 疗效。CRC 中的靶向干预证据满足前者。
+  - class_id: D
+    name: context_specific_enrichment
+    accepts:
+      - MSS/pMMR
+      - post-anti-EGFR
+      - liver metastasis
+      - treatment-resistant
+      - HER2-positive
+      - refractory metastatic CRC
+    # 疾病级 CRC 证据只支持 canonical context，不自动支持任何亚群。
+    disease_level_supports_canonical_only: true
+    subgroup_requires_class_d: true
+
+# ---------------------------------------------------- 检索范围冻结（可判定完整性）
+#
+# PR #58 曾判定 no_known_linkage_after_complete_search 不可用，理由是检索范围
+# 未闭合。本节正是使该 outcome 变为可用的前提：范围一旦冻结，
+# 「是否完成规定检索」就成为可判定的事实，而不是执行者的自我声明。
+declared_search_scope:
+  scope_version: 0.1.0
+  per_target_required_source_classes:
+    - peer_reviewed_literature
+    - clinical_trial_registry
+    - public_molecular_dataset
+  query_template_required: true
+  query_template_must_record:
+    - target_symbol_and_synonyms
+    - crc_terms
+    - class_specific_terms
+    - date_range
+  date_range_upper_bound: run_date
+  per_source_must_record:
+    - source_class
+    - endpoint
+    - query_expression
+    - executed_at
+    - result_count
+    - reachable
+  # 「完成规定检索」的定义。任一条不满足即为未完成。
+  search_complete_definition:
+    - 每个 target 都对 per_target_required_source_classes 的每一类执行过检索
+    - 每次检索都记录了 query_expression、executed_at、result_count 与 reachable
+    - 所有 reachable = false 的来源类都被显式记录为未完成，而非静默跳过
+  unreachable_source_consequence: search_incomplete_for_that_target
+  silent_skip_forbidden: true
+
+# ------------------------------------------------ LOCK-03 求值规则与冻结优先级
+#
+# 五条规则必须覆盖全部 pair 且互斥。优先级先判检索完整性，
+# 因为检索未完成时其余判据都不可信。
+derivation_precedence:
+  - L3-01
+  - L3-02
+  - L3-03
+  - L3-04
+  - L3-05
+precedence_rationale: >-
+  先判检索是否完成——未完成时「没找到」无法与「不存在」区分；
+  再判是否存在与该 context 匹配的 CRC-specific 证据；
+  再判疾病级证据遇亚群 context 的降级；再判仅有其他癌种 precedent 的降级；
+  以上都不成立且检索已完成，才允许判定完整检索后无 linkage。
+
+derivation_rules:
+  - id: L3-01
+    condition: 未按 declared_search_scope 完成规定检索
+    lock_03_outcome: linkage_evidence_missing
+    disposition: DEFER
+    resulting_state: hold
+    reason: 检索未完成时「没找到」不能与「不存在」区分。
+  - id: L3-02
+    condition: >-
+      存在 A/B/C 任一类的 CRC-specific 证据，且 context 为 canonical_c0，
+      或 context 为亚群且同时存在 D 类情境特异性证据
+    lock_03_outcome: linkage_evidence_exists
+    disposition: RETAIN
+    resulting_state: active
+  - id: L3-03
+    condition: 存在 CRC 疾病级证据，但 context 为亚群且无 D 类证据
+    lock_03_outcome: linkage_unassessed
+    disposition: DEFER
+    resulting_state: hold
+    reason: 疾病级 CRC 证据不能建立亚群特异 linkage。
+  - id: L3-04
+    condition: 仅有其他癌种的 precedent，无任何 CRC-specific 证据
+    lock_03_outcome: linkage_unassessed
+    disposition: DEFER
+    resulting_state: hold
+    reason: 泛癌 precedent 只证明 modality precedent，不证明与 CRC context 的 linkage。
+    retained_as: target_modality_metadata
+  - id: L3-05
+    condition: 已按 declared_search_scope 完成规定检索，且四类 linkage 均无命中
+    lock_03_outcome: no_known_linkage_after_complete_search
+    disposition: EXCLUDE
+    disposition_semantics: EXCLUDE_FROM_ACTIVE_POOL
+    resulting_state: reactivation-eligible
+    is_scientific_disproof: false
+    is_killed: false
+    retained_in_eligible_universe_index: true
+    requires_search_completeness_record: true
+    required_search_fields:
+      - search_complete
+      - search_policy_ref
+      - source_coverage_ref
+      - search_scope
+      - searched_at
+      - search_policy_version
+
+# 本契约不给出预期结果形状，这与 EVGAP-01 不同。
+predicted_result_shape:
+  provided: false
+  reason: >-
+    EVGAP-01 读取的是已固定的数据集，结果可以事先算出并逐项核对。
+    EVGAP-02 是发现型检索，事先给出 22/19 这类数字就会把预测冒充成结果——
+    正是来源文档列为第二种必须避免的混淆。因此本契约不预测计数，
+    改为冻结 declared_search_scope，使完整性与每一条 disposition 都可事后核验。
+  what_is_frozen_instead:
+    - declared_search_scope
+    - search_complete_definition
+    - derivation_precedence
+    - provenance requirements
+    - output validation
+
+# ---------------------------------------------------------------- 输出
+output_schema:
+  # 每条证据一行。来源文档规定的 13 列为必需最小集。
+  evidence_columns:
+    - pair_id
+    - target
+    - clinical_context_id
+    - evidence_type
+    - crc_specific
+    - context_specific
+    - human_or_model
+    - protein_or_rna
+    - source_ref
+    - source_locator
+    - evidence_direction
+    - review_status
+    - linkage_outcome
+    # 以下为可审计性所需的补充列。
+    - linkage_class
+    - is_adc_efficacy_evidence
+    - positive_fraction_or_prevalence
+    - malignant_cell_attribution
+    - retrieved_at
+  # 每个 pair 一行的 disposition 表。
+  disposition_columns:
+    - pair_id
+    - target
+    - clinical_context_id
+    - rule_id
+    - lock_03_outcome
+    - disposition
+    - disposition_semantics
+    - resulting_state
+    - evaluation_status
+    - linkage_classes_hit
+    - search_complete
+    - search_policy_ref
+    - source_coverage_ref
+    - search_scope
+    - searched_at
+    - search_policy_version
+    - provenance_kind
+    - evidence_row_count
+    - no_evidence_found_reason
+    - provisional_only
+    - may_advance_to_level_02
+  provenance_kinds:
+    - source_supported
+    - no_evidence_found_after_complete_search
+    - search_incomplete
+  # 找不到证据的 pair 不得伪造 source provenance，须记录检索 provenance。
+  conditionally_required_columns:
+    - when_provenance_kind: source_supported
+      required_columns:
+        - source_ref
+        - source_locator
+        - retrieved_at
+      may_be_empty_columns:
+        - no_evidence_found_reason
+    - when_provenance_kind: no_evidence_found_after_complete_search
+      required_columns:
+        - search_complete
+        - search_policy_ref
+        - source_coverage_ref
+        - search_scope
+        - searched_at
+        - search_policy_version
+        - no_evidence_found_reason
+      may_be_empty_columns:
+        - source_ref
+        - source_locator
+      fabricating_source_evidence_forbidden: true
+    - when_provenance_kind: search_incomplete
+      required_columns:
+        - search_complete
+        - search_scope
+        - searched_at
+        - no_evidence_found_reason
+      may_be_empty_columns:
+        - source_ref
+        - source_locator
+      fabricating_source_evidence_forbidden: true
+
+output_validation:
+  - id: VAL-L01
+    rule: disposition 表必须恰好 369 行，每行按 derivation_precedence 命中且仅命中一条规则并记录 rule_id。
+  - id: VAL-L02
+    rule: 每行的 lock_03_outcome、disposition、resulting_state 必须与 derivation_rules 中同一 rule_id 的声明逐项一致。
+  - id: VAL-L03
+    rule: >-
+      RNA 来源的证据行必须 protein_or_rna = rna 且显式标注；
+      任何 RNA 行都不得被引用为 LOCK-01 依据。
+  - id: VAL-L04
+    rule: >-
+      C 类证据行必须 is_adc_efficacy_evidence = false；
+      任何 C 类行被表述为 ADC 疗效证据即为验证失败。
+  - id: VAL-L05
+    rule: >-
+      仅有其他癌种 precedent 的 pair 必须落 L3-04，其证据行 crc_specific = false，
+      且不得计入 linkage_classes_hit。
+  - id: VAL-L06
+    rule: >-
+      context 为亚群且无 D 类证据的 pair 必须落 L3-03，不得因疾病级证据而 RETAIN。
+  - id: VAL-L07
+    rule: >-
+      L3-05 的行必须六项检索完整性字段齐备且 search_complete = true；
+      其 disposition_semantics 必须为 EXCLUDE_FROM_ACTIVE_POOL，
+      is_scientific_disproof 与 is_killed 必须为 false，resulting_state 必须为 reactivation-eligible。
+  - id: VAL-L08
+    rule: >-
+      provenance_kind = no_evidence_found_after_complete_search 或 search_incomplete 的行，
+      source_ref 与 source_locator 允许为空，但不得伪造；出现非空 source_ref 即为验证失败。
+  - id: VAL-L09
+    rule: conditionally_required_columns 声明的必填列必须全部在 evidence_columns 或 disposition_columns 之内。
+  - id: VAL-L10
+    rule: 不得读取 tier_2_derived_local_databases 中的任何数据库。
+  - id: VAL-L11
+    rule: 每个 target 的检索记录必须覆盖 per_target_required_source_classes 的每一类，未达即该 target 的全部 pair 落 L3-01。
+  - id: VAL-L12
+    rule: 输出中不得出现任何 Gate 分数、Gate 状态、T2/T7 判定、排序、Tier 划分或实验建议。
+  - id: VAL-L13
+    rule: 输入轴文件的 SHA-256 必须与本契约记录一致，不一致即中止执行。
+  - id: VAL-L14
+    rule: 每个产物文件必须逐文件记录 SHA-256 并写入结果 PR 的 handoff。
+  - id: VAL-L15
+    rule: >-
+      每行必须带 provisional_only 与 may_advance_to_level_02；
+      在 EVGAP-01 未解除前 may_advance_to_level_02 恒为 false。
+
+# 必须写进结果报告的约束。
+mandatory_findings:
+  - id: MF-L01
+    finding: >-
+      LOCK-03 RETAIN 只表示存在可回溯的 CRC-specific linkage 证据，
+      不表示该靶点适合 ADC、不表示疗效、不表示治疗窗。
+  - id: MF-L02
+    finding: >-
+      C 类证据（naked antibody／CAR-T／bispecific／RIT／immunotoxin／imaging）
+      证明 target 在 CRC 中可接近或可干预，**不是 ADC 疗效证据**，必须在报告中原样标注。
+  - id: MF-L03
+    finding: >-
+      本次抽取未使用任何派生本地数据库，检索完整性只在 Tier 1 声明范围内成立。
+      若某个派生库日后获准入，需另开 PR 扩大范围并重跑。
+  - id: MF-L04
+    finding: >-
+      LOCK-03 RETAIN 不使 pair 进入 Level 02。EVGAP-01 未解除前
+      may_advance_to_level_02 恒为 false。
+
+not_authorised:
+  - 执行 Level 01
+  - 解除 EVGAP-01
+  - 读取任何 tier_2 派生本地数据库
+  - 把任何派生数据库纳入已批准来源
+  - 评估 T2、T7 或任何 Gate
+  - 新增靶点或 clinical context
+  - 任何筛选排序、Tier 划分、资产推荐或实验建议
+  - 把被隔离运行（PR #53、#54）的任何产物引入

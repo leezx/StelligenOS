@@ -2557,3 +2557,23 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Accepted by reviewer, unchanged: `AUD-01`..`AUD-09` 足以覆盖 builder／raw manifest／license／family independence／去重／discordance／行级 provenance／重建；`admission_record_ref = null` 时不得执行抽取；自声明守卫仅作 pending claim；RQ-02 分解自洽（34 = 22 + 6 + 6）；`ECD-b` 路径合理；reference-absent 靶点不再被迫伪造 source evidence；precedence 已解决 `TM4SF1`／`TDGF1`；不执行 Level 01；不评估 T7；不新增 target／context；不读取被禁文件；`EVGAP-02` 仍未解除；仓库内无 evidence 或结果数据。
 - Review write-back: 连接器 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本条与 handoff 第十一节。
 - Next: 推送同一 PR 并同步 PR 描述请求复审。
+
+## 2026-08-05T13:30:00-04:00 — EVGAP-02 CRC linkage 抽取契约（contract-only，未执行）
+
+- Instruction: 人类负责人指示起 `EVGAP-02` 契约。这是来源文档指定的 Track A，优先级高于 `SRCADM-01`／`EVGAP-01`（Track B）。判据、检索范围与结果 schema 取自 `Asset-Generation-OS-architecture.md` 的 `# EVGAP-02 应该具体抽取什么` 与 `# EVGAP-02 最小结果标准`（只读未改）。
+- Context: `EVGAP-02` 阻断 `LOCK-03`——`crc_prevalence` 41 条全 `not_available`、33 条 `adc_precedent` supporting 无一附 indication，故 LOCK-03 对 369 个 pair 只能 `unresolved`，已在 2026-08-05 Level 01 Preview 实测确认。
+- Finding (high), governance: **仓库内 `logs/chatgpt-review-*.md` 中没有任何一条提及过任何本地派生数据库。** PR #59 发现的 surfaceome 准入问题不是个例而是普遍状况。据此把来源分成 Tier 1（原始公开来源，可直接用）与 Tier 2（派生本地库，一律禁用至各自获准入）。
+- Design: Tier 1 = PubMed／PMC、ClinicalTrials.gov、TCGA／GEO／HPA，加已批准枚举轴（PR #29）。依据是 PR #59 审核所作的区分——原始公开来源不是派生数据库，内容可由 `source_locator` 回溯到原始记录，不存在「构建逻辑是否遵守声明」的问题。**该层足以支撑本抽取，故本契约获批即可执行、不需等任何 admission**（`blocked_by: [contract_approval]`）。Tier 2 登记四个待准入项 `SRCADM-02`..`SRCADM-05`，`admission_record_ref` 全为 `null`，并写明检索完整性只在 Tier 1 范围内成立、日后扩大须另开 PR 重跑。
+- Design: `independent_of: [EVGAP-01, SRCADM-01]`。LOCK-03 与表面拓扑无关，不读 surfaceome、不受其准入状态影响。故抽取覆盖**全部 369 个 pair**而非 EVGAP-01 后可能 eligible 的 22 个——**只覆盖 22 个会使本抽取依赖尚未准入的 surfaceome 判定，既污染来源又使两条 track 无法并行。**
+- Linkage classes frozen: A CRC human tumor expression（蛋白优先；**RNA 可证 linkage 存在但绝不得替代 LOCK-01** 且须标注，测试与 Level 01 契约双向校验）；B CRC-specific ADC precedent（**仅其他癌种 precedent 不算 linkage**，降 `metadata_only_hold`，与 #58 一致）；**C CRC-specific target-directed modality evidence（本契约新增）**——naked antibody／CAR-T／bispecific／RIT／immunotoxin／imaging antibody，满足 LOCK-03 存在性但**必须标注 `is_adc_efficacy_evidence: false`**；D context-specific enrichment（疾病级只支持 canonical，亚群须有 D 类才能 RETAIN）。
+- Key design, declared_search_scope: PR #58 曾判 `no_known_linkage_after_complete_search` 不可用，理由是检索范围未闭合。本契约冻结范围正是使该 outcome 可用的前提——范围一旦冻结，「是否完成规定检索」成为**可判定事实**而非自我声明。每 target 对三类 Tier 1 来源各检索一次；须记录 query template 与 `query_expression`／`executed_at`／`result_count`／`reachable`；**来源不可达即判该 target 检索未完成**，`silent_skip_forbidden: true`。检索粒度写明：A／B／C 按 target（41 次），D 按 pair（369 次），避免「检索次数」被误读。
+- Precedence frozen: `L3-01`（检索未完成）→ `L3-02`（RETAIN／active）→ `L3-03`（亚群无 D 类，DEFER）→ `L3-04`（仅其他癌种，DEFER）→ `L3-05`（完整检索后无 linkage，`EXCLUDE_FROM_ACTIVE_POOL`／`reactivation-eligible`）。**先判检索完整性——未完成时「没找到」无法与「不存在」区分。** 只有 `L3-02` 可 RETAIN、只有 `L3-05` 可 EXCLUDE，测试断言各恰好一条。测试用参考实现穷举 `search_complete × crc_specific × canonical × class_d × other_cancer` 全部 **32 种组合**，证明每种恰好命中一条且五条规则均可达——PR #59 阻断 4 的教训，这次一开始就做。
+- Deliberate omission: **本契约不给预期结果形状。** EVGAP-01 读固定数据集可事先算出（22／19）；EVGAP-02 是发现型检索，事先给数字即把预测冒充成结果——来源文档列为第二种必须避免的混淆。改为冻结检索范围、完整性定义、优先级、provenance 与输出验证；测试断言 `provided: false` 且不得以别名塞入计数。
+- Lessons carried forward: provenance 三分（`source_supported`／`no_evidence_found_after_complete_search`／`search_incomplete`，后两种可空 `source_ref` 但**禁止伪造**，出现非空即失败）——PR #59 阻断 3；条件必填列必须在 schema 之内，测试直接断言子集关系——PR #59 阻断 2。
+- Validation: `Ran 334 tests` 全部通过（`main` 基线 309 + 新增 25）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。
+- Mutation-tested (13 个，全部 `FAILED` 后精确回滚，与备份 `diff -q` 一致、恢复 `OK`): RNA 满足 LOCK-01、C 类声明为 ADC 疗效证据、泛癌 precedent 算作 linkage、疾病级证据支撑亚群、`L3-03` 改判 RETAIN、完整检索排除改判 killed、检索完整性排到优先级最后、允许静默跳过来源、开放 Tier 2 派生库、自行填入 `SRCADM-02` 记录、偷偷加入预测计数、要求未找到证据的行也有 `source_ref`、范围缩到依赖 LOCK-01 状态。
+- Own test error, self-caught: 初稿断言「除 `L3-05` 外全部 DEFER」，漏了 `L3-02` 是 RETAIN 规则；改为逐规则断言并加「恰好一条 RETAIN、恰好一条 EXCLUDE」。
+- Deliberately not done: 未执行抽取、未发起任何检索；未执行 Level 01 也不授权；**未解除 `EVGAP-01`**；未读任何 Tier 2 派生库；未把任何派生库纳入已批准来源；未评估 T2／T7／任何 Gate；未排序／Tier／推荐／实验建议；未新增靶点或 context；未引用被隔离运行产物；未更新 `adc_pool_level_01_input_binding.yaml`；未预测结果计数；未补七份批准记录。
+- Noticed, not fixed: `requirements.txt` 注释仍写「207 tests」，实测 334。属无关改动，只记录。
+- Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**，须经 ChatGPT `APPROVE`。
+- Next: 推送并创建 PR 送审。请审核方裁决 Tier 1／Tier 2 的划分是否成立，以及 C 类作为 linkage 存在性依据是否可接受。
