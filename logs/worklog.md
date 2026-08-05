@@ -2647,3 +2647,23 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Accepted by reviewer, unchanged: EVGAP-02 与 EVGAP-01／SRCADM-01 独立；覆盖全部 369 pairs；Tier 1／Tier 2 分层与 Tier 2 禁用；A/B/C/D 四类框架；RNA 可支持 linkage 但不满足 LOCK-01；C 类可作 linkage existence 但非 ADC efficacy；disease-level 不自动支持 subgroup；other-cancer 只作 metadata；`L3-05` 可逆非证伪非 killed；不执行 Gate／Level 01、不解除 `EVGAP-01`；不预写 discovery run 结果数量。
 - Review write-back: 连接器 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本条与 handoff 第十四节。
 - Next: 推送同一 PR 并同步 PR 描述请求复审。
+
+## 2026-08-05T19:20:00-04:00 — EVGAP-02 CRC linkage 抽取执行（外部运行留痕）
+
+- Instruction: 人类负责人指示「先执行 EVGAP-02 抽取，然后 SRCADM-01」。授权依据为 PR #61 已 `APPROVE` 并合并的 `docs/pools/evgap_02_crc_linkage_extraction.yaml`，其 `blocked_by: [contract_approval]` 已满足。
+- Reachability tested first: 契约把来源不可达定为须记录的事实而非可静默跳过，故执行前逐个测试六个必查 endpoint，全部应答——PubMed／PMC（NCBI E-utilities `esearch`）、ClinicalTrials.gov API v2、GEO（E-utilities `db=gds`）、TCGA（GDC genes API）、Human Protein Atlas（`search_download`）。
+- Run: `gen_iet_evgap_02_crc_linkage_20260805T190453Z`，六个产物全部写入外部 `DATA`，**仓库零写入**。
+- Search completeness: **451 次检索、0 不可达、41／41 target 检索完整、369／369 pair 的 D 类检索完整**。target 级按 endpoint 判定覆盖（非按 source class），A／B／C 用类别特异术语；D 类按 pair 判定并记录六个完整性字段。
+- Result: **`L3-02` 168 RETAIN／active；`L3-03` 192 DEFER／hold；`L3-05` 9 `EXCLUDE_FROM_ACTIVE_POOL`／reactivation-eligible**。168+192+9 = 369。`L3-01` 与 `L3-04` 本次为空规则——无检索不完整的 pair，也未采集到「仅其他癌种 precedent」的证据。
+- active by context: canonical `crc_mss_pmMR_mcrc_3l_plus` **40**（41 个靶点中仅 `EDBN` 无 A/B/C 证据）；8 个亚群 context 分别 33／19／17／17／14／11／11／6。**亚群必须同时有 D 类情境特异证据才能 RETAIN**——这正是 192 个 `L3-03` 的差别：有疾病级 CRC 证据，但该亚群无情境特异富集证据。
+- Evidence: **7,067 行**，A 2,808／B 2,295／C 1,746／D 218。`context_specific = true` 仅 D 类 218 行，A／B／C 按契约是疾病级检索、按构造不具情境特异性。
+- Mandatory findings recorded: `MF-L01` RETAIN 只表示存在可回溯的 CRC-specific linkage 记录，**不表示适合 ADC、不表示疗效、不表示治疗窗**；`MF-L02` C 类 1,746 行全部 `is_adc_efficacy_evidence = false`；`MF-L03` 未使用任何派生本地库，**完整性只在 Tier 1 范围内成立**，`SRCADM-02`..`05` 仍待准入，日后扩大须另开 PR 重跑；`MF-L04` RETAIN 不使 pair 进入 Level 02，369 行 `may_advance_to_level_02` 全为 `false`。
+- Evidence strength stated plainly: **全部 7,067 行 `review_status = machine_retrieved_requires_human_review`、`evidence_direction = unknown`**。这些是按冻结查询式检索到的公开记录（PMID／PMCID／NCT／GEO 登记号均可回溯），**内容未被阅读、未被人工判读**。按 PR #58 已获接受的 `DECISION-02`，machine-retrieved 证据满足 LOCK-03 存在性但该 pair 不得晋级 Level 02。**故 168 个 active 的含义是「存在待复核的 CRC-specific linkage 记录」，不是「linkage 已确证」。**
+- Only one target reached L3-05: `EDBN`（9 个 pair）。非标准符号（fibronectin EDB 结构域），在 Level 01 Preview 中亦为 `E1-05` 不在 surfaceome 参考库。`L3-05` 可逆——`is_scientific_disproof: false`、`is_killed: false`、`reactivation-eligible`，仍留在 Eligible Universe Index，**不是科学证伪、不是淘汰**。
+- Executor defect found by self-check and repaired: 首版 evidence 表缺契约要求的 4 列（`pair_id`／`clinical_context_id`／`context_specific`／`linkage_outcome`），且 A／B／C 按契约按 target 检索一次导致单条证据无法携带唯一 `pair_id`、`VAL-L16` 不可满足。**这是我没把「按 target 检索」与「按 pair 记录证据」对齐。** 修正方式是让输出符合已冻结 schema 而非改契约：把 target 级记录按 pair 展开为 7,067 行，**未重复任何网络调用、未改变任何已检索事实**，只改表示形式。
+- Validation: **契约 20 条 `VAL-L01`..`VAL-L20` 逐条对实际产物核验，全部 `PASS`**，含 `VAL-L09` 两张表列集合逐表相等、`VAL-L16` 全部引用 id 存在且 `pair_id` 一致且 7,067 个 id 无重复、`VAL-L17` 逐规则引用约束、`VAL-L18` 369 pair 六字段齐备、`VAL-L20` 计数等于三组 refs 去重总数。仓库侧 `Ran 338 tests` 通过、`scripts/verify_repository_boundary.sh` 通过。
+- Packaged for review: `external:result/gen_iet_evgap_02_crc_linkage_20260805T190453Z.zip`，148,063 bytes，ZIP SHA-256 `9c9c184e7b66e2999950831a18e059847c3b7dfd4a5b6f92ac78ac9dce259ece`，含且仅含六个产物文件。**按 PR #60 第二轮裁决后自我约束的规则执行：外部产物每次交付必须同时产出带校验和的打包。**
+- Boundary: 未运行任何 Gate、未赋分数、未评估 T2／T7、未排序、未划 Tier、未推荐资产、未给实验建议、未新增靶点或 context（0／0）、**未打开任何 Tier 2 派生库**、未引用被隔离运行产物、未写入仓库。
+- Deliberately not done: **未解除 `EVGAP-02`**（须待本结果获批后另开 PR 更新绑定）；未解除 `EVGAP-01`；未更新 `adc_pool_level_01_input_binding.yaml`；Level 01 仍不可执行；未生成 `ADC_POOL_LEVEL_01_ACCEPTED`；未补八份批准记录。
+- Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**，须经 ChatGPT `APPROVE`。本 PR 只含本条 worklog 与一份 handoff。
+- Next: 送审本结果；获批后另开 PR 解除 `EVGAP-02`；随后按指示起 `SRCADM-01`。
