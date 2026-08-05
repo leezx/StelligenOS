@@ -1,10 +1,10 @@
 """Verify docs/pools/evgap_01_surface_localization_extraction.yaml.
 
-The extraction contract discharges EVGAP-01 by admitting one pinned database
-version as an approved source and freezing how its fields map onto LOCK-01's
-RQ-01/RQ-02/RQ-03. These tests check internal consistency and agreement with the
-merged Level 01 contracts. They never read the external database: it lives
-outside the repository, so the recorded checksums are audit metadata.
+The extraction contract freezes how one pinned database version would map onto
+LOCK-01's RQ-01/RQ-02/RQ-03. It does not admit that database: admission needs its
+own review, tracked as SRCADM-01. These tests check internal consistency and
+agreement with the merged Level 01 contracts. They never read the external
+database, so the recorded checksums are integrity pins, not verification.
 """
 
 from __future__ import annotations
@@ -56,33 +56,65 @@ class Evgap01ExtractionContractTests(unittest.TestCase):
         self.assertIn("EVGAP-01", gaps)
         self.assertEqual(gaps["EVGAP-01"]["blocks"], "LOCK-01")
         self.assertEqual(head["execution_status"], "not_authorized_not_executed")
-        self.assertIs(head["authorises_extraction_run"], True)
+        # The extraction is frozen but not yet authorised: SRCADM-01 blocks it.
+        self.assertIs(head["authorises_extraction_run"], False)
         self.assertIs(head["authorises_level_01_execution"], False)
         self.assertIs(head["requires_followup_binding_pr"], True)
 
-    def test_source_admission_is_declared_as_not_previously_approved(self) -> None:
-        request = self.doc["source_admission_request"]
-        self.assertIs(request["previously_approved"], False)
-        self.assertTrue(request["previously_approved_evidence"].strip())
-        self.assertTrue(request["root"].startswith("external:"))
-        self.assertEqual(request["dataset_version"], "0.3.0")
-        for item in request["files"]:
+    def test_database_admission_is_deferred_to_its_own_approval(self) -> None:
+        """Blocker 1: a derived database cannot be admitted by self-declaration."""
+
+        dep = self.doc["source_admission_dependency"]
+        self.assertEqual(dep["id"], "SRCADM-01")
+        self.assertIs(dep["is_derived_database"], True)
+        self.assertIs(dep["previously_approved"], False)
+        self.assertEqual(dep["admission_status"], "pending_separate_admission_pr")
+        self.assertIsNone(dep["admission_record_ref"])
+        self.assertIs(dep["admission_record_required"], True)
+        # The extraction must be blocked while the admission is pending.
+        head = self.doc["extraction"]
+        self.assertIs(head["authorises_extraction_run"], False)
+        self.assertIn("SRCADM-01", head["extraction_blocked_by"])
+        # Admitting the database is explicitly outside this contract.
+        not_authorised = " ".join(self.doc["not_authorised"])
+        self.assertIn("SRCADM-01", not_authorised)
+        self.assertIn("纳入已批准来源", not_authorised)
+
+    def test_admission_audit_covers_more_than_hashes(self) -> None:
+        dep = self.doc["source_admission_dependency"]
+        items = {a["id"]: a["item"] for a in dep["required_audit_items"]}
+        self.assertGreaterEqual(len(items), 9)
+        joined = " ".join(items.values())
+        for topic in ("builder", "raw manifest", "license", "去重",
+                      "discordance_flags", "回溯", "复现"):
+            with self.subTest(topic=topic):
+                self.assertIn(topic, joined)
+        # Independence of the evidence families must be audited, not assumed.
+        self.assertIn("独立性", joined)
+
+    def test_self_declared_guards_are_claims_not_verification(self) -> None:
+        dep = self.doc["source_admission_dependency"]
+        self.assertIs(dep["self_declared_guards_are_claims_not_verification"], True)
+        guards = dep["self_declared_guards"]
+        self.assertGreaterEqual(len(guards), 6)
+        for guard in guards:
+            with self.subTest(guard=guard["guard"]):
+                self.assertEqual(guard["status"], "claim_pending_audit")
+                self.assertTrue(guard["relates_to_repo_rule"].strip())
+        names = {g["guard"] for g in guards}
+        for required in ("absence_is_negative_evidence",
+                         "membrane_topology_is_independent_surface_localization"):
+            self.assertIn(required, names)
+
+    def test_checksums_are_integrity_pins_not_approval(self) -> None:
+        dep = self.doc["source_admission_dependency"]
+        pinned = dep["files_pinned_for_integrity_only"]
+        self.assertEqual(len(pinned), 4)
+        for item in pinned:
             with self.subTest(path=item["path"]):
                 digest = item["sha256"]
                 self.assertEqual(len(digest), 64, digest)
                 self.assertTrue(all(c in "0123456789abcdef" for c in digest))
-
-    def test_inherited_guards_cover_the_repository_rules(self) -> None:
-        guards = {g["guard"]: g for g in
-                  self.doc["source_admission_request"]["inherited_semantics_guards"]}
-        # The two that previous review rounds turned on must be present and false.
-        for name in ("absence_is_negative_evidence",
-                     "membrane_topology_is_independent_surface_localization"):
-            with self.subTest(guard=name):
-                self.assertIn(name, guards)
-                self.assertIs(guards[name]["value"], False)
-                self.assertTrue(guards[name]["matches_repo_rule"].strip())
-        self.assertIn("excluded_rna_source", guards)
 
     def test_scope_is_the_approved_target_axis_only(self) -> None:
         scope = self.doc["scope"]
@@ -135,24 +167,91 @@ class Evgap01ExtractionContractTests(unittest.TestCase):
         rq2 = self.doc["rq_02_extracellular_domain"]
         paths = {p["path_id"]: p for p in rq2["paths"]}
         self.assertEqual(set(paths), {"ECD-a", "ECD-b"})
-        # The GPI path exists to correct a representation artefact, and must say so.
         self.assertTrue(paths["ECD-b"]["rationale_note"].strip())
         self.assertEqual(len(paths["ECD-b"]["measured_targets"]),
-                         paths["ECD-b"]["measured_count"])
+                         paths["ECD-b"]["eligible_via_path_count"])
         self.assertIs(rq2["luminal_domain_is_not_extracellular"], True)
         self.assertIn("LAMP1", rq2["luminal_domain_note"])
-        eligible = next(r for r in self.doc["derivation_rules"] if r["id"] == "E1-01")
+
+    def test_path_satisfaction_is_not_confused_with_eligibility(self) -> None:
+        """Blocker 2: satisfying an ECD path is not the same as being eligible."""
+
+        rq2 = self.doc["rq_02_extracellular_domain"]
+        by_id = {r["id"]: r for r in self.doc["derivation_rules"]}
+        for path in rq2["paths"]:
+            with self.subTest(path=path["path_id"]):
+                # Both counts must exist and eligibility cannot exceed satisfaction.
+                self.assertIn("measured_path_satisfied_count", path)
+                self.assertIn("eligible_via_path_count", path)
+                self.assertLessEqual(
+                    path["eligible_via_path_count"],
+                    path["measured_path_satisfied_count"],
+                )
+        # eligible_via_path must sum to E1-01, not to the satisfied totals.
         self.assertEqual(
-            sum(p["measured_count"] for p in rq2["paths"]), eligible["expected_count"]
+            sum(p["eligible_via_path_count"] for p in rq2["paths"]),
+            by_id["E1-01"]["expected_count"],
         )
+        satisfied = sum(p["measured_path_satisfied_count"] for p in rq2["paths"])
+        self.assertEqual(satisfied - rq2["measured_path_overlap"],
+                         rq2["rq_02_positive_decomposition"]["total"])
+
+    def test_rq_02_positive_decomposition_holds(self) -> None:
+        rq2 = self.doc["rq_02_extracellular_domain"]
+        decomposition = rq2["rq_02_positive_decomposition"]
+        by_id = {r["id"]: r for r in self.doc["derivation_rules"]}
+        self.assertEqual(
+            decomposition["final_eligible"]
+            + decomposition["hold_insufficient_localization_families"]
+            + decomposition["hold_discordance"],
+            decomposition["total"],
+        )
+        self.assertEqual(decomposition["final_eligible"], by_id["E1-01"]["expected_count"])
+        self.assertEqual(
+            decomposition["hold_insufficient_localization_families"],
+            by_id["E1-02"]["expected_count"],
+        )
+        # RQ-02 positives must outnumber the eligible set: holds exist downstream.
+        self.assertGreater(decomposition["total"], decomposition["final_eligible"])
+        self.assertTrue(decomposition["identity"].strip())
 
     def test_rq_03_requires_protein_level_provenance(self) -> None:
         rq3 = self.doc["rq_03_protein_level_provenance"]
         self.assertIs(rq3["rna_derived_rows_admissible"], False)
+        covered = rq3["covered_rows"]
         for field in ("source_id", "source_release", "source_url", "license"):
-            self.assertIn(field, rq3["required_fields"])
+            self.assertIn(field, covered["required_fields"])
         allowed = set(self.doc["allowed_fields"]["from_source_evidence"])
-        self.assertTrue(set(rq3["required_fields"]) <= allowed)
+        self.assertTrue(set(covered["required_fields"]) <= allowed)
+
+    def test_reference_absent_rows_need_absence_provenance_not_fabrication(self) -> None:
+        """Blocker 3: absent targets have no source rows and must not invent any."""
+
+        rq3 = self.doc["rq_03_protein_level_provenance"]
+        absent = rq3["absent_rows"]
+        self.assertIsNone(absent["requires_rows_in"])
+        self.assertIs(absent["source_provenance_fields_may_be_empty"], True)
+        self.assertIs(absent["fabricating_source_evidence_forbidden"], True)
+        self.assertIs(rq3["never_present_absence_as_source_supported"], True)
+        for field in ("reference_dataset_id", "reference_dataset_version",
+                      "reference_snapshot_id", "target_axis_ref",
+                      "absence_reason", "lookup_at"):
+            with self.subTest(field=field):
+                self.assertIn(field, absent["required_absence_fields"])
+        # The absence path must not reuse the covered-row requirement.
+        self.assertEqual(
+            set(absent["required_absence_fields"])
+            & set(rq3["covered_rows"]["required_fields"]),
+            set(),
+        )
+        # Validation must carry all three provenance rules.
+        ids = {r["id"] for r in self.doc["output_validation"]}
+        for rule_id in ("VAL-E05", "VAL-E05b", "VAL-E05c"):
+            self.assertIn(rule_id, ids)
+        columns = set(self.doc["output_schema"]["per_target_columns"])
+        for column in ("provenance_kind", "absence_reason", "target_axis_ref", "lookup_at"):
+            with self.subTest(column=column):
+                self.assertIn(column, columns)
 
     def test_derivation_rules_are_total_and_never_exclude(self) -> None:
         rules = self.doc["derivation_rules"]
@@ -183,6 +282,80 @@ class Evgap01ExtractionContractTests(unittest.TestCase):
                 with self.subTest(rule=rule["id"]):
                     self.assertEqual(
                         len(rule["measured_targets"]), rule["expected_count"]
+                    )
+
+    def test_precedence_is_frozen_and_covers_every_rule(self) -> None:
+        """Blocker 4: the five conditions are not naturally mutually exclusive."""
+
+        precedence = self.doc["derivation_precedence"]
+        rule_ids = [r["id"] for r in self.doc["derivation_rules"]]
+        self.assertEqual(set(precedence), set(rule_ids))
+        self.assertEqual(len(precedence), len(set(precedence)))
+        # Absence first, then conflict, then the RQ checks, eligible last.
+        self.assertEqual(precedence[0], "E1-05")
+        self.assertEqual(precedence[1], "E1-04")
+        self.assertEqual(precedence[-1], "E1-01")
+        self.assertTrue(self.doc["precedence_rationale"].strip())
+        ids = {r["id"] for r in self.doc["output_validation"]}
+        self.assertIn("VAL-E11", ids)
+
+    def _assign(self, target: dict) -> str:
+        """Reference implementation of the frozen precedence."""
+
+        conditions = {
+            "E1-05": target["absent"],
+            "E1-04": not target["absent"] and target["conflict"],
+            "E1-03": not target["absent"] and not target["rq2"],
+            "E1-02": not target["absent"] and target["families"] < 2,
+            "E1-01": True,
+        }
+        for rule_id in self.doc["derivation_precedence"]:
+            if conditions[rule_id]:
+                return rule_id
+        raise AssertionError("precedence did not cover the target")
+
+    def test_precedence_gives_one_and_only_one_rule_per_target(self) -> None:
+        floor = self.doc["rq_01_plasma_membrane_localization"][
+            "minimum_independent_families"
+        ]
+        # Cases chosen to exercise every overlap the reviewer named.
+        cases = [
+            ({"absent": True, "conflict": False, "rq2": False, "families": 0}, "E1-05"),
+            ({"absent": True, "conflict": True, "rq2": False, "families": 0}, "E1-05"),
+            ({"absent": False, "conflict": True, "rq2": True, "families": 3}, "E1-04"),
+            ({"absent": False, "conflict": True, "rq2": True, "families": 1}, "E1-04"),
+            ({"absent": False, "conflict": True, "rq2": False, "families": 0}, "E1-04"),
+            ({"absent": False, "conflict": False, "rq2": False, "families": 3}, "E1-03"),
+            ({"absent": False, "conflict": False, "rq2": False, "families": 1}, "E1-03"),
+            ({"absent": False, "conflict": False, "rq2": True, "families": 1}, "E1-02"),
+            ({"absent": False, "conflict": False, "rq2": True, "families": floor}, "E1-01"),
+        ]
+        for target, expected in cases:
+            with self.subTest(**target):
+                self.assertEqual(self._assign(target), expected)
+
+    def test_multi_condition_targets_resolve_to_the_higher_rule(self) -> None:
+        recorded = self.doc["measured_multi_condition_targets"]
+        self.assertTrue(recorded)
+        precedence = self.doc["derivation_precedence"]
+        by_id = {r["id"]: r for r in self.doc["derivation_rules"]}
+        for item in recorded:
+            with self.subTest(target=item["gene_symbol"]):
+                matched = item["conditions_matched"]
+                self.assertGreater(len(matched), 1, "not a multi-condition target")
+                winner = min(matched, key=precedence.index)
+                self.assertEqual(item["resolved_to"], winner)
+                # The recorded resolution must match where the rule counts it.
+                self.assertIn(
+                    item["gene_symbol"], by_id[item["resolved_to"]]["measured_targets"]
+                )
+                # And it must NOT be counted under a suppressed condition.
+                for suppressed in matched:
+                    if suppressed == winner:
+                        continue
+                    self.assertNotIn(
+                        item["gene_symbol"],
+                        by_id[suppressed].get("measured_targets", []),
                     )
 
     def test_exclusion_outcomes_remain_unavailable(self) -> None:

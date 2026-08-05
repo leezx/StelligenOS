@@ -2526,3 +2526,21 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Noticed, not fixed: `requirements.txt` 注释仍写「207 tests」，实测 298。属无关改动，只记录。
 - Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**，须经 ChatGPT `APPROVE`。
 - Next: 推送并创建 PR 送审；请审核方裁决是否接受把 `ADC_surfaceome_reference@0.3.0` 纳入已批准来源，以及 `ECD-b` 路径是否成立。
+
+## 2026-08-05T00:20:00-04:00 — PR #59 第一轮审核裁决与修订（四条阻断全部接受）
+
+- Review: ChatGPT 对 PR #59（HEAD `570562c`，可合并、CI 成功）返回 `REQUEST_CHANGES`，四条阻断。**全部接受**，同一 PR 内最小修订。
+- Finding 1 accepted: **未批准的派生数据库不能靠自声明 + 哈希升级为 approved source。** 初稿只记录 snapshot／SHA-256／builder 路径／该库自己的语义守卫，而测试明确不读外部数据库，故实际未审计 builder 实现、raw manifest、原始来源清单、license、evidence family 独立性、去重与冲突处理、代表性行回溯、snapshot 可重建性。**执行者错误：把「它的语义写得对」当成了「它已被验证」。** 该库声明 `membrane_topology_is_independent_surface_localization = false` 不等于它确实遵守该规则。
+- Fix 1: source admission 从本契约剥离为依赖项 `SRCADM-01`——`admission_status: pending_separate_admission_pr`、`admission_record_ref: null`（不得代填）、`authorises_extraction_run: false`、`extraction_blocked_by: [SRCADM-01]`；登记 `AUD-01`..`AUD-09` 九项必审内容；六条自声明守卫一律标 `status: claim_pending_audit`；四个 SHA-256 角色降为 `files_pinned_for_integrity_only`；新增 `VAL-E13`（抽取前 `admission_record_ref` 必须指向实际存在的独立 `APPROVE` 记录）。
+- Finding 2 accepted: **RQ-02 路径计数与 `E1-02` 自相矛盾。** 初稿写 `ECD-a=18`／`ECD-b=4` 并强制 18+4=22 eligible，但 `E1-02` 的 6 个靶点是「RQ-02 满足但家族数<2」，必然也命中某条 ECD 路径。**执行者把「满足 ECD 路径」错等于「最终 eligible」。**
+- Fix 2: 实测后拆为两个计数——`ECD-a` 路径命中 **30**／其中 eligible **18**；`ECD-b` 命中 **4**／eligible **4**；两路径无重叠。写入分解恒等式 **34 RQ-02 阳性 = 22 eligible + 6 `E1-02` + 6 `E1-04` 中 RQ-02 阳性者**。新增 `VAL-E12` 与两条测试（eligible 不得超过路径命中；`eligible_via_path` 之和等于 `E1-01`，路径命中之和减重叠等于 RQ-02 阳性总数）。
+- Finding 3 accepted: **`VAL-E05` 与 reference-absent 靶点冲突。** `E1-05` 的 4 个靶点在 `source_evidence.tsv` 里本就没有行，而初稿要求每行都有非空 source provenance——会让合法 hold 行无法通过验证，或迫使执行者伪造 provenance。
+- Fix 3: provenance 拆两类。覆盖行须完整来源 provenance；未覆盖行 `source_*` 允许为空但须完整**缺失 provenance**（`reference_dataset_id`／`reference_dataset_version`／`reference_snapshot_id`／`target_axis_ref`／`absence_reason` 只能取 `gene_symbol_not_present_in_reference`／`lookup_at`）。新增 `VAL-E05b`／`VAL-E05c`：禁止伪造 source evidence，禁止把缺失表述为 source-supported，`provenance_kind = reference_absent` 行出现非空 `source_ids` 即验证失败。输出列 21 → 26。
+- Finding 4 accepted: **五条规则没有冻结优先级**，而 `VAL-E01` 要求命中且仅命中一条。实测本 snapshot 下 **2 个**靶点同时满足 `E1-03` 与 `E1-02`（`TM4SF1`、`TDGF1`）。初稿只验证预写计数之和等于 41，未证明真实条件下的 one-and-only-one。
+- Fix 4: 冻结 `derivation_precedence` = `E1-05` → `E1-04` → `E1-03` → `E1-02` → `E1-01` 并写明理由；登记 `measured_multi_condition_targets`（两靶点解析到 `E1-03`）；新增 `VAL-E11`；新增三条测试——优先级覆盖全部规则且首尾正确、用等价 fixture 逐例证明九种条件组合（含 absent+conflict、conflict+low-family、conflict+no-ECD、no-ECD+low-family）各有唯一结果、重叠靶点必须落在优先级更高规则且不得计入被压制规则的 `measured_targets`。
+- Counts unchanged: 按冻结后优先级重算仍为 22／6／3／6／4，与初稿一致——初稿的计算脚本已隐含同一顺序，只是没把顺序写进契约。
+- Validation: `Ran 306 tests` 全部通过（`main` 基线 283 + 新增 23，由 15 增至 23）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。
+- Mutation-tested (本轮 12 个，全部 `FAILED` 后精确回滚，与备份 `diff -q` 一致、恢复 `OK`): 自行填入 admission 记录并放行、自声明守卫标为已验证、删掉 license 审计项、eligible 超过路径命中数、用 eligible 冒充路径命中、破坏分解恒等式、要求未覆盖行也有 source 字段、允许伪造 source evidence、删掉 `absence_reason` 要求、`E1-01` 提到优先级最前、冲突优先级降到最后、重叠靶点解析到被压制规则。
+- Accepted by reviewer, unchanged: `ECD-b` 路径可作为 extracellular topology 路径（前提是 GPI 注释可靠、有信号肽、零跨膜段、蛋白级 provenance）；跨膜段不再单独满足 `RQ-01`；GPI 路径未被当成普通跨膜蛋白规则；`LAMP1` 腔内结构域不被当成胞外；缺失与冲突均 DEFER 不 EXCLUDE；`not_surface_target` 仍不可用；T7 与肿瘤定量文件明确禁止；不执行 Level 01；不新增 target／context；仓库不存 evidence／result；`EVGAP-02` 继续未解除。
+- Review write-back: 连接器 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本条与 handoff 第十节。
+- Next: 推送同一 PR 并同步 PR 描述请求复审。此后欠着的工作变为三项：`SRCADM-01` 数据库 admission PR、`EVGAP-02` 契约、五份批准记录。
