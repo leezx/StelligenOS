@@ -144,17 +144,73 @@ class InputBindingTests(unittest.TestCase):
     def test_linkage_rules_never_exclude(self) -> None:
         rules = self.binding["lock_03_linkage_rules"]
         lock_03 = next(l for l in self.level["locks"] if l["lock_id"] == "LOCK-03")
-        valid_outcomes = {o["outcome"] for o in lock_03["outcomes"]}
+        valid = {o["outcome"]: o for o in lock_03["outcomes"]}
         for rule in rules["rules"]:
             with self.subTest(rule=rule["id"]):
-                self.assertIn(rule["outcome"], valid_outcomes)
+                self.assertIn(rule["outcome"], valid)
                 self.assertIn(
                     rule["disposition"],
                     {CandidateDisposition.RETAIN.value, CandidateDisposition.DEFER.value},
                 )
+                self.assertEqual(
+                    rule["resulting_state"], valid[rule["outcome"]]["resulting_state"]
+                )
         self.assertEqual(
             rules["evidence_granularity"], "disease_level_not_subgroup_level"
         )
+
+    def test_linkage_has_a_non_vacuous_basis(self) -> None:
+        """A binding whose only linkage basis is empty guarantees an empty pool."""
+
+        bases = self.binding["lock_03_linkage_rules"]["accepted_linkage_bases"]
+        self.assertGreaterEqual(len(bases), 2)
+        ids = [b["basis_id"] for b in bases]
+        self.assertEqual(len(ids), len(set(ids)))
+        for basis in bases:
+            with self.subTest(basis=basis["basis_id"]):
+                self.assertEqual(basis["required_direction"], "supporting")
+                self.assertIsInstance(basis["measured_supporting_units"], int)
+                # A vacuous basis must be declared vacuous, and vice versa.
+                self.assertEqual(
+                    basis["vacuous_this_run"],
+                    basis["measured_supporting_units"] == 0,
+                )
+        live = [b for b in bases if not b["vacuous_this_run"]]
+        self.assertTrue(live, "every linkage basis is vacuous: pool would be empty")
+
+    def test_predicted_shape_reconciles_with_the_counting_identities(self) -> None:
+        shape = self.binding["predicted_result_shape"]
+        scope = self.binding["scope_consequences"]
+        ctx, tgt = shape["context_eligibility"], shape["target_eligibility"]
+        pool = shape["pool_level_01"]
+
+        # CNT-01
+        self.assertEqual(shape["raw_enumeration_matrix"], scope["raw_enumeration_matrix_pairs"])
+        # CNT-04 and CNT-05
+        self.assertEqual(
+            ctx["eligible"] + ctx["hold"] + ctx["superseded"], scope["raw_clinical_contexts"]
+        )
+        self.assertEqual(
+            tgt["eligible"] + tgt["hold"] + tgt["killed"], scope["raw_targets"]
+        )
+        # CNT-02
+        self.assertEqual(
+            shape["eligible_universe_index"], ctx["eligible"] * tgt["eligible"]
+        )
+        # CNT-03
+        self.assertEqual(
+            pool["active"] + pool["hold"] + pool["reactivation_eligible"],
+            shape["eligible_universe_index"],
+        )
+        # Consistent with the LOCK-01 derivation and the LOCK-02 ceiling.
+        self.assertEqual(tgt["eligible"], self.binding["lock_01_derivation"]["coverage"]["eligible"])
+        self.assertEqual(tgt["killed"], 0)
+        calibrated = [
+            e for e in self.binding["lock_02_status_ceiling"]
+            if e["calibration"] == "calibrated"
+        ]
+        self.assertEqual(ctx["eligible"], sum(e["count"] for e in calibrated))
+        self.assertTrue(shape["bottleneck"].strip())
 
     def test_complete_search_exclusion_is_unavailable_with_this_input(self) -> None:
         rules = self.binding["lock_03_linkage_rules"]
@@ -198,6 +254,259 @@ class InputBindingTests(unittest.TestCase):
         for phrase in ("枚举", "Gate", "Level 02", "endpoint"):
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, not_authorised)
+
+    # ---- Blocker 1: LOCK-01 must be derivable without free judgement ----
+
+    def test_lock_01_derivation_maps_every_outcome_uniquely(self) -> None:
+        derivation = self.binding["lock_01_derivation"]
+        lock_01 = next(l for l in self.level["locks"] if l["lock_id"] == "LOCK-01")
+        declared = {o["outcome"]: o for o in lock_01["outcomes"]}
+
+        produced = {r["outcome"] for r in derivation["rules"]}
+        unavailable = {u["outcome"] for u in derivation["unavailable_outcomes"]}
+        # Every outcome the level declares is either produced or explicitly barred.
+        self.assertEqual(produced | unavailable, set(declared))
+        self.assertEqual(produced & unavailable, set())
+
+        for rule in derivation["rules"]:
+            with self.subTest(rule=rule["id"]):
+                outcome = declared[rule["outcome"]]
+                self.assertEqual(rule["disposition"], outcome["disposition"])
+                self.assertEqual(rule["resulting_state"], outcome["resulting_state"])
+        for barred in derivation["unavailable_outcomes"]:
+            with self.subTest(outcome=barred["outcome"]):
+                self.assertTrue(barred["reason"].strip())
+
+    def test_lock_01_rna_evidence_can_never_retain(self) -> None:
+        derivation = self.binding["lock_01_derivation"]
+        self.assertIs(derivation["rna_derived_locators_may_retain"], False)
+        self.assertEqual(
+            derivation["allowed_retain_evidence_basis"], "protein_topology_annotation"
+        )
+        allowed = set(derivation["allowed_retain_locators"])
+        retaining = [
+            r for r in derivation["rules"]
+            if r["disposition"] == CandidateDisposition.RETAIN.value
+        ]
+        self.assertTrue(retaining)
+        for rule in retaining:
+            with self.subTest(rule=rule["id"]):
+                self.assertEqual(rule["evidence_basis"], "protein_topology_annotation")
+                self.assertTrue(
+                    any(locator in rule["condition"] for locator in allowed),
+                    f"RETAIN rule must cite an allowed locator: {rule['condition']}",
+                )
+        # Any rule whose reason invokes RNA must defer.
+        for rule in derivation["rules"]:
+            if "RNA" in rule.get("reason", ""):
+                self.assertEqual(rule["disposition"], CandidateDisposition.DEFER.value)
+
+    def test_lock_01_missing_or_conflicting_evidence_never_excludes(self) -> None:
+        derivation = self.binding["lock_01_derivation"]
+        for rule in derivation["rules"]:
+            with self.subTest(rule=rule["id"]):
+                self.assertNotEqual(
+                    rule["disposition"], CandidateDisposition.EXCLUDE.value
+                )
+        self.assertIn(
+            "not_surface_target",
+            {u["outcome"] for u in derivation["unavailable_outcomes"]},
+        )
+        self.assertEqual(derivation["coverage"]["killed"], 0)
+
+    def test_lock_01_cannot_read_prior_dispositions_or_gate_labels(self) -> None:
+        derivation = self.binding["lock_01_derivation"]
+        barred = set(derivation["barred_fields"])
+        for field in ("disposition", "gate_score_status", "gate_pass_status"):
+            self.assertIn(field, barred)
+        # The decisive field must not itself be a barred field.
+        self.assertNotIn(derivation["decisive_field"], barred)
+        semantics = self.binding["lock_01_input_semantics"]
+        self.assertIs(semantics["may_be_inherited_as_lock_01_outcome"], False)
+
+    def test_lock_01_coverage_accounts_for_every_target(self) -> None:
+        derivation = self.binding["lock_01_derivation"]
+        coverage = derivation["coverage"]
+        self.assertEqual(
+            coverage["eligible"] + coverage["hold"] + coverage["killed"],
+            coverage["total_targets"],
+        )
+        self.assertEqual(
+            coverage["total_targets"],
+            self.binding["scope_consequences"]["raw_targets"],
+        )
+        self.assertIs(coverage["determinate_without_free_judgement"], True)
+        # Non-vacuous rules must carry an expected count, and those must reconcile.
+        counted = sum(
+            r["expected_count"] for r in derivation["rules"] if "expected_count" in r
+        )
+        self.assertEqual(counted, coverage["total_targets"])
+        for rule in derivation["rules"]:
+            if "expected_count" not in rule:
+                with self.subTest(rule=rule["id"]):
+                    self.assertIs(rule["vacuous_this_run"], True)
+                    self.assertTrue(rule["vacuous_reason"].strip())
+
+    # ---- Blocker 2: the context projection must be deterministic ----
+
+    def _project(self, rows: list[dict]) -> dict:
+        """Reference implementation of the declared projection rules."""
+
+        projection = self.binding["clinical_context_projection"]
+        key_fields = projection["determinism"]["dedupe_key"]
+        deduped = {tuple(row[f] for f in key_fields): row for row in rows}
+        ordered = sorted(
+            deduped.values(),
+            key=lambda r: tuple(r[f] for f in projection["determinism"]["sort_rows_by"]),
+        )
+        groups: dict[str, list[dict]] = {}
+        for row in ordered:
+            groups.setdefault(row[projection["group_by"]], []).append(row)
+
+        contexts = {}
+        for indication_id, members in sorted(groups.items()):
+            constant = projection["context_level_fields_required_constant"]
+            conflicted = any(
+                len({m[field] for m in members}) != 1 for field in constant
+            )
+            roles = {m["endpoint_role"] for m in members}
+            incomplete = roles != set(
+                projection["endpoint_handling"]["required_endpoint_roles"]
+            )
+            contexts[indication_id] = {
+                "clinical_context_ref": projection["context_ref_template"].format(
+                    indication_id=indication_id
+                ),
+                "endpoint_candidates": [
+                    (m["endpoint_role"], m["endpoint"]) for m in members
+                ],
+                "endpoint_maturity": projection["endpoint_handling"][
+                    "endpoint_maturity_value"
+                ],
+                "source_row_keys": [
+                    tuple(m[f] for f in projection["provenance"]["source_row_key_fields"])
+                    for m in members
+                ],
+                "outcome": "undefined_context" if (conflicted or incomplete) else None,
+            }
+        return contexts
+
+    @staticmethod
+    def _fixture() -> list[dict]:
+        """Synthetic rows mirroring the approved file's schema. Not real data."""
+
+        roles = (
+            ("regulatory_ultimate", "OS"),
+            ("pivotal_supporting", "PFS"),
+            ("early_adc_proof", "ORR"),
+            ("supportive_exploratory", "DCR"),
+        )
+        rows = []
+        for n in range(1, 10):
+            for role, endpoint in roles:
+                rows.append(
+                    {
+                        "indication_id": f"ctx_{n:02d}",
+                        "label": f"context {n}",
+                        "status": "derived_strategy",
+                        "source": "pilot",
+                        "clinical_need": "need",
+                        "confidence": "not_calibrated",
+                        "priority": str(n),
+                        "endpoint_role": role,
+                        "endpoint": endpoint,
+                        "rationale": f"rationale {role}",
+                    }
+                )
+        return rows
+
+    def test_projection_turns_36_rows_into_exactly_9_contexts(self) -> None:
+        projection = self.binding["clinical_context_projection"]
+        self.assertEqual(projection["input_rows"], 36)
+        self.assertEqual(
+            projection["output_contexts"],
+            self.binding["scope_consequences"]["raw_clinical_contexts"],
+        )
+        rows = self._fixture()
+        self.assertEqual(len(rows), projection["input_rows"])
+        contexts = self._project(rows)
+        self.assertEqual(len(contexts), projection["output_contexts"])
+        self.assertTrue(all(c["outcome"] is None for c in contexts.values()))
+
+    def test_projection_is_independent_of_input_row_order(self) -> None:
+        rows = self._fixture()
+        forward = self._project(rows)
+        backward = self._project(list(reversed(rows)))
+        # Deterministic: reversing the input changes nothing, including provenance.
+        self.assertEqual(forward, backward)
+        rotated = self._project(rows[7:] + rows[:7])
+        self.assertEqual(forward, rotated)
+
+    def test_duplicate_endpoint_rows_do_not_change_context_identity(self) -> None:
+        rows = self._fixture()
+        baseline = self._project(rows)
+        with_dupes = self._project(rows + rows[:5])
+        self.assertEqual(baseline, with_dupes)
+        self.assertEqual(
+            self.binding["clinical_context_projection"]["determinism"][
+                "measured_duplicate_role_pairs"
+            ],
+            0,
+        )
+
+    def test_conflicting_or_incomplete_rows_defer_and_never_exclude(self) -> None:
+        projection = self.binding["clinical_context_projection"]
+        for rule in projection["conflict_handling"]:
+            with self.subTest(rule=rule["id"]):
+                self.assertEqual(rule["disposition"], CandidateDisposition.DEFER.value)
+                self.assertEqual(rule["resulting_state"], "hold")
+                self.assertEqual(rule["outcome"], "undefined_context")
+
+        # A varying context-level field must take the conflict path.
+        rows = self._fixture()
+        rows[0] = dict(rows[0], confidence="calibrated")
+        conflicted = self._project(rows)
+        self.assertEqual(conflicted["ctx_01"]["outcome"], "undefined_context")
+
+        # A missing endpoint role must take the same path.
+        rows = [r for r in self._fixture() if not (
+            r["indication_id"] == "ctx_02" and r["endpoint_role"] == "early_adc_proof"
+        )]
+        incomplete = self._project(rows)
+        self.assertEqual(incomplete["ctx_02"]["outcome"], "undefined_context")
+        self.assertIsNone(incomplete["ctx_01"]["outcome"])
+
+    def test_every_input_row_is_traceable_to_its_context(self) -> None:
+        projection = self.binding["clinical_context_projection"]
+        self.assertIs(projection["provenance"]["every_input_row_must_be_referenced"], True)
+        rows = self._fixture()
+        contexts = self._project(rows)
+        referenced = [key for c in contexts.values() for key in c["source_row_keys"]]
+        expected = [
+            tuple(r[f] for f in projection["provenance"]["source_row_key_fields"])
+            for r in rows
+        ]
+        self.assertEqual(sorted(referenced), sorted(expected))
+        self.assertEqual(len(referenced), len(set(referenced)), "row referenced twice")
+
+    def test_context_identity_excludes_endpoint_and_endpoint_stays_unlocked(self) -> None:
+        projection = self.binding["clinical_context_projection"]
+        self.assertEqual(projection["identity_fields"], ["indication_id"])
+        self.assertEqual(projection["context_ref_depends_only_on"], "indication_id")
+        handling = projection["endpoint_handling"]
+        self.assertIs(handling["endpoint_locked"], False)
+        for dropped in ("endpoint", "endpoint_role"):
+            self.assertIn(dropped, handling["dropped_from_context_identity"])
+        self.assertEqual(handling["endpoint_maturity_value"], "not_locked_at_level_01")
+        # Changing an endpoint value must not change any context ref.
+        rows = self._fixture()
+        baseline = self._project(rows)
+        rows[1] = dict(rows[1], endpoint="EFS")
+        altered = self._project(rows)
+        self.assertEqual(
+            {k: v["clinical_context_ref"] for k, v in baseline.items()},
+            {k: v["clinical_context_ref"] for k, v in altered.items()},
+        )
 
     def test_validation_rules_bar_quarantine_only_targets(self) -> None:
         rules = " ".join(
