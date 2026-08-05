@@ -159,8 +159,8 @@ class InputBindingTests(unittest.TestCase):
             rules["evidence_granularity"], "disease_level_not_subgroup_level"
         )
 
-    def test_linkage_has_a_non_vacuous_basis(self) -> None:
-        """A binding whose only linkage basis is empty guarantees an empty pool."""
+    def test_vacuous_linkage_bases_must_block_execution(self) -> None:
+        """If no linkage basis qualifies, the binding must not authorise a run."""
 
         bases = self.binding["lock_03_linkage_rules"]["accepted_linkage_bases"]
         self.assertGreaterEqual(len(bases), 2)
@@ -169,14 +169,89 @@ class InputBindingTests(unittest.TestCase):
         for basis in bases:
             with self.subTest(basis=basis["basis_id"]):
                 self.assertEqual(basis["required_direction"], "supporting")
-                self.assertIsInstance(basis["measured_supporting_units"], int)
-                # A vacuous basis must be declared vacuous, and vice versa.
+                # Vacuity is decided by QUALIFYING units, not merely supporting
+                # ones: pan-cancer precedent is supporting but does not qualify.
+                self.assertIsInstance(basis["measured_qualifying_units"], int)
                 self.assertEqual(
-                    basis["vacuous_this_run"],
-                    basis["measured_supporting_units"] == 0,
+                    basis["vacuous_this_run"], basis["measured_qualifying_units"] == 0
                 )
         live = [b for b in bases if not b["vacuous_this_run"]]
-        self.assertTrue(live, "every linkage basis is vacuous: pool would be empty")
+        if not live:
+            self.assertIs(self.binding["binding"]["authorises_level_01_execution"], False)
+
+    def test_pan_cancer_precedent_cannot_establish_crc_linkage(self) -> None:
+        basis = next(
+            b for b in self.binding["lock_03_linkage_rules"]["accepted_linkage_bases"]
+            if b["basis_id"] == "LB-precedent"
+        )
+        self.assertIs(basis["requires_source_level_crc_indication"], True)
+        self.assertIs(basis["indication_fit_may_substitute"], False)
+        self.assertEqual(basis["other_cancer_precedent_disposition"], "metadata_only_hold")
+        for field in ("precedent_indication", "source_locator"):
+            self.assertIn(field, basis["required_recorded_fields"])
+        # Supporting-but-not-qualifying must be visible, not collapsed.
+        self.assertGreater(basis["measured_supporting_units"], 0)
+        self.assertEqual(basis["measured_qualifying_units"], 0)
+        self.assertTrue(basis["measurement_trap"].strip())
+
+        rules = {r["id"]: r for r in self.binding["lock_03_linkage_rules"]["rules"]}
+        for rule_id in ("LNK-02b", "LNK-02c"):
+            with self.subTest(rule=rule_id):
+                self.assertEqual(
+                    rules[rule_id]["disposition"], CandidateDisposition.DEFER.value
+                )
+                self.assertEqual(rules[rule_id]["resulting_state"], "hold")
+
+    def test_transmembrane_topology_alone_cannot_retain(self) -> None:
+        derivation = self.binding["lock_01_derivation"]
+        self.assertIs(derivation["retain_requirements_satisfiable_by_approved_inputs"], False)
+        required = {r["requirement_id"] for r in derivation["retain_requirements"]}
+        self.assertEqual(required, {"RQ-01", "RQ-02", "RQ-03"})
+        self.assertEqual(set(derivation["retain_requires_all_of"]), required)
+        claims = {r["requirement_id"]: r for r in derivation["retain_requirements"]}
+        self.assertEqual(claims["RQ-01"]["claim"], "plasma_membrane_localization")
+        self.assertEqual(claims["RQ-02"]["claim"], "extracellular_domain_or_topology")
+        for requirement in derivation["retain_requirements"]:
+            self.assertIs(requirement["must_be_protein_level"], True)
+
+        rules = {r["id"]: r for r in derivation["rules"]}
+        # The transmembrane-only rule must defer, and the RETAIN rule must
+        # demand all three requirements rather than a bare locator.
+        tm_rule = rules["L1-02"]
+        self.assertIn("transmembrane_segment_count", tm_rule["condition"])
+        self.assertEqual(tm_rule["disposition"], CandidateDisposition.DEFER.value)
+        self.assertEqual(tm_rule["resulting_state"], "hold")
+        retain = rules["L1-01"]
+        self.assertEqual(retain["disposition"], CandidateDisposition.RETAIN.value)
+        for requirement_id in required:
+            self.assertIn(requirement_id, retain["condition"])
+        self.assertNotIn("transmembrane_segment_count", retain["condition"])
+
+    def test_organelle_or_conflicting_localization_defers(self) -> None:
+        rules = {r["id"]: r for r in self.binding["lock_01_derivation"]["rules"]}
+        organelle = rules["L1-04"]
+        self.assertEqual(organelle["disposition"], CandidateDisposition.DEFER.value)
+        self.assertEqual(organelle["resulting_state"], "hold")
+        self.assertEqual(organelle["outcome"], "possible_surface_target")
+
+    def test_evidence_gaps_block_execution_and_name_their_next_run(self) -> None:
+        gaps = {g["id"]: g for g in self.binding["evidence_gaps"]}
+        self.assertEqual(set(gaps), {"EVGAP-01", "EVGAP-02"})
+        self.assertEqual(
+            set(self.binding["binding"]["level_01_execution_blocked_by"]), set(gaps)
+        )
+        self.assertEqual(
+            self.binding["binding"]["scope_of_authorisation"], "raw_axis_binding_only"
+        )
+        self.assertIs(self.binding["binding"]["authorises_level_01_execution"], False)
+        self.assertIs(self.binding["predicted_result_shape"]["is_authorised_to_execute"], False)
+        for gap in gaps.values():
+            with self.subTest(gap=gap["id"]):
+                self.assertIn(gap["blocks"], {"LOCK-01", "LOCK-03"})
+                for field in ("missing", "measured", "consequence", "required_next_run"):
+                    self.assertTrue(str(gap[field]).strip())
+        not_authorised = " ".join(self.binding["not_authorised"])
+        self.assertIn("执行 Level 01", not_authorised)
 
     def test_predicted_shape_reconciles_with_the_counting_identities(self) -> None:
         shape = self.binding["predicted_result_shape"]
@@ -204,13 +279,18 @@ class InputBindingTests(unittest.TestCase):
         )
         # Consistent with the LOCK-01 derivation and the LOCK-02 ceiling.
         self.assertEqual(tgt["eligible"], self.binding["lock_01_derivation"]["coverage"]["eligible"])
+        self.assertEqual(tgt["hold"], self.binding["lock_01_derivation"]["coverage"]["hold"])
         self.assertEqual(tgt["killed"], 0)
+        # An empty universe must not be presented as an authorised run.
+        if shape["eligible_universe_index"] == 0:
+            self.assertIs(shape["is_authorised_to_execute"], False)
+            self.assertTrue(shape["conclusion"].strip())
         calibrated = [
             e for e in self.binding["lock_02_status_ceiling"]
             if e["calibration"] == "calibrated"
         ]
         self.assertEqual(ctx["eligible"], sum(e["count"] for e in calibrated))
-        self.assertTrue(shape["bottleneck"].strip())
+        self.assertTrue(shape["derivation_note"].strip())
 
     def test_complete_search_exclusion_is_unavailable_with_this_input(self) -> None:
         rules = self.binding["lock_03_linkage_rules"]
@@ -280,10 +360,6 @@ class InputBindingTests(unittest.TestCase):
     def test_lock_01_rna_evidence_can_never_retain(self) -> None:
         derivation = self.binding["lock_01_derivation"]
         self.assertIs(derivation["rna_derived_locators_may_retain"], False)
-        self.assertEqual(
-            derivation["allowed_retain_evidence_basis"], "protein_topology_annotation"
-        )
-        allowed = set(derivation["allowed_retain_locators"])
         retaining = [
             r for r in derivation["rules"]
             if r["disposition"] == CandidateDisposition.RETAIN.value
@@ -291,10 +367,11 @@ class InputBindingTests(unittest.TestCase):
         self.assertTrue(retaining)
         for rule in retaining:
             with self.subTest(rule=rule["id"]):
-                self.assertEqual(rule["evidence_basis"], "protein_topology_annotation")
-                self.assertTrue(
-                    any(locator in rule["condition"] for locator in allowed),
-                    f"RETAIN rule must cite an allowed locator: {rule['condition']}",
+                # RETAIN must rest on localization plus extracellular topology,
+                # never on a bare annotation basis.
+                self.assertEqual(
+                    rule["evidence_basis"],
+                    "plasma_membrane_localization_and_extracellular_topology",
                 )
         # Any rule whose reason invokes RNA must defer.
         for rule in derivation["rules"]:

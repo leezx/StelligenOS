@@ -2479,3 +2479,20 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Accepted by reviewer, unchanged: #53／#54 列为 barred sources；输入 SHA-256 固定且不一致即中止；旧 `indication_endpoint_target_pairs.tsv` 不作输入；`no_known_linkage_after_complete_search` 本轮禁用；疾病级证据不用于亚群特异 linkage；**`DECISION-02` 获接受**；不执行 Gate、不评分、不排序；仓库不存候选／证据／结果；contract-only 范围与 GenModule／Gate 边界无污染。
 - Review write-back: 连接器 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本条与 handoff 第十一节。
 - Next: 推送同一 PR 并同步 PR 描述，请求复审。
+
+## 2026-08-04T20:45:00-04:00 — PR #58 第二轮审核裁决与修订（两条科学语义阻断，本 PR 降级为只绑 raw 轴）
+
+- Review: ChatGPT 对 PR #58（HEAD `8ac045e`，可合并、CI 成功）返回 `REQUEST_CHANGES`。确认上一轮两个工程问题已修复（36→9 投影确定化、LOCK-01 不再继承旧 disposition 并补了 mapping、输入隔离／SHA／DATA 边界／测试均正确），但暴露两个**更基础的科学语义问题**。两条**全部接受**。
+- Finding 1 accepted: **跨膜段证据不足以判定 `eligible_surface_target`。** `transmembrane_segment_count` 只证明跨膜拓扑，不能单独证明质膜定位、细胞外结构域存在、表位可被抗体接近、位于 CRC tumor-cell surface，也不能排除内质网／高尔基／线粒体等细胞器膜蛋白。PR #57 冻结的 LOCK-01 问题是「是否存在有合理依据的**细胞外可及蛋白形式**」，把 32 个靶点判 eligible 超过了输入证据强度。**执行者错误尤为直接：原始 statement 本身就写着 does not prove tumor-cell surface exposure，读到了却仍升级为 RETAIN。**
+- Fix 1: `eligible_surface_target` 改为必须同时满足 `RQ-01` plasma-membrane localization、`RQ-02` extracellular domain/topology、`RQ-03` protein-level provenance，三者缺一不可且全部要求蛋白层面来源。跨膜段单独 → `L1-02` DEFER(32)；无注释 → `L1-03` DEFER(9)；细胞器定位或定位冲突 → `L1-04` DEFER。实测已批准层 `plasma membrane`／`extracellular`／`localization`／`signal peptide`／`GPI` 关键词命中数**均为 0**，故 `retain_requirements_satisfiable_by_approved_inputs: false`，**eligible = 0**。
+- Finding 2 accepted: **泛癌 ADC precedent 不能直接证明 CRC linkage。** 「某靶点已有临床 ADC」可发生在任何癌种，最多证明 ADC modality precedent；`indication_fit` 若为 catalog 派生或模型判断也不能替代源级 CRC 证据（PR #57 已明确模型领域知识单独不足以录入 pair）。
+- Fix 2: `LB-precedent` 改为要求源证据本身含 CRC/colorectal indication，或 CRC 细胞系／PDO／PDX／动物模型的 ADC/preclinical targeting 证据，并记录 `precedent_indication` 与 `source_locator`；仅其他癌种 precedent → `LNK-02b` DEFER 并保留为 target/modality metadata；仅 `indication_fit` → `LNK-02c` DEFER。实测 `measured_source_level_crc_units = 0`——33 条 supporting 单元实质主张均为「Local ADC Index contains ADC precedent for〈药名〉」，不附 indication。
+- Measurement trap recorded: 33 条 statement 全含 "CRC" 字样，但只出现在免责句「precedent does not establish CRC efficacy or a safe therapeutic window」里。**执行者上一轮正是按「statement 是否包含 CRC」计数得到 33/33，属假阳性。** 已写入 `measurement_trap` 禁止该判据。
+- Consequence, PR downgraded: 两条修订各自独立把可 RETAIN 数量归零——target eligible 32→**0**、Eligible Universe Index 32→**0**、active 27→**0**。**已批准证据包无法支撑 Level 01 执行**；执行只会产出空的 Eligible Universe Index 与空快照，既无候选价值又有被误读为「已筛完」的风险。按审核方上一轮给出的退路降级：`scope_of_authorisation: raw_axis_binding_only`、`authorises_level_01_execution: false`。
+- Evidence gaps registered: **`EVGAP-01`**（阻断 LOCK-01，缺蛋白层面 plasma-membrane 定位与 extracellular domain/topology 证据，需受控 target-surface localization evidence extraction）；**`EVGAP-02`**（阻断 LOCK-03，缺源级 CRC-specific linkage 证据，需受控 CRC-specific target-context linkage evidence extraction）。两者各需独立 contract-only PR 与 `APPROVE`，均不在本 PR 授权范围。
+- Test invariant changed: 原「至少存在一个非空 linkage 依据」的断言若保留会阻止提交一个**诚实**的绑定。改为——每个依据的 `vacuous_this_run` 必须与其**合格**计数一致（不是 supporting 计数，泛癌 precedent 是 supporting 但不合格），且**无任何依据合格时 `authorises_level_01_execution` 必须为 `false`**。守卫对象由「必须有货」改为「没货就不许执行」。
+- Validation: `Ran 281 tests` 全部通过（`main` 基线 251 + 新增 30）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。
+- Mutation-tested (本轮 10 个，全部 `FAILED` 后精确回滚，与备份 `diff -q` 一致、恢复 `OK`): 跨膜段单独恢复 RETAIN、RETAIN 条件削减为只要 `RQ-01`、声明已批准输入可满足 RETAIN、细胞器定位改判 EXCLUDE、`indication_fit` 可替代源级证据、泛癌 precedent 声明为合格、去掉 `requires_source_level_crc_indication`、空池却声明授权执行、coverage 改回 32 eligible、`LNK-02b` 改判 RETAIN。
+- Accepted by reviewer, unchanged: context identity 只由 `indication_id` 决定；endpoint 不进 identity 也未锁定；顺序与重复行不改投影；冲突与残缺 context 进 DEFER；每个 source row 有 provenance；#53／#54 来源禁止；输入 SHA-256 固定；`no_known_linkage_after_complete_search` 本轮不可用；machine-extracted 证据可满足存在性但不得直接晋级 Level 02；不运行 Gate、不评分、不排序；仓库未写入候选／证据／结果。
+- Review write-back: 连接器 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本条与 handoff 第十二节。
+- Next: 推送同一 PR 并同步 PR 描述，请求复审。后续两个证据抽取契约需人类负责人决定先做哪个。

@@ -4,12 +4,15 @@
 - 前置工作包：PR #57（Level 01 判据定义），ChatGPT `APPROVE`
 - 机器可读绑定：[`../pools/adc_pool_level_01_input_binding.yaml`](../pools/adc_pool_level_01_input_binding.yaml)，由 `tests/test_adc_pool_level_01_input_binding.py` 校验
 - 当前状态：**contract-only，未执行，等待 ChatGPT 审核**
+- **授权范围：仅绑定 raw 轴。本契约不授权执行 Level 01**——被 `EVGAP-01`／`EVGAP-02` 两个证据缺口阻断，见第十节。
 
 ## 目的
 
 解除 PR #57 的 `BLOCK-02`，把 Level 01 的两条原始轴与 linkage 证据绑定到**已获独立批准**的外部产物上，并冻结「来源状态 → LOCK 输出上限」的映射。
 
 本文件**不执行 Level 01**，也**不授权任何新的枚举运行**。
+
+**并且，经第二轮审核核实，本契约也不授权执行 Level 01。** 已批准证据包既不含 plasma-membrane 定位证据，也不含源级 CRC-specific linkage 证据，`LOCK-01` 与 `LOCK-03` 都无法产出任何 RETAIN。执行只会得到一份空的 Eligible Universe Index 与空的 pool 快照。缺口与所需的后续受控抽取见第十节。
 
 ## 一、关键发现：不需要重跑枚举
 
@@ -65,7 +68,7 @@ Level 01 首次执行的范围因此小于那次被隔离的运行。**这是正
 
 依据是 PR #28 契约自身的禁令：「不得将 derived strategy 自动升级为 canonical clinical fact」。此处继承，并由测试机械保证未校准来源不可能得到 RETAIN。
 
-**直接后果：本次执行只有 1 个 context 可以 `eligible`。** Eligible Universe Index 因此恰为 1 × 32 = 32 pairs（32 见第六节 LOCK-01 推导）。这个数字小，但它是「只用已批准证据」的真实结果。
+**直接后果：只有 1 个 context 可以 `eligible`。** 但 LOCK-01 给出 0 个 eligible target，故 Eligible Universe Index 为 1 × 0 = **0**，见第六节与第十节。
 
 ## 六、LOCK-01：既有 disposition 列不可继承
 
@@ -75,27 +78,33 @@ Level 01 首次执行的范围因此小于那次被隔离的运行。**这是正
 
 ### LOCK-01 的确定性推导
 
-只允许一个来源、一个 dimension、一个判决字段。不是为了简洁，而是因为已批准层里只有这一个可判别字段。
+**第二轮审核裁决：跨膜段证据不足以判定 `eligible_surface_target`，本契约已据此更正。** `transmembrane_segment_count` 只证明蛋白具有跨膜拓扑，不能单独证明位于质膜、存在细胞外结构域、表位可被抗体接近，也不能排除内质网／高尔基／线粒体等细胞器膜蛋白。而 PR #57 冻结的 LOCK-01 问题是「是否存在有合理依据的**细胞外可及蛋白形式**」。原映射把 32 个靶点判为 eligible，超过输入证据能支持的强度。
 
-- 来源：`target_evidence_units.tsv`，`dimension = surface_reachability`，按 `gene_symbol` 连接
-- 判决字段：`evidence_locator`，实测取值只有两种——`transmembrane_segment_count`（32）与 `not_available`（9）
-- **禁止参与推导的字段**：`disposition`、`gate_score_status`、`gate_pass_status`、`evidence_class`、`clinical_stage_max`、`internalization_status`、`normal_tissue_risk_status`
+`eligible_surface_target` 现在要求**同时**满足三项，缺一不可，且全部要求蛋白层面来源：
+
+| 要求 | 内容 |
+|---|---|
+| `RQ-01` | plasma-membrane localization |
+| `RQ-02` | extracellular domain / topology |
+| `RQ-03` | protein-level provenance |
 
 | ID | 条件 | outcome | disposition | 数量 |
 |---|---|---|---|---|
-| `L1-01` | `evidence_locator = transmembrane_segment_count` 且 `direction = supporting` | `eligible_surface_target` | RETAIN | **32** |
-| `L1-02` | `evidence_locator = not_available` | `possible_surface_target` | DEFER | **9** |
-| `L1-03` | 同一 gene 同时存在 supporting 与 opposing | `possible_surface_target` | DEFER | 0（本次空规则） |
-| `L1-04` | 证据来源为 RNA 层面 | `possible_surface_target` | DEFER | 0（本次空规则） |
+| `L1-01` | 同时满足 `RQ-01`＋`RQ-02`＋`RQ-03` | `eligible_surface_target` | RETAIN | **0**（本次空规则） |
+| `L1-02` | 只有 `transmembrane_segment_count` supporting，无质膜定位与细胞外结构域证据 | `possible_surface_target` | DEFER | **32** |
+| `L1-03` | `evidence_locator = not_available` | `possible_surface_target` | DEFER | **9** |
+| `L1-04` | 注释指向细胞器膜，或定位证据冲突 | `possible_surface_target` | DEFER | 0（本次空规则） |
+| `L1-05` | 同 gene 同时 supporting 与 opposing | `possible_surface_target` | DEFER | 0（本次空规则） |
+| `L1-06` | 证据来源为 RNA 层面 | `possible_surface_target` | DEFER | 0（本次空规则） |
 
-RETAIN 的证据基础只能是 `protein_topology_annotation`，白名单只有 `transmembrane_segment_count` 一个 locator，`rna_derived_locators_may_retain: false`。原始 statement 自述「supports a membrane-associated target hypothesis but does not prove tumor-cell surface exposure」——这正合 LOCK-01 的职责（身份与拓扑），证明肿瘤细胞表面可得是 Level 02 的 T7，不在本层。
+- 来源固定为 `target_evidence_units.tsv`／`dimension = surface_reachability`／按 `gene_symbol` 连接
+- **禁止参与推导的字段**：`disposition`、`gate_score_status`、`gate_pass_status`、`evidence_class`、`clinical_stage_max`、`internalization_status`、`normal_tissue_risk_status`
+- `retain_requirements_satisfiable_by_approved_inputs: false`。实测依据：`target_evidence_units.tsv` 中 `plasma membrane`／`extracellular`／`localization`／`signal peptide`／`GPI` 关键词命中数**均为 0**；`surface_reachability` 只有 `transmembrane_segment_count`(32) 与 `not_available`(9)。
+- 原始 statement 自述「supports a membrane-associated target hypothesis but **does not prove tumor-cell surface exposure**」——这句话本身就说明它不足以 RETAIN。
 
-**两个 outcome 本次不可用：**
+**两个 outcome 仍然不可用**：`not_surface_target` 要求阳性的 negative protein/topology 证据，已批准层没有任何一条断言某靶点不是表面蛋白；`identity_unresolved` 要求身份解析结论字段，已批准层没有。
 
-- `not_surface_target`：要求阳性的 negative protein/topology 证据（注释为纯胞内、零跨膜段且无信号肽或 GPI 锚）。已批准层只有上述两种 locator，**没有任何一条断言某靶点不是表面蛋白**。因此本次执行不得排除任何靶点。
-- `identity_unresolved`：要求一个身份解析结论字段，已批准层没有，无法区分「身份未解析」与「注释不可得」，故一律落 `possible_surface_target`。
-
-完备性：32 + 9 = 41，全部靶点得到确定状态，**零自由裁量、零排除**。`VAL-B07`／`VAL-B08` 强制记录命中规则 ID 与 provenance，并禁止结果与旧 `disposition` 列存在函数依赖。
+**完备性：41 = 32 (`L1-02`) + 9 (`L1-03`)，eligible = 0，killed = 0。** 零自由裁量、零排除，但也**零录入**。
 
 ## 六之二、36 行 → 9 个 clinical context 的确定性投影
 
@@ -120,23 +129,29 @@ PR #57 规定 Level 01 的单元是 `clinical context × target` 且 endpoint �
 
 来源文档 Lock 3 列出的合格 linkage 形式本就包含「**已有 CRC preclinical 或 clinical targeting evidence**」，因此只绑表达类证据本身就是漏读来源文档。冻结两类依据：
 
-| 依据 | dimension | 判据 | 实测 supporting |
-|---|---|---|---|
-| `LB-expression` | `crc_prevalence` | `direction = supporting` | **0**（本次为空） |
-| `LB-precedent` | `adc_precedent` | `direction = supporting` 且 `locator = clinical_adc_names;clinical_stage_max` | **33** |
+| 依据 | dimension | 判据 | 实测 supporting | 实测**合格** |
+|---|---|---|---|---|
+| `LB-expression` | `crc_prevalence` | `direction = supporting` | 0 | **0** |
+| `LB-precedent` | `adc_precedent` | `supporting` 且 `locator = clinical_adc_names;clinical_stage_max` **且源证据本身写明 CRC/colorectal indication** | 33 | **0** |
 
-`indication_fit` 在 41 行中全部为 CRC 范围（19 个 `CRC clinical benchmark in local ADC Index`、22 个 `CRC public literature/landscape candidate`），故该字段用于确认 CRC 归属，不用于区分。
+**第二轮审核裁决：泛癌 ADC precedent 不能直接证明 CRC linkage，本契约已据此收紧。** 「某靶点已有临床 ADC」可能发生在任何癌种，它最多证明该 target 具有 ADC modality precedent。`LB-precedent` 现在要求源证据本身包含 CRC/colorectal indication，或 CRC 细胞系／PDO／PDX／动物模型的 ADC/preclinical targeting 证据，并记录 `precedent_indication` 与 `source_locator`。仅在其他癌种中的 precedent 保留为 target/modality metadata（`LNK-02b`），**不满足 LOCK-03**。
+
+`indication_fit` **不得替代**源级 CRC 证据（`LNK-02c`）：它只有两种 CRC-scoped 标签、对 41 行全部成立、不区分任何靶点，且属 catalog 派生判断；PR #57 已明确模型领域知识单独不足以录入 pair。
+
+**实测结果：`measured_source_level_crc_units = 0`。** `adc_precedent` 的 33 条 supporting 单元实质主张都是「Local ADC Index contains ADC precedent for〈药名〉」，**不附任何 indication**。
+
+> **一个必须记录的实测陷阱**：这 33 条 statement 全部含 "CRC" 字样，但只出现在免责句「precedent does not establish CRC efficacy or a safe therapeutic window」里。按「statement 是否包含 CRC」计数会得到 33/33，是假阳性。契约已写入 `measurement_trap`，禁止用该判据。
 
 | ID | 条件 | outcome | disposition |
 |---|---|---|---|
-| `LNK-01` | 命中任一依据，且该 context 为 `canonical_c0` | `linkage_evidence_exists` | RETAIN |
-| `LNK-02` | 命中任一依据，但 context 为 derived 或 benchmark 亚群 | `linkage_unassessed` | DEFER |
+| `LNK-01` | 命中任一合格依据，且 context 为 `canonical_c0` | `linkage_evidence_exists` | RETAIN |
+| `LNK-02` | 命中任一合格依据，但 context 为 derived／benchmark 亚群 | `linkage_unassessed` | DEFER |
+| `LNK-02b` | 仅有其他癌种 ADC precedent，无源级 CRC indication | `linkage_unassessed` | DEFER |
+| `LNK-02c` | 仅有 catalog 派生的 `indication_fit`，无源级 CRC 证据 | `linkage_unassessed` | DEFER |
 | `LNK-03` | 未命中任何依据 | `linkage_unassessed` | DEFER |
 | `LNK-04` | 未按规定范围完成检索 | `linkage_evidence_missing` | DEFER |
 
-`LNK-02` 的理由是：疾病级证据不能建立亚群特异 linkage。这与第五节的 LOCK-02 上限相互独立，但结论一致——目前只有 canonical context 能走到 RETAIN。
-
-测试断言**至少存在一个非空依据**，且每个依据的 `vacuous_this_run` 必须与其实测计数一致——若将来所有依据都变空，测试会直接失败，而不是静默产出空池。
+**两类依据本次都为空。** 测试据此断言：每个依据的 `vacuous_this_run` 必须与其**合格**计数一致（不是 supporting 计数——泛癌 precedent 是 supporting 但不合格）；且当没有任何依据合格时，`authorises_level_01_execution` **必须为 `false`**。这样全空的绑定会明确阻断执行，而不是静默产出空池。
 
 **`no_known_linkage_after_complete_search` 本次不可用。** 该 outcome 要求 `search_complete = true` 与完整检索记录；既有证据包为 machine-extracted、专家复核只完成 2/20，检索范围未闭合。`VAL-B03` 禁止其出现在输出中。
 
@@ -153,9 +168,9 @@ PR #57 规定 Level 01 的单元是 `clinical context × target` 且 endpoint �
 
 ## 八、本契约授权与不授权
 
-**授权：** 按本绑定执行 Level 01 一次，产出 PR #57 契约规定的五份产物。
+**授权：** 把 raw clinical context 轴与 raw target 轴绑定到 PR #29／#31 已批准的产物并固定 SHA-256；冻结 LOCK-01 推导、LOCK-02 状态上限、LOCK-03 linkage 依据与 clinical context 投影；记录 `EVGAP-01`／`EVGAP-02` 及其所需的后续受控抽取。
 
-**不授权：** 任何新的 context 或 target 枚举；任何靶点筛选排序、Tier 划分、资产推荐或实验建议；任何 Gate 执行或评分；endpoint 锁定或定量门槛；Level 02 与 Level 03；把被隔离运行的任何产物重新引入。
+**不授权：** **执行 Level 01**（被 `EVGAP-01`／`EVGAP-02` 阻断）；任何证据抽取或检索运行；任何新的 context 或 target 枚举；任何靶点筛选排序、Tier 划分、资产推荐或实验建议；任何 Gate 执行或评分；endpoint 锁定或定量门槛；Level 02 与 Level 03；把被隔离运行的任何产物重新引入。
 
 ## 九、输出验证
 
@@ -172,32 +187,33 @@ PR #57 规定 Level 01 的单元是 `clinical context × target` 且 endpoint �
 
 执行后每个产物文件仍须逐文件记录 SHA-256，并通过独立结果 PR 审核；`APPROVE` 前不得发布任何排序、推荐或资产决策。
 
-## 十、可以预见的结果形状（逐项可核对）
-
-按第五至七节的规则算出，不是估计：
+## 十、按本绑定推算的结果，以及为什么不授权执行
 
 | 量 | 值 |
 |---|---|
 | Raw Enumeration Matrix | **369** |
 | context 资格 | eligible **1**／hold **8**／superseded **0** |
-| target 资格 | eligible **32**／hold **9**／killed **0** |
-| Eligible Universe Index | **32**（1 × 32） |
-| Pool Level 01 | active **27**／hold **5**／reactivation-eligible **0** |
+| target 资格 | eligible **0**／hold **41**／killed **0** |
+| Eligible Universe Index | **0**（1 × 0） |
+| Pool Level 01 | active **0**／hold **0**／reactivation-eligible **0** |
 
-`CNT-03` 对账：32 = 27 + 5 + 0。推导：1 个 canonical context × 32 个 LOCK-01 eligible target = 32 pair；其中 27 个命中 `LB-precedent`，走 `LNK-01` 得 active；其余 5 个未命中任何 linkage 依据，走 `LNK-03` 得 hold。
+`CNT-02` 对账 1 × 0 = 0；`CNT-03` 对账 0 = 0 + 0 + 0。
 
-**执行结果必须逐项等于上表。任一项不符即视为执行偏离本契约。**
+LOCK-02 给出 1 个 eligible context，但 LOCK-01 给出 **0** 个 eligible target，故 Eligible Universe Index 为空，Level 01 不产生任何 pair 行。LOCK-03 的两类依据也都为空，即使 LOCK-01 通过也不会有 active。
 
-### 必须写进结果报告的结构性限制
+**结论：已批准证据包无法支撑 Level 01 执行。** 执行只会产出一份空的 Eligible Universe Index 与空的 pool 快照，既无候选价值，又有被误读为「已筛完」的风险。因此本契约**只授权绑定 raw 轴**。
 
-**27 个 active pair 的 linkage 全部只有「已有临床 ADC 针对该靶点」这一类，没有任何一条 CRC 表达证据**——因为已批准层里 41 条 `crc_prevalence` 全是 `not_available`。`adc_precedent` 的原始 statement 也自述「precedent does not establish CRC efficacy or a safe therapeutic window for a new asset」。
+### 阻断执行的两个证据缺口
 
-因此 `active` 在本次执行中的含义仅是「存在一条可回溯的 CRC-scoped ADC precedent」，**不代表该靶点在 CRC 上有表达支持**。这一句必须原样出现在结果报告里，否则 active 会被误读。
+| ID | 阻断 | 缺什么 | 实测依据 | 所需后续运行 |
+|---|---|---|---|---|
+| `EVGAP-01` | `LOCK-01` | plasma-membrane 定位与 extracellular domain/topology 证据（蛋白层面） | `plasma membrane`／`extracellular`／`localization`／`signal peptide`／`GPI` 关键词命中数均为 0 | 受控的 target-surface localization evidence extraction |
+| `EVGAP-02` | `LOCK-03` | 源级 CRC-specific linkage 证据 | `crc_prevalence` 41 条全 `not_available`；33 条 `adc_precedent` 均不附 indication；`indication_fit` 为 catalog 派生且对 41 行全部成立 | 受控的 CRC-specific target-context linkage evidence extraction |
 
-真正的瓶颈是 CRC 表达证据缺口与**剩余 18 个专家复核批次**，不是漏斗设计——与 PR #54 M6「portfolio 受数据集限制而非 Gate 限制」一致，只是这次建立在已批准证据上。
+两条缺口各自需要一次受控证据抽取运行，**各自走 contract-only PR 与 `APPROVE`**，都不在本 PR 的授权范围内。
 
 ## 十一、当前阻断
 
-- 本契约获 ChatGPT `APPROVE` 前，不得执行 Level 01。
+- **本契约获 `APPROVE` 后仍不得执行 Level 01**，直到 `EVGAP-01` 与 `EVGAP-02` 各自通过受控抽取补齐并被接受。
 - 本仓库不得写入候选池、快照、证据、cache、result 或 weights。
 - `DECISION-02` 未获裁决前，执行者不得自行改用严格方案。

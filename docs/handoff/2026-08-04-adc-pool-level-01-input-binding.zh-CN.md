@@ -5,6 +5,7 @@
 - 基线：`main` @ `5e0458b`
 - 前置：PR #57（Level 01 判据定义），已 `APPROVE` 并合并
 - 交付物类型：**contract-only**
+- 授权范围：**仅绑定 raw 轴，不授权执行 Level 01**（第二轮审核后降级，见第十二节）
 - 外部运行：**无。没有执行任何运行，没有产生任何 context、target、pair、disposition 或排序。**
 - 架构变更：`NO_ARCHITECTURE_CHANGE`（依据是 diff 范围，可由 `git diff --stat` 核验）
 - 审核状态：等待 ChatGPT `APPROVE`。**本 PR 不适用 `AGENTS.md`「审核豁免」。**
@@ -31,7 +32,7 @@ PR #57 的 `BLOCK-02` 写的是「唯一的 context 枚举来自被隔离的 202
 |---|---|
 | `docs/tasks/ADC_POOL_LEVEL_01_INPUT_BINDING_CONTRACT.zh-CN.md` | 输入绑定与执行契约（面向操作者，中文） |
 | `docs/pools/adc_pool_level_01_input_binding.yaml` | 机器可读绑定：允许来源＋SHA-256、禁止来源、状态上限、linkage 规则、输出验证 |
-| `tests/test_adc_pool_level_01_input_binding.py` | 26 项校验，把绑定钉在已合并的 Level 01 契约与实际存在的批准记录上 |
+| `tests/test_adc_pool_level_01_input_binding.py` | 30 项校验，把绑定钉在已合并的 Level 01 契约与实际存在的批准记录上 |
 
 ## 四、绑定的输入
 
@@ -49,7 +50,7 @@ PR #57 的 `BLOCK-02` 写的是「唯一的 context 枚举来自被隔离的 202
 ## 五、三条实测得到的硬约束
 
 **1. LOCK-02：最多只有 1 个 context 能 `eligible`。**
-实测 9 个 context 的来源状态是 1 个 `canonical_c0`（confidence 0.93）、7 个 `derived_strategy`（`not_calibrated`）、1 个 `benchmark_subgroup`（`benchmark_only`）。PR #28 契约自身禁止「把 derived strategy 自动升级为 canonical clinical fact」，此处继承为 outcome 上限：未校准来源**强制 DEFER**，由测试机械保证不可能得到 RETAIN。所以 Eligible Universe Index 恰为 1 × 32 = 32 pairs。
+实测 9 个 context 的来源状态是 1 个 `canonical_c0`（confidence 0.93）、7 个 `derived_strategy`（`not_calibrated`）、1 个 `benchmark_subgroup`（`benchmark_only`）。PR #28 契约自身禁止「把 derived strategy 自动升级为 canonical clinical fact」，此处继承为 outcome 上限：未校准来源**强制 DEFER**，由测试机械保证不可能得到 RETAIN。但 LOCK-01 给出 0 个 eligible target（见第十二节），故 Eligible Universe Index 为 1 × 0 = **0**。
 
 **2. LOCK-01：既有 `disposition` 列不可继承。**
 `target_evidence_catalog.tsv` 的 `disposition` 取值是 `benchmark`（19）／`candidate`（16）／`hold`（6）——不是 `CandidateFilterResult`。它们由 PR #28 的五条最小筛选层产生，判据与 LOCK-01 不同，且 41 行的 `gate_score_status` 全为 `not_scored_in_enumeration_run`、`gate_pass_status` 全为 `not_assessed`。测试断言这三个标签与 `CandidateDisposition` 取值无交集，防止混读。
@@ -67,7 +68,7 @@ PR #57 的 `BLOCK-02` 写的是「唯一的 context 枚举来自被隔离的 202
 
 ## 七、可以预见的结果形状（预先写明，避免误读）
 
-按上述规则算出（不是估计）：Raw Enumeration Matrix **369**；context 资格 eligible **1**／hold **8**；target 资格 eligible **32**／hold **9**／killed **0**；Eligible Universe Index **32**；Pool Level 01 active **27**／hold **5**／reactivation-eligible **0**。`CNT-03` 对账 32 = 27 + 5 + 0。**执行结果必须逐项等于这些数字**，任一项不符即视为偏离契约。
+**本节已被第十二节取代。** 第二轮审核后的推算是：Raw Enumeration Matrix **369**；context 资格 eligible **1**／hold **8**；target 资格 eligible **0**／hold **41**／killed **0**；Eligible Universe Index **0**；Pool Level 01 active **0**。`CNT-02` 对账 1 × 0 = 0，`CNT-03` 对账 0 = 0 + 0 + 0。这不是一次被授权运行的预期产物，而是**不授权执行的理由**。
 
 池子很小，真正的瓶颈不在漏斗设计，在**剩余 18 个专家复核批次**。这与 PR #54 M6「portfolio 受数据集限制而非 Gate 限制」一致，只是这次建立在已批准证据上。预先写明是为了避免结果出来后被误读为 Level 01 失效。
 
@@ -79,11 +80,11 @@ PR #57 的 `BLOCK-02` 写的是「唯一的 context 枚举来自被隔离的 202
 - 没有定义 Level 02／03；没有实现 PR #57 记录的六条缺口（`GAP-P01`..`GAP-P06`）。
 - 没有改 `BLOCK-02` 在 PR #57 文件里的原文——那是已获批准的历史记录，更正写在本 PR，不回写历史。
 - **没有补 #52／#53／#54／#57 的批准记录。** 人类负责人先要 Level 01，那件事中断在事实收集阶段、未写任何文件。已查明的事实一并留在这里，避免重做：#52 也没有记录（原以为只缺三份）；**四个 PR 在 GitHub 上都没有 review 记录**（`/reviews` 返回空）；已批准 head 与 merge commit 分别是 #52 `bfc04be`／`985edf8`、#53 `5318eca`／`09990c8`、#54 `8992563`／`58984e7`、#57 `6036c01`／`5e0458b`，其中 #54 与 #57 的合并 head 与获批 head 不同，差异都只是 main 经合并进入。四轮转述评审的逐字文本可从会话 transcript 恢复。
-- 没有修 `requirements.txt` 注释里过期的「207 tests」（实测 277）。仍属无关改动。
+- 没有修 `requirements.txt` 注释里过期的「207 tests」（实测 281）。仍属无关改动。
 
 ## 九、验证结果
 
-- `Ran 277 tests` 全部通过（`main` 基线 251 + 本次新增 26）。
+- `Ran 281 tests` 全部通过（`main` 基线 251 + 本次新增 30）。
 - `scripts/verify_repository_boundary.sh`：`Repository boundary check passed.`
 - `git diff --check`：通过；零 `__pycache__`。
 - 所有规模数字均由脚本读取外部产物实测：9 contexts、41 targets、369 pairs、36 endpoint 行、292 evidence units、41 genes、7 dimensions、supporting/opposing/unknown = 88/32/172、专家复核 2/20 批次覆盖 4 靶点、`cost_tier = low` 的 Gate 7 个。
@@ -138,6 +139,65 @@ ChatGPT 对 PR #58（HEAD `8f5c85d`）返回 `REQUEST_CHANGES`，两条阻断**�
 ### 审核方认可、本轮未改动的部分
 
 #53／#54 列为 barred sources；输入文件 SHA-256 固定且不一致即中止；旧 `indication_endpoint_target_pairs.tsv` 不作输入；`no_known_linkage_after_complete_search` 本轮禁用；疾病级证据不用于 derived／benchmark 亚群特异 linkage；`DECISION-02` 获接受；不执行 Gate、不评分、不排序；仓库不存候选、证据或结果；contract-only 范围与 GenModule／Gate 边界无污染。
+
+### 审核回写状态
+
+审核方尝试通过 GitHub 连接器提交正式 `REQUEST_CHANGES` review，连接器返回 403，未写回 GitHub。裁决以人类负责人转述为准，已完整记录于本节与 `logs/worklog.md`。
+
+## 十二、第二轮审核裁决与修订（`REQUEST_CHANGES`，2026-08-04）
+
+ChatGPT 对 PR #58（HEAD `8ac045e`）返回 `REQUEST_CHANGES`。上一轮两个工程问题被确认已修复；本轮暴露两个**更基础的科学语义问题**。两条**全部接受**，并导致本 PR 的授权范围被降级。
+
+### 阻断 1（接受）：跨膜段证据不足以判定 `eligible_surface_target`
+
+`transmembrane_segment_count` 只证明蛋白具有跨膜拓扑，不能单独证明质膜定位、细胞外结构域存在、表位可被抗体接近、位于 CRC tumor-cell surface，也不能排除内质网／高尔基／线粒体等细胞器膜蛋白。而 PR #57 冻结的 LOCK-01 问题是「是否存在有合理依据的**细胞外可及蛋白形式**」。把 32 个靶点判为 eligible 超过了输入证据能支持的强度。
+
+原始 statement 本身就写着「supports a membrane-associated target hypothesis but **does not prove tumor-cell surface exposure**」——我读了这句话，还是把它升级成了 RETAIN。这是本轮最直接的错误。
+
+修订：`eligible_surface_target` 现在要求同时满足 `RQ-01` plasma-membrane localization、`RQ-02` extracellular domain/topology、`RQ-03` protein-level provenance，三者缺一不可且全部要求蛋白层面来源。跨膜段单独 → `L1-02` `possible_surface_target` DEFER（32）；无注释 → `L1-03` DEFER（9）；细胞器定位或定位冲突 → `L1-04` DEFER。
+
+**实测：已批准层无法满足 `RQ-01` 与 `RQ-02`。** `target_evidence_units.tsv` 中 `plasma membrane`／`extracellular`／`localization`／`signal peptide`／`GPI` 关键词命中数**均为 0**。故 `retain_requirements_satisfiable_by_approved_inputs: false`，**eligible = 0**。
+
+### 阻断 2（接受）：泛癌 ADC precedent 不能直接证明 CRC linkage
+
+「某靶点已有临床 ADC」可能发生在任何癌种，最多证明该 target 具有 ADC modality precedent，不能自动证明与 CRC clinical context 存在 linkage；而 `indication_fit` 若只是 catalog 派生或模型判断，也不能替代源级 CRC 证据。
+
+修订：`LB-precedent` 现在要求源证据本身包含 CRC/colorectal indication，或 CRC 细胞系／PDO／PDX／动物模型的 ADC/preclinical targeting 证据，并记录 `precedent_indication` 与 `source_locator`。仅其他癌种的 precedent → `LNK-02b` DEFER，保留为 target/modality metadata。仅 `indication_fit` → `LNK-02c` DEFER。
+
+**实测：`measured_source_level_crc_units = 0`。** 33 条 `adc_precedent` supporting 单元的实质主张都是「Local ADC Index contains ADC precedent for〈药名〉」，不附任何 indication。
+
+**一个必须记录的实测陷阱**：这 33 条 statement 全部含 "CRC" 字样，但只出现在免责句「precedent does not establish CRC efficacy or a safe therapeutic window」里。我上一轮就是按「statement 是否包含 CRC」计数得到 33/33 的，那是假阳性。契约已写入 `measurement_trap` 禁止该判据。
+
+### 两条阻断的合并后果：本 PR 降级为只绑定 raw 轴
+
+两条修订各自独立地把可 RETAIN 的数量归零：
+
+| 量 | 修订前 | 修订后 |
+|---|---|---|
+| target eligible | 32 | **0** |
+| Eligible Universe Index | 32 | **0** |
+| Pool Level 01 active | 27 | **0** |
+
+因此**已批准证据包无法支撑 Level 01 执行**。执行只会产出空的 Eligible Universe Index 与空的 pool 快照，既无候选价值，又有被误读为「已筛完」的风险。
+
+按审核方上一轮给出的退路，本 PR 降级：`scope_of_authorisation: raw_axis_binding_only`、`authorises_level_01_execution: false`，并登记两个证据缺口：
+
+- **`EVGAP-01`**（阻断 `LOCK-01`）：缺蛋白层面的 plasma-membrane 定位与 extracellular domain/topology 证据。需要一次受控的 target-surface localization evidence extraction。
+- **`EVGAP-02`**（阻断 `LOCK-03`）：缺源级 CRC-specific linkage 证据。需要一次受控的 CRC-specific target-context linkage evidence extraction。
+
+两者各自需要独立的 contract-only PR 与 `APPROVE`，都不在本 PR 授权范围内。
+
+### 测试的守卫方式改了
+
+原有一条测试断言「至少存在一个非空 linkage 依据」。现在两类依据都空，那条断言若保留就会阻止提交一个**诚实**的绑定。改为：每个依据的 `vacuous_this_run` 必须与其**合格**计数一致（不是 supporting 计数——泛癌 precedent 是 supporting 但不合格），且**当没有任何依据合格时，`authorises_level_01_execution` 必须为 `false`**。守卫的对象从「必须有货」变成「没货就不许执行」，这才是正确的不变式。
+
+### 本轮变异检验
+
+10 个变异全部被捕获后精确回滚，回滚后与备份 `diff -q` 一致、测试恢复 `OK`：让跨膜段单独恢复 RETAIN、把 RETAIN 条件削减为只要 `RQ-01`、声明已批准输入可满足 RETAIN 要求、把细胞器定位改判 EXCLUDE、让 `indication_fit` 可替代源级证据、把泛癌 precedent 声明为合格、去掉 `requires_source_level_crc_indication`、在空池情况下声明授权执行、把 coverage 改回 32 eligible、把 `LNK-02b` 改判 RETAIN。
+
+### 审核方认可、本轮未改动的部分
+
+context identity 只由 `indication_id` 决定；endpoint 不进入 identity 也未被锁定；顺序变化与重复行不改投影；冲突与残缺 context 进入 DEFER；每个 source row 都有 provenance；#53／#54 来源明确禁止；输入 SHA-256 固定；`no_known_linkage_after_complete_search` 本轮不可用；machine-extracted 证据可满足存在性但不得直接晋级 Level 02；不运行 Gate、不评分、不排序；仓库未写入候选、证据或运行结果。
 
 ### 审核回写状态
 
