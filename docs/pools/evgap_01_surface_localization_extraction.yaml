@@ -1,0 +1,351 @@
+# EVGAP-01：target surface localization 证据抽取绑定（machine-readable）
+#
+# 目的：解除 PR #58 登记的 EVGAP-01，使 Level 01 的 LOCK-01 可以真正产出
+# eligible_surface_target。本文件不含任何证据数据，只含来源身份、字段白名单、
+# 到 RQ 要求的映射、输出 schema 与验证规则。
+#
+# 由 tests/test_evgap_01_surface_localization.py 校验。
+# LOCK-01 的 RQ-01/RQ-02/RQ-03 定义见 docs/pools/adc_pool_level_01_input_binding.yaml。
+
+extraction:
+  extraction_id: evgap_01_surface_localization
+  extraction_version: 0.1.0
+  discharges_gap: EVGAP-01
+  gap_source: docs/pools/adc_pool_level_01_input_binding.yaml
+  serves_lock: LOCK-01
+  status: contract_only_pending_review
+  execution_status: not_authorized_not_executed
+  # 本契约只授权一次抽取运行；不授权执行 Level 01。
+  authorises_extraction_run: true
+  authorises_level_01_execution: false
+  # 抽取完成并经结果 PR 接受后，需再开一个 PR 更新 Level 01 输入绑定以解除 EVGAP-01。
+  requires_followup_binding_pr: true
+
+# 本契约请求把这一个数据库版本纳入已批准来源集合。
+# 治理事实：该数据库此前从未被审核批准，仓库内无任何 APPROVE 记录提及它；
+# 已获批的证据抽取（PR #31）的 source_manifest 用的是 ADC_internalization_reference，
+# 没有接入本库——这正是已批准层只有跨膜段注释、没有质膜定位证据的原因。
+source_admission_request:
+  source_id: adc_surfaceome_reference_v0_3_0
+  dataset_id: ADC_surfaceome_reference
+  dataset_version: 0.3.0
+  snapshot_id: 2026-07-29-quant-topology-mm
+  root: external:databases/ADC_surfaceome_reference/processed/v0.3.0
+  builder: AssetGenOS/scripts/build_t7_surfaceome_reference.py
+  builder_version: 0.3.0
+  raw_manifest_sha256: 884f419118302ae39c3e50292d03295ff676434868e1061b39ead50f9cc977bb
+  previously_approved: false
+  previously_approved_evidence: 仓库内 logs/chatgpt-review-*.md 无任何一条提及 surfaceome；worklog 仅有一次 2026-08-01 mock 运行提及。
+  files:
+    - path: surfaceome_consensus.tsv
+      sha256: c7baa2ac86e1d173ef555e92036c2841efb5d106c4931bcf71507fbd5cbc1e7b
+      rows: 20797
+      role: 每基因共识与字段来源
+    - path: membrane_topology_evidence.tsv
+      sha256: d2680b961793f8ed83decbc92cdf04d5818f4cdbcb1e241c0ef34c4f06e77eca
+      rows: 4863
+      role: 拓扑逐条证据与 provenance
+    - path: source_evidence.tsv
+      sha256: a61222f03f2763af7733793d0bc85e19185515683a8fa1956d1559667cd662ab
+      rows: 41204
+      role: 逐来源证据行，供 RQ-03 provenance
+    - path: build_manifest.json
+      sha256: 9872dacd2f30532364576f29ce8c7428a8df9c6bc5abea408472bb3f79069fe2
+      role: 构建语义与版本声明
+
+  # 该库自身的 consensus_semantics 已经编码了本仓库反复要求的守卫。
+  # 这是主张纳入它的核心理由：语义不是本契约事后附加的，是它构建时就写死的。
+  inherited_semantics_guards:
+    - guard: absence_is_negative_evidence
+      value: false
+      matches_repo_rule: 缺失证据一律 DEFER，永不 EXCLUDE
+    - guard: membrane_topology_is_independent_surface_localization
+      value: false
+      matches_repo_rule: PR #58 第二轮阻断——跨膜段不足以判定细胞外可及
+    - guard: generic_membrane_is_surface_confirmation
+      value: false
+      matches_repo_rule: 泛膜注释不等于质膜定位
+    - guard: cci_receptor_role_is_surface_confirmation
+      value: false
+      matches_repo_rule: 受体角色推断不等于定位证据
+    - guard: tumor_ihc_is_surface_density
+      value: false
+      matches_repo_rule: 表达强度不等于表面密度，属 Level 02 T7
+    - guard: excluded_rna_source
+      value: GSE160572_MM_surfaceome.csv.gz 因其为 RNA FPKM 而被排除
+      matches_repo_rule: RNA 不得当作蛋白层面验证，无例外
+
+# 抽取范围：只处理已批准枚举里的 41 个靶点，不新增任何靶点。
+scope:
+  target_axis_source: external:result/gen_iet_crc_target_enumeration_20260802
+  target_axis_file: target_evidence_catalog.tsv
+  target_axis_sha256: 27bb81ebe5f1048b732f62c530095e0007212f818f3844e004118bb94525cc28
+  target_count: 41
+  join_key: gene_symbol
+  new_targets_allowed: false
+  measured_coverage_in_reference: 37
+  measured_absent_from_reference: 4
+  measured_absent_targets:
+    - AG7
+    - CA19-9
+    - EDBN
+    - Undisclosed
+
+# 只允许读取这些字段。白名单之外一律不得进入推导，防止把 Level 02 的量化
+# 与肿瘤上下文数据洗进 LOCK-01。
+allowed_fields:
+  from_surfaceome_consensus:
+    - gene_symbol
+    - uniprot_accessions
+    - uniprot_signal_peptide
+    - uniprot_gpi_anchor
+    - uniprot_transmembrane_segment_count
+    - uniprot_extracellular_domain
+    - uniprot_extracellular_domain_count
+    - uniprot_extracellular_max_length_aa
+    - uniprot_ecd_meets_min_length
+    - independent_evidence_family_count
+    - independent_evidence_families
+    - consensus_class
+    - discordance_flags
+    - dataset_version
+    - snapshot_id
+    - row_checksum
+  from_source_evidence:
+    - gene_symbol
+    - source_id
+    - source_release
+    - evidence_family
+    - evidence_kind
+    - evidence_codes
+    - source_url
+    - license
+
+# 明确禁止读取的文件与字段：它们属 Level 02 / T7，读入即重演 PR #58 的越界。
+barred_files:
+  - path: tumor_surface_measurement.tsv
+    reason: 肿瘤表面定量属 Level 02 T7，不属 LOCK-01。
+  - path: tumor_protein_context.tsv
+    reason: 肿瘤上下文蛋白组属 Level 02 T7。
+  - path: treatment_surface_response.tsv
+    reason: 治疗后表面变化属 T5/T7，Level 01 不评估。
+  - path: receptor_evidence.tsv
+    reason: 受体角色推断不构成定位证据（该库自身亦声明 cci_receptor_role_is_surface_confirmation=false）。
+barred_fields:
+  - field: cci_receptor_role
+    reason: 受体角色不是定位证据。
+  - field: uniprot_generic_membrane
+    reason: 泛膜注释不等于质膜定位。
+  - field: full_t7_gate_confidence_cap
+    reason: T7 置信上限属 Level 02，Level 01 不得引用。
+
+# RQ-01：质膜定位。要求至少两个独立证据家族。
+# 该库定义的三个独立家族为 curated_knowledge / imaging / cell_surface_capture_ms，
+# 且已把拓扑与泛膜排除在家族计数之外，故家族计数天然不会把拓扑当定位。
+rq_01_plasma_membrane_localization:
+  decisive_field: independent_evidence_family_count
+  minimum_independent_families: 2
+  independent_families:
+    - curated_knowledge
+    - imaging
+    - cell_surface_capture_ms
+  topology_counts_as_family: false
+  generic_membrane_counts_as_family: false
+  rna_may_satisfy: false
+
+# RQ-02：细胞外结构域。两条合格路径，任一成立即满足。
+rq_02_extracellular_domain:
+  paths:
+    - path_id: ECD-a
+      condition: uniprot_ecd_meets_min_length = true
+      applies_to: 有跨膜段且带 TOPO_DOM Extracellular 注释的蛋白
+      measured_count: 18
+    # 必需的第二条路径。UniProt 的 extracellular domain 字段由跨膜蛋白的
+    # TOPO_DOM 推导，GPI 锚定蛋白零跨膜段、无 TOPO_DOM，故该字段一律为 false。
+    # 若只用 ECD-a，CEACAM5、MSLN、FOLR1、MELTF 会因数据表示假象落入 hold，
+    # 而四者都是 confirmed_surface 且带信号肽与 GPI 锚——成熟蛋白整体位于胞外。
+    - path_id: ECD-b
+      condition: uniprot_gpi_anchor = true 且 uniprot_signal_peptide = true 且 uniprot_transmembrane_segment_count = 0
+      applies_to: GPI 锚定、带信号肽、零跨膜段的蛋白，成熟蛋白整体位于胞外
+      rationale_note: >-
+        这是修正数据表示假象，不是放宽标准：GPI 锚定加信号肽加零跨膜段在结构上
+        即意味着全长成熟蛋白位于细胞外侧，其胞外长度等于成熟蛋白长度。
+      measured_count: 4
+      measured_targets:
+        - CEACAM5
+        - FOLR1
+        - MELTF
+        - MSLN
+  luminal_domain_is_not_extracellular: true
+  luminal_domain_note: >-
+    溶酶体／内体膜蛋白的大结构域朝向腔内而非胞外。LAMP1 即属此类：
+    有跨膜段与信号肽，但无胞外 TOPO_DOM，故两条路径都不满足，落 hold。
+    这正是审核方要求的「细胞器膜定位必须 DEFER」。
+
+# RQ-03：蛋白层面 provenance。
+rq_03_protein_level_provenance:
+  requires_rows_in: source_evidence.tsv
+  required_fields:
+    - source_id
+    - source_release
+    - evidence_family
+    - source_url
+    - license
+  rna_derived_rows_admissible: false
+
+# 确定性映射。五条规则覆盖全部 41 个靶点，无自由裁量，零排除。
+derivation_rules:
+  - id: E1-01
+    condition: RQ-01 满足且 RQ-02 任一路径满足且 RQ-03 满足，且 discordance_flags 为空
+    lock_01_outcome: eligible_surface_target
+    disposition: RETAIN
+    resulting_state: eligible
+    expected_count: 22
+  - id: E1-02
+    condition: RQ-02 满足但独立证据家族数 < 2
+    lock_01_outcome: possible_surface_target
+    disposition: DEFER
+    resulting_state: hold
+    expected_count: 6
+    measured_targets:
+      - CLDN18
+      - GUCY2C
+      - LGR5
+      - PRLR
+      - RNF43
+      - SLC44A4
+  - id: E1-03
+    condition: 两条 RQ-02 路径都不满足（含细胞器腔内结构域）
+    lock_01_outcome: possible_surface_target
+    disposition: DEFER
+    resulting_state: hold
+    expected_count: 3
+    measured_targets:
+      - LAMP1
+      - TDGF1
+      - TM4SF1
+  - id: E1-04
+    condition: discordance_flags 非空
+    lock_01_outcome: possible_surface_target
+    disposition: DEFER
+    resulting_state: hold
+    reason: 定位证据冲突一律 DEFER，不得由抽取者裁决。
+    expected_count: 6
+    measured_targets:
+      - CD276
+      - F3
+      - IL2RA
+      - MET
+      - MST1R
+      - TACSTD2
+  - id: E1-05
+    condition: 靶点不在参考库中
+    lock_01_outcome: possible_surface_target
+    disposition: DEFER
+    resulting_state: hold
+    reason: 缺失是 DEFER，永不 EXCLUDE；该库自身 absence_is_negative_evidence 亦为 false。
+    expected_count: 4
+    measured_targets:
+      - AG7
+      - CA19-9
+      - EDBN
+      - Undisclosed
+
+# not_surface_target 仍然不可用。
+unavailable_outcomes:
+  - outcome: not_surface_target
+    reason: >-
+      本库明确 absence_is_negative_evidence=false，不产出「该靶点不是表面蛋白」
+      这类阳性否定断言。consensus_class = no_surface_support 只表示无支持证据，
+      不等于已证伪。故本次抽取仍不得排除任何靶点。
+  - outcome: identity_unresolved
+    reason: 本库无身份解析结论字段；未覆盖的 4 个靶点一律落 possible_surface_target。
+
+# 抽取后的预期结果，逐项可核对。
+predicted_result_shape:
+  targets_total: 41
+  eligible: 22
+  hold: 19
+  killed: 0
+  hold_breakdown:
+    E1-02_no_independent_localization: 6
+    E1-03_no_extracellular_domain: 3
+    E1-04_conflict: 6
+    E1-05_not_in_reference: 4
+  eligible_via_path:
+    ECD-a: 18
+    ECD-b: 4
+  # 执行结果必须逐项等于上列数字，任一项不符即视为偏离本契约。
+
+# 必须写进结果报告的发现，避免被误读。
+mandatory_findings:
+  - id: MF-01
+    finding: >-
+      GUCY2C 落 hold。它在本参考库中只有 curated_knowledge 一个独立证据家族，
+      未达两家族门槛，consensus_class 为 supported_surface 而非 confirmed_surface。
+      这与此前多模型共识把 GUCY2C 列为首选、以及被隔离运行的 Tier A 选择相反。
+      结果报告必须原样写出，不得因与既有偏好冲突而弱化。
+  - id: MF-02
+    finding: >-
+      eligible 只表示身份与拓扑层面存在有合理依据的细胞外可及蛋白形式，
+      不表示该靶点在 CRC 肿瘤细胞表面可得——后者是 Level 02 的 T7，本次未评估。
+  - id: MF-03
+    finding: >-
+      零排除。41 个靶点中没有任何一个被判为 not_surface_target。
+      hold 不是淘汰，是待证据。
+
+output_schema:
+  per_target_columns:
+    - gene_symbol
+    - uniprot_accessions
+    - rule_id
+    - lock_01_outcome
+    - disposition
+    - evaluation_status
+    - rq_01_satisfied
+    - rq_01_family_count
+    - rq_01_families
+    - rq_02_satisfied
+    - rq_02_path
+    - rq_03_satisfied
+    - consensus_class
+    - discordance_flags
+    - source_ids
+    - source_releases
+    - source_urls
+    - licenses
+    - dataset_version
+    - snapshot_id
+    - row_checksum
+    - extracted_at
+
+output_validation:
+  - id: VAL-E01
+    rule: 输出必须恰好 41 行，每行命中且仅命中一条 derivation_rules 规则，并记录 rule_id。
+  - id: VAL-E02
+    rule: 计数必须等于 predicted_result_shape：22 eligible + 19 hold + 0 killed，且 hold_breakdown 逐项相符。
+  - id: VAL-E03
+    rule: 输出中不得出现 not_surface_target 或 identity_unresolved。
+  - id: VAL-E04
+    rule: 每个 eligible 行必须记录 rq_02_path，取值限于 ECD-a 或 ECD-b。
+  - id: VAL-E05
+    rule: 每行必须有非空 source_ids、source_releases、source_urls、licenses，缺失即该行降为 hold。
+  - id: VAL-E06
+    rule: 四个输入文件与靶点轴文件的 SHA-256 必须与本契约记录一致，不一致即中止执行。
+  - id: VAL-E07
+    rule: 不得读取 barred_files 或 barred_fields 中的任何文件或字段。
+  - id: VAL-E08
+    rule: 输出中不得出现任何 Gate 分数、Gate 状态、T7 判定或肿瘤表面定量。
+  - id: VAL-E09
+    rule: mandatory_findings 的三条必须原样出现在结果报告中。
+  - id: VAL-E10
+    rule: 每个产物文件必须逐文件记录 SHA-256 并写入结果 PR 的 handoff。
+
+not_authorised:
+  - 执行 Level 01
+  - 评估 T7 或任何肿瘤细胞表面可得性
+  - 新增任何靶点或 clinical context
+  - 任何筛选排序、Tier 划分、资产推荐或实验建议
+  - 任何 Gate 执行或评分
+  - 读取被禁文件或字段
+  - 把被隔离运行（PR #53、#54）的任何产物引入
