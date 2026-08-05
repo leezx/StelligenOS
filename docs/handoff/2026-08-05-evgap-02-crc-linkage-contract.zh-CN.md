@@ -24,7 +24,7 @@
 |---|---|
 | `docs/tasks/EVGAP_02_CRC_LINKAGE_EXTRACTION_CONTRACT.zh-CN.md` | 抽取契约（面向操作者，中文） |
 | `docs/pools/evgap_02_crc_linkage_extraction.yaml` | 机器可读绑定：来源分层、四类 linkage、检索范围冻结、五条规则与优先级、输出 schema 与 15 条验证 |
-| `tests/test_evgap_02_crc_linkage.py` | 25 项校验，含 32 种条件组合的穷举求值证明 |
+| `tests/test_evgap_02_crc_linkage.py` | 29 项校验，含 32 种条件组合的穷举求值证明 |
 
 ## 三、与 EVGAP-01 独立，这决定了范围
 
@@ -92,11 +92,11 @@ EVGAP-01 读固定数据集，结果可事先算出并逐项核对（22／19）�
 - 没有更新 `adc_pool_level_01_input_binding.yaml`——解除 `EVGAP-02` 须待抽取执行、结果 PR 获批后另开 PR。
 - 没有预测结果计数（见第八节）。
 - 未补 #52／#53／#54／#57／#58／#59／#60 的批准记录（现为七份），事实已查全但未写文件。
-- 没有修 `requirements.txt` 注释里过期的「207 tests」（实测 334）。属无关改动。
+- 没有修 `requirements.txt` 注释里过期的「207 tests」（实测 338）。属无关改动。
 
 ## 十一、验证结果
 
-- `Ran 334 tests` 全部通过（`main` 基线 309 + 本次新增 25）。
+- `Ran 338 tests` 全部通过（`main` 基线 309 + 本次新增 29）。
 - `scripts/verify_repository_boundary.sh`：`Repository boundary check passed.`
 - `git diff --check`：通过；零 `__pycache__`。
 - **13 个变异全部被捕获后精确回滚**，与备份 `diff -q` 一致、测试恢复 `OK`：让 RNA 满足 LOCK-01、把 C 类声明为 ADC 疗效证据、让泛癌 precedent 算作 linkage、让疾病级证据支撑亚群、把 `L3-03` 改判 RETAIN、把完整检索排除改判 killed、把检索完整性排到优先级最后、允许静默跳过来源、开放 Tier 2 派生库、自行填入 `SRCADM-02` 记录、偷偷加入预测计数、要求未找到证据的行也有 `source_ref`、把范围缩到依赖 LOCK-01 状态。
@@ -115,3 +115,55 @@ EVGAP-01 读固定数据集，结果可事先算出并逐项核对（22／19）�
 - 本契约获 `APPROVE` 前，不得执行抽取。
 - 抽取完成也**不**解除 `EVGAP-01`，Level 01 仍不可执行。
 - 本仓库不得写入证据、候选、快照、cache、result 或 weights。
+
+## 十四、第一轮审核裁决与修订（`REQUEST_CHANGES`，三条阻断全部接受）
+
+ChatGPT 对 PR #61（HEAD `430e85f`）返回 `REQUEST_CHANGES`。三条**全部接受**。
+
+### 阻断 1（接受）：D 类检索没有真正进入 search completeness，且 endpoint 覆盖语义未冻结
+
+契约声明 A/B/C 按 target 检索、D 类按 369 个 pair 评估，但 `search_complete_definition` **只要求每个 target 完成三类 source-class 检索**，没有要求每个 pair 对 D 类完成可审计的检索。审核方指出的两个后果都成立：subgroup pair 可能在未真正检索 D 类时直接落 `L3-03`；「四类均无命中」的 `L3-05` 也可能在 D 类未检索时被错误触发。
+
+同时，`peer_reviewed_literature` 有 PubMed 与 PMC 两个 endpoint、`public_molecular_dataset` 有三个，而契约只要求覆盖 source class——**执行者可以只查其中一个，结果不可复现。**
+
+修订：
+
+- 新增 `per_pair_required_class_d_search`，369 个 pair 全覆盖，每 pair 记录六个字段（`class_d_query_expression`／`class_d_executed_at`／`class_d_result_count`／`class_d_reachable`／`class_d_source_coverage_ref`／`class_d_search_complete`），六个字段同时进入 `disposition_columns`
+- `incomplete_consequence: L3-01`——**D 类未完成必须落 `L3-01`，不得落 `L3-03` 或 `L3-05`**（`VAL-L18`）；`L3-03` 与 `L3-05` 都加 `requires_class_d_search_complete: true`；`L3-01` 加 `covers_both_completeness_levels: true`
+- `search_complete_requires_both_levels: true`，两级为 target 级 endpoint 覆盖与 pair 级 D 类覆盖
+- `coverage_unit: endpoint`，每个 source class 加 `all_endpoints_required: true` 与 `minimum_endpoint_set`（PubMed+PMC；ClinicalTrials.gov；TCGA+GEO+HPA），缺任一 endpoint 该 target 全部 pair 落 `L3-01`（`VAL-L19`）
+- 新增 `unreachable_class_d_consequence: search_incomplete_for_that_pair`
+
+### 阻断 2（接受）：disposition 与 evidence 之间没有稳定引用关系
+
+初稿 disposition 表只有 `evidence_row_count`，**单条 disposition 无法证明自己由哪些 evidence 行支持**。而我的测试用两张表列的**并集**验证条件必填字段存在——审核方指出这恰好掩盖了问题。这条批评对测试方法本身，比对契约更准。
+
+修订：
+
+- evidence 表新增唯一 `evidence_id`（`evidence_row_key`／`evidence_id_unique`）
+- disposition 表新增三组引用：`supporting_evidence_refs`、`class_d_evidence_refs`、`other_cancer_evidence_refs`
+- 新增 `evidence_reference_requirements`，逐规则冻结「必须引用什么、必须不引用什么」，`L3-02` 按 canonical／subgroup 拆成两条：canonical 至少一条 A/B/C；subgroup 另需至少一条 D；`L3-03` 须有疾病级证据且 D refs 为空；`L3-04` supporting 必须为空、只能引用 other-cancer；`L3-05` 三组全空且检索 provenance 完整；`L3-01` 不得伪造
+- 新增 `VAL-L16`（引用的 id 必须存在于 evidence 表且 `pair_id` 一致）、`VAL-L17`（逐规则引用约束）、`VAL-L20`（`evidence_row_count` 必须等于三组 refs 去重后总条数）
+- 每个 `conditionally_required_columns` 块加 `table` 字段，**测试改为逐表检查，不再用并集**（`VAL-L09` 同步改写）
+
+### 阻断 3（接受）：PR 不可合并
+
+同步 `origin/main`（`0190a73`）。`logs/worklog.md` 冲突按时间顺序解决：main 的 12:45 EDT 在前、我的 13:30 在后，断言无残留冲突标记、两侧每个条目与每个标题都在。
+
+合并后核验：相对 `main` 仍**只有 5 个文件**（本 handoff、契约 YAML、契约文档、worklog、测试），**未混入 PR #60 的 preview 结果**（`grep -c preview` = 0），未引入其他无关契约。
+
+### 一处执行者操作失误，已自查并修复
+
+中途为处理 PR #60 而切分支时执行了 `git stash -u`，把阻断 1／2 的未提交 YAML 改动一并藏入栈中，切回后未恢复，导致随后的编辑落在了未修订的版本上、测试报 `KeyError`。已定位 `stash@{0}`、丢弃冲突编辑、`git stash pop` 恢复全部 133 行改动后重做，无内容丢失。
+
+### 本轮变异检验
+
+12 个变异全部被捕获后精确回滚，与备份 `diff -q` 一致、测试恢复 `OK`：把 D 类改为非必需、让 D 类未完成落 `L3-03`、让 `L3-05` 不要求 D 类完成、让完整性只要 target 级、覆盖粒度退回 source class、只查 PubMed 就算覆盖 class、去掉 `evidence_id`、让 `L3-04` 可引用 supporting refs、让 subgroup RETAIN 不需 D refs、让 `L3-05` 可引用证据、把必填列声明到错误的表、删掉 `L3-03` 的 D refs 为空约束。
+
+### 审核方认可、本轮未改动的部分
+
+EVGAP-02 与 EVGAP-01／SRCADM-01 独立；覆盖全部 369 pairs 而非 provisional 22；Tier 1／Tier 2 分层合理且 Tier 2 在 admission 前保持禁用；A/B/C/D 四类框架完整；RNA 可支持 linkage 但不满足 LOCK-01；C 类可作 CRC linkage existence 但必须明确不是 ADC efficacy；disease-level 不能自动支持 subgroup；other-cancer precedent 只能作 metadata；`L3-05` 是可逆的 `EXCLUDE_FROM_ACTIVE_POOL` 而非科学证伪或 killed；不执行 Gate、不执行 Level 01、不解除 `EVGAP-01`；不预写 discovery run 的结果数量。
+
+### 审核回写状态
+
+审核方尝试通过 GitHub 连接器提交正式 `REQUEST_CHANGES`，连接器返回 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本节与 `logs/worklog.md`。

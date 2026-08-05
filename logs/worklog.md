@@ -2584,3 +2584,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Noticed, not fixed: `requirements.txt` 注释仍写「207 tests」，实测 334。属无关改动，只记录。
 - Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**，须经 ChatGPT `APPROVE`。
 - Next: 推送并创建 PR 送审。请审核方裁决 Tier 1／Tier 2 的划分是否成立，以及 C 类作为 linkage 存在性依据是否可接受。
+
+## 2026-08-05T15:40:00-04:00 — PR #61 第一轮审核裁决与修订（三条阻断全部接受）
+
+- Review: ChatGPT 对 PR #61（HEAD `430e85f`，CI 成功但 `mergeable=false`）返回 `REQUEST_CHANGES`，三条阻断。**全部接受。**
+- Finding 1 accepted: **D 类检索没有真正进入 search completeness，且 endpoint 覆盖语义未冻结。** 契约声明 A/B/C 按 target、D 类按 369 pair，但 `search_complete_definition` 只要求 target 完成三类 source-class 检索，未要求每 pair 对 D 类完成可审计检索——后果是 subgroup pair 可能在未检索 D 类时直接落 `L3-03`，`L3-05`「四类均无命中」也可能在 D 类未检索时被错误触发。同时 `peer_reviewed_literature` 有 PubMed／PMC 两个 endpoint、`public_molecular_dataset` 有三个，而契约只要求覆盖 source class，**执行者可只查其中一个，结果不可复现**。
+- Fix 1: 新增 `per_pair_required_class_d_search`（369 pair 全覆盖，六个字段并同时进入 `disposition_columns`），`incomplete_consequence: L3-01`——**D 类未完成必须落 `L3-01`，不得落 `L3-03` 或 `L3-05`**（`VAL-L18`）；`L3-03`／`L3-05` 加 `requires_class_d_search_complete: true`，`L3-01` 加 `covers_both_completeness_levels: true`；`search_complete_requires_both_levels: true`；`coverage_unit: endpoint`，每个 source class 加 `all_endpoints_required: true` 与 `minimum_endpoint_set`（PubMed+PMC／ClinicalTrials.gov／TCGA+GEO+HPA），缺任一 endpoint 该 target 全部 pair 落 `L3-01`（`VAL-L19`）；新增 `unreachable_class_d_consequence`。
+- Finding 2 accepted: **disposition 与 evidence 之间没有稳定引用关系。** 初稿 disposition 只有 `evidence_row_count`，单条 disposition 无法证明自己由哪些 evidence 行支持——`L3-02` RETAIN 无法回答「哪条 A/B/C 支持、subgroup 时哪条 D 支持、是否有 other-cancer precedent 但未被错误算入」。**而我的测试用两张表列的并集验证条件必填字段，恰好掩盖了这个问题——这条批评对测试方法本身比对契约更准。**
+- Fix 2: evidence 表新增唯一 `evidence_id`；disposition 表新增 `supporting_evidence_refs`／`class_d_evidence_refs`／`other_cancer_evidence_refs`；新增 `evidence_reference_requirements` 逐规则冻结引用约束（`L3-02` 按 canonical／subgroup 拆两条，subgroup 另需至少一条 D；`L3-03` 须疾病级证据且 D refs 空；`L3-04` supporting 必空、只能引用 other-cancer；`L3-05` 三组全空且检索 provenance 完整；`L3-01` 不得伪造）；新增 `VAL-L16`／`VAL-L17`／`VAL-L20`；每个 `conditionally_required_columns` 块加 `table` 字段，**测试改为逐表检查、不再用并集**。
+- Finding 3 accepted: PR 不可合并。已同步 `origin/main`（`0190a73`），`logs/worklog.md` 冲突按时间顺序解决（main 的 12:45 EDT 在前、我的 13:30 在后），断言无残留冲突标记、两侧条目与标题全在。合并后核验相对 `main` 仍**只有 5 个文件**，**未混入 PR #60 的 preview 结果**（`grep -c preview` = 0），未引入其他无关契约。
+- Executor mistake, self-caught: 中途为处理 PR #60 切分支时执行 `git stash -u`，把阻断 1／2 的未提交 YAML 改动一并藏入栈，切回后未恢复，导致后续编辑落在未修订版本上、测试报 `KeyError`。已定位 `stash@{0}`、丢弃冲突编辑、`git stash pop` 恢复全部 133 行改动后重做，无内容丢失。**教训：跨分支处理另一个 PR 前，未提交改动应先提交或明确记录 stash，切回后第一步就恢复。**
+- Validation: `Ran 338 tests` 全部通过（`main` 基线 309 + 新增 29，由 25 增至 29）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。
+- Mutation-tested (本轮 12 个，全部 `FAILED` 后精确回滚，与备份 `diff -q` 一致、恢复 `OK`): D 类改为非必需、D 类未完成落 `L3-03`、`L3-05` 不要求 D 类完成、完整性只要 target 级、覆盖粒度退回 source class、只查 PubMed 就算覆盖、去掉 `evidence_id`、`L3-04` 可引用 supporting refs、subgroup RETAIN 不需 D refs、`L3-05` 可引用证据、必填列声明到错误的表、删掉 `L3-03` 的 D refs 为空约束。
+- Accepted by reviewer, unchanged: EVGAP-02 与 EVGAP-01／SRCADM-01 独立；覆盖全部 369 pairs；Tier 1／Tier 2 分层与 Tier 2 禁用；A/B/C/D 四类框架；RNA 可支持 linkage 但不满足 LOCK-01；C 类可作 linkage existence 但非 ADC efficacy；disease-level 不自动支持 subgroup；other-cancer 只作 metadata；`L3-05` 可逆非证伪非 killed；不执行 Gate／Level 01、不解除 `EVGAP-01`；不预写 discovery run 结果数量。
+- Review write-back: 连接器 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本条与 handoff 第十四节。
+- Next: 推送同一 PR 并同步 PR 描述请求复审。

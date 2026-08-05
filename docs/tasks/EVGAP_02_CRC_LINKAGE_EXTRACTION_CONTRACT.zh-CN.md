@@ -87,10 +87,27 @@
 
 PR #58 曾判定 `no_known_linkage_after_complete_search` **不可用**，理由是检索范围未闭合。本节正是使该 outcome 变为可用的前提——范围一旦冻结，「是否完成规定检索」就成为可判定的事实，而不是执行者的自我声明。
 
-- 每个 target 必须对三类 Tier 1 来源（文献、试验注册库、公开分子数据集）各执行检索
-- 必须记录 query template，含 target 符号与同义词、CRC 术语、类别特异术语、日期范围
-- 每次检索必须记录 `source_class`、`endpoint`、`query_expression`、`executed_at`、`result_count`、`reachable`
-- **来源不可达 → 该 target 判为检索未完成**（`search_incomplete_for_that_target`），不得静默跳过（`silent_skip_forbidden: true`）
+完整性分**两级**，`search_complete_requires_both_levels: true`，两级都达标才算完成。
+
+**第一级：target 级，按 endpoint 判定（不是按 source class 判定）。**
+
+初稿只要求「覆盖 source class」，执行者可以只查 PubMed 不查 PMC、只查 TCGA 不查 GEO 与 HPA，结果不可复现——这是审核裁决指出的漏洞。现改为 `coverage_unit: endpoint`，每个 source class 都写明 `minimum_endpoint_set` 且 `all_endpoints_required: true`：
+
+| source class | 必查 endpoints |
+|---|---|
+| `peer_reviewed_literature` | PubMed **与** PMC |
+| `clinical_trial_registry` | ClinicalTrials.gov |
+| `public_molecular_dataset` | TCGA **与** GEO **与** Human Protein Atlas |
+
+缺任一 endpoint，该 target 的全部 pair 落 `L3-01`（`VAL-L19`）。
+
+**第二级：pair 级 D 类检索，369 个 pair 全覆盖。**
+
+D 类是 pair 级判据，初稿却没要求它进入 `search_complete`——后果是 subgroup pair 可能在从未检索 D 类的情况下直接落 `L3-03`，或使「四类均无命中」的 `L3-05` 被错误触发。现要求每个 pair 记录六个字段：`class_d_query_expression`、`class_d_executed_at`、`class_d_result_count`、`class_d_reachable`、`class_d_source_coverage_ref`、`class_d_search_complete`。
+
+**某个 pair 的 D 类检索未完成时，该 pair 必须落 `L3-01`，不得落 `L3-03`，也不得落 `L3-05`**（`VAL-L18`）。`L3-03` 与 `L3-05` 都带 `requires_class_d_search_complete: true`。
+
+**其他要求**：必须记录 query template（target 符号与同义词、CRC 术语、类别特异术语、日期范围）；每次检索记录 `query_expression`、`executed_at`、`result_count`、`reachable`；来源不可达 → 该 target 检索未完成，D 类不可达 → 该 pair 检索未完成；`silent_skip_forbidden: true`。
 
 ### 检索粒度
 
@@ -124,7 +141,28 @@ EVGAP-01 读取的是已固定的数据集，结果可以事先算出并逐项�
 
 ## 七、输出与 provenance 分层
 
-**两张表。** `evidence` 表每条证据一行，含来源文档规定的 13 列必需最小集，另加 `linkage_class`、`is_adc_efficacy_evidence`、`positive_fraction_or_prevalence`、`malignant_cell_attribution`、`retrieved_at`。`disposition` 表每个 pair 一行，21 列，含 `rule_id`、六项检索完整性字段、`provenance_kind`、`provisional_only`、`may_advance_to_level_02`。
+**两张表，且两表之间有稳定的一对一引用关系。**
+
+`evidence` 表每条证据一行，**19 列**，含来源文档规定的 13 列必需最小集，外加 `evidence_id`（唯一）、`linkage_class`、`is_adc_efficacy_evidence`、`positive_fraction_or_prevalence`、`malignant_cell_attribution`、`retrieved_at`。
+
+`disposition` 表每个 pair 一行，**30 列**，含 `rule_id`、六项检索完整性字段、六个 D 类 pair 级字段、`provenance_kind`、`provisional_only`、`may_advance_to_level_02`，以及**三组证据引用**：`supporting_evidence_refs`、`class_d_evidence_refs`、`other_cancer_evidence_refs`。
+
+### 为什么需要这三组引用
+
+初稿的 disposition 表只有 `evidence_row_count`——**单条 disposition 无法证明自己由哪些 evidence 行支持**。审核裁决指出，`L3-02` RETAIN 应当能回答：哪条 A/B/C 证据支持？subgroup RETAIN 时哪条 D 证据支持？是否有其他癌种 precedent 但没被错误算入 linkage？初稿都答不了。
+
+每条规则必须引用什么、必须不引用什么，已逐条冻结（`VAL-L17`）：
+
+| 规则 | `supporting_evidence_refs` | `class_d_evidence_refs` | `other_cancer_evidence_refs` |
+|---|---|---|---|
+| `L3-01` | 必须为空 | 必须为空 | 可空（不得伪造） |
+| `L3-02` canonical | 至少一条 A/B/C | 可空 | 可有但不得计入 linkage |
+| `L3-02` subgroup | 至少一条 A/B/C | **至少一条** | 可有但不得计入 linkage |
+| `L3-03` | 至少一条疾病级 CRC 证据 | **必须为空** | 可空 |
+| `L3-04` | **必须为空** | 必须为空 | 至少一条 |
+| `L3-05` | 必须为空 | 必须为空 | 必须为空（检索 provenance 须完整） |
+
+另加 `VAL-L16`（每个引用的 id 必须存在于 evidence 表，且所引用行的 `pair_id` 与该 disposition 一致）与 `VAL-L20`（`evidence_row_count` 必须等于三组 refs 去重后的总条数，不得只报计数不给 refs）。
 
 **三种 `provenance_kind`，要求不同**（这是 PR #59 阻断 3 的教训）：
 
@@ -134,9 +172,11 @@ EVGAP-01 读取的是已固定的数据集，结果可以事先算出并逐项�
 | `no_evidence_found_after_complete_search` | 六项检索完整性字段 + `no_evidence_found_reason` | `source_ref`、`source_locator` |
 | `search_incomplete` | `search_complete`、`search_scope`、`searched_at`、`no_evidence_found_reason` | `source_ref`、`source_locator` |
 
-后两种**禁止伪造 source evidence**；出现非空 `source_ref` 即为验证失败（`VAL-L08`）。测试断言所有条件必填列都在输出 schema 之内（PR #59 阻断 2 的教训）。
+后两种**禁止伪造 source evidence**；出现非空 `source_ref` 即为验证失败（`VAL-L08`）。
 
-15 条验证规则 `VAL-L01`..`VAL-L15` 见 YAML。
+每个 `conditionally_required_columns` 块都写明 `table`（`evidence` 或 `disposition`），**测试逐表检查必填列，不再用两张表列的并集代替**（`VAL-L09`）——初稿用并集，恰好掩盖了阻断 2 那个问题。
+
+**20 条**验证规则 `VAL-L01`..`VAL-L20` 见 YAML。
 
 ## 八、必须写进结果报告的四条
 

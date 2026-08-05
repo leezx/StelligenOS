@@ -305,17 +305,127 @@ class Evgap02LinkageContractTests(unittest.TestCase):
             self.assertNotIn(key, predicted)
 
     # ------------------------------------------------------------- provenance
-    def test_required_columns_all_exist_in_the_output_schema(self) -> None:
+    def test_required_columns_exist_in_their_own_table(self) -> None:
+        """Checking the union of both tables would mask a missing column."""
+
         schema = self.doc["output_schema"]
-        columns = set(schema["evidence_columns"]) | set(schema["disposition_columns"])
+        evidence = set(schema["evidence_columns"])
+        disposition = set(schema["disposition_columns"])
         for column in REQUIRED_EVIDENCE_COLUMNS:
             with self.subTest(column=column):
-                self.assertIn(column, schema["evidence_columns"])
+                self.assertIn(column, evidence)
         for block in schema["conditionally_required_columns"]:
-            with self.subTest(kind=block["when_provenance_kind"]):
-                missing = set(block["required_columns"]) - columns
-                self.assertEqual(missing, set(), f"missing columns: {missing}")
-                self.assertIn(block["when_provenance_kind"], schema["provenance_kinds"])
+            kind = block["when_provenance_kind"]
+            with self.subTest(kind=kind):
+                self.assertIn(kind, schema["provenance_kinds"])
+                # Every conditionally required column must live in a named table,
+                # and the block must say which one.
+                table = block["table"]
+                self.assertIn(table, ("evidence", "disposition"))
+                owned = evidence if table == "evidence" else disposition
+                missing = set(block["required_columns"]) - owned
+                self.assertEqual(missing, set(),
+                                 f"{kind}: columns absent from {table}: {missing}")
+                may_empty = set(block.get("may_be_empty_columns", []))
+                self.assertEqual(may_empty - (evidence | disposition), set())
+
+    def test_evidence_rows_are_individually_addressable(self) -> None:
+        """Blocker 2: a disposition must be able to name its supporting rows."""
+
+        schema = self.doc["output_schema"]
+        self.assertEqual(schema["evidence_row_key"], "evidence_id")
+        self.assertIs(schema["evidence_id_unique"], True)
+        self.assertIn("evidence_id", schema["evidence_columns"])
+        for column in ("supporting_evidence_refs", "class_d_evidence_refs",
+                       "other_cancer_evidence_refs"):
+            with self.subTest(column=column):
+                self.assertIn(column, schema["disposition_columns"])
+        ids = {r["id"] for r in self.doc["output_validation"]}
+        for rule_id in ("VAL-L16", "VAL-L17", "VAL-L20"):
+            self.assertIn(rule_id, ids)
+
+    def test_every_rule_states_what_it_must_and_must_not_cite(self) -> None:
+        requirements = self.doc["output_schema"]["evidence_reference_requirements"]
+        rule_ids = {r["id"] for r in self.doc["derivation_rules"]}
+        covered = {r["rule_id"] for r in requirements}
+        self.assertEqual(covered, rule_ids)
+        by_key = {(r["rule_id"], r.get("context_kind")): r for r in requirements}
+        # L3-02 must be split by context kind: a subgroup needs class D as well.
+        canonical = by_key[("L3-02", "canonical")]
+        subgroup = by_key[("L3-02", "subgroup")]
+        self.assertEqual(canonical["supporting_evidence_refs"],
+                         "at_least_one_of_class_a_b_or_c")
+        self.assertEqual(subgroup["supporting_evidence_refs"],
+                         "at_least_one_of_class_a_b_or_c")
+        self.assertEqual(subgroup["class_d_evidence_refs"], "at_least_one")
+        # L3-03 rests on disease-level evidence and must cite no class D.
+        l3_03 = by_key[("L3-03", None)]
+        self.assertEqual(l3_03["supporting_evidence_refs"],
+                         "at_least_one_disease_level_crc_evidence")
+        self.assertEqual(l3_03["class_d_evidence_refs"], "must_be_empty")
+        # Other-cancer precedent may never be cited as support.
+        l3_04 = by_key[("L3-04", None)]
+        self.assertEqual(l3_04["supporting_evidence_refs"], "must_be_empty")
+        self.assertEqual(l3_04["other_cancer_evidence_refs"], "at_least_one")
+        # L3-05 cites nothing but must carry complete search provenance.
+        l3_05 = by_key[("L3-05", None)]
+        for key in ("supporting_evidence_refs", "class_d_evidence_refs",
+                    "other_cancer_evidence_refs"):
+            self.assertEqual(l3_05[key], "must_be_empty")
+        self.assertEqual(l3_05["search_provenance"], "must_be_complete")
+        # L3-01 must not invent references.
+        l3_01 = by_key[("L3-01", None)]
+        self.assertEqual(l3_01["supporting_evidence_refs"], "must_be_empty")
+        self.assertEqual(l3_01["class_d_evidence_refs"], "must_be_empty")
+
+    def test_class_d_completeness_is_pair_level_and_gates_l3_03_and_l3_05(self) -> None:
+        """Blocker 1: D-class search must enter search_complete per pair."""
+
+        scope = self.doc["declared_search_scope"]
+        block = scope["per_pair_required_class_d_search"]
+        self.assertIs(block["required"], True)
+        self.assertEqual(block["applies_to"], "all_369_pairs")
+        self.assertEqual(block["incomplete_consequence"], "L3-01")
+        for field in ("class_d_query_expression", "class_d_executed_at",
+                      "class_d_result_count", "class_d_reachable",
+                      "class_d_source_coverage_ref", "class_d_search_complete"):
+            with self.subTest(field=field):
+                self.assertIn(field, block["must_record"])
+                # The field must actually be carried by the disposition table.
+                self.assertIn(field, self.doc["output_schema"]["disposition_columns"])
+        # Completeness must require both levels, not just the target level.
+        self.assertIs(scope["search_complete_requires_both_levels"], True)
+        self.assertEqual(set(scope["search_complete_levels"]),
+                         {"target_level_source_class_and_endpoint_coverage",
+                          "pair_level_class_d_coverage"})
+        self.assertEqual(scope["unreachable_class_d_consequence"],
+                         "search_incomplete_for_that_pair")
+        # L3-03 and L3-05 may only fire once the D-class search has closed.
+        by_id = {r["id"]: r for r in self.doc["derivation_rules"]}
+        for rule_id in ("L3-03", "L3-05"):
+            with self.subTest(rule=rule_id):
+                self.assertIs(by_id[rule_id]["requires_class_d_search_complete"], True)
+        self.assertIs(by_id["L3-01"]["covers_both_completeness_levels"], True)
+        ids = {r["id"] for r in self.doc["output_validation"]}
+        self.assertIn("VAL-L18", ids)
+
+    def test_endpoint_coverage_is_frozen_not_left_to_the_executor(self) -> None:
+        """Blocker 1: covering a source class must mean covering its endpoints."""
+
+        scope = self.doc["declared_search_scope"]
+        self.assertEqual(scope["coverage_unit"], "endpoint")
+        self.assertTrue(scope["coverage_unit_reason"].strip())
+        required = set(scope["per_target_required_source_classes"])
+        for source in self.doc["source_tiers"]["tier_1_primary_public"]["sources"]:
+            if source["source_class"] not in required:
+                continue
+            with self.subTest(source=source["source_class"]):
+                self.assertIs(source["all_endpoints_required"], True)
+                # The minimum set may not be narrower than the declared endpoints.
+                self.assertEqual(set(source["minimum_endpoint_set"]),
+                                 set(source["endpoints"]))
+        ids = {r["id"] for r in self.doc["output_validation"]}
+        self.assertIn("VAL-L19", ids)
 
     def test_pairs_without_evidence_may_not_fabricate_provenance(self) -> None:
         schema = self.doc["output_schema"]
