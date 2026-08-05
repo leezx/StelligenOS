@@ -2667,3 +2667,24 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Deliberately not done: **未解除 `EVGAP-02`**（须待本结果获批后另开 PR 更新绑定）；未解除 `EVGAP-01`；未更新 `adc_pool_level_01_input_binding.yaml`；Level 01 仍不可执行；未生成 `ADC_POOL_LEVEL_01_ACCEPTED`；未补八份批准记录。
 - Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**，须经 ChatGPT `APPROVE`。本 PR 只含本条 worklog 与一份 handoff。
 - Next: 送审本结果；获批后另开 PR 解除 `EVGAP-02`；随后按指示起 `SRCADM-01`。
+
+### 2026-08-05 16:55 EDT — EVGAP-02：审核后降级为检索候选层，契约修订至 v0.2.0（PR #62 第二轮）
+
+- Trigger: ChatGPT 对 PR #62 返回 `REQUEST_CHANGES`——「这些是搜索命中，不是 linkage evidence」。
+- Verified before changing anything: 逐条对实际文件核验，**审核意见全部成立**。7,067 行确实全部 `evidence_direction = unknown`、`review_status = machine_retrieved_requires_human_review`。
+- Worse than described: **没有任何一行带有已解析的断言字段。** `positive_fraction_or_prevalence` 在 7,067 行中全为空；`is_adc_efficacy_evidence` 全为 `false`；`malignant_cell_attribution` 全为 `unresolved`／`not_applicable`；5,699 条文献行的 `protein_or_rna` 全为 `unresolved`。**一条已抽取的断言都没有。**
+- Identity resolution never happened: `Undisclosed` **是缺失值占位符、不是实体**，却被当作基因符号检索，`PMC/A` 返回 1,384 条并产出 1 个 RETAIN；`CA19-9`（糖类抗原，无 HGNC 符号）`PMC/A` 14,200 条、9 个 pair 中 8 个 RETAIN；`EDBN` 在 11 个 endpoint 全部 0 命中，9 个 pair 落 `L3-05` **EXCLUDE**——它疑指 fibronectin 的 extra domain B（标准符号 `FN1`），**被排除的唯一原因是这个缩写不通行于文献。消歧失败被当成了完整检索后的阴性结论。**
+- One review detail corrected on the facts: 审核说 TCGA 与 HPA 的命中被算作 A 类证据。**实测它们没有产生任何证据行**——证据表 `source_ref` 前缀只有 `PMC` 3,240／`PubMed` 2,459／`ClinicalTrials.gov` 702／`GEO` 666。**原则完全成立，实际的实例是 `GEO`** 的 `db=gds` 元数据命中被登记为 666 行 A 类。
+- Third defect found by self-check, not raised in review: **未披露的检索截断**。451 次检索报告命中合计 **718,140**，实际登记 **979** 条，**333／451 次被截断**（多数每组只留 3 条）。revision 1 未声明此上限却宣称检索完整。
+- Root cause is the contract, not only the run: v0.1.0 把 `evidence_direction` 与 `review_status` 列为**必需列却无任何规则要求其被解析**，`linkage_class` 也无规则约束其来源，于是由**查询类别**决定。**一次完全合规的执行因此产出 168 条 RETAIN。** 故修在契约。
+- Contract amended to v0.2.0: 三层结构 `L-RETRIEVAL`／`L-ASSERTION`／`L-DISPOSITION`；`assertion_requirements` 六要件并**硬性禁止 `assertion_direction = unknown`**；`identity_resolution` 与新规则 `L3-00`（置于优先级最前，**未消歧实体既不得 RETAIN 也绝不得 EXCLUDE**）；`endpoint_evidence_admissibility` 逐 endpoint 写明命中证明什么与不证明什么；`search_complete` 扩为四层；新增 `VAL-L21`..`VAL-L28`。
+- Frozen vocabulary respected: LOCK-03 的 outcome 词表由 PR #57 冻结、其中没有 `identity_unresolved`（该 outcome 只属 LOCK-01），故 `L3-00` **复用 `linkage_evidence_missing`**，身份信息另由 `identity_resolution_status` 列承载，**不新增 outcome**。
+- Result downgraded (revision 2): 撤销 `pair_linkage_evidence.tsv`，改出 `retrieval_candidates.tsv` **979 行** + `linkage_assertions.tsv` **0 行**。**未重复任何网络调用、未丢弃任何已检索记录。** 「7,067 条证据」实为 **979 条记录乘以 9**（A 2808/9=312、B 2295/9=255、C 1746/9=194、D 218 不复制）。
+- Dispositions withdrawn: 369 个 pair 全部 DEFER／hold——`L3-00` **36**（4 个不可消歧实体 × 9 context）、`L3-01` **333**。**RETAIN 0、EXCLUDE 0**，三组 `*_evidence_refs` 全空。
+- Upstream defect recorded, not fixed: **`GAP-P07`**——PR #58 冻结的 41 个 target 中至少四个不是可消歧的蛋白实体。`EVGAP-02` 无权改轴，在本契约内给 `Undisclosed` 编身份等于静默改轴。**binding 本身已察觉这一点**：它把 `identity_unresolved` 列入 `unavailable_outcomes`，理由是「已批准层没有身份解析结论字段」，四个实体因此以 `E1-05` 留在轴上。修复须另开 PR，会改动 41／369 两个冻结计数。
+- Validation: 外部产物经 **25 项 v0.2.0 规则**核验全通过；`tests/test_evgap_02_crc_linkage.py` **44 tests**；全库 `Ran 353 tests` OK；`scripts/verify_repository_boundary.sh` 通过。
+- Mutation testing: **15 个变异全部被捕获**，逐个 `diff -q` 回滚干净。其中一个首轮「逃逸」实为我的替换串缩进写错、变异根本未生效；改正缩进后被捕获——记此以免把无效变异误记为测试覆盖。
+- Packaged: `gen_iet_evgap_02_crc_linkage_20260805T190453Z_rev2.zip`，41,734 bytes，ZIP SHA-256 `e8f2a7f5ce9fae25265994f0d9a1fae1e371a1bb55ccafea2026835bd5120d3d`，8 个条目。**按 PR #60 裁决后确立的规则，每个修订单独出包并各带自己的 SHA-256。**
+- Boundary: 未运行任何 Gate、未赋分数、未评估 T2／T7、未排序、未划 Tier、未推荐资产、未给实验建议、**未新增或修改靶点与 context**、未打开任何 Tier 2 派生库、未引用被隔离运行产物、未写入任何数据文件到仓库。
+- Deliberately not done: **未解除 `EVGAP-02`**；未处理 `GAP-P07`；未执行 `L-ASSERTION` 抽取；未解除 `EVGAP-01`；未更新 binding；未生成 `ADC_POOL_LEVEL_01_ACCEPTED`；未补九份批准记录。
+- Next: 送审本修订；获批后另开 PR 处理 `GAP-P07`，再执行 `L-ASSERTION` 抽取。

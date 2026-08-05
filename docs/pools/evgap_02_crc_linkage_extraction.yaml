@@ -7,15 +7,41 @@
 # 由 tests/test_evgap_02_crc_linkage.py 校验。
 # LOCK-03 的 outcome 词表见 docs/pools/adc_pool_gate_usage.yaml（PR #57）。
 # 来源文档：Zhixins-KB/2.Biotech/Asset-Generation-OS-architecture.md#EVGAP-02 应该具体抽取什么
+#
+# v0.2.0 修订（PR #62 审核）：v0.1.0 有一个承重漏洞——它把 evidence_direction 与
+# review_status 列为必需列，却没有任何一条规则要求它们被解析。结果 0.1.0 下的一次
+# 合规执行产出了 7,067 行 evidence_direction=unknown 的检索命中，并据此判出 168 条
+# RETAIN。检索命中不是 linkage 证据。v0.2.0 把抽取拆成三层，并要求 LOCK-03 只能
+# 引用已抽取的 assertion。
 
 extraction:
   extraction_id: evgap_02_crc_linkage
-  extraction_version: 0.1.0
+  extraction_version: 0.2.0
+  supersedes_version: 0.1.0
+  amended_after_review_of_pr: 62
+  amendment_reason: >-
+    v0.1.0 允许「搜索命中」直接充当 A/B/C/D 类 linkage 证据：linkage_class 由
+    query 类别决定，而非由记录内容决定。因此 target、CRC 词与 modality 词在同一篇
+    全文中共现即可被登记为 precedent。v0.2.0 引入 assertion 层，把「检索到候选」
+    与「已抽取断言」分开，并把实体消歧前置为 LOCK-03 可求值的前提。
   discharges_gap: EVGAP-02
   gap_source: docs/pools/adc_pool_level_01_input_binding.yaml
   serves_lock: LOCK-03
-  status: contract_only_pending_review
-  execution_status: not_authorized_not_executed
+  status: amended_pending_review
+  # v0.1.0 已执行一次，其产物按 PR #62 审核结论降级为 L-RETRIEVAL 层产物，
+  # 不构成 EVGAP-02 结果。v0.2.0 的 L-ASSERTION 与 L-DISPOSITION 尚未执行。
+  execution_status: retrieval_layer_executed_assertion_layer_not_executed
+  gap_discharged: false
+  executed_runs:
+    - run_id: external:result/gen_iet_evgap_02_crc_linkage_20260805T190453Z
+      under_contract_version: 0.1.0
+      layers_completed:
+        - L-RETRIEVAL
+      layers_not_completed:
+        - L-ASSERTION
+        - L-DISPOSITION
+      downgraded_by_review_of_pr: 62
+      discharges_gap: false
   # 与 EVGAP-01 不同：本抽取不依赖任何未获准入的派生数据库，
   # Tier 1 原始公开来源即可支撑，故获 APPROVE 后即可执行。
   authorises_extraction_run_after_approve: true
@@ -30,6 +56,215 @@ extraction:
   independence_reason: >-
     LOCK-03 问的是「target 为什么与这个 CRC clinical context 有关」，
     与表面拓扑无关，因此不读取 surfaceome 参考库，也不受其准入状态影响。
+
+# ---------------------------------------------------------------- 三层结构
+#
+# v0.1.0 只有「检索」与「判定」两步，中间缺一层。缺的这一层正是「这条记录到底
+# 断言了什么」。没有它，linkage_class 只能由 query 类别决定，于是分类器就是查询词本身。
+extraction_layers:
+  - layer_id: L-RETRIEVAL
+    name: candidate_retrieval
+    unit: target（A/B/C）与 pair（D）
+    produces: retrieval_candidates
+    # 这一层的产物永远不能单独支撑 LOCK-03。
+    may_support_lock_03: false
+    may_be_referenced_by_disposition: false
+    what_it_proves: >-
+      在该 endpoint 上，给定 query 表达式返回了这条记录。仅此而已。
+      它不证明该记录谈及本 target，也不证明其中的 CRC 语义与本 target 有关。
+    known_false_positive_modes:
+      - 缩写碰撞（符号在正文中指代其他事物）
+      - 全文命中（target 与 CRC 词分别出现在正文不同段落、彼此无关）
+      - 参考文献命中（命中来自文末引文而非正文主张）
+      - 综述背景命中（modality 词属于其他 target 的 precedent）
+      - "免责声明命中（PR #58 已记录：33 条 statement 全含 CRC，但只出现在
+        「precedent does not establish CRC efficacy」这句免责声明里）"
+  - layer_id: L-ASSERTION
+    name: assertion_extraction
+    unit: assertion
+    consumes: retrieval_candidates
+    produces: linkage_assertions
+    may_support_lock_03: true
+    # 一条 assertion 必须已经把主体、癌种、关系、方向与出处落到具体字段上。
+    requires_all_of: assertion_requirements
+    machine_extraction_permitted: true
+    machine_extraction_permitted_basis: >-
+      PR #58 的 DECISION-02 允许机器抽取的证据满足 LOCK-03 existence，
+      但其前提是机器**已经抽出一条具体、可审计的 linkage assertion**，
+      而不是「返回了一批候选记录」。v0.1.0 的执行停在候选，未做抽取。
+    human_review_still_required: true
+    human_review_scope: 每条 assertion 的 review_status 仍为待人工复核
+  - layer_id: L-DISPOSITION
+    name: lock_03_disposition
+    unit: pair
+    consumes: linkage_assertions
+    may_only_reference: linkage_assertions
+    may_reference_retrieval_candidates: false
+    reason: >-
+      supporting_evidence_refs 若可指向纯检索命中，L3-02 就退化为
+      「query 有返回」。这正是 v0.1.0 实际发生的事。
+
+# --------------------------------------------------------- assertion 的构成要件
+#
+# 任一要件缺失，该记录停留在 L-RETRIEVAL，不得升级为 assertion。
+assertion_requirements:
+  required_elements:
+    - element: target_entity_resolved
+      meaning: 记录中的主体已消歧到本 pair 的 target，而不仅是字符串匹配
+    - element: crc_entity_resolved
+      meaning: 记录中的癌种已消歧为 CRC，而不是「正文出现 colorectal 一词」
+    - element: context_entity_resolved
+      meaning: D 类必需——亚群语义已消歧到本 pair 的 clinical context
+    - element: relationship_type
+      meaning: target 与 CRC/context 之间的关系类型，取自 relationship_types
+    - element: assertion_direction
+      meaning: 关系的方向，不得为 unknown
+    - element: supporting_text_or_structured_field
+      meaning: 支撑该断言的具体原文段落，或具体结构化字段值
+  relationship_types:
+    - expressed_in
+    - enriched_in
+    - retained_in
+    - targeted_by_modality_in
+    - clinically_evaluated_in
+  # 这是 v0.1.0 缺失的那一条硬性要求。
+  direction_must_be_resolved: true
+  direction_unknown_forbidden_for_lock_03: true
+  direction_unknown_consequence: 该记录停留在 retrieval_candidate，不得进入任何 refs
+  # 共现不是断言。
+  cooccurrence_is_not_an_assertion: true
+  cooccurrence_examples_rejected:
+    - target 与 CRC 词共现于同一全文
+    - target、CRC 与 "ADC" 共现于同一全文
+    - target 与 BRAF／HER2／CMS4 等亚群词共现于同一全文
+  examples_of_valid_assertions:
+    - "CEACAM5 protein was detected in 72% of CRC tumours"
+    - "A CEACAM5 ADC was tested in a CRC xenograft model"
+  examples_of_invalid_assertions:
+    - "一篇综述同时提到本 target、colorectal 与 antibody-drug conjugate"
+    - "GDC gene index 中存在该 gene symbol"
+
+# ---------------------------------------------------------------- 实体消歧
+#
+# v0.1.0 直接把 target 轴的字符串塞进 query。实测后果：字符串 "Undisclosed"
+# 被当作基因符号检索，PMC 返回 1,384 条，并使 1 个 pair 判出 RETAIN。
+identity_resolution:
+  required_before_search: true
+  resolution_must_record:
+    - input_symbol
+    - resolved_identifier_kind
+    - resolved_identifier
+    - synonyms_used
+    - resolution_status
+    - resolution_basis
+  resolved_identifier_kinds:
+    - hgnc_gene_symbol
+    - uniprot_accession
+    - non_protein_antigen_definition
+  resolution_status_vocabulary:
+    - resolved
+    - resolved_as_non_protein_antigen
+    - unresolvable_placeholder
+    - unresolvable_ambiguous_abbreviation
+  # 未消歧的实体不得进入检索，更不得由检索结果推出任何 LOCK-03 结论。
+  unresolved_may_not_be_searched: true
+  unresolved_lock_03_rule: L3-00
+  # 关键不对称：未消歧实体既不得 RETAIN，也**绝不得** EXCLUDE。
+  unresolved_may_not_retain: true
+  unresolved_may_not_exclude: true
+  unresolved_may_not_exclude_reason: >-
+    零命中若源于符号无法消歧，那是消歧失败，不是「完整检索后无 linkage」。
+    实测 v0.1.0 正是在此处出错：EDBN 在全部 11 个 endpoint 返回 0 条，
+    于是 9 个 pair 落 L3-05 EXCLUDE。而 EDBN 应指 fibronectin 的 extra domain B，
+    其标准符号为 FN1；被排除的原因只是缩写本身不出现在文献里。
+  # 本次 target 轴中实测四个必须单列的实体。
+  known_unresolved_entities:
+    - input_symbol: Undisclosed
+      resolution_status: unresolvable_placeholder
+      note: 这不是实体，是缺失值占位符。v0.1.0 对其执行了 11 次检索。
+    - input_symbol: EDBN
+      resolution_status: unresolvable_ambiguous_abbreviation
+      note: 疑指 fibronectin extra domain B（标准符号 FN1），须由来源轴确认后才可检索。
+    - input_symbol: AG7
+      resolution_status: unresolvable_ambiguous_abbreviation
+      note: 非标准靶点符号；PMC 返回 56 条，全部为缩写碰撞候选。
+    - input_symbol: CA19-9
+      resolution_status: resolved_as_non_protein_antigen
+      note: >-
+        sialyl-Lewis a 糖类抗原，非蛋白基因产物，无 HGNC 符号。
+        它可被消歧，但不能按基因符号检索；PMC 返回 14,200 条。
+  # 消歧规则的可判定性：四个实体在 target 轴中的 LOCK-01 状态一致，可机械识别。
+  mechanical_precondition: >-
+    这四个实体在 PR #58 的 target 轴中同属 rq_01_family_count = 0、rule E1-05
+    （参考库无对应行）。故「无任何表面注释」与「符号无法消歧」在本轴上高度相关，
+    可先按该字段筛出候选再逐个消歧，不依赖自由裁量。
+
+# ------------------------------------------------- 各 endpoint 的命中证明了什么
+#
+# v0.1.0 未声明这一层，于是「endpoint 返回一条记录」被一律当作该类证据。
+endpoint_evidence_admissibility:
+  - endpoint: PubMed
+    hit_proves: 该 query 在题录索引中匹配到该条记录
+    hit_does_not_prove: 该记录断言本 target 与 CRC 有关
+    assertion_extraction_source: title_and_abstract
+    requires_assertion_extraction: true
+  - endpoint: PMC
+    hit_proves: 该 query 的词项出现在该全文中的某处
+    hit_does_not_prove: 这些词项彼此相关，或都指代本 target
+    assertion_extraction_source: matched_passage
+    requires_assertion_extraction: true
+    additional_requirement: 必须记录命中所在段落，且该段落须同时含主体与癌种语义
+  - endpoint: ClinicalTrials.gov
+    hit_proves: 该 query 匹配到该试验记录
+    hit_does_not_prove: 本 target 是干预靶点，或 CRC 是实际纳入适应症
+    requires_assertion_extraction: true
+    # 宽查询（"<symbol> colorectal"）返回的记录不得直接进入 B/C 类。
+    required_structured_fields:
+      - intervention_name
+      - intervention_target
+      - intervention_modality
+      - conditions
+      - arm_group_assignment
+    same_arm_requirement: true
+    same_arm_requirement_note: target 与 indication 必须属于同一试验臂，否则不成立
+  - endpoint: TCGA
+    query_kind: GDC gene index lookup
+    hit_proves: GDC gene index 中存在该 gene symbol
+    hit_does_not_prove:
+      - CRC 肿瘤表达
+      - tumour > normal
+      - prevalence
+      - malignant-cell attribution
+    admissible_as_class_a: false
+    admissible_as_class_a_reason: gene 存在性与表达无关，属身份查询而非证据查询
+    permitted_role: identity_resolution_support_only
+  - endpoint: Human Protein Atlas
+    query_kind: search index lookup
+    hit_proves: HPA 中存在该 target 的页面
+    hit_does_not_prove: CRC 人体肿瘤表达
+    admissible_as_class_a: false
+    permitted_role: identity_resolution_support_only
+  - endpoint: GEO
+    query_kind: db=gds metadata search
+    hit_proves: 该数据集的标题或摘要匹配了 query 词项
+    hit_does_not_prove: 该数据集中本 target 在 CRC 中表达或富集
+    admissible_as_class_a: false
+    admissible_as_class_a_reason: >-
+      数据集元数据匹配不是表达测量。要作为 A 类，必须抽取该数据集内本 target 的
+      具体表达结论（含方向），并按 RNA 标注。
+    permitted_role: candidate_dataset_identification_only
+    rna_labelling_still_required: true
+
+# 三个 dataset endpoint 仍必查——它们服务于检索完整性与身份消歧，
+# 但其命中不得计入 linkage_classes_hit。
+dataset_endpoint_handling:
+  dataset_endpoints:
+    - TCGA
+    - Human Protein Atlas
+    - GEO
+  still_required_for_coverage: true
+  hits_excluded_from_linkage_classes_hit: true
+  hits_may_not_be_sole_basis_for_class_a: true
 
 # ---------------------------------------------------------------- 来源分层
 #
@@ -154,6 +389,23 @@ scope:
       D 类情境特异性富集必须按 pair 判定。
 
 # ------------------------------------------------- 四类 linkage 判据（来源文档）
+#
+# v0.2.0：四类都是 assertion 的分类，不是 query 的分类。
+linkage_class_common_requirements:
+  applies_to_all_classes: true
+  requires_assertion: true
+  classified_by: assertion_content
+  classified_by_query_category_forbidden: true
+  classified_by_query_category_forbidden_reason: >-
+    v0.1.0 用 query 类别给记录贴 class：命中「class B 查询」即记为 B 类 precedent。
+    于是「文章里同时出现 target、CRC 与 ADC」被当成「该 target 在 CRC 中有 ADC precedent」。
+    命中可能来自综述、参考文献、背景介绍、别的 target 的 ADC，或 ADC 是别的缩写。
+  minimum_fields_per_assertion:
+    - relationship_type
+    - assertion_direction
+    - supporting_text_or_structured_field
+  direction_unknown_admissible: false
+
 linkage_classes:
   - class_id: A
     name: crc_human_tumor_expression
@@ -217,7 +469,7 @@ linkage_classes:
 # 未闭合。本节正是使该 outcome 变为可用的前提：范围一旦冻结，
 # 「是否完成规定检索」就成为可判定的事实，而不是执行者的自我声明。
 declared_search_scope:
-  scope_version: 0.1.0
+  scope_version: 0.2.0
   per_target_required_source_classes:
     - peer_reviewed_literature
     - clinical_trial_registry
@@ -262,14 +514,26 @@ declared_search_scope:
 
   # 「完成规定检索」的定义。任一条不满足即为未完成。
   search_complete_definition:
+    - 每个 target 的 input_symbol 都已完成 identity_resolution 且 resolution_status = resolved
+      或 resolved_as_non_protein_antigen
     - 每个 target 都对 per_target_required_source_classes 的每一类的**每一个 endpoint** 执行过检索
     - 每次检索都记录了 query_expression、executed_at、result_count 与 reachable
     - 每个 pair 都完成了 per_pair_required_class_d_search 并记录其六个字段
     - 所有 reachable = false 的 endpoint 与 D 类检索都被显式记录为未完成，而非静默跳过
-  search_complete_requires_both_levels: true
+    - 该 pair 的全部 retrieval_candidates 都已过 L-ASSERTION 层，即每条候选都已判定为
+      「已抽出 assertion」或「无法抽出 assertion」，不得有未判定的候选
+  search_complete_requires_both_levels: false
+  search_complete_requires_all_levels: true
   search_complete_levels:
+    - target_level_identity_resolution
     - target_level_source_class_and_endpoint_coverage
     - pair_level_class_d_coverage
+    - pair_level_assertion_extraction_completed
+  # v0.2.0 新增：仅完成检索不等于完成本抽取。
+  retrieval_alone_is_not_search_complete: true
+  retrieval_alone_is_not_search_complete_reason: >-
+    L3-05 EXCLUDE 的前提是「已完整检索且四类均无命中」。若 assertion 层未做，
+    「无命中」只是「未判定」。v0.1.0 的 9 条 L3-05 全部出自这一混淆。
   unreachable_source_consequence: search_incomplete_for_that_target
   unreachable_class_d_consequence: search_incomplete_for_that_pair
   silent_skip_forbidden: true
@@ -279,31 +543,55 @@ declared_search_scope:
 # 五条规则必须覆盖全部 pair 且互斥。优先级先判检索完整性，
 # 因为检索未完成时其余判据都不可信。
 derivation_precedence:
+  - L3-00
   - L3-01
   - L3-02
   - L3-03
   - L3-04
   - L3-05
 precedence_rationale: >-
-  先判检索是否完成——未完成时「没找到」无法与「不存在」区分；
+  先判实体是否消歧——符号未消歧时检索结果既不能支持也不能排除；
+  再判检索与 assertion 抽取是否完成——未完成时「没找到」无法与「不存在」区分；
   再判是否存在与该 context 匹配的 CRC-specific 证据；
   再判疾病级证据遇亚群 context 的降级；再判仅有其他癌种 precedent 的降级；
   以上都不成立且检索已完成，才允许判定完整检索后无 linkage。
 
 derivation_rules:
-  - id: L3-01
+  # v0.2.0 新增，且必须位于最前。
+  - id: L3-00
     condition: >-
-      未按 declared_search_scope 完成规定检索——target 级 endpoint 覆盖未齐，
-      **或**该 pair 的 D 类检索未完成
+      该 pair 的 target input_symbol 的 identity_resolution 结果为
+      unresolvable_placeholder 或 unresolvable_ambiguous_abbreviation
     lock_03_outcome: linkage_evidence_missing
     disposition: DEFER
     resulting_state: hold
-    reason: 检索未完成时「没找到」不能与「不存在」区分。
-    covers_both_completeness_levels: true
+    reason: >-
+      符号未消歧时，检索命中可能来自缩写碰撞，零命中可能来自符号本身不通行。
+      两个方向都不可采信，故只能 DEFER。
+    # LOCK-03 的 outcome 词表由 PR #57 冻结，其中没有 identity_unresolved
+    # （该 outcome 只属于 LOCK-01）。故本规则复用 linkage_evidence_missing，
+    # 其 evidence_state = absent_incomplete_search 恰好正确，
+    # 身份信息另由 identity_resolution_status 列承载，不新增 outcome。
+    outcome_vocabulary_note: reuses_lock_03_frozen_vocabulary
+    does_not_introduce_new_outcome: true
+    distinguishing_column: identity_resolution_status
+    may_never_become_l3_05: true
+  - id: L3-01
+    condition: >-
+      实体已消歧，但未按 declared_search_scope 完成规定工作——target 级 endpoint
+      覆盖未齐，**或**该 pair 的 D 类检索未完成，**或**该 pair 的 assertion 抽取未完成
+    lock_03_outcome: linkage_evidence_missing
+    disposition: DEFER
+    resulting_state: hold
+    reason: 检索或 assertion 抽取未完成时「没找到」不能与「不存在」区分。
+    covers_all_completeness_levels: true
   - id: L3-02
     condition: >-
-      存在 A/B/C 任一类的 CRC-specific 证据，且 context 为 canonical_c0，
-      或 context 为亚群且同时存在 D 类情境特异性证据
+      存在 A/B/C 任一类的 CRC-specific **assertion**，且 context 为 canonical_c0，
+      或 context 为亚群且同时存在 D 类情境特异性 assertion
+    requires_assertion: true
+    requires_direction_resolved: true
+    may_reference_retrieval_candidates: false
     lock_03_outcome: linkage_evidence_exists
     disposition: RETAIN
     resulting_state: active
@@ -324,9 +612,14 @@ derivation_rules:
     retained_as: target_modality_metadata
   - id: L3-05
     condition: >-
-      已按 declared_search_scope 完成规定检索（含该 pair 的 D 类检索），
-      且四类 linkage 均无命中
+      实体已消歧，已按 declared_search_scope 完成规定检索（含该 pair 的 D 类检索）
+      **且已完成 assertion 抽取**，四类 linkage 均无 assertion
     requires_class_d_search_complete: true
+    requires_identity_resolved: true
+    requires_assertion_extraction_complete: true
+    zero_hits_from_unresolved_symbol_forbidden: true
+    zero_hits_from_unresolved_symbol_forbidden_note: >-
+      零命中若源于符号无法消歧，必须落 L3-00，不得落本规则。
     lock_03_outcome: no_known_linkage_after_complete_search
     disposition: EXCLUDE
     disposition_semantics: EXCLUDE_FROM_ACTIVE_POOL
@@ -360,31 +653,101 @@ predicted_result_shape:
 
 # ---------------------------------------------------------------- 输出
 output_schema:
-  # 每条证据一行。来源文档规定的 13 列为必需最小集。
-  # evidence_id 使每条 disposition 都能一对一回溯到支持它的具体证据行。
-  evidence_row_key: evidence_id
-  evidence_id_unique: true
-  evidence_columns:
-    - evidence_id
+  # v0.2.0：三张表，对应三层。前两张表不可混用。
+  tables:
+    - table: retrieval_candidates
+      layer: L-RETRIEVAL
+      may_be_referenced_by_disposition: false
+    - table: linkage_assertions
+      layer: L-ASSERTION
+      may_be_referenced_by_disposition: true
+    - table: pair_linkage_disposition
+      layer: L-DISPOSITION
+
+  # 第一层产物。它是检索审计记录，不是证据表。
+  retrieval_candidate_row_key: candidate_id
+  retrieval_candidate_columns:
+    - candidate_id
+    - target_input_symbol
+    - queried_symbol
+    - source_class
+    - endpoint
+    - query_expression
+    - query_class_label
+    - source_ref
+    - source_locator
+    - result_rank
+    - retrieved_at
+    # 这四列把「候选」与「证据」的界限写进 schema 本身。
+    - record_status
+    - linkage_validated
+    - may_support_lock_03
+    - assertion_extraction_status
+  retrieval_candidate_fixed_values:
+    record_status: retrieved_candidate
+    linkage_validated: false
+    may_support_lock_03: false
+  # query_class_label 只记录该候选由哪一类查询检出，**不是** linkage_class。
+  query_class_label_is_not_linkage_class: true
+  assertion_extraction_status_vocabulary:
+    - not_attempted
+    - assertion_extracted
+    - no_assertion_extractable
+  # 第二层产物。只有这张表的行可以被 disposition 引用。
+  assertion_row_key: assertion_id
+  assertion_id_unique: true
+  assertion_columns:
+    - assertion_id
+    - candidate_id
     - pair_id
     - target
     - clinical_context_id
     - evidence_type
+    - linkage_outcome
+    - target_entity_resolved
+    - crc_entity_resolved
+    - context_entity_resolved
+    - relationship_type
+    - assertion_direction
+    - supporting_text_or_structured_field
+    - source_section_or_field
+    - extraction_method
+    - extraction_confidence
+    - review_status
+    - linkage_class
     - crc_specific
     - context_specific
     - human_or_model
     - protein_or_rna
     - source_ref
     - source_locator
-    - evidence_direction
-    - review_status
-    - linkage_outcome
-    # 以下为可审计性所需的补充列。
-    - linkage_class
     - is_adc_efficacy_evidence
     - positive_fraction_or_prevalence
     - malignant_cell_attribution
     - retrieved_at
+  assertion_forbidden_values:
+    assertion_direction:
+      - unknown
+      - ""
+  assertion_must_cite_its_candidate: true
+  assertion_must_cite_its_candidate_reason: >-
+    candidate_id 使每条 assertion 都能回溯到它是从哪一次检索的哪一条记录抽出的，
+    审核方因此可以独立复核抽取是否成立。
+
+  # v0.2.0 起「evidence 表」即 linkage_assertions 表，其列为 assertion_columns。
+  # 既有验证规则中的「evidence 行」一律指 assertion 行。
+  evidence_table_is_assertion_table: true
+  evidence_table_name: linkage_assertions
+  evidence_columns_alias: assertion_columns
+  evidence_row_key: assertion_id
+  evidence_id_unique: true
+  # v0.1.0 → v0.2.0 的列改名，避免两版列名被混用。
+  renamed_from_v0_1_0:
+    - from: evidence_id
+      to: assertion_id
+    - from: evidence_direction
+      to: assertion_direction
+      change: 不再允许 unknown
   # 每个 pair 一行的 disposition 表。
   disposition_columns:
     - pair_id
@@ -405,6 +768,12 @@ output_schema:
     - search_policy_version
     - provenance_kind
     - evidence_row_count
+    # v0.2.0 新增：承载 L3-00 与 assertion 层完整性，使二者可逐 pair 审计。
+    - identity_resolution_status
+    - resolved_identifier
+    - assertion_extraction_complete
+    - retrieval_candidate_count
+    - assertion_count
     # 三组引用，使每条 disposition 可逐条审计其依据。
     - supporting_evidence_refs
     - class_d_evidence_refs
@@ -421,12 +790,23 @@ output_schema:
     - may_advance_to_level_02
   # 每条规则必须引用什么、必须不引用什么。这是 disposition 与 evidence 之间的
   # 一对一审计关系；仅有 evidence_row_count 无法证明某条 disposition 由哪些证据支持。
+  # v0.2.0：所有 refs 一律指向 linkage_assertions 表的 assertion_id，
+  # 指向 retrieval_candidates 的 candidate_id 即为验证失败。
+  refs_point_to: assertion_id
+  refs_pointing_to_candidate_id_forbidden: true
   evidence_reference_requirements:
+    - rule_id: L3-00
+      supporting_evidence_refs: must_be_empty
+      class_d_evidence_refs: must_be_empty
+      other_cancer_evidence_refs: must_be_empty
+      note: >-
+        实体未消歧时，任何命中都可能是缩写碰撞，不得引用为依据；
+        零命中也不得据以排除。
     - rule_id: L3-01
       supporting_evidence_refs: must_be_empty
       class_d_evidence_refs: must_be_empty
       other_cancer_evidence_refs: may_be_empty
-      note: 检索未完成时不得伪造任何 evidence refs。
+      note: 检索或 assertion 抽取未完成时不得伪造任何 evidence refs。
     - rule_id: L3-02
       context_kind: canonical
       supporting_evidence_refs: at_least_one_of_class_a_b_or_c
@@ -527,9 +907,10 @@ output_validation:
       不得用两张表列的并集代替逐表检查。
   - id: VAL-L16
     rule: >-
-      每条 evidence 行必须有唯一 evidence_id；每条 disposition 行的
+      每条 assertion 行必须有唯一 assertion_id；每条 disposition 行的
       supporting_evidence_refs、class_d_evidence_refs、other_cancer_evidence_refs
-      引用的每个 id 都必须存在于 evidence 表，且所引用行的 pair_id 与该 disposition 一致。
+      引用的每个 id 都必须存在于 linkage_assertions 表，
+      且所引用行的 pair_id 与该 disposition 一致。
   - id: VAL-L17
     rule: >-
       每条 disposition 必须满足 evidence_reference_requirements 中其 rule_id 与
@@ -549,6 +930,47 @@ output_validation:
     rule: >-
       evidence_row_count 必须等于该 pair 三组 refs 去重后的总条数，
       不得只报计数而不给 refs。
+  # ---------------- v0.2.0 新增：三层结构与实体消歧的验证规则
+  - id: VAL-L21
+    rule: >-
+      每条 assertion 行的 assertion_direction 不得为 unknown 或空。
+      出现一条即为验证失败——这是 v0.1.0 未设、并因此漏掉 7,067 行的那道检查。
+  - id: VAL-L22
+    rule: >-
+      每条 assertion 行必须同时非空：target_entity_resolved、crc_entity_resolved、
+      relationship_type、assertion_direction、supporting_text_or_structured_field、
+      source_section_or_field；D 类另需 context_entity_resolved 非空。
+  - id: VAL-L23
+    rule: >-
+      supporting_evidence_refs、class_d_evidence_refs、other_cancer_evidence_refs
+      引用的每个 id 都必须是 linkage_assertions 表的 assertion_id。
+      任一 id 只存在于 retrieval_candidates 表即为验证失败。
+  - id: VAL-L24
+    rule: >-
+      retrieval_candidates 表每行必须 record_status = retrieved_candidate、
+      linkage_validated = false、may_support_lock_03 = false，
+      且 assertion_extraction_status 取自其词表。
+  - id: VAL-L25
+    rule: >-
+      linkage_class 必须可由该 assertion 的 relationship_type 与内容判定；
+      仅凭 query_class_label 赋 linkage_class 即为验证失败。
+      retrieval_candidates 表不得含 linkage_class 列。
+  - id: VAL-L26
+    rule: >-
+      TCGA、Human Protein Atlas 与 GEO 三个 endpoint 的命中不得计入
+      linkage_classes_hit，也不得作为 A 类 assertion 的唯一依据；
+      但它们的检索记录仍必须齐备，缺任一仍触发 L3-01。
+  - id: VAL-L27
+    rule: >-
+      每个 target 的 input_symbol 必须有 identity_resolution 记录。
+      resolution_status 为 unresolvable_placeholder 或
+      unresolvable_ambiguous_abbreviation 的 target，其全部 9 个 pair 必须落 L3-00，
+      不得落 L3-02，**尤其不得落 L3-05**。
+  - id: VAL-L28
+    rule: >-
+      ClinicalTrials.gov 来源的 B/C 类 assertion 必须记录
+      required_structured_fields 的五个字段，且 target 与 indication 属于同一试验臂；
+      仅有「symbol + colorectal」宽查询命中不得成为 B/C 类 assertion。
   - id: VAL-L10
     rule: 不得读取 tier_2_derived_local_databases 中的任何数据库。
   - id: VAL-L11
@@ -584,6 +1006,42 @@ mandatory_findings:
     finding: >-
       LOCK-03 RETAIN 不使 pair 进入 Level 02。EVGAP-01 未解除前
       may_advance_to_level_02 恒为 false。
+  - id: MF-L05
+    finding: >-
+      检索命中不是 linkage 证据。报告必须分别给出 retrieval_candidate_count 与
+      assertion_count；只报候选数即冒充证据量。
+  - id: MF-L06
+    finding: >-
+      落 L3-00 的 pair 既未被支持也未被排除。报告不得把它们与 L3-05
+      合并计数，也不得表述为「无 linkage」。
+
+# --------------------------------------------- 上游缺陷：target 轴含不可消歧实体
+#
+# 本节只登记，不修复——target 轴由 PR #58 的 binding 冻结，
+# 修复须另开 PR，不得在 EVGAP-02 内静默改轴。
+upstream_defect:
+  id: GAP-P07
+  defect: PR #58 冻结的 41 个 target 中至少四个不是可消歧的蛋白实体
+  entities:
+    - Undisclosed
+    - EDBN
+    - AG7
+    - CA19-9
+  where: external:result/gen_iet_crc_target_enumeration_20260802#target_evidence_catalog.tsv
+  frozen_by_pr: 58
+  why_not_fixed_here: >-
+    EVGAP-02 无权新增或修改 target 与 clinical context（见 not_authorised）。
+    在本契约内给 Undisclosed 编一个身份，等于静默改轴。
+  binding_already_knew: >-
+    binding 的 lock_01 规则明确把 identity_unresolved 列为 unavailable_outcomes，
+    理由是「已批准层没有身份解析结论字段，无法区分身份未解析与注释不可得」。
+    也就是说该缺陷在 PR #58 时已被察觉但无法表达，于是四个实体以
+    rq_01_family_count = 0、rule E1-05 的形式留在轴上。
+  interim_handling: 本抽取按 L3-00 处理，全部 DEFER，既不 RETAIN 也不 EXCLUDE
+  requires_separate_pr: true
+  separate_pr_scope: >-
+    在 target 轴层面决定这四个实体的归属：解析为标准符号、定义为非蛋白抗原、
+    或从轴上移除。移除会改变 41/369 这两个冻结计数，故必须经审核。
 
 not_authorised:
   - 执行 Level 01
@@ -594,3 +1052,10 @@ not_authorised:
   - 新增靶点或 clinical context
   - 任何筛选排序、Tier 划分、资产推荐或实验建议
   - 把被隔离运行（PR #53、#54）的任何产物引入
+  # v0.2.0 新增
+  - 把 retrieval_candidates 表的行引用为 LOCK-03 的依据
+  - 用 query 类别给记录赋 linkage_class
+  - 让 assertion_direction = unknown 的记录支撑任何 disposition
+  - 把 TCGA／HPA／GEO 的命中当作 CRC 表达证据
+  - 为 target 轴上不可消歧的实体编造身份，或据其零命中作出排除
+  - 修改 target 轴以修复 GAP-P07（须另开 PR）

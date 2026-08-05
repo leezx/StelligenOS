@@ -4,8 +4,67 @@
 - 前置工作包：PR #57（Level 01 判据定义）、#58（输入绑定与缺口登记）、#59（EVGAP-01 抽取契约），均已 `APPROVE` 并合并
 - 机器可读绑定：[`../pools/evgap_02_crc_linkage_extraction.yaml`](../pools/evgap_02_crc_linkage_extraction.yaml)，由 `tests/test_evgap_02_crc_linkage.py` 校验
 - 来源文档：`Zhixins-KB/2.Biotech/Asset-Generation-OS-architecture.md` 的 `# EVGAP-02 应该具体抽取什么` 与 `# EVGAP-02 最小结果标准`（只读取，未修改）
-- 当前状态：**contract-only，未执行，等待 ChatGPT 审核**
-- 授权范围：**获 `APPROVE` 后即可执行一次抽取。不授权执行 Level 01，不解除 `EVGAP-01`。**
+- 当前状态：**v0.2.0，`L-RETRIEVAL` 层已执行，`L-ASSERTION` 层未执行，等待 ChatGPT 审核**
+- 授权范围：**不授权执行 Level 01，不解除 `EVGAP-01`，`EVGAP-02` 亦未解除。**
+
+## 〇、v0.2.0 修订（PR #62 审核）
+
+v0.1.0 有一个承重漏洞：它把 `evidence_direction` 与 `review_status` 列为**必需列，
+却没有任何一条规则要求它们被解析**；`linkage_class` 也没有任何规则约束其来源。
+于是一次**完全合规**的执行产出了 7,067 行 `evidence_direction = unknown` 的检索命中，
+并据此判出 **168 条 RETAIN、9 条 EXCLUDE**。
+
+**检索命中不是 linkage 证据。** 修必须修在契约上，因为执行并未违约。
+
+### 三层结构
+
+| layer | 产物 | 可支撑 LOCK-03 |
+|---|---|---|
+| `L-RETRIEVAL` | `retrieval_candidates` | **否** |
+| `L-ASSERTION` | `linkage_assertions` | 是 |
+| `L-DISPOSITION` | `pair_linkage_disposition` | 只能引用 assertion |
+
+`assertion_requirements` 规定六个构成要件：target／CRC／context 实体消歧、
+`relationship_type`、`assertion_direction`、`supporting_text_or_structured_field`。
+**硬性禁止 `assertion_direction = unknown`**——这正是 v0.1.0 漏掉 7,067 行的那道检查（`VAL-L21`）。
+
+`linkage_class` 由 assertion 内容判定；候选表改记 `query_class_label`，
+且**候选表不得含 `linkage_class` 列**（`VAL-L25`）。
+
+### `DECISION-02` 的正确读法
+
+PR #58 允许机器抽取的证据满足 LOCK-03 existence，**前提是机器已抽出一条具体、可审计的 assertion**——
+主体、癌种、关系、方向、出处俱全。v0.1.0 停在候选检索。人工复核要求不变。
+
+### 实体消歧与 `L3-00`
+
+新增 `L3-00` 置于优先级最前。关键在**不对称**：未消歧实体既不得 RETAIN，也**绝不得** EXCLUDE。
+
+实测四个必须单列的实体：`Undisclosed`（缺失值占位符，被当基因符号检索，PMC 返回 1,384 条）、
+`CA19-9`（糖类抗原，无 HGNC 符号，PMC 14,200 条）、`AG7`、
+`EDBN`（11 个 endpoint 全部 0 命中，因而被 `L3-05` 排除——
+**排除的唯一原因是这个缩写不通行于文献**）。
+
+`L3-00` **不引入新 outcome**：LOCK-03 的词表由 PR #57 冻结，其中没有 `identity_unresolved`
+（该 outcome 只属于 LOCK-01）。故复用 `linkage_evidence_missing`，
+身份信息另由 `identity_resolution_status` 列承载。
+
+### endpoint 命中证明了什么
+
+新增 `endpoint_evidence_admissibility`。TCGA／HPA／GEO 三者 `admissible_as_class_a: false`
+（gene index 存在性、页面存在性、数据集元数据匹配都不是表达证据），
+但**仍为必查**，服务于覆盖与身份消歧，其命中不计入 `linkage_classes_hit`（`VAL-L26`）。
+`ClinicalTrials.gov` 须记录五个结构化字段并满足**同臂**要求（`VAL-L28`）。
+
+### 检索完整性
+
+`search_complete` 现需四层：身份消歧、endpoint 覆盖、pair 级 D 类、**assertion 抽取完成**。
+`retrieval_alone_is_not_search_complete: true`。
+
+### 上游缺陷 `GAP-P07`
+
+target 轴上四个实体不可消歧。`EVGAP-02` 无权改轴，故**只登记不修复**——
+在本契约内给 `Undisclosed` 编一个身份等于静默改轴。修复须另开 PR。
 
 ## 目的
 
@@ -115,13 +174,15 @@ A／B／C 三类的疾病级检索对同一 target 在 9 个 context 下结果�
 
 ## 五、LOCK-03 求值规则与冻结优先级
 
-优先级：`L3-01` → `L3-02` → `L3-03` → `L3-04` → `L3-05`。
+优先级（v0.2.0）：`L3-00` → `L3-01` → `L3-02` → `L3-03` → `L3-04` → `L3-05`。
 
-理由：**先判检索是否完成——未完成时「没找到」无法与「不存在」区分**；再判是否存在与该 context 匹配的 CRC-specific 证据；再判疾病级证据遇亚群 context 的降级；再判仅有其他癌种 precedent 的降级；以上都不成立且检索已完成，才允许判定完整检索后无 linkage。
+理由：**先判实体是否消歧——符号未消歧时检索结果既不能支持也不能排除**；
+再判检索与 assertion 抽取是否完成——未完成时「没找到」无法与「不存在」区分；再判是否存在与该 context 匹配的 CRC-specific 证据；再判疾病级证据遇亚群 context 的降级；再判仅有其他癌种 precedent 的降级；以上都不成立且检索已完成，才允许判定完整检索后无 linkage。
 
 | ID | 条件 | outcome | disposition | state |
 |---|---|---|---|---|
-| `L3-01` | 未完成规定检索 | `linkage_evidence_missing` | DEFER | hold |
+| `L3-00` | target 符号不可消歧 | `linkage_evidence_missing` | DEFER | hold |
+| `L3-01` | 未完成规定检索或 assertion 抽取 | `linkage_evidence_missing` | DEFER | hold |
 | `L3-02` | 有 A/B/C 任一 CRC-specific 证据，且 context 为 canonical，或亚群且有 D 类证据 | `linkage_evidence_exists` | **RETAIN** | active |
 | `L3-03` | 有 CRC 疾病级证据，但 context 为亚群且无 D 类 | `linkage_unassessed` | DEFER | hold |
 | `L3-04` | 仅有其他癌种 precedent | `linkage_unassessed` | DEFER | hold |
@@ -129,7 +190,9 @@ A／B／C 三类的疾病级检索对同一 target 在 9 个 context 下结果�
 
 **只有 `L3-02` 可以 RETAIN，只有 `L3-05` 可以 EXCLUDE**，测试断言各自恰好一条。`L3-05` 的 EXCLUDE 语义严格限定为 `EXCLUDE_FROM_ACTIVE_POOL`：`is_scientific_disproof: false`、`is_killed: false`、`retained_in_eligible_universe_index: true`，并须六项检索完整性字段齐备。
 
-测试用参考实现穷举 `search_complete × crc_specific × canonical × class_d × other_cancer` 全部 **32 种组合**，证明每种恰好命中一条规则，且五条规则都可达。
+测试用参考实现穷举 `identity_resolved × search_complete × crc_specific × canonical × class_d × other_cancer`
+全部 **64 种组合**，证明每种恰好命中一条规则，且六条规则都可达。
+另有一条专门的测试断言：**未消歧实体在任何组合下都落 `L3-00`，永远无法被 `L3-05` 排除。**
 
 ## 六、本契约不给出预期结果形状
 
@@ -178,29 +241,35 @@ EVGAP-01 读取的是已固定的数据集，结果可以事先算出并逐项�
 
 **20 条**验证规则 `VAL-L01`..`VAL-L20` 见 YAML。
 
-## 八、必须写进结果报告的四条
+## 八、必须写进结果报告的六条
 
 - **`MF-L01`**：LOCK-03 RETAIN 只表示存在可回溯的 CRC-specific linkage 证据，**不表示该靶点适合 ADC、不表示疗效、不表示治疗窗**。
 - **`MF-L02`**：C 类证据证明 target 在 CRC 中可接近或可干预，**不是 ADC 疗效证据**，必须原样标注。
 - **`MF-L03`**：本次抽取未使用任何派生本地数据库，检索完整性只在 Tier 1 声明范围内成立。
 - **`MF-L04`**：LOCK-03 RETAIN **不使 pair 进入 Level 02**。`EVGAP-01` 未解除前 `may_advance_to_level_02` 恒为 `false`。
+- **`MF-L05`**（v0.2.0）：检索命中不是 linkage 证据。报告必须分别给出 `retrieval_candidate_count` 与 `assertion_count`；只报候选数即冒充证据量。
+- **`MF-L06`**（v0.2.0）：落 `L3-00` 的 pair 既未被支持也未被排除，**不得**与 `L3-05` 合并计数，也不得表述为「无 linkage」。
 
 ## 九、授权与不授权
 
-**授权：** 获 `APPROVE` 后按本契约执行**一次**抽取，读取 Tier 1 来源，覆盖全部 369 个 pair。
+**授权：** 按本契约执行抽取，读取 Tier 1 来源，覆盖全部 369 个 pair。
+`L-RETRIEVAL` 层已执行一次（`gen_iet_evgap_02_crc_linkage_20260805T190453Z` revision 2）。
 
 **不授权：** 执行 Level 01；解除 `EVGAP-01`；读取任何 Tier 2 派生本地数据库；把任何派生数据库纳入已批准来源；评估 T2、T7 或任何 Gate；新增靶点或 clinical context；任何筛选排序、Tier 划分、资产推荐或实验建议；引入被隔离运行（PR #53、#54）的任何产物。
 
 ## 十、后续顺序
 
-1. 本契约 `APPROVE`。
-2. 执行抽取 → 结果 PR → `APPROVE`。
-3. **另开 PR** 更新 `adc_pool_level_01_input_binding.yaml`，绑定抽取产物并解除 `EVGAP-02`。
-4. `EVGAP-01` 由 Track B 独立推进（`SRCADM-01` → 抽取 → 结果 → binding）。
-5. **两个缺口都解除后，才能生成 `ADC_POOL_LEVEL_01_ACCEPTED`。**
+1. v0.2.0 契约与 `L-RETRIEVAL` 层产物 `APPROVE`。
+2. **另开 PR** 处理 `GAP-P07`：四个实体解析为标准符号、定义为非蛋白抗原，或移出轴。
+   移出会改动 41／369 这两个冻结计数，故必须经审核。
+3. `GAP-P07` 处理后执行 `L-ASSERTION` 抽取 → 结果 PR → `APPROVE`。
+4. **再另开 PR** 更新 `adc_pool_level_01_input_binding.yaml`，绑定产物并解除 `EVGAP-02`。
+5. `EVGAP-01` 由 Track B 独立推进（`SRCADM-01` → 抽取 → 结果 → binding）。
+6. **两个缺口都解除后，才能生成 `ADC_POOL_LEVEL_01_ACCEPTED`。**
 
 ## 十一、当前阻断
 
-- 本契约获 ChatGPT `APPROVE` 前，不得执行抽取。
-- 抽取完成也**不**解除 `EVGAP-01`，Level 01 仍不可执行。
+- `L-ASSERTION` 层未执行，故 **`EVGAP-02` 未解除**。
+- `GAP-P07` 未处理前，36 个 pair 无法脱离 `L3-00`。
+- `EVGAP-01` 亦未解除，Level 01 仍不可执行。
 - 本仓库不得写入证据、候选、快照、cache、result 或 weights。
