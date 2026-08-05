@@ -5,7 +5,7 @@
 - 基线：`main` @ `e30a430`
 - 前置：PR #57、#58、#59，均已 `APPROVE` 并合并
 - 交付物类型：**结果审核（外部运行留痕）**
-- 外部运行：`gen_iet_adc_pool_level_01_preview_20260805T160125Z`
+- 外部运行：`gen_iet_adc_pool_level_01_preview_20260805T160125Z`，**revision 2**（按 2026-08-05 审核裁决修订，见第十一节）
 - **产物状态：`PROVISIONAL_NOT_AUTHORIZED_FOR_ADVANCEMENT`**
 - 架构变更：`NO_ARCHITECTURE_CHANGE`（本 PR 只含本 handoff 与一条 worklog）
 - 审核状态：等待 ChatGPT `APPROVE`。**本 PR 不适用 `AGENTS.md`「审核豁免」。**
@@ -49,7 +49,9 @@
 
 ### `active = 0` 不等于 pool 为空
 
-它真正表示：**目前没有任何 pair 同时满足三把锁，但已有 22 个 pair 通过了 provisional context × target identity，正在等待 CRC linkage。**
+它真正表示：**目前没有任何 pair 同时满足三把锁；已有 22 个 pair 形成了 provisional context × target identity 组合，但它们仍同时等待 `EVGAP-01` 的正式接受与 `EVGAP-02` 的 CRC linkage。**
+
+这 22 个 pair 的 LOCK-01 状态来自尚未通过 `SRCADM-01` 的 surfaceome 参考库，因此**每一行的 `blocking_evidence_gaps` 都是 `EVGAP-01;EVGAP-02`**（369／369）。
 
 `HOLD` 是待证据，不是否定。369 个 pair 一个都没有被删除或排除。
 
@@ -84,7 +86,7 @@ hold（19）及原因：独立定位家族数 < 2（CLDN18、**GUCY2C**、LGR5�
 
 来源文档列出的五条：把 provisional 写成 accepted；把预测数字写成实际运行结果；把 hold 写成 negative；把 Level 01 target identity 写成 T7 tumor surface validation；让 provisional candidate 自动进入 Level 02。
 
-本次的防护：每个 TSV 的**每一行**都带 `provisional_only = true` 与 `may_advance_to_level_02 = false`；target 行带 `t7_tumor_surface_validated = not_assessed_level_02_scope`；`pool_state` 只有 `HOLD_PENDING_CRC_LINKAGE` 与 `RAW_MATRIX_ONLY` 两种取值，不存在任何 `active` 态；manifest 顶层四个状态标记齐备且 `is_formal_level_01_execution_result: false`、`may_be_used_as_gate_input: false`、`may_be_used_for_asset_decisions: false`。
+本次的防护：**四个 TSV 全部**带 `provisional_only = true` 与 `may_advance_to_level_02 = false`，逐行填充、无空值、取值唯一（revision 2 修正，见第十一节）；`raw_targets.tsv` 与 `pool_level_01_preview.tsv` 另带 `source_admission_status = NOT_ADMITTED_PENDING_SRCADM_01`；target 行带 `t7_tumor_surface_validated = not_assessed_level_02_scope`；`pool_state` 只有 `HOLD_PENDING_CRC_LINKAGE` 与 `RAW_MATRIX_ONLY` 两种取值，不存在任何 `active` 态；manifest 顶层四个状态标记齐备且 `is_formal_level_01_execution_result: false`、`may_be_used_as_gate_input: false`、`may_be_used_for_asset_decisions: false`。
 
 ## 八、明确没有做什么
 
@@ -112,16 +114,69 @@ hold（19）及原因：独立定位家族数 < 2（CLDN18、**GUCY2C**、LGR5�
 
 `EVGAP-02` 的抽取范围来源文档已给定：四类 pair-level linkage（A CRC human tumor expression、B CRC-specific ADC precedent、C CRC-specific target-directed modality evidence 含 CAR-T／bispecific／RIT／immunotoxin／imaging antibody、D context-specific enrichment）与 13 列最小结果 schema。其中 C 类是现有契约尚未涵盖的新增依据，需要在 `EVGAP-02` 契约中加入。
 
+## 十一、第一轮审核裁决与修订（`REQUEST_CHANGES`，两条阻断全部接受）
+
+ChatGPT 对 PR #60（HEAD `6778a6b`）返回 `REQUEST_CHANGES`。对账部分全部确认正确（9／41／369、22／19、22／347、LOCK-03 369/369 unresolved、无 active、manifest 六个哈希与上传包一致、#53／#54 仍列为 barred inputs、无 Gate score／排序／资产推荐）。两条阻断**全部接受，两条都是我的错**。
+
+### 阻断 1（接受）：22 个核心 pair 错误丢失了 `EVGAP-01`
+
+22 个 `HOLD_PENDING_CRC_LINKAGE` 行原先写 `blocking_evidence_gaps = EVGAP-02`。
+
+**生成逻辑写反了。** 我的代码是 `"EVGAP-02" if in_index else "EVGAP-01;EVGAP-02"`——而恰恰是这 22 个 in-index 的 pair，其 LOCK-01 状态来自尚未通过 `SRCADM-01` 的 `ADC_surfaceome_reference@0.3.0`，最应该同时带 `EVGAP-01`。PR #59 只冻结了抽取契约：没批准数据库、没授权抽取、没解除 `EVGAP-01`、没正式接受 22／19 的判定。
+
+后果是实质的：独立消费 `pool_level_01_preview.tsv` 的下游会误以为 **LOCK-01 已正式通过、只剩 CRC linkage 未完成**。而 target 表其实正确保留了 `EVGAP-01;EVGAP-02`——一进入 pool 行就丢了，这种不一致比统一写错更容易骗过读者。
+
+修订：全部 369 行统一为 `EVGAP-01;EVGAP-02`；in-index 行的 `pool_state_reason` 改为 `provisional_context_and_surface_identity_pending_evgap_01_and_crc_linkage_pending_evgap_02`；报告与本 handoff 的对应表述同步更正。
+
+### 阻断 2（接受）：「每个 TSV 都有机械防护」的声明与实际文件不一致
+
+revision 1 的实际情况是：
+
+| 文件 | `provisional_only` | `may_advance_to_level_02` |
+|---|---|---|
+| `raw_clinical_contexts.tsv` | 有 | **无** |
+| `raw_targets.tsv` | 有 | 有 |
+| `raw_enumeration_matrix.tsv` | **无** | **无** |
+| `pool_level_01_preview.tsv` | 有 | 有 |
+
+**所以机械防护并未覆盖每个 TSV，我的声明是事实错误。** 而且这不是纯文案问题——Raw Matrix 很可能被下游单独读取，脱离 manifest 后就会被误用。
+
+修订：按审核方建议统一 schema，四个 TSV 全部加入两列并逐行填充。
+
+### 非阻断增强（已接受）
+
+`raw_targets.tsv` 与 `pool_level_01_preview.tsv` 新增 `source_admission_status = NOT_ADMITTED_PENDING_SRCADM_01`，使治理状态在 TSV 被单独复制或加载时不丢失。
+
+### 按验收标准的复核
+
+- **任何依赖未准入 surfaceome 的 pair 都不再只携带 `EVGAP-02`**：缺 `EVGAP-01` 的行 **0 / 369**。
+- **四个 TSV 逐个读取校验**：两列均存在、无空值、`provisional_only` 唯一值 `true`、`may_advance_to_level_02` 唯一值 `false`，行数 9 / 41 / 369 / 369，全部 `PASS`。
+- PR body、本 handoff、报告与实际 schema 已同步一致。
+
+### 修订未改变的计数
+
+9 contexts、41 targets、369 pairs、22 provisional / 19 hold、22 `HOLD_PENDING_CRC_LINKAGE` / 347 `RAW_MATRIX_ONLY`、LOCK-03 unresolved 369/369、active 0、排除 0——与 revision 1 一致。
+
+manifest 已升为 `revision: 2` 并记录原因；**revision 1 的全部校验和已失效**，七个文件重新计算，见附录 A。
+
+### 审核回写状态
+
+审核方尝试通过 GitHub 连接器提交正式 `REQUEST_CHANGES` review，连接器返回 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本节与 `logs/worklog.md`。
+
 ## 附录 A：产物 SHA-256
 
 | 文件 | SHA-256 |
 |---|---|
-| `raw_clinical_contexts.tsv` | `d21ff96322298f8ec63cb99815157a0bcb0c1e4602af50731fa02a3852892d19` |
-| `raw_targets.tsv` | `b227fac291ee1d50cd55412656cef5728a40dda87431f6aaacb726f4d13404a4` |
-| `raw_enumeration_matrix.tsv` | `bbf56c033b086b69259f0d4c404f45398ec7bca9b85d0aa6a19e83636ef0c7b9` |
-| `pool_level_01_preview.tsv` | `0def1f20f39fbd02190e8a8db73fb5b293364114a45151379801b86c668ab8e8` |
-| `pool_level_01_preview_report.md` | `cc47720e9e53d80c2afbe0d40968c4ebde1b4aa30ed63ba762d2b383b76c2e3c` |
-| `external_run_worklog.md` | `fb4b62613242473a9127fb1746782246c4c1892bbceb2bcb13a8d0f512696bea` |
-| `source_manifest.json` | `a2430324ea1d272eeef8461036bab8db365df5e72d2ae5fbd3922ed94d78ad0a` |
+**revision 2 的校验和。revision 1 的全部校验和已失效。**
+
+| 文件 | SHA-256 |
+|---|---|
+| `raw_clinical_contexts.tsv` | `d7084e9553cc56ad06e2ec72fd846b021f6c9e2bf72d5149cdb8d9371926539d` |
+| `raw_targets.tsv` | `1cd9deb9fa3162c40058bb6ae29ac4806037ef87ff358b1bebbd9e2fec76f957` |
+| `raw_enumeration_matrix.tsv` | `4e369201dad43da3be1fe2bb2725d65334365140f2ebea1ec518b60ef7e687f2` |
+| `pool_level_01_preview.tsv` | `24be8810c89feb034114c293f8a6f34b06663c3771d99b3b71c61b1211606340` |
+| `pool_level_01_preview_report.md` | `4cf0e1fce872d6fefcf73d1b020626aa82712079fd7116d6bcabc1c8c1f12c4f` |
+| `external_run_worklog.md` | `9c1149193b8af84c8b62cdc8835fae04a9977602ff7f310d281d498828891037` |
+| `source_manifest.json` | `fbf3c6a4c8eb3b039231394270762de51f788ef52e07ffcdc73e1a4509cfc483` |
 
 运行目录：`external:result/gen_iet_adc_pool_level_01_preview_20260805T160125Z`

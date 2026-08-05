@@ -2578,3 +2578,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Deliberately not done: 未生成 `ADC_POOL_LEVEL_01_ACCEPTED`（须待五项批准齐备）；未补 #52／#53／#54／#57／#58／#59 的批准记录（现为六份，事实已查全未写文件）。
 - Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**，须经 ChatGPT `APPROVE`。本 PR 只含本条 worklog 与一份 handoff，无代码、契约或测试变更。
 - Next: 起 `EVGAP-02` 契约（Track A，优先），与 `SRCADM-01`（Track B）并行。`EVGAP-02` 需新增来源文档 C 类依据（CRC-specific target-directed modality evidence：naked antibody／CAR-T／bispecific／RIT／immunotoxin／imaging antibody），现有契约尚未涵盖。
+
+## 2026-08-05T14:10:00-04:00 — PR #60 第一轮审核裁决与修订（两条阻断全部接受，preview 升为 revision 2）
+
+- Review: ChatGPT 对 PR #60（HEAD `6778a6b`）返回 `REQUEST_CHANGES`。对账部分全部确认正确——9／41／369 无重复、22／19、22／347、LOCK-03 369/369 `unresolved`、`may_advance_to_level_02=false` 369/369、无 active、manifest 六个哈希与上传包一致、#53／#54 仍列 barred inputs、无 Gate score／排序／资产推荐。两条阻断**全部接受，两条都是执行者的错**。
+- Finding 1 accepted: **22 个核心 pair 错误丢失了 `EVGAP-01`。** 22 个 `HOLD_PENDING_CRC_LINKAGE` 行原写 `blocking_evidence_gaps = EVGAP-02`。**生成逻辑写反了**——代码是 `"EVGAP-02" if in_index else "EVGAP-01;EVGAP-02"`，而恰恰是这 22 个 in-index 的 pair 其 LOCK-01 来自尚未通过 `SRCADM-01` 的 `ADC_surfaceome_reference@0.3.0`，最应该同时带 `EVGAP-01`。PR #59 只冻结抽取契约：没批准数据库、没授权抽取、没解除 `EVGAP-01`、没正式接受 22／19 判定。后果是实质的：独立消费 `pool_level_01_preview.tsv` 的下游会误以为 **LOCK-01 已正式通过、只剩 CRC linkage**。而 target 表其实正确保留了两个 gap——一进入 pool 行就丢了，这种不一致比统一写错更容易骗过读者。
+- Fix 1: 全部 369 行统一 `EVGAP-01;EVGAP-02`（实测缺 `EVGAP-01` 的行 **0 / 369**）；in-index 行 `pool_state_reason` 改为 `provisional_context_and_surface_identity_pending_evgap_01_and_crc_linkage_pending_evgap_02`；报告、handoff、PR 描述的对应表述同步更正。
+- Finding 2 accepted: **「每个 TSV 每一行都有两列机械防护」的声明与实际文件不一致。** revision 1 实况：`raw_clinical_contexts.tsv` 缺 `may_advance_to_level_02`，`raw_enumeration_matrix.tsv` 两列都缺。**声明是事实错误。** 且不是纯文案问题——Raw Matrix 很可能被下游单独读取，脱离 manifest 后会被误用。
+- Fix 2: 按审核方建议统一 schema，四个 TSV 全部加入两列并逐行填充。复核：两列均存在、无空值、`provisional_only` 唯一值 `true`、`may_advance_to_level_02` 唯一值 `false`，行数 9／41／369／369，全部 `PASS`。
+- Non-blocking enhancement accepted: `raw_targets.tsv` 与 `pool_level_01_preview.tsv` 新增 `source_admission_status = NOT_ADMITTED_PENDING_SRCADM_01`，使治理状态在 TSV 被单独复制或加载时不丢失（原先只存在于 manifest 顶层）。
+- Counts unchanged by the revision: 9 contexts、41 targets、369 pairs、22 provisional／19 hold、22 `HOLD_PENDING_CRC_LINKAGE`／347 `RAW_MATRIX_ONLY`、LOCK-03 unresolved 369/369、active 0、排除 0。
+- Manifest: 升为 `revision: 2` 并写入 `revision_reason`、`guard_columns`、`governance_columns` 与 `counts.blocking_evidence_gaps`（`{'EVGAP-01;EVGAP-02': 369}`）。**revision 1 的全部校验和已失效**，七个文件重新计算并写入 manifest 与 handoff 附录 A。外部 worklog 追加 8 条修订记录。
+- Boundary unchanged: 仓库仍零写入（产物全在外部 `DATA`）；未运行 Gate、未赋分数、未排序、未推荐、未给实验建议；未评估 T7；未新增靶点或 context；零排除；未读被禁文件；**未解除任何 EVGAP、未更新 Level 01 binding**。
+- Validation: `Ran 334 tests` 全部通过；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。
+- Review write-back: 连接器 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本条与 handoff 第十一节。
+- Next: 推送同一 PR 并同步 PR 描述请求复审。
