@@ -55,30 +55,51 @@ class Evgap01ExtractionContractTests(unittest.TestCase):
         gaps = {g["id"]: g for g in self.binding["evidence_gaps"]}
         self.assertIn("EVGAP-01", gaps)
         self.assertEqual(gaps["EVGAP-01"]["blocks"], "LOCK-01")
-        self.assertEqual(head["execution_status"], "not_authorized_not_executed")
-        # The extraction is frozen but not yet authorised: SRCADM-01 blocks it.
-        self.assertIs(head["authorises_extraction_run"], False)
+        self.assertEqual(head["execution_status"], "authorised_not_yet_executed")
+        # SRCADM-01 was admitted in PR #63, so the extraction is now authorised
+        # -- but for one run only, and Level 01 stays unauthorised.
+        self.assertIs(head["authorises_extraction_run"], True)
+        self.assertEqual(head["authorises_extraction_run_count"], 1)
         self.assertIs(head["authorises_level_01_execution"], False)
         self.assertIs(head["requires_followup_binding_pr"], True)
 
-    def test_database_admission_is_deferred_to_its_own_approval(self) -> None:
-        """Blocker 1: a derived database cannot be admitted by self-declaration."""
+    def test_database_admission_came_from_its_own_approval(self) -> None:
+        """Blocker 1 stays honoured: the database was admitted by a separate
+        approval, not by this contract declaring itself satisfied."""
 
         dep = self.doc["source_admission_dependency"]
         self.assertEqual(dep["id"], "SRCADM-01")
         self.assertIs(dep["is_derived_database"], True)
-        self.assertIs(dep["previously_approved"], False)
-        self.assertEqual(dep["admission_status"], "pending_separate_admission_pr")
-        self.assertIsNone(dep["admission_record_ref"])
         self.assertIs(dep["admission_record_required"], True)
-        # The extraction must be blocked while the admission is pending.
+        self.assertEqual(dep["admission_status"], "admitted_with_conditions")
+        # The reference must point at a record that actually exists. A dangling
+        # path would authorise the run on a document nobody can read.
+        ref = dep["admission_record_ref"]
+        self.assertTrue(ref)
+        self.assertTrue((REPO_ROOT / ref).is_file(), f"missing record: {ref}")
+        # And that record must actually be about this dataset and snapshot.
+        record = (REPO_ROOT / ref).read_text(encoding="utf-8")
+        for token in (dep["dataset_id"], str(dep["dataset_version"]),
+                      dep["snapshot_id"], "APPROVE"):
+            with self.subTest(token=token):
+                self.assertIn(token, record)
+        # Admission is conditional; the conditions must be named, and they must
+        # be the ones the audit actually froze.
+        self.assertIs(dep["admission_is_conditional"], True)
+        audit = _load(POOLS / "srcadm_01_surfaceome_admission.yaml")
+        frozen = [c["id"] for c in audit["admission_conditions"]]
+        self.assertEqual(dep["admission_conditions"], frozen)
+        # Nothing may block the run any more, and it stays a single run.
         head = self.doc["extraction"]
-        self.assertIs(head["authorises_extraction_run"], False)
-        self.assertIn("SRCADM-01", head["extraction_blocked_by"])
-        # Admitting the database is explicitly outside this contract.
+        self.assertEqual(head["extraction_blocked_by"], [])
+        self.assertIs(head["authorises_extraction_run"], True)
+        cleared = {c["blocker"]: c for c in head["extraction_unblocked_by"]}
+        self.assertEqual(cleared["SRCADM-01"]["admission_record_ref"], ref)
+        # Admitting the database is still outside this contract: it was admitted
+        # elsewhere, and this file only cites that decision.
         not_authorised = " ".join(self.doc["not_authorised"])
-        self.assertIn("SRCADM-01", not_authorised)
         self.assertIn("纳入已批准来源", not_authorised)
+        self.assertIs(audit["admission"]["grants_admission_by_itself"], False)
 
     def test_admission_audit_covers_more_than_hashes(self) -> None:
         dep = self.doc["source_admission_dependency"]

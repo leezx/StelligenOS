@@ -69,17 +69,39 @@ class Srcadm01AuditTests(unittest.TestCase):
                     self.assertTrue(str(finding.get("finding", "")).strip(),
                                     f"{fid} is PASS_WITH_FINDING but names no finding")
 
-    def test_the_audit_does_not_grant_admission(self) -> None:
+    def test_admission_comes_from_the_record_not_from_this_file(self) -> None:
+        """The audit is approved, but this file still grants nothing by itself:
+        the grant lives in the review record it points at."""
+
         head = self.doc["admission"]
-        self.assertEqual(head["status"], "pending_review")
+        self.assertEqual(head["status"], "approved")
         self.assertIs(head["grants_admission_by_itself"], False)
-        self.assertIsNone(head["admission_record_ref"])
-        # EVGAP-01 must still be unfilled and still block its extraction.
+        self.assertIs(head["admission_granted"], True)
+        self.assertEqual(head["admission_granted_by_pr"], 63)
+        ref = head["admission_record_ref"]
+        self.assertTrue(ref)
+        self.assertTrue((REPO_ROOT / ref).is_file(), f"missing record: {ref}")
+        # EVGAP-01 must cite the very same record, not a second one.
         dep = self.evgap["source_admission_dependency"]
-        self.assertIsNone(dep["admission_record_ref"])
-        self.assertIs(self.evgap["extraction"]["authorises_extraction_run"], False)
+        self.assertEqual(dep["admission_record_ref"], ref)
+        self.assertEqual(dep["admission_status"], "admitted_with_conditions")
+        # The recommendation was conditional, so the grant must be too.
+        self.assertEqual(head["recommendation"], "admissible_with_conditions")
+        self.assertIs(dep["admission_is_conditional"], True)
+        self.assertEqual(dep["admission_conditions"],
+                         [c["id"] for c in self.doc["admission_conditions"]])
+
+    def test_the_grant_reaches_extraction_but_stops_there(self) -> None:
+        """Admission authorises one EVGAP-01 run. It must not reach Level 01."""
+
+        extraction = self.evgap["extraction"]
+        self.assertIs(extraction["authorises_extraction_run"], True)
+        self.assertEqual(extraction["authorises_extraction_run_count"], 1)
+        self.assertIs(extraction["authorises_level_01_execution"], False)
+        self.assertIs(extraction["requires_followup_binding_pr"], True)
+        # The audit still disclaims the things it never covered.
         not_authorised = " ".join(self.doc["not_authorised"])
-        for phrase in ("授予准入", "admission_record_ref", "EVGAP-01", "Level 01"):
+        for phrase in ("Level 01", "其他版本", "字段白名单"):
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, not_authorised)
 
