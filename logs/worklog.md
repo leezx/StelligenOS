@@ -2647,6 +2647,63 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Accepted by reviewer, unchanged: EVGAP-02 与 EVGAP-01／SRCADM-01 独立；覆盖全部 369 pairs；Tier 1／Tier 2 分层与 Tier 2 禁用；A/B/C/D 四类框架；RNA 可支持 linkage 但不满足 LOCK-01；C 类可作 linkage existence 但非 ADC efficacy；disease-level 不自动支持 subgroup；other-cancer 只作 metadata；`L3-05` 可逆非证伪非 killed；不执行 Gate／Level 01、不解除 `EVGAP-01`；不预写 discovery run 结果数量。
 - Review write-back: 连接器 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本条与 handoff 第十四节。
 - Next: 推送同一 PR 并同步 PR 描述请求复审。
+## 2026-08-05T19:20:00-04:00 — EVGAP-02 CRC linkage 抽取执行（外部运行留痕）
+
+- Instruction: 人类负责人指示「先执行 EVGAP-02 抽取，然后 SRCADM-01」。授权依据为 PR #61 已 `APPROVE` 并合并的 `docs/pools/evgap_02_crc_linkage_extraction.yaml`，其 `blocked_by: [contract_approval]` 已满足。
+- Reachability tested first: 契约把来源不可达定为须记录的事实而非可静默跳过，故执行前逐个测试六个必查 endpoint，全部应答——PubMed／PMC（NCBI E-utilities `esearch`）、ClinicalTrials.gov API v2、GEO（E-utilities `db=gds`）、TCGA（GDC genes API）、Human Protein Atlas（`search_download`）。
+- Run: `gen_iet_evgap_02_crc_linkage_20260805T190453Z`，六个产物全部写入外部 `DATA`，**仓库零写入**。
+- Search completeness: **451 次检索、0 不可达、41／41 target 检索完整、369／369 pair 的 D 类检索完整**。target 级按 endpoint 判定覆盖（非按 source class），A／B／C 用类别特异术语；D 类按 pair 判定并记录六个完整性字段。
+- Result: **`L3-02` 168 RETAIN／active；`L3-03` 192 DEFER／hold；`L3-05` 9 `EXCLUDE_FROM_ACTIVE_POOL`／reactivation-eligible**。168+192+9 = 369。`L3-01` 与 `L3-04` 本次为空规则——无检索不完整的 pair，也未采集到「仅其他癌种 precedent」的证据。
+- active by context: canonical `crc_mss_pmMR_mcrc_3l_plus` **40**（41 个靶点中仅 `EDBN` 无 A/B/C 证据）；8 个亚群 context 分别 33／19／17／17／14／11／11／6。**亚群必须同时有 D 类情境特异证据才能 RETAIN**——这正是 192 个 `L3-03` 的差别：有疾病级 CRC 证据，但该亚群无情境特异富集证据。
+- Evidence: **7,067 行**，A 2,808／B 2,295／C 1,746／D 218。`context_specific = true` 仅 D 类 218 行，A／B／C 按契约是疾病级检索、按构造不具情境特异性。
+- Mandatory findings recorded: `MF-L01` RETAIN 只表示存在可回溯的 CRC-specific linkage 记录，**不表示适合 ADC、不表示疗效、不表示治疗窗**；`MF-L02` C 类 1,746 行全部 `is_adc_efficacy_evidence = false`；`MF-L03` 未使用任何派生本地库，**完整性只在 Tier 1 范围内成立**，`SRCADM-02`..`05` 仍待准入，日后扩大须另开 PR 重跑；`MF-L04` RETAIN 不使 pair 进入 Level 02，369 行 `may_advance_to_level_02` 全为 `false`。
+- Evidence strength stated plainly: **全部 7,067 行 `review_status = machine_retrieved_requires_human_review`、`evidence_direction = unknown`**。这些是按冻结查询式检索到的公开记录（PMID／PMCID／NCT／GEO 登记号均可回溯），**内容未被阅读、未被人工判读**。按 PR #58 已获接受的 `DECISION-02`，machine-retrieved 证据满足 LOCK-03 存在性但该 pair 不得晋级 Level 02。**故 168 个 active 的含义是「存在待复核的 CRC-specific linkage 记录」，不是「linkage 已确证」。**
+- Only one target reached L3-05: `EDBN`（9 个 pair）。非标准符号（fibronectin EDB 结构域），在 Level 01 Preview 中亦为 `E1-05` 不在 surfaceome 参考库。`L3-05` 可逆——`is_scientific_disproof: false`、`is_killed: false`、`reactivation-eligible`，仍留在 Eligible Universe Index，**不是科学证伪、不是淘汰**。
+- Executor defect found by self-check and repaired: 首版 evidence 表缺契约要求的 4 列（`pair_id`／`clinical_context_id`／`context_specific`／`linkage_outcome`），且 A／B／C 按契约按 target 检索一次导致单条证据无法携带唯一 `pair_id`、`VAL-L16` 不可满足。**这是我没把「按 target 检索」与「按 pair 记录证据」对齐。** 修正方式是让输出符合已冻结 schema 而非改契约：把 target 级记录按 pair 展开为 7,067 行，**未重复任何网络调用、未改变任何已检索事实**，只改表示形式。
+- Validation: **契约 20 条 `VAL-L01`..`VAL-L20` 逐条对实际产物核验，全部 `PASS`**，含 `VAL-L09` 两张表列集合逐表相等、`VAL-L16` 全部引用 id 存在且 `pair_id` 一致且 7,067 个 id 无重复、`VAL-L17` 逐规则引用约束、`VAL-L18` 369 pair 六字段齐备、`VAL-L20` 计数等于三组 refs 去重总数。仓库侧 `Ran 338 tests` 通过、`scripts/verify_repository_boundary.sh` 通过。
+- Packaged for review: `external:result/gen_iet_evgap_02_crc_linkage_20260805T190453Z.zip`，148,063 bytes，ZIP SHA-256 `9c9c184e7b66e2999950831a18e059847c3b7dfd4a5b6f92ac78ac9dce259ece`，含且仅含六个产物文件。**按 PR #60 第二轮裁决后自我约束的规则执行：外部产物每次交付必须同时产出带校验和的打包。**
+- Boundary: 未运行任何 Gate、未赋分数、未评估 T2／T7、未排序、未划 Tier、未推荐资产、未给实验建议、未新增靶点或 context（0／0）、**未打开任何 Tier 2 派生库**、未引用被隔离运行产物、未写入仓库。
+- Deliberately not done: **未解除 `EVGAP-02`**（须待本结果获批后另开 PR 更新绑定）；未解除 `EVGAP-01`；未更新 `adc_pool_level_01_input_binding.yaml`；Level 01 仍不可执行；未生成 `ADC_POOL_LEVEL_01_ACCEPTED`；未补八份批准记录。
+- Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**，须经 ChatGPT `APPROVE`。本 PR 只含本条 worklog 与一份 handoff。
+- Next: 送审本结果；获批后另开 PR 解除 `EVGAP-02`；随后按指示起 `SRCADM-01`。
+
+### 2026-08-05 16:55 EDT — EVGAP-02：审核后降级为检索候选层，契约修订至 v0.2.0（PR #62 第二轮）
+
+- Trigger: ChatGPT 对 PR #62 返回 `REQUEST_CHANGES`——「这些是搜索命中，不是 linkage evidence」。
+- Verified before changing anything: 逐条对实际文件核验，**审核意见全部成立**。7,067 行确实全部 `evidence_direction = unknown`、`review_status = machine_retrieved_requires_human_review`。
+- Worse than described: **没有任何一行带有已解析的断言字段。** `positive_fraction_or_prevalence` 在 7,067 行中全为空；`is_adc_efficacy_evidence` 全为 `false`；`malignant_cell_attribution` 全为 `unresolved`／`not_applicable`；5,699 条文献行的 `protein_or_rna` 全为 `unresolved`。**一条已抽取的断言都没有。**
+- Identity resolution never happened: `Undisclosed` **是缺失值占位符、不是实体**，却被当作基因符号检索，`PMC/A` 返回 1,384 条并产出 1 个 RETAIN；`CA19-9`（糖类抗原，无 HGNC 符号）`PMC/A` 14,200 条、9 个 pair 中 8 个 RETAIN；`EDBN` 在 11 个 endpoint 全部 0 命中，9 个 pair 落 `L3-05` **EXCLUDE**——它疑指 fibronectin 的 extra domain B（标准符号 `FN1`），**被排除的唯一原因是这个缩写不通行于文献。消歧失败被当成了完整检索后的阴性结论。**
+- One review detail corrected on the facts: 审核说 TCGA 与 HPA 的命中被算作 A 类证据。**实测它们没有产生任何证据行**——证据表 `source_ref` 前缀只有 `PMC` 3,240／`PubMed` 2,459／`ClinicalTrials.gov` 702／`GEO` 666。**原则完全成立，实际的实例是 `GEO`** 的 `db=gds` 元数据命中被登记为 666 行 A 类。
+- Third defect found by self-check, not raised in review: **未披露的检索截断**。451 次检索报告命中合计 **718,140**，实际登记 **979** 条，**333／451 次被截断**（多数每组只留 3 条）。revision 1 未声明此上限却宣称检索完整。
+- Root cause is the contract, not only the run: v0.1.0 把 `evidence_direction` 与 `review_status` 列为**必需列却无任何规则要求其被解析**，`linkage_class` 也无规则约束其来源，于是由**查询类别**决定。**一次完全合规的执行因此产出 168 条 RETAIN。** 故修在契约。
+- Contract amended to v0.2.0: 三层结构 `L-RETRIEVAL`／`L-ASSERTION`／`L-DISPOSITION`；`assertion_requirements` 六要件并**硬性禁止 `assertion_direction = unknown`**；`identity_resolution` 与新规则 `L3-00`（置于优先级最前，**未消歧实体既不得 RETAIN 也绝不得 EXCLUDE**）；`endpoint_evidence_admissibility` 逐 endpoint 写明命中证明什么与不证明什么；`search_complete` 扩为四层；新增 `VAL-L21`..`VAL-L28`。
+- Frozen vocabulary respected: LOCK-03 的 outcome 词表由 PR #57 冻结、其中没有 `identity_unresolved`（该 outcome 只属 LOCK-01），故 `L3-00` **复用 `linkage_evidence_missing`**，身份信息另由 `identity_resolution_status` 列承载，**不新增 outcome**。
+- Result downgraded (revision 2): 撤销 `pair_linkage_evidence.tsv`，改出 `retrieval_candidates.tsv` **979 行** + `linkage_assertions.tsv` **0 行**。**未重复任何网络调用、未丢弃任何已检索记录。** 「7,067 条证据」实为 **979 条记录乘以 9**（A 2808/9=312、B 2295/9=255、C 1746/9=194、D 218 不复制）。
+- Dispositions withdrawn: 369 个 pair 全部 DEFER／hold——`L3-00` **36**（4 个不可消歧实体 × 9 context）、`L3-01` **333**。**RETAIN 0、EXCLUDE 0**，三组 `*_evidence_refs` 全空。
+- Upstream defect recorded, not fixed: **`GAP-P07`**——PR #58 冻结的 41 个 target 中至少四个不是可消歧的蛋白实体。`EVGAP-02` 无权改轴，在本契约内给 `Undisclosed` 编身份等于静默改轴。**binding 本身已察觉这一点**：它把 `identity_unresolved` 列入 `unavailable_outcomes`，理由是「已批准层没有身份解析结论字段」，四个实体因此以 `E1-05` 留在轴上。修复须另开 PR，会改动 41／369 两个冻结计数。
+- Validation: 外部产物经 **25 项 v0.2.0 规则**核验全通过；`tests/test_evgap_02_crc_linkage.py` **44 tests**；全库 `Ran 353 tests` OK；`scripts/verify_repository_boundary.sh` 通过。
+- Mutation testing: **15 个变异全部被捕获**，逐个 `diff -q` 回滚干净。其中一个首轮「逃逸」实为我的替换串缩进写错、变异根本未生效；改正缩进后被捕获——记此以免把无效变异误记为测试覆盖。
+- Packaged: `gen_iet_evgap_02_crc_linkage_20260805T190453Z_rev2.zip`，41,734 bytes，ZIP SHA-256 `e8f2a7f5ce9fae25265994f0d9a1fae1e371a1bb55ccafea2026835bd5120d3d`，8 个条目。**按 PR #60 裁决后确立的规则，每个修订单独出包并各带自己的 SHA-256。**
+- Boundary: 未运行任何 Gate、未赋分数、未评估 T2／T7、未排序、未划 Tier、未推荐资产、未给实验建议、**未新增或修改靶点与 context**、未打开任何 Tier 2 派生库、未引用被隔离运行产物、未写入任何数据文件到仓库。
+- Deliberately not done: **未解除 `EVGAP-02`**；未处理 `GAP-P07`；未执行 `L-ASSERTION` 抽取；未解除 `EVGAP-01`；未更新 binding；未生成 `ADC_POOL_LEVEL_01_ACCEPTED`；未补九份批准记录。
+- Next: 送审本修订；获批后另开 PR 处理 `GAP-P07`，再执行 `L-ASSERTION` 抽取。
+
+### 2026-08-05 17:30 EDT — EVGAP-02：修正 CA19-9 的 L3-00 误判（PR #62 第三轮）
+
+- Trigger: ChatGPT 对 PR #62 第二轮 `REQUEST_CHANGES`——revision 2 把 `CA19-9` 放进 `L3-00`，与契约直接冲突。**该意见成立。**
+- The contradiction: 契约把 `CA19-9` 定为 `resolved_as_non_protein_antigen`，而 `search_complete_definition` 明确接受该 status。**它是已消歧的实体，不是身份未解析。** 只有 `unresolvable_placeholder` 与 `unresolvable_ambiguous_abbreviation` 才应触发 `L3-00`。
+- Root cause in my own work: 契约那张表命名为 `known_unresolved_entities`，**里面却有一个 resolved 的条目**；重建脚本按**表成员身份**而非按 `resolution_status` 赋 `L3-00`。**名字招来了这个 bug，脚本接受了邀请。**
+- Fixed at the point of failure, not the symptom: 表改名 `known_identity_findings`；新增 `l3_00_statuses`（只含两个 unresolvable）；`l3_00_membership_test: resolution_status`；`l3_00_membership_by_list_forbidden: true`；每个条目显式声明其 status 蕴含的 `lock_03_rule`，测试逐条比对二者是否自洽。
+- Option 1 taken: `CA19-9` 保持 `resolved_as_non_protein_antigen`，转 `L3-01`。新增 `non_protein_antigen_search_requirements`——非蛋白抗原**不得按基因符号检索**，v0.1.0 的 14,200 条 PMC 命中出自无效查询形式；`invalid_query_form_consequence: L3-01`，即**检索未完成，而非身份未解析**。新增 `VAL-L29`。
+- Result rebuilt (revision 3): `L3-00` **27**（`Undisclosed`／`EDBN`／`AG7` × 9），`L3-01` **342**。仍是 0 RETAIN、0 EXCLUDE、369 hold、三组 refs 全空、assertion 表空、候选 979 未变、**未重复任何网络调用**。
+- GAP-P07 sharpened: 四个实体**性质不同**，不可混为一谈。三个是不可消歧的符号；**`CA19-9` 已消歧、只是不是蛋白**——非蛋白抗原是否属于「所有潜在 ADC 膜蛋白靶点」这一 target universe，才是 `GAP-P07` 真正要回答的问题。契约新增 `entity_kinds` 分列。
+- Verification hardened: 外部核验脚本的 `L3-00` 期望集**由契约按 `resolution_status` 推导**，不是硬编码，故同类错误再犯会被捕获。20 项核验全通过。
+- Tests: `tests/test_evgap_02_crc_linkage.py` **47 tests**（新增 3 条：status 而非成员身份、非蛋白抗原检索形式、两处 completeness 定义互不矛盾）；全库 `Ran 356 tests` OK；boundary check 通过。
+- Mutation testing: **10 个新变异全部被捕获**，`diff -q` 回滚干净。
+- Packaged: `gen_iet_evgap_02_crc_linkage_20260805T190453Z_rev3.zip`，43,443 bytes，ZIP SHA-256 `ef268fd2f6dcc0c056b0dd01c67da5e850a5e79972ae5858dd49b5f60b49faac`。**revision 2 从未上传**，其 36／333 未被任何下游依赖；rev2 包已删除以免误取。
+- Also done this turn: 按人工负责人指示关闭 PR #55 并注明 superseded by #56（#56 已于 2026-08-04 合并）。**分支保留不删**——删除分支须单独授权。
+- Deliberately not done: 未解除 `EVGAP-02`；未处理 `GAP-P07`；未执行 `L-ASSERTION` 抽取；未改 target 轴；未补九份批准记录。
+- Next: 送审 revision 3；并按第二轮审核要求为 PR #63 制作可独立复核的 SRCADM-01 audit bundle。
 ### 2026-08-06 15:04 EDT
 
 - Instruction: Re-read the current StelligenOS project and produce a versioned, review-ready description of the current design architecture, module logic, system flow, implementation status, and open gaps.
@@ -2656,3 +2713,16 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Versioning: Updated the version index to state that unapproved `v2-draft` was superseded without a snapshot; no `v3` snapshot is created before approval. Updated architecture/README navigation, added this repository handoff, and refreshed workspace `HANDOFF.md` with the active v3 review task.
 - Boundary: Documentation-only. No data, cache, result, model weight, provider execution, Gate execution, contract change, lifecycle change, or module implementation was added.
 - Validation: Final branch validation ran 338 tests successfully; `scripts/verify_repository_boundary.sh` and `git diff --check` passed; no `__pycache__` directory was generated.
+
+### 2026-08-06 16:10 EDT — EVGAP-02：冻结语义，只补正式受审包（PR #62 第四轮）
+
+- Instruction: 冻结当前 HEAD，不改架构／契约／规则／测试逻辑，只补齐实际受审包并使包内数据严格匹配 handoff。
+- **本轮未改任何语义**：`docs/pools/evgap_02_crc_linkage_extraction.yaml` 未动、`tests/` 未动、契约版本仍 v0.2.0、disposition 逻辑未动、未新增 mandatory finding、未改 target 轴、未补 admission binding、未执行 EVGAP-01、未解除 EVGAP-02。
+- Added to the package only: `verify_package.py`（只读验证脚本）。因包内容变化，ZIP 哈希必然变化，故三处声明同步更新。
+- Package: `gen_iet_evgap_02_crc_linkage_20260805T190453Z_rev3.zip`，SHA-256 `81baa45f23f180c68b16d18c83284b60bdee725c017e668e590d4e80b04176e9`，46,292 bytes，**8 个文件**（ZIP 内 9 个条目，多出的一条是目录条目），`revision = 3`。**上一版声明的 `ef268fd2…` 作废。**
+- Three declarations aligned: handoff、PR body、`source_manifest.json` 现在写同一个文件名、同一个 ZIP SHA-256、同一个文件数、同一个 revision。
+- Corrected a transcription error in the previous handoff: `pair_linkage_disposition.tsv` 曾被写成 `4c4def27…`，那其实是 `run_report.md` 的哈希。真实值 `33674913…`。本轮的哈希表由 `source_manifest.json` 直接生成，不再手抄。
+- Verifier scope: 文件数、逐文件 SHA-256 与字节数、清单未遗漏文件、可选 ZIP 哈希、`revision = 3`、`979 / 0 / 369`、schema（候选表无 `linkage_class`、三个标记列齐备）、候选表三个固定值、`L3-00 27`／`L3-01 342`／`L3-02..L3-05` 全 `0`、无 RETAIN 无 EXCLUDE、369 行全 DEFER/hold、三组 refs 全空、`may_advance_to_level_02` 全 `false`、三个不可消歧 target 各 9 pair 全 `L3-00`、`CA19-9` 9 pair 全 `L3-01` 且 status 为 `resolved_as_non_protein_antigen`、`EVGAP-02` 未解除。
+- Verified from a clean extract in a temp directory (not the working copy), with the ZIP digest passed in: **`65/65 MATCH`，退出码 0**。
+- One self-caught slip: 脚本初版把「文件数」定为 9，实为 8——ZIP 的第 9 个条目是目录条目本身。已改正并在 handoff 中写明该区别。另注意 `python3 ... | tail` 会把 `tail` 的退出码当成脚本的，实际退出码须用 `PIPESTATUS`。
+- Repo-side changes this round: 仅本条 worklog 与 handoff 的包信息段。测试与契约零改动。
