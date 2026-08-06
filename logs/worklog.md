@@ -2817,3 +2817,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - PR description correction: 初次创建命令中的 Markdown 反引号被 shell 当作命令替换，造成描述文字被污染；代码、commit 和工作区文件未受影响。已用不含 shell 特殊反引号的正文执行 `gh pr edit 67` 修正描述。
 - Handoff: 更新 `docs/handoff/2026-08-06-sponsor-strategy-contracts.zh-CN.md`，补入 PR URL 与 code commit。
 - Next: 提交 handoff/worklog metadata commit 并推送 PR #67；使用 Chrome 网页版 ChatGPT 审核 PR #67，未获明确 `APPROVE` 前不进入第 2 步。
+
+### 2026-08-06 17:47 EDT — Chrome ChatGPT 审核 Phase 1 PR #67
+
+- Method: 在 Chrome 网页版 ChatGPT 的 `ADC研发框架优化` 对话中，通过聊天框 `+` 菜单显式选择 GitHub 来源，提交 PR #67 审核指令；未使用本地工作区替代 GitHub PR 审核。
+- Review scope: ChatGPT 读取 PR #67 的完整 changed files、两个 commits、aggregate diff、handoff、worklog、合同实现、YAML、测试与 GitHub 状态。
+- Result: ChatGPT 返回明确 `APPROVE`，审核 HEAD 为 `7307705a84e13d6740355a25ad24b36c4bb91a8b`。
+- Accepted: 严格只完成第 1 步；只增加 `DevelopmentSponsorProfile@0.1.0` 与 `ProgramThesis@0.1.0`；未修改 45-Gate、T0-T12/P0-P15/C0-C15、lifecycle、core objects 或 Asset Generation routing；未实现第 2–4 步；未引入数据或外部运行；sponsor-relative 与 asset-intrinsic 分离正确；测试和 boundary 声明一致。
+- Non-blocking observation: GitHub 初始 metadata 的 `mergeable=false` 经 compare 核对为 ahead 2、behind 0、merge base 一致，ChatGPT 判断为状态未刷新，不是真冲突；合并前需重新刷新状态。
+- Explicit boundary: 批准只覆盖合并 Phase 1；不批准或授权 Search-Space Admission、Program Commitment Review、SponsorFitAssessment、ValueInflectionPlan、实例、数据、外部运行或 Gate/lifecycle/core-object 修改。
+- Persisted: 新增 `logs/chatgpt-review-2026-08-06-sponsor-strategy-phase1.md`，并更新 handoff 状态为 `APPROVED_WAITING_HUMAN_MERGE`。
+- Next: 提交并推送本次审核记录 metadata；等待人类负责人合并 PR #67。合并前不进入第 2 步。
