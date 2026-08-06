@@ -16,11 +16,25 @@
 不能证明外部事实为真。** 这个意见成立，而且与我在 PR #62 对自己提的要求是同一条标准。
 
 审计包：`external:result/gen_iet_srcadm_01_audit_bundle_20260806T000000Z`
-ZIP SHA-256 `2dbe88af1a2e9aee8004b9cbdd894c48f2f91197726678898aadf5da3f75e931`，
-2,663,987 bytes，13 个条目。
+ZIP SHA-256 `49d56c395661e7c71ba4caa60657126596cf4f784430ff462ab4512fdb0237b4`，
+2,666,041 bytes，**13 个文件**（ZIP 内 14 个条目，多出的一条是目录条目）。
 
-解包后 `python3 verify_audit.py .` 即重算 **48 项**审计事实，逐项 `MATCH`／`MISMATCH`。
-**本次 48／48 全部 `MATCH`。**
+**上一版声明的 `2dbe88af…` 作废**——按复核要求补入了 `audit_expected.json`、
+`license_manifest.json` 与更多重算项，包内容变了哈希必然变。**以此为准。**
+
+解包后 `python3 verify_audit.py .` 即重算 **72 项**审计事实，逐项 `MATCH`／`MISMATCH`，
+末行输出 `72/72 MATCH`。无网络、无写入、不依赖包外路径，解压即可运行，退出码 `0` 表示全通过。
+
+**从全新解压目录实测：`72/72 MATCH`，退出码 0。**
+
+**为什么是 72 而不是上一版的 48。** 按复核要求补入了 processed 表逐文件 SHA-256／字节数／行数
+重算（9 项）、六个 license 歧义来源逐一验证其 license 文本确实歧义（6 项）、
+三个 CC BY 4.0 来源逐一验证（3 项）、license 清单覆盖全部 19 个来源、
+已记录 raw 摘要与 `checksums.sha256` 逐条一致、snapshot 与 dataset 版本一致性、
+target 轴规模等。**未删除任何原有检查**，48 项全部仍在。
+
+**判据不来自预写结论。** 被审计主张放在 `audit_expected.json`，脚本从 builder 源码与
+三张表**重新算出**每个数字再比对；那份文件里写错一个数，这里就会 `MISMATCH`。
 
 三张 processed 表**未做子集裁剪**——子集会使 11,334、6／5 重复键等计数无法重算，
 审核方就只能重新相信叙述。整包压缩后 2.6 MB，代价可接受。

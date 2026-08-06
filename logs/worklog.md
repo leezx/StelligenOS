@@ -2690,3 +2690,16 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Versioning: Updated the version index to state that unapproved `v2-draft` was superseded without a snapshot; no `v3` snapshot is created before approval. Updated architecture/README navigation, added this repository handoff, and refreshed workspace `HANDOFF.md` with the active v3 review task.
 - Boundary: Documentation-only. No data, cache, result, model weight, provider execution, Gate execution, contract change, lifecycle change, or module implementation was added.
 - Validation: Final branch validation ran 338 tests successfully; `scripts/verify_repository_boundary.sh` and `git diff --check` passed; no `__pycache__` directory was generated.
+
+### 2026-08-06 16:35 EDT — SRCADM-01：冻结语义，只补正式审计包（PR #63 第三轮）
+
+- Instruction: 冻结当前 HEAD，不改九项审计与四项条件，只上传正式审计包并使三处声明一致。
+- **本轮未改任何语义**：九项 `audit_findings` 的 verdict 与依据未动、四项 `admission_conditions` 未动、`status: pending_review` 未动、`admission_record_ref: null` 未动、`EVGAP-01` 的 `authorises_extraction_run` 仍为 `false`、未顺带授予 admission。
+- Added to the bundle only: `audit_expected.json`、`license_manifest.json`，并重写 `verify_audit.py`；移除 `audit_report.json`（预写结论不应与证据混放）。因包内容变化，ZIP 哈希必然变化。
+- Package: `gen_iet_srcadm_01_audit_bundle_20260806T000000Z.zip`，SHA-256 `49d56c395661e7c71ba4caa60657126596cf4f784430ff462ab4512fdb0237b4`，2,666,041 bytes，**13 个文件**（ZIP 内 14 个条目，多出的一条是目录条目）。**上一版声明的 `2dbe88af…` 作废。**
+- Verifier properties: 无网络、无写入、不依赖包外路径、解压即可运行、退出码 0 表示全通过、逐项输出 `MATCH`／`MISMATCH`、末行 `72/72 MATCH`。
+- **判据不来自预写结论**：主张放在 `audit_expected.json`，脚本从 builder 源码与三张表**重新算出**每个数字再比对；那份文件写错一个数就会 `MISMATCH`。已在记录中以 `verdicts_read_from_file: false` 固定该性质。
+- **72 而不是 48，如实报告**：按复核要求补入 processed 表逐文件 SHA-256／字节数／行数重算（9 项）、六个 license 歧义来源逐一验证其文本确实歧义（6 项）、三个 CC BY 4.0 来源逐一验证（3 项）、license 清单覆盖 19 个来源、已记录 raw 摘要与 `checksums.sha256` 逐条一致、snapshot 与 dataset 版本一致性、target 轴规模等。**未删除任何原有检查**，48 项全部仍在。上一版的 48 记为 `previous_recomputed_checks`。
+- Covered by recomputation, as requested: raw manifest SHA-256；processed 三表摘要；family source mapping；GOA 与 UniProt 同属一个 family；HPA 反例 11,334（并同时报出 13,597 与 18,534 两个口径）；imaging 误计为 0；source_evidence 重复键 6；topology 重复键 5；11 个受影响基因；与 41-target 轴交集为空；CDH17／CEACAM5／GUCY2C provenance；license 歧义来源未进入允许字段；consensus `gene_symbol` 唯一；41 个 target 的 `family_count` 与 family list 一致。
+- Verified from a clean extract in a temp directory, not the working copy: **`72/72 MATCH`，退出码 0**。
+- Repo-side changes this round: 仅本条 worklog、handoff 的包信息段、YAML 的 `audit_bundle` 数据字段（哈希／字节／文件数／检查数／内容清单）。九项审计结论、四项条件、测试逻辑零改动。

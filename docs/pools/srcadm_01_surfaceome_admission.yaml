@@ -26,15 +26,30 @@ admission:
 audit_bundle:
   bundle_id: external:result/gen_iet_srcadm_01_audit_bundle_20260806T000000Z
   package: gen_iet_srcadm_01_audit_bundle_20260806T000000Z.zip
-  package_sha256: 2dbe88af1a2e9aee8004b9cbdd894c48f2f91197726678898aadf5da3f75e931
-  package_bytes: 2663987
-  entries: 13
+  package_sha256: 49d56c395661e7c71ba4caa60657126596cf4f784430ff462ab4512fdb0237b4
+  package_bytes: 2666041
+  files: 13
+  zip_entries: 14
   read_only: true
   grants_admission: false
   # 复核方式：解包后运行 python3 verify_audit.py .
   reverification_command: python3 verify_audit.py .
-  recomputed_checks: 48
+  recomputed_checks: 72
   recomputed_result: all_match
+  # 判据不来自预写结论：主张放在 audit_expected.json，脚本从 builder 源码与三张表
+  # 重新算出每个数字再比对。写错一个数就会 MISMATCH，不会静默通过。
+  verdicts_read_from_file: false
+  expected_values_file: audit_expected.json
+  verifier_properties:
+    network_access: false
+    writes_files: false
+    depends_on_paths_outside_bundle: false
+    runnable_after_extract: true
+    exit_zero_means_all_passed: true
+    final_line: 72/72 MATCH
+  # 上一版为 48 项。本轮按复核要求补入 processed 表逐文件摘要／字节数／行数重算、
+  # 六个 license 歧义来源逐一验证、三个 CC BY 4.0 来源逐一验证等，未删除任何原有检查。
+  previous_recomputed_checks: 48
   contents:
     - file: build_t7_surfaceome_reference.py
       serves: [AUD-01, AUD-05, AUD-06, AUD-07, AUD-09]
@@ -56,7 +71,11 @@ audit_bundle:
       serves: [AUD-06]
     - file: verify_audit.py
       serves: [all]
-    - file: audit_report.json
+    - file: audit_expected.json
+      serves: [all]
+    - file: license_manifest.json
+      serves: [AUD-04]
+    - file: README.md
       serves: [all]
   # 三张 processed 表未做子集裁剪，故所有计数可精确重算，而非只能核对代表性行。
   processed_tables_subset: false
