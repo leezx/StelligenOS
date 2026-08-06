@@ -2647,3 +2647,12 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Accepted by reviewer, unchanged: EVGAP-02 与 EVGAP-01／SRCADM-01 独立；覆盖全部 369 pairs；Tier 1／Tier 2 分层与 Tier 2 禁用；A/B/C/D 四类框架；RNA 可支持 linkage 但不满足 LOCK-01；C 类可作 linkage existence 但非 ADC efficacy；disease-level 不自动支持 subgroup；other-cancer 只作 metadata；`L3-05` 可逆非证伪非 killed；不执行 Gate／Level 01、不解除 `EVGAP-01`；不预写 discovery run 结果数量。
 - Review write-back: 连接器 403，未写回 GitHub。裁决以人类负责人转述为准，已记录于本条与 handoff 第十四节。
 - Next: 推送同一 PR 并同步 PR 描述请求复审。
+### 2026-08-06 15:04 EDT
+
+- Instruction: Re-read the current StelligenOS project and produce a versioned, review-ready description of the current design architecture, module logic, system flow, implementation status, and open gaps.
+- Context read: Re-read workspace `AGENTS.md`, `HANDOFF.md`, `setup_env.sh`, `DATA/dataset.index.md`, `migration.md`, `SOFTWARES/TOOL_INDEX.md`; repository README/LINKS/AGENTS; architecture contract/release/versioning; core objects, lifecycle, clinical lock, Gate contracts, capabilities, cross-cutting ports, GenModules, extensions, CRC Pool/EVGAP contracts, recent handoffs, and Git history.
+- GitHub verification: Confirmed `main@8aa7e87`; open PR #62 is an EVGAP-02 v0.2.0 retrieval-layer correction, PR #63 is a conditional surfaceome source-admission audit that does not grant admission, and PR #55 is the obsolete dirty predecessor of merged PR #56.
+- Change: Replaced the stale `v2-draft` canonical architecture explanation with `v3-draft` / `STELLIGENOS-ARCH-2026.08.06-v3-draft`. Added explicit architecture layers, lifecycle, objects, ClinicalHypothesis locks, capabilities, 45-Gate logic, all module areas and versions, patient-anchored data infrastructure, CRC Level 01 status, open work, runtime flow, maturity matrix, limitations, and expert review questions.
+- Versioning: Updated the version index to state that unapproved `v2-draft` was superseded without a snapshot; no `v3` snapshot is created before approval. Updated architecture/README navigation, added this repository handoff, and refreshed workspace `HANDOFF.md` with the active v3 review task.
+- Boundary: Documentation-only. No data, cache, result, model weight, provider execution, Gate execution, contract change, lifecycle change, or module implementation was added.
+- Validation: Final branch validation ran 338 tests successfully; `scripts/verify_repository_boundary.sh` and `git diff --check` passed; no `__pycache__` directory was generated.
