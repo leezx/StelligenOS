@@ -107,8 +107,61 @@ class Srcadm01AuditTests(unittest.TestCase):
         text = aud["same_origin_pair_handled"]
         self.assertIn("goa_human", text)
         self.assertIn("uniprot_reviewed_human", text)
-        # The counterexample check must cite a measured count.
-        self.assertIn("11,334", aud["counting_requires_support_evidence"])
+        # The counterexample check must cite a measured count, and it must state
+        # the denominator. "11,334 genes with plasma_membrane=false" is ambiguous
+        # on its own: 18,534 consensus rows carry that value, most because HPA
+        # never covered the gene at all. Both figures must appear so the reader
+        # cannot conflate them.
+        counterexample = aud["counting_requires_support_evidence"]
+        for figure in ("13,597", "11,334", "18,534"):
+            with self.subTest(figure=figure):
+                self.assertIn(figure, counterexample)
+        self.assertIn("从未被 HPA 覆盖", counterexample)
+
+    def test_the_audit_ships_a_bundle_that_can_be_recomputed(self) -> None:
+        """Tests on this file prove only internal consistency. The external facts
+        need an external, re-runnable bundle."""
+
+        bundle = self.doc["audit_bundle"]
+        self.assertIs(bundle["read_only"], True)
+        self.assertIs(bundle["grants_admission"], False)
+        self.assertTrue(bundle["reverification_command"].strip())
+        self.assertEqual(bundle["recomputed_result"], "all_match")
+        self.assertGreaterEqual(bundle["recomputed_checks"], 40)
+        # A 64-hex package digest, so a swapped package is detectable.
+        digest = bundle["package_sha256"]
+        self.assertEqual(len(digest), 64, digest)
+        self.assertTrue(all(c in "0123456789abcdef" for c in digest))
+        # Every scope item must be served by at least one shipped file. The
+        # literal "all" marks the verifier and its report, which serve every
+        # item; it is not itself a scope item, so drop it before comparing.
+        served = {item for entry in bundle["contents"] for item in entry["serves"]}
+        self.assertIn("all", served, "no file is declared as serving every item")
+        served.discard("all")
+        required = {item["id"] for item in
+                    self.evgap["source_admission_dependency"]["required_audit_items"]}
+        self.assertEqual(required - served, set(),
+                         f"scope items with no bundle file: {sorted(required - served)}")
+
+    def test_the_bundle_states_what_it_cannot_prove(self) -> None:
+        """A bundle that implies everything is recomputable would be worse than
+        no bundle."""
+
+        bundle = self.doc["audit_bundle"]
+        # Full tables, not representative rows — otherwise the counts are
+        # unverifiable and the reviewer is back to trusting the narrative.
+        self.assertIs(bundle["processed_tables_subset"], False)
+        self.assertTrue(bundle["processed_tables_subset_reason"].strip())
+        limits = bundle["not_independently_recomputable_in_bundle"]
+        self.assertTrue(limits)
+        raw_limit = next(item for item in limits if "AUD-09" in item["item"])
+        self.assertTrue(raw_limit["reason"].strip())
+        self.assertTrue(raw_limit["what_is_provided"].strip())
+        # The limitation must be the one the conditions already declare, not a
+        # new and unrecorded one.
+        self.assertEqual(raw_limit["already_stated_as"], "COND-03")
+        conditions = {c["id"] for c in self.doc["admission_conditions"]}
+        self.assertIn("COND-03", conditions)
 
     def test_license_ambiguity_is_bounded_by_the_field_whitelist(self) -> None:
         aud = self.findings["AUD-04"]

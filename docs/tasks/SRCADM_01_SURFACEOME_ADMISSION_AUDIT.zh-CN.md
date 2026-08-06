@@ -4,6 +4,8 @@
 - 授权依据：审计范围 `AUD-01`..`AUD-09` 由 **PR #59** 冻结并获 ChatGPT `APPROVE`
 - 机器可读记录：[`../pools/srcadm_01_surfaceome_admission.yaml`](../pools/srcadm_01_surfaceome_admission.yaml)，由 `tests/test_srcadm_01_surfaceome_admission.py` 校验
 - 当前状态：**审计已完成，结论待审核**
+- 可独立复核的审计包：`external:result/gen_iet_srcadm_01_audit_bundle_20260806T000000Z`，
+  ZIP SHA-256 `2dbe88af1a2e9aee8004b9cbdd894c48f2f91197726678898aadf5da3f75e931`
 - 结论：**`admissible_with_conditions`——有条件可纳入，四项条件见第三节**
 
 ## 目的
@@ -11,6 +13,50 @@
 `EVGAP-01` 的抽取被 `SRCADM-01` 阻断：`ADC_surfaceome_reference@0.3.0` 从未被审核，PR #59 明确「派生数据库不能靠自声明 + 哈希纳入」，并冻结了九项必审内容。
 
 本文件是那九项的审计结论。**本文件不授予准入**——准入由本 PR 获 `APPROVE` 后成立，届时另开 PR 把 `EVGAP-01` 契约的 `admission_record_ref` 指向审核记录。
+
+## 〇、审计包（第一轮审核后补）
+
+第一轮审核指出：**审计结论的核心事实全部来自仓库外文件，而仓库内的测试只验证审计文档
+自洽，不能证明外部事实为真。** 这个意见成立——所以本轮补一个只读复核包。
+
+解包后运行：
+
+```
+python3 verify_audit.py .
+```
+
+脚本只读包内文件，**重算 48 项审计事实**，逐项输出 `MATCH` / `MISMATCH`。
+本次结果：**48 / 48 全部 `MATCH`**。
+
+三张 processed 表**未做子集裁剪**（`source_evidence` 11.8 MB、`surfaceome_consensus` 8.9 MB、
+`membrane_topology_evidence` 3.5 MB），因此 11,334、6／5 重复键、家族映射等数字都能**精确重算**，
+而不是只能核对代表性行。整包压缩后 2.6 MB。
+
+### 唯一不能在包内独立重算的一项
+
+**19 个 raw 文件未随包提供**（合计数 GB）。其校验和在审计时已从归档 snapshot 实算，
+结果记在 `raw_checksum_verification.json`（**19／19 `OK`**）。要独立重算这一项需要归档
+snapshot 本身——**这正是 `COND-03` 已声明的边界**，不是新增限制。
+
+`download_manifest.json` 本身随包提供，故 **`AUD-02` 的 SHA-256 对应关系可在包内完整重算**。
+
+### 重算过程中发现的一处表述问题
+
+审计原文写「HPA 有行但 `hpa_plasma_membrane = false` 的基因共 **11,334** 个」。
+重算脚本首版按「consensus 中 `hpa_plasma_membrane = false`」计数，得 **18,534**。
+
+**11,334 这个数字是对的**：HPA 实际覆盖 **13,597** 个基因，其中 11,334 个 `plasma_membrane = false`。
+18,534 里多出的部分是**从未被 HPA 覆盖**的基因——该字段对它们同样是 `false`。
+
+原文的「有行」二字承载了全部区分度，容易读漏。现已在机器可读记录与脚本中同时报出
+13,597／18,534／11,334 三个数。**两种口径下 `imaging` 被错误计入的基因都是 0 个**，
+故 `AUD-05` 的结论不变。
+
+### 另一处更正
+
+`AUD-01` 原写「`AssetGenOS/scripts/build_t7_surfaceome_reference.py`」有歧义——
+该路径**在 StelligenOS 仓库之外**，是同级的 `AssetGenOS` 仓库
+（`/Volumes/Stelligen_SSD/Stelligen/AssetGenOS/scripts/`）。已更正，副本随包提供。
 
 ## 一、九项逐条结论
 
@@ -108,7 +154,7 @@ builder 存在、2,721 行、可读，family 计数与 discordance 生成均为�
 
 ## 八、后续顺序
 
-1. 本审计 `APPROVE`，在 `logs/` 留下审核记录。
+1. 本审计连同审计包 `APPROVE`，在 `logs/` 留下审核记录。
 2. **另开 PR** 把 `EVGAP-01` 契约的 `admission_record_ref` 指向该记录，`authorises_extraction_run` 转为 `true`。
 3. 执行 `EVGAP-01` 抽取 → 结果 PR → binding，解除 `EVGAP-01`。
 4. `EVGAP-02` 的抽取已执行，结果审核在 PR #62；获批后另开 PR 解除 `EVGAP-02`。

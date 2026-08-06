@@ -9,6 +9,44 @@
 - 架构变更：`NO_ARCHITECTURE_CHANGE`
 - 审核状态：等待 ChatGPT `APPROVE`。**本 PR 不适用 `AGENTS.md`「审核豁免」。**
 
+
+## 〇、第一轮审核后补：可独立复核的审计包
+
+审核意见：**审计结论的核心事实全部来自仓库外文件；仓库内的测试只验证审计文档自洽，
+不能证明外部事实为真。** 这个意见成立，而且与我在 PR #62 对自己提的要求是同一条标准。
+
+审计包：`external:result/gen_iet_srcadm_01_audit_bundle_20260806T000000Z`
+ZIP SHA-256 `2dbe88af1a2e9aee8004b9cbdd894c48f2f91197726678898aadf5da3f75e931`，
+2,663,987 bytes，13 个条目。
+
+解包后 `python3 verify_audit.py .` 即重算 **48 项**审计事实，逐项 `MATCH`／`MISMATCH`。
+**本次 48／48 全部 `MATCH`。**
+
+三张 processed 表**未做子集裁剪**——子集会使 11,334、6／5 重复键等计数无法重算，
+审核方就只能重新相信叙述。整包压缩后 2.6 MB，代价可接受。
+
+### 唯一不能在包内独立重算的项
+
+19 个 raw 文件未随包提供（合计数 GB）。其校验和在审计时已实算，记于
+`raw_checksum_verification.json`（**19／19 `OK`**）。独立重算需归档 snapshot 本身——
+**这正是 `COND-03` 已声明的边界**，不是新增限制。`download_manifest.json` 随包提供，
+故 `AUD-02` 可在包内完整重算。
+
+### 重算过程中查出的一处表述问题
+
+原文「HPA 有行但 `hpa_plasma_membrane = false` 的基因共 **11,334** 个」。
+重算脚本首版按「consensus 中该字段为 false」计数，得 **18,534**。
+
+**11,334 是对的**：HPA 实际覆盖 **13,597** 个基因，其中 11,334 个该字段为 `false`；
+多出的部分是**从未被 HPA 覆盖**的基因——该字段对它们同样是 `false`。
+原文的「有行」二字承载了全部区分度，容易读漏。现在机器可读记录与脚本都同时报出
+13,597／18,534／11,334。**两种口径下 `imaging` 被错误计入的都是 0 个**，`AUD-05` 结论不变。
+
+### 另一处更正
+
+`AUD-01` 原写 `AssetGenOS/scripts/build_t7_surfaceome_reference.py`，有歧义——
+该路径**在 StelligenOS 仓库之外**，是同级的 `AssetGenOS` 仓库。已更正，副本随包提供。
+
 ## 一、本次范围
 
 人类负责人指示起 `SRCADM-01`。这是 Track B 的第一环，也是唯一挡住 `EVGAP-01` 的一环。

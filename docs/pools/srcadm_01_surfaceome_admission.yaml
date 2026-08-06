@@ -21,13 +21,68 @@ admission:
   admission_record_ref: null
   next_step: 获 APPROVE 后另开 PR 把 EVGAP-01 契约的 admission_record_ref 指向审核记录
 
+# 可独立复核的审计包。PR #63 第一轮审核指出：审计结论的核心事实全部来自仓库外文件，
+# 仅凭文档自洽的测试无法证明外部事实为真。该意见成立——本节即其应答。
+audit_bundle:
+  bundle_id: external:result/gen_iet_srcadm_01_audit_bundle_20260806T000000Z
+  package: gen_iet_srcadm_01_audit_bundle_20260806T000000Z.zip
+  package_sha256: 2dbe88af1a2e9aee8004b9cbdd894c48f2f91197726678898aadf5da3f75e931
+  package_bytes: 2663987
+  entries: 13
+  read_only: true
+  grants_admission: false
+  # 复核方式：解包后运行 python3 verify_audit.py .
+  reverification_command: python3 verify_audit.py .
+  recomputed_checks: 48
+  recomputed_result: all_match
+  contents:
+    - file: build_t7_surfaceome_reference.py
+      serves: [AUD-01, AUD-05, AUD-06, AUD-07, AUD-09]
+    - file: build_manifest.json
+      serves: [AUD-01, AUD-02]
+    - file: download_manifest.json
+      serves: [AUD-02, AUD-03, AUD-04]
+    - file: checksums.sha256
+      serves: [AUD-09]
+    - file: raw_checksum_verification.json
+      serves: [AUD-09]
+    - file: source_evidence.tsv
+      serves: [AUD-03, AUD-04, AUD-05, AUD-06, AUD-08]
+    - file: membrane_topology_evidence.tsv
+      serves: [AUD-06]
+    - file: surfaceome_consensus.tsv
+      serves: [AUD-05, AUD-06, AUD-07, AUD-08]
+    - file: evgap_01_target_axis.txt
+      serves: [AUD-06]
+    - file: verify_audit.py
+      serves: [all]
+    - file: audit_report.json
+      serves: [all]
+  # 三张 processed 表未做子集裁剪，故所有计数可精确重算，而非只能核对代表性行。
+  processed_tables_subset: false
+  processed_tables_subset_reason: >-
+    子集会使 11,334、6／5 重复键等计数无法重算，审核方只能重新相信叙述。
+  # 唯一不能在包内独立重算的项，如实写明。
+  not_independently_recomputable_in_bundle:
+    - item: AUD-09 的 19 个 raw 文件逐字节校验
+      reason: raw 文件合计数 GB，未随包提供
+      what_is_provided: >-
+        checksums.sha256 与审计时实算结果 raw_checksum_verification.json（19／19 OK）
+      full_recomputation_requires: 归档 snapshot 本身
+      already_stated_as: COND-03
+    - item: AUD-02 的 SHA-256 对应关系
+      reason: 无此限制——download_manifest.json 随包提供，可在包内完整重算
+      note: 列此条是为免误读为同样受限
+
 # 逐项审计结论。每一条都必须有可复核的依据，不接受「已阅读」这类断言。
 audit_findings:
   - id: AUD-01
     item: builder 实现与版本
     verdict: PASS
     evidence: >-
-      AssetGenOS/scripts/build_t7_surfaceome_reference.py 存在，2,721 行，可读。
+      /Volumes/Stelligen_SSD/Stelligen/AssetGenOS/scripts/build_t7_surfaceome_reference.py
+      存在，2,721 行，可读。**注意该路径在 StelligenOS 仓库之外**，是同级的 AssetGenOS
+      仓库；首版审计只写 AssetGenOS/scripts/... 有歧义，已更正。副本随审计包提供。
       family 计数、discordance 生成、consensus 打分均为显式条件分支，无隐藏启发式。
     residual_note: >-
       builder_version 由 config 传入而非脚本内常量，故「0.3.0」这个版本号依赖
@@ -93,8 +148,14 @@ audit_findings:
     counting_requires_support: true
     counting_requires_support_evidence: >-
       family 由 consensus 的 support 布尔值推出（builder 第 2112–2118 行），
-      不是「有行即计」。实测反例检验：HPA 有行但 hpa_plasma_membrane=false 的基因
-      共 11,334 个，其中 imaging 被计入家族的为 **0 个**。
+      不是「有行即计」。实测反例检验：**HPA 实际覆盖 13,597 个基因**
+      （在 source_evidence.tsv 中有 hpa_subcellular_location 行），
+      其中 hpa_plasma_membrane = false 的为 **11,334 个**，
+      而 imaging 被计入家族的为 **0 个**。
+      口径说明：consensus 中 hpa_plasma_membrane = false 的行共 18,534 条，
+      但其中包含**从未被 HPA 覆盖**的基因——该字段对它们同样是 false。
+      11,334 这个数只统计 HPA 确有覆盖的基因，「有行」二字承载全部区分度。
+      两种口径下 imaging 被错误计入的基因都是 0 个。
     structural_guarantee: >-
       由于 curated_knowledge 是唯一可由两个来源喂养但只计一次的家族，
       family_count >= 2 必然包含至少一个实验型家族（imaging 或

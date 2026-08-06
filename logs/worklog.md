@@ -2668,3 +2668,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Deliberately not done: **未授予准入**；未修改 `evgap_01_surface_localization_extraction.yaml` 的 `admission_record_ref`（仍 `null`，`authorises_extraction_run` 仍 `false`）；未执行 `EVGAP-01` 抽取；未执行 Level 01；未解除任何 EVGAP；未纳入该数据集其他版本或后续重建；未扩大 #59 字段白名单；未纳入 `SRCADM-02`..`05`；**未产生任何外部运行产物**（本次是对既有文件的审计）；未补九份批准记录。
 - Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**，须经 ChatGPT `APPROVE`。
 - Next: 送审；获批后另开 PR 把 `admission_record_ref` 指向审核记录并放行 `EVGAP-01` 抽取。
+
+### 2026-08-05 20:20 EDT — SRCADM-01：补可独立复核的审计包（PR #63 第二轮）
+
+- Trigger: ChatGPT 对 PR #63 `REQUEST_CHANGES`——审计结论的核心事实全部来自仓库外文件，仓库内测试只验证文档自洽，**不能证明外部事实为真**。意见成立，且与我在 PR #62 对自己提的标准是同一条。
+- Bundle: `external:result/gen_iet_srcadm_01_audit_bundle_20260806T000000Z`，ZIP SHA-256 `2dbe88af1a2e9aee8004b9cbdd894c48f2f91197726678898aadf5da3f75e931`，2,663,987 bytes，13 个条目。含 builder 源码、`build_manifest.json`、`download_manifest.json`、`checksums.sha256`、raw 校验实算结果、三张完整 processed 表、41 靶点轴、`verify_audit.py`、`audit_report.json`。
+- Not subset: 三张 processed 表**未做子集裁剪**（11.8／8.9／3.5 MB）。子集会使 11,334、6／5 重复键等计数无法重算，审核方只能重新相信叙述。压缩后 2.6 MB，代价可接受。
+- Re-verification: `python3 verify_audit.py .` 重算 **48 项**审计事实，**48／48 `MATCH`**。脚本只读包内文件。
+- Stated limit: 19 个 raw 文件未随包提供（数 GB），其校验和审计时已实算（19／19 `OK`）记于 `raw_checksum_verification.json`。独立重算需归档 snapshot 本身——**这正是 `COND-03` 已声明的边界**，不是新增限制。`download_manifest.json` 随包提供，故 `AUD-02` 可在包内完整重算。
+- Found while recomputing: 原文「HPA 有行但 `hpa_plasma_membrane = false` 共 11,334 个」——脚本首版按「consensus 中该字段为 false」计数得 **18,534**。**11,334 是对的**：HPA 实际覆盖 **13,597** 个基因，其中 11,334 个为 false；多出部分是**从未被 HPA 覆盖**的基因，该字段对它们同样是 false。「有行」二字承载全部区分度，容易读漏。现三个数一并报出，测试强制三者同时出现。**两种口径下 `imaging` 被错误计入的都是 0 个**，`AUD-05` 结论不变。
+- Also corrected: `AUD-01` 原写 `AssetGenOS/scripts/...` 有歧义——该路径**在 StelligenOS 仓库之外**，是同级 `AssetGenOS` 仓库。已更正，副本随包提供。
+- Tests: `tests/test_srcadm_01_surfaceome_admission.py` 由 13 增至 **15**（新增：包可重算且不自授准入、包如实声明其不能证明什么）；全库 `Ran 353 tests` OK；boundary check 通过。
+- Mutation testing: 12 个变异，9 个被捕获。**3 个「逃逸」经查是变异本身不破坏被测不变式**——单独从某个条目删除 `AUD-02` 时另一条目仍服务该项，而测试断言的是「至少一个文件服务该项」；从**所有**条目删除即被捕获。同时把该断言的三元表达式改写清楚，原写法可读性差、`{"all"}` 并集无实际作用。
+- Deliberately not done: 未授予准入（`status: pending_review`、`admission_record_ref: null` 未动）；未修改 `EVGAP-01` 契约；未执行任何抽取。
+- Next: 送审审计包；获批后另开 PR 填 `admission_record_ref` 并放行 `EVGAP-01` 抽取。
