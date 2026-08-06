@@ -2810,3 +2810,10 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Failure/fix: 首次导航补丁因 README 目标行不匹配而未应用，未产生文件变更；重新读取目标行后拆分补丁成功。其余命令无失败。
 - Boundary: 未新增数据、cache、result、数据库、模型权重或临时产物；未执行外部运行。
 - Next: 显式检查状态和文件范围后提交、推送并创建 PR；使用 Chrome 网页版 ChatGPT 审核当前 PR，未获明确 `APPROVE` 前不得进入第 2 步。
+
+### 2026-08-06 17:45 EDT — 第 1 步 PR 创建与描述修正
+
+- Git: 按显式文件清单暂存 9 个文件，提交 `e558181`，推送分支 `task_20260806_sponsor-contracts`，创建 PR #67 指向 `main`。
+- PR description correction: 初次创建命令中的 Markdown 反引号被 shell 当作命令替换，造成描述文字被污染；代码、commit 和工作区文件未受影响。已用不含 shell 特殊反引号的正文执行 `gh pr edit 67` 修正描述。
+- Handoff: 更新 `docs/handoff/2026-08-06-sponsor-strategy-contracts.zh-CN.md`，补入 PR URL 与 code commit。
+- Next: 提交 handoff/worklog metadata commit 并推送 PR #67；使用 Chrome 网页版 ChatGPT 审核 PR #67，未获明确 `APPROVE` 前不进入第 2 步。

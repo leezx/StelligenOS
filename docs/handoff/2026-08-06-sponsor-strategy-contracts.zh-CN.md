@@ -5,8 +5,9 @@
 - 任务：建立 Sponsor Profile 与 Program Thesis 合同
 - 分支：`task_20260806_sponsor-contracts`
 - 基线：`main@b497246`
+- Code commit：`e558181`
 - 版本：`DevelopmentSponsorProfile@0.1.0`、`ProgramThesis@0.1.0`
-- PR：待创建
+- PR：https://github.com/leezx/StelligenOS/pull/67
 - 状态：`PENDING_CHATGPT_REVIEW`
 
 ## 总体四步路线
