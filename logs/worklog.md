@@ -2772,3 +2772,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Covered by recomputation, as requested: raw manifest SHA-256；processed 三表摘要；family source mapping；GOA 与 UniProt 同属一个 family；HPA 反例 11,334（并同时报出 13,597 与 18,534 两个口径）；imaging 误计为 0；source_evidence 重复键 6；topology 重复键 5；11 个受影响基因；与 41-target 轴交集为空；CDH17／CEACAM5／GUCY2C provenance；license 歧义来源未进入允许字段；consensus `gene_symbol` 唯一；41 个 target 的 `family_count` 与 family list 一致。
 - Verified from a clean extract in a temp directory, not the working copy: **`72/72 MATCH`，退出码 0**。
 - Repo-side changes this round: 仅本条 worklog、handoff 的包信息段、YAML 的 `audit_bundle` 数据字段（哈希／字节／文件数／检查数／内容清单）。九项审计结论、四项条件、测试逻辑零改动。
+
+### 2026-08-06 16:55 EDT — 补登 PR #62 与 PR #63 的审核记录
+
+- Merged first, on the human lead's instruction: PR #62 at `aa3583dc` → `17c5707`，PR #63 at `ae4dca32` → `98a1698`。合并前逐字符核对两个 HEAD 与被批的一致，**均用 merge commit，无 squash**。
+- **#63 的冲突未在其分支上解决。** 合并 #62 后 #63 在 `logs/worklog.md` 上冲突。若把 main 并进分支再解，`ae4dca32` 就不再是被批的那个 commit。故在 main 侧的 merge commit 内解决：插入 46 行、删 0 行，**两个分支 HEAD 原封不动**。合并后 `docs/pools/` 两个契约与各自被批状态 diff 为空；`Ran 371 tests` OK；boundary check 通过。
+- Why these records are not optional: 审核方两次说明**通过 GitHub 连接器写入正式 review 返回 `403`**，故两个 PR 在 GitHub 上没有任何 review 记录。更直接的原因是 `SRCADM-01` 的准入要通过 `admission_record_ref` 生效，而该字段按定义指向一条审核记录——**没有记录，binding PR 就没有可指的对象**。
+- Added: `logs/chatgpt-review-2026-08-06-evgap-02-retrieval-layer-final.md`、`logs/chatgpt-review-2026-08-06-srcadm-01-admission-final.md`。两份均标注 `verbatim as relayed by the human lead`，结论段原样引用不改写，并写明 GitHub 无 review 记录及其原因。后者顶部显式标注**这就是 `admission_record_ref` 要指向的记录**。
+- Scope preserved verbatim: #62 只接受 v0.2.0 契约修复与 revision 3 作为 `L-RETRIEVAL` 层产物，**不**接受任何 CRC linkage assertion、不解除 `EVGAP-02`、不生成 accepted pool、不推进 Level 02；#63 接受四项条件下的准入，**本身不**填 `admission_record_ref`、不授权 `EVGAP-01` extraction、不解除 `EVGAP-01`、不执行 Level 01。
+- Scope decision by the human lead: 本轮**只补 #62 与 #63**。`#52`／`#53`／`#54`／`#57`／`#58`／`#59`／`#60`／`#61` 八份仍欠，不阻塞在途工作，留待另议。早期几份需从 handoff 与 worklog 回溯重建，属二手记录，补登时须标注来源与局限，**不得伪装成审核原文**。
+- Deliberately not done: 未填 `admission_record_ref`；未改 `evgap_01_surface_localization_extraction.yaml`；未改 `srcadm_01_surfaceome_admission.yaml` 的 `status`；未解除任何缺口；未执行任何抽取；未改契约、规则、测试或 target 轴。
+- Next: 本 PR 获批后另开**极小的 admission binding PR**，再执行 `EVGAP-01` 抽取。
