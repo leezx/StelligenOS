@@ -2713,3 +2713,16 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Versioning: Updated the version index to state that unapproved `v2-draft` was superseded without a snapshot; no `v3` snapshot is created before approval. Updated architecture/README navigation, added this repository handoff, and refreshed workspace `HANDOFF.md` with the active v3 review task.
 - Boundary: Documentation-only. No data, cache, result, model weight, provider execution, Gate execution, contract change, lifecycle change, or module implementation was added.
 - Validation: Final branch validation ran 338 tests successfully; `scripts/verify_repository_boundary.sh` and `git diff --check` passed; no `__pycache__` directory was generated.
+
+### 2026-08-06 16:10 EDT — EVGAP-02：冻结语义，只补正式受审包（PR #62 第四轮）
+
+- Instruction: 冻结当前 HEAD，不改架构／契约／规则／测试逻辑，只补齐实际受审包并使包内数据严格匹配 handoff。
+- **本轮未改任何语义**：`docs/pools/evgap_02_crc_linkage_extraction.yaml` 未动、`tests/` 未动、契约版本仍 v0.2.0、disposition 逻辑未动、未新增 mandatory finding、未改 target 轴、未补 admission binding、未执行 EVGAP-01、未解除 EVGAP-02。
+- Added to the package only: `verify_package.py`（只读验证脚本）。因包内容变化，ZIP 哈希必然变化，故三处声明同步更新。
+- Package: `gen_iet_evgap_02_crc_linkage_20260805T190453Z_rev3.zip`，SHA-256 `81baa45f23f180c68b16d18c83284b60bdee725c017e668e590d4e80b04176e9`，46,292 bytes，**8 个文件**（ZIP 内 9 个条目，多出的一条是目录条目），`revision = 3`。**上一版声明的 `ef268fd2…` 作废。**
+- Three declarations aligned: handoff、PR body、`source_manifest.json` 现在写同一个文件名、同一个 ZIP SHA-256、同一个文件数、同一个 revision。
+- Corrected a transcription error in the previous handoff: `pair_linkage_disposition.tsv` 曾被写成 `4c4def27…`，那其实是 `run_report.md` 的哈希。真实值 `33674913…`。本轮的哈希表由 `source_manifest.json` 直接生成，不再手抄。
+- Verifier scope: 文件数、逐文件 SHA-256 与字节数、清单未遗漏文件、可选 ZIP 哈希、`revision = 3`、`979 / 0 / 369`、schema（候选表无 `linkage_class`、三个标记列齐备）、候选表三个固定值、`L3-00 27`／`L3-01 342`／`L3-02..L3-05` 全 `0`、无 RETAIN 无 EXCLUDE、369 行全 DEFER/hold、三组 refs 全空、`may_advance_to_level_02` 全 `false`、三个不可消歧 target 各 9 pair 全 `L3-00`、`CA19-9` 9 pair 全 `L3-01` 且 status 为 `resolved_as_non_protein_antigen`、`EVGAP-02` 未解除。
+- Verified from a clean extract in a temp directory (not the working copy), with the ZIP digest passed in: **`65/65 MATCH`，退出码 0**。
+- One self-caught slip: 脚本初版把「文件数」定为 9，实为 8——ZIP 的第 9 个条目是目录条目本身。已改正并在 handoff 中写明该区别。另注意 `python3 ... | tail` 会把 `tail` 的退出码当成脚本的，实际退出码须用 `PIPESTATUS`。
+- Repo-side changes this round: 仅本条 worklog 与 handoff 的包信息段。测试与契约零改动。

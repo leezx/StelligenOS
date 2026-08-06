@@ -160,28 +160,54 @@ PR #58 冻结的 41 个 target 中至少四个的身份需单独裁定，且**�
 
 ## 六、产物与校验
 
-外部包 **revision 3**（仓库内无任何数据文件）：
+外部包 **revision 3**（仓库内无任何数据文件）。**8 个文件**，ZIP 内 9 个条目（多出的一条是目录条目）：
 
 | 文件 | 行数 | SHA-256 |
 |---|---|---|
 | `retrieval_candidates.tsv` | 979 | `09a2aa75ee7885ed9be3807d8c074e8a31fb81bef6bfff27728181831e5c326a` |
 | `linkage_assertions.tsv` | 0 | `f0c83e0e2fb0aa13e354babe00164d9287c226bd6d7229c29434d664f744ee8b` |
-| `pair_linkage_disposition.tsv` | 369 | `4c4def27c73853ab175c9610c58bcb41c6765276cec133e71f161ee9a7dfc2ac` |
+| `pair_linkage_disposition.tsv` | 369 | `33674913edf0d1efb82f4bc2a8303e55e18f2a39a32ba7b2dd3152c5f6734dad` |
 | `search_log.tsv` | 451 | `dd0569c572bfd09f74f034f1844811c918182c767118e963afc9ed0a14c7ce08` |
-| `run_report.md` | — | `9359ac1cc0c25ea3a3e7de06f8f5bd23270bed390db1a6fe7bdbe246e4846059` |
+| `run_report.md` | — | `4c4def27c73853ab175c9610c58bcb41c6765276cec133e71f161ee9a7dfc2ac` |
 | `external_run_worklog.md` | — | `0db30b1e0e0fa5e98637619275d595729cb30c2b90fdcaad913ae7e8a1565cd7` |
-| `source_manifest.json` | — | `0faac3f936b602f635c7dc64771b6a5faed2ce126cbf2d5d5612be952ac42bda` |
+| `verify_package.py` | — | `63bd46eb220a6d12be594ad809b03a933dbd3b2901d7d5d9a4d1e7d9b3701bcf` |
+| `source_manifest.json` | — | `776677c571725060175e3e480936e8f17eeeebb3ee67d5472c2a52c114a5265f` |
 
-**打包件**（按 PR #60 审核后确立的规则，每个修订单独出包并各带自己的 SHA-256）：
+**打包件（唯一正式受审包）：**
 
 - `gen_iet_evgap_02_crc_linkage_20260805T190453Z_rev3.zip`
-- SHA-256 `ef268fd2f6dcc0c056b0dd01c67da5e850a5e79972ae5858dd49b5f60b49faac`
-- 43,443 bytes，8 个条目
-- **revision 2 从未上传**，故其 36／333 未被任何下游依赖；rev2 包已删除以免误取。
+- SHA-256 `81baa45f23f180c68b16d18c83284b60bdee725c017e668e590d4e80b04176e9`
+- 46,292 bytes，8 个文件（ZIP 内 9 个条目）
+- `revision = 3`
+
+**上一版声明的 ZIP SHA-256 `ef268fd2…` 作废**——包内新增了 `verify_package.py`，
+内容变了哈希必然变。**以本表为准。**
+
+同时更正上一版 handoff 的一处笔误：`pair_linkage_disposition.tsv` 曾被写成
+`4c4def27…`，那其实是 `run_report.md` 的哈希。本表由 `source_manifest.json` 直接生成，
+不再手抄。
+
+### 包内自带验证脚本
+
+```
+python3 verify_package.py .
+python3 verify_package.py . --zip ../<pkg>.zip --zip-sha256 <expected>
+```
+
+只读包内文件，无网络、无写入、不依赖包外路径，解压即可运行，退出码 0 表示全通过。
+逐项检查：文件数、每个文件的 SHA-256 与字节数、清单未遗漏文件、`revision = 3`、
+`979 / 0 / 369`、schema（候选表无 `linkage_class`、三个标记列齐备）、
+候选表三个固定值、`L3-00 27` / `L3-01 342` / `L3-02..L3-05` 全为 `0`、
+无 RETAIN 无 EXCLUDE、369 行全 DEFER/hold、三组 refs 全空、
+`may_advance_to_level_02` 全 `false`、三个不可消歧 target 各 9 个 pair 全 `L3-00`、
+`CA19-9` 9 个 pair 全 `L3-01` 且 `identity_resolution_status =
+resolved_as_non_protein_antigen`、`EVGAP-02` 未解除。
+
+**实测（从全新解压目录运行，含 ZIP 哈希校验）：`65/65 MATCH`，退出码 0。**
 
 仓库内变更：契约 v0.2.0、契约文档、测试、本 handoff、一条 worklog。
 `tests/test_evgap_02_crc_linkage.py` **47 个测试**通过；全库 `Ran 356 tests` OK。
-外部产物另经 20 项 v0.2.0 规则核验，全通过——其中 `L3-00` 期望集由契约推导而非硬编码。
+外部产物另经包内 `verify_package.py` 核验：**65/65 MATCH**，退出码 0。
 
 ## 七、边界
 
