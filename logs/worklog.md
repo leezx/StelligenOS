@@ -2704,6 +2704,40 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Also done this turn: 按人工负责人指示关闭 PR #55 并注明 superseded by #56（#56 已于 2026-08-04 合并）。**分支保留不删**——删除分支须单独授权。
 - Deliberately not done: 未解除 `EVGAP-02`；未处理 `GAP-P07`；未执行 `L-ASSERTION` 抽取；未改 target 轴；未补九份批准记录。
 - Next: 送审 revision 3；并按第二轮审核要求为 PR #63 制作可独立复核的 SRCADM-01 audit bundle。
+## 2026-08-05T20:30:00-04:00 — SRCADM-01 surfaceome 来源准入审计（审计记录，结论：有条件可纳入）
+
+- Instruction: 人类负责人指示「起 SRCADM-01」。授权依据是 PR #59 已冻结并获 `APPROVE` 的审计范围 `AUD-01`..`AUD-09`——该范围本身就是这次审计的授权。
+- Method: 实际读取 builder 源码（`AssetGenOS/scripts/build_t7_surfaceome_reference.py`，2,721 行）、raw `download_manifest.json`、`checksums.sha256`、license 声明与三个 processed 表，**而不是描述它们**。所有结论均附可复核依据。
+- Verdicts: `AUD-01` PASS｜`AUD-02` PASS（实算）｜`AUD-03` PASS_WITH_FINDING｜`AUD-04` PASS_WITH_FINDING｜`AUD-05` PASS｜`AUD-06` PASS_WITH_FINDING｜`AUD-07` PASS｜`AUD-08` PASS｜`AUD-09` PASS_WITH_FINDING。**无一项 FAIL。** 总结论 `admissible_with_conditions`。
+- `AUD-02` hard verification: 对 `raw/2026-07-29-quant-topology-mm/download_manifest.json` 实算 SHA-256 得 `884f419118302ae39c3e50292d03295ff676434868e1061b39ead50f9cc977bb`，与 `build_manifest.json` 声明的 `raw_manifest_sha256` 逐字符一致。
+- `AUD-05` (the item the reviewer singled out) PASS with two reinforcing checks: 三家族映射为 `curated_knowledge <- {goa_human, uniprot_reviewed_human}`／`imaging <- {hpa_subcellular_location}`／`cell_surface_capture_ms <- {cspa}`。**`goa_human` 与 `uniprot_reviewed_human` 同源**（GOA human 由 UniProt 策展流程产出），builder 把二者收进**同一个**家族故不重复计数——`GUCY2C` 两来源皆 supported 而 `family_count` 仍为 1，**这正是审核方点名的失效模式而 builder 避开了它**。加强验证一：family 计数要求**支持性**证据（builder 2112–2118），反例检验 HPA 有行但 `hpa_plasma_membrane=false` 的 **11,334** 个基因中 `imaging` 被计入的为 **0**。加强验证二：`curated_knowledge` 是唯一可由两来源喂养但只计一次的家族，故 `family_count >= 2` 必然含至少一个实验型家族，`RQ-01` 的门槛不是形式门槛。
+- `AUD-04` finding with decisive bound: 19 个来源全部声明 license，六个有歧义（`cellphonedb_gene`／`protein`／`complex`／`interaction`、`cellchatdb_human` GPL-3.0、`omnipath_intercell_receptor` per-resource）。**实测：这六个没有任何一个出现在 `source_evidence.tsv` 中**，只喂已被 #59 `barred_fields` 禁用的 `cci_receptor_*`。进入的四个来源中三个为 CC BY 4.0。该结论**承重**——依赖 #59 字段白名单，白名单扩大即须重审（`COND-02`）。另记一处命名不一致：processed 用 `source_id = cspa`，manifest 用 `cspa_validated_surfaceome`／`cspa_cell_type_matrix`，无法直接 join。
+- `AUD-09` finding: `shasum -a 256 -c checksums.sha256` 对 19 个 raw 文件全部 OK；builder 唯一时间依赖是第 268 行 `datetime.now()` 用于 `processed_at_utc`、不参与计算，无 `random`／`shuffle`，给定同一 snapshot 构建确定。**但 `uniprot_reviewed_human` 与 `goa_human` 的 release 是 `current_at_download`、不是版本号**，从上游重新下载不保证逐字节复现。可复现性成立的前提是使用已归档 snapshot（`COND-03`）。
+- `AUD-03` finding: manifest 的 `files` 条目 `release` 字段**全部为 null**，release 字符串由 builder 另行赋值且在 processed 表中确有实义取值（`HPA 25.1; Ensembl 109`、`PLOS ONE 2015 supplementary file S2` 等）；但四个在用来源中两个为 `current_at_download`。
+- `AUD-06` finding with bounded impact: builder 中**检索不到显式去重例程**；实测 `source_evidence.tsv` 在 `(gene_symbol, source_id, evidence_kind)` 上 6 个重复键、`membrane_topology_evidence.tsv` 在 `(gene_symbol, source_id)` 上 5 个，`surfaceome_consensus.tsv` 无重复。受影响基因 `HERC3`／`MATR3`／`NPIPA9`／`PINX1`／`POLR2J3`／`PRODH`／`ERVK-7`／`NRXN1`／`NRXN2`／`NRXN3`／`SIRPB1`，**没有一个属于 41 个靶点**；且 family 计数取自 support 布尔值而非行数，故重复行结构上不可能抬高 `RQ-01`；41 靶点的 `family_count` 与 `families` 列表实测 100% 一致。
+- `AUD-07` PASS: builder 2121–2129 四条确定性规则。#59 的 `E1-04` 把 `discordance_flags` 非空一律判 DEFER，故这些规则只把冲突显式化、**不会产生 RETAIN**。
+- `AUD-08` PASS: 三个代表性靶点逐行回溯成功，每条主张落到 `source_id` + `surface_supported` + `source_release` + `source_url`——`CDH17`（ECD-a，n=2）、`CEACAM5`（ECD-b GPI，n=2）、`GUCY2C`（仅 curated_knowledge，n=1，故落 `E1-02` hold）。
+- `AUD-01` residual recorded honestly: `builder_version` 由 config 传入而非脚本内常量，故「0.3.0」依赖 `build_manifest` 自述、**不能由脚本自身独立确证**。不构成阻断（snapshot 由 23 个校验和钉住），但如实记录。
+- Admission conditions: `COND-01` 仅限该 snapshot｜`COND-02` 仅限 #59 字段白名单｜`COND-03` 基于已归档 snapshot 而非可从上游复现｜`COND-04` 重复键不得进入 EVGAP-01 判据、靶点轴扩大须重查。任一条被破坏即须重审。
+- Validation: `Ran 351 tests` 全部通过（`main` 基线 338 + 新增 13）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；零 `__pycache__`。测试把结论钉在 #59 冻结范围上——九项 ID 必须与 `required_audit_items` 完全相等、无 FAIL、每项必须有可复核依据、`AUD-02` 摘要必须是 64 位十六进制且与 #59 前缀一致、`AUD-05` 必须点名同源来源对并引用实测反例数、`AUD-04` 依赖的 `cci_receptor_role` 必须确实在 #59 `barred_fields` 中、`AUD-06` 影响界定必须针对 41 靶点轴、本审计不得授予准入。
+- Own test error, self-caught: 初稿从 `source_admission_dependency` 读 `raw_manifest_sha256` 键，而该键在 #59 修订后并不存在（摘要写在 `AUD-02` 条目文本里）。改为跨文件比对前缀并校验 64 位十六进制。
+- Deliberately not done: **未授予准入**；未修改 `evgap_01_surface_localization_extraction.yaml` 的 `admission_record_ref`（仍 `null`，`authorises_extraction_run` 仍 `false`）；未执行 `EVGAP-01` 抽取；未执行 Level 01；未解除任何 EVGAP；未纳入该数据集其他版本或后续重建；未扩大 #59 字段白名单；未纳入 `SRCADM-02`..`05`；**未产生任何外部运行产物**（本次是对既有文件的审计）；未补九份批准记录。
+- Governance note: **本 PR 不适用 `AGENTS.md`「审核豁免」**，须经 ChatGPT `APPROVE`。
+- Next: 送审；获批后另开 PR 把 `admission_record_ref` 指向审核记录并放行 `EVGAP-01` 抽取。
+
+### 2026-08-05 20:20 EDT — SRCADM-01：补可独立复核的审计包（PR #63 第二轮）
+
+- Trigger: ChatGPT 对 PR #63 `REQUEST_CHANGES`——审计结论的核心事实全部来自仓库外文件，仓库内测试只验证文档自洽，**不能证明外部事实为真**。意见成立，且与我在 PR #62 对自己提的标准是同一条。
+- Bundle: `external:result/gen_iet_srcadm_01_audit_bundle_20260806T000000Z`，ZIP SHA-256 `2dbe88af1a2e9aee8004b9cbdd894c48f2f91197726678898aadf5da3f75e931`，2,663,987 bytes，13 个条目。含 builder 源码、`build_manifest.json`、`download_manifest.json`、`checksums.sha256`、raw 校验实算结果、三张完整 processed 表、41 靶点轴、`verify_audit.py`、`audit_report.json`。
+- Not subset: 三张 processed 表**未做子集裁剪**（11.8／8.9／3.5 MB）。子集会使 11,334、6／5 重复键等计数无法重算，审核方只能重新相信叙述。压缩后 2.6 MB，代价可接受。
+- Re-verification: `python3 verify_audit.py .` 重算 **48 项**审计事实，**48／48 `MATCH`**。脚本只读包内文件。
+- Stated limit: 19 个 raw 文件未随包提供（数 GB），其校验和审计时已实算（19／19 `OK`）记于 `raw_checksum_verification.json`。独立重算需归档 snapshot 本身——**这正是 `COND-03` 已声明的边界**，不是新增限制。`download_manifest.json` 随包提供，故 `AUD-02` 可在包内完整重算。
+- Found while recomputing: 原文「HPA 有行但 `hpa_plasma_membrane = false` 共 11,334 个」——脚本首版按「consensus 中该字段为 false」计数得 **18,534**。**11,334 是对的**：HPA 实际覆盖 **13,597** 个基因，其中 11,334 个为 false；多出部分是**从未被 HPA 覆盖**的基因，该字段对它们同样是 false。「有行」二字承载全部区分度，容易读漏。现三个数一并报出，测试强制三者同时出现。**两种口径下 `imaging` 被错误计入的都是 0 个**，`AUD-05` 结论不变。
+- Also corrected: `AUD-01` 原写 `AssetGenOS/scripts/...` 有歧义——该路径**在 StelligenOS 仓库之外**，是同级 `AssetGenOS` 仓库。已更正，副本随包提供。
+- Tests: `tests/test_srcadm_01_surfaceome_admission.py` 由 13 增至 **15**（新增：包可重算且不自授准入、包如实声明其不能证明什么）；全库 `Ran 353 tests` OK；boundary check 通过。
+- Mutation testing: 12 个变异，9 个被捕获。**3 个「逃逸」经查是变异本身不破坏被测不变式**——单独从某个条目删除 `AUD-02` 时另一条目仍服务该项，而测试断言的是「至少一个文件服务该项」；从**所有**条目删除即被捕获。同时把该断言的三元表达式改写清楚，原写法可读性差、`{"all"}` 并集无实际作用。
+- Deliberately not done: 未授予准入（`status: pending_review`、`admission_record_ref: null` 未动）；未修改 `EVGAP-01` 契约；未执行任何抽取。
+- Next: 送审审计包；获批后另开 PR 填 `admission_record_ref` 并放行 `EVGAP-01` 抽取。
 ### 2026-08-06 15:04 EDT
 
 - Instruction: Re-read the current StelligenOS project and produce a versioned, review-ready description of the current design architecture, module logic, system flow, implementation status, and open gaps.
@@ -2726,3 +2760,15 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Verified from a clean extract in a temp directory (not the working copy), with the ZIP digest passed in: **`65/65 MATCH`，退出码 0**。
 - One self-caught slip: 脚本初版把「文件数」定为 9，实为 8——ZIP 的第 9 个条目是目录条目本身。已改正并在 handoff 中写明该区别。另注意 `python3 ... | tail` 会把 `tail` 的退出码当成脚本的，实际退出码须用 `PIPESTATUS`。
 - Repo-side changes this round: 仅本条 worklog 与 handoff 的包信息段。测试与契约零改动。
+### 2026-08-06 16:35 EDT — SRCADM-01：冻结语义，只补正式审计包（PR #63 第三轮）
+
+- Instruction: 冻结当前 HEAD，不改九项审计与四项条件，只上传正式审计包并使三处声明一致。
+- **本轮未改任何语义**：九项 `audit_findings` 的 verdict 与依据未动、四项 `admission_conditions` 未动、`status: pending_review` 未动、`admission_record_ref: null` 未动、`EVGAP-01` 的 `authorises_extraction_run` 仍为 `false`、未顺带授予 admission。
+- Added to the bundle only: `audit_expected.json`、`license_manifest.json`，并重写 `verify_audit.py`；移除 `audit_report.json`（预写结论不应与证据混放）。因包内容变化，ZIP 哈希必然变化。
+- Package: `gen_iet_srcadm_01_audit_bundle_20260806T000000Z.zip`，SHA-256 `49d56c395661e7c71ba4caa60657126596cf4f784430ff462ab4512fdb0237b4`，2,666,041 bytes，**13 个文件**（ZIP 内 14 个条目，多出的一条是目录条目）。**上一版声明的 `2dbe88af…` 作废。**
+- Verifier properties: 无网络、无写入、不依赖包外路径、解压即可运行、退出码 0 表示全通过、逐项输出 `MATCH`／`MISMATCH`、末行 `72/72 MATCH`。
+- **判据不来自预写结论**：主张放在 `audit_expected.json`，脚本从 builder 源码与三张表**重新算出**每个数字再比对；那份文件写错一个数就会 `MISMATCH`。已在记录中以 `verdicts_read_from_file: false` 固定该性质。
+- **72 而不是 48，如实报告**：按复核要求补入 processed 表逐文件 SHA-256／字节数／行数重算（9 项）、六个 license 歧义来源逐一验证其文本确实歧义（6 项）、三个 CC BY 4.0 来源逐一验证（3 项）、license 清单覆盖 19 个来源、已记录 raw 摘要与 `checksums.sha256` 逐条一致、snapshot 与 dataset 版本一致性、target 轴规模等。**未删除任何原有检查**，48 项全部仍在。上一版的 48 记为 `previous_recomputed_checks`。
+- Covered by recomputation, as requested: raw manifest SHA-256；processed 三表摘要；family source mapping；GOA 与 UniProt 同属一个 family；HPA 反例 11,334（并同时报出 13,597 与 18,534 两个口径）；imaging 误计为 0；source_evidence 重复键 6；topology 重复键 5；11 个受影响基因；与 41-target 轴交集为空；CDH17／CEACAM5／GUCY2C provenance；license 歧义来源未进入允许字段；consensus `gene_symbol` 唯一；41 个 target 的 `family_count` 与 family list 一致。
+- Verified from a clean extract in a temp directory, not the working copy: **`72/72 MATCH`，退出码 0**。
+- Repo-side changes this round: 仅本条 worklog、handoff 的包信息段、YAML 的 `audit_bundle` 数据字段（哈希／字节／文件数／检查数／内容清单）。九项审计结论、四项条件、测试逻辑零改动。
