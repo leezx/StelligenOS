@@ -1,10 +1,10 @@
-# Handoff：EVGAP-02 Tier 1 检索候选层 + 契约 v0.2.0（revision 2）
+# Handoff：EVGAP-02 Tier 1 检索候选层 + 契约 v0.2.0（revision 3）
 
 - 日期：`2026-08-05`
 - 任务分支：`task_20260805_evgap-02-extraction-result`
 - 基线：`main` @ `8aa7e87`
-- 本修订依据：**PR #62 审核 `REQUEST_CHANGES`**
-- 外部运行：`gen_iet_evgap_02_crc_linkage_20260805T190453Z` **revision 2**
+- 本修订依据：**PR #62 第一轮与第二轮 `REQUEST_CHANGES`**
+- 外部运行：`gen_iet_evgap_02_crc_linkage_20260805T190453Z` **revision 3**
 - 交付物类型：**契约修订 + 结果降级（外部运行留痕）**
 - 审核状态：等待 ChatGPT `APPROVE`。**本 PR 不适用 `AGENTS.md`「审核豁免」。**
 - **结论：`EVGAP-02` 未解除。本运行只完成 `L-RETRIEVAL` 层。**
@@ -85,7 +85,8 @@ v0.1.0 停在候选。这一读法写进了 `L-ASSERTION.machine_extraction_perm
 `identity_resolution_status` 列承载。
 
 四个实体在 target 轴上同属 `rq_01_family_count = 0`、规则 `E1-05`，
-故识别它们**不依赖自由裁量**（`mechanical_precondition`）。
+故**筛出**它们不依赖自由裁量。但该字段只用于筛候选，**不决定** `resolution_status`，
+也不决定是否落 `L3-00`——`CA19-9` 同属 `E1-05`，却已消歧。这正是第二轮的教训。
 
 ### endpoint 命中证明了什么
 
@@ -99,17 +100,17 @@ TCGA／HPA／GEO 三者 `admissible_as_class_a: false`，
 `search_complete` 现在需要四层：身份消歧、endpoint 覆盖、pair 级 D 类、**assertion 抽取完成**。
 `retrieval_alone_is_not_search_complete: true`。
 
-新增 `VAL-L21`..`VAL-L28`。
+新增 `VAL-L21`..`VAL-L29`。
 
-## 四、结果降级（revision 2）
+## 四、结果降级（revision 3）
 
-| | revision 1 | revision 2 |
+| | revision 1 | revision 3 |
 |---|---|---|
 | 证据表 | `pair_linkage_evidence.tsv` 7,067 行 | 撤销 → `retrieval_candidates.tsv` **979** + `linkage_assertions.tsv` **0** |
 | `L3-02` RETAIN | 168 | **0** |
 | `L3-03` | 192 | 0 |
 | `L3-05` EXCLUDE | 9 | **0** |
-| 全部 369 pair | 三分 | **全部 DEFER / hold** |
+| 全部 369 pair | 三分 | **全部 DEFER / hold**（`L3-00` 27 + `L3-01` 342） |
 
 **未重复任何网络调用，未丢弃任何已检索记录。**
 
@@ -117,12 +118,38 @@ TCGA／HPA／GEO 三者 `admissible_as_class_a: false`，
 `A 2808/9=312`、`B 2295/9=255`、`C 1746/9=194`、`D 218`（pair 级不复制），合计 **979**。
 **「7,067 条证据」实为 979 条记录乘以 9。**
 
-369 个 pair：`L3-00` **36**（4 个不可消歧实体 × 9）、`L3-01` **333**（assertion 层未执行）。
+369 个 pair：`L3-00` **27**（3 个**不可消歧**实体 `Undisclosed`／`EDBN`／`AG7` × 9）、
+`L3-01` **342**（assertion 层未执行，含 `CA19-9` 的 9 个 pair）。
 三组 `*_evidence_refs` 在 369 行中全空。
+
+### 第二轮审核指出的矛盾，以及我为什么会犯
+
+revision 2 给出 36／333，把 `CA19-9` 也放进 `L3-00`。**这与契约直接冲突**：
+契约把它定为 `resolved_as_non_protein_antigen`，而 `search_complete_definition`
+明确接受该 status——**它是已消歧的实体，不是身份未解析**。
+
+根因在我自己的命名与实现：契约那张表叫 `known_unresolved_entities`，
+里面却有一个 **resolved** 的条目；重建脚本按**表成员身份**而非按 `resolution_status`
+赋 `L3-00`。**名字招来了这个 bug，脚本接受了邀请。**
+
+修在失效点而非症状：表改名 `known_identity_findings`；新增 `l3_00_statuses`；
+`l3_00_membership_test: resolution_status`；`l3_00_membership_by_list_forbidden: true`；
+每个条目显式声明其 status 蕴含的 `lock_03_rule`。
+
+采用审核建议的**方案一**：`CA19-9` 保持 `resolved_as_non_protein_antigen`，转入 `L3-01`。
+它 defer 的原因是 assertion 层未执行，**外加** v0.1.0 按基因符号检索糖类抗原的查询形式无效——
+**不是**身份不明。新增 `non_protein_antigen_search_requirements` 与 `VAL-L29` 固定这一区分。
+
+验证脚本的 `L3-00` 期望集**由契约推导**（按 `resolution_status` 过滤），不是硬编码，
+因此同类错误再犯会被捕获。
 
 ## 五、上游缺陷 GAP-P07（登记，不修）
 
-PR #58 冻结的 41 个 target 中至少四个不是可消歧的蛋白实体。
+PR #58 冻结的 41 个 target 中至少四个的身份需单独裁定，且**四者性质不同**：
+`Undisclosed` 不是实体；`EDBN`、`AG7` 是无法消歧的缩写；
+**`CA19-9` 已消歧，只是不是蛋白**——非蛋白抗原是否属于「所有潜在 ADC 膜蛋白靶点」
+这一 target universe，才是 `GAP-P07` 真正要回答的问题。
+
 `EVGAP-02` 无权改轴——在本契约内给 `Undisclosed` 编一个身份等于静默改轴。
 
 **binding 本身已察觉这一点**：它把 `identity_unresolved` 列入 `unavailable_outcomes`，
@@ -133,27 +160,28 @@ PR #58 冻结的 41 个 target 中至少四个不是可消歧的蛋白实体。
 
 ## 六、产物与校验
 
-外部包 **revision 2**（仓库内无任何数据文件）：
+外部包 **revision 3**（仓库内无任何数据文件）：
 
 | 文件 | 行数 | SHA-256 |
 |---|---|---|
 | `retrieval_candidates.tsv` | 979 | `09a2aa75ee7885ed9be3807d8c074e8a31fb81bef6bfff27728181831e5c326a` |
 | `linkage_assertions.tsv` | 0 | `f0c83e0e2fb0aa13e354babe00164d9287c226bd6d7229c29434d664f744ee8b` |
-| `pair_linkage_disposition.tsv` | 369 | `a43b47c874f9a70e3e3b4de11941ef9c87765f06bce5098247ac87d06351598d` |
+| `pair_linkage_disposition.tsv` | 369 | `4c4def27c73853ab175c9610c58bcb41c6765276cec133e71f161ee9a7dfc2ac` |
 | `search_log.tsv` | 451 | `dd0569c572bfd09f74f034f1844811c918182c767118e963afc9ed0a14c7ce08` |
 | `run_report.md` | — | `9359ac1cc0c25ea3a3e7de06f8f5bd23270bed390db1a6fe7bdbe246e4846059` |
-| `external_run_worklog.md` | — | `028a7c2f11a2b6b15b5f651c9f5826f6ee3eeee6f05cd7ebc3c2488e7c361c96` |
-| `source_manifest.json` | — | `9fb1f2f75429e438d343a097eabdedeff44ae0f819cc346f71212f64b1647202` |
+| `external_run_worklog.md` | — | `0db30b1e0e0fa5e98637619275d595729cb30c2b90fdcaad913ae7e8a1565cd7` |
+| `source_manifest.json` | — | `0faac3f936b602f635c7dc64771b6a5faed2ce126cbf2d5d5612be952ac42bda` |
 
 **打包件**（按 PR #60 审核后确立的规则，每个修订单独出包并各带自己的 SHA-256）：
 
-- `gen_iet_evgap_02_crc_linkage_20260805T190453Z_rev2.zip`
-- SHA-256 `e8f2a7f5ce9fae25265994f0d9a1fae1e371a1bb55ccafea2026835bd5120d3d`
-- 41,734 bytes，8 个条目
+- `gen_iet_evgap_02_crc_linkage_20260805T190453Z_rev3.zip`
+- SHA-256 `ef268fd2f6dcc0c056b0dd01c67da5e850a5e79972ae5858dd49b5f60b49faac`
+- 43,443 bytes，8 个条目
+- **revision 2 从未上传**，故其 36／333 未被任何下游依赖；rev2 包已删除以免误取。
 
 仓库内变更：契约 v0.2.0、契约文档、测试、本 handoff、一条 worklog。
-`tests/test_evgap_02_crc_linkage.py` **44 个测试**通过；全库 `Ran 353 tests` OK。
-外部产物另经 25 项 v0.2.0 规则核验，全通过。
+`tests/test_evgap_02_crc_linkage.py` **47 个测试**通过；全库 `Ran 356 tests` OK。
+外部产物另经 20 项 v0.2.0 规则核验，全通过——其中 `L3-00` 期望集由契约推导而非硬编码。
 
 ## 七、边界
 
@@ -165,7 +193,8 @@ PR #58 冻结的 41 个 target 中至少四个不是可消歧的蛋白实体。
 ## 八、后续顺序
 
 1. 本 PR `APPROVE`（契约 v0.2.0 + `L-RETRIEVAL` 层产物），在 `logs/` 留审核记录。
-2. **另开 PR** 处理 `GAP-P07`：四个实体解析为标准符号、定义为非蛋白抗原，或移出轴。
+2. **另开 PR** 处理 `GAP-P07`：`Undisclosed`／`EDBN`／`AG7` 解析为标准符号或移出轴；
+   `CA19-9` 则须裁定非蛋白抗原是否属于本 target universe。
 3. `GAP-P07` 处理后执行 `L-ASSERTION` 抽取 → 结果 PR。
 4. 两层齐备后才谈解除 `EVGAP-02`。
 5. `EVGAP-01` 走另一条独立轨道（`SRCADM-01` 在 PR #63 待审）。

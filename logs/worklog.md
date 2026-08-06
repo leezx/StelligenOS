@@ -2688,3 +2688,20 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 未运行任何 Gate、未赋分数、未评估 T2／T7、未排序、未划 Tier、未推荐资产、未给实验建议、**未新增或修改靶点与 context**、未打开任何 Tier 2 派生库、未引用被隔离运行产物、未写入任何数据文件到仓库。
 - Deliberately not done: **未解除 `EVGAP-02`**；未处理 `GAP-P07`；未执行 `L-ASSERTION` 抽取；未解除 `EVGAP-01`；未更新 binding；未生成 `ADC_POOL_LEVEL_01_ACCEPTED`；未补九份批准记录。
 - Next: 送审本修订；获批后另开 PR 处理 `GAP-P07`，再执行 `L-ASSERTION` 抽取。
+
+### 2026-08-05 17:30 EDT — EVGAP-02：修正 CA19-9 的 L3-00 误判（PR #62 第三轮）
+
+- Trigger: ChatGPT 对 PR #62 第二轮 `REQUEST_CHANGES`——revision 2 把 `CA19-9` 放进 `L3-00`，与契约直接冲突。**该意见成立。**
+- The contradiction: 契约把 `CA19-9` 定为 `resolved_as_non_protein_antigen`，而 `search_complete_definition` 明确接受该 status。**它是已消歧的实体，不是身份未解析。** 只有 `unresolvable_placeholder` 与 `unresolvable_ambiguous_abbreviation` 才应触发 `L3-00`。
+- Root cause in my own work: 契约那张表命名为 `known_unresolved_entities`，**里面却有一个 resolved 的条目**；重建脚本按**表成员身份**而非按 `resolution_status` 赋 `L3-00`。**名字招来了这个 bug，脚本接受了邀请。**
+- Fixed at the point of failure, not the symptom: 表改名 `known_identity_findings`；新增 `l3_00_statuses`（只含两个 unresolvable）；`l3_00_membership_test: resolution_status`；`l3_00_membership_by_list_forbidden: true`；每个条目显式声明其 status 蕴含的 `lock_03_rule`，测试逐条比对二者是否自洽。
+- Option 1 taken: `CA19-9` 保持 `resolved_as_non_protein_antigen`，转 `L3-01`。新增 `non_protein_antigen_search_requirements`——非蛋白抗原**不得按基因符号检索**，v0.1.0 的 14,200 条 PMC 命中出自无效查询形式；`invalid_query_form_consequence: L3-01`，即**检索未完成，而非身份未解析**。新增 `VAL-L29`。
+- Result rebuilt (revision 3): `L3-00` **27**（`Undisclosed`／`EDBN`／`AG7` × 9），`L3-01` **342**。仍是 0 RETAIN、0 EXCLUDE、369 hold、三组 refs 全空、assertion 表空、候选 979 未变、**未重复任何网络调用**。
+- GAP-P07 sharpened: 四个实体**性质不同**，不可混为一谈。三个是不可消歧的符号；**`CA19-9` 已消歧、只是不是蛋白**——非蛋白抗原是否属于「所有潜在 ADC 膜蛋白靶点」这一 target universe，才是 `GAP-P07` 真正要回答的问题。契约新增 `entity_kinds` 分列。
+- Verification hardened: 外部核验脚本的 `L3-00` 期望集**由契约按 `resolution_status` 推导**，不是硬编码，故同类错误再犯会被捕获。20 项核验全通过。
+- Tests: `tests/test_evgap_02_crc_linkage.py` **47 tests**（新增 3 条：status 而非成员身份、非蛋白抗原检索形式、两处 completeness 定义互不矛盾）；全库 `Ran 356 tests` OK；boundary check 通过。
+- Mutation testing: **10 个新变异全部被捕获**，`diff -q` 回滚干净。
+- Packaged: `gen_iet_evgap_02_crc_linkage_20260805T190453Z_rev3.zip`，43,443 bytes，ZIP SHA-256 `ef268fd2f6dcc0c056b0dd01c67da5e850a5e79972ae5858dd49b5f60b49faac`。**revision 2 从未上传**，其 36／333 未被任何下游依赖；rev2 包已删除以免误取。
+- Also done this turn: 按人工负责人指示关闭 PR #55 并注明 superseded by #56（#56 已于 2026-08-04 合并）。**分支保留不删**——删除分支须单独授权。
+- Deliberately not done: 未解除 `EVGAP-02`；未处理 `GAP-P07`；未执行 `L-ASSERTION` 抽取；未改 target 轴；未补九份批准记录。
+- Next: 送审 revision 3；并按第二轮审核要求为 PR #63 制作可独立复核的 SRCADM-01 audit bundle。

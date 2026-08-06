@@ -178,26 +178,59 @@ identity_resolution:
     于是 9 个 pair 落 L3-05 EXCLUDE。而 EDBN 应指 fibronectin 的 extra domain B，
     其标准符号为 FN1；被排除的原因只是缩写本身不出现在文献里。
   # 本次 target 轴中实测四个必须单列的实体。
-  known_unresolved_entities:
+  # 只有这两个 status 触发 L3-00。判据是 status，**不是**「是否出现在下面这张表里」。
+  # v0.2.0 首版把该表命名为 known_unresolved_entities 并让执行者按表成员身份赋
+  # L3-00，于是 CA19-9 虽已消歧仍落进 L3-00——契约与结果自相矛盾。表名与判据都已改。
+  l3_00_statuses:
+    - unresolvable_placeholder
+    - unresolvable_ambiguous_abbreviation
+  l3_00_membership_test: resolution_status
+  l3_00_membership_by_list_forbidden: true
+  # 本表登记的是「身份需要单独裁定的实体」，其中既有未消歧的，也有已消歧但
+  # 不能按基因符号检索的。两者的 LOCK-03 处置不同。
+  known_identity_findings:
     - input_symbol: Undisclosed
       resolution_status: unresolvable_placeholder
+      lock_03_rule: L3-00
       note: 这不是实体，是缺失值占位符。v0.1.0 对其执行了 11 次检索。
     - input_symbol: EDBN
       resolution_status: unresolvable_ambiguous_abbreviation
+      lock_03_rule: L3-00
       note: 疑指 fibronectin extra domain B（标准符号 FN1），须由来源轴确认后才可检索。
     - input_symbol: AG7
       resolution_status: unresolvable_ambiguous_abbreviation
+      lock_03_rule: L3-00
       note: 非标准靶点符号；PMC 返回 56 条，全部为缩写碰撞候选。
     - input_symbol: CA19-9
       resolution_status: resolved_as_non_protein_antigen
+      # 已消歧，故**不**落 L3-00。它与其余靶点一样受 assertion 层未执行所阻。
+      lock_03_rule: L3-01
+      resolved_identifier_kind: non_protein_antigen_definition
+      resolved_identifier: sialyl-Lewis a（CA19-9 糖类抗原表位）
       note: >-
-        sialyl-Lewis a 糖类抗原，非蛋白基因产物，无 HGNC 符号。
-        它可被消歧，但不能按基因符号检索；PMC 返回 14,200 条。
-  # 消歧规则的可判定性：四个实体在 target 轴中的 LOCK-01 状态一致，可机械识别。
+        糖类抗原，非蛋白基因产物，无 HGNC 符号——但这是一个可定义的实体，
+        不等于身份未解析。它是否属于「所有潜在 ADC 膜蛋白靶点」这一 Level 01
+        target universe，属 GAP-P07 的上游问题，不在本契约内裁定。
+      invalid_query_form_in_v0_1_0: true
+      invalid_query_form_note: >-
+        v0.1.0 按基因符号检索它，PMC 返回 14,200 条。该检索形式无效，
+        其候选记录不得计入检索完整性；但这使检索未完成（L3-01），不使身份未解析。
+  # 已消歧为非蛋白抗原的实体必须换一种检索形式，不得按基因符号检索。
+  non_protein_antigen_search_requirements:
+    gene_symbol_query_forbidden: true
+    required_query_basis:
+      - antigen_or_epitope_name_and_synonyms
+      - carrier_or_glycan_definition
+    invalid_query_form_consequence: L3-01
+    invalid_query_form_consequence_reason: >-
+      检索形式无效等同于该 target 的规定检索未完成，
+      与「身份未解析」是两回事，不得混为一谈。
+  # 可判定性：四个实体在 target 轴中的 LOCK-01 状态一致，可机械筛出**候选**。
   mechanical_precondition: >-
     这四个实体在 PR #58 的 target 轴中同属 rq_01_family_count = 0、rule E1-05
-    （参考库无对应行）。故「无任何表面注释」与「符号无法消歧」在本轴上高度相关，
-    可先按该字段筛出候选再逐个消歧，不依赖自由裁量。
+    （参考库无对应行），故可先按该字段机械筛出需要单独裁定身份的候选。
+    但该字段只用于筛候选，**不决定** resolution_status，也不决定是否落 L3-00——
+    CA19-9 同属 E1-05，却已消歧。
 
 # ------------------------------------------------- 各 endpoint 的命中证明了什么
 #
@@ -963,9 +996,15 @@ output_validation:
   - id: VAL-L27
     rule: >-
       每个 target 的 input_symbol 必须有 identity_resolution 记录。
-      resolution_status 为 unresolvable_placeholder 或
-      unresolvable_ambiguous_abbreviation 的 target，其全部 9 个 pair 必须落 L3-00，
-      不得落 L3-02，**尤其不得落 L3-05**。
+      L3-00 的成员资格由 resolution_status 判定：当且仅当 status 属于
+      l3_00_statuses 时落 L3-00，其全部 9 个 pair 不得落 L3-02，**尤其不得落 L3-05**。
+      status 为 resolved 或 resolved_as_non_protein_antigen 的 target
+      **不得**落 L3-00，即便它出现在 known_identity_findings 表中。
+  - id: VAL-L29
+    rule: >-
+      resolution_status = resolved_as_non_protein_antigen 的 target
+      不得按基因符号检索。其 v0.1.0 候选记录不得计入检索完整性，
+      该 target 的 pair 落 L3-01。
   - id: VAL-L28
     rule: >-
       ClinicalTrials.gov 来源的 B/C 类 assertion 必须记录
@@ -1021,12 +1060,23 @@ mandatory_findings:
 # 修复须另开 PR，不得在 EVGAP-02 内静默改轴。
 upstream_defect:
   id: GAP-P07
-  defect: PR #58 冻结的 41 个 target 中至少四个不是可消歧的蛋白实体
+  defect: PR #58 冻结的 41 个 target 中至少四个的身份需要单独裁定
   entities:
     - Undisclosed
     - EDBN
     - AG7
     - CA19-9
+  # 四个实体的缺陷性质不同，不可混为一谈。
+  entity_kinds:
+    - input_symbol: Undisclosed
+      kind: 不是实体
+    - input_symbol: EDBN
+      kind: 缩写无法消歧
+    - input_symbol: AG7
+      kind: 缩写无法消歧
+    - input_symbol: CA19-9
+      # 这一条才是 GAP-P07 真正要回答的问题。
+      kind: 已消歧，但不是蛋白——是否属于本 target universe 需上游裁定
   where: external:result/gen_iet_crc_target_enumeration_20260802#target_evidence_catalog.tsv
   frozen_by_pr: 58
   why_not_fixed_here: >-

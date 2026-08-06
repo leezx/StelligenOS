@@ -676,11 +676,11 @@ class Evgap02LinkageContractTests(unittest.TestCase):
             with self.subTest(field=field):
                 self.assertIn(field, block["resolution_must_record"])
 
-    def test_the_four_unresolvable_entities_are_named_with_their_kind(self) -> None:
+    def test_the_four_flagged_entities_are_named_with_their_kind(self) -> None:
         """Each was searched as a gene symbol by the v0.1.0 run."""
 
         block = self.doc["identity_resolution"]
-        entities = {e["input_symbol"]: e for e in block["known_unresolved_entities"]}
+        entities = {e["input_symbol"]: e for e in block["known_identity_findings"]}
         self.assertEqual(set(entities),
                          {"Undisclosed", "EDBN", "AG7", "CA19-9"})
         vocabulary = set(block["resolution_status_vocabulary"])
@@ -696,8 +696,71 @@ class Evgap02LinkageContractTests(unittest.TestCase):
                          "resolved_as_non_protein_antigen")
         self.assertEqual(entities["EDBN"]["resolution_status"],
                          "unresolvable_ambiguous_abbreviation")
-        # Recognising them must not require free judgement.
-        self.assertIn("E1-05", block["mechanical_precondition"])
+        # Recognising them must not require free judgement — but the field that
+        # finds them must not be mistaken for the field that classifies them.
+        precondition = block["mechanical_precondition"]
+        self.assertIn("E1-05", precondition)
+        self.assertIn("CA19-9", precondition)
+
+    def test_l3_00_membership_follows_status_not_list_membership(self) -> None:
+        """The v0.2.0 first draft put CA19-9 in L3-00 although it is resolved.
+
+        The table is a list of entities whose identity needed adjudicating; two
+        of its statuses mean unresolved and one means resolved. Keying L3-00 on
+        membership rather than status contradicts the contract."""
+
+        block = self.doc["identity_resolution"]
+        statuses = set(block["l3_00_statuses"])
+        self.assertEqual(statuses, {"unresolvable_placeholder",
+                                    "unresolvable_ambiguous_abbreviation"})
+        self.assertEqual(block["l3_00_membership_test"], "resolution_status")
+        self.assertIs(block["l3_00_membership_by_list_forbidden"], True)
+        # A resolved status may never be an L3-00 status.
+        for resolved in ("resolved", "resolved_as_non_protein_antigen"):
+            with self.subTest(status=resolved):
+                self.assertNotIn(resolved, statuses)
+        # Every flagged entity must declare the rule it lands on, and that rule
+        # must agree with its status.
+        for entry in block["known_identity_findings"]:
+            with self.subTest(symbol=entry["input_symbol"]):
+                expected = "L3-00" if entry["resolution_status"] in statuses \
+                    else "L3-01"
+                self.assertEqual(entry["lock_03_rule"], expected)
+        # CA19-9 specifically: resolved, so L3-01, and it must carry an identifier.
+        ca = next(e for e in block["known_identity_findings"]
+                  if e["input_symbol"] == "CA19-9")
+        self.assertEqual(ca["lock_03_rule"], "L3-01")
+        self.assertTrue(ca["resolved_identifier"].strip())
+        self.assertEqual(ca["resolved_identifier_kind"], "non_protein_antigen_definition")
+        self.assertIn(ca["resolved_identifier_kind"],
+                      block["resolved_identifier_kinds"])
+
+    def test_a_non_protein_antigen_may_not_be_queried_by_gene_symbol(self) -> None:
+        block = self.doc["identity_resolution"]["non_protein_antigen_search_requirements"]
+        self.assertIs(block["gene_symbol_query_forbidden"], True)
+        self.assertTrue(block["required_query_basis"])
+        # An invalid query form leaves the search incomplete; it does not make
+        # the identity unresolved.
+        self.assertEqual(block["invalid_query_form_consequence"], "L3-01")
+        self.assertTrue(block["invalid_query_form_consequence_reason"].strip())
+        ids = {r["id"] for r in self.doc["output_validation"]}
+        self.assertIn("VAL-L29", ids)
+
+    def test_the_two_completeness_definitions_agree_on_resolved_statuses(self) -> None:
+        """search_complete accepts both resolved statuses, so neither may be
+        treated as unresolved when the disposition is assigned."""
+
+        definition = " ".join(
+            self.doc["declared_search_scope"]["search_complete_definition"])
+        self.assertIn("resolved_as_non_protein_antigen", definition)
+        statuses = set(self.doc["identity_resolution"]["l3_00_statuses"])
+        # The statuses search_complete accepts and the statuses that force L3-00
+        # must be disjoint, or a target could be both complete and unresolved.
+        accepted = {s for s in
+                    self.doc["identity_resolution"]["resolution_status_vocabulary"]
+                    if s in definition}
+        self.assertTrue(accepted)
+        self.assertEqual(accepted & statuses, set())
 
     def test_l3_00_reuses_the_frozen_outcome_vocabulary(self) -> None:
         """LOCK-03 has no identity_unresolved outcome; that belongs to LOCK-01."""
