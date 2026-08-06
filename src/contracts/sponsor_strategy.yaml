@@ -1,0 +1,99 @@
+version: "0.1.0"
+name: stelligenos-sponsor-strategy-contracts
+description: >-
+  Contract definitions for sponsor-relative program selection. These are
+  architecture contracts only; instances live in an external runtime.
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  database: forbidden
+  cache: forbidden
+  result_files: forbidden
+contracts:
+  DevelopmentSponsorProfile:
+    contract_id: DevelopmentSponsorProfile@0.1.0
+    role: >-
+      Describes the sponsor-relative capabilities, constraints and preferred
+      risk-transfer boundary used to assess program executability.
+    required_fields:
+      - sponsor_id
+      - company_stage
+      - therapeutic_focus
+      - disease_advantage
+      - modality_scope
+      - owned_capabilities
+      - partnered_capabilities
+      - unavailable_capabilities
+      - accessible_data
+      - accessible_patient_samples
+      - accessible_models
+      - capital_envelope
+      - time_horizon
+      - maximum_self_funded_stage
+      - preferred_transaction_stage
+      - acceptable_program_count
+      - risk_tolerance
+      - geographic_scope
+      - ip_strategy
+    field_kinds:
+      sponsor_id: identifier
+      company_stage: controlled_text
+      therapeutic_focus: string_list
+      disease_advantage: string_list
+      modality_scope: string_list
+      owned_capabilities: string_list
+      partnered_capabilities: string_list
+      unavailable_capabilities: string_list
+      accessible_data: external_reference_list
+      accessible_patient_samples: external_reference_list
+      accessible_models: external_reference_list
+      capital_envelope: external_reference
+      time_horizon: external_reference
+      maximum_self_funded_stage: controlled_text
+      preferred_transaction_stage: controlled_text
+      acceptable_program_count: external_reference
+      risk_tolerance: controlled_text
+      geographic_scope: string_list
+      ip_strategy: external_reference
+    invariants:
+      - profile_instances_must_be_external
+      - capability_fields_describe_sponsor_context_not_asset_scientific_truth
+      - changing_the_profile_must_not_change_asset_intrinsic_gate_results
+      - external_references_must_use_external_scheme
+
+  ProgramThesis:
+    contract_id: ProgramThesis@0.1.0
+    role: >-
+      Binds an opportunity and its clinical hypothesis to an intended product
+      position, a sponsor and a target risk-transfer milestone.
+    required_fields:
+      - thesis_id
+      - opportunity_ref
+      - clinical_hypothesis_ref
+      - intended_product_position_ref
+      - sponsor_profile_ref
+      - current_lifecycle_stage
+      - target_transfer_milestone_ref
+      - development_path
+      - source_refs
+    field_kinds:
+      thesis_id: identifier
+      opportunity_ref: external_reference
+      clinical_hypothesis_ref: external_reference
+      intended_product_position_ref: external_reference
+      sponsor_profile_ref: external_reference
+      current_lifecycle_stage: controlled_text
+      target_transfer_milestone_ref: external_reference
+      development_path: controlled_text
+      source_refs: external_reference_list
+    allowed_values:
+      development_path:
+        - full_asset_development
+        - partnerable_asset_option
+        - data_package_only
+    invariants:
+      - thesis_instances_must_be_external
+      - all_cross_boundary_and_source_refs_must_use_external_scheme
+      - target_transfer_milestone_is_required_before_program_commitment
+      - thesis_does_not_grant_program_commitment
+      - thesis_does_not_execute_a_gate_or_asset_generation_run
