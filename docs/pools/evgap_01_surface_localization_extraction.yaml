@@ -13,15 +13,20 @@ extraction:
   discharges_gap: EVGAP-01
   gap_source: docs/pools/adc_pool_level_01_input_binding.yaml
   serves_lock: LOCK-01
-  status: contract_only_pending_review
-  execution_status: not_authorized_not_executed
-  # 本契约冻结抽取边界，但**尚不授权执行抽取**：所依赖的数据库 snapshot
-  # 必须先通过独立的 source admission PR 取得自己的 APPROVE 记录。见
-  # source_admission_dependency。
-  authorises_extraction_run: false
+  status: admission_bound_extraction_authorised
+  execution_status: authorised_not_yet_executed
+  # SRCADM-01 已于 PR #63 取得独立 APPROVE（记录见 source_admission_dependency
+  # 的 admission_record_ref，由 PR #65 合入）。抽取阻断因此解除。
+  # 授权范围是**一次**抽取，且仍不授权执行 Level 01。
+  authorises_extraction_run: true
+  authorises_extraction_run_count: 1
   authorises_level_01_execution: false
-  extraction_blocked_by:
-    - SRCADM-01
+  extraction_blocked_by: []
+  extraction_unblocked_by:
+    - blocker: SRCADM-01
+      cleared_by_pr: 63
+      admission_record_ref: logs/chatgpt-review-2026-08-06-srcadm-01-admission-final.md
+      merge_commit: 98a1698
   # 抽取完成并经结果 PR 接受后，需再开一个 PR 更新 Level 01 输入绑定以解除 EVGAP-01。
   requires_followup_binding_pr: true
 
@@ -40,11 +45,22 @@ source_admission_dependency:
   is_derived_database: true
   previously_approved: false
   previously_approved_evidence: 仓库内 logs/chatgpt-review-*.md 无任何一条提及 surfaceome；worklog 仅有一次 2026-08-01 mock 运行提及。
-  admission_status: pending_separate_admission_pr
-  admission_record_ref: null
+  admission_status: admitted_with_conditions
+  admission_record_ref: logs/chatgpt-review-2026-08-06-srcadm-01-admission-final.md
   admission_record_required: true
-  # 抽取执行前必须存在的独立 APPROVE 记录路径形态；本契约不得代填。
-  admission_record_path_pattern: logs/chatgpt-review-<date>-adc-surfaceome-reference-v0-3-0-admission-final.md
+  # 记录文件名按 admission ID（SRCADM-01）命名，与 PR #59 originally 写下的
+  # 按数据集命名的形态不同。**未重命名已合并且已获批的记录文件**，改为把形态
+  # 对齐到实际约定，并保留原形态以便追溯。见 handoff 第三节。
+  admission_record_path_pattern: logs/chatgpt-review-<date>-srcadm-01-admission-final.md
+  admission_record_path_pattern_superseded: logs/chatgpt-review-<date>-adc-surfaceome-reference-v0-3-0-admission-final.md
+  # 准入是**有条件**的。四项条件由 SRCADM-01 冻结，任一被破坏即须重审。
+  admission_is_conditional: true
+  admission_conditions_ref: docs/pools/srcadm_01_surfaceome_admission.yaml#admission_conditions
+  admission_conditions:
+    - COND-01
+    - COND-02
+    - COND-03
+    - COND-04
   # 该 admission PR 必须逐项审计以下内容。哈希与自声明不在其列。
   required_audit_items:
     - id: AUD-01

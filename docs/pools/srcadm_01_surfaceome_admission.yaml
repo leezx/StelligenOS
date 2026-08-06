@@ -14,12 +14,17 @@ admission:
   snapshot_id: 2026-07-29-quant-topology-mm
   audit_scope_frozen_by_pr: 59
   audit_scope_items: 9
-  status: pending_review
+  status: approved
   # 结论是「有条件可纳入」，不是无条件可纳入。四项条件见 admission_conditions。
   recommendation: admissible_with_conditions
   grants_admission_by_itself: false
-  admission_record_ref: null
-  next_step: 获 APPROVE 后另开 PR 把 EVGAP-01 契约的 admission_record_ref 指向审核记录
+  admission_record_ref: logs/chatgpt-review-2026-08-06-srcadm-01-admission-final.md
+  # 该文件本身仍不授予准入——准入由上面这条审核记录授予，本字段只是指向它。
+  admission_granted: true
+  admission_granted_by_pr: 63
+  admission_granted_merge_commit: 98a1698
+  admission_record_added_by_pr: 65
+  next_step: 执行一次 EVGAP-01 抽取 → 结果 PR → binding，解除 EVGAP-01
 
 # 可独立复核的审计包。PR #63 第一轮审核指出：审计结论的核心事实全部来自仓库外文件，
 # 仅凭文档自洽的测试无法证明外部事实为真。该意见成立——本节即其应答。
@@ -260,13 +265,17 @@ admission_conditions:
       已实测 11 个受影响基因全部在 41 个靶点之外，且 family 计数不按行数累加。
       若 EVGAP-01 的靶点轴日后扩大，须重新检查重复键是否触及新靶点。
 
-# 本审计明确不做什么。
+# 准入已成立后，本记录仍然不覆盖什么。
+#
+# 两条已被 PR #63 的 APPROVE 取代，移出本表：「授予准入」与「修改 EVGAP-01 的
+# admission_record_ref」——后者正是本 binding PR 依授权所做的事。其余全部保留。
+#
+# 注意引号：`扩大 PR #59 的字段白名单` 若不加引号，YAML 会把 ` #59 …` 当成注释，
+# 该条目会静默退化成「扩大 PR」。这是本轮发现的既有缺陷，一并修正。
 not_authorised:
-  - 授予准入（准入由本 PR 获 APPROVE 后成立）
-  - 修改 evgap_01_surface_localization_extraction.yaml 的 admission_record_ref
-  - 执行 EVGAP-01 抽取
+  - 执行 EVGAP-01 抽取（本记录只支持授权，执行是另一次动作）
   - 执行 Level 01
   - 解除 EVGAP-01 或 EVGAP-02
   - 把该数据集的其他版本或后续重建纳入
-  - 扩大 PR #59 的字段白名单
+  - "扩大 PR #59 的字段白名单"
   - 纳入 SRCADM-02..SRCADM-05 的任何派生库

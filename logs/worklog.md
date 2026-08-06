@@ -2783,3 +2783,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Scope decision by the human lead: 本轮**只补 #62 与 #63**。`#52`／`#53`／`#54`／`#57`／`#58`／`#59`／`#60`／`#61` 八份仍欠，不阻塞在途工作，留待另议。早期几份需从 handoff 与 worklog 回溯重建，属二手记录，补登时须标注来源与局限，**不得伪装成审核原文**。
 - Deliberately not done: 未填 `admission_record_ref`；未改 `evgap_01_surface_localization_extraction.yaml`；未改 `srcadm_01_surfaceome_admission.yaml` 的 `status`；未解除任何缺口；未执行任何抽取；未改契约、规则、测试或 target 轴。
 - Next: 本 PR 获批后另开**极小的 admission binding PR**，再执行 `EVGAP-01` 抽取。
+
+### 2026-08-06 17:20 EDT — SRCADM-01 准入绑定（极小 binding PR）
+
+- Merged first on instruction: PR #65 at `a39171fa` → `e167c56`。合并前核对 HEAD 与被批一致；merge commit，无 squash。审核方再次说明连接器 403，正式 review 仍未能写回 GitHub——这正是 #65 那两份记录存在的理由。
+- Scope: 只做审核方指定的三件事——更新 `SRCADM-01` 的 admission 状态与记录引用；把 `EVGAP-01` 的 `admission_record_ref` 指向 #63 审核记录；在四项条件不变的前提下授权**一次** `EVGAP-01` extraction。
+- Deliberate non-change: `grants_admission_by_itself` 仍为 `false`。**准入不是这个文件授予的**，是它指向的那条审核记录授予的；该文件只承载指针。`authorises_level_01_execution` 亦仍为 `false`。
+- Bounded grant: 新增 `authorises_extraction_run_count: 1`，授权范围是**一次**抽取而非长期许可。
+- Conditions carried, not restated: `EVGAP-01` 侧新增 `admission_is_conditional: true` 与 `admission_conditions: [COND-01..04]`，并有测试断言该列表与 `SRCADM-01` 实际冻结的四项**逐项相等**，防止两边日后漂移。测试还断言 `admission_record_ref` 指向的文件**确实存在**，且其内容含该 dataset、version、snapshot 与 `APPROVE`——悬空指针不得放行抽取。
+- Naming mismatch handled explicitly, not silently: PR #59 冻结的 `admission_record_path_pattern` 按数据集命名，而 PR #65 已合入并获批的记录按 admission ID 命名。**未重命名已被引用的审核记录**，改为对齐形态并以 `admission_record_path_pattern_superseded` 保留原形态。重命名一份已获批记录的风险高于修正一条命名形态。
+- Pre-existing YAML defect found and partially fixed: `not_authorised` 中未加引号的条目会被 YAML 把 ` #59` 之后当成注释——`扩大 PR #59 的字段白名单` 在机器可读层面**静默退化为「扩大 PR」**。本 PR 因绑定本就要重写该表，故一并加引号。
+- **同类缺陷另有三处未修**（属无关改动）：`adc_pool_level_01_input_binding.yaml:498` 退化为「…绑定到 PR」、`evgap_01_surface_localization_extraction.yaml:551` 与 `evgap_02_crc_linkage_extraction.yaml:1104` 均退化为「把被隔离运行（PR」。影响有界——原文对人类可读，丢的只是解析后内容，且现有测试断言的是其他条目。建议另开极小 PR 统一加引号并加防回归检查。
+- `not_authorised` 移出两条：「授予准入」已由 #63 成立；「修改 `admission_record_ref`」正是本 PR 依授权所做的事。其余保留，并把「执行 `EVGAP-01` 抽取」改写为「本记录只支持授权，执行是另一次动作」。
+- Tests: `test_evgap_01_surface_localization.py` 两条改为断言绑定后的不变式（含记录文件必须真实存在、条件列表逐项相等）；`test_srcadm_01_surfaceome_admission.py` 拆为「准入来自记录而非本文件」与「授权到抽取为止、不得触及 Level 01」两条。全库 `Ran 372 tests` OK，boundary check 通过。
+- Deliberately not done: **未执行 `EVGAP-01` 抽取**；未执行 Level 01；未解除任何缺口；未改 target 轴；未碰 `EVGAP-02` 契约；未扩大字段白名单；未纳入 `SRCADM-02`..`05`。
+- Next: 本 PR 获批后执行一次 `EVGAP-01` 抽取（外部运行，产物不入仓）→ 结果 PR → 解除 `EVGAP-01`。
