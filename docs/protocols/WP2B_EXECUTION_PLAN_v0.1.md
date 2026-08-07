@@ -29,27 +29,54 @@
 
 ## 1. Executor
 
-本次由 Claude 在**当前会话**里直接执行，使用当前会话可访问的公开检索能力。不为
-WP2B v0.1 另建自动化采集 pipeline——首要目标是建立一个高质量、可审计的 CRC
-territory baseline，把 ontology、territory granularity、evidence depth 和路由
-逻辑跑通，而不是提前工程化一个尚未稳定的方法。
+本次由 Claude 执行，使用可访问的公开检索能力。不为 WP2B v0.1 另建自动化采集
+pipeline——首要目标是建立一个高质量、可审计的 CRC territory baseline，把
+ontology、territory granularity、evidence depth 和路由逻辑跑通，而不是提前
+工程化一个尚未稳定的方法。
 
-### 1.1 当前会话的真实工具清单（如实记录，不夸大）
+### 1.1 授权单位是一个 `run_id`，不是一次会话
+
+`wp2b_crc_territory_map_run.yaml` 授权的是**一次运行**（`authorises_run_count:
+1`），单位是 `run_id`，不是「一次 Claude 对话」。给定 15–30 个 territory、每个
+还要临床、竞争、trial、biology、buyer/IP/time window 等 field-level
+provenance，把整个运行硬绑在一次会话内不稳健——上下文长度或工具中断不应逼着
+草率收尾。
+
+因此本次运行可以跨越多个**执行检查点／续接会话**，形态例如：
+
+```
+Pass A enumeration → checkpoint
+  → Pass B normalization → checkpoint
+  → breadth-first evidence（第 7 节） → checkpoint
+  → ACTIVE_SEARCH 候选的第二轮 deeper verification → checkpoint
+  → 最终打包
+```
+
+**跨检查点必须保持不变的四项：** `knowledge_cutoff`（第 4 节）、已批准冻结的
+`DevelopmentSponsorProfile` 实例（v0.1.2，SHA-256 见文首）、
+`search_space_route_policy.yaml`（PR #79）、第 3 节 source policy，以及一份
+连续的 query log（第 14 节 `run_manifest.json`）。四项任一变化都不是同一次
+运行的延续，而是新的 `run_id`，需要重新走授权流程——这不在本计划授权范围内。
+
+这不产生第二次运行，也不消费第二次授权：`run_manifest.json` 里的 `run_id` 全程
+唯一，检查点只是同一个 `run_id` 下的执行进度记录。
+
+### 1.2 工具清单与决定（如实记录，不夸大）
 
 | 工具 | 状态 | 用途 |
 |---|---|---|
 | `WebSearch` | 可用，无需授权 | 发现型检索；美国地区限定 |
-| `WebFetch` | 可用，无需授权 | 抓取公开 URL 并转 markdown 摘要；对非结构化页面（新闻、guideline 页、公司 IR 页）够用，对结构化字段（trial phase、enrollment、arm 设计）会有损 |
-| `PubMed` MCP connector | **已安装但未授权**，需要用户在浏览器完成 OAuth | 结构化文献检索，比 `WebFetch` 抓 PubMed 网页更可靠 |
-| `Clinical Trials` MCP connector | **已安装但未授权**，需要用户在浏览器完成 OAuth | 结构化试验数据（phase、状态、入组、readout）——对第 10 节的 competition/window-closure 调查价值最高 |
-| `bioRxiv` MCP connector | **已安装但未授权**，需要用户在浏览器完成 OAuth | 预印本检索，仅用于 Tier 1C 之外的补充发现，不作为 primary evidence |
+| `WebFetch` | 可用，无需授权 | 抓取公开 URL 并转 markdown 摘要；对非结构化页面（新闻、公司 IR 页）够用，对结构化字段（trial phase、enrollment、arm 设计）会有损 |
+| `PubMed` MCP connector | **已安装但未授权**，需要用户在浏览器完成 OAuth | 结构化文献检索，对应第 3 节 `pubmed`／`pmc` |
+| `Clinical Trials` MCP connector | **已安装但未授权**，需要用户在浏览器完成 OAuth | 结构化试验数据（phase、状态、入组、readout），对应第 3 节 `clinicaltrials_gov`——对第 10 节 competition/window-closure 调查价值最高 |
 
-**建议**：在正式执行前，请授权 `Clinical Trials` 与 `PubMed` 两个 connector——
-两者都用于第 3 节 Tier 1A／1B 的权威信息，结构化字段的可靠度明显高于
-`WebFetch` 抓取同一个网页。`bioRxiv` 可选，不授权也不影响 Tier 1A/1B/1D/1E 的
-调查完整性。若您不希望授权，我会退回 `WebSearch` + `WebFetch` 直接访问
-`clinicaltrials.gov`／`pubmed.ncbi.nlm.nih.gov` 的公开页面，可行但结构化字段的
-逐条可追溯性会弱于 connector。
+**决定：** 授权 `PubMed` 与 `Clinical Trials`；`bioRxiv` 不用于 WP2B v0.1
+——预印本不在第 3 节 `tier_1_sources` 之内，且会增加证据等级管理复杂度，对本次
+不是必要输入。两个 connector 均对应第 3 节已冻结的 source class，**不因
+connector 可用与否而改变冻结的 source 语义**——若届时 OAuth 未完成，退回
+`WebSearch` + `WebFetch` 直接访问 `clinicaltrials.gov`／`pubmed.ncbi.nlm.nih.gov`
+公开页面作为 fallback，但正式证据仍必须落在第 3 节允许的来源类别内，不因
+fallback 而放宽。
 
 不允许：
 
@@ -86,21 +113,70 @@ Territory 主要由以下轴定义：
 
 ---
 
-## 3. Source hierarchy（本次冻结，供 `source_manifest.json` 与
-`field_evidence_map.json` 引用）
+## 3. Source hierarchy（不扩大冻结契约，逐字对齐 `wp2b_crc_territory_map_run.yaml` 的 `source_policy`）
 
-| Tier | 来源 | 用途 | 置信度标注 |
-|---|---|---|---|
-| **1A** 监管／权威临床 | FDA、EMA、NCCN/ESMO/ASCO 公开可及 guideline、ClinicalTrials.gov、WHO ICTRP 或等效官方注册库 | current SOC、批准适应症、treatment line、trial stage、regulatory status | — |
-| **1B** 同行评审临床/科学文献 | PubMed 索引原始论文、NEJM、Lancet／Lancet Oncology、JCO、Nature Medicine／Cancer Discovery／Cancer Cell 等 | clinical outcome、resistance population、molecular subtype、metastatic-state evidence、human biomarker evidence | — |
-| **1C** 会议摘要（原始，未正式发表） | ASCO、AACR、ESMO、ASCO GI | 尚未发表但可能改变 competitive position／window closure 的项目 | **必须标注 `CONFERENCE_ONLY`，不得与完整同行评审证据混为同一 confidence** |
-| **1D** Sponsor 一级披露 | 公司新闻稿、investor presentation、SEC filing | trial initiation、enrollment/status、topline result、licensing/acquisition、disclosed development strategy | **不得仅凭 sponsor claim 判定 clinical superiority** |
-| **1E** 公开分子/患者资源 | TCGA、GEO、cBioPortal、GTEx、HPA、DepMap（均已在冻结 `DevelopmentSponsorProfile@0.1.2` 的 `accessible_data` 中列出） | data availability、territory 是否 computationally addressable、是否存在公开人体证据 | **公共数据库本身不得令 `asymmetric_evidence_advantage = SATISFIED`**——已是 profile v0.1.2 的硬不变量（`public_data_plus_generic_bioinformatics_is_insufficient`），此处只是复用，不重新定义 |
-| Discovery-only | Google Scholar、PubMed related articles、综述 | 用于发现 primary source 的路径 | **不得作为关键 route criterion 的唯一证据**；最终 field-level evidence 必须尽量回到 primary/authoritative source |
+上一版在此新增了 NCCN/ESMO/ASCO guideline、WHO ICTRP，并把 TCGA/GEO/cBioPortal/
+GTEx/HPA/DepMap 统称「Tier 1E formal evidence」——**这是擅自扩大冻结的 source
+admission**，不是执行细节。冻结契约 `source_policy.tier_1_sources` 只列七类：
 
-`field_evidence_map.json` 中每条 `evidence_ref` 必须能对应到上表某个 Tier；
-`CONFERENCE_ONLY` 与 sponsor-disclosure 来源的记录必须显式携带对应标注字段，
-校验脚本会检查这一点（见第 17 节 `validate_field_evidence_map`）。
+```yaml
+tier_1_sources:
+  - pubmed
+  - pmc
+  - clinicaltrials_gov
+  - fda_labels_and_approvals
+  - ema_labels_and_approvals
+  - company_public_disclosure
+  - conference_abstract_public_record
+tier_2_derived_databases_permitted: false
+```
+
+本计划**不新开 source-admission PR**，因此正式来源严格限定在这七类，逐一对应：
+
+| 冻结 source class | 用途 | 置信度标注 |
+|---|---|---|
+| `pubmed`／`pmc` | clinical outcome、resistance population、molecular subtype、metastatic-state evidence、human biomarker evidence；treatment-guideline 若以 JCO／Annals of Oncology／JNCCN 等 PubMed 索引期刊发表，落在这一类，不单开 guideline tier | — |
+| `clinicaltrials_gov` | trial stage、enrollment/status、竞争者试验进度 | — |
+| `fda_labels_and_approvals`／`ema_labels_and_approvals` | current SOC、批准适应症、treatment line、regulatory status | — |
+| `company_public_disclosure` | trial initiation、enrollment/status、topline result、licensing/acquisition、disclosed development strategy | **不得仅凭 sponsor claim 判定 clinical superiority** |
+| `conference_abstract_public_record`（ASCO、AACR、ESMO、ASCO GI 等原始未发表摘要） | 可能改变 competitive position／window closure 的项目 | **必须标注 `CONFERENCE_ONLY`，不得与完整同行评审证据混为同一 confidence** |
+
+**未解决的张力，如实记录而非自行裁定：** `evidence_standards.clinical_definition`
+与 `current_failure` 两个 field group 的 `requires` 字段写的是「公开指南、标签或
+同行评议文献」——字面提到「指南」，但 `source_policy.tier_1_sources` 里没有
+「guideline」这个独立类别。本计划不通过新增 Tier 解决这处张力：guideline 内容
+只有在能落进上表七类之一时才算正式来源（例如已发表为 PubMed 索引论文的共识
+指南，或已反映在 FDA／EMA 批准标签里的 SOC）；只能在专属 guideline 网站找到、
+无法归入七类任一类的内容，只作 discovery-only，不进入 `source_manifest.json`。
+
+**明确排除出正式 Tier 体系**（按上一轮审核裁定）：
+
+- NCCN/ESMO/ASCO **独立** guideline 页面（不是以上七类的载体时）；
+- WHO ICTRP 或其他官方注册库——冻结契约只认 `clinicaltrials_gov`；
+- TCGA、GEO、cBioPortal、GTEx、HPA、DepMap——**一律不得出现在
+  `source_manifest.json`**（直接触发 `VAL-T16`）。`cBioPortal` 是典型 Tier-2
+  派生数据库；TCGA／GEO／GTEx／HPA／DepMap 同样缺少各自的 `SRCADM-02..05`
+  admission，`tier_2_derived_databases_permitted: false` 覆盖它们全部，本计划
+  不代为裁定谁该单独获得豁免。
+
+**这六个公开资源仍有合法用途，但只在 `availability` field group 内**（`
+known_target_biology_refs`／`available_patient_data_refs`／
+`available_model_refs`），该组 `requires` 允许「发起方可核验的资源清单」，
+用途仅限描述 territory 是否 computationally addressable、是否存在公开人体
+证据——**不作为 clinical_definition／current_failure／competition／
+sponsor_fit_context／timing 任何字段的证据来源**，且这类 ref 不进入
+`source_manifest.json` 的 Tier 分类。与冻结 profile v0.1.2 已有的硬不变量
+一致：公共数据库本身不得令 `asymmetric_evidence_advantage = SATISFIED`
+（`public_data_plus_generic_bioinformatics_is_insufficient`），此处复用，不
+重新定义。
+
+**Discovery-only**：Google Scholar、PubMed related articles、综述，仅用于发现
+primary source 的路径，**不得作为关键 route criterion 的唯一证据**；最终
+field-level evidence 必须落到上表七类之一。
+
+`field_evidence_map.json` 中每条 `evidence_ref` 必须能对应到七类之一；
+`CONFERENCE_ONLY` 与 `company_public_disclosure` 来源的记录必须显式携带对应
+标注字段，校验脚本会检查这一点（见第 17 节）。
 
 ---
 
@@ -154,37 +230,76 @@ knowledge_cutoff = 2026-08-07
 - remove biologically interesting但临床不可行动的状态；
 - 只在 treatment history／SOC／competitive landscape 真正不同时才 split。
 
-输出实际 territory count。**15–30 仅作 `VAL-T02` 的 reconciliation reference**
-（`expected_active_band` 的处理方式，PR #78 已冻结），**不得为凑数 split/merge**。
+输出实际 territory count。**15–30 仅作 `VAL-T01` 的 reconciliation reference**
+（报告实际数量，落在区间外不构成失败但须给出 reconciliation note，PR #78 已
+冻结的 `expected_active_band` 处理方式），**不得为凑数 split/merge**。
+`VAL-T02`（`territory_id` 全局唯一）是另一条规则，不要混用。
 
 ---
 
 ## 6. 每个 territory 的最小调查深度
 
-每个 territory 至少完成以下 18 项才能称为 investigated；任何一项缺资料**必须写
-`UNKNOWN`，不能通过推测填满**。此列表与 `OpportunityTerritory@0.1.0` 的字段
-逐一对应（右列括注对应的契约字段）：
+上一版声称「18 项调查深度逐一对应 `OpportunityTerritory` 字段」不成立——
+`OpportunityTerritory@0.1.0` 实际有 21 个字段（含 `territory_id`／
+`search_space_admission_ref`／`source_refs` 三个结构性字段），18 项清单漏了
+`disease_ref`、`molecular_subtype_ref`、`treatment_line_ref`、
+`prior_therapy_refs`、`metastatic_site_refs`、`known_target_biology_refs`、
+`source_refs`。下表覆盖全部 21 个字段，逐一标注所属 `evidence_standards`
+field group 与该组的 unknown/empty 处理方式（第 6.1 节展开）：
 
-| # | 调查项 | 对应契约字段 |
-|---|---|---|
-| 1 | Patient definition | `clinical_population_ref` |
-| 2 | Current SOC | `current_soc_ref` |
-| 3 | Main clinical failure/unmet need | `clinical_failure_mode_ref` |
-| 4 | Approximate population relevance | `patient_size_band_ref` |
-| 5 | Current leading competitors | `current_competitor_refs` |
-| 6 | Highest development stage | `leading_asset_refs` |
-| 7 | Important expected readouts | `expected_readout_refs` |
-| 8 | Evidence that position is locked / not locked / unresolved | `position_occupancy_ref` |
-| 9 | Public patient data availability | `available_patient_data_refs` |
-| 10 | Public model availability | `available_model_refs` |
-| 11 | Stelligen territory-specific evidence advantage hypothesis | `sponsor_evidence_advantage_ref` |
-| 12 | Key uncertainty addressability | `search_space_admission_ref` → `key_uncertainty_addressable` |
-| 13 | Preclinical differentiation visibility | `search_space_admission_ref` → `differentiation_visible_preclinical` |
-| 14 | Preliminary defensible IP path | `search_space_admission_ref` → `defensible_ip_path` |
-| 15 | Plausible buyer/partner class | `search_space_admission_ref` → `plausible_buyer_partner_map` |
-| 16 | Window-closure risk | `window_closure_risk_ref` |
-| 17 | 八项 `SearchSpaceAdmission` 标准，均带 evidence ref | `search_space_admission_ref` |
-| 18 | 严格按冻结的 `search_space_route_policy.yaml`（PR #79）解出路由 | `search_space_admission_ref` → route |
+| # | 契约字段 | field_group | unknown/empty 处理 | 调查内容 |
+|---|---|---|---|---|
+| 1 | `territory_id` | 结构性（`VAL-T02` 全局唯一） | 不适用 | 唯一标识，不是证据字段 |
+| 2 | `disease_ref` | `clinical_definition` | **不允许 UNKNOWN** | Disease 定义 |
+| 3 | `clinical_population_ref` | `clinical_definition` | **不允许 UNKNOWN** | Patient definition |
+| 4 | `molecular_subtype_ref` | `clinical_definition` | **不允许 UNKNOWN** | Molecular subtype |
+| 5 | `treatment_line_ref` | `clinical_definition` | **不允许 UNKNOWN** | Treatment line |
+| 6 | `prior_therapy_refs` | `clinical_definition` | **不允许 UNKNOWN** | Prior therapy exposure |
+| 7 | `metastatic_site_refs` | `clinical_definition` | **不允许 UNKNOWN** | Metastatic site/context |
+| 8 | `current_soc_ref` | `current_failure` | **不允许 UNKNOWN** | Current SOC |
+| 9 | `clinical_failure_mode_ref` | `current_failure` | **不允许 UNKNOWN** | Main clinical failure/unmet need |
+| 10 | `patient_size_band_ref` | `current_failure` | **不允许 UNKNOWN**（只需分档，不需精确数字） | Approximate population relevance |
+| 11 | `current_competitor_refs` | `competition` | empty 允许，须与未调查区分（`VAL-T14`） | Current leading competitors |
+| 12 | `leading_asset_refs` | `competition` | empty 允许，须与未调查区分 | Highest development stage |
+| 13 | `expected_readout_refs` | `competition` | empty 允许，须与未调查区分 | Important expected readouts |
+| 14 | `position_occupancy_ref` | `competition` | empty 允许，须与未调查区分 | Evidence that position is locked / not locked / unresolved |
+| 15 | `known_target_biology_refs` | `availability` | empty 允许 | 背景生物学情报（仅背景，不是 target candidate，见 PR #77 非阻断意见） |
+| 16 | `available_patient_data_refs` | `availability` | empty 允许 | Public patient data availability |
+| 17 | `available_model_refs` | `availability` | empty 允许 | Public model availability |
+| 18 | `sponsor_evidence_advantage_ref` | `sponsor_fit_context` | **UNKNOWN 允许，且不得省略该字段**（`VAL-T15`） | Territory-specific evidence advantage（profile 本身不足以支撑，见第 9 节） |
+| 19 | `window_closure_risk_ref` | `timing` | UNKNOWN 允许 | Window-closure risk（profile 只贡献执行时间跨度那一半） |
+| 20 | `search_space_admission_ref` | 结构性（`VAL-T04` 恰好一个） | 八项标准各自 `SATISFIED`／`UNKNOWN`／`UNSATISFIED`，机制见第 6.1 节末段 | 八项 `SearchSpaceAdmission` 标准 + 按 PR #79 解出路由 |
+| 21 | `source_refs` | 结构性（`VAL-T13` 每个非空字段至少一条） | 不适用 | 聚合引用列表 |
+
+### 6.1 UNKNOWN 语义——不是「缺资料就写 UNKNOWN」
+
+上一版统一说「任何一项缺资料必须写 UNKNOWN」，这与冻结的
+`evidence_standards` 直接冲突。正确语义按 field group 三分：
+
+**(a) 硬性必需，不允许 UNKNOWN**——`clinical_definition`（第 2–7 行）与
+`current_failure`（第 8–10 行）。原文：「临床定义不完整的 territory 不成立，
+不得录入。」**这些字段任一无法确证，该候选 territory 不进入最终
+`territory_map.json`，改记入 `reconciliation_report.md` 的
+excluded-enumeration 部分，写明缺哪一项、查过哪些来源仍无法确证。** 不是给
+该 territory 填 UNKNOWN 后保留它。
+
+**(b) 允许为空，但空必须与未调查区分**——`competition`（第 11–14 行）与
+`availability`（第 15–17 行）。原文：「无竞争者或无预期 readout 是真实且有
+信息量的状态，不等于未调查。」空值必须显式标注
+`investigated_and_empty`（对应 `VAL-T14`），不能留白。
+
+**(c) UNKNOWN 允许且必须记录，不得省略字段**——`sponsor_fit_context`（第 18
+行）与 `timing`（第 19 行）。原文：「优势未知即记未知，不得因『看起来我们
+能做』而记为具有优势。未知不转为不具优势，也不转为具有优势。」`VAL-T15`
+明确 `sponsor_evidence_advantage` 未知时记 `UNKNOWN`，**不得省略该字段**——
+这与 (a) 恰好相反：(a) 是「不确定就不成立」，(c) 是「不确定也要留下这个
+字段，标 UNKNOWN」。
+
+**八项 `SearchSpaceAdmission` 标准（第 20 行）是第四种机制**，不属于以上任何
+field group：每项标准的状态本身就是 `SATISFIED`／`UNKNOWN`／`UNSATISFIED`
+三值（`CriterionStatus`），`UNKNOWN` 是合法值而非例外，按 `search_space_route_
+policy.yaml`（PR #79）解出路由——这正是第 8 节 `UNKNOWN → WATCHLIST` 的机制
+本身，不是「缺资料」的兜底。
 
 ---
 
@@ -286,18 +401,31 @@ wp2b_crc_territory_map_<UTC_TIMESTAMP>/
 
 ## 12. Required deliverables
 
-必须：
+上一版把冻结的 required artifact 名称改写成了别的名字
+（`opportunity_territory_map.json`／`territory_table.tsv`），并漏掉了
+`run_report.md`／`verify_package.py`。`output.required_artifacts` 是
+`wp2b_crc_territory_map_run.yaml` 已冻结的字段，本计划不得替换，只能追加。
 
-- `opportunity_territory_map.json`
-- `territory_table.tsv`
+**冻结必须（逐字取自契约，不改名）：**
+
+- `territory_map.json`
+- `territories.tsv`
 - `search_space_admissions.json`
-- `source_manifest.json`
-- `field_evidence_map.json`
 - `sponsor_evidence_advantage.json`
+- `source_manifest.json`
+- `run_report.md`
+- `verify_package.py`
+
+**本计划追加（不替换以上任何一项）：**
+
+- `field_evidence_map.json`（第 13 节，强制——冻结契约没有单独要求它，但
+  `VAL-T13`「每个非空字段有至少一条 source_ref」需要一个可审的映射文件才能
+  被独立核验，否则审核者只能面对文献列表反推）
 - `window_closure_risk.json`
-- `reconciliation_report.md`
-- `validation_report.md`
-- `run_manifest.json`
+- `run_manifest.json`（第 14 节；与冻结的 `source_manifest.json` 是两个不同
+  文件，不要混淆）
+- `reconciliation_report.md`（第 5 节 Pass B 的重叠说明与 excluded-enumeration
+  记录，第 6.1 节 (a) 类字段无法确证时的候选 territory 也记在这里）
 
 推荐：
 
@@ -340,7 +468,7 @@ territory_id + field/criterion + claim + evidence_ref
 - actual territory count
 - route counts（`ACTIVE_SEARCH`／`WATCHLIST`／`PARTNER_ONLY`／`OUT_OF_MANDATE`
   各多少）
-- tool/environment identity（第 1.1 节工具清单，含实际使用哪些 connector）
+- tool/environment identity（第 1.2 节工具清单，含实际使用哪些 connector）
 
 **不要求** bit-for-bit reproducibility of web search。**要求** decision
 reproducibility：后来的审核者能理解 territory 为什么存在、为什么被这样路由。
@@ -382,35 +510,49 @@ reproducibility：后来的审核者能理解 territory 为什么存在、为什
 结果 PR 必须能重跑并通过以下检查（具体实现随 result PR 一起提交，此处冻结
 检查项，不冻结实现）：
 
-1. `opportunity_territory_map.json` 中每个元素可按
-   `OpportunityTerritory@0.1.0` 构造成功（形状校验，同 profile 校验器模式）。
-2. `VAL-T01`–`VAL-T21` 全部通过（`wp2b_crc_territory_map_run.yaml` 已冻结的
-   校验规则，本计划不重新定义）。
-3. `field_evidence_map.json` 覆盖 `opportunity_territory_map.json` 中每个
-   territory 的每个非 `UNKNOWN` 字段/criterion。
-4. 每条 `evidence_ref` 能对应到第 3 节 Source hierarchy 的某个 Tier；
-   `CONFERENCE_ONLY` 与 sponsor-disclosure 来源显式标注。
+1. `territory_map.json` 中每个元素可按 `OpportunityTerritory@0.1.0` 构造成功
+   （形状校验，同 profile 校验器模式）。
+2. `VAL-T01`–`VAL-T21` 全部通过，逐条按 `wp2b_crc_territory_map_run.yaml`
+   已冻结的规则文本核对（本计划不重新定义任何一条，也不改编号）。
+3. `field_evidence_map.json` 覆盖 `territory_map.json` 中每个 territory 的
+   每个非 `UNKNOWN` 字段/criterion。
+4. 每条 `evidence_ref` 能对应到第 3 节冻结的七个 `tier_1_sources` 类别之一；
+   `CONFERENCE_ONLY` 与 `company_public_disclosure` 来源显式标注；
+   `available_*_refs` 字段引用的六个公开分子/患者资源（第 3 节已排除的
+   TCGA/GEO/cBioPortal/GTEx/HPA/DepMap）不出现在这份 Tier 分类里。
 5. `ACTIVE_SEARCH` 的每个 territory，八项 admission criteria 全部
    `SATISFIED`，且都有 evidence ref（复核 PR #79 的 `ACTIVE-01`，不重新判定）。
 6. `sponsor_evidence_advantage_ref` 不直接等于 `DevelopmentSponsorProfile` 的
-   `content_sha256` 或其字段值的字面复制——即不允许把 profile 本身当证据。
+   `content_sha256` 或其字段值的字面复制——即不允许把 profile 本身当证据
+   （`VAL-T19`）；任意两个 territory 不共用同一个该 ref（`VAL-T20`）。
 7. `run_manifest.json` 的 `approved_instance_sha256`／`approved_content_sha256`
    与当前冻结 profile 一致。
-8. `source_manifest.json` 中不出现 `dfci`／`hospital`／`academic`／
-   `institution`／`pdx` 关键词（复用 `validate_profile.py` 的机构关键词扫描
-   逻辑，应用对象是本次运行产物而非 profile）。
+8. `source_manifest.json` 中不出现任何 `tier_2_derived_databases_permitted:
+   false` 覆盖的派生数据库（`VAL-T16`）——即 cBioPortal 及第 3 节列出的其余
+   五个公开资源一律不得作为 Tier 分类下的正式来源出现。**不做机构关键词
+   扫描**：`dfci`／`hospital`／`academic`／`institution`／`pdx` 这类字符串
+   匹配是 `DevelopmentSponsorProfile` 校验器的规则，防的是「把机构资源写成
+   公司资产」；本运行的证据层引用的是**公开发表的论文与试验记录**，一篇由
+   DFCI 或某学术医院作者发表的公开论文、一项公开发表的 PDX 研究，都是完全
+   合法的 Tier-1 primary evidence，不能因为字符串命中就判 fail。真正要防的是
+   把 private／unpublished／institution-controlled 的资源（未发表数据集、
+   机构私有队列、未公开的患者样本）当成 Stelligen-controlled evidence 来
+   源——即复用第 1 节「不允许」清单里的边界，而不是对 citation 文本做
+   关键词扫描。
 
 ---
 
 ## 18. Expected resource/time range
 
-单次会话内完成，预计：
+按第 1.1 节，授权单位是一个 `run_id`，可跨多个执行检查点，不强求单次会话内
+完成。预计：
 
-- Pass A 枚举 + Pass B 归并：约 1–2 小时等效工作量。
-- 每个 territory 第一轮广度调查（1–3 + 1–3 来源）：数十分钟级。
+- Pass A 枚举 + Pass B 归并：约 1–2 小时等效工作量，可作第一个检查点。
+- 每个 territory 第一轮广度调查（1–3 + 1–3 来源）：数十分钟级；可按若干
+  territory 为一批设检查点。
 - 进入 `ACTIVE_SEARCH` 候选的第二轮深度核验：视候选数量另计，每个数十分钟级。
-- 无法给出 bit-for-bit 时间估计，因为检索路径依赖实际证据分布，且取决于是否
-  授权 `ClinicalTrials`／`PubMed` connector（第 1.1 节）。
+- 无法给出 bit-for-bit 时间估计，因为检索路径依赖实际证据分布，且取决于
+  `PubMed`／`Clinical Trials` connector 的 OAuth 是否已完成（第 1.2 节）。
 
 ---
 
@@ -420,7 +562,11 @@ reproducibility：后来的审核者能理解 territory 为什么存在、为什
 - 不修改 `search_space_route_policy.yaml` 的任何规则或标准；
 - 不修改 `DevelopmentSponsorProfile` 实例或其冻结状态；
 - 不修改 `wp2b_crc_territory_map_run.yaml` 的授权字段（`authorises_run`／
-  `authorises_run_count`／`blocked_by`）；
+  `authorises_run_count`／`blocked_by`）或 `source_policy`／
+  `output.required_artifacts`／`validation_rules`；
+- 不新开 source-admission PR 为 TCGA/GEO/cBioPortal/GTEx/HPA/DepMap 或任何
+  guideline 网站单独裁定 Tier 归属（第 3 节的排除是复用冻结契约的现状，不是
+  本计划的新裁定）；
 - 不生成 target candidates 或 program wedges（WP3 范围）；
 - 不复活旧的 369 target-pair 池；
 - 不裁定 `EVGAP-01`／`EVGAP-02`／`GAP-P07`；
@@ -432,7 +578,8 @@ reproducibility：后来的审核者能理解 territory 为什么存在、为什
 
 人类负责人批准本计划后：
 
-1. 直接在当前会话执行 territory 枚举（Pass A → Pass B → 分层调查 → 路由）；
+1. 按第 1.1 节的检查点形态执行 territory 枚举（Pass A → Pass B → 分层调查 →
+   路由），可跨检查点/续接会话，不强求单次会话内完成；
 2. 产出第 12 节列出的全部必需交付物于第 11 节路径；
 3. 生成 `run_manifest.json` 并计算整包 SHA-256；
 4. 提交 result PR，仅含 hashes／校验结果／reconciliation 摘要，不含

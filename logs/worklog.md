@@ -3272,3 +3272,39 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   通过；`git diff --check` 通过
 - Next: 等待人类负责人（及若适用的 ChatGPT）对本计划的审核结论；批准后才真正
   执行 territory 枚举并消费这一次授权
+
+## 2026-08-07T17:00 — WP2B Execution Plan 第一轮修订（REQUEST_CHANGES，六条，接受）
+
+- 分支 `task_20260807_wp2b-execution-plan`
+- 审核裁决：`REQUEST_CHANGES`（六条，全部接受）；`PR #81` 同轮 `APPROVE` 并合并
+  （`7616dff`）
+- **阻断一**：Source hierarchy 擅自扩大冻结契约——新增了 NCCN/ESMO/ASCO
+  guideline、WHO ICTRP，并把 TCGA/GEO/cBioPortal/GTEx/HPA/DepMap 统称
+  「Tier 1E formal evidence」，与 `source_policy.tier_1_sources`（仅七类）及
+  `VAL-T16`（禁止 Tier-2 派生数据库）直接冲突。改为严格限定七类，六个公开
+  资源明确排除出正式 Tier 体系，只保留 `availability` field group 内的
+  descriptive 用途；guideline 与 `tier_1_sources` 缺失「guideline」类别的
+  张力如实记录，不通过新增 Tier 解决
+- **阻断二**：Required artifact 名称与冻结契约不符
+  （`opportunity_territory_map.json`／`territory_table.tsv`），且漏掉
+  `run_report.md`／`verify_package.py`。改为冻结七个必需文件名逐字不改，
+  新增文件明确标注「追加，不替换」
+- **阻断三**：VAL 编号写错——`VAL-T01` 是数量 reconciliation，`VAL-T02` 是
+  `territory_id` 唯一性，此前写反。已修正并在文中加区分说明
+- **阻断四**：「18 项调查深度逐一对应字段」不成立——漏了 7 个字段。改为覆盖
+  `OpportunityTerritory@0.1.0` 全部 21 个字段的完整表
+- **阻断五**：UNKNOWN 语义与冻结的 `evidence_standards` 冲突——不能「缺资料
+  就统一写 UNKNOWN」。改为按 field group 三分：(a) clinical_definition／
+  current_failure 不允许 UNKNOWN，无法确证则排除该候选 territory；
+  (b) competition／availability 允许为空但须标注
+  `investigated_and_empty`；(c) sponsor_fit_context／timing 允许 UNKNOWN
+  且不得省略字段
+- **阻断六**：`source_manifest.json` 机构关键词扫描（`dfci`/`hospital`/…）
+  错误复制了 profile 校验器的规则——防的是资产误认，不是引用学术机构公开
+  论文。已删除，替换为「不得把 private/unpublished/institution-controlled
+  资源当作 Stelligen-controlled evidence」的正确边界
+- 另按建议：授权单位改为 `run_id`（可跨检查点/续接会话），不绑定单次会话；
+  工具决定明确为授权 `PubMed`+`Clinical Trials`，不用 `bioRxiv`
+- 555 tests OK（未改代码，数字不变）；`scripts/verify_repository_boundary.sh`
+  通过；`git diff --check` 通过
+- Next: 等待审核方对本轮修订的结论；获批后才真正执行 territory 枚举
