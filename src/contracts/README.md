@@ -14,3 +14,8 @@ Current sponsor-relative strategy contracts:
 
 The contracts do not grant program commitment, execute Gates, or persist
 instances.
+
+Phase 2 adds `search_space_admission.yaml` and
+`search_space_admission.py` for `SearchSpaceAdmission@0.1.0`. It defines four
+sponsor-relative routes and eight externally evidenced criteria; it does not
+evaluate a scientific Gate or persist a route instance.

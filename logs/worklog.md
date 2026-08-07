@@ -2828,3 +2828,33 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Explicit boundary: 批准只覆盖合并 Phase 1；不批准或授权 Search-Space Admission、Program Commitment Review、SponsorFitAssessment、ValueInflectionPlan、实例、数据、外部运行或 Gate/lifecycle/core-object 修改。
 - Persisted: 新增 `logs/chatgpt-review-2026-08-06-sponsor-strategy-phase1.md`，并更新 handoff 状态为 `APPROVED_WAITING_HUMAN_MERGE`。
 - Next: 提交并推送本次审核记录 metadata；等待人类负责人合并 PR #67。合并前不进入第 2 步。
+
+### 2026-08-06 20:39 EDT — 小微 Biotech 架构调整第 2 步：Early Search-Space Admission
+
+- Instruction: PR #67 已获 Chrome 网页版 ChatGPT `APPROVE` 并合并为 `12055f5`；按四步路线进入第 2 步，只实现 Early Search-Space Admission 路由，之后仍须新 PR 审核。
+- Scope frozen: 只建立 sponsor-relative 路由合同；四路由为 `ACTIVE_SEARCH`、`WATCHLIST`、`PARTNER_ONLY`、`OUT_OF_MANDATE`；八条件只保留 `SATISFIED`、`UNKNOWN`、`UNSATISFIED`；不做评分、证据评价、Gate、EVGAP、数据运行或自动策略推断。
+- Read: 重新读取 `Zhixins-KB/2.Biotech/Asset-Generation-OS-architecture.md` 中 Search-Space Admission 与四步实施段落，读取已合并的 Sponsor Strategy 合同、Opportunity Generation 边界、Phase gate 协议；确认基线为 `origin/main@12055f5`。
+- Branch: 创建 `/private/tmp/StelligenOS-search-space-admission` worktree，分支 `task_20260807_search-space-admission`。
+- Changed: 新增 `src/contracts/search_space_admission.yaml`、`src/contracts/search_space_admission.py`、`tests/test_search_space_admission.py`、`docs/architecture/search-space-admission.zh-CN.md`、本任务 handoff；更新 `architecture.md`、`README.md`、`src/contracts/README.md`。
+- Design: 路由由外部可审计 `route_policy_ref` 提供；仓库内只验证四路由、八条件、外部引用、未知保留和不执行下游工作的边界。`OUT_OF_MANDATE` 是当前 sponsor 上下文的路由，不是全局科学 KILL。
+- Validation: 定向测试 9/9 通过；全量 `PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'` 为 `381 tests` 全部通过；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；无 `__pycache__`、数据库或数据文件。
+- Failure/fix: 本轮无命令失败、无内容回滚、无外部运行。
+- Boundary: 未修改 Gate、lifecycle、core objects、ClinicalHypothesis、TargetHypothesis 或 Asset Generation routing；未创建任何实例或结果。
+- Next: 显式检查状态后提交、推送并创建 Phase 2 PR；使用 Chrome 网页版 ChatGPT 审核，未获明确 `APPROVE` 前不进入第 3 步。
+
+### 2026-08-06 20:42 EDT — Phase 2 PR #68 创建
+
+- Git: 提交 `c9cff2c` 已推送到 `task_20260807_search-space-admission`，创建 PR #68 指向 `main`。
+- PR scope: PR 描述明确四路由、八条件、external-only 和 UNKNOWN 保留规则；明确不包含 Gate、EVGAP、评分、数据、自动证据评价、候选删除、Program Commitment Review 或 ValueInflectionPlan。
+- Handoff: 更新 `docs/handoff/2026-08-06-search-space-admission.zh-CN.md`，补入 PR URL。
+- Next: 通过 Chrome 网页版 ChatGPT 的 GitHub 来源提交 PR #68 审核，未获明确 `APPROVE` 前不进入第 3 步。
+
+### 2026-08-06 20:43 EDT — Chrome ChatGPT 审核 Phase 2 PR #68
+
+- Method: 在 Chrome 网页版 ChatGPT 的 `ADC研发框架优化` 对话中，通过聊天框 `+` 菜单显式选择 GitHub 来源，提交 PR #68 审核指令。
+- Review scope: ChatGPT 读取 PR #68 的完整 changed files、两个 commits、aggregate diff、SearchSpaceAdmission Python/YAML 合同、架构说明、handoff/worklog、回归测试和 GitHub Actions 状态。
+- Result: ChatGPT 返回明确 `APPROVE`，审核 HEAD 为 `5dbf865d3900e2ef480e269a80e36c02fd7558d1`；GitHub 显示 open、non-draft、mergeable，CI completed successfully。
+- Accepted: 严格只完成第 2 步；四路由和八条件/三态冻结正确；`UNKNOWN` 未被转成失败；`OUT_OF_MANDATE` 是 sponsor-relative 路由而非全局 KILL；没有评分、证据聚合、自动路由、Gate/EVGAP/provider、数据采集、候选删除/mutation 或下游执行；没有修改既有 Gate、lifecycle、core objects、ClinicalHypothesis、TargetHypothesis 或 Asset Generation routing。
+- Explicit boundary: 批准只覆盖合并 `SearchSpaceAdmission@0.1.0` 合同及其校验边界；不批准或授权科学评价、自动路由、Gate/EVGAP/provider 运行、Program Commitment Review、ValueInflectionPlan、实例或外部运行。
+- Persisted: 新增 `logs/chatgpt-review-2026-08-06-search-space-admission-phase2.md`，更新 handoff 状态为 `APPROVED_WAITING_HUMAN_MERGE`。
+- Next: 提交并推送审核记录 metadata，随后合并 PR #68；合并后再创建第 3 步 PR。

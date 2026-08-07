@@ -1,0 +1,58 @@
+version: "0.1.0"
+name: stelligenos-search-space-admission-contract
+description: >-
+  Sponsor-relative early routing contract. It routes candidates without
+  killing them, evaluating scientific Gates, or persisting runtime records.
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  database: forbidden
+  cache: forbidden
+  result_files: forbidden
+route_values:
+  - ACTIVE_SEARCH
+  - WATCHLIST
+  - PARTNER_ONLY
+  - OUT_OF_MANDATE
+criterion_status_values:
+  - SATISFIED
+  - UNKNOWN
+  - UNSATISFIED
+criteria:
+  - clinical_value_exists
+  - competitive_position_not_locked
+  - asymmetric_evidence_advantage
+  - key_uncertainty_addressable
+  - differentiation_visible_preclinical
+  - defensible_ip_path
+  - plausible_buyer_partner_map
+  - time_window_compatible
+contract:
+  contract_id: SearchSpaceAdmission@0.1.0
+  role: >-
+    Records an externally adjudicated sponsor-relative route before formal
+    evidence extraction. The route is a routing instruction, not a scientific
+    verdict or a lifecycle transition.
+  required_fields:
+    - admission_id
+    - opportunity_ref
+    - sponsor_profile_ref
+    - program_thesis_ref
+    - criterion_results
+    - route
+    - route_policy_ref
+    - rationale_ref
+    - source_refs
+  criterion_result_fields:
+    - criterion_id
+    - status
+    - evidence_ref
+  invariants:
+    - all_instances_external_only
+    - all_cross_boundary_and_source_refs_use_external_scheme
+    - exactly_eight_criteria_are_required
+    - unknown_is_not_kill
+    - route_is_not_a_scientific_gate_result
+    - route_does_not_delete_or_mutate_the_candidate
+    - route_does_not_authorise_gate_or_asset_generation_execution
+    - route_policy_is_external_and_auditable
