@@ -3224,3 +3224,25 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   （handoff 必须含全部五个哈希）并在契约中写明该检查只是内部一致性
 - 555 tests OK；boundary 通过；`git diff --check` 通过
 - profile／冻结包／批准工件／route policy／授权状态一律未动
+
+## 2026-08-07T16:00 — 合并 PR #80，WP2B 取得一次执行授权
+
+- Merge: ChatGPT 对 PR #80 第六轮返回 `APPROVE`，审核 HEAD
+  `c69028107a645ee42c47dfbf1a665d4572593024`，CI 两项 SUCCESS，`mergeStateStatus: CLEAN`，
+  合入得 `8c86492fc6e3ab184afbd0544cbb6c50c76167fd`。核对 HEAD 未漂移后以 merge commit
+  合入（未 squash）。
+- 审核方确认第六轮两处修订成立：`approved_instance_sha256 == frozen instance sha256`
+  现按值比较而非仅判非空；`cleared: true` 的 `BLOCK-01` 不再带
+  `not_yet_cleared_because`。审核方指出一处非阻断意见：
+  `human_approval_artifact_must_record` 仍列 `approved_instance_sha256`，而人工批准
+  实际绑定的是 content SHA；`binding_semantics` 已把两者关系说清楚，故不构成矛盾，
+  留作以后重构 approval artifact schema 时再考虑显式加入 `approved_content_sha256`。
+- 合并后核验 `main`：`authorises_run: true`、`authorises_run_count: 1`、
+  `blocked_by: []`。`555 tests OK`。
+- **两个 blocker 均已清，WP2B 获得一次真实执行授权。** 完整链条：
+  Sponsor Profile 人工批准并冻结 → `BLOCK-01` 清 ∧ Route policy 获批 → `BLOCK-02` 清
+  → `authorises_run_count = 1` → 执行一次 CRC Territory Map 外部运行 → 结果 PR 跑
+  `VAL-T01`..`VAL-T21` → 消费授权，`run_count` 归零 → WP3。
+- Next: 审核方明确「不该再继续磨 authorization 机制，应正式执行 WP2B CRC
+  Opportunity Territory Map」。执行前需先与人类负责人确定运行范围（数据来源、
+  执行环境、交付物清单）——运行本身在仓库外进行，产物不入仓。
