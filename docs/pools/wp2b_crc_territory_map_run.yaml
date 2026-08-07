@@ -16,14 +16,19 @@ run:
   work_package: WP2B
   produces: OpportunityTerritoryMap@0.1.0
   produces_element: OpportunityTerritory@0.1.0
-  status: contract_only_pending_review
-  execution_status: not_authorized_not_executed
-  authorises_run: false
-  # 授权范围将是**一次**测绘运行，不是长期许可。BLOCK-01 未清前保持 0。
-  authorises_run_count: 0
-  blocked_by:
-    - BLOCK-01
+  status: authorised_not_yet_executed
+  execution_status: authorised_not_yet_executed
+  authorises_run: true
+  # 授权范围是**一次**测绘运行，不是长期许可。
+  authorises_run_count: 1
+  blocked_by: []
   blocked_by_cleared:
+    - blocker: BLOCK-01
+      cleared_by: 人类负责人批准 DevelopmentSponsorProfile 实例 v0.1.2 并冻结
+      evidence_package: gen_sponsor_profile_stelligen_v0.1.2_20260807T150000Z_frozen
+      evidence_zip_sha256: 249affaca0c11e409b5da8be6936a61b55b712af2d9cc87d3b6d76c6df0264ba
+      instance_sha256: 41f8e02680a976cdf4db34cd18dbf0dfd7a566ed160230934c753d3e7241544a
+      validation: validate_profile.py 65/65 MATCH
     - blocker: BLOCK-02
       cleared_by: search_space_admission_route_policy@0.1.0
       evidence_path: docs/pools/search_space_route_policy.yaml
@@ -31,8 +36,8 @@ run:
       merge_commit: 0c030c2
   requires_result_pr: true
   requires_followup_binding_pr: false
-  # BLOCK-01 未清，本契约获批仍不等于可以开跑。
-  approval_does_not_authorise_execution: true
+  # 两个 blocker 现已分别清除，见 blocked_by_cleared。
+  approval_does_not_authorise_execution: false
   # 承接 PR #66 审核方对 authorises_extraction_run_count 的非阻断意见：计数字段
   # 若无消费机制就只是声明。此处写明消费点，但**诚实标注它由流程而非代码强制**
   # ——结果 PR 必须把 authorises_run_count 归零，仓库不会自动递减。
@@ -57,10 +62,17 @@ blockers:
     must_be: external_instance
     must_be_frozen_before_run: true
     cleared_by: 人类负责人提供事实并冻结该实例，且实例经审核接受
-    cleared: false
+    cleared: true
+    cleared_evidence: gen_sponsor_profile_stelligen_v0.1.2_20260807T150000Z_frozen
+    cleared_note: >-
+      三条件合取成立：机器校验 PASS、存在可引用的人工批准工件、
+      approved_instance_sha256 等于冻结实例的 SHA-256。
+      冻结实例声明 accessible_patient_samples 为空，并把机构队列、未发表数据集、
+      学术 organoid、机构 PDX 与机构雇佣下产生的发明列入 NOT_YET_CONTROLLED
+      登记表，各自写明转化所需的法律工具。**创始人的科学接触不等于公司可用。**
     machine_validation: PASS
-    machine_validation_evidence: gen_sponsor_profile_stelligen_v0.1.2_20260807T143000Z_draft
-    machine_validation_detail: validate_profile.py 51/51 MATCH
+    machine_validation_evidence: gen_sponsor_profile_stelligen_v0.1.2_20260807T150000Z_frozen
+    machine_validation_detail: validate_profile.py 65/65 MATCH
     # 机器校验需要仓库 checkout：包内哈希可独立核对，合同形状校验不能脱离仓库。
     machine_validation_requires_repository_checkout: true
     machine_validation_scope: >-
@@ -68,10 +80,20 @@ blockers:
       requires a StelligenOS checkout at the referenced contract baseline.
     candidate_instance_version: "0.1.2"
     candidate_instance_sha256: f31a769a8658d41fdae963069fce0308582e34644aafd55fd2e531a36f4ad6dd
-    human_approval_ref: null
-    approved_instance_sha256: null
-    # 候选实例不是已批准实例。审核通过前 approved_instance_sha256 必须为 null。
-    candidate_is_not_approved: true
+    human_approval_ref: external:human_approval/stelligen_sponsor_profile_v0.1.2
+    approved_instance_sha256: 41f8e02680a976cdf4db34cd18dbf0dfd7a566ed160230934c753d3e7241544a
+    approved_profile_version: "0.1.2"
+    approval_timestamp_utc: "2026-08-07T15:00:00Z"
+    approving_role: human_lead_founder
+    # 人工批准是在草稿实例上给出的；冻结只改状态元数据，不改实质。
+    # content_sha256 在两者中相同，这才是批准真正绑定的对象。
+    reviewed_draft_instance_sha256: f31a769a8658d41fdae963069fce0308582e34644aafd55fd2e531a36f4ad6dd
+    approved_content_sha256: f910fc5e2b9c7743c4301ae4ac648ad44e67a22b591e5c266ff8a8995427fd9b
+    content_sha256_is_the_binding: >-
+      冻结必然改变实例文件的 SHA-256。把新 SHA 直接顶替审核方看过的那个，正是
+      第一轮被判定不成立的那类跳跃。因此批准绑定 content_sha256——对去掉状态与
+      批准字段后的实例取哈希，草稿与冻结包中逐字相同，可独立复算。
+    candidate_is_not_approved: false
     withdrawn_candidates:
       - package: gen_sponsor_profile_stelligen_v0.1.1_20260807T130000Z_draft
         instance_sha256: 7582ca157ec769c170c390e6dc8a99d55adf2e1dffc3d1af461434797e0ec421
@@ -373,7 +395,6 @@ validation_rules:
 # ---------------------------------------------------------------- 明确不授权
 
 not_authorised:
-  - "执行本运行——BLOCK-01 未清"
   - "在 authorises_run_count 归零后再次执行本运行"
   - "生成任何 program wedge"
   - "生成任何 target 或 target-territory pair"

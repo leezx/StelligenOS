@@ -1,22 +1,24 @@
-# Handoff：WP2B 执行授权（`BLOCK-02` 已清；`BLOCK-01` 待人工批准）
+# Handoff：WP2B 执行授权（两个 blocker 均已清；已授权**一次**运行）
 
 - 日期：`2026-08-07`
 - 任务分支：`task_20260807_wp2b-authorization`
 - 基线：`main` @ `0c030c2`
-- 交付物类型：**授权绑定（无新语义、无内容、**未授权执行**）**
+- 交付物类型：**授权绑定（无新语义、无内容；已授权一次运行，**尚未执行**）**
 - 架构变更：`NO_ARCHITECTURE_CHANGE`
 - 审核状态：等待 ChatGPT `APPROVE`。**本 PR 不适用 `AGENTS.md`「审核豁免」。**
 
-## 一、本 PR 当前做的事（第一轮审核后已收回授权）
+## 一、本 PR 最终做的事
 
 1. 记录 `BLOCK-02` 已清——`search_space_admission_route_policy@0.1.0`
    已由 PR #79 合并（`0c030c2`）。
-2. 为 `BLOCK-01` 建立**三项合取的清除条件**，并如实记录它**尚未清除**。
-3. **保持 `authorises_run: false`、`authorises_run_count: 0`、
-   `blocked_by: [BLOCK-01]`。**
+2. 为 `BLOCK-01` 建立**三项合取的清除条件**，并在四轮审核后按该条件将其清除：
+   机器校验 PASS + 存在可引用的人工批准工件 + `approved_instance_sha256`
+   等于冻结实例的 SHA-256。
+3. 开启 `authorises_run: true`、`authorises_run_count: 1`、`blocked_by: []`。
 
-初版曾把 `BLOCK-01` 记为已清并开启授权，第一轮审核判定该跳跃不成立，
-已收回。详见第八节。
+**中间经过四轮 `REQUEST_CHANGES`。** 初版曾把「已生成且机器校验通过」记作「已获
+人工批准」，被判定不成立并收回授权；此后 profile 经 v0.1.0（作废）→ v0.1.1
+（作废）→ v0.1.2（批准）三版。详见第八至十二节。
 
 **不改任何语义、范围、来源策略、证据标准或校验规则。**
 
@@ -529,3 +531,151 @@ git diff --check                        通过
 `authorises_run: false`、`authorises_run_count: 0`、`blocked_by: [BLOCK-01]` 不变。
 v0.1.1 已列入 `withdrawn_candidates`，其 SHA `7582ca15…` 带
 `must_never_be_approved_instance_sha256: true`。
+
+## 十二、人工批准与冻结（第五轮：`APPROVE`）
+
+审核方对 v0.1.2 给出人工批准。批准声明逐字记入冻结包的 `human_approval.json`：
+
+> I approve the v0.1.2 sponsor profile as the current Stelligen operating
+> baseline. I acknowledge that operating-assumption fields are current policy
+> rather than immutable facts; no institutional/employer-controlled data, samples,
+> models, inventions, or other resources are assumed to be Stelligen assets; no
+> incorporated legal entity is assumed to exist; and partnered/CRO capabilities are
+> market-availability assumptions, not contracted capabilities. Approval is bound
+> to the exact v0.1.2 instance SHA-256 and does not apply to any modified instance.
+
+### 执行前先解决的一个问题：冻结会改变实例的 SHA-256
+
+批准是在**草稿实例** `f31a769a…` 上给出的。冻结要写
+`profile_status: FROZEN`、`frozen: true`、`clears_block_01: true`、批准块与冻结
+出处——文件字节必然改变，SHA 必然不同。
+
+**把新 SHA 直接顶替审核方看过的那个，正是第一轮被判定不成立的那类跳跃。**
+批准绑定的是内容，不是状态戳。
+
+因此引入 `content_sha256`：对实例去掉状态与批准字段后取哈希。
+
+```
+content_sha256          f910fc5e2b9c7743c4301ae4ac648ad44e67a22b591e5c266ff8a8995427fd9b
+  已审草稿实例 SHA-256   f31a769a8658d41fdae963069fce0308582e34644aafd55fd2e531a36f4ad6dd
+  冻结实例   SHA-256     41f8e02680a976cdf4db34cd18dbf0dfd7a566ed160230934c753d3e7241544a
+```
+
+草稿与冻结包的 `content_sha256` **逐字相同**——这是「冻结未改实质」的可复算证明。
+构建脚本在冻结时先断言这一点，不成立就拒绝出包。三个哈希全部记入契约与批准工件，
+**已审草稿的 SHA 保留而非被覆盖**。
+
+草稿与冻结由**同一个脚本**生成（`--freeze` 开关），实质内容不可能在两者间分叉。
+
+### 一次险些造成的破坏
+
+第一次尝试冻结时，脚本先重建了草稿包以加入 `content_sha256`——这改变了已批准
+草稿的 SHA。守卫断言当场失败并中止：
+
+```
+AssertionError: the reviewed draft on disk is not the one the approval names
+```
+
+草稿包已从其 ZIP（`a928f6d9…`）原样恢复，`f31a769a…` 完好。构建脚本现在在非冻结
+模式下检测到目标目录的实例哈希等于已批准哈希时**直接拒绝执行**。
+**已获人工批准的工件不得被重新生成。**
+
+### 冻结包
+
+```
+gen_sponsor_profile_stelligen_v0.1.2_20260807T150000Z_frozen
+ZIP SHA-256      249affaca0c11e409b5da8be6936a61b55b712af2d9cc87d3b6d76c6df0264ba
+实例 SHA-256     41f8e02680a976cdf4db34cd18dbf0dfd7a566ed160230934c753d3e7241544a
+批准工件 SHA-256  32f7c28e5a059cca019ad115b496e9e31bbfca43d116850377138a3b5854f32e
+27,329 bytes，7 个文件
+validate_profile.py -> 65/65 MATCH
+human_approval_ref = external:human_approval/stelligen_sponsor_profile_v0.1.2
+四项 acknowledgment 全部为 true
+```
+
+审核方指出的 stale docstring（`Validate profile instance v0.1.1`）已一并改正。
+
+已审草稿包 `…v0.1.2_20260807T143000Z_draft` 原样保留，`f31a769a…` 未变，作为批准
+对象的留痕。
+
+### `BLOCK-01` 清除与授权
+
+```yaml
+cleared: true
+human_approval_ref: external:human_approval/stelligen_sponsor_profile_v0.1.2
+approved_instance_sha256: 41f8e026…
+approved_content_sha256: f910fc5e…
+reviewed_draft_instance_sha256: f31a769a…
+```
+
+```yaml
+authorises_run: true
+authorises_run_count: 1        # 一次，不是长期许可
+blocked_by: []
+```
+
+`not_authorised` 首条改为「在 `authorises_run_count` 归零后再次执行本运行」。
+
+### 三项测试改写为**由状态推导**而非写死
+
+原先三项测试把「未授权」写死，一清除 blocker 就是测试被改坏而不是被检查。改为：
+
+- `test_authorisation_follows_the_blocker_state`——`authorises_run` 必须等于
+  「没有未清 blocker」，且授权时 count 恒为 1；
+- `test_the_not_authorised_list_tracks_the_blocker_state`——已清后，过期的
+  blocker 禁令不得残留；
+- 新增 `test_freezing_does_not_silently_swap_the_approved_hash`——断言冻结哈希
+  与已审草稿哈希**必须不同**（相同说明冻结没真发生），已审哈希必须等于候选哈希，
+  且 `approved_content_sha256` 存在且不等于实例哈希。
+
+### 变异检验
+
+外部冻结包 26 项，全部 CAUGHT。新增的冻结态变异：
+
+| 变异 | 结果 |
+|---|---|
+| manifest 翻回 DRAFT 而实例为 FROZEN | `59/65` FAIL |
+| summary 状态行翻回 DRAFT | FAIL |
+| 批准后改实质字段但不改 content hash | FAIL |
+| 批准工件指向实例没有的 content hash | FAIL |
+| `approved_instance_sha256` 仍留草稿的值 | FAIL |
+| 某项 acknowledgment 降为 false | `64/65` FAIL |
+| 冻结实例少写一项 acknowledgment | FAIL |
+| 冻结态清空 `human_approval_ref` | FAIL |
+| 批准工件声称自己授权了 WP2B 运行 | FAIL |
+| 批准版本号与实例版本号不一致 | **首轮 ESCAPED**，见下 |
+
+仓库侧 8 项：未清却授权（`failures=5`）、count 改 2、把已审草稿哈希顶替为已批准
+哈希、把已审哈希改成与冻结哈希相同、清空 `approved_content_sha256`、
+`blocked_by` 留旧值、保留过期禁令、清空 `human_approval_ref`——全部 FAIL。
+回滚 `diff -q` 无差异。
+
+**一处逃逸，已修：** 「批准工件的 `approved_profile_version` 改成 0.1.1」最初
+通过 `62/62`。此前只核对了**实例内**批准块的版本，没核对**批准工件本身**。
+已补三项交叉核对（版本、`human_approval_ref`、时间戳与角色必须两处一致）。
+`26/26` CAUGHT。
+
+### 验证
+
+```
+Ran 551 tests  OK              （上一轮 550，净增 1）
+scripts/verify_repository_boundary.sh   通过
+git diff --check                        通过
+冻结包 validate_profile.py              65/65 MATCH
+已审草稿包实例 SHA-256                   f31a769a… 未变
+```
+
+### 后续
+
+1. 本 PR `APPROVE` 并合并 —— WP2B 获得**一次**执行授权。
+2. 执行 CRC Territory Map（**外部运行**，产物不入仓），按契约产出
+   `territory_map.json`、`territories.tsv`、`search_space_admissions.json`、
+   `sponsor_evidence_advantage.json`、`source_manifest.json`、`run_report.md`
+   与包内可独立运行的 `verify_package.py`。
+3. 结果 PR：`VAL-T01`..`VAL-T21` 全部校验，并把 `authorises_run_count` 归零。
+4. 获批后进入 WP3 Program Wedge Generator。
+
+**profile 一旦改版**，按 route policy `RT-03`，所有已路由 territory 的
+`asymmetric_evidence_advantage`、`key_uncertainty_addressable` 与
+`time_window_compatible` 都要重评估；且需要新的批准工件——批准绑定
+`content_sha256`，实质字段一改即失效。

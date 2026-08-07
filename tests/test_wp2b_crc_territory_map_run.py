@@ -17,12 +17,27 @@ CONTRACT = yaml.safe_load(CONTRACT_PATH.read_text(encoding="utf-8"))
 class RunAuthorisationTests(unittest.TestCase):
     """The run stays unauthorised while any blocker is uncleared."""
 
-    def test_the_run_is_not_authorised(self):
+    def test_authorisation_follows_the_blocker_state(self):
+        """Derived, not asserted. Holds whether or not the run is authorised.
+
+        The earlier version hardcoded "not authorised", so clearing a blocker
+        broke the test rather than being checked by it.
+        """
+
         run = CONTRACT["run"]
-        self.assertFalse(run["authorises_run"])
-        self.assertEqual(run["authorises_run_count"], 0)
-        self.assertEqual(run["execution_status"], "not_authorized_not_executed")
-        self.assertTrue(run["approval_does_not_authorise_execution"])
+        uncleared = [b["id"] for b in CONTRACT["blockers"] if not b["cleared"]]
+        self.assertEqual(run["authorises_run"], not uncleared)
+        self.assertEqual(run["approval_does_not_authorise_execution"], bool(uncleared))
+        if uncleared:
+            self.assertEqual(run["authorises_run_count"], 0)
+            self.assertEqual(run["execution_status"], "not_authorized_not_executed")
+        else:
+            self.assertEqual(
+                run["authorises_run_count"],
+                1,
+                "authorisation covers exactly one run, never a standing licence",
+            )
+            self.assertEqual(run["execution_status"], "authorised_not_yet_executed")
 
     def test_an_uncleared_blocker_stays_in_blocked_by(self):
         blocked = CONTRACT["run"]["blocked_by"]
@@ -80,8 +95,8 @@ class RunAuthorisationTests(unittest.TestCase):
 
         blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
         self.assertTrue(blocker["candidate_instance_sha256"].strip())
-        self.assertTrue(blocker["candidate_is_not_approved"])
         if not blocker["human_approval_ref"]:
+            self.assertTrue(blocker["candidate_is_not_approved"])
             self.assertIsNone(
                 blocker["approved_instance_sha256"],
                 "a candidate SHA-256 must not be promoted to an approved one",
@@ -90,6 +105,36 @@ class RunAuthorisationTests(unittest.TestCase):
                 blocker["candidate_instance_sha256"],
                 blocker["approved_instance_sha256"],
             )
+
+    def test_freezing_does_not_silently_swap_the_approved_hash(self):
+        """Approval was given on the draft; freezing changes the file's SHA.
+
+        Substituting the frozen hash for the one the approver saw would repeat
+        the defect the first review round rejected. The reviewed hash stays
+        recorded, and the binding is the content hash, which survives freezing.
+        """
+
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        if not blocker["human_approval_ref"]:
+            self.skipTest("not yet approved")
+        self.assertNotEqual(
+            blocker["approved_instance_sha256"],
+            blocker["reviewed_draft_instance_sha256"],
+            "freezing must change the file hash; identical hashes mean it did not",
+        )
+        self.assertEqual(
+            blocker["reviewed_draft_instance_sha256"],
+            blocker["candidate_instance_sha256"],
+            "the reviewed draft must be the candidate that was put up for review",
+        )
+        self.assertTrue(blocker["approved_content_sha256"].strip())
+        self.assertNotEqual(
+            blocker["approved_content_sha256"], blocker["approved_instance_sha256"]
+        )
+        self.assertTrue(blocker["content_sha256_is_the_binding"].strip())
+        self.assertEqual(blocker["approved_profile_version"], "0.1.2")
+        self.assertTrue(blocker["approval_timestamp_utc"].strip())
+        self.assertTrue(blocker["approving_role"].strip())
 
     def test_a_withdrawn_candidate_can_never_become_the_approved_instance(self):
         blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
@@ -457,9 +502,23 @@ class ValidationRuleTests(unittest.TestCase):
 
 
 class NotAuthorisedTests(unittest.TestCase):
-    def test_the_run_itself_heads_the_not_authorised_list(self):
-        self.assertIn("执行本运行", CONTRACT["not_authorised"][0])
-        self.assertIn("BLOCK-01", CONTRACT["not_authorised"][0])
+    def test_the_not_authorised_list_tracks_the_blocker_state(self):
+        """While blocked, running at all is barred. Once cleared, only a second run is."""
+
+        uncleared = [b["id"] for b in CONTRACT["blockers"] if not b["cleared"]]
+        head = CONTRACT["not_authorised"][0]
+        if uncleared:
+            self.assertIn("执行本运行", head)
+            self.assertTrue(any(b in head for b in uncleared))
+        else:
+            self.assertIn("authorises_run_count 归零后再次执行本运行", head)
+            self.assertFalse(
+                any(
+                    "执行本运行——" in item and "未清" in item
+                    for item in CONTRACT["not_authorised"]
+                ),
+                "a stale blocker bar must not outlive the blocker",
+            )
 
     def test_downstream_work_is_not_authorised(self):
         joined = " ".join(CONTRACT["not_authorised"])

@@ -3188,3 +3188,22 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 采纳非阻断意见：机器校验措辞改为「包内哈希可独立核对，合同形状校验需仓库 checkout」
 - **`authorises_run: false`，`blocked_by: [BLOCK-01]` 不变**
 - 550 tests OK；boundary 通过；`git diff --check` 通过
+
+## 2026-08-07T15:10 — PR #80：v0.1.2 获人工批准并冻结，BLOCK-01 清除，授权一次运行
+
+- 分支 `task_20260807_wp2b-authorization`
+- 审核裁决：**`APPROVE`**（内容层面），批准声明逐字记入冻结包 `human_approval.json`
+- 冻结包 `gen_sponsor_profile_stelligen_v0.1.2_20260807T150000Z_frozen`
+  - 实例 SHA-256 `41f8e02680a976cdf4db34cd18dbf0dfd7a566ed160230934c753d3e7241544a`
+  - ZIP SHA-256 `249affaca0c11e409b5da8be6936a61b55b712af2d9cc87d3b6d76c6df0264ba`（27,329 bytes，7 文件）
+  - 批准工件 SHA-256 `32f7c28e5a059cca019ad115b496e9e31bbfca43d116850377138a3b5854f32e`
+  - `validate_profile.py` 65/65 MATCH；变异检验 26/26 CAUGHT
+- **content_sha256 桥**：`f910fc5e2b9c7743c4301ae4ac648ad44e67a22b591e5c266ff8a8995427fd9b`
+  在已审草稿与冻结包中逐字相同；批准绑定内容而非状态戳。
+  已审草稿 `f31a769a…` 原样保留未被覆盖。
+- 构建脚本现在拒绝重建已获批准的草稿包（曾险些覆盖，守卫当场中止）
+- `BLOCK-01` 按三条件合取清除；`authorises_run: true`、`authorises_run_count: 1`、
+  `blocked_by: []`；`not_authorised` 首条改为「count 归零后再次执行」
+- 三项测试改写为由 blocker 状态推导；新增冻结哈希不得顶替已审哈希的测试
+- 551 tests OK；boundary 通过；`git diff --check` 通过
+- **下一步：本 PR 合并后方可执行 CRC Territory Map 外部运行（一次）**
