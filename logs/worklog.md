@@ -3060,3 +3060,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Executor note: 本轮修订中一次 `str.replace` 未加断言而静默未命中，导致 YAML `binding_note` 一度仍描述已删除的镜像；核对时发现并修正。**教训：批量文本替换必须逐条断言命中，否则失败是静默的。**
 - Validation: `Ran 468 tests OK`（合并前 448，本文件 20）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；无数据、cache、result、database、model weights 或实例进入仓库。
 - Next: 推送到同一 PR #77，不新开 PR；等待复审。
+
+### 2026-08-07T03:00 — 合并 PR #77 并起 WP2B 运行契约（两个 blocker）
+
+- Merge: ChatGPT 对 PR #77 返回第二轮 `APPROVE`，审核 HEAD `36d6171c54a8f1728307b95208dedc9f850601f2`，CI 通过。核对 HEAD 未漂移后以 merge commit 合入，得 `fbc4f36`。**WP2A 完成。** 审核方特别认可去掉 `SearchSpaceRoute` import（不拥有路由状态的层没必要知道路由枚举），并确认「WP3 必须同时消费 territory 与其 admission、不得把 territory 引用本身当作已获 `ACTIVE_SEARCH` 资格」这条会迫使 wedge 层真正消费 admission。非阻断意见：测试函数名 `..._and_the_frozen_route_vocabulary` 已过时而断言正确，未改。
+- Decision: 按人类负责人指示先起 WP2B 运行契约，把两项前提列为 blocker。WP2B 是外部知识生产，按 2026-08-04 对 PR #53／#54 的隔离裁决必须先有 contract-only PR 预先冻结范围与语义再运行；本文件即该前置契约，角色同 PR #57 之于 Level 01。
+- Change: 新增 `docs/pools/wp2b_crc_territory_map_run.yaml` 与 `tests/test_wp2b_crc_territory_map_run.py`。契约冻结 scope（疾病范围、territory 15–30、粒度可判定规则）、与旧管线关系、来源策略、五个字段组的证据标准、输出与打包规则、`VAL-T01`..`VAL-T18`、十条 `not_authorised`。**`approval_does_not_authorise_execution: true`**，有测试断言 `authorises_run: false`、`authorises_run_count: 0`。
+- BLOCK-01: `DevelopmentSponsorProfile` 实例不存在。仓库内只有 PR #67 的合同形状，没有任何实例；每个 territory 的 `sponsor_evidence_advantage_ref` 都要指向它。按执行策略 Stage 0 该 profile 必须写当前事实而非理想中的未来公司。**这份事实只有人类负责人能提供。**
+- BLOCK-02: `SearchSpaceAdmission` 的 `route_policy_ref` 不存在。没有它，八个条件到四种路由的映射没有依据，四种路由会退化为无据判断。该 policy 须定义四件事：八条件判定标准、条件组合到路由的映射、`UNKNOWN` 处理、重评估触发。
+- Lessons encoded: 校验规则逐条对应已付过代价的坑——`VAL-T02` 唯一 ID（`SRCADM-01` 重复键）；`VAL-T08` 无路由状态字段（PR #77 镜像双真源）；`VAL-T09`／`VAL-T10` 无 target／gene／pair／score／rank；`VAL-T11` 两个被隔离运行 barred 且 `used=false`（PR #53／#54）；`VAL-T12` 未读 9×41×369 轴；`VAL-T14` 空竞争字段须与「未调查」区分；`VAL-T16` 无 Tier 2 派生库（PR #59 裁决）；`output.packaging_rules`（PR #60 第二轮裁决）。`known_target_biology_refs` 的「背景情报而非 target candidate」约束写进 `evidence_standards`，承接 PR #77 非阻断意见。
+- Design: `expected_active_band` 4–8 标注 `is_a_target: false` / `is_a_reconciliation_reference: true`，只用于事后对账——写成目标会让路由变成凑数字。`sponsor` 字段组允许 `UNKNOWN` 但方向写死：优势未知即记未知，不得因「看起来我们能做」记为具有优势，未知既不转为不具优势也不转为具有优势。
+- Executor mistake, self-caught: 初稿 YAML 无法解析——`VAL-T03` 规则文本里未加引号的 `external: ` 被 YAML 读成嵌套映射。已加引号修正，并对全文件做解析后扫描确认无字符串被 `#` 或 `:` 静默截断。**与仓库已登记的三处 YAML 引号缺陷（`v4-draft` 问题 17）同类**，差别只在这次提交前被自己的测试挡下。
+- Boundary: 不执行任何运行；不产出任何 territory；不含任何 CRC 内容（有测试断言文件中不出现 `MSS`／`HER2`／`TROP2`／`KRAS`／`BRAF`／`G12C`／`MSI`，且无 `territories:` 键）；不修改任何既有合同、schema、Gate、lifecycle 或 core objects；不解除 `EVGAP-01`／`EVGAP-02`；不裁定 `GAP-P07`；不复活或修改 369-pair 轴。
+- Validation: `Ran 500 tests OK`（合并前 468，净增 32）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
+- Next: 本 PR 获批合并后仍不能开跑。先清 `BLOCK-01`（人类负责人提供事实 → 冻结 profile 实例 → 审核接受），再清 `BLOCK-02`（冻结 route policy → 审核接受），两者都清后另开极小 PR 把 `authorises_run` 转 `true`、`blocked_by` 清空，形态同 PR #66。
