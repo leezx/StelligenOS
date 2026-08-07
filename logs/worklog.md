@@ -2984,3 +2984,21 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Scope: 不改任何代码、契约、测试、Gate、lifecycle、core objects 或 target 轴；不回写任何已批准历史文本；不修复记录中提到的任何缺陷；不解除任何缺口；不执行任何抽取或外部运行。只新增九个 `logs/` 文件、一份 handoff 与本条 worklog。
 - Validation: `Ran 413 tests OK`；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；无数据、cache、result、database、model weights 或实例进入仓库。
 - Closed: 补完这九份后，`#1`..`#73` 中所有已合并且需要记录的 PR 均有仓库内批准记录，历史欠账清零。审核方 GitHub 连接器持续返回 `403`，仓库内记录是唯一可长期引用的载体。
+
+### 2026-08-06T23:55 — 按「小微 Biotech 后的执行策略」开始执行：WP1 补齐 SponsorFitAssessment@0.1.0
+
+- Source: 人类负责人指示按 `Zhixins-KB/2.Biotech/Asset-Generation-OS-architecture.md` 的「小微Biotech后的执行策略」逐步执行。该节第十部分把改造拆成六个工作包，本次执行 Work Package 1。
+- Audit: 核查 WP1 的四份交付在当前 `main` 的状态——`DevelopmentSponsorProfile@0.1.0` 与 `ProgramThesis@0.1.0` 已由 PR #67 合并，`ValueInflectionPlan@0.1.0` 已由 Phase 4 合并，**`SponsorFitAssessment@0.1.0` 缺失**。`grep -rn "SponsorFitAssessment\|sponsor_fit"` 在 `src/`、`tests/` 中零命中，仅有的三处出现均在 Phase 1 的 handoff、审核记录与 worklog 中，且都是「本 PR 不实现 SponsorFitAssessment」这类排除性表述。因此 WP1 只差这一份。
+- Mapping: 该合同对应源文档 Decision 3（Sponsor Fit Qualification）与 Stage 6（正式 Sponsor Fit Assessment）。与 Stage 8 的 `ProgramCommitmentReview@0.1.0` 刻意分开——前者是带证据的**建议**，后者是**授权**；数据类中不含 `commitment_status` 与 `downstream_status`，有测试断言。
+- Change: 新增 `src/contracts/sponsor_fit_assessment.py` 与 `.yaml`。七个必答问题各答一次（`evidence_advantage`／`capability_fit`／`capital_fit`／`time_fit`／`differentiation_visibility`／`ip_capture`／`partnerability`），状态三值 `SATISFIED`／`UNKNOWN`／`UNSATISFIED`；capability map 五值；resource map 把每个关键不确定性映射到实验、会改变的决定、成本分档、能力来源、失败后果；`cost_band_ref` 只是外部分档引用，模块不对其计算。
+- Rule 1: **不使用总分**（源文档原话「这里不要用总分」），以 `aggregate_score: forbidden` 登记，并有测试断言数据类中不存在任何形如 `*_score` 的字段。理由：总分会让「能力齐备」补偿「没有非对称优势」，而那正是该检查点存在的目的。
+- Rule 2: 源文档写「缺少非对称优势**通常**不能 `SELF_DEVELOP`」。把「通常」编码为**显式外部豁免**而非沉默——`evidence_advantage` 非 `SATISFIED` 时走 `SELF_DEVELOP` 必须提供 `asymmetric_advantage_waiver_ref`，且该豁免只对 `SELF_DEVELOP` 有效。**这是本 PR 唯一超出源文档字面的设计判断，已在 handoff 与 PR 描述中标出请审核方裁定**；备选方案（硬禁止 / 仅写注释）分别把「通常」读成「一律」或等于没有约束。
+- Rule 3: `differentiation_requires_phase_3` 为真时 `differentiation_visibility` 不得记为 `SATISFIED`——源文档「无效差异」清单中最可机器检查的一条。
+- Rule 4: `UNKNOWN` 与 `UNSATISFIED` 严格分开。`UNKNOWN` 不得自动转为 `UNSATISFIED` 或 KILL，且**单独不阻断任何路线**；`UNSATISFIED` 不能支撑 asset-directed 路线但仍可走 `PARTNER_NOW`／`DATA_PACKAGE_ONLY`／`MONITOR`／`STOP_FOR_SPONSOR`，`STOP_FOR_SPONSOR` 必须始终可达且不是科学 KILL。
+- Decision: 路线枚举复用 Phase 3 的六值词汇。源文档把 Decision 3 输出写作 `PARTNER_BEFORE_CONJUGATION` 与 `WATCH`，那是自然语言描述，Phase 3 已分别收敛为 `PARTNER_NOW` 与 `MONITOR` 以避免机器 ID 漂移；复用同一词汇使「建议」与「消费该建议的承诺」可直接比对。决定与理由写入 YAML 的 `route_vocabulary_note`。
+- Mutation: 六项——把 `UNKNOWN` 当 `UNSATISFIED` -> `errors=2`；允许三期差异记 `SATISFIED` -> `failures=1`；去掉七问各答一次 -> `failures=2`；豁免可挂任意路线 -> `failures=1`；`MONITOR` 加入 asset-directed -> `errors=1`；去掉 `SELF_DEVELOP` 豁免要求 -> 首轮 `OK`。
+- Fix: 最后一项首轮通过属**无效变异而非覆盖缺失**——该变异把 `if waiver is None: raise` 改成 `pass`，但下一行 `_require_external_ref(None, ...)` 仍因 `None` 非字符串抛 `ValueError`，规则从未被真正关闭。改用真正关闭该规则的变异（`if statuses["evidence_advantage"] is not SATISFIED:` -> `if False:`）重跑，得 `failures=2`。六项回滚均以 `diff -q` 确认无差异。
+- Boundary: 未修改任何已有合同（`ProgramCommitmentReview` 一字未动）；未修改 45 个 Gate、T12、lifecycle、core objects；未绑定到任何入口；未生成实例；未执行任何 Gate、EVGAP、模型或数据采集；未推进 WP2..WP6；未修改架构说明文档 `v4-draft`。
+- Not bound: `ProgramCommitmentReview@0.1.0` 目前不要求 `sponsor_fit_assessment_ref`，给已冻结合同加必填字段属 breaking change，应另立 binding PR（形态同 PR #72）。在此之前本合同与 Phase 1／2 一样无消费者，已在 `downstream_relationship.binding_status: not_bound` 显式登记并有测试断言，避免重演「文档声称硬控制、代码无人消费」。
+- Validation: `Ran 436 tests OK`（合并前 413，净增 23）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；无数据、cache、result、database、model weights 或实例进入仓库。
+- Next: WP2 CRC Opportunity Territory Map。注意它天然分两半——territory schema 属仓库内合同，而 territories 本身（竞争格局、readout 日历、数据可得性）是内容与数据，按硬边界必须在仓库外产出再走结果 PR；建议先只做 schema。

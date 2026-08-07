@@ -30,3 +30,12 @@ Phase 4 adds `value_inflection_plan.yaml` and `value_inflection_plan.py` for
 value-transfer boundary, minimum evidence package, success criteria, stop
 conditions, capability sources, and buyer requirements. It does not execute
 Asset Generation, advance lifecycle stages, or store plan instances.
+
+`sponsor_fit_assessment.yaml` and `sponsor_fit_assessment.py` complete Work
+Package 1 with `SponsorFitAssessment@0.1.0`, the fourth of that package's four
+contracts. It records the seven mandatory sponsor-fit questions, a capability
+map and a resource map, and produces a route recommendation. It computes no
+aggregate score by design, keeps `UNKNOWN` distinct from `UNSATISFIED`, and
+requires an explicit external waiver before `SELF_DEVELOP` without an
+asymmetric evidence advantage. It grants no commitment and authorises no
+capital; `ProgramCommitmentReview@0.1.0` does not yet reference it.

@@ -1,0 +1,110 @@
+version: "0.1.0"
+name: stelligenos-sponsor-fit-assessment-contract
+description: >-
+  Formal sponsor-fit assessment sitting between scientific opportunity
+  qualification and program commitment. It records an externally adjudicated
+  route recommendation with its supporting evidence; it does not authorise
+  capital, execute a Gate, or judge the science.
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  database: forbidden
+  cache: forbidden
+  result_files: forbidden
+question_status_values:
+  - SATISFIED
+  - UNKNOWN
+  - UNSATISFIED
+route_values:
+  - SELF_DEVELOP
+  - CO_DEVELOP
+  - DATA_PACKAGE_ONLY
+  - PARTNER_NOW
+  - MONITOR
+  - STOP_FOR_SPONSOR
+route_vocabulary_note: >-
+  The source architecture note writes Decision 3 outputs as
+  PARTNER_BEFORE_CONJUGATION and WATCH. Those are natural-language
+  descriptions; Phase 3 already converged them to PARTNER_NOW and MONITOR to
+  prevent machine-ID drift. This contract reuses the ProgramCommitmentReview
+  vocabulary so a recommendation and the commitment consuming it stay
+  comparable.
+capability_availability_values:
+  - owned
+  - collaborative
+  - cro_accessible
+  - license_required
+  - unavailable
+mandatory_questions:
+  - evidence_advantage
+  - capability_fit
+  - capital_fit
+  - time_fit
+  - differentiation_visibility
+  - ip_capture
+  - partnerability
+contract:
+  contract_id: SponsorFitAssessment@0.1.0
+  role: >-
+    Answers whether the current sponsor is the right one to carry this program
+    and by which route, given asymmetric evidence, capability, capital, time,
+    differentiation, IP and partnerability.
+  required_fields:
+    - assessment_id
+    - program_thesis_ref
+    - sponsor_profile_ref
+    - scientific_opportunity_ref
+    - question_results
+    - capability_map
+    - resource_map
+    - differentiation_requires_phase_3
+    - route
+    - route_policy_ref
+    - rationale_ref
+    - human_decision_ref
+    - source_refs
+  optional_fields:
+    - asymmetric_advantage_waiver_ref
+  capability_map_entry_fields:
+    - capability_id
+    - availability
+    - evidence_ref
+  resource_map_entry_fields:
+    - uncertainty_ref
+    - experiment_ref
+    - decision_changed_ref
+    - cost_band_ref
+    - capability_source
+    - failure_consequence_ref
+  aggregate_score: forbidden
+  aggregate_score_rationale: >-
+    The source note states this explicitly: do not use a total score here. A
+    single number would let a satisfied capability answer compensate for an
+    absent asymmetric advantage, which is the specific failure this checkpoint
+    exists to prevent.
+  cost_band_is_a_reference_not_a_number: true
+  invariants:
+    - all_instances_external_only
+    - all_cross_boundary_and_source_refs_use_external_scheme
+    - exactly_seven_mandatory_questions_answered_once_each
+    - no_aggregate_score_is_computed_or_stored
+    - unknown_is_preserved_and_never_auto_converted_to_unsatisfied_or_kill
+    - unknown_alone_does_not_block_a_route
+    - self_develop_without_asymmetric_advantage_requires_an_explicit_waiver
+    - waiver_applies_only_to_self_develop
+    - unsatisfied_question_cannot_support_an_asset_directed_route
+    - differentiation_requiring_phase_3_is_not_visible_differentiation
+    - assessment_does_not_grant_program_commitment
+    - assessment_does_not_authorise_capital
+    - assessment_does_not_execute_a_gate_or_asset_generation_run
+    - assessment_does_not_change_asset_intrinsic_scientific_truth
+    - stop_for_sponsor_is_not_scientific_kill
+    - route_is_a_recommendation_not_an_authorisation
+downstream_relationship:
+  consumed_by: ProgramCommitmentReview@0.1.0
+  binding_status: not_bound
+  binding_note: >-
+    ProgramCommitmentReview@0.1.0 is frozen and does not yet require a
+    sponsor_fit_assessment_ref. Adding one is a breaking change to a merged
+    contract and belongs in a separate binding PR, in the same shape as the
+    BinderAdcRouteRequest binding in PR #72.
