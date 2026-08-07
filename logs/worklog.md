@@ -2924,3 +2924,10 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: 全量 `393 tests` 通过；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；当前没有开放 PR。
 - Finding: Phase 4 handoff 仍写 `APPROVED_WAITING_MERGE`，与已合并事实不一致。
 - Fix scope: 本收口 PR 只将该 handoff 状态改为 `MERGED_TO_MAIN`，并记录四步调整已完成；不修改代码、契约、测试、架构语义，不执行数据或外部运行。
+
+### 2026-08-07 — ChatGPT 审核 Phase 4 收口 PR #71
+
+- Method: 在 Chrome 网页版 ChatGPT 的 `ADC研发框架优化` 对话中读取 PR #71 审核结果。
+- Result: ChatGPT 明确返回 `APPROVE`；审核 HEAD `ac53101`；CI run `#66` 成功；确认 PR 仅修正 handoff/worklog 状态，无范围扩张。
+- Persisted: 新增 `logs/chatgpt-review-2026-08-07-phase4-closeout.md`。
+- Next: 合并 PR #71；合并后再次刷新本地 `main`，确认 handoff 为 `MERGED_TO_MAIN`、无开放 PR、工作区干净。
