@@ -2841,3 +2841,10 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Failure/fix: 本轮无命令失败、无内容回滚、无外部运行。
 - Boundary: 未修改 Gate、lifecycle、core objects、ClinicalHypothesis、TargetHypothesis 或 Asset Generation routing；未创建任何实例或结果。
 - Next: 显式检查状态后提交、推送并创建 Phase 2 PR；使用 Chrome 网页版 ChatGPT 审核，未获明确 `APPROVE` 前不进入第 3 步。
+
+### 2026-08-06 20:42 EDT — Phase 2 PR #68 创建
+
+- Git: 提交 `c9cff2c` 已推送到 `task_20260807_search-space-admission`，创建 PR #68 指向 `main`。
+- PR scope: PR 描述明确四路由、八条件、external-only 和 UNKNOWN 保留规则；明确不包含 Gate、EVGAP、评分、数据、自动证据评价、候选删除、Program Commitment Review 或 ValueInflectionPlan。
+- Handoff: 更新 `docs/handoff/2026-08-06-search-space-admission.zh-CN.md`，补入 PR URL。
+- Next: 通过 Chrome 网页版 ChatGPT 的 GitHub 来源提交 PR #68 审核，未获明确 `APPROVE` 前不进入第 3 步。

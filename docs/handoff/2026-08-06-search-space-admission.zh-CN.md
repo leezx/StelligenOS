@@ -6,7 +6,7 @@
 - 分支：`task_20260807_search-space-admission`
 - 基线：`origin/main@12055f5`
 - 版本：`SearchSpaceAdmission@0.1.0`
-- PR：待创建
+- PR：https://github.com/leezx/StelligenOS/pull/68
 - 状态：`PENDING_CHATGPT_REVIEW`
 
 ## 总体四步路线
