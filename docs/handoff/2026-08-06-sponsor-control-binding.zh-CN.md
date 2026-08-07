@@ -45,8 +45,15 @@ commitment 记录，且全量测试不会失败**。声明了约束但没有消�
 | `value_inflection_plan_ref` | 指向外部 `ValueInflectionPlan@0.1.0` 实例 |
 | `asset_generation_authorization_ref` | 外部 human handoff 已确认前两者允许进入当前 route |
 
-三者的校验强于既有五个字段：不仅要求 `external:` 前缀，还要求**前缀之后有非空
-内容**——`external:` 与 `external:   ` 均被拒绝。
+字段顺序按审核方给出的代码形态，三者置于 `opportunity_ref` 与 `policy_ref`
+之间。这不只是排版：三个必填字段夹在其余必填字段中间后，**给其中任何一个加
+默认值都会让模块在类定义阶段直接 `TypeError`**（non-default argument follows
+default argument），比任何测试都更早失败。
+
+校验按审核方形态收敛为**一个统一循环**，覆盖全部八个引用字段，使用
+`isinstance` 守卫与统一错误文案 `"<field> must be a non-empty external:
+reference"`；并按该文案的字面含义补上非空校验——`external:` 与 `external:   `
+在八个字段上一律被拒。
 
 无默认值是刻意的：默认值会让缺失的控制悄悄变回「已满足」，等于把这个 PR 的
 作用取消。测试对此有专门断言。
@@ -68,10 +75,14 @@ sponsor_control_binding:
   bound_contracts:
     program_commitment_review: ProgramCommitmentReview@0.1.0
     value_inflection_plan: ValueInflectionPlan@0.1.0
-  required_request_refs: [三个字段]
+  required_request_refs: [三个新字段]
+  required_request_reference_fields: [全部八个引用字段]
   reference_scheme: external_only
   empty_reference_body: forbidden
   default_values: forbidden
+  reference_validation: uniform_across_all_required_request_refs
+  blocked_commitment_outcomes_stay_blocked: [MONITOR, DATA_PACKAGE_ONLY, STOP_FOR_SPONSOR]
+  field_presence_is_not_a_decision: true
   authorization_read_by_repository: forbidden
   authorization_re_adjudicated_by_repository: forbidden
   authorization_generated_by_repository: forbidden
@@ -89,18 +100,32 @@ sponsor_control_binding:
 对齐，并用两个 envelope 级字段说明 result 未变。若审核方认为应严格照字面只改
 代码，可退回该 YAML 版本改动。
 
-### 3. `tests/test_phase5_binder_adc_routes.py`
+### 3. `genmodules/README.md`
 
-原 fixture 已更新为提供三个新引用。新增 `SponsorControlBindingTests`，21 个测试
-覆盖：
+「Architecture mapping」一节补一段 route 侧说明：进入任一 route 现在额外要求
+三个不可省略、不可默认的 external reference，并写明 `MONITOR`、
+`DATA_PACKAGE_ONLY`、`STOP_FOR_SPONSOR` 三种 outcome 仍保持
+`BLOCKED_NO_COMMITMENT`——**字段存在本身不是决定**。这正是
+`asset_generation_authorization_ref` 存在的理由：只要求
+`program_commitment_review_ref`，一份 `MONITOR` review 同样能满足存在性检查。
+
+### 4. `tests/test_phase5_binder_adc_routes.py`
+
+原 fixture 已更新为提供三个新引用。新增 `SponsorControlBindingTests`，本文件共
+23 个测试，覆盖：
 
 - 三个字段各自缺失时**无法构造** request（`TypeError`）；
 - 三个字段各自使用 `local:` 时被拒绝（三条字面命名的测试，外加一条参数化）；
-- 空串、`external:`、`external:   ` 被拒绝；
+- 全部八个引用字段对空串、`external:`、`external:   `、`local:x/1`、`1`、`None`
+  以及一个 `__str__` 伪装成 external 的非字符串对象一律拒绝；
 - 三个字段都**没有默认值**；
 - 合法 external refs 可构造，两条 route 都验证；
 - `contract_version` 为 `0.2.0`，result 仍为 `0.1.0`；
 - 构造 request **不执行 route**（request 不暴露任何可调用属性）；
+- 构造 request **不创建 result**（对 `BinderAdcRouteResult.__post_init__` 挂探针，
+  断言从未被触发）；
+- 构造 request **不推进 lifecycle**（`state_machine` 与 `clinical_lock` 的公开
+  符号快照前后相等）；
 - 构造 request **不写仓库状态**（构造前后仓库文件树快照相等）；
 - request 为 frozen，不持有解析后的实例；
 - 模块 import 集合恰为 `{dataclasses, typing}`；
@@ -112,15 +137,25 @@ sponsor_control_binding:
 
 | 变异 | 结果 |
 |---|---|
-| 给 `asset_generation_authorization_ref` 加默认值 | `FAILED (failures=2)` |
-| 删除非空内容校验 | `FAILED (failures=6)` |
-| 从控制字段元组中删掉 `value_inflection_plan_ref` | `FAILED (failures=3)` |
+| 给 `asset_generation_authorization_ref` 加默认值 | 类定义阶段 `TypeError`，模块无法载入 |
+| 给该字段及其后全部字段加默认值 | `FAILED (failures=2)` |
+| 删除非空内容校验 | `FAILED (failures=16)` |
+| 从 `SPONSOR_CONTROL_REQUEST_FIELDS` 删掉 `value_inflection_plan_ref` | `FAILED (failures=2)` |
+| 从 `REQUIRED_REQUEST_REFERENCE_FIELDS` 删掉同一字段 | `FAILED (failures=4)` |
 | 把 `contract_version` 退回 `0.1.0` | `FAILED (failures=1)` |
+| 把 `isinstance` 守卫换成 `str()` 强制转换 | `FAILED (errors=8)` |
 
-第三项**第一轮只触发 1 条失败**：参数化测试遍历的正是它要验证的那个常量，删掉
-字段也就删掉了对应的用例，属自我收缩的重言测试。因此补了一条字面列出三个字段
-名的断言和三条字面命名的 `local:` 测试，重跑后升到 3 条失败。回滚后
-`diff -q` 无差异。
+两处**第一轮未被捕获，已在本 PR 内修正**：
+
+1. 删除控制字段元组中的条目时首轮只触发 1 条失败——参数化测试遍历的正是它要
+   验证的那个常量，删掉字段也就删掉了对应用例，属自我收缩的重言测试。补了字面
+   列出字段名的断言与三条字面命名的 `local:` 测试。
+2. 把 `isinstance` 守卫换成 `str()` 强制转换时首轮**通过**。这是一次
+   **无效变异，不是覆盖证明**：测试用的 `1` 和 `None` 经 `str()` 后同样不以
+   `external:` 开头，两种实现无法区分。补了一个 `__str__` 返回
+   `"external:impostor/1"` 的非字符串对象后，该变异升为 `errors=8`。
+
+七项变异回滚后 `diff -q` 均无差异。
 
 ## 四、本 PR 明确不做什么
 
@@ -134,7 +169,7 @@ authorization；不修改 Phase 1–4 的四个合同本身；不执行任何外
 ## 五、验证
 
 ```
-Ran 411 tests  OK              （合并前 393，净增 18）
+Ran 413 tests  OK              （合并前 393，净增 20；本文件 23）
 scripts/verify_repository_boundary.sh   通过
 git diff --check                        通过
 git status --short                      仅本 PR 涉及的文件
@@ -144,13 +179,10 @@ git status --short                      仅本 PR 涉及的文件
 
 ## 六、已知遗留（本 PR 未处理，登记备查）
 
-1. **校验强度不对称。** 三个新字段要求「非空 external ref」，既有五个字段仍只
-   要求 `external:` 前缀，`external:` 空体可通过。指令要求「保留现有校验」，
-   故未收紧；建议另开极小 PR 统一，属既有行为不是本 PR 引入。
-2. **其余三个 sponsor-relative 合同仍未接线。** `DevelopmentSponsorProfile`、
+1. **其余三个 sponsor-relative 合同仍未接线。** `DevelopmentSponsorProfile`、
    `ProgramThesis`、`SearchSpaceAdmission` 目前仍只有形状校验器，没有消费者。
    本 PR 只按指令绑定 Phase 3–4 两条硬控制。
-3. **架构文档 v3 已过期。** 基线仍写 `main@8aa7e87`，落后 35 个 commit；§10.2
+2. **架构文档 v3 已过期。** 基线仍写 `main@8aa7e87`，落后 35 个 commit；§10.2
    仍把 PR #62/#63/#55 记为开放；§12 的运行流程图从 T12 直接走到 route
    selection，未含本 PR 绑定的控制点；§13 仍写 338 项测试。留待 v4 refresh。
 

@@ -22,6 +22,17 @@ SPONSOR_CONTROL_REQUEST_FIELDS: Final[tuple[str, ...]] = (
     "asset_generation_authorization_ref",
 )
 
+REQUIRED_REQUEST_REFERENCE_FIELDS: Final[tuple[str, ...]] = (
+    "input_ref",
+    "opportunity_ref",
+    "program_commitment_review_ref",
+    "value_inflection_plan_ref",
+    "asset_generation_authorization_ref",
+    "policy_ref",
+    "tool_environment_ref",
+    "run_context_ref",
+)
+
 
 EXISTING_BINDER_ROUTE: Final[str] = "existing_binder_asset_engineering"
 EPITOPE_DE_NOVO_ROUTE: Final[str] = "epitope_conditioned_de_novo_antibody_discovery"
@@ -74,34 +85,29 @@ class BinderAdcRouteRequest:
     route_id: str
     input_ref: str
     opportunity_ref: str
-    policy_ref: str
-    tool_environment_ref: str
-    run_context_ref: str
     program_commitment_review_ref: str
     value_inflection_plan_ref: str
     asset_generation_authorization_ref: str
+    policy_ref: str
+    tool_environment_ref: str
+    run_context_ref: str
     contract_version: str = "0.2.0"
 
     def __post_init__(self) -> None:
         if self.route_id not in ROUTE_IDS:
             raise ValueError(f"Unknown Binder/ADC route: {self.route_id}")
-        for reference in (
-            self.input_ref,
-            self.opportunity_ref,
-            self.policy_ref,
-            self.tool_environment_ref,
-            self.run_context_ref,
-        ):
-            if not reference.startswith(EXTERNAL_REFERENCE_SCHEME):
-                raise ValueError("Binder/ADC routes require external references")
-        for field_name in SPONSOR_CONTROL_REQUEST_FIELDS:
+        for field_name in REQUIRED_REQUEST_REFERENCE_FIELDS:
             reference = getattr(self, field_name)
-            if not reference.startswith(EXTERNAL_REFERENCE_SCHEME):
+            if not isinstance(reference, str) or not reference.startswith(
+                EXTERNAL_REFERENCE_SCHEME
+            ):
                 raise ValueError(
-                    f"{field_name} must be an external: reference, got {reference!r}"
+                    f"{field_name} must be a non-empty external: reference"
                 )
             if not reference[len(EXTERNAL_REFERENCE_SCHEME) :].strip():
-                raise ValueError(f"{field_name} must not be an empty external reference")
+                raise ValueError(
+                    f"{field_name} must be a non-empty external: reference"
+                )
 
 
 @dataclass(frozen=True)

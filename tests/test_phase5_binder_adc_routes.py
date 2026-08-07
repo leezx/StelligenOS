@@ -10,6 +10,7 @@ from src.capabilities.binder_adc_routes import (
     BinderAdcRouteResult,
     EPITOPE_DE_NOVO_ROUTE,
     EXISTING_BINDER_ROUTE,
+    REQUIRED_REQUEST_REFERENCE_FIELDS,
     ROUTE_IDS,
     SPONSOR_CONTROL_REQUEST_FIELDS,
     route_stages,
@@ -144,10 +145,39 @@ class SponsorControlBindingTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     _request(**{field_name: "local:instance/1"})
 
-    def test_empty_and_bare_scheme_references_are_rejected(self):
-        for field_name in SPONSOR_CONTROL_REQUEST_FIELDS:
-            for value in ("", "external:", "external:   "):
-                with self.subTest(field=field_name, value=value):
+    def test_every_required_reference_field_is_validated_uniformly(self):
+        """All eight references now share one loop; none may be bare or local."""
+
+        self.assertEqual(
+            REQUIRED_REQUEST_REFERENCE_FIELDS,
+            (
+                "input_ref",
+                "opportunity_ref",
+                "program_commitment_review_ref",
+                "value_inflection_plan_ref",
+                "asset_generation_authorization_ref",
+                "policy_ref",
+                "tool_environment_ref",
+                "run_context_ref",
+            ),
+        )
+        class LooksExternal:
+            """Non-str whose text form would pass a coercing check."""
+
+            def __str__(self):
+                return "external:impostor/1"
+
+        for field_name in REQUIRED_REQUEST_REFERENCE_FIELDS:
+            for value in (
+                "",
+                "external:",
+                "external:   ",
+                "local:x/1",
+                1,
+                None,
+                LooksExternal(),
+            ):
+                with self.subTest(field=field_name, value=repr(value)):
                     with self.assertRaises(ValueError):
                         _request(**{field_name: value})
 
@@ -181,6 +211,39 @@ class SponsorControlBindingTests(unittest.TestCase):
                 f"request exposes callable {attribute!r}",
             )
 
+    def test_constructing_a_request_creates_no_result(self):
+        """A satisfied precondition is not a run: no result may come into being."""
+
+        created = []
+        original_post_init = BinderAdcRouteResult.__post_init__
+
+        def spy_post_init(self):  # pragma: no cover - must never be reached
+            created.append(self)
+            original_post_init(self)
+
+        BinderAdcRouteResult.__post_init__ = spy_post_init
+        try:
+            _request()
+        finally:
+            BinderAdcRouteResult.__post_init__ = original_post_init
+        self.assertEqual(created, [])
+
+    def test_constructing_a_request_does_not_advance_lifecycle(self):
+        from src.lifecycle import clinical_lock, state_machine
+
+        def snapshot():
+            return {
+                (module.__name__, name): repr(getattr(module, name))
+                for module in (state_machine, clinical_lock)
+                for name in dir(module)
+                if not name.startswith("_")
+            }
+
+        before = snapshot()
+        for route_id in ROUTE_IDS:
+            _request(route_id=route_id)
+        self.assertEqual(snapshot(), before)
+
     def test_constructing_a_request_writes_no_repository_state(self):
         before = _repository_tree()
         for route_id in ROUTE_IDS:
@@ -213,6 +276,10 @@ class SponsorControlBindingTests(unittest.TestCase):
         binding = contract["sponsor_control_binding"]
         self.assertEqual(
             tuple(binding["required_request_refs"]), SPONSOR_CONTROL_REQUEST_FIELDS
+        )
+        self.assertEqual(
+            tuple(binding["required_request_reference_fields"]),
+            REQUIRED_REQUEST_REFERENCE_FIELDS,
         )
         self.assertEqual(
             binding["bound_contracts"],

@@ -47,6 +47,16 @@ The frozen Binder/ADC route contract remains the OS-level boundary:
 route runtimes described by that contract; they do not replace the route port
 or create a second lifecycle.
 
+From `BinderAdcRouteRequest@0.2.0`, entering either route additionally requires
+three external references that cannot be omitted or defaulted:
+`program_commitment_review_ref` (`ProgramCommitmentReview@0.1.0`),
+`value_inflection_plan_ref` (`ValueInflectionPlan@0.1.0`), and
+`asset_generation_authorization_ref`, the external human handoff confirming that
+the commitment outcome and the plan permit this route. A review whose outcome is
+`MONITOR`, `DATA_PACKAGE_ONLY`, or `STOP_FOR_SPONSOR` stays
+`BLOCKED_NO_COMMITMENT`; the repository never reads, re-adjudicates, or
+generates the authorization, so field presence alone is not a decision.
+
 Run outputs must be placed outside this repository, for example:
 
 ```bash

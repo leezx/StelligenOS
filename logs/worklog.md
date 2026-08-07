@@ -2944,3 +2944,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: `Ran 411 tests OK`（合并前 393）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git status --short` 只含本 PR 文件；无数据、cache、result、database、model weights 或实例进入仓库。
 - Deferred: 既有五个引用字段仍只校验 `external:` 前缀、允许空体，按「保留现有校验」未收紧；`DevelopmentSponsorProfile`、`ProgramThesis`、`SearchSpaceAdmission` 三个合同仍无消费者；架构文档 v3 基线 `main@8aa7e87` 已落后 35 个 commit 且未含 Phase 1–4。三项均登记不修。
 - Next: 提交 PR 并提交 ChatGPT 审核；不更新 `CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md`，架构 v4 refresh 另立 PR。
+
+### 2026-08-06T22:05 — PR #72 逐条核对审核方建议并补齐四处缺口
+
+- Method: 把审核方原始建议逐条对照 PR #72 已提交内容核对，12 条编号要求 + 散文中的三处形态建议。
+- Result: 12 条编号要求中 9 条完全满足；缺口 4 处，均已在同一 PR 内修订，不另开 PR。
+- Gap 1 (字段顺序): 原提交把三个新字段放在 `run_context_ref` 之后，审核方给出的代码形态是放在 `opportunity_ref` 与 `policy_ref` 之间。已改为审核方形态。副作用是正向的：三个必填字段夹在其余必填字段中间后，给其中任一字段加默认值会在类定义阶段直接 `TypeError`，比任何测试更早失败。
+- Gap 2 (校验结构): 原提交用两个循环、既有五字段与新三字段强度不对称，并把该不对称登记为遗留项。审核方给出的代码形态是单一循环覆盖全部八个字段、带 `isinstance` 守卫、统一错误文案 `"<field> must be a non-empty external: reference"`。已按该形态收敛为 `REQUIRED_REQUEST_REFERENCE_FIELDS` 单循环，并按错误文案字面含义对八个字段统一补非空校验。原遗留项第 1 条因此消除。
+- Gap 3 (测试第 5 类不完整): 审核方要求「不调用 port、不创建 result、不修改 lifecycle 或 repository state」。原提交只覆盖不暴露可调用属性与仓库文件树快照。补两条测试：对 `BinderAdcRouteResult.__post_init__` 挂探针断言从未触发；对 `state_machine` 与 `clinical_lock` 公开符号快照断言前后相等。
+- Gap 4 (route 文档): 审核方 PR A 范围含「更新对应测试和少量 route 文档」，原提交未改任何 route 文档。已在 `genmodules/README.md` 的 Architecture mapping 补一段，写明三个必填 external reference，并写明 `MONITOR`／`DATA_PACKAGE_ONLY`／`STOP_FOR_SPONSOR` 仍保持 `BLOCKED_NO_COMMITMENT`、字段存在本身不是决定。`src/contracts/binder_adc_routes.yaml` 同步新增 `required_request_reference_fields`、`reference_validation`、`blocked_commitment_outcomes_stay_blocked`、`field_presence_is_not_a_decision`。
+- Mutation: 重跑七项。加默认值 -> 类定义阶段 `TypeError`；对该字段及其后全部字段加默认值 -> `failures=2`；删非空校验 -> `failures=16`；删 `SPONSOR_CONTROL_REQUEST_FIELDS` 条目 -> `failures=2`；删 `REQUIRED_REQUEST_REFERENCE_FIELDS` 条目 -> `failures=4`；版本退回 `0.1.0` -> `failures=1`；`isinstance` 守卫换成 `str()` 强制转换 -> 首轮 `OK`。
+- Fix: `isinstance` 那一项首轮通过属**无效变异而非覆盖证明**——测试用的 `1` 与 `None` 经 `str()` 后同样不以 `external:` 开头，两种实现无法区分。补一个 `__str__` 返回 `"external:impostor/1"` 的非字符串对象后重跑，该变异升为 `errors=8`。七项回滚均以 `diff -q` 确认无差异。
+- Validation: `Ran 413 tests OK`（本文件 23）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git status --short` 仅本 PR 5 个文件；无数据、cache、result、database、model weights 或实例进入仓库。
+- Deferred: 遗留项收敛为两条——另外三个 sponsor-relative 合同仍无消费者；架构文档 v3 已过期，留待 v4 refresh。
+- Next: 推送到同一 PR #72，不新开 PR；等待 ChatGPT 审核。

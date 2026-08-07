@@ -46,6 +46,21 @@ contract:
     reference_scheme: external_only
     empty_reference_body: forbidden
     default_values: forbidden
+    reference_validation: uniform_across_all_required_request_refs
+    required_request_reference_fields:
+      - input_ref
+      - opportunity_ref
+      - program_commitment_review_ref
+      - value_inflection_plan_ref
+      - asset_generation_authorization_ref
+      - policy_ref
+      - tool_environment_ref
+      - run_context_ref
+    blocked_commitment_outcomes_stay_blocked:
+      - MONITOR
+      - DATA_PACKAGE_ONLY
+      - STOP_FOR_SPONSOR
+    field_presence_is_not_a_decision: true
     authorization_meaning: >-
       asset_generation_authorization_ref records that an external human handoff
       confirmed the Program Commitment outcome and the ValueInflectionPlan
