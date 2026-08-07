@@ -2890,3 +2890,30 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Explicit boundary: 批准只覆盖合并 `ProgramCommitmentReview@0.1.0` 及其六个结果、external-only 输入、下游阻断和 human handoff 语义；不批准或授权 ValueInflectionPlan、binder/ADC/de novo、Gate/EVGAP/provider/model/data、Asset Generation、实例或外部运行。
 - Persisted: 新增 `logs/chatgpt-review-2026-08-06-program-commitment-review-phase3.md`，更新 handoff 状态为 `APPROVED_WAITING_HUMAN_MERGE`。
 - Next: 提交并推送审核记录 metadata，随后合并 PR #69；合并后再创建第 4 步 PR。
+
+### 2026-08-06 — 小微 Biotech 架构调整第 4 步：Value Inflection Plan
+
+- Instruction: Phase 3 PR #69 已获 Chrome 网页版 ChatGPT `APPROVE` 并合并为 `5ae1b55`；按四步路线进入第 4 步，只实现 ValueInflectionPlan 合同，之后仍须新 PR 审核。
+- Read: 重新读取 `Zhixins-KB/2.Biotech/Asset-Generation-OS-architecture.md` 中 Value-Inflection Plan 字段、TWEAKR 示例和第四步实施要求；读取已合并的 Phase 1-3 合同、仓库边界和交接规则。
+- Branch: 创建 `/private/tmp/StelligenOS-value-inflection-plan` worktree，分支 `task_20260807_value-inflection-plan`，基线 `origin/main@5ae1b55`。
+- Changed: 新增 `src/contracts/value_inflection_plan.yaml`、`src/contracts/value_inflection_plan.py`、`tests/test_value_inflection_plan.py`、`docs/architecture/value-inflection-plan.zh-CN.md`、本任务 handoff；更新 `architecture.md`、`README.md`、`src/contracts/README.md`。
+- Design: 计划是横跨生命周期的 sponsor-relative 外部对象；只描述下一价值拐点所需的证据、最低成功标准、停止条件、能力和买家要求，不新增科学 Gate，不执行实验或生命周期推进，不实现成本模型、交易概率或买家匹配。
+- Validation so far: 定向 ValueInflectionPlan 测试 `6 tests` 全部通过。
+- Boundary: 未新增数据、cache、result、数据库、模型权重或运行实例；未执行外部数据或 Asset Generation。
+- Next: 执行全量测试、仓库边界检查和 diff 检查；显式暂存相关文件后提交、推送并创建 PR；通过 Chrome 网页版 ChatGPT 的 GitHub 来源审核，未获明确 `APPROVE` 前不得合并或进入后续开发。
+
+### 2026-08-06 — Phase 4 PR #70 创建
+
+- Git: 显式暂存 9 个相关文件；首次提交前 `git diff --cached --check` 发现 Python 文件末尾多余空白行，修正后重新检查通过；提交 `f676a2a` 已创建并推送到 `task_20260807_value-inflection-plan`。
+- PR: 创建 https://github.com/leezx/StelligenOS/pull/70，目标为 `main`；PR 正文冻结了 external-only、无数据、无执行和必须 ChatGPT `APPROVE` 的边界。
+- Failure/fix: 初次沙箱推送因 DNS 无法解析 GitHub 失败；申请网络权限后推送成功。没有代码回滚或内容丢失。
+- Next: 使用 Chrome 网页版 ChatGPT 的 `ADC研发框架优化` 对话，通过聊天框 `+` 显式选择 GitHub 来源审核 PR #70；在明确 `APPROVE` 前不合并。
+
+### 2026-08-06 — Chrome ChatGPT 审核 Phase 4 PR #70
+
+- Method: 在 Chrome 网页版 ChatGPT 的 `ADC研发框架优化` 对话中，通过聊天框 `+` 显式选择 GitHub 来源，提交 PR #70 审核指令；审核结束后保留 handoff tab 并结束浏览器会话。
+- Result: ChatGPT 返回明确 `APPROVE`；审核 HEAD 为 `78a9a62`；GitHub 显示 open、non-draft、mergeable，CI run `#63` 成功。
+- Accepted: 严格只完成 ValueInflectionPlan@0.1.0；字段、external-only、非空约束、Asset Generation 阻断、非自动执行、无科学 Gate/商业预测/交易执行和无核心架构改动均通过。
+- Non-blocking note: ChatGPT 说明 handoff 初始提交里的“待执行全量验证”已由最终 CI run #63 的成功结果覆盖，不构成阻断。
+- Persisted: 新增 `logs/chatgpt-review-2026-08-06-value-inflection-plan-phase4.md`，更新本 handoff 状态为 `APPROVED_WAITING_MERGE`。
+- Next: 提交审核记录 metadata 并推送；按批准范围合并 PR #70。合并后四步架构调整完成，不自动开始 Asset Generation 或任何外部运行。

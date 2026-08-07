@@ -24,3 +24,9 @@ Phase 3 adds `program_commitment_review.yaml` and
 `program_commitment_review.py` for `ProgramCommitmentReview@0.1.0`. It records
 an externally adjudicated sponsor-relative commitment checkpoint after T12;
 it does not define ValueInflectionPlan or execute binder/ADC routes.
+
+Phase 4 adds `value_inflection_plan.yaml` and `value_inflection_plan.py` for
+`ValueInflectionPlan@0.1.0`. It defines the externally referenced target
+value-transfer boundary, minimum evidence package, success criteria, stop
+conditions, capability sources, and buyer requirements. It does not execute
+Asset Generation, advance lifecycle stages, or store plan instances.
