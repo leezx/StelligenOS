@@ -1,0 +1,113 @@
+version: "0.1.0"
+name: stelligenos-opportunity-territory-schema
+description: >-
+  Schema for the opportunity territory map (Pool 00 / Stage 1). A territory
+  describes a clinical water, not a candidate. This contract defines shape only;
+  every territory instance, including all disease-specific content, lives in an
+  external workspace.
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  database: forbidden
+  cache: forbidden
+  result_files: forbidden
+  disease_specific_content_in_repository: forbidden
+territory_status_values:
+  - ACTIVE_SEARCH
+  - WATCHLIST
+  - PARTNER_ONLY
+  - OUT_OF_MANDATE
+territory_status_vocabulary_note: >-
+  Imported from the frozen SearchSpaceRoute rather than redeclared. The source
+  architecture note spells the territory states three different ways -
+  ACTIVE_TERRITORY/WATCH_TERRITORY/PARTNER_DEPENDENT/OUT_OF_MANDATE,
+  ACTIVE_TERRITORY/WATCH/PARTNER_ONLY/OUT_OF_MANDATE, and
+  ACTIVE/WATCH/PARTNER_ONLY/OUT - and a fourth spelling would be one more chance
+  for machine IDs to drift apart.
+contracts:
+  OpportunityTerritory:
+    contract_id: OpportunityTerritory@0.1.0
+    role: >-
+      One row of the territory map: a clinical water with its failure mode,
+      competitive position, reachable data and sponsor advantage.
+    required_fields:
+      - territory_id
+      - disease_ref
+      - clinical_population_ref
+      - molecular_subtype_ref
+      - treatment_line_ref
+      - prior_therapy_refs
+      - metastatic_site_refs
+      - current_soc_ref
+      - clinical_failure_mode_ref
+      - patient_size_band_ref
+      - current_competitor_refs
+      - leading_asset_refs
+      - expected_readout_refs
+      - position_occupancy_ref
+      - known_target_biology_refs
+      - available_patient_data_refs
+      - available_model_refs
+      - sponsor_evidence_advantage_ref
+      - window_closure_risk_ref
+      - search_space_admission_ref
+      - territory_status
+      - source_refs
+    non_empty_list_fields:
+      - source_refs
+    empty_lists_permitted_rationale: >-
+      A territory with no competitors, no expected readouts or no known target
+      biology is a real and informative state. Only provenance is always
+      required.
+    field_naming_note: >-
+      The source note calls one field Stelligen_evidence_advantage. The machine
+      ID here is sponsor_evidence_advantage_ref: sponsor identity belongs in the
+      referenced DevelopmentSponsorProfile, not in a schema field name.
+    invariants:
+      - all_instances_external_only
+      - all_refs_use_external_scheme
+      - no_disease_specific_content_in_the_repository
+      - territory_is_a_map_row_not_a_candidate
+      - territory_names_no_target
+      - territory_does_not_generate_targets
+      - routing_decision_is_not_restated_here
+      - search_space_admission_is_authoritative_for_the_route
+      - active_search_does_not_authorise_target_generation
+      - territory_does_not_execute_a_gate_or_admit_evidence
+  OpportunityTerritoryMap:
+    contract_id: OpportunityTerritoryMap@0.1.0
+    role: The territory map as a whole, for one disease scope and one sponsor.
+    required_fields:
+      - map_id
+      - disease_scope_ref
+      - sponsor_profile_ref
+      - territories
+      - source_refs
+    invariants:
+      - territory_ids_must_be_unique
+      - map_does_not_rank_or_score_territories
+      - map_does_not_generate_wedges_or_targets
+    duplicate_key_rationale: >-
+      Duplicate territory ids are rejected at construction rather than
+      downstream. A duplicate key silently collapsing two clinical waters into
+      one is the defect class the SRCADM-01 audit had to go looking for after
+      the fact.
+upstream_relationship:
+  routed_by: SearchSpaceAdmission@0.1.0
+  binding_status: bound
+  binding_note: >-
+    Each territory carries a search_space_admission_ref and mirrors that route
+    in territory_status. This gives SearchSpaceAdmission its first consumer. The
+    repository holds the reference only; it never dereferences the admission,
+    recomputes its eight criteria, or re-routes a territory.
+downstream_relationship:
+  consumed_by: not_yet_defined
+  note: >-
+    Program wedges (WP3) will consume ACTIVE_SEARCH territories. That contract
+    does not exist yet, so nothing downstream is claimed here.
+out_of_scope:
+  - program_wedge_definition
+  - wedge_specific_target_generation
+  - triple_pre_screen
+  - t_gate_execution
+  - any_crc_territory_content

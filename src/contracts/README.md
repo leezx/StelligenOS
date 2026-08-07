@@ -40,3 +40,12 @@ requires an explicit external waiver before `SELF_DEVELOP` without an
 asymmetric evidence advantage. It grants no commitment and authorises no
 capital; `ProgramCommitmentReview@0.2.0` requires a reference to it, so a
 commitment cannot be reached without one.
+
+`opportunity_territory.yaml` and `opportunity_territory.py` open Work Package 2
+with `OpportunityTerritory@0.1.0` and `OpportunityTerritoryMap@0.1.0`. A
+territory is a clinical water, not a candidate: it names no target and generates
+none. It carries a `search_space_admission_ref` and mirrors that route, giving
+`SearchSpaceAdmission@0.1.0` its first consumer, and it reuses the frozen
+`SearchSpaceRoute` vocabulary rather than adding a fourth spelling of the
+territory states. The schema holds no disease-specific content; territory
+instances live in an external workspace.

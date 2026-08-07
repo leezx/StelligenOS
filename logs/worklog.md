@@ -3031,3 +3031,19 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: `Ran 448 tests OK`（合并前 442，净增 6）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；无数据、cache、result、database、model weights 或实例进入仓库。
 - Remaining unbound: 仍无消费者的 sponsor-relative 合同还剩三份——`DevelopmentSponsorProfile`、`ProgramThesis`、`SearchSpaceAdmission`。其中 `SearchSpaceAdmission` 的天然消费者正是 WP2 的 territory 路由。
 - Next: WP2A CRC Opportunity Territory Schema（纯 schema，无 CRC 内容）；WP2B territories 内容按硬边界须在仓库外产出再走结果 PR。
+
+### 2026-08-07T01:45 — 合并 PR #76 并开始 WP2A：Opportunity Territory Schema
+
+- Merge: ChatGPT 对 PR #76 返回 `APPROVE`，审核 HEAD `cf8c3074552a8c4575e06d27b1da358f8ccb43e3`，CI 通过。核对 HEAD 未漂移后以 merge commit 合入，得 `822440c`。sponsor-relative 链路闭环成立：`T12 → SponsorFitAssessment → ProgramCommitmentReview@0.2.0 → BinderAdcRouteRequest@0.2.0 → route`。审核方特别认可「即使 `STOP_FOR_SPONSOR`／`MONITOR` 也必须写明所基于的评估」，并确认架构文档留待后续版本升级、不在 binding PR 内偷改正文。
+- WP2A: 按审核方指示把 WP2 拆两半，本次只做 2A —— 纯 schema，不含任何 CRC 内容。新增 `src/contracts/opportunity_territory.{py,yaml}`：`OpportunityTerritory@0.1.0`（一行 = 一片临床水域）与 `OpportunityTerritoryMap@0.1.0`（整张图）。字段按源文档 Stage 1 推荐清单逐项落地。
+- Design 1: 源文档把 territory 状态写了**三套**（`ACTIVE_TERRITORY/WATCH_TERRITORY/PARTNER_DEPENDENT/OUT_OF_MANDATE`、`ACTIVE_TERRITORY/WATCH/PARTNER_ONLY/OUT_OF_MANDATE`、`ACTIVE/WATCH/PARTNER_ONLY/OUT`）。本合同不新增第四套，直接 import 已冻结的 `SearchSpaceRoute`，与 `SponsorFitRoute` 复用 `ProgramCommitmentDecision` 词汇同理。
+- Design 2: territory 携带 `search_space_admission_ref` 并在 `territory_status` 中镜像该路由，**admission 才是权威**；仓库只持有引用，不解引用、不重算八个条件、不重新路由。副作用是 `SearchSpaceAdmission` 从此有了第一个消费者。审核方说过「下一阶段不应再补 binding 细节」——本 PR 不是 binding PR，territory 本来就必须记录它被谁路由，否则这一层会变成第二套路由逻辑；已在 handoff 与 PR 描述中标出请裁定。
+- Design 3: 源文档的 `Stelligen_evidence_advantage` 改名为 `sponsor_evidence_advantage_ref`——发起方身份属于它引用的 `DevelopmentSponsorProfile`，不该写进 schema 字段名。
+- Rule: 空列表是合法状态，只有 `source_refs` 必须非空——没有竞争者、没有预期 readout、没有已知靶点生物学都是真实且有信息量的状态。空 map 亦合法。`OpportunityTerritoryMap` 在构造时拒绝重复 `territory_id`，重复键把两片临床水域悄悄合并正是 `SRCADM-01` 事后才去找的那类缺陷。
+- Inconsistency registered: 本合同的 external-ref 校验比既有几份严（要求前缀后内容非空），而 `search_space_admission.py`／`sponsor_fit_assessment.py`／`program_commitment_review.py` 仍只校验前缀、允许裸 `external:`。新合同从严是免费的，回头统一收紧既有三份属独立范围，**登记不修**，不在本 PR 夹带。
+- Mutation: 六项——允许重复 `territory_id` -> `failures=1`；允许字符串状态（等于放行第四套词汇）-> `failures=1`；把 `search_space_admission_ref` 移出校验列表 -> 首轮 `OK`；强制所有列表非空 -> `failures=2, errors=1`；去掉裸 scheme 检查 -> `failures=22`；让 `with_status` 反向筛选 -> `failures=1`。
+- Fix: 第三项首轮通过是**自我收缩的重言测试**——参数化测试遍历的正是它要验证的常量，删字段等于删用例。**这是 PR #72 上犯过的同一个错误。** 补了字面列出两个字段清单的断言，以及专门针对 `search_space_admission_ref` 的命名测试（它承载整个上游绑定，本就该独立测试），重跑后该变异升为 `failures=6`。六项回滚均以 `diff -q` 确认无差异。
+- Boundary tests: 断言字段名中不含 `target_id`／`gene`／`pair`／`_score`／`rank`；模块源码去掉注释与 docstring 后不出现 `CRC`／`MSS`／`HER2`／`TROP2`／`KRAS`／`BRAF`／`colorectal`；import 集合恰为 `{__future__, dataclasses, typing, src.contracts.search_space_admission}`。
+- Downstream: WP3 的 program wedge 将消费 `ACTIVE_SEARCH` territories，但该合同尚不存在，故 `downstream_relationship.consumed_by` 记为 `not_yet_defined`，不作任何下游声明。
+- Validation: `Ran 469 tests OK`（合并前 448，净增 21）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；无数据、cache、result、database、model weights 或实例进入仓库。
+- Next: WP2B CRC territories 内容——按硬边界必须在仓库外产出再走结果 PR，且每个 territory 还需一份 `SearchSpaceAdmission` 实例给出路由。
