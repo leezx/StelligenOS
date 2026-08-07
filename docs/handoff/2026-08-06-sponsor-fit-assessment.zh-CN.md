@@ -55,26 +55,32 @@ Assessment）。
 `*_score` 的字段。理由不是风格：总分会让「能力齐备」补偿「没有非对称优势」，
 而那正是这个检查点存在的目的。
 
-**2. 缺少非对称证据优势通常不能 `SELF_DEVELOP`。** 源文档写的是「**通常**」。
-本合同把这个「通常」编码为**显式外部豁免**而非沉默：`evidence_advantage` 非
-`SATISFIED` 时若仍走 `SELF_DEVELOP`，必须提供
-`asymmetric_advantage_waiver_ref`（外部人类决定）；该豁免只对 `SELF_DEVELOP`
-有效，挂到其他路线上会被拒绝。
+**2. 路线资格是正证据，不是「没有反证」。**（第一轮审核后改写，见第十一节）
 
-**这是本 PR 唯一一处超出源文档字面的设计判断，请审核方裁定。** 备选是把它写成
-硬禁止，但那会把「通常」读成「一律」；写成注释则等于没有约束。
+一个路线被允许，是因为**已经存在足够的 sponsor-fit 正证据**，而不是因为
+「没有任何一项被明确记为 `UNSATISFIED`」。**没有豁免机制。**
 
 **3. 需要三期才能证明的差异不算可见差异。** `differentiation_requires_phase_3`
 为真时，`differentiation_visibility` 不得记为 `SATISFIED`。这是源文档「无效
 差异」清单里最可机器检查的一条。
 
-## 四、`UNKNOWN` 与 `UNSATISFIED` 严格分开
+## 四、六条路线的资格门槛（第一轮审核后确立）
 
-- `UNKNOWN` 是信息缺失，不得自动转为 `UNSATISFIED` 或 KILL，**单独不阻断任何
-  路线**（有专门测试）。
-- `UNSATISFIED` 不能支撑 asset-directed 路线（`SELF_DEVELOP`／`CO_DEVELOP`），
-  但仍可走 `PARTNER_NOW`／`DATA_PACKAGE_ONLY`／`MONITOR`／`STOP_FOR_SPONSOR`
-  ——`STOP_FOR_SPONSOR` 必须始终可达，它**不是科学 KILL**。
+| 路线 | 必须 `SATISFIED` | 不得 `UNSATISFIED` | 至少一项 `SATISFIED` |
+|---|---|---|---|
+| `SELF_DEVELOP` | `evidence_advantage`、`capability_fit`、`capital_fit`、`time_fit`、`differentiation_visibility`、`ip_capture` | — | — |
+| `CO_DEVELOP` | `evidence_advantage`、`differentiation_visibility`、`partnerability` | `ip_capture` | — |
+| `PARTNER_NOW` | `partnerability` | — | `evidence_advantage` 或 `differentiation_visibility` |
+| `DATA_PACKAGE_ONLY` | — | — | — |
+| `MONITOR` | — | — | — |
+| `STOP_FOR_SPONSOR` | — | — | — |
+
+`UNKNOWN` **不是失败，也永远不自动 KILL**——七项全 `UNKNOWN` 是一份完全合法的
+评估，只是它无法支撑任何承诺型路线。但**关键 `UNKNOWN` 会阻断 asset-directed
+路线直到被解决**。两者不矛盾：不判死刑，也不放行。
+
+`UNSATISFIED` 同样不构成 KILL，`DATA_PACKAGE_ONLY`／`MONITOR`／
+`STOP_FOR_SPONSOR` 始终可达；`STOP_FOR_SPONSOR` **不是科学 KILL**。
 
 ## 五、路线枚举复用 Phase 3 词汇
 
@@ -83,7 +89,7 @@ Assessment）。
 机器 ID 漂移。本合同复用同一套六值词汇，使「建议」与「消费该建议的承诺」可直接
 比对。这一决定连同理由写进了 YAML 的 `route_vocabulary_note`。
 
-## 六、变异检验
+## 六、第一轮变异检验（修订前）
 
 | 变异 | 结果 |
 |---|---|
@@ -110,7 +116,7 @@ Gate、T12、lifecycle、core objects、`ClinicalHypothesis` 或 `TargetHypothes
 ## 八、验证
 
 ```
-Ran 436 tests  OK              （合并前 413，净增 23）
+Ran 442 tests  OK              （合并前 413，净增 29；本文件 29）
 scripts/verify_repository_boundary.sh   通过
 git diff --check                        通过
 ```
@@ -137,3 +143,70 @@ PR #72 对 `BinderAdcRouteRequest` 的绑定相同。
    WP5 T0–T12 分批验证 → WP6 Commitment 与 Value-Inflection。
 4. 源文档明确指出：**下一步不再是继续补全 369 个 pairs。** 现有 `EVGAP-01`
    抽取授权与 `GAP-P07` 裁定仍然开着，但它们属于旧管线，不因本 PR 变化。
+
+## 十一、第一轮审核裁决与修订（`REQUEST_CHANGES`，一条阻断，接受）
+
+### 阻断：举证责任写反了
+
+审核方指出，`unknown_alone_does_not_block_a_route` 对一个 sponsor-fit 资格
+检查点过于宽松。修订前的代码允许 `capability_fit`／`capital_fit`／`time_fit`／
+`differentiation_visibility`／`ip_capture`／`partnerability` **六项全部
+`UNKNOWN`**，仍然输出 `CO_DEVELOP`；而且有一条测试
+`test_unknown_alone_does_not_block_a_route` **专门把这个行为锁死**。
+
+这等于仍在采用旧逻辑：
+
+> 没有明确反证 → 可以继续开发
+
+而三重资格要求的是：
+
+> 已有足够正证据 → 才允许资本性推进
+
+对小微 Biotech，`capital_fit`、`time_fit`、`ip_capture`、
+`differentiation_visibility` 不是普通信息项，而是是否该投入资源的核心资格条件。
+**这条阻断成立，执行者接受，未作辩解。**
+
+### 修订
+
+1. 路线资格改为**正证据门槛**，按路线分别声明
+   `must_be_satisfied`／`must_not_be_unsatisfied`／`at_least_one_satisfied`
+   （表见第四节），代码与 YAML 两侧各存一份并有测试断言逐项相等。
+2. **删除 `asymmetric_advantage_waiver_ref` 整个字段与豁免机制。** 审核方的
+   理由被接受：本合同编码的是当前 Stelligen 的生存规则，不是通用 Biotech 规则；
+   逐案豁免等于给这个检查点留后门，而它存在的目的恰恰是防止「这个项目我很喜欢，
+   所以特殊批准继续做」。能力变化时应更新 `DevelopmentSponsorProfile` 或升合同
+   版本。YAML 以 `waiver_mechanism: none` 与 `waiver_rationale` 记录，并有测试
+   断言数据类中不存在任何含 `waiver` 的字段。
+3. 删除 invariant `unknown_alone_does_not_block_a_route`，替换为审核方指定的
+   三条：`unknown_is_not_failure`、`unknown_never_auto_kills`、
+   `critical_unknowns_block_asset_directed_routes_until_resolved`；另加
+   `route_eligibility_is_affirmative_not_absence_of_negative`、
+   `self_develop_requires_affirmative_sponsor_fit_evidence`、
+   `no_waiver_mechanism_exists_for_sponsor_fit`。有测试断言旧 invariant
+   **不再存在**。
+4. 删除被锁死错误行为的那条测试，改为
+   `test_a_mostly_unknown_assessment_cannot_reach_a_committed_route` 与
+   `test_unknown_is_not_failure_and_never_auto_kills` 两条。
+
+同时删除了修订前那条「任何 `UNSATISFIED` 一律阻断 asset-directed 路线」的笼统
+规则——它与审核方明确允许的「`SELF_DEVELOP` 对 `partnerability` 可以放宽」相
+冲突。资格现在完全由每条路线自己的门槛表决定。
+
+### 第二轮变异检验
+
+| 变异 | 结果 |
+|---|---|
+| **退回「只有明确 `UNSATISFIED` 才阻断」** | `FAILED (failures=12)` |
+| 清空 `SELF_DEVELOP` 的门槛 | `FAILED (failures=15)` |
+| 去掉 `CO_DEVELOP` 的 `partnerability` 要求 | `FAILED (failures=3)` |
+| 去掉 `CO_DEVELOP` 的 `ip_capture` 守卫 | `FAILED (failures=2)` |
+| 去掉 `PARTNER_NOW` 的「至少一项」 | `FAILED (failures=2)` |
+| 跳过「至少一项」检查 | `FAILED (failures=1)` |
+| 给 `MONITOR` 加上正证据要求 | `FAILED (failures=1, errors=1)` |
+
+第一项就是这次阻断的行为本身，七项回滚后 `diff -q` 均无差异。
+
+### 范围未扩大
+
+本轮只改 `SponsorFitAssessment` 的语义。未修改 45 个科学 Gate、
+`ProgramCommitmentReview`、lifecycle、core objects 或任何下游绑定。

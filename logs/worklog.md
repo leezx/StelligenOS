@@ -3002,3 +3002,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Not bound: `ProgramCommitmentReview@0.1.0` 目前不要求 `sponsor_fit_assessment_ref`，给已冻结合同加必填字段属 breaking change，应另立 binding PR（形态同 PR #72）。在此之前本合同与 Phase 1／2 一样无消费者，已在 `downstream_relationship.binding_status: not_bound` 显式登记并有测试断言，避免重演「文档声称硬控制、代码无人消费」。
 - Validation: `Ran 436 tests OK`（合并前 413，净增 23）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；无数据、cache、result、database、model weights 或实例进入仓库。
 - Next: WP2 CRC Opportunity Territory Map。注意它天然分两半——territory schema 属仓库内合同，而 territories 本身（竞争格局、readout 日历、数据可得性）是内容与数据，按硬边界必须在仓库外产出再走结果 PR；建议先只做 schema。
+
+### 2026-08-07T00:35 — PR #75 第一轮审核裁决与修订（一条阻断，接受）
+
+- Review: ChatGPT 对 PR #75 返回 `REQUEST_CHANGES`，架构方向、合同边界与实现质量均获认可，仅一条实质阻断。**接受，未作辩解。**
+- Blocker accepted: `unknown_alone_does_not_block_a_route` 对一个 sponsor-fit 资格检查点过于宽松。修订前代码允许 `capability_fit`／`capital_fit`／`time_fit`／`differentiation_visibility`／`ip_capture`／`partnerability` 六项全部 `UNKNOWN` 仍输出 `CO_DEVELOP`，且有一条测试 `test_unknown_alone_does_not_block_a_route` **专门把该行为锁死**。这等于仍在采用「没有明确反证 → 可以继续开发」，而三重资格要求的是「已有足够正证据 → 才允许资本性推进」。对小微 Biotech，`capital_fit`／`time_fit`／`ip_capture`／`differentiation_visibility` 不是普通信息项而是核心资格条件。举证责任写反了，这是执行者的错。
+- Fix 1: 路线资格改为**正证据门槛**。新增 `RouteRequirement` 与 `ROUTE_REQUIREMENTS`，按路线声明 `must_be_satisfied`／`must_not_be_unsatisfied`／`at_least_one_satisfied`：`SELF_DEVELOP` 需六项 `SATISFIED`（`partnerability` 刻意放宽，因项目可能计划独立融资）；`CO_DEVELOP` 需 `evidence_advantage`／`differentiation_visibility`／`partnerability` 且 `ip_capture` 不得 `UNSATISFIED`，`capability_fit`／`capital_fit` 可 `UNKNOWN`（合作方正是用来补齐这两项的）；`PARTNER_NOW` 需 `partnerability` 且 `evidence_advantage` 与 `differentiation_visibility` 至少一项成立；`DATA_PACKAGE_ONLY`／`MONITOR`／`STOP_FOR_SPONSOR` 无门槛。代码与 YAML 各存一份并有测试断言逐项相等。
+- Fix 2: **删除 `asymmetric_advantage_waiver_ref` 字段与整个豁免机制。** 接受审核方理由：本合同编码的是当前 Stelligen 的生存规则而非通用 Biotech 规则，逐案豁免等于给这个检查点留后门，而它存在的目的恰恰是防止「这个项目我很喜欢，所以特殊批准继续做」；能力变化时应更新 `DevelopmentSponsorProfile` 或升合同版本。YAML 以 `waiver_mechanism: none` 与 `waiver_rationale` 记录，并有测试断言数据类中不存在任何含 `waiver` 的字段。
+- Fix 3: 删除 invariant `unknown_alone_does_not_block_a_route`，替换为审核方指定的三条 `unknown_is_not_failure`／`unknown_never_auto_kills`／`critical_unknowns_block_asset_directed_routes_until_resolved`，另加 `route_eligibility_is_affirmative_not_absence_of_negative`／`self_develop_requires_affirmative_sponsor_fit_evidence`／`no_waiver_mechanism_exists_for_sponsor_fit`。有测试断言旧 invariant **不再存在**。
+- Fix 4: 删除锁死错误行为的那条测试，改为 `test_a_mostly_unknown_assessment_cannot_reach_a_committed_route` 与 `test_unknown_is_not_failure_and_never_auto_kills`。
+- Side effect handled: 同时删除修订前那条「任何 `UNSATISFIED` 一律阻断 asset-directed 路线」的笼统规则——它与审核方明确允许的「`SELF_DEVELOP` 对 `partnerability` 可以放宽」相冲突。资格现在完全由每条路线自己的门槛表决定。
+- Mutation: 第二轮七项。**退回「只有明确 `UNSATISFIED` 才阻断」-> `failures=12`**（即本次阻断的行为本身）；清空 `SELF_DEVELOP` 门槛 -> `failures=15`；去掉 `CO_DEVELOP` 的 `partnerability` -> `failures=3`；去掉其 `ip_capture` 守卫 -> `failures=2`；去掉 `PARTNER_NOW` 的「至少一项」-> `failures=2`；跳过「至少一项」检查 -> `failures=1`；给 `MONITOR` 加正证据要求 -> `failures=1, errors=1`。七项回滚均以 `diff -q` 确认无差异。
+- Scope: 本轮只改 `SponsorFitAssessment` 语义，未修改 45 个科学 Gate、`ProgramCommitmentReview`、lifecycle、core objects 或任何下游绑定，未夹带无关改动。
+- Validation: `Ran 442 tests OK`（本文件 29）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；无数据、cache、result、database、model weights 或实例进入仓库。
+- Next: 推送到同一 PR #75，不新开 PR；等待复审。

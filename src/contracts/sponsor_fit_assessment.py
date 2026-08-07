@@ -5,6 +5,11 @@ scientific opportunity qualification and the capital authorisation recorded by
 `ProgramCommitmentReview@0.1.0`. It answers "is this sponsor the right one to
 carry this program, and by which route", not "is the opportunity sound".
 
+Route eligibility is **affirmative**: a route is permitted because sufficient
+sponsor-fit evidence is present, never because nothing was explicitly recorded
+as UNSATISFIED. `UNKNOWN` is not failure and never auto-kills, but a critical
+`UNKNOWN` blocks the asset-directed routes until it is resolved.
+
 The module validates externally adjudicated assessments in memory. It computes
 no aggregate score, evaluates no scientific evidence, executes no Gate, and
 persists nothing.
@@ -64,6 +69,59 @@ ASSET_DIRECTED_ROUTES: Final[tuple[SponsorFitRoute, ...]] = (
     SponsorFitRoute.SELF_DEVELOP,
     SponsorFitRoute.CO_DEVELOP,
 )
+
+
+@dataclass(frozen=True)
+class RouteRequirement:
+    """Affirmative evidence a route needs before it may be recommended.
+
+    Eligibility is stated as evidence that must be present, never as the mere
+    absence of a negative. An assessment whose critical questions are UNKNOWN
+    has not shown sponsor fit; it has only failed to disprove it.
+    """
+
+    must_be_satisfied: tuple[str, ...] = ()
+    must_not_be_unsatisfied: tuple[str, ...] = ()
+    at_least_one_satisfied: tuple[str, ...] = ()
+
+
+ROUTE_REQUIREMENTS: Final[dict[SponsorFitRoute, RouteRequirement]] = {
+    # Carrying a programme alone requires affirmative evidence on every
+    # dimension the sponsor would have to supply itself. Partnerability is
+    # deliberately free: a programme may plan to keep funding independently.
+    SponsorFitRoute.SELF_DEVELOP: RouteRequirement(
+        must_be_satisfied=(
+            "evidence_advantage",
+            "capability_fit",
+            "capital_fit",
+            "time_fit",
+            "differentiation_visibility",
+            "ip_capture",
+        ),
+    ),
+    # "I have something worth partnering on, I just lack the capability."
+    # Capability and capital may stay UNKNOWN because a partner would resolve
+    # them; what must be shown is that there is something worth partnering on.
+    SponsorFitRoute.CO_DEVELOP: RouteRequirement(
+        must_be_satisfied=(
+            "evidence_advantage",
+            "differentiation_visibility",
+            "partnerability",
+        ),
+        must_not_be_unsatisfied=("ip_capture",),
+    ),
+    # Without partnerability the route has no meaning, and without at least one
+    # visible or defensible advantage there is nothing to take to a partner.
+    SponsorFitRoute.PARTNER_NOW: RouteRequirement(
+        must_be_satisfied=("partnerability",),
+        at_least_one_satisfied=("evidence_advantage", "differentiation_visibility"),
+    ),
+    # These three stay reachable under unresolved uncertainty. MONITOR is the
+    # natural home of UNKNOWN.
+    SponsorFitRoute.DATA_PACKAGE_ONLY: RouteRequirement(),
+    SponsorFitRoute.MONITOR: RouteRequirement(),
+    SponsorFitRoute.STOP_FOR_SPONSOR: RouteRequirement(),
+}
 
 
 def _require_text(value: str, field_name: str) -> None:
@@ -160,7 +218,6 @@ class SponsorFitAssessment:
     rationale_ref: str
     human_decision_ref: str
     source_refs: tuple[str, ...]
-    asymmetric_advantage_waiver_ref: str | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.assessment_id, "assessment_id")
@@ -221,28 +278,28 @@ class SponsorFitAssessment:
                 "differentiation_visibility"
             )
 
-        # Without an asymmetric evidence advantage a program normally cannot be
-        # self-developed. "Normally" is encoded as an explicit external waiver
-        # rather than as silence.
-        if self.route is SponsorFitRoute.SELF_DEVELOP:
-            if statuses["evidence_advantage"] is not QuestionStatus.SATISFIED:
-                if self.asymmetric_advantage_waiver_ref is None:
-                    raise ValueError(
-                        "SELF_DEVELOP without a SATISFIED evidence_advantage requires "
-                        "an explicit asymmetric_advantage_waiver_ref"
-                    )
-                _require_external_ref(
-                    self.asymmetric_advantage_waiver_ref,
-                    "asymmetric_advantage_waiver_ref",
+        # Route eligibility is affirmative. A question left UNKNOWN has not
+        # been shown; it has only not been disproved. There is no waiver: if
+        # the sponsor's capabilities change, the profile or the contract
+        # version changes, not this decision case by case.
+        requirement = ROUTE_REQUIREMENTS[self.route]
+        for question_id in requirement.must_be_satisfied:
+            if statuses[question_id] is not QuestionStatus.SATISFIED:
+                raise ValueError(
+                    f"{self.route.value} requires a SATISFIED {question_id}, "
+                    f"got {statuses[question_id].value}"
                 )
-        elif self.asymmetric_advantage_waiver_ref is not None:
-            raise ValueError(
-                "asymmetric_advantage_waiver_ref applies only to SELF_DEVELOP"
-            )
-
-        if self.route in ASSET_DIRECTED_ROUTES and any(
-            status is QuestionStatus.UNSATISFIED for status in statuses.values()
+        for question_id in requirement.must_not_be_unsatisfied:
+            if statuses[question_id] is QuestionStatus.UNSATISFIED:
+                raise ValueError(
+                    f"{self.route.value} cannot proceed with an UNSATISFIED "
+                    f"{question_id}"
+                )
+        if requirement.at_least_one_satisfied and not any(
+            statuses[question_id] is QuestionStatus.SATISFIED
+            for question_id in requirement.at_least_one_satisfied
         ):
             raise ValueError(
-                "an UNSATISFIED question cannot support an asset-directed route"
+                f"{self.route.value} requires at least one SATISFIED value among "
+                + ", ".join(requirement.at_least_one_satisfied)
             )

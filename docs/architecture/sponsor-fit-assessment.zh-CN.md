@@ -41,22 +41,51 @@
 理由不是风格问题：一个总分会让「能力齐备」去补偿「没有非对称优势」，
 而那恰恰是这个检查点存在的目的。
 
-**2. 缺少非对称证据优势，通常不能 `SELF_DEVELOP`。** 来源文档写的是
-「通常」。合同把这个「通常」编码为**显式外部豁免**而不是沉默：
-`evidence_advantage` 非 `SATISFIED` 时若仍要走 `SELF_DEVELOP`，必须提供
-`asymmetric_advantage_waiver_ref`（外部人类决定）。该豁免**只对
-`SELF_DEVELOP` 有效**，挂到别的路线上会被拒绝。
+**2. 路线资格是正证据，不是「没有反证」。** 这是本合同最核心的一条。
+
+一个路线被允许，是因为**已经存在足够的 sponsor-fit 正证据**，而不是因为
+「没有任何一项被明确记为 `UNSATISFIED`」。七项关键问题大部分是 `UNKNOWN` 的
+评估，并没有证明 sponsor fit 成立——它只是没能证伪。
+
+具体门槛见下表。**没有豁免机制。** 本合同编码的是当前 Stelligen 的生存规则，
+不是通用 Biotech 规则；逐案豁免等于给这个检查点留后门，而它存在的目的恰恰是
+防止「这个项目我很喜欢，所以特殊批准继续做」。发起方能力变化时，应当更新
+`DevelopmentSponsorProfile` 或升合同版本，而不是不断发豁免。
 
 **3. 需要三期才能证明的差异不算可见差异。** 若
 `differentiation_requires_phase_3` 为真，则
 `differentiation_visibility` 不得记为 `SATISFIED`。
 
+## 六条路线的资格门槛
+
+| 路线 | 必须 `SATISFIED` | 不得 `UNSATISFIED` | 至少一项 `SATISFIED` |
+|---|---|---|---|
+| `SELF_DEVELOP` | `evidence_advantage`、`capability_fit`、`capital_fit`、`time_fit`、`differentiation_visibility`、`ip_capture` | — | — |
+| `CO_DEVELOP` | `evidence_advantage`、`differentiation_visibility`、`partnerability` | `ip_capture` | — |
+| `PARTNER_NOW` | `partnerability` | — | `evidence_advantage` 或 `differentiation_visibility` |
+| `DATA_PACKAGE_ONLY` | — | — | — |
+| `MONITOR` | — | — | — |
+| `STOP_FOR_SPONSOR` | — | — | — |
+
+几点用意：
+
+- `SELF_DEVELOP` 刻意**不要求** `partnerability`——有些项目计划继续独立融资。
+- `CO_DEVELOP` 允许 `capability_fit` 与 `capital_fit` 为 `UNKNOWN`，因为合作方
+  正是用来补齐这两项的；但必须证明**存在值得合作的东西**。
+- `PARTNER_NOW` 若连 `partnerability` 都不成立，这个名字就没有语义依据；
+  若两项优势全无，拿什么去找 partner。
+- `DATA_PACKAGE_ONLY` 允许大量 `UNKNOWN`——它本身就是「先用自己的数据优势
+  降低特定风险，不承诺完整资产开发」。这对当前 Stelligen 可能是很重要的一条路径。
+- `MONITOR` 是 `UNKNOWN` 的天然归宿。
+
 ## `UNKNOWN` 与 `UNSATISFIED` 严格分开
 
-- `UNKNOWN` 是信息缺失，**不得自动转为 `UNSATISFIED` 或任何 KILL**，
-  且**单独不阻断任何路线**。
-- `UNSATISFIED` 不能支撑 asset-directed 路线（`SELF_DEVELOP`／`CO_DEVELOP`），
-  但仍可走 `PARTNER_NOW`／`DATA_PACKAGE_ONLY`／`MONITOR`／`STOP_FOR_SPONSOR`。
+- `UNKNOWN` **不是失败，也永远不自动 KILL**。七项全 `UNKNOWN` 是一份完全合法的
+  评估，只是它无法支撑任何承诺型路线。
+- 但**关键 `UNKNOWN` 会阻断 asset-directed 路线，直到它被解决**。这与上一条
+  不矛盾：不判死刑，也不放行。
+- `UNSATISFIED` 同样不构成 KILL，`DATA_PACKAGE_ONLY`／`MONITOR`／
+  `STOP_FOR_SPONSOR` 始终可达。
 
 `STOP_FOR_SPONSOR` **不是科学 KILL**，与 45 个 Gate 的判定完全无关。
 

@@ -43,6 +43,64 @@ mandatory_questions:
   - differentiation_visibility
   - ip_capture
   - partnerability
+route_eligibility_principle: >-
+  A route is permitted because sufficient affirmative sponsor-fit evidence is
+  present, never because no item happens to be recorded as UNSATISFIED. An
+  assessment whose critical questions are UNKNOWN has not shown sponsor fit; it
+  has only failed to disprove it.
+route_eligibility:
+  SELF_DEVELOP:
+    must_be_satisfied:
+      - evidence_advantage
+      - capability_fit
+      - capital_fit
+      - time_fit
+      - differentiation_visibility
+      - ip_capture
+    must_not_be_unsatisfied: []
+    at_least_one_satisfied: []
+    note: >-
+      Partnerability is deliberately free: a programme may plan to keep funding
+      independently.
+  CO_DEVELOP:
+    must_be_satisfied:
+      - evidence_advantage
+      - differentiation_visibility
+      - partnerability
+    must_not_be_unsatisfied:
+      - ip_capture
+    at_least_one_satisfied: []
+    note: >-
+      Capability and capital may stay UNKNOWN because a partner would resolve
+      them. What must be shown is that there is something worth partnering on.
+  PARTNER_NOW:
+    must_be_satisfied:
+      - partnerability
+    must_not_be_unsatisfied: []
+    at_least_one_satisfied:
+      - evidence_advantage
+      - differentiation_visibility
+    note: >-
+      Without partnerability the route has no meaning; without at least one
+      visible or defensible advantage there is nothing to take to a partner.
+  DATA_PACKAGE_ONLY:
+    must_be_satisfied: []
+    must_not_be_unsatisfied: []
+    at_least_one_satisfied: []
+    note: >-
+      Reachable under unresolved uncertainty. This route buys down specific risk
+      with the sponsor's own data advantage without committing to full asset
+      development.
+  MONITOR:
+    must_be_satisfied: []
+    must_not_be_unsatisfied: []
+    at_least_one_satisfied: []
+    note: MONITOR is the natural home of UNKNOWN.
+  STOP_FOR_SPONSOR:
+    must_be_satisfied: []
+    must_not_be_unsatisfied: []
+    at_least_one_satisfied: []
+    note: Reachable under any state, and never a scientific KILL.
 contract:
   contract_id: SponsorFitAssessment@0.1.0
   role: >-
@@ -63,8 +121,16 @@ contract:
     - rationale_ref
     - human_decision_ref
     - source_refs
-  optional_fields:
-    - asymmetric_advantage_waiver_ref
+  optional_fields: []
+  waiver_mechanism: none
+  waiver_rationale: >-
+    There is deliberately no waiver. This contract encodes the current Stelligen
+    sponsor context, not a general biotech rule. A case-by-case waiver would be
+    a back door around the very checkpoint that exists to stop "I like this
+    programme, so approve it anyway". If the sponsor acquires ADC chemistry,
+    linker/payload, CMC, tox, GMP or clinical capability, the answer is to
+    update DevelopmentSponsorProfile or raise this contract version, not to
+    issue waivers.
   capability_map_entry_fields:
     - capability_id
     - availability
@@ -88,11 +154,12 @@ contract:
     - all_cross_boundary_and_source_refs_use_external_scheme
     - exactly_seven_mandatory_questions_answered_once_each
     - no_aggregate_score_is_computed_or_stored
-    - unknown_is_preserved_and_never_auto_converted_to_unsatisfied_or_kill
-    - unknown_alone_does_not_block_a_route
-    - self_develop_without_asymmetric_advantage_requires_an_explicit_waiver
-    - waiver_applies_only_to_self_develop
-    - unsatisfied_question_cannot_support_an_asset_directed_route
+    - unknown_is_not_failure
+    - unknown_never_auto_kills
+    - critical_unknowns_block_asset_directed_routes_until_resolved
+    - route_eligibility_is_affirmative_not_absence_of_negative
+    - self_develop_requires_affirmative_sponsor_fit_evidence
+    - no_waiver_mechanism_exists_for_sponsor_fit
     - differentiation_requiring_phase_3_is_not_visible_differentiation
     - assessment_does_not_grant_program_commitment
     - assessment_does_not_authorise_capital

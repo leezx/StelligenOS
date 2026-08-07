@@ -5,6 +5,7 @@ import yaml
 
 from src.contracts.sponsor_fit_assessment import (
     ASSET_DIRECTED_ROUTES,
+    ROUTE_REQUIREMENTS,
     CapabilityAvailability,
     CapabilityMapEntry,
     QuestionStatus,
@@ -198,81 +199,145 @@ class SponsorFitDecisionRuleTests(unittest.TestCase):
                 field_name.endswith("_score"), f"{field_name} looks like a score"
             )
 
-    def test_self_develop_without_asymmetric_advantage_needs_a_waiver(self):
-        for status in (QuestionStatus.UNKNOWN, QuestionStatus.UNSATISFIED):
+    def test_self_develop_requires_affirmative_evidence_on_six_questions(self):
+        for question in (
+            "evidence_advantage",
+            "capability_fit",
+            "capital_fit",
+            "time_fit",
+            "differentiation_visibility",
+            "ip_capture",
+        ):
+            for status in (QuestionStatus.UNKNOWN, QuestionStatus.UNSATISFIED):
+                with self.subTest(question=question, status=status):
+                    with self.assertRaises(ValueError):
+                        _assessment(
+                            question_results=_questions(**{question: status}),
+                            route=SponsorFitRoute.SELF_DEVELOP,
+                        )
+
+    def test_self_develop_leaves_partnerability_free(self):
+        """A programme may plan to keep funding independently."""
+
+        for status in QuestionStatus:
             with self.subTest(status=status):
-                with self.assertRaises(ValueError):
-                    _assessment(
-                        question_results=_questions(evidence_advantage=status),
-                        route=SponsorFitRoute.SELF_DEVELOP,
-                    )
+                assessment = _assessment(
+                    question_results=_questions(partnerability=status),
+                    route=SponsorFitRoute.SELF_DEVELOP,
+                )
+                self.assertEqual(assessment.route, SponsorFitRoute.SELF_DEVELOP)
 
-    def test_an_explicit_waiver_permits_self_develop(self):
-        assessment = _assessment(
-            question_results=_questions(evidence_advantage=QuestionStatus.UNKNOWN),
-            route=SponsorFitRoute.SELF_DEVELOP,
-            asymmetric_advantage_waiver_ref="external:human-decision/waiver/1",
+    def test_no_waiver_mechanism_exists(self):
+        """A case-by-case waiver would be a back door around this checkpoint."""
+
+        self.assertNotIn(
+            "asymmetric_advantage_waiver_ref",
+            SponsorFitAssessment.__dataclass_fields__,
         )
-        self.assertEqual(
-            assessment.asymmetric_advantage_waiver_ref,
-            "external:human-decision/waiver/1",
-        )
+        for field_name in SponsorFitAssessment.__dataclass_fields__:
+            self.assertNotIn("waiver", field_name)
+        with self.assertRaises(TypeError):
+            _assessment(asymmetric_advantage_waiver_ref="external:waiver/1")
 
-    def test_a_waiver_must_itself_be_external(self):
-        with self.assertRaises(ValueError):
-            _assessment(
-                question_results=_questions(evidence_advantage=QuestionStatus.UNKNOWN),
-                route=SponsorFitRoute.SELF_DEVELOP,
-                asymmetric_advantage_waiver_ref="local:waiver/1",
-            )
+    def test_co_develop_requires_something_worth_partnering_on(self):
+        for question in (
+            "evidence_advantage",
+            "differentiation_visibility",
+            "partnerability",
+        ):
+            for status in (QuestionStatus.UNKNOWN, QuestionStatus.UNSATISFIED):
+                with self.subTest(question=question, status=status):
+                    with self.assertRaises(ValueError):
+                        _assessment(
+                            question_results=_questions(**{question: status}),
+                            route=SponsorFitRoute.CO_DEVELOP,
+                        )
 
-    def test_a_waiver_cannot_be_attached_to_any_other_route(self):
-        with self.assertRaises(ValueError):
-            _assessment(
-                route=SponsorFitRoute.MONITOR,
-                asymmetric_advantage_waiver_ref="external:human-decision/waiver/1",
-            )
-
-    def test_unsatisfied_cannot_support_an_asset_directed_route(self):
-        for route in ASSET_DIRECTED_ROUTES:
-            with self.subTest(route=route):
-                with self.assertRaises(ValueError):
-                    _assessment(
-                        question_results=_questions(
-                            ip_capture=QuestionStatus.UNSATISFIED
-                        ),
-                        route=route,
-                        asymmetric_advantage_waiver_ref=None,
-                    )
-
-    def test_unknown_alone_does_not_block_a_route(self):
-        """UNKNOWN is missing information, not a negative finding."""
+    def test_co_develop_tolerates_capability_and_capital_uncertainty(self):
+        """A partner is exactly what would resolve those two."""
 
         assessment = _assessment(
             question_results=_questions(
-                time_fit=QuestionStatus.UNKNOWN,
-                partnerability=QuestionStatus.UNKNOWN,
+                capability_fit=QuestionStatus.UNKNOWN,
+                capital_fit=QuestionStatus.UNKNOWN,
             ),
             route=SponsorFitRoute.CO_DEVELOP,
         )
         self.assertEqual(assessment.route, SponsorFitRoute.CO_DEVELOP)
 
-    def test_unsatisfied_still_permits_a_non_asset_route(self):
-        """STOP_FOR_SPONSOR must stay reachable; it is not a scientific KILL."""
+    def test_co_develop_rejects_an_unsatisfied_ip_path(self):
+        with self.assertRaises(ValueError):
+            _assessment(
+                question_results=_questions(ip_capture=QuestionStatus.UNSATISFIED),
+                route=SponsorFitRoute.CO_DEVELOP,
+            )
 
+    def test_co_develop_tolerates_an_unknown_ip_path(self):
+        assessment = _assessment(
+            question_results=_questions(ip_capture=QuestionStatus.UNKNOWN),
+            route=SponsorFitRoute.CO_DEVELOP,
+        )
+        self.assertEqual(assessment.route, SponsorFitRoute.CO_DEVELOP)
+
+    def test_partner_now_requires_partnerability(self):
+        for status in (QuestionStatus.UNKNOWN, QuestionStatus.UNSATISFIED):
+            with self.subTest(status=status):
+                with self.assertRaises(ValueError):
+                    _assessment(
+                        question_results=_questions(partnerability=status),
+                        route=SponsorFitRoute.PARTNER_NOW,
+                    )
+
+    def test_partner_now_requires_something_to_take_to_a_partner(self):
+        with self.assertRaises(ValueError):
+            _assessment(
+                question_results=_questions(
+                    evidence_advantage=QuestionStatus.UNKNOWN,
+                    differentiation_visibility=QuestionStatus.UNKNOWN,
+                ),
+                route=SponsorFitRoute.PARTNER_NOW,
+            )
+        for present in ("evidence_advantage", "differentiation_visibility"):
+            with self.subTest(present=present):
+                absent = (
+                    "differentiation_visibility"
+                    if present == "evidence_advantage"
+                    else "evidence_advantage"
+                )
+                assessment = _assessment(
+                    question_results=_questions(**{absent: QuestionStatus.UNKNOWN}),
+                    route=SponsorFitRoute.PARTNER_NOW,
+                )
+                self.assertEqual(assessment.route, SponsorFitRoute.PARTNER_NOW)
+
+    def test_a_mostly_unknown_assessment_cannot_reach_a_committed_route(self):
+        """The core fix: absence of a negative is not evidence of fit."""
+
+        all_unknown = _questions(
+            **{question: QuestionStatus.UNKNOWN for question in SPONSOR_FIT_QUESTIONS}
+        )
         for route in (
-            SponsorFitRoute.STOP_FOR_SPONSOR,
-            SponsorFitRoute.MONITOR,
+            SponsorFitRoute.SELF_DEVELOP,
+            SponsorFitRoute.CO_DEVELOP,
             SponsorFitRoute.PARTNER_NOW,
-            SponsorFitRoute.DATA_PACKAGE_ONLY,
         ):
             with self.subTest(route=route):
-                assessment = _assessment(
-                    question_results=_questions(
-                        evidence_advantage=QuestionStatus.UNSATISFIED
-                    ),
-                    route=route,
-                )
+                with self.assertRaises(ValueError):
+                    _assessment(question_results=all_unknown, route=route)
+
+    def test_unknown_is_not_failure_and_never_auto_kills(self):
+        """All-UNKNOWN is a valid assessment; it just cannot commit resources."""
+
+        all_unknown = _questions(
+            **{question: QuestionStatus.UNKNOWN for question in SPONSOR_FIT_QUESTIONS}
+        )
+        for route in (
+            SponsorFitRoute.MONITOR,
+            SponsorFitRoute.DATA_PACKAGE_ONLY,
+            SponsorFitRoute.STOP_FOR_SPONSOR,
+        ):
+            with self.subTest(route=route):
+                assessment = _assessment(question_results=all_unknown, route=route)
                 self.assertEqual(assessment.route, route)
 
     def test_phase_3_only_differentiation_cannot_be_satisfied(self):
@@ -351,15 +416,49 @@ class SponsorFitBoundaryTests(unittest.TestCase):
         invariants = set(contract["contract"]["invariants"])
         for required in (
             "no_aggregate_score_is_computed_or_stored",
-            "unknown_is_preserved_and_never_auto_converted_to_unsatisfied_or_kill",
-            "self_develop_without_asymmetric_advantage_requires_an_explicit_waiver",
-            "unsatisfied_question_cannot_support_an_asset_directed_route",
+            "unknown_is_not_failure",
+            "unknown_never_auto_kills",
+            "critical_unknowns_block_asset_directed_routes_until_resolved",
+            "route_eligibility_is_affirmative_not_absence_of_negative",
+            "self_develop_requires_affirmative_sponsor_fit_evidence",
+            "no_waiver_mechanism_exists_for_sponsor_fit",
             "differentiation_requiring_phase_3_is_not_visible_differentiation",
             "assessment_does_not_grant_program_commitment",
             "stop_for_sponsor_is_not_scientific_kill",
             "route_is_a_recommendation_not_an_authorisation",
         ):
             self.assertIn(required, invariants)
+        self.assertNotIn("unknown_alone_does_not_block_a_route", invariants)
+
+    def test_contract_yaml_route_eligibility_matches_the_code(self):
+        contract = yaml.safe_load(CONTRACT_PATH.read_text(encoding="utf-8"))
+        declared = contract["route_eligibility"]
+        self.assertEqual(
+            set(declared), {route.value for route in SponsorFitRoute}
+        )
+        for route, requirement in ROUTE_REQUIREMENTS.items():
+            with self.subTest(route=route):
+                entry = declared[route.value]
+                self.assertEqual(
+                    tuple(entry["must_be_satisfied"]), requirement.must_be_satisfied
+                )
+                self.assertEqual(
+                    tuple(entry["must_not_be_unsatisfied"]),
+                    requirement.must_not_be_unsatisfied,
+                )
+                self.assertEqual(
+                    tuple(entry["at_least_one_satisfied"]),
+                    requirement.at_least_one_satisfied,
+                )
+        self.assertEqual(contract["contract"]["waiver_mechanism"], "none")
+        self.assertEqual(contract["contract"]["optional_fields"], [])
+
+    def test_every_asset_directed_route_demands_affirmative_evidence(self):
+        """No asset-directed route may be reachable with an empty requirement."""
+
+        for route in ASSET_DIRECTED_ROUTES:
+            with self.subTest(route=route):
+                self.assertTrue(ROUTE_REQUIREMENTS[route].must_be_satisfied)
 
 
 if __name__ == "__main__":
