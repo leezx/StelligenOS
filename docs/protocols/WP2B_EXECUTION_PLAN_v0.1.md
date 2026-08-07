@@ -232,8 +232,10 @@ knowledge_cutoff = 2026-08-07
 
 输出实际 territory count。**15–30 仅作 `VAL-T01` 的 reconciliation reference**
 （报告实际数量，落在区间外不构成失败但须给出 reconciliation note，PR #78 已
-冻结的 `expected_active_band` 处理方式），**不得为凑数 split/merge**。
-`VAL-T02`（`territory_id` 全局唯一）是另一条规则，不要混用。
+冻结的 `territory_count_band` 处理方式——不要与同一契约里 `expected_active_
+band`（4–8，指 `ACTIVE_SEARCH` 数量，同样只是 reconciliation reference）混用，
+两个区间对应不同的量），**不得为凑数 split/merge**。`VAL-T02`
+（`territory_id` 全局唯一）是另一条规则，也不要混用。
 
 ---
 
@@ -315,8 +317,10 @@ competitive position 时，该 assessment 内部记
 **八项 `SearchSpaceAdmission` 标准（第 20 行）是第四种机制**，不属于以上任何
 field group：每项标准的状态本身就是 `SATISFIED`／`UNKNOWN`／`UNSATISFIED`
 三值（`CriterionStatus`），`UNKNOWN` 是合法值而非例外，按 `search_space_route_
-policy.yaml`（PR #79）解出路由——这正是第 8 节 `UNKNOWN → WATCHLIST` 的机制
-本身，不是「缺资料」的兜底。
+policy.yaml`（PR #79）的 `first_match_wins` 规则表解出路由——`UNKNOWN` 会阻断
+`ACTIVE-01`，但不直接决定最终路由，更早的 `OUT-*`／`PARTNER-*` 规则仍可能先
+命中，`WATCHLIST` 只是排到最后的 catch-all。详见第 8 节，不是「缺资料」的
+兜底捷径。
 
 ---
 
@@ -346,8 +350,38 @@ policy.yaml`（PR #79）解出路由——这正是第 8 节 `UNKNOWN → WATCHL
 - `plausible_buyer_partner_map`
 - `time_window_compatible`
 
-只能提出合理假设而没有足够证据时：`UNKNOWN → WATCHLIST`。这是**预期行为**，
-不是 run failure。**得到 0 个 `ACTIVE_SEARCH` 是合法结果。**
+只能提出合理假设而没有足够证据时，正确表述不是「`UNKNOWN → WATCHLIST`」这个
+捷径，而是：**`UNKNOWN` 会阻断 `ACTIVE_SEARCH`，但不直接决定最终路由。**
+最终路由必须永远交给冻结的 `first_match_wins` 规则表求值：
+
+```
+OUT-01 / OUT-02 / OUT-03  （clinical_value_exists、time_window_compatible、
+                            competitive_position_not_locked 等 UNSATISFIED）
+        ↓ 均不命中
+PARTNER-01 / PARTNER-02  （competitive_position_not_locked 或
+                            asymmetric_evidence_advantage UNSATISFIED，
+                            但 clinical_value_exists 与 plausible_buyer_
+                            partner_map 均 SATISFIED）
+        ↓ 均不命中
+ACTIVE-01  （八项全部 SATISFIED）
+        ↓ 不命中
+WATCH-01  （catch-all）
+```
+
+例如 `clinical_value_exists=SATISFIED`、
+`competitive_position_not_locked=UNSATISFIED`、
+`plausible_buyer_partner_map=SATISFIED`、
+`differentiation_visible_preclinical=UNKNOWN` 这样的组合，会先命中
+`PARTNER-01 → PARTNER_ONLY`，**不是** WATCHLIST——`PARTNER-01` 的 `when` 子句
+根本不检查 `differentiation_visible_preclinical`，它是不是 UNKNOWN 与这条
+规则命中与否无关。**只有当八项标准都走到第 20 行之前的每一条 OUT／PARTNER
+规则都不命中时**，`UNKNOWN` 才会以「使 `ACTIVE-01` 无法成立、又没有更早规则
+拦截」的方式，落到 `WATCH-01` 这个 catch-all。把「看到 UNKNOWN 就判
+WATCHLIST」当捷径，会把本该 `PARTNER_ONLY` 的 territory 错分。这是执行层面的
+表述修正，不改 PR #79 冻结的规则表本身。
+
+这是**预期行为**，不是 run failure。**得到 0 个 `ACTIVE_SEARCH` 是合法
+结果。**
 
 本计划的成功标准不是找到若干 active territory，而是证据是否真实支持得到的
 分布——`20 个 territory → 0 ACTIVE / 8 WATCH / 5 PARTNER_ONLY / 7 OUT` 与

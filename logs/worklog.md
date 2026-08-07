@@ -3334,3 +3334,35 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 555 tests OK（未改代码，数字不变）；`scripts/verify_repository_boundary.sh`
   通过；`git diff --check` 通过
 - Next: 等待审核方对本轮修订的结论
+
+## 2026-08-07T17:40 — WP2B Execution Plan 第三轮修订：UNKNOWN 路由表述纠正
+
+- 分支 `task_20260807_wp2b-execution-plan`
+- 审核裁决：`REQUEST_CHANGES`（一处阻断 + 两处非阻断，全部接受）
+- **阻断**：第 8 节仍写「`UNKNOWN → WATCHLIST`」这个捷径，与冻结的
+  `search_space_route_policy.yaml`（PR #79）`first_match_wins` 规则表不符。
+  该表顺序是 `OUT-* → PARTNER-* → ACTIVE-01 → WATCH-01`（catch-all）；
+  `PARTNER-01`／`PARTNER-02` 的 `when` 子句不检查
+  `differentiation_visible_preclinical` 等四项，因此一个含 UNKNOWN 的组合
+  完全可能先命中 `PARTNER_ONLY`，不会落到 WATCHLIST。若执行时把
+  「看到 UNKNOWN 就判 WATCHLIST」当捷径，会把本该 `PARTNER_ONLY` 的
+  territory 错分。已改为：UNKNOWN 阻断 `ACTIVE-01` 但不直接决定最终路由，
+  必须交给完整规则表求值，WATCHLIST 只是排到最后的 catch-all；用一个具体
+  组合（`competitive_position_not_locked=UNSATISFIED` +
+  `plausible_buyer_partner_map=SATISFIED` + `differentiation_visible_
+  preclinical=UNKNOWN` → 先命中 `PARTNER-01`）示范。第 6.1 节的同一处捷径
+  引用也一并改正。不改 PR #79 规则表本身，只改执行层面表述
+- **非阻断一**：第 5 节把 15–30 这个区间误标为 `expected_active_band`
+  （4–8，指 ACTIVE_SEARCH 数量）；正确应为 `territory_count_band`（15–30，
+  指总数）。已改正并在文中说明两者是不同的量，都只是 reconciliation
+  reference
+- **非阻断二**：PR #82 的 description 仍是初版措辞（five-tier hierarchy、
+  18-item depth、bioRxiv 待授权），与已改到第三轮的正文不符。已更新 PR body
+  为当前内容（frozen 七类 formal source、21-field completeness table、
+  PubMed+Clinical Trials 已决定授权、bioRxiv 明确不用）
+- 未改动其他内容：source policy、artifact 名称、UNKNOWN field-group 分层、
+  `position_occupancy_ref` 处理、授权状态一律未动
+- 555 tests OK（未改代码，数字不变）；`scripts/verify_repository_boundary.sh`
+  通过；`git diff --check` 通过
+- Next: 等待审核方对本轮修订的结论；据审核方预期，通过后即可 `APPROVE`
+  并开始正式执行
