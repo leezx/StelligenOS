@@ -13,6 +13,7 @@
 - [Early Search-Space Admission](./docs/architecture/search-space-admission.zh-CN.md)
 - [Program Commitment Review](./docs/architecture/program-commitment-review.zh-CN.md)
 - [Value Inflection Plan](./docs/architecture/value-inflection-plan.zh-CN.md)
+- [Sponsor Fit Assessment](./docs/architecture/sponsor-fit-assessment.zh-CN.md)
 - [Legacy Inventory](./docs/architecture/legacy_inventory.zh-CN.md)
 - [Migration Prompt](./prompts/system/STELLIGENOS_MIGRATION_MASTER_PROMPT.zh-CN.md)
 

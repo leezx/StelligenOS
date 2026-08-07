@@ -1,0 +1,177 @@
+version: "0.1.0"
+name: stelligenos-sponsor-fit-assessment-contract
+description: >-
+  Formal sponsor-fit assessment sitting between scientific opportunity
+  qualification and program commitment. It records an externally adjudicated
+  route recommendation with its supporting evidence; it does not authorise
+  capital, execute a Gate, or judge the science.
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  database: forbidden
+  cache: forbidden
+  result_files: forbidden
+question_status_values:
+  - SATISFIED
+  - UNKNOWN
+  - UNSATISFIED
+route_values:
+  - SELF_DEVELOP
+  - CO_DEVELOP
+  - DATA_PACKAGE_ONLY
+  - PARTNER_NOW
+  - MONITOR
+  - STOP_FOR_SPONSOR
+route_vocabulary_note: >-
+  The source architecture note writes Decision 3 outputs as
+  PARTNER_BEFORE_CONJUGATION and WATCH. Those are natural-language
+  descriptions; Phase 3 already converged them to PARTNER_NOW and MONITOR to
+  prevent machine-ID drift. This contract reuses the ProgramCommitmentReview
+  vocabulary so a recommendation and the commitment consuming it stay
+  comparable.
+capability_availability_values:
+  - owned
+  - collaborative
+  - cro_accessible
+  - license_required
+  - unavailable
+mandatory_questions:
+  - evidence_advantage
+  - capability_fit
+  - capital_fit
+  - time_fit
+  - differentiation_visibility
+  - ip_capture
+  - partnerability
+route_eligibility_principle: >-
+  A route is permitted because sufficient affirmative sponsor-fit evidence is
+  present, never because no item happens to be recorded as UNSATISFIED. An
+  assessment whose critical questions are UNKNOWN has not shown sponsor fit; it
+  has only failed to disprove it.
+route_eligibility:
+  SELF_DEVELOP:
+    must_be_satisfied:
+      - evidence_advantage
+      - capability_fit
+      - capital_fit
+      - time_fit
+      - differentiation_visibility
+      - ip_capture
+    must_not_be_unsatisfied: []
+    at_least_one_satisfied: []
+    note: >-
+      Partnerability is deliberately free: a programme may plan to keep funding
+      independently.
+  CO_DEVELOP:
+    must_be_satisfied:
+      - evidence_advantage
+      - differentiation_visibility
+      - partnerability
+    must_not_be_unsatisfied:
+      - ip_capture
+    at_least_one_satisfied: []
+    note: >-
+      Capability and capital may stay UNKNOWN because a partner would resolve
+      them. What must be shown is that there is something worth partnering on.
+  PARTNER_NOW:
+    must_be_satisfied:
+      - partnerability
+    must_not_be_unsatisfied: []
+    at_least_one_satisfied:
+      - evidence_advantage
+      - differentiation_visibility
+    note: >-
+      Without partnerability the route has no meaning; without at least one
+      visible or defensible advantage there is nothing to take to a partner.
+  DATA_PACKAGE_ONLY:
+    must_be_satisfied: []
+    must_not_be_unsatisfied: []
+    at_least_one_satisfied: []
+    note: >-
+      Reachable under unresolved uncertainty. This route buys down specific risk
+      with the sponsor's own data advantage without committing to full asset
+      development.
+  MONITOR:
+    must_be_satisfied: []
+    must_not_be_unsatisfied: []
+    at_least_one_satisfied: []
+    note: MONITOR is the natural home of UNKNOWN.
+  STOP_FOR_SPONSOR:
+    must_be_satisfied: []
+    must_not_be_unsatisfied: []
+    at_least_one_satisfied: []
+    note: Reachable under any state, and never a scientific KILL.
+contract:
+  contract_id: SponsorFitAssessment@0.1.0
+  role: >-
+    Answers whether the current sponsor is the right one to carry this program
+    and by which route, given asymmetric evidence, capability, capital, time,
+    differentiation, IP and partnerability.
+  required_fields:
+    - assessment_id
+    - program_thesis_ref
+    - sponsor_profile_ref
+    - scientific_opportunity_ref
+    - question_results
+    - capability_map
+    - resource_map
+    - differentiation_requires_phase_3
+    - route
+    - route_policy_ref
+    - rationale_ref
+    - human_decision_ref
+    - source_refs
+  optional_fields: []
+  waiver_mechanism: none
+  waiver_rationale: >-
+    There is deliberately no waiver. This contract encodes the current Stelligen
+    sponsor context, not a general biotech rule. A case-by-case waiver would be
+    a back door around the very checkpoint that exists to stop "I like this
+    programme, so approve it anyway". If the sponsor acquires ADC chemistry,
+    linker/payload, CMC, tox, GMP or clinical capability, the answer is to
+    update DevelopmentSponsorProfile or raise this contract version, not to
+    issue waivers.
+  capability_map_entry_fields:
+    - capability_id
+    - availability
+    - evidence_ref
+  resource_map_entry_fields:
+    - uncertainty_ref
+    - experiment_ref
+    - decision_changed_ref
+    - cost_band_ref
+    - capability_source
+    - failure_consequence_ref
+  aggregate_score: forbidden
+  aggregate_score_rationale: >-
+    The source note states this explicitly: do not use a total score here. A
+    single number would let a satisfied capability answer compensate for an
+    absent asymmetric advantage, which is the specific failure this checkpoint
+    exists to prevent.
+  cost_band_is_a_reference_not_a_number: true
+  invariants:
+    - all_instances_external_only
+    - all_cross_boundary_and_source_refs_use_external_scheme
+    - exactly_seven_mandatory_questions_answered_once_each
+    - no_aggregate_score_is_computed_or_stored
+    - unknown_is_not_failure
+    - unknown_never_auto_kills
+    - critical_unknowns_block_asset_directed_routes_until_resolved
+    - route_eligibility_is_affirmative_not_absence_of_negative
+    - self_develop_requires_affirmative_sponsor_fit_evidence
+    - no_waiver_mechanism_exists_for_sponsor_fit
+    - differentiation_requiring_phase_3_is_not_visible_differentiation
+    - assessment_does_not_grant_program_commitment
+    - assessment_does_not_authorise_capital
+    - assessment_does_not_execute_a_gate_or_asset_generation_run
+    - assessment_does_not_change_asset_intrinsic_scientific_truth
+    - stop_for_sponsor_is_not_scientific_kill
+    - route_is_a_recommendation_not_an_authorisation
+downstream_relationship:
+  consumed_by: ProgramCommitmentReview@0.1.0
+  binding_status: not_bound
+  binding_note: >-
+    ProgramCommitmentReview@0.1.0 is frozen and does not yet require a
+    sponsor_fit_assessment_ref. Adding one is a breaking change to a merged
+    contract and belongs in a separate binding PR, in the same shape as the
+    BinderAdcRouteRequest binding in PR #72.
