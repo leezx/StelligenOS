@@ -3246,3 +3246,123 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Next: 审核方明确「不该再继续磨 authorization 机制，应正式执行 WP2B CRC
   Opportunity Territory Map」。执行前需先与人类负责人确定运行范围（数据来源、
   执行环境、交付物清单）——运行本身在仓库外进行，产物不入仓。
+
+## 2026-08-07T16:20 — 起草 WP2B CRC Opportunity Territory Map Execution Plan v0.1
+
+- 分支 `task_20260807_wp2b-execution-plan`
+- 新文件 `docs/protocols/WP2B_EXECUTION_PLAN_v0.1.md`——execution protocol，
+  **不新增 architecture semantics，不修改 #77–#80 已冻结的 contracts/policies**，
+  **不消费 `authorises_run_count: 1`，不执行任何 territory 枚举**
+- 按人类负责人给定的 16 点要求逐条编写（executor、search objective、五层
+  source hierarchy、knowledge cutoff、两段式枚举、18 项最小调查深度、广度优先
+  证据深度、ACTIVE_SEARCH 特别规则、sponsor advantage rule、竞争/window
+  closure、交付目录、必需交付物、field-level provenance、run manifest、
+  stop/checkpoint policy、result PR 形态）
+- 起草阶段即验证交付目录真实存在且可写：
+  `/Volumes/Stelligen_SSD/Stelligen/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result`
+- 如实记录当前会话工具清单：`WebSearch`／`WebFetch` 可直接用；`PubMed`／
+  `Clinical Trials`／`bioRxiv` MCP connector 已安装但需人类在浏览器完成 OAuth——
+  建议至少授权 `Clinical Trials` 与 `PubMed` 以取得结构化字段，供人类负责人决定
+  是否授权
+- 计划中每个字段/术语均对照冻结契约核实：`OpportunityTerritory@0.1.0` 的 21
+  个字段、`SEARCH_SPACE_CRITERIA` 的八项标准名、`search_space_route_policy.yaml`
+  的 `ACTIVE-01` 规则、profile v0.1.2 的 `asymmetric_evidence_advantage_semantics`
+  ——未凭空发明新字段名
+- 555 tests OK（未改代码，数字不变）；`scripts/verify_repository_boundary.sh`
+  通过；`git diff --check` 通过
+- Next: 等待人类负责人（及若适用的 ChatGPT）对本计划的审核结论；批准后才真正
+  执行 territory 枚举并消费这一次授权
+
+## 2026-08-07T17:00 — WP2B Execution Plan 第一轮修订（REQUEST_CHANGES，六条，接受）
+
+- 分支 `task_20260807_wp2b-execution-plan`
+- 审核裁决：`REQUEST_CHANGES`（六条，全部接受）；`PR #81` 同轮 `APPROVE` 并合并
+  （`7616dff`）
+- **阻断一**：Source hierarchy 擅自扩大冻结契约——新增了 NCCN/ESMO/ASCO
+  guideline、WHO ICTRP，并把 TCGA/GEO/cBioPortal/GTEx/HPA/DepMap 统称
+  「Tier 1E formal evidence」，与 `source_policy.tier_1_sources`（仅七类）及
+  `VAL-T16`（禁止 Tier-2 派生数据库）直接冲突。改为严格限定七类，六个公开
+  资源明确排除出正式 Tier 体系，只保留 `availability` field group 内的
+  descriptive 用途；guideline 与 `tier_1_sources` 缺失「guideline」类别的
+  张力如实记录，不通过新增 Tier 解决
+- **阻断二**：Required artifact 名称与冻结契约不符
+  （`opportunity_territory_map.json`／`territory_table.tsv`），且漏掉
+  `run_report.md`／`verify_package.py`。改为冻结七个必需文件名逐字不改，
+  新增文件明确标注「追加，不替换」
+- **阻断三**：VAL 编号写错——`VAL-T01` 是数量 reconciliation，`VAL-T02` 是
+  `territory_id` 唯一性，此前写反。已修正并在文中加区分说明
+- **阻断四**：「18 项调查深度逐一对应字段」不成立——漏了 7 个字段。改为覆盖
+  `OpportunityTerritory@0.1.0` 全部 21 个字段的完整表
+- **阻断五**：UNKNOWN 语义与冻结的 `evidence_standards` 冲突——不能「缺资料
+  就统一写 UNKNOWN」。改为按 field group 三分：(a) clinical_definition／
+  current_failure 不允许 UNKNOWN，无法确证则排除该候选 territory；
+  (b) competition／availability 允许为空但须标注
+  `investigated_and_empty`；(c) sponsor_fit_context／timing 允许 UNKNOWN
+  且不得省略字段
+- **阻断六**：`source_manifest.json` 机构关键词扫描（`dfci`/`hospital`/…）
+  错误复制了 profile 校验器的规则——防的是资产误认，不是引用学术机构公开
+  论文。已删除，替换为「不得把 private/unpublished/institution-controlled
+  资源当作 Stelligen-controlled evidence」的正确边界
+- 另按建议：授权单位改为 `run_id`（可跨检查点/续接会话），不绑定单次会话；
+  工具决定明确为授权 `PubMed`+`Clinical Trials`，不用 `bioRxiv`
+- 555 tests OK（未改代码，数字不变）；`scripts/verify_repository_boundary.sh`
+  通过；`git diff --check` 通过
+- Next: 等待审核方对本轮修订的结论；获批后才真正执行 territory 枚举
+
+## 2026-08-07T17:20 — WP2B Execution Plan 第二轮修订：position_occupancy_ref 的 empty 语义
+
+- 分支 `task_20260807_wp2b-execution-plan`
+- 审核裁决：`REQUEST_CHANGES`（一条，接受）——第 6 节把 `position_occupancy_ref`
+  与三个 list 字段一起标成「empty 允许，须与未调查区分」，但
+  `OpportunityTerritory@0.1.0` 里它属于 `TERRITORY_SINGLE_REFERENCE_FIELDS`，
+  经 `_require_external_ref` 校验，永远不允许为空——按原计划写的 territory 会
+  在结果校验第一步（构造实例）就失败
+- 成因：冻结的 `evidence_standards.yaml` 把 `position_occupancy_ref` 与
+  `current_competitor_refs`／`leading_asset_refs`／`expected_readout_refs`
+  分在同一个 `competition` field group、组级声明 `empty_permitted: true`——
+  这是 evidence_standards 文本与 dataclass 校验之间的张力：前三者是 list
+  字段，`empty_permitted` 对它们成立；`position_occupancy_ref` 是单值 ref，
+  不是 list，同一句声明对它不成立
+- 修订：第 6 节表格与 6.1 节把 `position_occupancy_ref` 从「empty 允许」组
+  移到「ref 必须存在，结论可以是 UNKNOWN/UNRESOLVED」组，与
+  `sponsor_evidence_advantage_ref`／`window_closure_risk_ref` 同一机制；
+  第 17 节 validation procedure 新增第 9 条，显式要求非空
+  `position_occupancy_ref`，并说明这与三个 list 字段的
+  `investigated_and_empty` 标注是两条独立检查
+- 未改动其他任何内容：source policy、artifact 名称、UNKNOWN 分层、授权状态
+  一律未动
+- 555 tests OK（未改代码，数字不变）；`scripts/verify_repository_boundary.sh`
+  通过；`git diff --check` 通过
+- Next: 等待审核方对本轮修订的结论
+
+## 2026-08-07T17:40 — WP2B Execution Plan 第三轮修订：UNKNOWN 路由表述纠正
+
+- 分支 `task_20260807_wp2b-execution-plan`
+- 审核裁决：`REQUEST_CHANGES`（一处阻断 + 两处非阻断，全部接受）
+- **阻断**：第 8 节仍写「`UNKNOWN → WATCHLIST`」这个捷径，与冻结的
+  `search_space_route_policy.yaml`（PR #79）`first_match_wins` 规则表不符。
+  该表顺序是 `OUT-* → PARTNER-* → ACTIVE-01 → WATCH-01`（catch-all）；
+  `PARTNER-01`／`PARTNER-02` 的 `when` 子句不检查
+  `differentiation_visible_preclinical` 等四项，因此一个含 UNKNOWN 的组合
+  完全可能先命中 `PARTNER_ONLY`，不会落到 WATCHLIST。若执行时把
+  「看到 UNKNOWN 就判 WATCHLIST」当捷径，会把本该 `PARTNER_ONLY` 的
+  territory 错分。已改为：UNKNOWN 阻断 `ACTIVE-01` 但不直接决定最终路由，
+  必须交给完整规则表求值，WATCHLIST 只是排到最后的 catch-all；用一个具体
+  组合（`competitive_position_not_locked=UNSATISFIED` +
+  `plausible_buyer_partner_map=SATISFIED` + `differentiation_visible_
+  preclinical=UNKNOWN` → 先命中 `PARTNER-01`）示范。第 6.1 节的同一处捷径
+  引用也一并改正。不改 PR #79 规则表本身，只改执行层面表述
+- **非阻断一**：第 5 节把 15–30 这个区间误标为 `expected_active_band`
+  （4–8，指 ACTIVE_SEARCH 数量）；正确应为 `territory_count_band`（15–30，
+  指总数）。已改正并在文中说明两者是不同的量，都只是 reconciliation
+  reference
+- **非阻断二**：PR #82 的 description 仍是初版措辞（five-tier hierarchy、
+  18-item depth、bioRxiv 待授权），与已改到第三轮的正文不符。已更新 PR body
+  为当前内容（frozen 七类 formal source、21-field completeness table、
+  PubMed+Clinical Trials 已决定授权、bioRxiv 明确不用）
+- 未改动其他内容：source policy、artifact 名称、UNKNOWN field-group 分层、
+  `position_occupancy_ref` 处理、授权状态一律未动
+- 555 tests OK（未改代码，数字不变）；`scripts/verify_repository_boundary.sh`
+  通过；`git diff --check` 通过
+- Next: 等待审核方对本轮修订的结论；据审核方预期，通过后即可 `APPROVE`
+  并开始正式执行
