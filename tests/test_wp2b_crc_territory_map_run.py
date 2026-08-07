@@ -35,10 +35,14 @@ class RunAuthorisationTests(unittest.TestCase):
                 self.assertTrue(blocker["why"].strip())
                 self.assertTrue(blocker["cleared_by"].strip())
 
-    def test_blocker_one_covers_the_sponsor_profile_instance(self):
+    def test_blocker_one_treats_the_profile_as_an_upstream_input(self):
+        """The profile is a baseline, not the advantage evidence itself."""
+
         blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
         self.assertEqual(blocker["must_be"], "external_instance")
-        self.assertIn("sponsor_evidence_advantage_ref", blocker["blocks"])
+        self.assertEqual(
+            blocker["role"], "upstream_input_not_the_advantage_evidence_itself"
+        )
 
     def test_blocker_two_covers_the_route_policy(self):
         blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-02")
@@ -51,9 +55,20 @@ class RunAuthorisationTests(unittest.TestCase):
 
 
 class ScopeTests(unittest.TestCase):
-    def test_the_territory_count_band_is_frozen(self):
+    def test_the_count_band_is_planning_capacity_not_a_validity_criterion(self):
+        """Shaping the funnel first and making knowledge fit it is the failure."""
+
         band = CONTRACT["scope"]["territory_count_band"]
         self.assertEqual((band["min"], band["max"]), (15, 30))
+        self.assertFalse(band["is_a_target"])
+        self.assertTrue(band["is_a_reconciliation_reference"])
+        self.assertTrue(band["out_of_band_is_not_a_failure"])
+        self.assertTrue(band["out_of_band_requires_reconciliation_note"])
+
+    def test_the_count_rule_records_rather_than_gates(self):
+        rule = next(r for r in CONTRACT["validation_rules"] if r["id"] == "VAL-T01")
+        self.assertIn("不构成失败", rule["rule"])
+        self.assertIn("reconciliation note", rule["rule"])
 
     def test_the_active_band_is_a_reconciliation_reference_not_a_target(self):
         """A quota would turn routing into a number-hitting exercise."""
@@ -110,6 +125,43 @@ class SourcePolicyTests(unittest.TestCase):
         self.assertTrue(policy["every_field_requires_source_ref"])
 
 
+class SponsorAdvantageSemanticsTests(unittest.TestCase):
+    """A profile reference is a company bio, not evidence of a local advantage."""
+
+    def test_the_profile_is_a_baseline_not_the_evidence(self):
+        semantics = CONTRACT["sponsor_evidence_advantage_semantics"]
+        self.assertTrue(semantics["profile_is_a_baseline_not_the_evidence"])
+        self.assertTrue(semantics["ref_must_not_point_directly_at_the_profile"])
+        self.assertEqual(
+            semantics["ref_points_to"],
+            "territory_specific_external_evidence_or_assessment",
+        )
+
+    def test_the_shared_reference_failure_mode_is_named(self):
+        semantics = CONTRACT["sponsor_evidence_advantage_semantics"]
+        self.assertTrue(semantics["ref_must_not_be_shared_across_territories"])
+        self.assertIn("公司简介引用", semantics["shared_ref_failure_mode"])
+
+    def test_the_derivation_chain_is_recorded(self):
+        semantics = CONTRACT["sponsor_evidence_advantage_semantics"]
+        self.assertEqual(len(semantics["derivation"]), 4)
+
+    def test_no_new_formal_contract_is_required_now(self):
+        semantics = CONTRACT["sponsor_evidence_advantage_semantics"]
+        self.assertFalse(semantics["formal_contract_required_now"])
+
+    def test_validation_enforces_the_semantics(self):
+        rules = {r["id"]: r["rule"] for r in CONTRACT["validation_rules"]}
+        self.assertIn("不直接指向 DevelopmentSponsorProfile", rules["VAL-T19"])
+        self.assertIn("不得共用同一个", rules["VAL-T20"])
+        self.assertIn("不得仅由 DevelopmentSponsorProfile 支撑", rules["VAL-T21"])
+
+    def test_the_advantage_artifact_is_required_in_the_package(self):
+        self.assertIn(
+            "sponsor_evidence_advantage.json", CONTRACT["output"]["required_artifacts"]
+        )
+
+
 class EvidenceStandardTests(unittest.TestCase):
     def test_every_territory_field_group_has_a_standard(self):
         covered = set()
@@ -140,10 +192,25 @@ class EvidenceStandardTests(unittest.TestCase):
 
     def test_sponsor_advantage_unknown_stays_unknown(self):
         group = next(
-            g for g in CONTRACT["evidence_standards"] if g["field_group"] == "sponsor"
+            g
+            for g in CONTRACT["evidence_standards"]
+            if g["field_group"] == "sponsor_fit_context"
         )
         self.assertTrue(group["unknown_permitted"])
         self.assertIn("不转为", group["unknown_rule"])
+        self.assertTrue(group["profile_alone_is_insufficient"])
+
+    def test_sponsor_context_and_timing_are_separate_groups(self):
+        """Window closure risk is competition timing, not a sponsor attribute."""
+
+        groups = {g["field_group"]: g for g in CONTRACT["evidence_standards"]}
+        self.assertEqual(
+            groups["sponsor_fit_context"]["fields"], ["sponsor_evidence_advantage_ref"]
+        )
+        self.assertEqual(groups["timing"]["fields"], ["window_closure_risk_ref"])
+        timing = groups["timing"]
+        self.assertTrue(timing["profile_alone_is_insufficient"])
+        self.assertIn("time_fit", timing["downstream_note"])
 
     def test_known_target_biology_is_constrained_to_background_intelligence(self):
         """Carried forward from the PR #77 review."""
@@ -251,7 +318,20 @@ class RepositoryBoundaryTests(unittest.TestCase):
         for banned in ("MSS", "HER2", "TROP2", "KRAS", "BRAF", "G12C", "MSI"):
             with self.subTest(term=banned):
                 self.assertNotIn(banned, text)
-        self.assertNotIn("territories:", text)
+
+        # Structural, not substring: a key literally named "territories" would
+        # mean the contract had started carrying territory content. Matching on
+        # the text alone trips over keys that merely end in the word.
+        def keys(node):
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    yield key
+                    yield from keys(value)
+            elif isinstance(node, list):
+                for item in node:
+                    yield from keys(item)
+
+        self.assertNotIn("territories", set(keys(CONTRACT)))
 
     def test_the_map_schema_is_reachable_and_unchanged_by_this_contract(self):
         self.assertIn("territories", OpportunityTerritoryMap.__dataclass_fields__)

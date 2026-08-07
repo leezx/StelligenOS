@@ -33,11 +33,13 @@ run:
 blockers:
   - id: BLOCK-01
     title: DevelopmentSponsorProfile 实例尚不存在
-    blocks: 全部 territory 的 sponsor_evidence_advantage_ref
+    blocks: 本运行的上游输入——territory-specific 优势评估无基线可依
+    role: upstream_input_not_the_advantage_evidence_itself
     why: >-
-      每个 territory 必须声明发起方在该临床水域是否具有非对称证据优势，而该判断
-      的唯一基线是一份已冻结的 DevelopmentSponsorProfile 实例。目前仓库内只有
-      DevelopmentSponsorProfile@0.1.0 的合同形状（PR #67），没有任何实例。
+      每个 territory 必须声明发起方在该临床水域是否具有非对称证据优势。该判断
+      需要一份已冻结的 DevelopmentSponsorProfile 作为**稳定基线**，但 profile
+      本身不是该优势的证据——见 sponsor_evidence_advantage_semantics。目前仓库内
+      只有 DevelopmentSponsorProfile@0.1.0 的合同形状（PR #67），没有任何实例。
     source_requirement: >-
       按执行策略 Stage 0，该 profile 必须写当前事实而非理想中的未来公司：当前
       优势、可通过合作获得的能力、当前不可独立承担的能力、默认交易终点。
@@ -69,11 +71,18 @@ scope:
   disease_scope: colorectal_cancer
   disease_scope_ref_required: true
   unit_of_work: clinical_territory
-  # 规模取自执行策略第九节的推荐漏斗。这是执行能力匹配值，不是数学最优值。
+  # 规模取自执行策略第九节的推荐漏斗。这是**规划容量，不是有效性判据**。
+  # 若严格梳理后只有 12 个可区分、可判定的 territory，不得为通过校验而拆出 3 个；
+  # 若有 34 个合理 territory，也不得被区间逼着合并。先规定漏斗形状再让知识生产
+  # 去迎合漏斗，正是本工作包要消灭的东西。
   territory_count_band:
     min: 15
     max: 30
-    rationale: 执行策略第九节推荐 CRC territories 15–30。
+    is_a_target: false
+    is_a_reconciliation_reference: true
+    rationale: 执行策略第九节推荐 CRC territories 15–30，属规划容量。
+    out_of_band_is_not_a_failure: true
+    out_of_band_requires_reconciliation_note: true
   # ACTIVE 的数量不由本契约规定，由 route policy 与实际证据决定。
   # 此处只记录预期区间，用于事后对账，**不作为达标要求**。
   expected_active_band:
@@ -136,6 +145,33 @@ source_policy:
     未经原始来源验证的模型领域知识只能形成待验证假设，不支撑 territory 的任何
     正式字段。此规则沿用 PR #53 第 4 条裁决。
 
+# ------------------------------------------- sponsor advantage 的证据关系
+
+# 这一段是第一轮审核纠正的语义，单列以免再被读错。
+sponsor_evidence_advantage_semantics:
+  profile_is_a_baseline_not_the_evidence: true
+  statement: >-
+    DevelopmentSponsorProfile 描述的是发起方的稳定基线：拥有什么能力、能接触什么
+    数据、缺什么能力、最大自研阶段、默认交易节点。而「在某个具体 territory 里
+    是否存在非对称证据优势」是 territory-relative 判断。同一份 profile 对
+    oncofetal territory 可能优势很强，对另一片水域可能与所有人没有区别。
+  derivation:
+    - DevelopmentSponsorProfile（稳定基线）
+    - 该 territory 可触及的数据／模型／know-how
+    - 该 territory 的证据要求
+    - "-> territory-specific 优势评估 -> sponsor_evidence_advantage_ref"
+  ref_points_to: territory_specific_external_evidence_or_assessment
+  ref_must_not_point_directly_at_the_profile: true
+  ref_must_not_be_shared_across_territories: true
+  shared_ref_failure_mode: >-
+    若 20 个 territory 的 sponsor_evidence_advantage_ref 全部指向同一份
+    DevelopmentSponsorProfile 实例，该字段就只是「公司简介引用」，并未证明任何
+    territory 中存在非对称优势。
+  formal_contract_required_now: false
+  formal_contract_note: >-
+    本轮不新增正式评估合同。该评估先作为外部证据工件，由本运行产出并记入
+    sponsor_evidence_advantage.json。语义在此冻结，形态可留待后续。
+
 # ---------------------------------------------------------------- 证据标准
 
 evidence_standards:
@@ -162,13 +198,30 @@ evidence_standards:
     known_target_biology_constraint: >-
       known_target_biology_refs 是背景情报，不是 target candidate。本运行不得据此
       产出任何靶点，WP3 也不得把它当作候选生成的权威。
-  - field_group: sponsor
-    fields: [sponsor_evidence_advantage_ref, window_closure_risk_ref]
-    requires: 已冻结的 DevelopmentSponsorProfile 实例（BLOCK-01）
+  - field_group: sponsor_fit_context
+    fields: [sponsor_evidence_advantage_ref]
+    requires: >-
+      已冻结的 DevelopmentSponsorProfile 实例（BLOCK-01）**加上**该 territory 可
+      触及的数据／模型／know-how 与该 territory 的证据要求，三者共同支撑一份
+      territory-specific 优势评估。
+    ref_points_to: territory_specific_external_evidence_or_assessment
+    profile_alone_is_insufficient: true
     unknown_permitted: true
     unknown_rule: >-
       优势未知即记未知，不得因「看起来我们能做」而记为具有优势。未知不转为
       不具优势，也不转为具有优势。
+  - field_group: timing
+    fields: [window_closure_risk_ref]
+    requires: >-
+      竞争与 readout 时间证据（leading assets、competitor stage、expected
+      readouts、监管时间、SOC 演进）**加上**发起方执行时间跨度。
+    formula: competition_dynamics × expected_time_to_sponsor_inflection
+    profile_alone_is_insufficient: true
+    profile_contributes: 仅执行能力与时间约束的那一半
+    unknown_permitted: true
+    downstream_note: >-
+      这一组是 SearchSpaceAdmission 的 time_fit 条件的证据来源；若只靠 profile
+      支撑，time_fit 将失去依据。
 
 # ---------------------------------------------------------------- 输出
 
@@ -193,6 +246,7 @@ output:
     - territory_map.json
     - territories.tsv
     - search_space_admissions.json
+    - sponsor_evidence_advantage.json
     - source_manifest.json
     - run_report.md
     - verify_package.py
@@ -201,7 +255,7 @@ output:
 
 validation_rules:
   - id: VAL-T01
-    rule: territory 数量落在 territory_count_band 内
+    rule: 报告实际 territory 数量；落在 territory_count_band 之外不构成失败，但须给出 reconciliation note 说明为何该数量是梳理结果
   - id: VAL-T02
     rule: territory_id 全局唯一
   - id: VAL-T03
@@ -236,6 +290,12 @@ validation_rules:
     rule: territory 粒度满足 territory_granularity_rule，无完全重复的五元组
   - id: VAL-T18
     rule: 包内 verify_package.py 可独立运行且全部检查通过
+  - id: VAL-T19
+    rule: 每个 sponsor_evidence_advantage_ref 在 sponsor_evidence_advantage.json 中解析到一条 territory-specific 记录，且不直接指向 DevelopmentSponsorProfile 实例
+  - id: VAL-T20
+    rule: 任意两个 territory 不得共用同一个 sponsor_evidence_advantage_ref
+  - id: VAL-T21
+    rule: 每条 window_closure_risk 记录至少引用一条竞争或 readout 时间来源，不得仅由 DevelopmentSponsorProfile 支撑
 
 # ---------------------------------------------------------------- 明确不授权
 

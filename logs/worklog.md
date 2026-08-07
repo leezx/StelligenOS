@@ -3074,3 +3074,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Boundary: 不执行任何运行；不产出任何 territory；不含任何 CRC 内容（有测试断言文件中不出现 `MSS`／`HER2`／`TROP2`／`KRAS`／`BRAF`／`G12C`／`MSI`，且无 `territories:` 键）；不修改任何既有合同、schema、Gate、lifecycle 或 core objects；不解除 `EVGAP-01`／`EVGAP-02`；不裁定 `GAP-P07`；不复活或修改 369-pair 轴。
 - Validation: `Ran 500 tests OK`（合并前 468，净增 32）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
 - Next: 本 PR 获批合并后仍不能开跑。先清 `BLOCK-01`（人类负责人提供事实 → 冻结 profile 实例 → 审核接受），再清 `BLOCK-02`（冻结 route policy → 审核接受），两者都清后另开极小 PR 把 `authorises_run` 转 `true`、`blocked_by` 清空，形态同 PR #66。
+
+### 2026-08-07T03:40 — PR #78 第一轮审核裁决与修订（两条，均接受）
+
+- Review: ChatGPT 对 PR #78 返回 `REQUEST_CHANGES`。contract-only、未授权执行、旧 369-pair 隔离、Tier 2 禁用、结果外置等边界均获认可，两条实质问题。**均接受，未作辩解。**
+- Blocker 1 accepted: `territory_count_band` 15–30 被写成 `VAL-T01` 的硬通过条件，与同文件对 `expected_active_band` 的处理**自相矛盾**——4–8 被正确标为只作对账，15–30 却成了 validity criterion。后果具体：若严格梳理后只有 12 个可区分 territory，系统会为通过校验硬拆 3 个；若有 34 个合理 territory，又会被逼着合并。**先规定漏斗形状再让知识生产迎合漏斗**，正是本工作包反对的东西。
+- Fix 1: `territory_count_band` 加 `is_a_target: false`、`is_a_reconciliation_reference: true`、`out_of_band_is_not_a_failure: true`、`out_of_band_requires_reconciliation_note: true`；`VAL-T01` 改为「报告实际数量；落在参考区间外不构成失败，但须给出 reconciliation note」。
+- Blocker 2 accepted (executor semantic error): 初版写「每个 territory 的 `sponsor_evidence_advantage_ref` 都要指向 `DevelopmentSponsorProfile` 实例」——**这不成立**。profile 描述的是发起方稳定基线（能力、可触及数据、缺口、最大自研阶段、默认交易节点），而「在某个具体 territory 是否存在非对称优势」是 territory-relative 判断；同一份 profile 对 oncofetal territory 可能优势很强，对另一片水域可能与所有人没区别。若 20 个 territory 全指向同一份 profile，该字段只是「公司简介引用」，没有证明任何 territory 存在优势。
+- Fix 2: 新增 `sponsor_evidence_advantage_semantics` 段单列该语义，写明推导链（profile + 该 territory 可触及的数据/模型/know-how + 该 territory 的证据要求 → territory-specific 评估 → ref），并写死 `ref_must_not_point_directly_at_the_profile` 与 `ref_must_not_be_shared_across_territories`；`BLOCK-01` 角色改为 `upstream_input_not_the_advantage_evidence_itself`；拆开原 `sponsor` 字段组为 `sponsor_fit_context` 与 `timing`——后者不能主要来自 profile，其证据是 leading assets／competitor stage／expected readouts／监管时间／SOC 演进 加上发起方执行时间跨度，profile 最多提供后半段，两组均标 `profile_alone_is_insufficient: true`，并记明 `timing` 是 `SearchSpaceAdmission` `time_fit` 的证据来源；新增 `VAL-T19`／`VAL-T20`／`VAL-T21` 装上执行层牙齿，`sponsor_evidence_advantage.json` 加入必需产物。
+- Scope: **未新增正式评估合同**——审核方说除非必要否则不加，该评估先作为外部证据工件由运行产出，语义在此冻结、形态留待后续。未授权执行、未产出 CRC 内容、未改 `SearchSpaceAdmission` 语义、未动旧轴隔离。
+- Non-blocking registered: 审核方指出 `VAL-T13` 很严格但需确保 `source_manifest.json` 真正支持「字段 → claim/evidence → source」映射而非只列全局 sources，否则结果 PR 时可能「有 manifest 但无法证明哪个来源支持哪个字段」；判断可留到 execution authorization 或 result validator 具体化。本轮未改，登记备查。
+- Mutation: 五项——数量区间改回硬目标 -> `failures=1`；允许 ref 直接指向 profile -> `failures=1`；允许多 territory 共用同一 ref -> `failures=1`；把 sponsor 与 timing 合并回去 -> `errors=1`；删 `VAL-T20` -> `failures=1, errors=1`。五项回滚均以 `diff -q` 确认无差异。
+- Test defect, self-caught: 边界测试原用 `assertNotIn("territories:", text)` 检查契约是否夹带 territory 内容，新增的 `ref_must_not_be_shared_across_territories:` 让它**误报**。改为结构化检查——递归遍历解析后的键名，断言不存在字面为 `territories` 的键。**教训：用子串匹配做结构断言，会被恰好以该词结尾的键绊倒。**
+- Validation: `Ran 508 tests OK`（本文件 40）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
+- Next: 推送到同一 PR #78，不新开 PR；等待复审。
