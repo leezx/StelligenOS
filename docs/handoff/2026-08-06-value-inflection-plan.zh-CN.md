@@ -7,7 +7,7 @@
 - 基线：`origin/main@5ae1b55`
 - 版本：`ValueInflectionPlan@0.1.0`
 - PR：https://github.com/leezx/StelligenOS/pull/70
-- 状态：`APPROVED_WAITING_MERGE`
+- 状态：`MERGED_TO_MAIN`
 
 ## 总体四步路线
 
@@ -40,6 +40,7 @@
 
 - 通过 Chrome 网页版 ChatGPT 的 `ADC研发框架优化` 对话，用聊天框 `+` 显式选择 GitHub 来源审核本 PR。
 - ChatGPT 已明确 `APPROVE`；审核记录见 `logs/chatgpt-review-2026-08-06-value-inflection-plan-phase4.md`，审核 HEAD 为 `78a9a62`，CI run `#63` 成功。
-- 当前授权：合并 PR #70；合并前不创建新的功能阶段。
+- PR #70 已于 2026-08-07 合并到 `main`，合并提交为 `0103b48`；四步架构调整至此完成。
+- 当前状态：不自动创建新的功能阶段，不自动开始 Asset Generation 或任何外部运行。
 - `REQUEST_CHANGES`：只按反馈最小修订本 PR 并重新审核。
 - `REJECT_PHASE`：停止执行，等待重新定义总纲或阶段边界。
