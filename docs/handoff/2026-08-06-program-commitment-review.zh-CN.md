@@ -6,7 +6,7 @@
 - 分支：`task_20260807_program-commitment-review`
 - 基线：`origin/main@9abd66f`
 - 版本：`ProgramCommitmentReview@0.1.0`
-- PR：待创建
+- PR：https://github.com/leezx/StelligenOS/pull/69
 - 状态：`PENDING_CHATGPT_REVIEW`
 
 ## 总体四步路线
