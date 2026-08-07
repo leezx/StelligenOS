@@ -259,10 +259,10 @@ field group 与该组的 unknown/empty 处理方式（第 6.1 节展开）：
 | 8 | `current_soc_ref` | `current_failure` | **不允许 UNKNOWN** | Current SOC |
 | 9 | `clinical_failure_mode_ref` | `current_failure` | **不允许 UNKNOWN** | Main clinical failure/unmet need |
 | 10 | `patient_size_band_ref` | `current_failure` | **不允许 UNKNOWN**（只需分档，不需精确数字） | Approximate population relevance |
-| 11 | `current_competitor_refs` | `competition` | empty 允许，须与未调查区分（`VAL-T14`） | Current leading competitors |
-| 12 | `leading_asset_refs` | `competition` | empty 允许，须与未调查区分 | Highest development stage |
-| 13 | `expected_readout_refs` | `competition` | empty 允许，须与未调查区分 | Important expected readouts |
-| 14 | `position_occupancy_ref` | `competition` | empty 允许，须与未调查区分 | Evidence that position is locked / not locked / unresolved |
+| 11 | `current_competitor_refs` | `competition`（list） | empty 允许，须与未调查区分（`VAL-T14`） | Current leading competitors |
+| 12 | `leading_asset_refs` | `competition`（list） | empty 允许，须与未调查区分 | Highest development stage |
+| 13 | `expected_readout_refs` | `competition`（list） | empty 允许，须与未调查区分 | Important expected readouts |
+| 14 | `position_occupancy_ref` | `competition`（single ref，非 list） | **ref 本身不允许为空**——契约里与第 11–13 行同组，但它是 `TERRITORY_SINGLE_REFERENCE_FIELDS` 而非 list 字段，无法为空；结论可以是 `UNRESOLVED` | Evidence that position is locked / not locked / unresolved |
 | 15 | `known_target_biology_refs` | `availability` | empty 允许 | 背景生物学情报（仅背景，不是 target candidate，见 PR #77 非阻断意见） |
 | 16 | `available_patient_data_refs` | `availability` | empty 允许 | Public patient data availability |
 | 17 | `available_model_refs` | `availability` | empty 允许 | Public model availability |
@@ -283,17 +283,34 @@ field group 与该组的 unknown/empty 处理方式（第 6.1 节展开）：
 excluded-enumeration 部分，写明缺哪一项、查过哪些来源仍无法确证。** 不是给
 该 territory 填 UNKNOWN 后保留它。
 
-**(b) 允许为空，但空必须与未调查区分**——`competition`（第 11–14 行）与
-`availability`（第 15–17 行）。原文：「无竞争者或无预期 readout 是真实且有
-信息量的状态，不等于未调查。」空值必须显式标注
+**(b) 允许为空，但空必须与未调查区分**——**仅限 list 字段**：
+`current_competitor_refs`／`leading_asset_refs`／`expected_readout_refs`
+（第 11–13 行）与 `availability`（第 15–17 行）。原文：「无竞争者或无预期
+readout 是真实且有信息量的状态，不等于未调查。」空值必须显式标注
 `investigated_and_empty`（对应 `VAL-T14`），不能留白。
 
+**`position_occupancy_ref`（第 14 行）不属于 (b)，尽管它在冻结
+`evidence_standards` 里与上面三个 list 字段同属 `competition` field group。**
+它是 `TERRITORY_SINGLE_REFERENCE_FIELDS` 之一（同 `OpportunityTerritory` 契约
+里的 `sponsor_evidence_advantage_ref`／`window_closure_risk_ref`），
+`__post_init__` 用 `_require_external_ref` 校验，**永远不允许为空**——这一点
+与 evidence_standards 对整个 `competition` 组「`empty_permitted: true`」的
+字面表述有张力，如实记录：`empty_permitted` 对这三个 list 字段成立，对
+`position_occupancy_ref` 不成立，因为它根本不是 list。**position_occupancy_ref
+必须永远指向一份非空的 territory-specific occupancy assessment；无法确证
+competitive position 时，该 assessment 内部记
+`state = UNRESOLVED`，而不是把 ref 留空或省略。** 空 list（真实无竞争者）与
+空 ref（无法产出任何 assessment）是两件不同的事，不能用同一条规则处理。
+
 **(c) UNKNOWN 允许且必须记录，不得省略字段**——`sponsor_fit_context`（第 18
-行）与 `timing`（第 19 行）。原文：「优势未知即记未知，不得因『看起来我们
+行）、`timing`（第 19 行），以及刚才归类的 `position_occupancy_ref`（第 14
+行）。原文（`sponsor_fit_context`）：「优势未知即记未知，不得因『看起来我们
 能做』而记为具有优势。未知不转为不具优势，也不转为具有优势。」`VAL-T15`
 明确 `sponsor_evidence_advantage` 未知时记 `UNKNOWN`，**不得省略该字段**——
 这与 (a) 恰好相反：(a) 是「不确定就不成立」，(c) 是「不确定也要留下这个
-字段，标 UNKNOWN」。
+字段，标 UNKNOWN／UNRESOLVED」。`position_occupancy_ref` 与
+`sponsor_evidence_advantage_ref`／`window_closure_risk_ref` 在这一点上是
+同一种机制：ref 必须存在，ref 指向的内容可以是未知/未解决的结论。
 
 **八项 `SearchSpaceAdmission` 标准（第 20 行）是第四种机制**，不属于以上任何
 field group：每项标准的状态本身就是 `SATISFIED`／`UNKNOWN`／`UNSATISFIED`
@@ -539,6 +556,13 @@ reproducibility：后来的审核者能理解 territory 为什么存在、为什
    机构私有队列、未公开的患者样本）当成 Stelligen-controlled evidence 来
    源——即复用第 1 节「不允许」清单里的边界，而不是对 citation 文本做
    关键词扫描。
+9. **每个 territory 必须有一个可解析、非空的 `position_occupancy_ref`；
+   `current_competitor_refs`／`leading_asset_refs`／`expected_readout_refs`
+   为空列表不能免除这条要求。** 三个 list 字段的 `investigated_and_empty`
+   标注只满足 `VAL-T14`，不满足 `position_occupancy_ref` 本身的非空约束——
+   两者是独立检查，一个 territory 可以同时「无已知竞争者」且「occupancy ref
+   存在、内部记 `UNRESOLVED`」。ref 缺失或为空必须在这一步就 FAIL，不能留到
+   构造 `OpportunityTerritory@0.1.0` 时才因 `_require_external_ref` 报错。
 
 ---
 

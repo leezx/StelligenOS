@@ -3308,3 +3308,29 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 555 tests OK（未改代码，数字不变）；`scripts/verify_repository_boundary.sh`
   通过；`git diff --check` 通过
 - Next: 等待审核方对本轮修订的结论；获批后才真正执行 territory 枚举
+
+## 2026-08-07T17:20 — WP2B Execution Plan 第二轮修订：position_occupancy_ref 的 empty 语义
+
+- 分支 `task_20260807_wp2b-execution-plan`
+- 审核裁决：`REQUEST_CHANGES`（一条，接受）——第 6 节把 `position_occupancy_ref`
+  与三个 list 字段一起标成「empty 允许，须与未调查区分」，但
+  `OpportunityTerritory@0.1.0` 里它属于 `TERRITORY_SINGLE_REFERENCE_FIELDS`，
+  经 `_require_external_ref` 校验，永远不允许为空——按原计划写的 territory 会
+  在结果校验第一步（构造实例）就失败
+- 成因：冻结的 `evidence_standards.yaml` 把 `position_occupancy_ref` 与
+  `current_competitor_refs`／`leading_asset_refs`／`expected_readout_refs`
+  分在同一个 `competition` field group、组级声明 `empty_permitted: true`——
+  这是 evidence_standards 文本与 dataclass 校验之间的张力：前三者是 list
+  字段，`empty_permitted` 对它们成立；`position_occupancy_ref` 是单值 ref，
+  不是 list，同一句声明对它不成立
+- 修订：第 6 节表格与 6.1 节把 `position_occupancy_ref` 从「empty 允许」组
+  移到「ref 必须存在，结论可以是 UNKNOWN/UNRESOLVED」组，与
+  `sponsor_evidence_advantage_ref`／`window_closure_risk_ref` 同一机制；
+  第 17 节 validation procedure 新增第 9 条，显式要求非空
+  `position_occupancy_ref`，并说明这与三个 list 字段的
+  `investigated_and_empty` 标注是两条独立检查
+- 未改动其他任何内容：source policy、artifact 名称、UNKNOWN 分层、授权状态
+  一律未动
+- 555 tests OK（未改代码，数字不变）；`scripts/verify_repository_boundary.sh`
+  通过；`git diff --check` 通过
+- Next: 等待审核方对本轮修订的结论
