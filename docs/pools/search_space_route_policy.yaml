@@ -1,0 +1,228 @@
+# Search-Space Admission Route Policy（machine-readable）
+#
+# 目的：清除 WP2B 的 BLOCK-02。`SearchSpaceAdmission@0.1.0` 要求每条 admission
+# 引用一个外部、可审计的 route_policy_ref；本文件就是那份 policy 的规范正文。
+#
+# 本文件是**规则**，不是数据：它不含任何 CRC 内容、任何 territory、任何靶点。
+# 由 tests/test_search_space_route_policy.py 校验。
+#
+# 重要边界：**仓库不为任何 territory 计算路由。** 本文件只声明规则表；
+# 路由由外部 runtime 应用该表得出。测试对规则表本身做完备性与确定性证明
+# （枚举 3^8 = 6561 种状态组合），全部在测试内进行，`src/` 不含任何路由求值器。
+
+policy:
+  policy_id: search_space_admission_route_policy
+  policy_version: 0.1.0
+  clears_blocker: BLOCK-02
+  blocker_source: docs/pools/wp2b_crc_territory_map_run.yaml
+  applies_to: SearchSpaceAdmission@0.1.0
+  status: contract_only_pending_review
+  # route_policy_ref 必须是 external: 引用，其解析目标须为本 policy 的
+  # policy_id@policy_version。仓库持有规范正文，外部引用是对它的引证。
+  external_ref_must_resolve_to: search_space_admission_route_policy@0.1.0
+  repository_computes_routes: false
+  aggregate_score: forbidden
+  aggregate_score_rationale: >-
+    与 SponsorFitAssessment 同理：一个总分会让「有买家」去补偿「没有非对称优势」，
+    而这两件事不可互相替代。路由由规则表按优先级判定，不加权、不打分。
+
+# ---------------------------------------------------------------- 一、八个条件的判定标准
+
+criteria:
+  - id: clinical_value_exists
+    question: 这片水域是否存在真实、未被解决的临床问题？
+    satisfied_when: 有公开证据显示当前 SOC 下存在明确的疗效或耐受性缺口，且该缺口影响可识别的患者群。
+    unsatisfied_when: 公开证据显示该缺口已被现有疗法实质解决，或该人群无法被识别。
+    unknown_when: 未调查，或证据不足以判断缺口是否实质存在。
+    evidence_from: [公开指南, 标签, 同行评议文献, 真实世界结局报告]
+
+  - id: competitive_position_not_locked
+    question: 该临床位置是否尚未被占据？
+    satisfied_when: 无公认 winner，或领先项目距关键 readout 仍远，或存在尚未被覆盖的患者状态。
+    unsatisfied_when: 已有一个或多个成熟资产占据主要临床位置，且差异化只能靠大型随机试验证明。
+    unknown_when: 竞争格局未调查，或领先项目的关键 readout 时间不明。
+    evidence_from: [ClinicalTrials.gov, 公司公开披露, 监管文件, 会议摘要公开记录]
+    note: >-
+      本条 UNSATISFIED 表示「进入门槛高」，**不是科学失败**。成熟热门靶点在此
+      被路由为 PARTNER_ONLY 或 OUT_OF_MANDATE，不得因此被全局删除。
+
+  - id: asymmetric_evidence_advantage
+    question: 当前发起方在这片水域是否具有他人不易复制的证据优势？
+    satisfied_when: 依据 territory-specific 优势评估，发起方可触及的数据、模型或 know-how 能回答该水域的关键问题，而竞争者一般不能。
+    unsatisfied_when: 该水域所需证据是公开可得或人人可做的，发起方无区别。
+    unknown_when: 优势未评估，或所需证据类型尚未确定。
+    evidence_from: [territory-specific 优势评估]
+    must_not_be_supported_by_profile_alone: true
+    profile_note: >-
+      `DevelopmentSponsorProfile` 是稳定基线，不是本条的证据。承接 PR #78
+      的 sponsor_evidence_advantage_semantics。
+
+  - id: key_uncertainty_addressable
+    question: 该水域的关键未知能否在当前资源边界内被降低？
+    satisfied_when: 存在有限的、发起方可执行或可通过合作执行的实验／分析，其结果会改变是否推进的决定。
+    unsatisfied_when: 关键风险只能通过大规模临床试验解决。
+    unknown_when: 关键未知尚未被识别，或降低成本未估。
+    evidence_from: [公开文献, 发起方能力清单, 外部成本分档估计]
+
+  - id: differentiation_visible_preclinical
+    question: 预期差异能否在临床前被清楚展示？
+    satisfied_when: 差异可由治疗后患者状态、耐药模型恢复、新表位、不同内吞、更低正常组织结合、非交叉耐药 payload 或更明确 biomarker 展示。
+    unsatisfied_when: 差异只能由三期证明，或只能表述为「可能更有效／更安全／我们模型里趋势更好」。
+    unknown_when: 差异化路径尚未设想。
+    evidence_from: [公开文献, 竞争者失败模式分析]
+    note: 承接 SponsorFitAssessment 的同名规则：需要三期才能证明的差异不算可见差异。
+
+  - id: defensible_ip_path
+    question: 是否存在可持有或可排他获得的权利入口？
+    satisfied_when: 抗体、表位、患者选择、biomarker、适应症、treatment-state、组合或 payload 配对中，至少一项存在可主张的入口。
+    unsatisfied_when: 全部相关权利已被他方持有且无可绕行空间。
+    unknown_when: 未做 IP 初筛。
+    evidence_from: [公开专利数据库, 监管文件, 公司披露]
+
+  - id: plausible_buyer_partner_map
+    question: 是否至少存在一类自然合作方或买家？
+    satisfied_when: 可指名至少一类具体主体——ADC 平台公司、有 payload 缺适应症者、有 binder 缺适应症者、有该癌种商业布局缺新资产的 MNC、区域合作方或 NewCo 投资者。
+    unsatisfied_when: 无法指名任何一类合理接手方。
+    unknown_when: 买家图谱未调查。
+    evidence_from: [公司公开披露, 交易公开记录, 管线公开信息]
+
+  - id: time_window_compatible
+    question: 在发起方完成证据之前，竞争窗口是否仍然开着？
+    satisfied_when: 竞争与 readout 时间证据表明窗口在发起方预期拐点之前不会关闭。
+    unsatisfied_when: 领先项目的关键 readout 或 SOC 演进大概率在发起方完成证据前锁定该位置。
+    unknown_when: 竞争时间或发起方执行跨度任一未知。
+    evidence_from: [leading assets, competitor stage, expected readouts, 监管时间, SOC 演进, 发起方执行时间跨度]
+    must_not_be_supported_by_profile_alone: true
+    formula: competition_dynamics × expected_time_to_sponsor_inflection
+
+# ---------------------------------------------------------------- 二、条件组合到路由的映射
+
+routing:
+  evaluation: first_match_wins
+  is_deterministic: true
+  is_total: true
+  totality_guaranteed_by: 最末一条为 catch-all
+  # 规则按顺序求值，第一条命中者决定路由。未列出的条件在该条规则中不参与判定。
+  rules:
+    - id: OUT-01
+      route: OUT_OF_MANDATE
+      when:
+        clinical_value_exists: UNSATISFIED
+      rationale: 没有真实临床缺口就不属于本发起方的搜索范围。
+      not_a_scientific_kill: true
+
+    - id: OUT-02
+      route: OUT_OF_MANDATE
+      when:
+        time_window_compatible: UNSATISFIED
+        plausible_buyer_partner_map: UNSATISFIED
+      rationale: 窗口已关且无人接手——推进没有终点。
+
+    - id: PARTNER-01
+      route: PARTNER_ONLY
+      when:
+        competitive_position_not_locked: UNSATISFIED
+        clinical_value_exists: SATISFIED
+        plausible_buyer_partner_map: SATISFIED
+      rationale: >-
+        临床位置已被占据，但价值真实且有自然合作方。成熟热门靶点通常落在这里，
+        这是「进入门槛高」，不是科学失败。
+      not_a_scientific_kill: true
+
+    - id: OUT-03
+      route: OUT_OF_MANDATE
+      when:
+        competitive_position_not_locked: UNSATISFIED
+        plausible_buyer_partner_map: UNSATISFIED
+      rationale: 位置已锁且无人接手。
+
+    - id: PARTNER-02
+      route: PARTNER_ONLY
+      when:
+        asymmetric_evidence_advantage: UNSATISFIED
+        clinical_value_exists: SATISFIED
+        plausible_buyer_partner_map: SATISFIED
+      rationale: >-
+        价值真实但本发起方无非对称优势——机会本身不被否定，只是不该由我们主导。
+
+    - id: ACTIVE-01
+      route: ACTIVE_SEARCH
+      when:
+        clinical_value_exists: SATISFIED
+        competitive_position_not_locked: SATISFIED
+        asymmetric_evidence_advantage: SATISFIED
+        key_uncertainty_addressable: SATISFIED
+      rationale: >-
+        四项全部正向：有真实缺口、位置未锁、我们有他人不易复制的证据优势、
+        关键未知可在资源边界内降低。这是唯一会消耗后续搜索资源的路由，
+        因此要求正证据，不接受「没有反证」。
+      requires_affirmative_evidence: true
+
+    - id: WATCH-01
+      route: WATCHLIST
+      when: {}
+      is_catch_all: true
+      rationale: >-
+        其余一律进入观察。WATCHLIST 是 UNKNOWN 的天然归宿：不投入资源，
+        也不否定机会。
+
+# ---------------------------------------------------------------- 三、UNKNOWN 的处理
+
+unknown_handling:
+  unknown_is_not_failure: true
+  unknown_never_converts_to_unsatisfied: true
+  unknown_never_produces_out_of_mandate: true
+  out_of_mandate_requires_at_least_one_unsatisfied: true
+  unknown_blocks_active_search: true
+  unknown_blocks_active_search_rationale: >-
+    ACTIVE_SEARCH 是唯一消耗后续搜索资源的路由，必须由正证据支撑。关键条件为
+    UNKNOWN 时并未证明这片水域值得投入，只是没有证伪。
+  all_unknown_resolves_to: WATCHLIST
+  all_unknown_rationale: >-
+    七、八项全未知既不构成推进理由，也不构成排除理由。把它判成 OUT_OF_MANDATE
+    会是「不知道所以放弃」——与「没有反证所以推进」是同一个错误的镜像。
+
+# ---------------------------------------------------------------- 四、重评估触发
+
+reassessment_triggers:
+  - id: RT-01
+    trigger: 领先项目的关键 readout 公布
+    affects: [competitive_position_not_locked, time_window_compatible]
+  - id: RT-02
+    trigger: 该适应症 SOC 发生变化
+    affects: [clinical_value_exists, competitive_position_not_locked, time_window_compatible]
+  - id: RT-03
+    trigger: DevelopmentSponsorProfile 版本变更
+    affects: [asymmetric_evidence_advantage, key_uncertainty_addressable, time_window_compatible]
+  - id: RT-04
+    trigger: 某个关键未知被实验或分析解决
+    affects: [key_uncertainty_addressable, differentiation_visible_preclinical]
+  - id: RT-05
+    trigger: IP 格局变化（授权、失效、新授权公告）
+    affects: [defensible_ip_path]
+  - id: RT-06
+    trigger: 潜在买家的管线或战略公开变化
+    affects: [plausible_buyer_partner_map]
+  - id: RT-07
+    trigger: 距上次评估超过约定时限
+    affects: all
+
+reassessment_does_not_invalidate_history: true
+reassessment_produces_new_admission: true
+reassessment_note: >-
+  重评估产生一条新的 SearchSpaceAdmission 实例，不改写旧实例。territory 通过
+  更新自己的 search_space_admission_ref 指向新实例。
+
+# ---------------------------------------------------------------- 边界
+
+boundaries:
+  policy_is_sponsor_relative_not_scientific: true
+  no_route_is_a_scientific_kill: true
+  out_of_mandate_is_not_a_kill: true
+  partner_only_is_not_a_kill: true
+  hot_targets_must_not_be_globally_deleted: true
+  policy_does_not_evaluate_scientific_evidence: true
+  policy_does_not_execute_a_gate: true
+  policy_does_not_generate_targets_or_wedges: true
+  policy_does_not_authorise_any_run: true
+  active_search_does_not_authorise_target_generation: true

@@ -3088,3 +3088,16 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Test defect, self-caught: 边界测试原用 `assertNotIn("territories:", text)` 检查契约是否夹带 territory 内容，新增的 `ref_must_not_be_shared_across_territories:` 让它**误报**。改为结构化检查——递归遍历解析后的键名，断言不存在字面为 `territories` 的键。**教训：用子串匹配做结构断言，会被恰好以该词结尾的键绊倒。**
 - Validation: `Ran 508 tests OK`（本文件 40）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
 - Next: 推送到同一 PR #78，不新开 PR；等待复审。
+
+### 2026-08-07T04:20 — 合并 PR #78 并起 Search-Space Route Policy（清 BLOCK-02）
+
+- Merge: ChatGPT 对 PR #78 返回第二轮 `APPROVE`，审核 HEAD `9519b0c13f3fe23bbd2c5fbe6e00c14465b06eae`，CI 通过，合入得 `a651dea`。审核方特别强调「批准 #78 不等于可以执行 WP2B」——合并后核验 `main` 上仍为 `authorises_run: False`、`blocked_by: ['BLOCK-01','BLOCK-02']`、`not_authorized_not_executed`。两条非阻断意见连同判断依据写入合并说明：`ref` 唯一性在 v0.1 保持严格（将来 artifact 膨胀再升级为 `ref + record_id` 唯一）；`VAL-T13` 与 manifest 的「字段 → claim/evidence → source」映射留到 execution authorization 或 result validator 具体化。
+- Decision: 按人类负责人指示先清 `BLOCK-02`。新增 `docs/pools/search_space_route_policy.yaml` 与 `tests/test_search_space_route_policy.py`，逐项交付契约要求的四件事：八个条件的判定标准、条件组合到四种路由的映射、`UNKNOWN` 处理、重评估触发。
+- Boundary judgement: policy 是**规则不是数据**，正文放仓库内（有测试断言规范段落不出现任何疾病术语）；`route_policy_ref` 仍是 `external:` 引用，须解析到 `search_space_admission_route_policy@0.1.0`，与 WP2B 契约 `VAL-T07` 吻合。**仓库仍不为任何 territory 计算路由**——`repository_computes_routes: false`，有测试断言 `search_space_admission.py` 中不出现 `def resolve`／`def route(`／`def derive`／`ROUTE_RULES`；测试内的求值器只对假设状态元组应用规则表以证明表的性质，不接触任何实例。
+- Rules: 7 条按优先级——`OUT-01`（无临床缺口）／`OUT-02`（窗口关且无人接手）／`PARTNER-01`（位置已锁但有价值有合作方，`HER2`／`TROP2` 那类的归宿，标 `not_a_scientific_kill`）／`OUT-03`（位置锁且无人接手）／`PARTNER-02`（无非对称优势但可合作）／`ACTIVE-01`（四项全 `SATISFIED`）／`WATCH-01`（catch-all）。`ACTIVE_SEARCH` 是唯一消耗后续搜索资源的路由，要求正证据、不接受「没有反证」，与 `SponsorFitAssessment` 第一轮确立的原则一致。
+- UNKNOWN: 不是失败、永不转 `UNSATISFIED`、**永不产生 `OUT_OF_MANDATE`**、阻断 `ACTIVE_SEARCH`、八项全未知 → `WATCHLIST`。把全未知判成 `OUT_OF_MANDATE` 会是「不知道所以放弃」——与 `SponsorFitAssessment` 第一轮被否掉的「没有反证所以推进」是同一个错误的镜像。
+- Proof: 测试枚举全部 `3^8 = 6561` 种状态组合，证明表完备且确定；OUT 结果必伴随 `UNSATISFIED`；`ACTIVE_SEARCH` 必伴随四项 `SATISFIED`；`PARTNER_ONLY` 必伴随 `plausible_buyer_partner_map = SATISFIED`；四种路由全部可达。实测分布 `WATCHLIST` 3087／`OUT_OF_MANDATE` 2997（其中 `OUT-01` 占 2187）／`PARTNER_ONLY` 405／`ACTIVE_SEARCH` 72（1.1%，设计如此）。
+- Mutation: 六项，**两处首轮逃逸，均为测试写弱而非变异无效**。(1) 把 `OUT-02` 的条件由 `UNSATISFIED` 改为 `UNKNOWN` 仍通过——`test_unknown_never_produces_out_of_mandate` 只断言「结果为 OUT 时元组里存在某个 `UNSATISFIED`」，规则改 key 在 `UNKNOWN` 上后仍可由元组里**无关的**另一个负项满足。已补 `test_no_out_of_mandate_rule_keys_on_unknown`：每条 OUT 规则的 `when` 里所有值必须是 `UNSATISFIED`。(2) 改某触发器的 `affects` 仍通过——`test_every_criterion_can_be_reopened_by_some_trigger` 因 `RT-07` 的 `affects: all` 而**恒真**，属重言测试；已改为只统计具体触发器，`RT-07` 单独断言。两条重跑后均 `failures=1`。六项回滚均以 `diff -q` 确认无差异。
+- Executor mistake, self-caught: 初稿 YAML 无法解析——`reassessment_triggers` 之后的三个兄弟键写在了列表项缩进上。**这与 EVGAP-02 契约当初踩的是同一个坑。** 修正后照例做解析后扫描，确认无字符串被截断。另有一条边界测试用整文件子串匹配查疾病术语，把文件自己「不含任何 CRC 内容」这句注释和 `blocker_source` 路径都误判了；已改为只扫描规范段落的解析值。
+- Validation: `Ran 534 tests OK`（合并前 508，净增 26）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
+- Next: `BLOCK-01` 仍未清，需人类负责人提供 Stelligen 当前事实——文档未写、只有负责人知道的是：资本与时间边界分档、患者样本与模型的实际清单及自有／合作划分、可承担 active program 数量、风险容忍度、地域范围、IP 策略。两个 blocker 都清后才做 authorization PR，再执行运行。
