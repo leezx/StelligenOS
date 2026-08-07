@@ -15,44 +15,76 @@ CONTRACT = yaml.safe_load(CONTRACT_PATH.read_text(encoding="utf-8"))
 
 
 class RunAuthorisationTests(unittest.TestCase):
-    """One run is authorised, and only because both blockers were cleared."""
+    """The run stays unauthorised while any blocker is uncleared."""
 
-    def test_exactly_one_run_is_authorised(self):
+    def test_the_run_is_not_authorised(self):
         run = CONTRACT["run"]
-        self.assertTrue(run["authorises_run"])
-        self.assertEqual(run["authorises_run_count"], 1)
-        self.assertEqual(run["execution_status"], "authorised_not_yet_executed")
-        self.assertEqual(run["blocked_by"], [])
+        self.assertFalse(run["authorises_run"])
+        self.assertEqual(run["authorises_run_count"], 0)
+        self.assertEqual(run["execution_status"], "not_authorized_not_executed")
+        self.assertTrue(run["approval_does_not_authorise_execution"])
 
-    def test_authorisation_is_traceable_to_cleared_blockers(self):
-        """A cleared blocker must name what cleared it, not merely flip a flag."""
+    def test_an_uncleared_blocker_stays_in_blocked_by(self):
+        blocked = CONTRACT["run"]["blocked_by"]
+        uncleared = [b["id"] for b in CONTRACT["blockers"] if not b["cleared"]]
+        self.assertEqual(sorted(blocked), sorted(uncleared))
 
-        cleared = {entry["blocker"]: entry for entry in CONTRACT["run"]["blocked_by_cleared"]}
-        self.assertEqual(set(cleared), {"BLOCK-01", "BLOCK-02"})
+    def test_a_cleared_blocker_names_what_cleared_it(self):
+        """Clearing must be traceable, not merely a flipped flag."""
+
+        cleared = {e["blocker"]: e for e in CONTRACT["run"]["blocked_by_cleared"]}
+        for blocker in CONTRACT["blockers"]:
+            with self.subTest(blocker=blocker["id"]):
+                if not blocker["cleared"]:
+                    self.assertNotIn(blocker["id"], cleared)
+                    continue
+                self.assertIn(blocker["id"], cleared)
+                self.assertTrue(str(blocker["cleared_evidence"]).strip())
+
+    def test_block_01_requires_human_approval_not_only_machine_validation(self):
+        """Generated and machine-validated is not the same as human-approved.
+
+        A sponsor profile encodes subjective commitments - capital boundary,
+        resource control, capacity, transaction stage, IP strategy. A script can
+        check the shape; it cannot check that the values are ones the human lead
+        accepts.
+        """
+
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
         self.assertEqual(
-            cleared["BLOCK-01"]["evidence_package"],
-            "gen_sponsor_profile_stelligen_20260807T050000Z_frozen",
+            blocker["clearing_conditions"],
+            [
+                "machine_validation == PASS",
+                "human_approval_ref exists",
+                "approved_instance_sha256 == frozen instance sha256",
+            ],
         )
-        for key in ("evidence_zip_sha256", "instance_sha256"):
-            self.assertEqual(len(cleared["BLOCK-01"][key]), 64)
-        self.assertEqual(
-            cleared["BLOCK-02"]["evidence_path"],
-            "docs/pools/search_space_route_policy.yaml",
-        )
-        self.assertEqual(cleared["BLOCK-02"]["cleared_by_pr"], 79)
+        self.assertTrue(blocker["clearing_conditions_are_conjunctive"])
 
-    def test_both_blockers_record_their_clearing_evidence(self):
+        machine_ok = blocker["machine_validation"] == "PASS"
+        human_ok = bool(blocker["human_approval_ref"])
+        hash_ok = bool(blocker["approved_instance_sha256"])
+        self.assertEqual(blocker["cleared"], machine_ok and human_ok and hash_ok)
+
+    def test_machine_validation_alone_never_clears_block_01(self):
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        if blocker["machine_validation"] == "PASS" and not blocker["human_approval_ref"]:
+            self.assertFalse(
+                blocker["cleared"],
+                "BLOCK-01 cleared on machine validation with no human approval",
+            )
+            self.assertTrue(blocker["not_yet_cleared_because"].strip())
+
+    def test_every_blocker_states_why_and_how_it_clears(self):
         blockers = {blocker["id"]: blocker for blocker in CONTRACT["blockers"]}
         self.assertEqual(set(blockers), {"BLOCK-01", "BLOCK-02"})
         for blocker_id, blocker in blockers.items():
             with self.subTest(blocker=blocker_id):
-                self.assertTrue(blocker["cleared"])
                 self.assertTrue(blocker["must_be_frozen_before_run"])
                 self.assertTrue(blocker["why"].strip())
                 self.assertTrue(blocker["cleared_by"].strip())
-                self.assertTrue(str(blocker["cleared_evidence"]).strip())
 
-    def test_the_run_count_names_its_consumption_point_honestly(self):
+    def test_the_run_count_names_its_consumption_point_honestly(self):  # noqa: D401
         """Carried forward from the PR #66 note on a declarative counter."""
 
         run = CONTRACT["run"]
@@ -320,8 +352,9 @@ class ValidationRuleTests(unittest.TestCase):
 
 
 class NotAuthorisedTests(unittest.TestCase):
-    def test_a_repeat_run_heads_the_not_authorised_list(self):
-        self.assertIn("再次执行本运行", CONTRACT["not_authorised"][0])
+    def test_the_run_itself_heads_the_not_authorised_list(self):
+        self.assertIn("执行本运行", CONTRACT["not_authorised"][0])
+        self.assertIn("BLOCK-01", CONTRACT["not_authorised"][0])
 
     def test_downstream_work_is_not_authorised(self):
         joined = " ".join(CONTRACT["not_authorised"])

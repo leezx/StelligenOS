@@ -3127,3 +3127,15 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Mutation: 五项——授权次数改 3 -> `failures=1`；把计数器标成代码强制 -> `failures=1`；清 blocker 但不给证据包 -> `failures=1`；截断实例哈希 -> `failures=1`；标记已清但证据为空 -> `failures=1`。五项回滚均以 `diff -q` 确认无差异。测试要求「已清的 blocker 必须写明是什么清的，而不是只翻一个布尔位」。
 - Validation: `Ran 541 tests OK`（合并前 538，净增 3）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；无数据、cache、result、database、model weights 或实例进入仓库。
 - Next: 本 PR 获批合并后执行一次 CRC Territory Map 外部运行 → 结果 PR（跑 `VAL-T01`..`VAL-T21` 并把 `authorises_run_count` 归零）→ WP3。注意 profile 一旦改版，按 route policy `RT-03` 所有已路由 territory 的 `asymmetric_evidence_advantage`／`key_uncertainty_addressable`／`time_window_compatible` 都要重评估；`NOT_YET_CONTROLLED` 任一项被法律工具转化时不是改一行，而是升版本并触发重评估。
+
+### 2026-08-07T06:10 — PR #80 第一轮审核裁决与修订（收回授权，一条阻断，接受）
+
+- Review: ChatGPT 对 PR #80 返回 `REQUEST_CHANGES`。授权逻辑与代码本身获认可，机构资源边界处理被确认为正确方向，一条实质阻断。**接受，未作辩解。**
+- Blocker accepted: 初版把「已生成 + 机器校验通过」记成了「已获人工批准」。机器能证明的只有包名存在、SHA-256 长度正确、实例可按 `DevelopmentSponsorProfile@0.1.0` 构造、机构关键词未混入 accessible 字段；它证明不了 capital envelope、time horizon、1–2 active programs、最大自研阶段、transaction stage、risk tolerance、IP strategy 与 `accessible_patient_samples` 边界是否为人类负责人认可的经营事实——**而这些恰恰是 `BLOCK-01` 的主体**。
+- Executor error, precisely: 人类负责人确实回了「确认，冻结 v0.1.0，然后做 authorization PR」，但执行者在上一条消息里明确标出过**三处需要逐项答复的疑问**（`partnered_capabilities` 应为事实还是操作假设、`company_stage` 是否已有法律实体、`risk_tolerance`／`geographic_scope` 是否已定），一个笼统的「确认」并未逐项解决；且全程未产生任何可引用的批准工件。**执行者把一个全局回复读成了对逐项问题的答复。**
+- Fix: `authorises_run` 收回 `false`、`authorises_run_count` 归 `0`、`blocked_by` 恢复 `[BLOCK-01]`、`approval_does_not_authorise_execution` 恢复 `true`；`BLOCK-01` 记 `cleared: false` 并新增 `machine_validation: PASS`、`human_approval_ref: null`、`approved_instance_sha256: null`、`not_yet_cleared_because`；新增审核方建议的**合取**不变量 `clearing_conditions`（machine_validation == PASS AND human_approval_ref exists AND approved_instance_sha256 == frozen instance sha256）与 `clearing_conditions_are_conjunctive: true`；`BLOCK-02` 补 `human_approval_ref` 指向 PR #79 的 `APPROVE`，并说明 route policy 是规则而非经营承诺、不需要 profile 式独立批准工件；`not_authorised` 恢复首条「执行本运行——`BLOCK-01` 未清」。
+- Tests: 新增 `test_block_01_requires_human_approval_not_only_machine_validation`（断言三条件合取，且 `cleared` 恒等于三者之与）与 `test_machine_validation_alone_never_clears_block_01`；`test_an_uncleared_blocker_stays_in_blocked_by` 把 `blocked_by` 与未清 blocker 列表绑定，防止两处各说各话。
+- Mutation: 五项——**仅凭机器校验就清 `BLOCK-01`** -> `failures=4`（本轮阻断的行为本身）；未清却开启授权 -> `failures=1`；未清却清空 `blocked_by` -> `failures=1`；三条件改析取 -> `failures=1`；删 `human_approval_ref` 条件 -> `failures=1`。五项回滚均以 `diff -q` 确认无差异。
+- Unchanged: profile 内容、外部包、机构资源边界处理、授权机制本身一律未动。冻结包保持 `gen_sponsor_profile_stelligen_20260807T050000Z_frozen`（ZIP `5f057fde...`，实例 `65253e10...`，19/19 MATCH），未重做。
+- Validation: `Ran 544 tests OK`；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
+- Next: 把完整 profile（人读摘要 + 逐字段 provenance 表）交人类负责人审阅，逐项答复三处疑问；接受后再更新 #80 写入 `human_approval_ref` 与 `approved_instance_sha256`、开启授权。

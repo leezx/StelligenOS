@@ -1,25 +1,26 @@
-# Handoff：WP2B 执行授权（清除 `BLOCK-01` 与 `BLOCK-02`）
+# Handoff：WP2B 执行授权（`BLOCK-02` 已清；`BLOCK-01` 待人工批准）
 
 - 日期：`2026-08-07`
 - 任务分支：`task_20260807_wp2b-authorization`
 - 基线：`main` @ `0c030c2`
-- 交付物类型：**授权绑定（无新语义、无内容、未执行）**
+- 交付物类型：**授权绑定（无新语义、无内容、**未授权执行**）**
 - 架构变更：`NO_ARCHITECTURE_CHANGE`
 - 审核状态：等待 ChatGPT `APPROVE`。**本 PR 不适用 `AGENTS.md`「审核豁免」。**
 
-## 一、本 PR 做的三件事
+## 一、本 PR 当前做的事（第一轮审核后已收回授权）
 
-1. 记录 `BLOCK-01` 已清——`DevelopmentSponsorProfile@0.1.0` 外部实例已由人类
-   负责人确认并冻结。
-2. 记录 `BLOCK-02` 已清——`search_space_admission_route_policy@0.1.0`
+1. 记录 `BLOCK-02` 已清——`search_space_admission_route_policy@0.1.0`
    已由 PR #79 合并（`0c030c2`）。
-3. 把 `authorises_run` 转为 `true`，`authorises_run_count` 设为 **1**，
-   `blocked_by` 清空。
+2. 为 `BLOCK-01` 建立**三项合取的清除条件**，并如实记录它**尚未清除**。
+3. **保持 `authorises_run: false`、`authorises_run_count: 0`、
+   `blocked_by: [BLOCK-01]`。**
 
-形态与 PR #66 解除 `EVGAP-01` 的 binding PR 相同。**不改任何语义、范围、
-来源策略、证据标准或校验规则。**
+初版曾把 `BLOCK-01` 记为已清并开启授权，第一轮审核判定该跳跃不成立，
+已收回。详见第八节。
 
-## 二、`BLOCK-01` 的清除证据
+**不改任何语义、范围、来源策略、证据标准或校验规则。**
+
+## 二、`BLOCK-01` 的机器校验证据（**尚不足以清除**）
 
 外部包（**不入仓**）：
 
@@ -82,21 +83,13 @@ run_count_consumption_is_process_enforced_not_code_enforced: true
 有测试断言第二个字段为 `true`，注释写着「计数器不得声称仓库并不具备的强制力」。
 **这不是把问题解决了，是把问题标注清楚了**——仓库仍然不会自动递减。
 
-`not_authorised` 的第一条相应由「执行本运行」改为
-「在 `authorises_run_count` 归零后再次执行本运行」。
+`not_authorised` 现有两条相关项：首条「执行本运行——`BLOCK-01` 未清」，
+另一条「在 `authorises_run_count` 归零后再次执行本运行」。
 
 ## 四、变异检验
 
-| 变异 | 结果 |
-|---|---|
-| 授权次数改为 3 | `FAILED (failures=1)` |
-| 把计数器标成代码强制 | `FAILED (failures=1)` |
-| 清除 blocker 但不给证据包 | `FAILED (failures=1)` |
-| 截断实例哈希 | `FAILED (failures=1)` |
-| 标记 blocker 已清但证据为空 | `FAILED (failures=1)` |
-
-五项回滚后 `diff -q` 均无差异。测试要求「已清的 blocker 必须写明是什么清的，
-而不是只翻一个布尔位」。
+见第八节的第二轮结果。测试要求「已清的 blocker 必须写明是什么清的，而不是只翻
+一个布尔位」，并且**仅凭机器校验不得清除 `BLOCK-01`**。
 
 ## 五、本 PR 不做什么
 
@@ -109,7 +102,7 @@ run_count_consumption_is_process_enforced_not_code_enforced: true
 ## 六、验证
 
 ```
-Ran 541 tests  OK              （合并前 538，净增 3）
+Ran 544 tests  OK              （合并前 538，净增 6）
 scripts/verify_repository_boundary.sh   通过
 git diff --check                        通过
 外部包 validate_profile.py              19/19 MATCH
@@ -119,13 +112,18 @@ git diff --check                        通过
 
 ## 七、后续顺序
 
-1. 本 PR `APPROVE` 并合并 —— **WP2B 获得一次执行授权**。
-2. 执行 CRC Territory Map（**外部运行**，产物不入仓）。按契约必须产出
+1. **人类负责人审阅完整 profile**（人读摘要 + 逐字段 provenance 表），逐项答复
+   此前标出的三处疑问，并明确接受或指出要改的字段。
+2. 接受后更新本 PR：`BLOCK-01.cleared: true`、写入 `human_approval_ref`
+   （形如 `external:human_approval/stelligen_sponsor_profile_20260807`）与
+   `approved_instance_sha256`，再开启 `authorises_run`。
+3. 本 PR `APPROVE` 并合并 —— **WP2B 才获得一次执行授权**。
+4. 执行 CRC Territory Map（**外部运行**，产物不入仓）。按契约必须产出
    `territory_map.json`、`territories.tsv`、`search_space_admissions.json`、
    `sponsor_evidence_advantage.json`、`source_manifest.json`、`run_report.md`
    与包内可独立运行的 `verify_package.py`，逐文件 SHA-256，整包 SHA-256。
-3. 结果 PR：`VAL-T01`..`VAL-T21` 全部校验，并把 `authorises_run_count` 归零。
-4. 获批后进入 WP3 Program Wedge Generator。
+5. 结果 PR：`VAL-T01`..`VAL-T21` 全部校验，并把 `authorises_run_count` 归零。
+6. 获批后进入 WP3 Program Wedge Generator。
 
 ### 一件后续必须注意的事
 
@@ -133,3 +131,70 @@ profile 一旦改版，按 route policy 的 `RT-03`，所有已路由 territory 
 `asymmetric_evidence_advantage`、`key_uncertainty_addressable` 与
 `time_window_compatible` 都要重评估。因此 `NOT_YET_CONTROLLED` 登记表里任何一项
 被法律工具转化为公司资源时，**不是改一行，而是升版本并触发重评估**。
+
+## 八、第一轮审核裁决与修订（`REQUEST_CHANGES`，一条，接受）
+
+### 阻断：把「已生成 + 机器校验通过」记成了「已获人工批准」
+
+审核方指出，初版以「人类负责人确认并冻结」为由把 `BLOCK-01` 记为已清，但真正
+要求的顺序是：**先出 profile → 停下来把完整内容交人工审核 → 确认后才清
+blocker**。而机器能证明的只有：包名存在、SHA-256 长度正确、实例可按
+`DevelopmentSponsorProfile@0.1.0` 构造、机构关键词未混入 accessible 字段。
+
+它**证明不了**：capital envelope、time horizon、1–2 active programs、最大自研
+阶段、transaction stage、risk tolerance、IP strategy，以及
+`accessible_patient_samples = none sponsor-controlled` 的具体边界，是否为人类
+负责人认可的经营事实。**而这些恰恰是 `BLOCK-01` 的主体。**
+
+**执行者的错在于**：人类负责人确实回了「确认」，但执行者此前明确标出过三处需要
+逐项答复的疑问（`partnered_capabilities` 的分类、`company_stage`、
+`risk_tolerance`／`geographic_scope`），一个笼统的「确认」并未逐项解决它们；
+且全程没有产生任何可引用的批准工件。**执行者把一个全局回复读成了对逐项问题的
+答复。** 阻断成立，接受。
+
+### 修订
+
+1. `authorises_run` 收回为 `false`，`authorises_run_count` 归 `0`，
+   `blocked_by` 恢复 `[BLOCK-01]`，`approval_does_not_authorise_execution`
+   恢复 `true`。
+2. `BLOCK-01` 记 `cleared: false`，并新增字段：`machine_validation: PASS`、
+   `human_approval_ref: null`、`approved_instance_sha256: null`、
+   `not_yet_cleared_because`（写明哪些字段是主观经营承诺而非可脚本判定的事实）。
+3. 新增审核方建议的**合取**不变量：
+
+```yaml
+clearing_conditions:
+  - machine_validation == PASS
+  - human_approval_ref exists
+  - approved_instance_sha256 == frozen instance sha256
+clearing_conditions_are_conjunctive: true
+```
+
+4. `BLOCK-02` 补 `human_approval_ref` 指向其 `APPROVE`（PR #79），并说明
+   route policy 是规则而非经营承诺，不需要 profile 式的独立批准工件。
+5. `not_authorised` 恢复首条「执行本运行——`BLOCK-01` 未清」。
+
+### 测试
+
+新增 `test_block_01_requires_human_approval_not_only_machine_validation`
+（断言三条件合取，且 `cleared` 等于三者之与）与
+`test_machine_validation_alone_never_clears_block_01`。
+`test_an_uncleared_blocker_stays_in_blocked_by` 把 `blocked_by` 与未清 blocker
+列表绑定，防止两处各说各话。
+
+### 第二轮变异检验
+
+| 变异 | 结果 |
+|---|---|
+| **仅凭机器校验就清 `BLOCK-01`** | `FAILED (failures=4)` |
+| `BLOCK-01` 未清却开启授权 | `FAILED (failures=1)` |
+| 未清却清空 `blocked_by` | `FAILED (failures=1)` |
+| 把三条件改成析取 | `FAILED (failures=1)` |
+| 删掉 `human_approval_ref` 条件 | `FAILED (failures=1)` |
+
+第一项正是本轮阻断的行为本身。五项回滚后 `diff -q` 均无差异。
+
+### 未改的部分
+
+profile 内容、外部包、机构资源边界处理、授权机制本身一律未动——审核方确认这些
+方向正确。

@@ -16,19 +16,14 @@ run:
   work_package: WP2B
   produces: OpportunityTerritoryMap@0.1.0
   produces_element: OpportunityTerritory@0.1.0
-  status: authorised_not_yet_executed
-  execution_status: authorised_not_yet_executed
-  authorises_run: true
-  # 授权范围是**一次**测绘运行，不是长期许可。
-  authorises_run_count: 1
-  blocked_by: []
+  status: contract_only_pending_review
+  execution_status: not_authorized_not_executed
+  authorises_run: false
+  # 授权范围将是**一次**测绘运行，不是长期许可。BLOCK-01 未清前保持 0。
+  authorises_run_count: 0
+  blocked_by:
+    - BLOCK-01
   blocked_by_cleared:
-    - blocker: BLOCK-01
-      cleared_by: 人类负责人确认并冻结 DevelopmentSponsorProfile@0.1.0 外部实例
-      evidence_package: gen_sponsor_profile_stelligen_20260807T050000Z_frozen
-      evidence_zip_sha256: 5f057fde5739a4813114546dc292d20cb260a82a842fd6adeeabfc8efcd016ed
-      instance_sha256: 65253e10cb37a5341c34ac5c5105d38c6d044fe99ea4382f0c4e138a206814ed
-      validation: validate_profile.py 19/19 MATCH
     - blocker: BLOCK-02
       cleared_by: search_space_admission_route_policy@0.1.0
       evidence_path: docs/pools/search_space_route_policy.yaml
@@ -36,8 +31,8 @@ run:
       merge_commit: 0c030c2
   requires_result_pr: true
   requires_followup_binding_pr: false
-  # 本契约获批曾不等于可以开跑；两个 blocker 现已分别清除，见 blocked_by_cleared。
-  approval_does_not_authorise_execution: false
+  # BLOCK-01 未清，本契约获批仍不等于可以开跑。
+  approval_does_not_authorise_execution: true
   # 承接 PR #66 审核方对 authorises_extraction_run_count 的非阻断意见：计数字段
   # 若无消费机制就只是声明。此处写明消费点，但**诚实标注它由流程而非代码强制**
   # ——结果 PR 必须把 authorises_run_count 归零，仓库不会自动递减。
@@ -62,12 +57,26 @@ blockers:
     must_be: external_instance
     must_be_frozen_before_run: true
     cleared_by: 人类负责人提供事实并冻结该实例，且实例经审核接受
-    cleared: true
-    cleared_evidence: gen_sponsor_profile_stelligen_20260807T050000Z_frozen
-    cleared_note: >-
-      冻结实例声明 accessible_patient_samples 为空，并把机构队列、未发表数据集、
-      学术 organoid、机构 PDX 与机构雇佣下产生的发明列入 NOT_YET_CONTROLLED
-      登记表，各自写明转化所需的法律工具。**创始人的科学接触不等于公司可用。**
+    cleared: false
+    machine_validation: PASS
+    machine_validation_evidence: gen_sponsor_profile_stelligen_20260807T050000Z_frozen
+    machine_validation_detail: validate_profile.py 19/19 MATCH
+    human_approval_ref: null
+    approved_instance_sha256: null
+    # 机器校验只能证明形状，证明不了这些值是不是人类负责人认可的经营事实。
+    not_yet_cleared_because: >-
+      capital envelope、time horizon、active program capacity、最大自研阶段、
+      transaction stage、risk tolerance、IP strategy 与 accessible_patient_samples
+      的具体边界，都是人类负责人的主观经营承诺，不是可由脚本判定的事实。
+      profile 已生成并通过机器校验，但尚无可引用的人工批准记录。
+    clearing_conditions:
+      - machine_validation == PASS
+      - human_approval_ref exists
+      - approved_instance_sha256 == frozen instance sha256
+    clearing_conditions_are_conjunctive: true
+    clearing_rationale: >-
+      「已生成且通过机器校验」不得被记作「已获人工批准」。这条不变量存在的目的
+      是让以后换 profile 版本时，同一个跳跃不会再发生一次。
   - id: BLOCK-02
     title: SearchSpaceAdmission 的 route_policy_ref 尚不存在
     blocks: 全部 territory 的 search_space_admission_ref
@@ -85,8 +94,13 @@ blockers:
       - 重评估触发条件
     cleared_by: route policy 冻结并经审核接受
     cleared: true
+    machine_validation: PASS
     cleared_evidence: docs/pools/search_space_route_policy.yaml
     cleared_by_pr: 79
+    human_approval_ref: logs/worklog.md#2026-08-07T05:40
+    human_approval_note: >-
+      route policy 是规则而非经营承诺，其内容已由审核方逐条复核并 APPROVE
+      （PR #79），因此不需要独立的 profile 式人工批准工件。
 
 # ---------------------------------------------------------------- scope
 
@@ -323,6 +337,7 @@ validation_rules:
 # ---------------------------------------------------------------- 明确不授权
 
 not_authorised:
+  - "执行本运行——BLOCK-01 未清"
   - "在 authorises_run_count 归零后再次执行本运行"
   - "生成任何 program wedge"
   - "生成任何 target 或 target-territory pair"
