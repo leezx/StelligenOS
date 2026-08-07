@@ -78,22 +78,36 @@ blockers:
     machine_validation_scope: >-
       package hashes can be independently verified; contract-shape validation
       requires a StelligenOS checkout at the referenced contract baseline.
-    candidate_instance_version: "0.1.2"
-    candidate_instance_sha256: f31a769a8658d41fdae963069fce0308582e34644aafd55fd2e531a36f4ad6dd
     human_approval_ref: external:human_approval/stelligen_sponsor_profile_v0.1.2
     approved_instance_sha256: 41f8e02680a976cdf4db34cd18dbf0dfd7a566ed160230934c753d3e7241544a
     approved_profile_version: "0.1.2"
     approval_timestamp_utc: "2026-08-07T15:00:00Z"
     approving_role: human_lead_founder
-    # 人工批准是在草稿实例上给出的；冻结只改状态元数据，不改实质。
-    # content_sha256 在两者中相同，这才是批准真正绑定的对象。
     reviewed_draft_instance_sha256: f31a769a8658d41fdae963069fce0308582e34644aafd55fd2e531a36f4ad6dd
     approved_content_sha256: f910fc5e2b9c7743c4301ae4ac648ad44e67a22b591e5c266ff8a8995427fd9b
-    content_sha256_is_the_binding: >-
-      冻结必然改变实例文件的 SHA-256。把新 SHA 直接顶替审核方看过的那个，正是
-      第一轮被判定不成立的那类跳跃。因此批准绑定 content_sha256——对去掉状态与
-      批准字段后的实例取哈希，草稿与冻结包中逐字相同，可独立复算。
-    candidate_is_not_approved: false
+    # 两层绑定，回答两个不同的问题，互不冲突。
+    binding_semantics:
+      human_approval_binds: approved_content_sha256
+      human_approval_binds_note: >-
+        Human approval binds substantive profile content via
+        approved_content_sha256.
+      block_01_clearance_additionally_requires: >-
+        BLOCK-01 clearance additionally requires the post-approval frozen
+        artifact to have approved_instance_sha256 equal to the frozen instance
+        SHA recorded in blocked_by_cleared.
+      frozen_instance_sha_recorded_in: run.blocked_by_cleared[BLOCK-01].instance_sha256
+      equality_check_is_internal_consistency_only: true
+      equality_check_limit: >-
+        仓库内的相等性检查只能发现单侧漂移。两侧同时改成同一个错值它发现不了，
+        而且仓库按 data-free 规则不持有冻结包，任何仓库内检查都无法对实际文件
+        取哈希。缓解手段是把同一组哈希同时记入 handoff（测试强制三处一致），
+        权威校验仍然是包内的外部 verifier。
+      why_two_layers: >-
+        内容一致性与工件身份是两个问题。冻结必然改变实例文件的 SHA-256，所以
+        「批准的是不是同一份内容」只能由 content hash 回答；而「被清除条件采信的
+        是不是那份冻结工件」只能由 instance hash 回答。前者跨草稿与冻结包不变，
+        后者唯一指向冻结包。把新 instance SHA 直接顶替审核方看过的草稿 SHA，
+        正是第一轮被判定不成立的那类跳跃——两个哈希都保留，不互相覆盖。
     withdrawn_candidates:
       - package: gen_sponsor_profile_stelligen_v0.1.1_20260807T130000Z_draft
         instance_sha256: 7582ca157ec769c170c390e6dc8a99d55adf2e1dffc3d1af461434797e0ec421
@@ -107,12 +121,6 @@ blockers:
           包内四个文件状态自相矛盾——instance 与 manifest 写 FROZEN／clears_block_01,
           summary 与 provenance table 写 DRAFT／未清；且把机器校验记作人工批准。
         must_never_be_approved_instance_sha256: true
-    # 机器校验只能证明形状，证明不了这些值是不是人类负责人认可的经营事实。
-    not_yet_cleared_because: >-
-      capital envelope、time horizon、active program capacity、最大自研阶段、
-      transaction stage、risk tolerance、IP strategy 与 accessible_patient_samples
-      的具体边界，都是人类负责人的主观经营承诺，不是可由脚本判定的事实。
-      候选实例 v0.1.1 已生成并通过机器校验，但尚无可引用的人工批准记录。
     clearing_conditions:
       - machine_validation == PASS
       - human_approval_ref exists

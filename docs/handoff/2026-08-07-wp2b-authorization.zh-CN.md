@@ -22,16 +22,25 @@
 
 **不改任何语义、范围、来源策略、证据标准或校验规则。**
 
-## 二、`BLOCK-01` 的候选实例（**尚不足以清除**）
+## 二、`BLOCK-01` 的实例谱系（全部**不入仓**）
 
-外部包（**不入仓**）。第二轮审核后已换为 v0.1.1：
+| 包 | 实例 SHA-256 | 状态 |
+|---|---|---|
+| `…20260807T050000Z_frozen` | `65253e10cb37a5341c34ac5c5105d38c6d044fe99ea4382f0c4e138a206814ed` | **作废**——包内四文件状态自相矛盾；把机器校验记作人工批准 |
+| `…v0.1.1_20260807T130000Z_draft` | `7582ca157ec769c170c390e6dc8a99d55adf2e1dffc3d1af461434797e0ec421` | **作废**——引用名 `contracted-*` 强于其 provenance 类别 |
+| `…v0.1.2_20260807T143000Z_draft` | `f31a769a8658d41fdae963069fce0308582e34644aafd55fd2e531a36f4ad6dd` | **人工批准对象**，原样保留 |
+| `…v0.1.2_20260807T150000Z_frozen` | `41f8e02680a976cdf4db34cd18dbf0dfd7a566ed160230934c753d3e7241544a` | **已冻结**，清除 `BLOCK-01` |
 
+内容哈希 `f910fc5e2b9c7743c4301ae4ac648ad44e67a22b591e5c266ff8a8995427fd9b`
+在已审草稿与冻结包中相同——这是「冻结未改实质」的证明。
+
+两个作废实例的 SHA 带 `must_never_be_approved_instance_sha256: true`，有测试强制。
+
+已审草稿包：
 ```
 gen_sponsor_profile_stelligen_v0.1.2_20260807T143000Z_draft
 ZIP SHA-256   a928f6d9c9e3910d3378c67580bbd66b27fea01472e35fbca668dbf07c86c01f
-实例 SHA-256  f31a769a8658d41fdae963069fce0308582e34644aafd55fd2e531a36f4ad6dd
-24,847 bytes，7 个文件
-validate_profile.py -> 51/51 MATCH
+24,847 bytes，7 个文件      validate_profile.py -> 51/51 MATCH
 ```
 
 **机器校验能证明什么，不能证明什么**（第四轮审核方的措辞，已写入契约）：
@@ -679,3 +688,108 @@ git diff --check                        通过
 `asymmetric_evidence_advantage`、`key_uncertainty_addressable` 与
 `time_window_compatible` 都要重评估；且需要新的批准工件——批准绑定
 `content_sha256`，实质字段一改即失效。
+
+## 十三、第六轮审核裁决与修订（`REQUEST_CHANGES`，两条，接受）
+
+### 阻断一：第三项清除条件从未被真正验证
+
+契约声明的三项合取条件里，第三项是
+`approved_instance_sha256 == frozen instance sha256`。但测试写的是：
+
+```python
+hash_ok = bool(blocker["approved_instance_sha256"])
+```
+
+**只验证非空，没有比较。** 只要两个字段都非空，即便
+`approved_instance_sha256` 指向一个与本契约无关的哈希，测试仍然通过。
+这恰好击穿了刚建立的最关键不变量。当前 YAML 里两个值碰巧相等，但那是运气，
+不是被保护的性质。
+
+修订：
+
+```python
+hash_ok = blocker["approved_instance_sha256"] == _frozen_instance_sha256()
+```
+
+`_frozen_instance_sha256()` 从 `run.blocked_by_cleared[BLOCK-01].instance_sha256`
+取值。另加 `test_the_approved_hash_is_the_frozen_artifact_not_merely_present`，
+断言相等、断言是 64 位小写十六进制、并断言 blocker 与 run 引用的是同一个包。
+
+### 阻断二：已清除的 blocker 仍带 `not_yet_cleared_because`
+
+内容还写着「候选实例 v0.1.1 已生成并通过机器校验，但尚无可引用的人工批准记录」
+——在 `cleared: true` 的对象里。这是审计合同，读取者无从判断哪个字段是真状态。
+
+按建议**直接删除**，不做历史化。历史已完整存在于 handoff、`withdrawn_candidates`
+与 worklog 三处。新增 `test_a_cleared_blocker_carries_no_uncleared_reason`：
+已清除的 blocker 不得带该字段，未清除的必须带。
+
+### 一并清理的过渡态字段
+
+- 删除 `candidate_is_not_approved`——候选已获批准并冻结，它不再是候选。
+- **一并删除 `candidate_instance_sha256` 与 `candidate_instance_version`。**
+  这超出审核方所列，理由是：它们与 `reviewed_draft_instance_sha256`／
+  `approved_profile_version` 持有逐字相同的值，重复字段正是本 PR 反复踩到的
+  漂移来源。相关测试改指 `reviewed_draft_instance_sha256`。
+
+### 两层绑定的措辞澄清
+
+原先 `clearing_conditions` 说绑定 instance SHA，而旁边的说明说真正绑定的是
+content SHA，读起来像前后否定。改为显式两层：
+
+```yaml
+binding_semantics:
+  human_approval_binds: approved_content_sha256
+  human_approval_binds_note: >-
+    Human approval binds substantive profile content via approved_content_sha256.
+  block_01_clearance_additionally_requires: >-
+    BLOCK-01 clearance additionally requires the post-approval frozen artifact
+    to have approved_instance_sha256 equal to the frozen instance SHA recorded
+    in blocked_by_cleared.
+```
+
+两者回答不同问题：内容一致性只能由 content hash 回答（跨草稿与冻结包不变），
+工件身份只能由 instance hash 回答（唯一指向冻结包）。
+
+### 变异检验，以及一个如实记录的盲点
+
+按要求新增 wrong-but-valid SHA 变异，另加七项：
+
+| 变异 | 结果 |
+|---|---|
+| **`approved_instance_sha256` 换成另一个合法 64 位哈希** | `failures=2` |
+| 换成已作废的 v0.1.1 哈希 | `failures=3` |
+| 改 `blocked_by_cleared` 一侧而非 blocker 一侧 | `failures=2` |
+| 哈希截断为 8 位 | `failures=2` |
+| 重新加回 `not_yet_cleared_because` | `failures=1` |
+| `cleared_evidence` 指向草稿包而非冻结包 | `failures=1` |
+| `human_approval_binds` 改为 instance hash | `failures=1` |
+| **两侧同时改成同一个错值** | **首轮 `OK` —— 逃逸** |
+
+最后一项是相等性检查的固有盲点：两侧一起漂移就检测不到，而且仓库按 data-free
+规则不持有冻结包，**任何仓库内检查都无法对实际文件取哈希**。
+
+没有把它当作已覆盖。缓解是加第三处独立记录——
+`test_the_frozen_hash_agrees_with_the_handoff_record` 要求契约里的冻结实例哈希、
+内容哈希、已审草稿哈希与两个作废哈希**全部出现在本 handoff 中**。静默替换因此
+需要同时改三处而非两处。契约里也写明了这条限制：
+
+```yaml
+equality_check_is_internal_consistency_only: true
+```
+
+复验：两侧同时漂移而不改 handoff → `failures=1`；只改 handoff 里的内容哈希 →
+`failures=1`。权威校验仍然是包内的外部 verifier。
+
+### 未改的部分
+
+profile、冻结包、人工批准工件、route policy、territory schema、`authorises_run`
+与计数——一律未动。本轮只改仓库内的审计表达与测试。
+
+### 验证
+
+```
+Ran 555 tests  OK              （上一轮 551，净增 4）
+scripts/verify_repository_boundary.sh   通过
+git diff --check                        通过
+```

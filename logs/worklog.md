@@ -3207,3 +3207,20 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 三项测试改写为由 blocker 状态推导；新增冻结哈希不得顶替已审哈希的测试
 - 551 tests OK；boundary 通过；`git diff --check` 通过
 - **下一步：本 PR 合并后方可执行 CRC Territory Map 外部运行（一次）**
+
+## 2026-08-07T15:45 — PR #80 第六轮审核修订：真正比较 SHA，清除过期状态字段
+
+- 分支 `task_20260807_wp2b-authorization`
+- 审核裁决：`REQUEST_CHANGES`（两条，接受）
+- **阻断一**：三项合取的第三项从未被验证——测试写的是 `bool(approved_instance_sha256)`
+  而非相等比较。已改为与 `run.blocked_by_cleared[BLOCK-01].instance_sha256` 比较
+- **阻断二**：`cleared: true` 的 BLOCK-01 仍带 `not_yet_cleared_because`（内容还说
+  「尚无人工批准记录」）。已删除，并加测试禁止已清 blocker 带该字段
+- 一并删除过渡态字段 `candidate_is_not_approved`、`candidate_instance_sha256`、
+  `candidate_instance_version`（后两者与 reviewed_draft_* 逐字重复）
+- 新增 `binding_semantics`：人工批准绑定 content hash，BLOCK-01 清除额外要求
+  instance hash 等于冻结工件——两层，回答不同问题
+- 变异检验 8 项，其中「两侧同时改成同一错值」逃逸；已加第三处独立记录
+  （handoff 必须含全部五个哈希）并在契约中写明该检查只是内部一致性
+- 555 tests OK；boundary 通过；`git diff --check` 通过
+- profile／冻结包／批准工件／route policy／授权状态一律未动

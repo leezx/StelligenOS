@@ -14,6 +14,15 @@ CONTRACT_PATH = ROOT / "docs" / "pools" / "wp2b_crc_territory_map_run.yaml"
 CONTRACT = yaml.safe_load(CONTRACT_PATH.read_text(encoding="utf-8"))
 
 
+def _frozen_instance_sha256():
+    """The frozen artifact's SHA-256 as recorded by the run, or None if uncleared."""
+
+    for entry in CONTRACT["run"].get("blocked_by_cleared", []):
+        if entry["blocker"] == "BLOCK-01":
+            return entry.get("instance_sha256")
+    return None
+
+
 class RunAuthorisationTests(unittest.TestCase):
     """The run stays unauthorised while any blocker is uncleared."""
 
@@ -78,8 +87,92 @@ class RunAuthorisationTests(unittest.TestCase):
 
         machine_ok = blocker["machine_validation"] == "PASS"
         human_ok = bool(blocker["human_approval_ref"])
-        hash_ok = bool(blocker["approved_instance_sha256"])
+        # Compare the hashes. An earlier version only checked non-emptiness,
+        # which would have let an approved hash that names nothing in this
+        # contract satisfy the very condition the conjunction exists to enforce.
+        hash_ok = blocker["approved_instance_sha256"] == _frozen_instance_sha256()
         self.assertEqual(blocker["cleared"], machine_ok and human_ok and hash_ok)
+
+    def test_the_approved_hash_is_the_frozen_artifact_not_merely_present(self):
+        """The third clearing condition, checked as equality rather than truthiness."""
+
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        if not blocker["cleared"]:
+            self.skipTest("BLOCK-01 not cleared")
+        frozen = _frozen_instance_sha256()
+        self.assertIsNotNone(frozen, "a cleared BLOCK-01 must record the frozen instance")
+        self.assertEqual(
+            blocker["approved_instance_sha256"],
+            frozen,
+            "approved_instance_sha256 must name the frozen artifact in blocked_by_cleared",
+        )
+        self.assertRegex(frozen, r"^[0-9a-f]{64}$")
+        self.assertEqual(
+            blocker["cleared_evidence"],
+            next(
+                e["evidence_package"]
+                for e in CONTRACT["run"]["blocked_by_cleared"]
+                if e["blocker"] == "BLOCK-01"
+            ),
+            "the blocker and the run must cite the same frozen package",
+        )
+
+    def test_the_frozen_hash_agrees_with_the_handoff_record(self):
+        """A third independent record, because equality alone has a blind spot.
+
+        Comparing approved_instance_sha256 with blocked_by_cleared catches one
+        side drifting. It cannot catch both drifting to the same wrong value,
+        and no in-repository check can close that: the frozen package lives
+        outside the repository by the data-free rule, so nothing here can hash
+        the actual file. Requiring the handoff to carry the same digest means
+        a silent substitution has to be made in three places instead of two.
+        The authoritative check remains the external verifier.
+        """
+
+        frozen = _frozen_instance_sha256()
+        if frozen is None:
+            self.skipTest("BLOCK-01 not cleared")
+        handoff = (
+            ROOT / "docs" / "handoff" / "2026-08-07-wp2b-authorization.zh-CN.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            frozen,
+            handoff,
+            "the handoff must record the same frozen instance SHA-256",
+        )
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        self.assertIn(blocker["approved_content_sha256"], handoff)
+        self.assertIn(blocker["reviewed_draft_instance_sha256"], handoff)
+        for entry in blocker["withdrawn_candidates"]:
+            with self.subTest(package=entry["package"]):
+                self.assertIn(entry["instance_sha256"], handoff)
+
+    def test_the_two_hash_bindings_answer_different_questions(self):
+        """Content hash binds the approval; instance hash binds the artifact."""
+
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        if not blocker["cleared"]:
+            self.skipTest("BLOCK-01 not cleared")
+        binding = blocker["binding_semantics"]
+        self.assertEqual(binding["human_approval_binds"], "approved_content_sha256")
+        self.assertIn(
+            "approved_instance_sha256 equal to the frozen instance",
+            binding["block_01_clearance_additionally_requires"],
+        )
+        self.assertNotEqual(
+            blocker["approved_content_sha256"], blocker["approved_instance_sha256"]
+        )
+        self.assertTrue(binding["why_two_layers"].strip())
+
+    def test_a_cleared_blocker_carries_no_uncleared_reason(self):
+        """cleared: true and "not yet cleared because" cannot both be true."""
+
+        for blocker in CONTRACT["blockers"]:
+            with self.subTest(blocker=blocker["id"]):
+                if blocker["cleared"]:
+                    self.assertNotIn("not_yet_cleared_because", blocker)
+                else:
+                    self.assertTrue(blocker["not_yet_cleared_because"].strip())
 
     def test_machine_validation_alone_never_clears_block_01(self):
         blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
@@ -90,21 +183,16 @@ class RunAuthorisationTests(unittest.TestCase):
             )
             self.assertTrue(blocker["not_yet_cleared_because"].strip())
 
-    def test_a_candidate_instance_is_not_an_approved_instance(self):
+    def test_an_unapproved_instance_never_carries_an_approved_hash(self):
         """A profile can exist, validate, and still not be approved."""
 
         blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
-        self.assertTrue(blocker["candidate_instance_sha256"].strip())
         if not blocker["human_approval_ref"]:
-            self.assertTrue(blocker["candidate_is_not_approved"])
             self.assertIsNone(
                 blocker["approved_instance_sha256"],
-                "a candidate SHA-256 must not be promoted to an approved one",
+                "a reviewed-draft SHA-256 must not be promoted to an approved one",
             )
-            self.assertNotEqual(
-                blocker["candidate_instance_sha256"],
-                blocker["approved_instance_sha256"],
-            )
+            self.assertIsNone(blocker.get("approved_content_sha256"))
 
     def test_freezing_does_not_silently_swap_the_approved_hash(self):
         """Approval was given on the draft; freezing changes the file's SHA.
@@ -122,16 +210,10 @@ class RunAuthorisationTests(unittest.TestCase):
             blocker["reviewed_draft_instance_sha256"],
             "freezing must change the file hash; identical hashes mean it did not",
         )
-        self.assertEqual(
-            blocker["reviewed_draft_instance_sha256"],
-            blocker["candidate_instance_sha256"],
-            "the reviewed draft must be the candidate that was put up for review",
-        )
         self.assertTrue(blocker["approved_content_sha256"].strip())
         self.assertNotEqual(
             blocker["approved_content_sha256"], blocker["approved_instance_sha256"]
         )
-        self.assertTrue(blocker["content_sha256_is_the_binding"].strip())
         self.assertEqual(blocker["approved_profile_version"], "0.1.2")
         self.assertTrue(blocker["approval_timestamp_utc"].strip())
         self.assertTrue(blocker["approving_role"].strip())
@@ -148,7 +230,11 @@ class RunAuthorisationTests(unittest.TestCase):
                     entry["instance_sha256"], blocker["approved_instance_sha256"]
                 )
                 self.assertNotEqual(
-                    entry["instance_sha256"], blocker["candidate_instance_sha256"]
+                    entry["instance_sha256"],
+                    blocker.get("reviewed_draft_instance_sha256"),
+                )
+                self.assertNotEqual(
+                    entry["instance_sha256"], _frozen_instance_sha256()
                 )
                 self.assertNotIn(entry["package"], blocker["machine_validation_evidence"])
 
