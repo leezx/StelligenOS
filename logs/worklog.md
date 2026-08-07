@@ -2858,3 +2858,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Explicit boundary: 批准只覆盖合并 `SearchSpaceAdmission@0.1.0` 合同及其校验边界；不批准或授权科学评价、自动路由、Gate/EVGAP/provider 运行、Program Commitment Review、ValueInflectionPlan、实例或外部运行。
 - Persisted: 新增 `logs/chatgpt-review-2026-08-06-search-space-admission-phase2.md`，更新 handoff 状态为 `APPROVED_WAITING_HUMAN_MERGE`。
 - Next: 提交并推送审核记录 metadata，随后合并 PR #68；合并后再创建第 3 步 PR。
+
+### 2026-08-06 20:47 EDT — 小微 Biotech 架构调整第 3 步：Program Commitment Review
+
+- Instruction: PR #68 已获 Chrome 网页版 ChatGPT `APPROVE` 并合并为 `9abd66f`；按四步路线进入第 3 步，只实现 T12 后 Program Commitment Review 合同，之后仍须新 PR 审核。
+- Scope frozen: 只建立 sponsor-relative commitment checkpoint；正式结果为 `SELF_DEVELOP`、`CO_DEVELOP`、`DATA_PACKAGE_ONLY`、`PARTNER_NOW`、`MONITOR`、`STOP_FOR_SPONSOR`；不实现 ValueInflectionPlan、binder/ADC/de novo route、Gate、EVGAP、provider、数据或模型运行。
+- Resolution: 文档前段的 `PARTNER_BEFORE_CONJUGATION`／`GENERATE_DATA_ONLY` 作为自然语言描述，机器可读合同收敛为后段实施顺序的 `PARTNER_NOW`／`DATA_PACKAGE_ONLY`，并在架构文档中记录映射。
+- Read: 重新读取四步实施段落、Phase 1/2 合同、T12 decision/ranking 和 binder route 外部边界；确认基线为 `origin/main@9abd66f`。
+- Branch: 创建 `/private/tmp/StelligenOS-program-commitment-review` worktree，分支 `task_20260807_program-commitment-review`。
+- Changed: 新增 `src/contracts/program_commitment_review.yaml`、`src/contracts/program_commitment_review.py`、`tests/test_program_commitment_review.py`、`docs/architecture/program-commitment-review.zh-CN.md`、本任务 handoff；更新 `architecture.md`、`README.md`、`src/contracts/README.md`。
+- Design: 所有输入、Value Inflection Plan、理由、来源和 human decision 都是 external refs；`MONITOR`、`DATA_PACKAGE_ONLY`、`STOP_FOR_SPONSOR` 阻断 binder/de novo；`SELF_DEVELOP`、`CO_DEVELOP`、`PARTNER_NOW` 只产生 `EXTERNAL_HANDOFF_REQUIRED`，不自动执行下游工作。
+- Validation: 定向测试 15/15 通过；全量 `PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'` 为 `387 tests` 全部通过；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；无 `__pycache__`、数据库或数据文件。
+- Failure/fix: 本轮无命令失败、无内容回滚、无外部运行。
+- Boundary: 未修改 Gate、lifecycle、core objects、ClinicalHypothesis、TargetHypothesis 或 Asset Generation routing；未定义 Phase 4 的 ValueInflectionPlan。
+- Next: 显式检查状态后提交、推送并创建 Phase 3 PR；使用 Chrome 网页版 ChatGPT 审核，未获明确 `APPROVE` 前不进入第 4 步。

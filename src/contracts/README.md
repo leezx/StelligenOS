@@ -19,3 +19,8 @@ Phase 2 adds `search_space_admission.yaml` and
 `search_space_admission.py` for `SearchSpaceAdmission@0.1.0`. It defines four
 sponsor-relative routes and eight externally evidenced criteria; it does not
 evaluate a scientific Gate or persist a route instance.
+
+Phase 3 adds `program_commitment_review.yaml` and
+`program_commitment_review.py` for `ProgramCommitmentReview@0.1.0`. It records
+an externally adjudicated sponsor-relative commitment checkpoint after T12;
+it does not define ValueInflectionPlan or execute binder/ADC routes.

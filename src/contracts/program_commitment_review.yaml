@@ -1,0 +1,61 @@
+version: "0.1.0"
+name: stelligenos-program-commitment-review-contract
+description: >-
+  Sponsor-relative commitment checkpoint after T12 and before binder or de
+  novo route selection. The review is externally adjudicated and does not
+  execute downstream work.
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  database: forbidden
+  cache: forbidden
+  result_files: forbidden
+decision_values:
+  - SELF_DEVELOP
+  - CO_DEVELOP
+  - DATA_PACKAGE_ONLY
+  - PARTNER_NOW
+  - MONITOR
+  - STOP_FOR_SPONSOR
+commitment_status_values:
+  - COMMITTED
+  - CONDITIONALLY_COMMITTED
+  - NOT_COMMITTED
+downstream_status_values:
+  - BLOCKED_NO_COMMITMENT
+  - EXTERNAL_HANDOFF_REQUIRED
+contract:
+  contract_id: ProgramCommitmentReview@0.1.0
+  role: >-
+    Separates a scientifically valid T12 opportunity from a sponsor-relative
+    decision to invest toward a defined value-transfer boundary.
+  required_fields:
+    - review_id
+    - program_thesis_ref
+    - t12_decision_ref
+    - clinical_hypothesis_ref
+    - target_hypothesis_ref
+    - competition_landscape_ref
+    - ip_fto_ref
+    - sponsor_profile_ref
+    - capital_envelope_ref
+    - capability_gap_ref
+    - buyer_map_ref
+    - value_inflection_plan_ref
+    - decision
+    - commitment_status
+    - downstream_status
+    - decision_rationale_ref
+    - condition_refs
+    - source_refs
+    - human_decision_ref
+  invariants:
+    - all_instances_external_only
+    - all_cross_boundary_and_source_refs_use_external_scheme
+    - decision_is_not_go_or_kill
+    - decision_does_not_change_asset_intrinsic_scientific_truth
+    - no_commitment_blocks_binder_and_de_novo_routes
+    - commitment_does_not_auto_execute_downstream_work
+    - human_decision_is_required_for_commitment
+    - value_inflection_plan_is_referenced_but_not_defined_here
+    - stop_for_sponsor_is_not_scientific_kill
