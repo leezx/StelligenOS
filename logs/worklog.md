@@ -2931,3 +2931,16 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Result: ChatGPT 明确返回 `APPROVE`；审核 HEAD `ac53101`；CI run `#66` 成功；确认 PR 仅修正 handoff/worklog 状态，无范围扩张。
 - Persisted: 新增 `logs/chatgpt-review-2026-08-07-phase4-closeout.md`。
 - Next: 合并 PR #71；合并后再次刷新本地 `main`，确认 handoff 为 `MERGED_TO_MAIN`、无开放 PR、工作区干净。
+
+### 2026-08-06T21:40 — Sponsor Control Binding：把 Phase 3–4 硬控制接进 Binder/ADC route request
+
+- Finding: Phase 3「没有 ProgramCommitmentReview 不得进入 binder/de novo route」与 Phase 4「没有 ValueInflectionPlan 不得开始 Asset Generation」在合并时只存在于文档。`grep` 确认排除 `src/contracts/` 自身后，`src/` 中对四个 sponsor-relative 合同零命中；`BinderAdcRouteRequest` 不要求任何 commitment 引用，因此可以完整构造并执行 route 而全量测试不失败。
+- Scope: 只做绑定，不引入新的科学或 sponsor 判断逻辑。
+- Change: `src/capabilities/binder_adc_routes.py` 的 `BinderAdcRouteRequest` 新增三个无默认值必填字段 `program_commitment_review_ref`、`value_inflection_plan_ref`、`asset_generation_authorization_ref`，要求 `external:` 前缀且前缀后内容非空；`contract_version` `0.1.0` -> `0.2.0`（新增必填字段属 breaking change）；`BinderAdcRouteResult` 不变，仍为 `0.1.0`；模块 import 仍只有 `dataclasses` 与 `typing`，不 import 两个合同类。
+- Change: `src/contracts/binder_adc_routes.yaml` 新增 `sponsor_control_binding` 段，把绑定写成机器可读形态；`contract_version` 升为 `0.2.0` 并新增 `request_contract_version` / `result_contract_version`，避免复制 v3 §6.2 已登记的 `GateInputEnvelope` `2.0.0`/`2.1.0` 版本漂移。该 YAML 版本改动超出字面指令，已在 handoff 中标出待审核方确认。
+- Change: `tests/test_phase5_binder_adc_routes.py` 更新原 fixture，新增 `SponsorControlBindingTests`，覆盖缺字段无法构造、`local:` 被拒、空体被拒、无默认值、合法构造、不执行 route、不写仓库状态、import 集合与 YAML 一致性。
+- Mutation: 加默认值 -> `FAILED (failures=2)`；删非空校验 -> `FAILED (failures=6)`；从控制元组删 `value_inflection_plan_ref` -> 首轮仅 `failures=1`；`contract_version` 退回 `0.1.0` -> `FAILED (failures=1)`。
+- Fix: 第三项首轮只触发 1 条失败，因参数化测试遍历的正是被验证的常量，属自我收缩的重言测试；补一条字面列出三个字段名的断言与三条字面命名的 `local:` 测试后重跑，升至 `failures=3`。四项变异均以 `diff -q` 确认回滚无差异。
+- Validation: `Ran 411 tests OK`（合并前 393）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git status --short` 只含本 PR 文件；无数据、cache、result、database、model weights 或实例进入仓库。
+- Deferred: 既有五个引用字段仍只校验 `external:` 前缀、允许空体，按「保留现有校验」未收紧；`DevelopmentSponsorProfile`、`ProgramThesis`、`SearchSpaceAdmission` 三个合同仍无消费者；架构文档 v3 基线 `main@8aa7e87` 已落后 35 个 commit 且未含 Phase 1–4。三项均登记不修。
+- Next: 提交 PR 并提交 ChatGPT 审核；不更新 `CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md`，架构 v4 refresh 另立 PR。

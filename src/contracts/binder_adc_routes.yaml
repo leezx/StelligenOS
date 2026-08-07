@@ -1,6 +1,13 @@
 contract:
   contract_id: binder_adc_generation_routes
-  contract_version: "0.1.0"
+  contract_version: "0.2.0"
+  request_contract_version: "0.2.0"
+  result_contract_version: "0.1.0"
+  version_change_reason: >-
+    BinderAdcRouteRequest gained three mandatory sponsor-control references.
+    Adding required fields is a breaking change, so the request envelope and
+    the umbrella contract both move to 0.2.0. The result envelope is unchanged
+    and deliberately stays at 0.1.0.
   routes:
     existing_binder_asset_engineering:
       source_version: "0.4.0"
@@ -27,3 +34,24 @@ contract:
   route_selection:
     selected_route_must_be_explicit: true
     route_mixing: forbidden
+  sponsor_control_binding:
+    binding_version: "0.2.0"
+    bound_contracts:
+      program_commitment_review: ProgramCommitmentReview@0.1.0
+      value_inflection_plan: ValueInflectionPlan@0.1.0
+    required_request_refs:
+      - program_commitment_review_ref
+      - value_inflection_plan_ref
+      - asset_generation_authorization_ref
+    reference_scheme: external_only
+    empty_reference_body: forbidden
+    default_values: forbidden
+    authorization_meaning: >-
+      asset_generation_authorization_ref records that an external human handoff
+      confirmed the Program Commitment outcome and the ValueInflectionPlan
+      permit this Binder/de novo route. It is an attestation reference only.
+    authorization_read_by_repository: forbidden
+    authorization_re_adjudicated_by_repository: forbidden
+    authorization_generated_by_repository: forbidden
+    contract_class_import_by_capability: forbidden
+    external_instance_materialisation: forbidden
