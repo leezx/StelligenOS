@@ -6,7 +6,7 @@
 - 分支：`task_20260807_value-inflection-plan`
 - 基线：`origin/main@5ae1b55`
 - 版本：`ValueInflectionPlan@0.1.0`
-- PR：待创建
+- PR：https://github.com/leezx/StelligenOS/pull/70
 - 状态：`PENDING_CHATGPT_REVIEW`
 
 ## 总体四步路线
