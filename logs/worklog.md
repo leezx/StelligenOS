@@ -3047,3 +3047,16 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Downstream: WP3 的 program wedge 将消费 `ACTIVE_SEARCH` territories，但该合同尚不存在，故 `downstream_relationship.consumed_by` 记为 `not_yet_defined`，不作任何下游声明。
 - Validation: `Ran 469 tests OK`（合并前 448，净增 21）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；无数据、cache、result、database、model weights 或实例进入仓库。
 - Next: WP2B CRC territories 内容——按硬边界必须在仓库外产出再走结果 PR，且每个 territory 还需一份 `SearchSpaceAdmission` 实例给出路由。
+
+### 2026-08-07T02:20 — PR #77 第一轮审核裁决与修订（一条阻断，接受）
+
+- Review: ChatGPT 对 PR #77 返回 `REQUEST_CHANGES`。方向、边界与 scope 纪律均获认可，仅一条实质阻断。**接受，未作辩解。**
+- Blocker accepted: `territory_status` 成了第二个路由真源。初版同时保存 `search_space_admission_ref` 与 `territory_status`，而合同声称 admission 才是权威；由于本模块**刻意从不解引用** admission，它**无法验证**二者是否一致——`search_space_admission_ref = external:admission/territory-001-OUT_OF_MANDATE` 配 `territory_status = ACTIVE_SEARCH` 在初版中完全合法。`OpportunityTerritoryMap.with_status()` 又把这个不可验证的镜像变成可执行筛选，于是文档说 admission 是权威、运行时被消费的却是 `territory_status`。一个权威决定加一个「查不了却筛得动」的镜像，正是本轮反复要避免的双真源。
+- Fix: 按审核方推荐的第一方案彻底去掉镜像——删除 `OpportunityTerritory.territory_status` 字段；删除 `OpportunityTerritoryMap.with_status()`；`search_space_admission_ref` 成为唯一路由关联，语义明确为**溯源而非状态**；连带删除 `SearchSpaceRoute` import，模块 import 集合回到 `{__future__, dataclasses, typing}`（不保存路由就不需要路由词汇，也就一并绕开了源文档那三套拼写）。
+- Fix: YAML 以 `territory_status_field: absent` 与 `territory_status_absence_rationale` 记录该字段的**刻意缺席**；invariant 改为 `routing_decision_is_neither_restated_nor_mirrored_here`、`search_space_admission_is_the_sole_authoritative_route_decision`、`territory_records_routing_provenance_without_duplicating_route_state`、`territory_carries_no_route_state_field`；map 侧加 `map_offers_no_route_based_selection_helper`；新增 `downstream_must_not` 明确禁止下游 `filter_territories_on_a_locally_stored_route` 与 `treat_a_territory_reference_alone_as_evidence_of_admission`。
+- Scope: **未新增 handoff 合同**——审核方说除非 schema 有效性严格需要否则留给 WP3，本次不需要。未改 `SearchSpaceAdmission` 语义、sponsor-fit 合同、Gate 逻辑，未加任何 CRC 内容，其余 WP2A 字段与范围一律未动。
+- Non-blocking noted: 审核方提出 `known_target_biology_refs` 是否会让 target-first 逻辑渗回来，并自行判断它是背景情报而非 target candidate，可以保留，只要 WP3 不把它当作候选生成的权威。未改，登记该约束供 WP3 承接。
+- Mutation: 第二轮四项——**重新引入镜像 `territory_status`** -> `failures=2, errors=79`；**重新引入按路由筛选的方法** -> `failures=1`；把 `search_space_admission_ref` 移出校验列表 -> `failures=6`；允许重复 `territory_id` -> `failures=1`。前两项正是本次阻断的两个成因。四项回滚均以 `diff -q` 确认无差异。
+- Executor note: 本轮修订中一次 `str.replace` 未加断言而静默未命中，导致 YAML `binding_note` 一度仍描述已删除的镜像；核对时发现并修正。**教训：批量文本替换必须逐条断言命中，否则失败是静默的。**
+- Validation: `Ran 468 tests OK`（合并前 448，本文件 20）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；无数据、cache、result、database、model weights 或实例进入仓库。
+- Next: 推送到同一 PR #77，不新开 PR；等待复审。

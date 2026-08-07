@@ -12,7 +12,6 @@ from src.contracts.opportunity_territory import (
     TERRITORY_REFERENCE_LIST_FIELDS,
     TERRITORY_SINGLE_REFERENCE_FIELDS,
 )
-from src.contracts.search_space_admission import SearchSpaceRoute
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 MODULE_PATH = ROOT / "src" / "contracts" / "opportunity_territory.py"
@@ -41,7 +40,6 @@ def _territory(**overrides):
         "sponsor_evidence_advantage_ref": "external:advantage/1",
         "window_closure_risk_ref": "external:window-risk/1",
         "search_space_admission_ref": "external:search-space-admission/1",
-        "territory_status": SearchSpaceRoute.ACTIVE_SEARCH,
         "source_refs": ("external:source/1",),
     }
     fields.update(overrides)
@@ -64,7 +62,10 @@ class TerritoryShapeTests(unittest.TestCase):
     def test_a_fully_external_territory_is_accepted(self):
         territory = _territory()
         self.assertEqual(territory.territory_id, "TERR-001")
-        self.assertIs(territory.territory_status, SearchSpaceRoute.ACTIVE_SEARCH)
+        self.assertEqual(
+            territory.search_space_admission_ref,
+            "external:search-space-admission/1",
+        )
 
     def test_the_reference_field_rosters_are_literal(self):
         """Named literally so the parameterised tests cannot self-shrink."""
@@ -144,17 +145,6 @@ class TerritoryShapeTests(unittest.TestCase):
         )
         self.assertEqual(territory.current_competitor_refs, ())
 
-    def test_territory_status_must_be_a_search_space_route(self):
-        with self.assertRaises(ValueError):
-            _territory(territory_status="ACTIVE")
-        with self.assertRaises(ValueError):
-            _territory(territory_status="ACTIVE_TERRITORY")
-
-    def test_all_four_routes_are_usable(self):
-        for route in SearchSpaceRoute:
-            with self.subTest(route=route):
-                self.assertIs(_territory(territory_status=route).territory_status, route)
-
 
 class TerritoryMapTests(unittest.TestCase):
     def test_a_map_is_accepted(self):
@@ -169,6 +159,18 @@ class TerritoryMapTests(unittest.TestCase):
         territories = (_territory(), _territory(territory_id="TERR-002"))
         self.assertEqual(len(_map(territories=territories).territories), 2)
 
+    def test_the_map_offers_no_route_based_selection_helper(self):
+        """A helper filtering on a local route would make a mirror operational."""
+
+        territory_map = _map()
+        self.assertFalse(hasattr(territory_map, "with_status"))
+        for attribute in dir(territory_map):
+            if attribute.startswith("_"):
+                continue
+            self.assertNotIn("status", attribute)
+            self.assertNotIn("route", attribute)
+            self.assertNotIn("active", attribute)
+
     def test_a_map_requires_provenance(self):
         with self.assertRaises(ValueError):
             _map(source_refs=())
@@ -178,28 +180,21 @@ class TerritoryMapTests(unittest.TestCase):
 
         self.assertEqual(_map(territories=()).territories, ())
 
-    def test_with_status_reads_and_does_not_decide(self):
-        territories = (
-            _territory(),
-            _territory(
-                territory_id="TERR-002",
-                territory_status=SearchSpaceRoute.OUT_OF_MANDATE,
-            ),
-        )
-        territory_map = _map(territories=territories)
-        active = territory_map.with_status(SearchSpaceRoute.ACTIVE_SEARCH)
-        self.assertEqual(tuple(t.territory_id for t in active), ("TERR-001",))
-        self.assertEqual(
-            tuple(
-                t.territory_id
-                for t in territory_map.with_status(SearchSpaceRoute.WATCHLIST)
-            ),
-            (),
-        )
-
 
 class TerritoryBoundaryTests(unittest.TestCase):
     """A map is not a candidate pool."""
+
+    def test_the_territory_carries_no_route_state(self):
+        """SearchSpaceAdmission is the sole authority; a mirror would drift."""
+
+        fields = OpportunityTerritory.__dataclass_fields__
+        self.assertNotIn("territory_status", fields)
+        for field_name in fields:
+            self.assertNotIn("status", field_name)
+            self.assertNotIn("route", field_name)
+        self.assertIn("search_space_admission_ref", fields)
+        with self.assertRaises(TypeError):
+            _territory(territory_status="ACTIVE_SEARCH")
 
     def test_the_schema_names_no_target(self):
         for field_name in OpportunityTerritory.__dataclass_fields__:
@@ -236,22 +231,12 @@ class TerritoryBoundaryTests(unittest.TestCase):
                 modules.update(alias.name for alias in node.names)
             elif isinstance(node, ast.ImportFrom) and node.module:
                 modules.add(node.module)
-        self.assertEqual(
-            modules,
-            {
-                "__future__",
-                "dataclasses",
-                "typing",
-                "src.contracts.search_space_admission",
-            },
-        )
+        self.assertEqual(modules, {"__future__", "dataclasses", "typing"})
 
     def test_contract_yaml_matches_the_code(self):
         contract = yaml.safe_load(CONTRACT_PATH.read_text(encoding="utf-8"))
-        self.assertEqual(
-            tuple(contract["territory_status_values"]),
-            tuple(route.value for route in SearchSpaceRoute),
-        )
+        self.assertEqual(contract["territory_status_field"], "absent")
+        self.assertNotIn("territory_status_values", contract)
         territory = contract["contracts"]["OpportunityTerritory"]
         declared = set(territory["required_fields"])
         self.assertEqual(declared, set(OpportunityTerritory.__dataclass_fields__))
@@ -281,13 +266,22 @@ class TerritoryBoundaryTests(unittest.TestCase):
             "territory_is_a_map_row_not_a_candidate",
             "territory_names_no_target",
             "territory_does_not_generate_targets",
-            "search_space_admission_is_authoritative_for_the_route",
+            "routing_decision_is_neither_restated_nor_mirrored_here",
+            "search_space_admission_is_the_sole_authoritative_route_decision",
+            "territory_records_routing_provenance_without_duplicating_route_state",
+            "territory_carries_no_route_state_field",
             "active_search_does_not_authorise_target_generation",
         ):
             self.assertIn(required, invariants)
-        self.assertIn(
-            "territory_ids_must_be_unique",
-            contract["contracts"]["OpportunityTerritoryMap"]["invariants"],
+        map_invariants = contract["contracts"]["OpportunityTerritoryMap"]["invariants"]
+        self.assertIn("territory_ids_must_be_unique", map_invariants)
+        self.assertIn("map_offers_no_route_based_selection_helper", map_invariants)
+        self.assertEqual(
+            contract["downstream_relationship"]["downstream_must_not"],
+            [
+                "filter_territories_on_a_locally_stored_route",
+                "treat_a_territory_reference_alone_as_evidence_of_admission",
+            ],
         )
 
 

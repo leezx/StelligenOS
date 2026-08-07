@@ -9,23 +9,22 @@ This module defines the shape only. Territory instances — including every
 disease-specific one — live in an external workspace, so the repository holds
 no CRC content.
 
-The routing decision is not restated here. A territory carries a reference to
-the `SearchSpaceAdmission@0.1.0` that routed it, and mirrors that route in
-`territory_status`; the admission remains authoritative. The frozen
-`SearchSpaceRoute` vocabulary is imported rather than redeclared, because the
-source architecture note writes the territory states three different ways
-(`ACTIVE_TERRITORY`/`WATCH_TERRITORY`/`PARTNER_DEPENDENT`/`OUT_OF_MANDATE`,
-`ACTIVE_TERRITORY`/`WATCH`/`PARTNER_ONLY`/`OUT_OF_MANDATE`, and
-`ACTIVE`/`WATCH`/`PARTNER_ONLY`/`OUT`) and a fourth spelling would be one more
-chance for machine IDs to drift apart.
+The routing decision is neither restated nor mirrored here. A territory records
+only `search_space_admission_ref`, the provenance of its routing;
+`SearchSpaceAdmission@0.1.0` holds the route and remains the sole authority.
+
+There is deliberately no `territory_status` field. This module never
+dereferences the admission, so it could not verify that a local copy of the
+route still matched the admission it claims to come from — and a copy that
+cannot be checked but can be filtered on is a second source of truth waiting to
+drift. Downstream work must consume a territory together with its admission, not
+a local mirror of the route.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Final
-
-from src.contracts.search_space_admission import SearchSpaceRoute
 
 TERRITORY_SINGLE_REFERENCE_FIELDS: Final[tuple[str, ...]] = (
     "disease_ref",
@@ -99,7 +98,6 @@ class OpportunityTerritory:
     sponsor_evidence_advantage_ref: str
     window_closure_risk_ref: str
     search_space_admission_ref: str
-    territory_status: SearchSpaceRoute
     source_refs: tuple[str, ...]
 
     def __post_init__(self) -> None:
@@ -114,8 +112,6 @@ class OpportunityTerritory:
                 raise ValueError(f"{field_name} must not be empty")
             for index, value in enumerate(values):
                 _require_external_ref(value, f"{field_name}[{index}]")
-        if not isinstance(self.territory_status, SearchSpaceRoute):
-            raise ValueError("territory_status must be a SearchSpaceRoute")
 
 
 @dataclass(frozen=True)
@@ -158,14 +154,3 @@ class OpportunityTerritoryMap:
             raise ValueError("source_refs must be a non-empty tuple")
         for index, value in enumerate(self.source_refs):
             _require_external_ref(value, f"source_refs[{index}]")
-
-    def with_status(
-        self, status: SearchSpaceRoute
-    ) -> tuple[OpportunityTerritory, ...]:
-        """Return the territories carrying one route. Reads, never decides."""
-
-        return tuple(
-            territory
-            for territory in self.territories
-            if territory.territory_status is status
-        )

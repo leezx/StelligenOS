@@ -34,7 +34,7 @@ Pool 00 的目的不是筛靶点，而是**发现哪些临床水域适合当前�
 | 竞争 | `current_competitor_refs`、`leading_asset_refs`、`expected_readout_refs`、`position_occupancy_ref` |
 | 可得性 | `known_target_biology_refs`、`available_patient_data_refs`、`available_model_refs` |
 | 发起方 | `sponsor_evidence_advantage_ref`、`window_closure_risk_ref` |
-| 路由 | `search_space_admission_ref`、`territory_status` |
+| 路由溯源 | `search_space_admission_ref` |
 | 溯源 | `source_refs` |
 
 **竞争字段放在这一层是有意的。** 源文档指出旧管线把商业竞争分析放得太晚；
@@ -46,21 +46,28 @@ Program Thesis**，而不是最后给一个分数。
 - 源文档写 `Stelligen_evidence_advantage`，这里的机器 ID 是
   `sponsor_evidence_advantage_ref`。发起方身份属于它引用的
   `DevelopmentSponsorProfile`，不该写进 schema 字段名。
-- 源文档把 territory 状态写了**三套**：
-  `ACTIVE_TERRITORY`／`WATCH_TERRITORY`／`PARTNER_DEPENDENT`／`OUT_OF_MANDATE`、
-  `ACTIVE_TERRITORY`／`WATCH`／`PARTNER_ONLY`／`OUT_OF_MANDATE`、
-  `ACTIVE`／`WATCH`／`PARTNER_ONLY`／`OUT`。
-  本合同**不新增第四套**，直接 import 已冻结的 `SearchSpaceRoute`
-  （`ACTIVE_SEARCH`／`WATCHLIST`／`PARTNER_ONLY`／`OUT_OF_MANDATE`）。
+- 源文档把 territory 状态写了**三套**。本合同**一套都不采用**——见下节。
 
-## 路由不在这一层重新裁定
+## 这一层没有路由状态
 
-territory 携带 `search_space_admission_ref` 并在 `territory_status` 中**镜像**
-那个路由；**`SearchSpaceAdmission@0.1.0` 才是权威**。仓库只持有引用，不解引用
-该 admission、不重算它的八个条件、不给 territory 重新路由。
+territory **只记录 `search_space_admission_ref`**，即它被哪份 admission 路由；
+路由本身留在 `SearchSpaceAdmission@0.1.0`，那里是**唯一权威**。
 
-这同时给了 `SearchSpaceAdmission` 它的**第一个消费者**——此前它和
-`DevelopmentSponsorProfile`、`ProgramThesis` 一样是无人消费的形状合同。
+**刻意没有 `territory_status` 字段。** 本模块从不解引用 admission，因此**无法
+验证**本地那份路由副本是否仍与它声称的来源一致——而一个「查不了却筛得动」的
+副本，就是第二个真源，迟早漂移。既然不存副本，路由词汇在本合同里也就完全不出现，
+顺带绕开了源文档那三套拼写。
+
+`OpportunityTerritoryMap` **不提供任何按路由筛选的方法**。有测试断言它没有
+`with_status`，也没有任何名字含 `status`／`route`／`active` 的公开属性。
+
+下游必须**同时拿着 territory 和它的 admission**，不能在这一层筛一个本地状态
+——因为这里没有。合同以 `downstream_must_not` 明确登记：
+
+```yaml
+- filter_territories_on_a_locally_stored_route
+- treat_a_territory_reference_alone_as_evidence_of_admission
+```
 
 **`ACTIVE_SEARCH` 不授权生成靶点。** 它只表示这片水域值得主动搜索。
 
@@ -81,11 +88,12 @@ Gate；不排序、不打分（有测试断言字段名中不含 `_score` 与 `r
 CRC 内容（有测试断言模块源码中不出现 `CRC`／`MSS`／`HER2`／`TROP2`／`KRAS`／
 `BRAF`／`colorectal`）。
 
-模块 import 集合恰为 `{__future__, dataclasses, typing,
-src.contracts.search_space_admission}`——最后一项只是那套冻结枚举，不是实例。
+模块 import 集合恰为 `{__future__, dataclasses, typing}`——去掉镜像字段后，
+这一层连路由枚举都不再需要。
 
 ## 下游
 
-WP3 的 program wedge 将消费 `ACTIVE_SEARCH` territories。**该合同尚不存在**，
-因此 `downstream_relationship.consumed_by` 记为 `not_yet_defined`，不作任何
-下游声明。
+WP3 的 program wedge 将消费**持有有效 `ACTIVE_SEARCH` admission 的**
+territories——是「territory + admission」一起消费，不是筛一个本地状态。
+**该合同尚不存在**，因此 `downstream_relationship.consumed_by` 记为
+`not_yet_defined`，不作任何下游声明。

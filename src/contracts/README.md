@@ -44,8 +44,8 @@ commitment cannot be reached without one.
 `opportunity_territory.yaml` and `opportunity_territory.py` open Work Package 2
 with `OpportunityTerritory@0.1.0` and `OpportunityTerritoryMap@0.1.0`. A
 territory is a clinical water, not a candidate: it names no target and generates
-none. It carries a `search_space_admission_ref` and mirrors that route, giving
-`SearchSpaceAdmission@0.1.0` its first consumer, and it reuses the frozen
-`SearchSpaceRoute` vocabulary rather than adding a fourth spelling of the
-territory states. The schema holds no disease-specific content; territory
-instances live in an external workspace.
+none. It carries a `search_space_admission_ref` recording which admission routed
+it, and deliberately stores no route state of its own - the route lives in
+`SearchSpaceAdmission@0.1.0` and nowhere else, so nothing here can drift from
+it. The schema holds no disease-specific content; territory instances live in an
+external workspace.
