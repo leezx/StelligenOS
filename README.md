@@ -59,6 +59,7 @@ git diff --check
 - `docs/architecture/program-commitment-review.zh-CN.md`
 - `docs/architecture/value-inflection-plan.zh-CN.md`
 - `docs/architecture/sponsor-fit-assessment.zh-CN.md`
+- `docs/architecture/opportunity-territory.zh-CN.md`
 - `docs/architecture/versions/README.md`
 - `extensions/README.md`
 - `extensions/BACKLOG.zh-CN.md`
