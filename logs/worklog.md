@@ -2972,3 +2972,15 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: `Ran 413 tests OK`；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git status --short` 仅本 PR 文件；无数据、cache、result、database、model weights 或实例进入仓库。
 - Deferred: 仍欠 `#52`／`#53`／`#54`／`#57`／`#58`／`#59`／`#60`／`#61`／`#66` 九份审核记录，本轮只补 #72。
 - Next: 提交 v4 refresh PR 并送审；获批后再考虑是否按规则 3 产出 `versions/` 只读快照（需审核方明确批准「v4 文档版本」而非仅批准本 PR 改动）。
+
+### 2026-08-06T23:10 — 合并 PR #73 并补登九份历史审核记录
+
+- Merge: ChatGPT 对 PR #73 返回 `APPROVE`，审核 HEAD `310abea5f2b6c3ece6da34c4cd0e58b00c8a57bc`，CI run #72 在 Python 3.11／3.12 均成功。核对 HEAD 未漂移后以 merge commit 合入，得 `9756982`。合并说明写入批准范围与不授权事项，并承接审核方的非阻断措辞意见：文中多处「Phase 1–4 的四个合同」严格说应为「四个阶段、五个合同」，因 Phase 1 同时含 `DevelopmentSponsorProfile` 与 `ProgramThesis`；表格已列全五个，不丢对象，留待后续统一。
+- Backfill: 补登 `#52`／`#53`／`#54`／`#57`／`#58`／`#59`／`#60`／`#61`／`#66` 九份审核记录。九个 PR 均已合并但仓库内无记录，`gh pr view --json reviews` 对九个全部返回空。
+- Honesty constraint: 其中八份的审核方最终批准原文**不可恢复**——从未写入 GitHub、从未转述进 `logs/`、仓库内无逐字副本。八份统一标注 `Record type: reconstructed_secondary`，并在文件头写明「不要把 Accepted conclusion 一节当作审核方的话」。可恢复且一手的部分是各轮 `REQUEST_CHANGES` 的阻断条目（当时即写入 handoff 与 worklog，多份 handoff 把原文置于文首并注明「下方原文一字未删」），记录中明确标为一手。`#66` 标注 `relayed_verbatim_conclusion`，结论与非阻断意见由人类负责人转述并逐字引用。
+- Correction: 逐个 SHA 回查 git 发现 worklog 2026-08-05 条目把 `#54` 的 merge commit 记错——`58984e7` 实为分支最终 head（`Merge remote-tracking branch 'origin/main'`），真正的 merge commit 是 `e7092d5`，获批 head 为 `8992563`。记录中写核对后的值并说明该差异；**worklog 原文未改**，更正写在新记录里，与此前处理 `#57` `BLOCK-02` 的做法一致。同类情况另有 `#57`、`#60` 两处：分支最终 head 均为「把 main 合并进分支」的提交，与获批 head 不同，差异仅为 main 进入，已在记录中说明。
+- Verify: 以脚本对照 `gh pr view` 复核九份记录的 PR 号、获批 head、merge commit、record-type 标签，全部通过。
+- Content: 各份按实际历史保留要点而非只写「已批准」——`#53`／`#54` 于文首声明被批准的是隔离修订而非那次外部运行（状态 `UNAUTHORIZED_QUARANTINED_NOT_ACCEPTED`），并保留四条／五条阻断与不接受内容清单及 `AE-01` 污染点；`#57` 保留其 `BLOCK-02` 表述错误与在 `#58` 中的更正；`#58` 保留三轮裁决及由此登记出 `EVGAP-01`／`EVGAP-02`；`#59` 保留「所需数据一直在本地而该库从未被批准」与派生库不得自声明纳入的裁决如何催生 `SRCADM-01`；`#60` 保留写反的生成逻辑、交付包版本不匹配裁决及由此确立的打包校验规则（后来 `verify_package.py`／`verify_audit.py` 的直接来源）与 `git stash -u` 失误；`#61` 保留 `0.1.0` 契约中导致 `#62` 阻断的那个洞；`#66` 保留 `authorises_extraction_run_count` 无消费机制的非阻断意见与三处未修 YAML 引号缺陷。
+- Scope: 不改任何代码、契约、测试、Gate、lifecycle、core objects 或 target 轴；不回写任何已批准历史文本；不修复记录中提到的任何缺陷；不解除任何缺口；不执行任何抽取或外部运行。只新增九个 `logs/` 文件、一份 handoff 与本条 worklog。
+- Validation: `Ran 413 tests OK`；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；无数据、cache、result、database、model weights 或实例进入仓库。
+- Closed: 补完这九份后，`#1`..`#73` 中所有已合并且需要记录的 PR 均有仓库内批准记录，历史欠账清零。审核方 GitHub 连接器持续返回 `403`，仓库内记录是唯一可长期引用的载体。
