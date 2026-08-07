@@ -16,17 +16,33 @@ run:
   work_package: WP2B
   produces: OpportunityTerritoryMap@0.1.0
   produces_element: OpportunityTerritory@0.1.0
-  status: contract_only_pending_review
-  execution_status: not_authorized_not_executed
-  authorises_run: false
-  authorises_run_count: 0
-  blocked_by:
-    - BLOCK-01
-    - BLOCK-02
+  status: authorised_not_yet_executed
+  execution_status: authorised_not_yet_executed
+  authorises_run: true
+  # 授权范围是**一次**测绘运行，不是长期许可。
+  authorises_run_count: 1
+  blocked_by: []
+  blocked_by_cleared:
+    - blocker: BLOCK-01
+      cleared_by: 人类负责人批准 DevelopmentSponsorProfile 实例 v0.1.2 并冻结
+      evidence_package: gen_sponsor_profile_stelligen_v0.1.2_20260807T150000Z_frozen
+      evidence_zip_sha256: 249affaca0c11e409b5da8be6936a61b55b712af2d9cc87d3b6d76c6df0264ba
+      instance_sha256: 41f8e02680a976cdf4db34cd18dbf0dfd7a566ed160230934c753d3e7241544a
+      validation: validate_profile.py 65/65 MATCH
+    - blocker: BLOCK-02
+      cleared_by: search_space_admission_route_policy@0.1.0
+      evidence_path: docs/pools/search_space_route_policy.yaml
+      cleared_by_pr: 79
+      merge_commit: 0c030c2
   requires_result_pr: true
   requires_followup_binding_pr: false
-  # 本契约获批不等于可以开跑。两个 blocker 各自需要独立交付并获批。
-  approval_does_not_authorise_execution: true
+  # 两个 blocker 现已分别清除，见 blocked_by_cleared。
+  approval_does_not_authorise_execution: false
+  # 承接 PR #66 审核方对 authorises_extraction_run_count 的非阻断意见：计数字段
+  # 若无消费机制就只是声明。此处写明消费点，但**诚实标注它由流程而非代码强制**
+  # ——结果 PR 必须把 authorises_run_count 归零，仓库不会自动递减。
+  run_count_consumed_by: result_pr
+  run_count_consumption_is_process_enforced_not_code_enforced: true
 
 # ---------------------------------------------------------------- blockers
 
@@ -46,7 +62,86 @@ blockers:
     must_be: external_instance
     must_be_frozen_before_run: true
     cleared_by: 人类负责人提供事实并冻结该实例，且实例经审核接受
-    cleared: false
+    cleared: true
+    cleared_evidence: gen_sponsor_profile_stelligen_v0.1.2_20260807T150000Z_frozen
+    cleared_note: >-
+      三条件合取成立：机器校验 PASS、存在可引用的人工批准工件、
+      approved_instance_sha256 等于冻结实例的 SHA-256。
+      冻结实例声明 accessible_patient_samples 为空，并把机构队列、未发表数据集、
+      学术 organoid、机构 PDX 与机构雇佣下产生的发明列入 NOT_YET_CONTROLLED
+      登记表，各自写明转化所需的法律工具。**创始人的科学接触不等于公司可用。**
+    machine_validation: PASS
+    machine_validation_evidence: gen_sponsor_profile_stelligen_v0.1.2_20260807T150000Z_frozen
+    machine_validation_detail: validate_profile.py 65/65 MATCH
+    # 机器校验需要仓库 checkout：包内哈希可独立核对，合同形状校验不能脱离仓库。
+    machine_validation_requires_repository_checkout: true
+    machine_validation_scope: >-
+      package hashes can be independently verified; contract-shape validation
+      requires a StelligenOS checkout at the referenced contract baseline.
+    human_approval_ref: external:human_approval/stelligen_sponsor_profile_v0.1.2
+    approved_instance_sha256: 41f8e02680a976cdf4db34cd18dbf0dfd7a566ed160230934c753d3e7241544a
+    approved_profile_version: "0.1.2"
+    approval_timestamp_utc: "2026-08-07T15:00:00Z"
+    approving_role: human_lead_founder
+    reviewed_draft_instance_sha256: f31a769a8658d41fdae963069fce0308582e34644aafd55fd2e531a36f4ad6dd
+    approved_content_sha256: f910fc5e2b9c7743c4301ae4ac648ad44e67a22b591e5c266ff8a8995427fd9b
+    # 两层绑定，回答两个不同的问题，互不冲突。
+    binding_semantics:
+      human_approval_binds: approved_content_sha256
+      human_approval_binds_note: >-
+        Human approval binds substantive profile content via
+        approved_content_sha256.
+      block_01_clearance_additionally_requires: >-
+        BLOCK-01 clearance additionally requires the post-approval frozen
+        artifact to have approved_instance_sha256 equal to the frozen instance
+        SHA recorded in blocked_by_cleared.
+      frozen_instance_sha_recorded_in: run.blocked_by_cleared[BLOCK-01].instance_sha256
+      equality_check_is_internal_consistency_only: true
+      equality_check_limit: >-
+        仓库内的相等性检查只能发现单侧漂移。两侧同时改成同一个错值它发现不了，
+        而且仓库按 data-free 规则不持有冻结包，任何仓库内检查都无法对实际文件
+        取哈希。缓解手段是把同一组哈希同时记入 handoff（测试强制三处一致），
+        权威校验仍然是包内的外部 verifier。
+      why_two_layers: >-
+        内容一致性与工件身份是两个问题。冻结必然改变实例文件的 SHA-256，所以
+        「批准的是不是同一份内容」只能由 content hash 回答；而「被清除条件采信的
+        是不是那份冻结工件」只能由 instance hash 回答。前者跨草稿与冻结包不变，
+        后者唯一指向冻结包。把新 instance SHA 直接顶替审核方看过的草稿 SHA，
+        正是第一轮被判定不成立的那类跳跃——两个哈希都保留，不互相覆盖。
+    withdrawn_candidates:
+      - package: gen_sponsor_profile_stelligen_v0.1.1_20260807T130000Z_draft
+        instance_sha256: 7582ca157ec769c170c390e6dc8a99d55adf2e1dffc3d1af461434797e0ec421
+        withdrawn_because: >-
+          accessible_models 中两个 ref 命名为 contracted-*，而同一实例声明
+          nothing contracted today——引用名声称了强于其 provenance 类别的事实。
+        must_never_be_approved_instance_sha256: true
+      - package: gen_sponsor_profile_stelligen_20260807T050000Z_frozen
+        instance_sha256: 65253e10cb37a5341c34ac5c5105d38c6d044fe99ea4382f0c4e138a206814ed
+        withdrawn_because: >-
+          包内四个文件状态自相矛盾——instance 与 manifest 写 FROZEN／clears_block_01,
+          summary 与 provenance table 写 DRAFT／未清；且把机器校验记作人工批准。
+        must_never_be_approved_instance_sha256: true
+    clearing_conditions:
+      - machine_validation == PASS
+      - human_approval_ref exists
+      - approved_instance_sha256 == frozen instance sha256
+    clearing_conditions_are_conjunctive: true
+    human_approval_artifact_must_record:
+      - approved_profile_version
+      - approved_instance_sha256
+      - approval_timestamp_utc
+      - approving_role
+      - acknowledges_operating_assumptions
+      - acknowledges_no_institutional_resource_ownership
+      - acknowledges_pre_company_no_legal_entity_assumed
+      - acknowledges_partnered_capabilities_are_uncontracted_market_assumptions
+    human_approval_artifact_rationale: >-
+      人工批准不能只是一句「同意」。批准工件必须绑定具体实例 SHA-256，并显式承认
+      OPERATING_ASSUMPTION 是当前经营政策而非事实、且未把任何机构资源计为公司资产。
+      否则 profile 换版时没有可追溯的审计链。
+    clearing_rationale: >-
+      「已生成且通过机器校验」不得被记作「已获人工批准」。这条不变量存在的目的
+      是让以后换 profile 版本时，同一个跳跃不会再发生一次。
   - id: BLOCK-02
     title: SearchSpaceAdmission 的 route_policy_ref 尚不存在
     blocks: 全部 territory 的 search_space_admission_ref
@@ -63,7 +158,14 @@ blockers:
       - UNKNOWN 的处理方式
       - 重评估触发条件
     cleared_by: route policy 冻结并经审核接受
-    cleared: false
+    cleared: true
+    machine_validation: PASS
+    cleared_evidence: docs/pools/search_space_route_policy.yaml
+    cleared_by_pr: 79
+    human_approval_ref: logs/worklog.md#2026-08-07T05:40
+    human_approval_note: >-
+      route policy 是规则而非经营承诺，其内容已由审核方逐条复核并 APPROVE
+      （PR #79），因此不需要独立的 profile 式人工批准工件。
 
 # ---------------------------------------------------------------- scope
 
@@ -201,7 +303,8 @@ evidence_standards:
   - field_group: sponsor_fit_context
     fields: [sponsor_evidence_advantage_ref]
     requires: >-
-      已冻结的 DevelopmentSponsorProfile 实例（BLOCK-01）**加上**该 territory 可
+      已获人工批准并冻结的 DevelopmentSponsorProfile 实例（须先按 clearing_conditions
+      清除 BLOCK-01；候选实例在清除前不得作为基线）**加上**该 territory 可
       触及的数据／模型／know-how 与该 territory 的证据要求，三者共同支撑一份
       territory-specific 优势评估。
     ref_points_to: territory_specific_external_evidence_or_assessment
@@ -300,7 +403,7 @@ validation_rules:
 # ---------------------------------------------------------------- 明确不授权
 
 not_authorised:
-  - "执行本运行——两个 blocker 未解除"
+  - "在 authorises_run_count 归零后再次执行本运行"
   - "生成任何 program wedge"
   - "生成任何 target 或 target-territory pair"
   - "执行任何 Gate、T-chain 或三重预筛"

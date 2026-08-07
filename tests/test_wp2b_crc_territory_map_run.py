@@ -14,26 +14,327 @@ CONTRACT_PATH = ROOT / "docs" / "pools" / "wp2b_crc_territory_map_run.yaml"
 CONTRACT = yaml.safe_load(CONTRACT_PATH.read_text(encoding="utf-8"))
 
 
+def _frozen_instance_sha256():
+    """The frozen artifact's SHA-256 as recorded by the run, or None if uncleared."""
+
+    for entry in CONTRACT["run"].get("blocked_by_cleared", []):
+        if entry["blocker"] == "BLOCK-01":
+            return entry.get("instance_sha256")
+    return None
+
+
 class RunAuthorisationTests(unittest.TestCase):
-    """Approving this contract must not, by itself, let the run start."""
+    """The run stays unauthorised while any blocker is uncleared."""
 
-    def test_the_run_is_not_authorised(self):
+    def test_authorisation_follows_the_blocker_state(self):
+        """Derived, not asserted. Holds whether or not the run is authorised.
+
+        The earlier version hardcoded "not authorised", so clearing a blocker
+        broke the test rather than being checked by it.
+        """
+
         run = CONTRACT["run"]
-        self.assertFalse(run["authorises_run"])
-        self.assertEqual(run["authorises_run_count"], 0)
-        self.assertEqual(run["execution_status"], "not_authorized_not_executed")
-        self.assertTrue(run["approval_does_not_authorise_execution"])
+        uncleared = [b["id"] for b in CONTRACT["blockers"] if not b["cleared"]]
+        self.assertEqual(run["authorises_run"], not uncleared)
+        self.assertEqual(run["approval_does_not_authorise_execution"], bool(uncleared))
+        if uncleared:
+            self.assertEqual(run["authorises_run_count"], 0)
+            self.assertEqual(run["execution_status"], "not_authorized_not_executed")
+        else:
+            self.assertEqual(
+                run["authorises_run_count"],
+                1,
+                "authorisation covers exactly one run, never a standing licence",
+            )
+            self.assertEqual(run["execution_status"], "authorised_not_yet_executed")
 
-    def test_both_blockers_are_declared_and_uncleared(self):
-        self.assertEqual(CONTRACT["run"]["blocked_by"], ["BLOCK-01", "BLOCK-02"])
+    def test_an_uncleared_blocker_stays_in_blocked_by(self):
+        blocked = CONTRACT["run"]["blocked_by"]
+        uncleared = [b["id"] for b in CONTRACT["blockers"] if not b["cleared"]]
+        self.assertEqual(sorted(blocked), sorted(uncleared))
+
+    def test_a_cleared_blocker_names_what_cleared_it(self):
+        """Clearing must be traceable, not merely a flipped flag."""
+
+        cleared = {e["blocker"]: e for e in CONTRACT["run"]["blocked_by_cleared"]}
+        for blocker in CONTRACT["blockers"]:
+            with self.subTest(blocker=blocker["id"]):
+                if not blocker["cleared"]:
+                    self.assertNotIn(blocker["id"], cleared)
+                    continue
+                self.assertIn(blocker["id"], cleared)
+                self.assertTrue(str(blocker["cleared_evidence"]).strip())
+
+    def test_block_01_requires_human_approval_not_only_machine_validation(self):
+        """Generated and machine-validated is not the same as human-approved.
+
+        A sponsor profile encodes subjective commitments - capital boundary,
+        resource control, capacity, transaction stage, IP strategy. A script can
+        check the shape; it cannot check that the values are ones the human lead
+        accepts.
+        """
+
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        self.assertEqual(
+            blocker["clearing_conditions"],
+            [
+                "machine_validation == PASS",
+                "human_approval_ref exists",
+                "approved_instance_sha256 == frozen instance sha256",
+            ],
+        )
+        self.assertTrue(blocker["clearing_conditions_are_conjunctive"])
+
+        machine_ok = blocker["machine_validation"] == "PASS"
+        human_ok = bool(blocker["human_approval_ref"])
+        # Compare the hashes. An earlier version only checked non-emptiness,
+        # which would have let an approved hash that names nothing in this
+        # contract satisfy the very condition the conjunction exists to enforce.
+        hash_ok = blocker["approved_instance_sha256"] == _frozen_instance_sha256()
+        self.assertEqual(blocker["cleared"], machine_ok and human_ok and hash_ok)
+
+    def test_the_approved_hash_is_the_frozen_artifact_not_merely_present(self):
+        """The third clearing condition, checked as equality rather than truthiness."""
+
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        if not blocker["cleared"]:
+            self.skipTest("BLOCK-01 not cleared")
+        frozen = _frozen_instance_sha256()
+        self.assertIsNotNone(frozen, "a cleared BLOCK-01 must record the frozen instance")
+        self.assertEqual(
+            blocker["approved_instance_sha256"],
+            frozen,
+            "approved_instance_sha256 must name the frozen artifact in blocked_by_cleared",
+        )
+        self.assertRegex(frozen, r"^[0-9a-f]{64}$")
+        self.assertEqual(
+            blocker["cleared_evidence"],
+            next(
+                e["evidence_package"]
+                for e in CONTRACT["run"]["blocked_by_cleared"]
+                if e["blocker"] == "BLOCK-01"
+            ),
+            "the blocker and the run must cite the same frozen package",
+        )
+
+    def test_the_frozen_hash_agrees_with_the_handoff_record(self):
+        """A third independent record, because equality alone has a blind spot.
+
+        Comparing approved_instance_sha256 with blocked_by_cleared catches one
+        side drifting. It cannot catch both drifting to the same wrong value,
+        and no in-repository check can close that: the frozen package lives
+        outside the repository by the data-free rule, so nothing here can hash
+        the actual file. Requiring the handoff to carry the same digest means
+        a silent substitution has to be made in three places instead of two.
+        The authoritative check remains the external verifier.
+        """
+
+        frozen = _frozen_instance_sha256()
+        if frozen is None:
+            self.skipTest("BLOCK-01 not cleared")
+        handoff = (
+            ROOT / "docs" / "handoff" / "2026-08-07-wp2b-authorization.zh-CN.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            frozen,
+            handoff,
+            "the handoff must record the same frozen instance SHA-256",
+        )
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        self.assertIn(blocker["approved_content_sha256"], handoff)
+        self.assertIn(blocker["reviewed_draft_instance_sha256"], handoff)
+        for entry in blocker["withdrawn_candidates"]:
+            with self.subTest(package=entry["package"]):
+                self.assertIn(entry["instance_sha256"], handoff)
+
+    def test_the_two_hash_bindings_answer_different_questions(self):
+        """Content hash binds the approval; instance hash binds the artifact."""
+
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        if not blocker["cleared"]:
+            self.skipTest("BLOCK-01 not cleared")
+        binding = blocker["binding_semantics"]
+        self.assertEqual(binding["human_approval_binds"], "approved_content_sha256")
+        self.assertIn(
+            "approved_instance_sha256 equal to the frozen instance",
+            binding["block_01_clearance_additionally_requires"],
+        )
+        self.assertNotEqual(
+            blocker["approved_content_sha256"], blocker["approved_instance_sha256"]
+        )
+        self.assertTrue(binding["why_two_layers"].strip())
+
+    def test_a_cleared_blocker_carries_no_uncleared_reason(self):
+        """cleared: true and "not yet cleared because" cannot both be true."""
+
+        for blocker in CONTRACT["blockers"]:
+            with self.subTest(blocker=blocker["id"]):
+                if blocker["cleared"]:
+                    self.assertNotIn("not_yet_cleared_because", blocker)
+                else:
+                    self.assertTrue(blocker["not_yet_cleared_because"].strip())
+
+    def test_machine_validation_alone_never_clears_block_01(self):
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        if blocker["machine_validation"] == "PASS" and not blocker["human_approval_ref"]:
+            self.assertFalse(
+                blocker["cleared"],
+                "BLOCK-01 cleared on machine validation with no human approval",
+            )
+            self.assertTrue(blocker["not_yet_cleared_because"].strip())
+
+    def test_an_unapproved_instance_never_carries_an_approved_hash(self):
+        """A profile can exist, validate, and still not be approved."""
+
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        if not blocker["human_approval_ref"]:
+            self.assertIsNone(
+                blocker["approved_instance_sha256"],
+                "a reviewed-draft SHA-256 must not be promoted to an approved one",
+            )
+            self.assertIsNone(blocker.get("approved_content_sha256"))
+
+    def test_freezing_does_not_silently_swap_the_approved_hash(self):
+        """Approval was given on the draft; freezing changes the file's SHA.
+
+        Substituting the frozen hash for the one the approver saw would repeat
+        the defect the first review round rejected. The reviewed hash stays
+        recorded, and the binding is the content hash, which survives freezing.
+        """
+
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        if not blocker["human_approval_ref"]:
+            self.skipTest("not yet approved")
+        self.assertNotEqual(
+            blocker["approved_instance_sha256"],
+            blocker["reviewed_draft_instance_sha256"],
+            "freezing must change the file hash; identical hashes mean it did not",
+        )
+        self.assertTrue(blocker["approved_content_sha256"].strip())
+        self.assertNotEqual(
+            blocker["approved_content_sha256"], blocker["approved_instance_sha256"]
+        )
+        self.assertEqual(blocker["approved_profile_version"], "0.1.2")
+        self.assertTrue(blocker["approval_timestamp_utc"].strip())
+        self.assertTrue(blocker["approving_role"].strip())
+
+    def test_a_withdrawn_candidate_can_never_become_the_approved_instance(self):
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        withdrawn = blocker["withdrawn_candidates"]
+        self.assertTrue(withdrawn, "every withdrawn candidate must stay recorded")
+        for entry in withdrawn:
+            with self.subTest(package=entry["package"]):
+                self.assertTrue(entry["withdrawn_because"].strip())
+                self.assertTrue(entry["must_never_be_approved_instance_sha256"])
+                self.assertNotEqual(
+                    entry["instance_sha256"], blocker["approved_instance_sha256"]
+                )
+                self.assertNotEqual(
+                    entry["instance_sha256"],
+                    blocker.get("reviewed_draft_instance_sha256"),
+                )
+                self.assertNotEqual(
+                    entry["instance_sha256"], _frozen_instance_sha256()
+                )
+                self.assertNotIn(entry["package"], blocker["machine_validation_evidence"])
+
+    def test_no_section_claims_an_uncleared_blocker_is_cleared(self):
+        """The rest of the contract may not contradict the blocker list.
+
+        A stale "BLOCK-01, cleared" survived in evidence_standards after the
+        authorization was withdrawn, because withdrawing edited the blocker
+        entry and not the prose that depended on it. Walk the parsed contract
+        rather than the raw text, and exempt only the blockers subtree, which
+        is where cleared state is legitimately discussed.
+        """
+
+        uncleared = [b["id"] for b in CONTRACT["blockers"] if not b["cleared"]]
+        claims = ("已清", "已解除", "cleared")
+        offenders = []
+
+        def walk(node, path):
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    walk(value, f"{path}.{key}")
+            elif isinstance(node, list):
+                for index, value in enumerate(node):
+                    walk(value, f"{path}[{index}]")
+            elif isinstance(node, str):
+                for blocker_id in uncleared:
+                    if blocker_id in node and any(c in node for c in claims):
+                        offenders.append((path, node.strip()[:90]))
+
+        for section, body in CONTRACT.items():
+            if section == "blockers":
+                continue
+            walk(body, section)
+
+        self.assertEqual(offenders, [], f"uncleared blockers claimed cleared: {offenders}")
+
+    def test_the_advantage_baseline_waits_for_human_approval(self):
+        """sponsor_fit_context must require an approved profile, not a candidate."""
+
+        group = next(
+            g
+            for g in CONTRACT["evidence_standards"]
+            if g["field_group"] == "sponsor_fit_context"
+        )
+        self.assertIn("已获人工批准", group["requires"])
+        self.assertIn("clearing_conditions", group["requires"])
+        self.assertTrue(group["profile_alone_is_insufficient"])
+
+    def test_human_approval_needs_an_artifact_not_only_a_yes(self):
+        """Eight recorded fields, so a later version has an audit chain to compare."""
+
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        self.assertEqual(
+            blocker["human_approval_artifact_must_record"],
+            [
+                "approved_profile_version",
+                "approved_instance_sha256",
+                "approval_timestamp_utc",
+                "approving_role",
+                "acknowledges_operating_assumptions",
+                "acknowledges_no_institutional_resource_ownership",
+                "acknowledges_pre_company_no_legal_entity_assumed",
+                "acknowledges_partnered_capabilities_are_uncontracted_market_assumptions",
+            ],
+        )
+        self.assertTrue(blocker["human_approval_artifact_rationale"].strip())
+
+    def test_machine_validation_does_not_overclaim_what_it_proves(self):
+        """The package is hash-verifiable standalone; shape validation is not."""
+
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        self.assertTrue(blocker["machine_validation_requires_repository_checkout"])
+        scope = blocker["machine_validation_scope"]
+        self.assertIn("package hashes can be independently verified", scope)
+        self.assertIn("requires a StelligenOS checkout", scope)
+
+    def test_every_blocker_states_why_and_how_it_clears(self):
         blockers = {blocker["id"]: blocker for blocker in CONTRACT["blockers"]}
         self.assertEqual(set(blockers), {"BLOCK-01", "BLOCK-02"})
         for blocker_id, blocker in blockers.items():
             with self.subTest(blocker=blocker_id):
-                self.assertFalse(blocker["cleared"])
                 self.assertTrue(blocker["must_be_frozen_before_run"])
                 self.assertTrue(blocker["why"].strip())
                 self.assertTrue(blocker["cleared_by"].strip())
+
+    def test_the_run_count_names_its_consumption_point_honestly(self):  # noqa: D401
+        """Carried forward from the PR #66 note on a declarative counter."""
+
+        run = CONTRACT["run"]
+        self.assertEqual(run["run_count_consumed_by"], "result_pr")
+        self.assertTrue(
+            run["run_count_consumption_is_process_enforced_not_code_enforced"],
+            "the counter must not claim an enforcement the repository lacks",
+        )
+
+    def test_a_second_run_is_still_not_authorised(self):
+        self.assertIn(
+            "在 authorises_run_count 归零后再次执行本运行",
+            CONTRACT["not_authorised"],
+        )
 
     def test_blocker_one_treats_the_profile_as_an_upstream_input(self):
         """The profile is a baseline, not the advantage evidence itself."""
@@ -287,8 +588,23 @@ class ValidationRuleTests(unittest.TestCase):
 
 
 class NotAuthorisedTests(unittest.TestCase):
-    def test_the_run_itself_heads_the_not_authorised_list(self):
-        self.assertIn("执行本运行", CONTRACT["not_authorised"][0])
+    def test_the_not_authorised_list_tracks_the_blocker_state(self):
+        """While blocked, running at all is barred. Once cleared, only a second run is."""
+
+        uncleared = [b["id"] for b in CONTRACT["blockers"] if not b["cleared"]]
+        head = CONTRACT["not_authorised"][0]
+        if uncleared:
+            self.assertIn("执行本运行", head)
+            self.assertTrue(any(b in head for b in uncleared))
+        else:
+            self.assertIn("authorises_run_count 归零后再次执行本运行", head)
+            self.assertFalse(
+                any(
+                    "执行本运行——" in item and "未清" in item
+                    for item in CONTRACT["not_authorised"]
+                ),
+                "a stale blocker bar must not outlive the blocker",
+            )
 
     def test_downstream_work_is_not_authorised(self):
         joined = " ".join(CONTRACT["not_authorised"])

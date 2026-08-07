@@ -3113,3 +3113,114 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Scope: 未改 OUT／PARTNER 语义、blocker 状态、执行授权、`SearchSpaceAdmission` schema，未加任何疾病内容。
 - Validation: `Ran 538 tests OK`（本文件 30）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
 - Next: 推送到同一 PR #79，不新开 PR；等待复审。`BLOCK-01` 仍未清。
+
+### 2026-08-07T05:40 — 合并 PR #79，冻结 Sponsor Profile v0.1.0，WP2B 取得一次执行授权
+
+- Merge: ChatGPT 对 PR #79 返回第二轮 `APPROVE`，审核 HEAD `3e0836fce60154702bcbfe90166ff1080c6e448d`，CI 通过，合入得 `0c030c2`。合并前按审核方的非阻断意见修正了 PR 描述里 stale 的「四项」表述——改的是 PR body 不是 commit，核验获批 HEAD 未动。审核方确认后四项条件终于具备真正否决能力，而不是「写在 schema 里但不参与路由」。
+- BLOCK-01 draft: 按人类负责人给出的当前事实起草 `DevelopmentSponsorProfile@0.1.0` 外部实例，产出 `gen_sponsor_profile_stelligen_20260807T050000Z`（草稿，`DRAFT_PENDING_HUMAN_REVIEW`），含实例、引用定义、人读摘要、逐字段 provenance 表与 `validate_profile.py`；草稿校验 17/17 MATCH。按指示**停下等人工确认**，未擅自清 blocker。
+- Hard invariant encoded: **创始人的科学接触不等于公司可用。** `accessible_patient_samples` 为空并带 `empty_list_semantics: INVESTIGATED_AND_CONFIRMED_NONE_SPONSOR_CONTROLLED`（空表示查过确认没有，不是没查）；机构队列、未发表机构数据集、学术 organoid、机构 PDX、机构雇佣下产生的发明进 `NOT_YET_CONTROLLED` 登记表，各写明转化所需法律工具；校验脚本扫 `accessible_data`／`accessible_models`，命中 `dfci`／`hospital`／`academic`／`institution`／`pdx` 即 FAIL。**理由是可量化的**：若把机构资源写成公司资产，`asymmetric_evidence_advantage` 会评为 `SATISFIED`，而它是 PR #79 规则表里 `ACTIVE_SEARCH` 必需八项之一，系统会为法律上不存在的资产投入真实搜索资源。
+- Conservative fields: `capital_envelope` 四档不填数字（六位数以上默认需外部资本，IND-enabling／GLP／GMP／临床完全在自有边界外）；capacity 定 1–2 active、第三个只能 `DATA_PACKAGE_ONLY`／`PARTNER_ONLY` 并在文件内写明比早前 1–3 更窄是有意的；`accessible_data` 只列公开源并点明公开数据人人可得、本身不构成非对称优势；`partnered_capabilities` 标 `OPERATING_ASSUMPTION` 而非事实（今天无任何已签 CRO／合作方）；每字段有 `CONFIRMED_CURRENT_FACT`／`OPERATING_ASSUMPTION`／`UNKNOWN` 分类，操作假设不得静默升格为事实。
+- Freeze: 人类负责人确认后冻结为 `v0.1.0`，产出独立包 `gen_sponsor_profile_stelligen_20260807T050000Z_frozen`，ZIP SHA-256 `5f057fde5739a4813114546dc292d20cb260a82a842fd6adeeabfc8efcd016ed`，实例 SHA-256 `65253e10cb37a5341c34ac5c5105d38c6d044fe99ea4382f0c4e138a206814ed`，13,660 bytes，校验 19/19 MATCH。按 PR #60 确立的规则，修订单独出包并各带自己的 SHA-256。
+- Authorization: `docs/pools/wp2b_crc_territory_map_run.yaml` 的 `authorises_run` 转 `true`、`authorises_run_count` 设 1、`blocked_by` 清空，两个 blocker 各记 `cleared: true` 与清除证据（`BLOCK-01` 记包名与两个 SHA-256；`BLOCK-02` 记 policy 路径、PR 79、merge commit）。形态同 PR #66。**未改任何语义、范围、来源策略、证据标准或校验规则。**
+- PR #66 note carried: 该轮审核方指出 `authorises_extraction_run_count` 无消费机制、只是声明字段。本契约写明 `run_count_consumed_by: result_pr`，并**诚实标注** `run_count_consumption_is_process_enforced_not_code_enforced: true`，有测试断言该字段为 `true`（注释：计数器不得声称仓库并不具备的强制力）。**这不是解决了问题，是把问题标注清楚了**——仓库仍不会自动递减。`not_authorised` 首条由「执行本运行」改为「在 `authorises_run_count` 归零后再次执行本运行」。
+- Executor mistake, self-caught: 授权脚本首版因 heredoc 引号嵌套语法错、次版因一处替换目标字符串缩进不符而 assert 失败。两次都**在写盘前失败**，契约未被部分修改——这正是逐条 assert 的作用（对照 PR #77 那次未加 assert 的静默未命中）。
+- Mutation: 五项——授权次数改 3 -> `failures=1`；把计数器标成代码强制 -> `failures=1`；清 blocker 但不给证据包 -> `failures=1`；截断实例哈希 -> `failures=1`；标记已清但证据为空 -> `failures=1`。五项回滚均以 `diff -q` 确认无差异。测试要求「已清的 blocker 必须写明是什么清的，而不是只翻一个布尔位」。
+- Validation: `Ran 541 tests OK`（合并前 538，净增 3）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；无数据、cache、result、database、model weights 或实例进入仓库。
+- Next: 本 PR 获批合并后执行一次 CRC Territory Map 外部运行 → 结果 PR（跑 `VAL-T01`..`VAL-T21` 并把 `authorises_run_count` 归零）→ WP3。注意 profile 一旦改版，按 route policy `RT-03` 所有已路由 territory 的 `asymmetric_evidence_advantage`／`key_uncertainty_addressable`／`time_window_compatible` 都要重评估；`NOT_YET_CONTROLLED` 任一项被法律工具转化时不是改一行，而是升版本并触发重评估。
+
+### 2026-08-07T06:10 — PR #80 第一轮审核裁决与修订（收回授权，一条阻断，接受）
+
+- Review: ChatGPT 对 PR #80 返回 `REQUEST_CHANGES`。授权逻辑与代码本身获认可，机构资源边界处理被确认为正确方向，一条实质阻断。**接受，未作辩解。**
+- Blocker accepted: 初版把「已生成 + 机器校验通过」记成了「已获人工批准」。机器能证明的只有包名存在、SHA-256 长度正确、实例可按 `DevelopmentSponsorProfile@0.1.0` 构造、机构关键词未混入 accessible 字段；它证明不了 capital envelope、time horizon、1–2 active programs、最大自研阶段、transaction stage、risk tolerance、IP strategy 与 `accessible_patient_samples` 边界是否为人类负责人认可的经营事实——**而这些恰恰是 `BLOCK-01` 的主体**。
+- Executor error, precisely: 人类负责人确实回了「确认，冻结 v0.1.0，然后做 authorization PR」，但执行者在上一条消息里明确标出过**三处需要逐项答复的疑问**（`partnered_capabilities` 应为事实还是操作假设、`company_stage` 是否已有法律实体、`risk_tolerance`／`geographic_scope` 是否已定），一个笼统的「确认」并未逐项解决；且全程未产生任何可引用的批准工件。**执行者把一个全局回复读成了对逐项问题的答复。**
+- Fix: `authorises_run` 收回 `false`、`authorises_run_count` 归 `0`、`blocked_by` 恢复 `[BLOCK-01]`、`approval_does_not_authorise_execution` 恢复 `true`；`BLOCK-01` 记 `cleared: false` 并新增 `machine_validation: PASS`、`human_approval_ref: null`、`approved_instance_sha256: null`、`not_yet_cleared_because`；新增审核方建议的**合取**不变量 `clearing_conditions`（machine_validation == PASS AND human_approval_ref exists AND approved_instance_sha256 == frozen instance sha256）与 `clearing_conditions_are_conjunctive: true`；`BLOCK-02` 补 `human_approval_ref` 指向 PR #79 的 `APPROVE`，并说明 route policy 是规则而非经营承诺、不需要 profile 式独立批准工件；`not_authorised` 恢复首条「执行本运行——`BLOCK-01` 未清」。
+- Tests: 新增 `test_block_01_requires_human_approval_not_only_machine_validation`（断言三条件合取，且 `cleared` 恒等于三者之与）与 `test_machine_validation_alone_never_clears_block_01`；`test_an_uncleared_blocker_stays_in_blocked_by` 把 `blocked_by` 与未清 blocker 列表绑定，防止两处各说各话。
+- Mutation: 五项——**仅凭机器校验就清 `BLOCK-01`** -> `failures=4`（本轮阻断的行为本身）；未清却开启授权 -> `failures=1`；未清却清空 `blocked_by` -> `failures=1`；三条件改析取 -> `failures=1`；删 `human_approval_ref` 条件 -> `failures=1`。五项回滚均以 `diff -q` 确认无差异。
+- Unchanged: profile 内容、外部包、机构资源边界处理、授权机制本身一律未动。冻结包保持 `gen_sponsor_profile_stelligen_20260807T050000Z_frozen`（ZIP `5f057fde...`，实例 `65253e10...`，19/19 MATCH），未重做。
+- Validation: `Ran 544 tests OK`；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
+- Next: 把完整 profile（人读摘要 + 逐字段 provenance 表）交人类负责人审阅，逐项答复三处疑问；接受后再更新 #80 写入 `human_approval_ref` 与 `approved_instance_sha256`、开启授权。
+
+## 2026-08-07T13:20 — PR #80 第二轮审核修订：profile 换为 v0.1.1 候选实例
+
+- 分支 `task_20260807_wp2b-authorization`
+- 审核裁决：`REQUEST_CHANGES`（三条阻断 + 三处疑问裁定），全部接受
+- 外部包 v0.1.0 **作废**（包内四文件状态自相矛盾；把机器校验记作人工批准）
+  - 作废实例 SHA-256 `65253e10cb37a5341c34ac5c5105d38c6d044fe99ea4382f0c4e138a206814ed`
+  - 旧包字节未改；作废说明写在包外 `.WITHDRAWN.md`
+- 新候选包 `gen_sponsor_profile_stelligen_v0.1.1_20260807T130000Z_draft`
+  - 实例 SHA-256 `7582ca157ec769c170c390e6dc8a99d55adf2e1dffc3d1af461434797e0ec421`
+  - ZIP SHA-256 `cf410e6278f8d78fa2e9aa937b14a72bc878cb9533059ae66374af0e5eb5f8a8`（22,972 bytes，7 文件）
+  - `validate_profile.py` 47/47 MATCH；变异检验 16/16 CAUGHT
+- 仓库侧：契约记录候选实例与作废实例，要求人工批准工件六字段；新增 3 项测试
+- **`authorises_run` 仍为 `false`，`blocked_by` 仍为 `[BLOCK-01]`——未清除任何 blocker**
+- 547 tests OK；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过
+- 等待人类负责人对 v0.1.1 的批准工件
+
+## 2026-08-07T14:05 — PR #80 第三轮审核修订：清除 evidence_standards 的状态残留
+
+- 分支 `task_20260807_wp2b-authorization`
+- 审核裁决：`REQUEST_CHANGES`（一条，接受）——`sponsor_fit_context` 仍写「BLOCK-01，已清」
+- 成因：第一轮收回授权时改了 blocker 条目，未回改引用它的散文（与 v0.1.0 包内
+  markdown 未随 JSON 更新是同一类错误）
+- 修订：改为「已获人工批准并冻结……须先按 clearing_conditions 清除 BLOCK-01」，
+  并去掉写死的 `@0.1.0`
+- 新增 2 项测试：解析后遍历全契约的状态漂移检查（豁免 blockers 子树）＋
+  sponsor_fit_context 必须要求已批准实例
+- 变异检验 3 正 2 反，反向对照未误报；回滚 `diff -q` 无差异
+- **未动其他任何内容**：`authorises_run: false`、`blocked_by: [BLOCK-01]`、两个 null 不变
+- 外部包 v0.1.1 未重新生成，实例 SHA-256 `7582ca15…` 不变
+- 549 tests OK；boundary 通过；`git diff --check` 通过
+
+## 2026-08-07T14:30 — PR #80 第四轮审核修订：profile v0.1.2
+
+- 分支 `task_20260807_wp2b-authorization`
+- 审核裁决：`REQUEST_CHANGES`（一条，接受）——`accessible_models` 两个 ref 名为
+  `contracted-*` 而实例声明 nothing contracted today
+- v0.1.1 **作废**，实例 SHA `7582ca157ec769c170c390e6dc8a99d55adf2e1dffc3d1af461434797e0ec421`
+  列入 `withdrawn_candidates`
+- 新候选包 `gen_sponsor_profile_stelligen_v0.1.2_20260807T143000Z_draft`
+  - 实例 SHA-256 `f31a769a8658d41fdae963069fce0308582e34644aafd55fd2e531a36f4ad6dd`
+  - ZIP SHA-256 `a928f6d9c9e3910d3378c67580bbd66b27fea01472e35fbca668dbf07c86c01f`（24,847 bytes，7 文件）
+  - `validate_profile.py` 51/51 MATCH；变异检验 21/21 CAUGHT
+- 改动仅四项：两个 CRO ref 改名 market-available-*；新增 reference_naming_rule 硬不变量；
+  批准模板加两项承认（共 8）；四个 single ref 路径版本段同步 v0.1.2（机械后果）
+- 逐字段 diff 确认无其他实质改动
+- 采纳非阻断意见：机器校验措辞改为「包内哈希可独立核对，合同形状校验需仓库 checkout」
+- **`authorises_run: false`，`blocked_by: [BLOCK-01]` 不变**
+- 550 tests OK；boundary 通过；`git diff --check` 通过
+
+## 2026-08-07T15:10 — PR #80：v0.1.2 获人工批准并冻结，BLOCK-01 清除，授权一次运行
+
+- 分支 `task_20260807_wp2b-authorization`
+- 审核裁决：**`APPROVE`**（内容层面），批准声明逐字记入冻结包 `human_approval.json`
+- 冻结包 `gen_sponsor_profile_stelligen_v0.1.2_20260807T150000Z_frozen`
+  - 实例 SHA-256 `41f8e02680a976cdf4db34cd18dbf0dfd7a566ed160230934c753d3e7241544a`
+  - ZIP SHA-256 `249affaca0c11e409b5da8be6936a61b55b712af2d9cc87d3b6d76c6df0264ba`（27,329 bytes，7 文件）
+  - 批准工件 SHA-256 `32f7c28e5a059cca019ad115b496e9e31bbfca43d116850377138a3b5854f32e`
+  - `validate_profile.py` 65/65 MATCH；变异检验 26/26 CAUGHT
+- **content_sha256 桥**：`f910fc5e2b9c7743c4301ae4ac648ad44e67a22b591e5c266ff8a8995427fd9b`
+  在已审草稿与冻结包中逐字相同；批准绑定内容而非状态戳。
+  已审草稿 `f31a769a…` 原样保留未被覆盖。
+- 构建脚本现在拒绝重建已获批准的草稿包（曾险些覆盖，守卫当场中止）
+- `BLOCK-01` 按三条件合取清除；`authorises_run: true`、`authorises_run_count: 1`、
+  `blocked_by: []`；`not_authorised` 首条改为「count 归零后再次执行」
+- 三项测试改写为由 blocker 状态推导；新增冻结哈希不得顶替已审哈希的测试
+- 551 tests OK；boundary 通过；`git diff --check` 通过
+- **下一步：本 PR 合并后方可执行 CRC Territory Map 外部运行（一次）**
+
+## 2026-08-07T15:45 — PR #80 第六轮审核修订：真正比较 SHA，清除过期状态字段
+
+- 分支 `task_20260807_wp2b-authorization`
+- 审核裁决：`REQUEST_CHANGES`（两条，接受）
+- **阻断一**：三项合取的第三项从未被验证——测试写的是 `bool(approved_instance_sha256)`
+  而非相等比较。已改为与 `run.blocked_by_cleared[BLOCK-01].instance_sha256` 比较
+- **阻断二**：`cleared: true` 的 BLOCK-01 仍带 `not_yet_cleared_because`（内容还说
+  「尚无人工批准记录」）。已删除，并加测试禁止已清 blocker 带该字段
+- 一并删除过渡态字段 `candidate_is_not_approved`、`candidate_instance_sha256`、
+  `candidate_instance_version`（后两者与 reviewed_draft_* 逐字重复）
+- 新增 `binding_semantics`：人工批准绑定 content hash，BLOCK-01 清除额外要求
+  instance hash 等于冻结工件——两层，回答不同问题
+- 变异检验 8 项，其中「两侧同时改成同一错值」逃逸；已加第三处独立记录
+  （handoff 必须含全部五个哈希）并在契约中写明该检查只是内部一致性
+- 555 tests OK；boundary 通过；`git diff --check` 通过
+- profile／冻结包／批准工件／route policy／授权状态一律未动
