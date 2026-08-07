@@ -94,7 +94,7 @@ class RunAuthorisationTests(unittest.TestCase):
     def test_a_withdrawn_candidate_can_never_become_the_approved_instance(self):
         blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
         withdrawn = blocker["withdrawn_candidates"]
-        self.assertTrue(withdrawn, "the withdrawn v0.1.0 artifact must stay recorded")
+        self.assertTrue(withdrawn, "every withdrawn candidate must stay recorded")
         for entry in withdrawn:
             with self.subTest(package=entry["package"]):
                 self.assertTrue(entry["withdrawn_because"].strip())
@@ -153,7 +153,7 @@ class RunAuthorisationTests(unittest.TestCase):
         self.assertTrue(group["profile_alone_is_insufficient"])
 
     def test_human_approval_needs_an_artifact_not_only_a_yes(self):
-        """Six recorded fields, so a later version has an audit chain to compare."""
+        """Eight recorded fields, so a later version has an audit chain to compare."""
 
         blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
         self.assertEqual(
@@ -165,9 +165,20 @@ class RunAuthorisationTests(unittest.TestCase):
                 "approving_role",
                 "acknowledges_operating_assumptions",
                 "acknowledges_no_institutional_resource_ownership",
+                "acknowledges_pre_company_no_legal_entity_assumed",
+                "acknowledges_partnered_capabilities_are_uncontracted_market_assumptions",
             ],
         )
         self.assertTrue(blocker["human_approval_artifact_rationale"].strip())
+
+    def test_machine_validation_does_not_overclaim_what_it_proves(self):
+        """The package is hash-verifiable standalone; shape validation is not."""
+
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        self.assertTrue(blocker["machine_validation_requires_repository_checkout"])
+        scope = blocker["machine_validation_scope"]
+        self.assertIn("package hashes can be independently verified", scope)
+        self.assertIn("requires a StelligenOS checkout", scope)
 
     def test_every_blocker_states_why_and_how_it_clears(self):
         blockers = {blocker["id"]: blocker for blocker in CONTRACT["blockers"]}

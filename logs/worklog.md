@@ -3170,3 +3170,21 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - **未动其他任何内容**：`authorises_run: false`、`blocked_by: [BLOCK-01]`、两个 null 不变
 - 外部包 v0.1.1 未重新生成，实例 SHA-256 `7582ca15…` 不变
 - 549 tests OK；boundary 通过；`git diff --check` 通过
+
+## 2026-08-07T14:30 — PR #80 第四轮审核修订：profile v0.1.2
+
+- 分支 `task_20260807_wp2b-authorization`
+- 审核裁决：`REQUEST_CHANGES`（一条，接受）——`accessible_models` 两个 ref 名为
+  `contracted-*` 而实例声明 nothing contracted today
+- v0.1.1 **作废**，实例 SHA `7582ca157ec769c170c390e6dc8a99d55adf2e1dffc3d1af461434797e0ec421`
+  列入 `withdrawn_candidates`
+- 新候选包 `gen_sponsor_profile_stelligen_v0.1.2_20260807T143000Z_draft`
+  - 实例 SHA-256 `f31a769a8658d41fdae963069fce0308582e34644aafd55fd2e531a36f4ad6dd`
+  - ZIP SHA-256 `a928f6d9c9e3910d3378c67580bbd66b27fea01472e35fbca668dbf07c86c01f`（24,847 bytes，7 文件）
+  - `validate_profile.py` 51/51 MATCH；变异检验 21/21 CAUGHT
+- 改动仅四项：两个 CRO ref 改名 market-available-*；新增 reference_naming_rule 硬不变量；
+  批准模板加两项承认（共 8）；四个 single ref 路径版本段同步 v0.1.2（机械后果）
+- 逐字段 diff 确认无其他实质改动
+- 采纳非阻断意见：机器校验措辞改为「包内哈希可独立核对，合同形状校验需仓库 checkout」
+- **`authorises_run: false`，`blocked_by: [BLOCK-01]` 不变**
+- 550 tests OK；boundary 通过；`git diff --check` 通过

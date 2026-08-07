@@ -25,12 +25,20 @@
 外部包（**不入仓**）。第二轮审核后已换为 v0.1.1：
 
 ```
-gen_sponsor_profile_stelligen_v0.1.1_20260807T130000Z_draft
-ZIP SHA-256   cf410e6278f8d78fa2e9aa937b14a72bc878cb9533059ae66374af0e5eb5f8a8
-实例 SHA-256  7582ca157ec769c170c390e6dc8a99d55adf2e1dffc3d1af461434797e0ec421
-22,972 bytes，7 个文件
-validate_profile.py -> 47/47 MATCH
+gen_sponsor_profile_stelligen_v0.1.2_20260807T143000Z_draft
+ZIP SHA-256   a928f6d9c9e3910d3378c67580bbd66b27fea01472e35fbca668dbf07c86c01f
+实例 SHA-256  f31a769a8658d41fdae963069fce0308582e34644aafd55fd2e531a36f4ad6dd
+24,847 bytes，7 个文件
+validate_profile.py -> 51/51 MATCH
 ```
+
+**机器校验能证明什么，不能证明什么**（第四轮审核方的措辞，已写入契约）：
+
+> package hashes can be independently verified; contract-shape validation
+> requires a StelligenOS checkout at the referenced contract baseline.
+
+校验脚本 import 仓库里的合同而非自带一份副本，因此**不可脱离仓库独立运行**。
+这是设计意图，但以后不得把它描述为「包自身完全独立可验证」。
 
 **v0.1.0 全部作废**，实例 SHA-256 `65253e10…` 写入契约的
 `withdrawn_candidates`，并带 `must_never_be_approved_instance_sha256: true`。
@@ -426,3 +434,98 @@ git diff --check                        通过
 …/result/gen_sponsor_profile_stelligen_v0.1.1_20260807T130000Z_draft.zip
 ZIP SHA-256  cf410e6278f8d78fa2e9aa937b14a72bc878cb9533059ae66374af0e5eb5f8a8
 ```
+
+## 十一、第四轮审核裁决与修订（`REQUEST_CHANGES`，一条，接受）
+
+审核方直接检查了 v0.1.1 的 ZIP：文件大小与 SHA-256 全部匹配，主状态四文件一致，
+19 个合同字段与仓库冻结的 `DevelopmentSponsorProfile@0.1.0` 对得上，
+第二轮要求的实质修订全部确认通过。**内容层面接近可批准，artifact 层面还有一处。**
+
+### 阻断：引用名声称了强于其 provenance 类别的事实
+
+```
+external:models/cro/contracted-cell-line-and-organoid-services
+external:models/cro/contracted-limited-xenograft
+```
+
+而同一实例写着 `nothing contracted today`，分类是 `OPERATING_ASSUMPTION`。
+
+`contracted-` 通常意味着已签约、已锁定。真实状态是「原则上可在市场或 CRO 采购，
+但没有签约」。**这正是整份 profile 要防的那条滑坡——「潜在可获得」滑成「已可支配」
+——只是这次发生在引用名里。**
+
+### v0.1.2 的修订（只此四项）
+
+1. 两个 CRO 引用改名：
+
+```
+external:models/cro/market-available-cell-line-and-organoid-services
+external:models/cro/market-available-limited-xenograft-services
+```
+
+2. 新增 `reference_naming_rule` 与对应硬不变量：无已执行的法律工具时，任何引用
+   不得以 `contracted-`／`owned-`／`licensed-`／`secured-`／`committed-` 命名；
+   操作假设只能用 `market-available-`／`purchasable-`／`public-`。
+3. 批准模板增加两项承认：`acknowledges_pre_company_no_legal_entity_assumed`、
+   `acknowledges_partnered_capabilities_are_uncontracted_market_assumptions`
+   （共 8 项）。契约的 `human_approval_artifact_must_record` 同步。
+4. 四个 single ref 路径 `…/v0.1.1/…` → `…/v0.1.2/…`。**这是机械后果不是实质改动**
+   ——引用路径按约定带 profile 版本号，留在 v0.1.1 就又是一处版本漂移。
+   定义体本身逐字未变（键名归一后 `==` 为 `True`）。新增校验断言四个 ref 必须
+   携带当前 profile 版本。
+
+### 逐字段核对：确实没有改别的
+
+以 v0.1.1 为基准 diff v0.1.2 的实例：
+
+- **合同字段变动**：仅 `accessible_models` 两条改名，以及四个 single ref 的版本段。
+- **非合同键变动**：`profile_version`、`supersedes`、`hard_invariants`（+1）、
+  `field_provenance`（两条 basis 补注改名原因）、新增 `reference_naming_rule`。
+- 其余一律未动：`maximum_self_funded_stage`、`preferred_transaction_stage`、
+  `risk_tolerance`、`empty_list_semantics`、
+  `asymmetric_evidence_advantage_semantics`、`key_uncertainty_addressable_semantics`、
+  `not_yet_controlled_register`、九项 provenance 分类。
+
+### 机器校验的边界（审核方的非阻断意见，已采纳）
+
+审核方在自己的环境里单独跑 `validate_profile.py` 失败，因为它依赖
+`src.contracts.sponsor_strategy`。这不是 bug——它本就是 against-repository
+validator。但措辞要准确，已写进契约的 `machine_validation_scope`，并加测试
+`test_machine_validation_does_not_overclaim_what_it_proves` 锁住。
+
+### 变异检验
+
+外部包 21 项（上一轮 16 + 新增 5），全部 CAUGHT：
+
+| 新增变异 | 结果 |
+|---|---|
+| CRO 引用改回 `contracted-*`（**本轮缺陷本身**） | `50/51` FAIL |
+| 引用声称已获授权 `licensed-*` | `49/51` FAIL |
+| 命名规则从 `hard_invariants` 删除 | `50/51` FAIL |
+| single ref 停留在上一版本号 | 报告 FAIL 并早退 |
+| 批准模板删掉两项新承认 | `50/51` FAIL |
+
+仓库侧 3 项：把 v0.1.1 的 SHA 写成已批准（`failures=2`）、删掉一项承认字段
+（`failures=1`）、把 `machine_validation_requires_repository_checkout` 翻为 false
+（`failures=1`）。回滚后 `diff -q` 无差异。
+
+**第二次自查修正：** 「single ref 停留在旧版本号」最初又是靠 `KeyError` 崩溃退出。
+上一轮已经为 `field_provenance` 修过同一类问题，这次出现在 `definitions[...]`
+解引用上。已改为解析失败即出报告后早退。**同一个教训犯了两次，记在这里。**
+
+### 验证
+
+```
+Ran 550 tests  OK              （上一轮 549，净增 1）
+scripts/verify_repository_boundary.sh   通过
+git diff --check                        通过
+外部包 validate_profile.py              51/51 MATCH（上一轮 47/47）
+包内 manifest 自校验                     6 个文件大小与 SHA 全部匹配
+```
+
+### 状态
+
+`DRAFT_PENDING_HUMAN_REVIEW`／`frozen: false`／`clears_block_01: false` 不变。
+`authorises_run: false`、`authorises_run_count: 0`、`blocked_by: [BLOCK-01]` 不变。
+v0.1.1 已列入 `withdrawn_candidates`，其 SHA `7582ca15…` 带
+`must_never_be_approved_instance_sha256: true`。

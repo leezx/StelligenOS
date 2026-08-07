@@ -59,15 +59,26 @@ blockers:
     cleared_by: 人类负责人提供事实并冻结该实例，且实例经审核接受
     cleared: false
     machine_validation: PASS
-    machine_validation_evidence: gen_sponsor_profile_stelligen_v0.1.1_20260807T130000Z_draft
-    machine_validation_detail: validate_profile.py 47/47 MATCH
-    candidate_instance_version: "0.1.1"
-    candidate_instance_sha256: 7582ca157ec769c170c390e6dc8a99d55adf2e1dffc3d1af461434797e0ec421
+    machine_validation_evidence: gen_sponsor_profile_stelligen_v0.1.2_20260807T143000Z_draft
+    machine_validation_detail: validate_profile.py 51/51 MATCH
+    # 机器校验需要仓库 checkout：包内哈希可独立核对，合同形状校验不能脱离仓库。
+    machine_validation_requires_repository_checkout: true
+    machine_validation_scope: >-
+      package hashes can be independently verified; contract-shape validation
+      requires a StelligenOS checkout at the referenced contract baseline.
+    candidate_instance_version: "0.1.2"
+    candidate_instance_sha256: f31a769a8658d41fdae963069fce0308582e34644aafd55fd2e531a36f4ad6dd
     human_approval_ref: null
     approved_instance_sha256: null
     # 候选实例不是已批准实例。审核通过前 approved_instance_sha256 必须为 null。
     candidate_is_not_approved: true
     withdrawn_candidates:
+      - package: gen_sponsor_profile_stelligen_v0.1.1_20260807T130000Z_draft
+        instance_sha256: 7582ca157ec769c170c390e6dc8a99d55adf2e1dffc3d1af461434797e0ec421
+        withdrawn_because: >-
+          accessible_models 中两个 ref 命名为 contracted-*，而同一实例声明
+          nothing contracted today——引用名声称了强于其 provenance 类别的事实。
+        must_never_be_approved_instance_sha256: true
       - package: gen_sponsor_profile_stelligen_20260807T050000Z_frozen
         instance_sha256: 65253e10cb37a5341c34ac5c5105d38c6d044fe99ea4382f0c4e138a206814ed
         withdrawn_because: >-
@@ -92,6 +103,8 @@ blockers:
       - approving_role
       - acknowledges_operating_assumptions
       - acknowledges_no_institutional_resource_ownership
+      - acknowledges_pre_company_no_legal_entity_assumed
+      - acknowledges_partnered_capabilities_are_uncontracted_market_assumptions
     human_approval_artifact_rationale: >-
       人工批准不能只是一句「同意」。批准工件必须绑定具体实例 SHA-256，并显式承认
       OPERATING_ASSUMPTION 是当前经营政策而非事实、且未把任何机构资源计为公司资产。
