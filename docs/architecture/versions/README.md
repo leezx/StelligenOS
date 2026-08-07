@@ -28,6 +28,7 @@
 |---|---|---|---|
 | `CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW` | `v1` | `CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.v1.zh-CN.md` | PR #42 `APPROVE` |
 
-`v2-draft` was not approved or snapshotted and has been superseded by the
-canonical `v3-draft` review baseline. `v3-draft` must not be copied into this
+`v2-draft` and `v3-draft` were neither approved nor snapshotted, and both have
+been superseded by the canonical `v4-draft` review baseline. Per rule 4 no
+snapshot is fabricated for either. `v4-draft` must not be copied into this
 directory until its dedicated expert/ChatGPT review returns `APPROVE`.

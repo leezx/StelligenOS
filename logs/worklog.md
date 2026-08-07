@@ -2958,3 +2958,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: `Ran 413 tests OK`（本文件 23）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git status --short` 仅本 PR 5 个文件；无数据、cache、result、database、model weights 或实例进入仓库。
 - Deferred: 遗留项收敛为两条——另外三个 sponsor-relative 合同仍无消费者；架构文档 v3 已过期，留待 v4 refresh。
 - Next: 推送到同一 PR #72，不新开 PR；等待 ChatGPT 审核。
+
+### 2026-08-06T22:40 — 合并 PR #72 并开始架构 v4 refresh
+
+- Merge: ChatGPT 对 PR #72 返回 `APPROVE`，审核 HEAD `a1b30d6655ded743a68b35786dc4365dc1948939`，CI run #70 在 Python 3.11／3.12 均成功。合并前核对 HEAD 未漂移，以 merge commit（非 squash）合入，得 `4d895d7`。合并说明写入审核方原文的批准范围，以及「仓库只校验 authorization 引用存在、不读取 Program Commitment outcome」这条边界。
+- Verify: 合并后 `main` 上 `BinderAdcRouteRequest@0.2.0` 字段顺序与 `REQUIRED_REQUEST_REFERENCE_FIELDS`（8 项）确认符合批准形态；`Ran 413 tests OK`；boundary 通过；无开放 PR。
+- Record: 新增 `logs/chatgpt-review-2026-08-06-sponsor-control-binding.md`。该记录必须在后续 PR 补登而不能加进 #72——审核方批准在内容冻结之后才到，在 `a1b30d6` 上加文件会改掉被批准的 HEAD。
+- Refresh: 架构说明文档 `v3-draft` -> `v4-draft`，基线 `main@8aa7e87` -> `main@4d895d7`。新增第 7 节「Sponsor-relative 决策轴（Phase 1–4）」；新增设计原则 11「发起方判断与科学事实分离」（10 条 -> 11 条）；第 13 节运行流程图补入四个控制点并标明只有 Phase 3–4 一段在代码层强制；第 16 节审核问题 12 条 -> 17 条。
+- Correct: 测试数 338 -> 413；PR #62／#63 记为已合并、#55 记为已关闭、开放 PR 由三个改为无；`EVGAP-01` 阻断理由由「admission 引用未绑定」更正为「已授权，未执行」；`GAP-P07` 区分三个不可消歧实体与 `CA19-9`（已解析为非蛋白抗原但须人裁定）。
+- Audit: 沿用的数字逐项复核未盲抄——`45` Gate／`59` Model／`53` Profile 按 `model.yaml`、`profile.yaml` 实际计数核对（注意：直接数 `*.yaml` 会得到 67／54，因目录内含 `endpoint_ontology.yaml` 等辅助文件，59／53 才是正确口径）；四个扩展 `status` 逐个读 `extension.yaml`；六个模块有 `module.yaml`、`gen_indication_endpoint_target` 仍无；Gate envelope `2.0.0`/`2.1.0` 漂移复核仍存在；三处 YAML 引号缺陷逐行读取并解析验证仍存在。
+- Scope: 本次刷新不改任何代码、契约、测试、Gate、lifecycle、core objects 或 target 轴；第 16 节登记的四类缺陷只登记不修，符合文档第 17 节规则 6；`v4-draft` 未获批，不复制进 `versions/`。
+- Change: 同步更新 `architecture.md`、`README.md` 的审核基线字符串，并更正 `docs/architecture/versions/README.md`——`v2-draft` 与 `v3-draft` 均未获批，因此都没有快照，按规则 4 不补造。
+- Validation: `Ran 413 tests OK`；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；`git status --short` 仅本 PR 文件；无数据、cache、result、database、model weights 或实例进入仓库。
+- Deferred: 仍欠 `#52`／`#53`／`#54`／`#57`／`#58`／`#59`／`#60`／`#61`／`#66` 九份审核记录，本轮只补 #72。
+- Next: 提交 v4 refresh PR 并送审；获批后再考虑是否按规则 3 产出 `versions/` 只读快照（需审核方明确批准「v4 文档版本」而非仅批准本 PR 改动）。
