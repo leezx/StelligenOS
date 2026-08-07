@@ -1,4 +1,4 @@
-version: "0.1.0"
+version: "0.2.0"
 name: stelligenos-program-commitment-review-contract
 description: >-
   Sponsor-relative commitment checkpoint after T12 and before binder or de
@@ -24,8 +24,14 @@ commitment_status_values:
 downstream_status_values:
   - BLOCKED_NO_COMMITMENT
   - EXTERNAL_HANDOFF_REQUIRED
+version_change_reason: >-
+  ProgramCommitmentReview gained a mandatory sponsor_fit_assessment_ref so that
+  a commitment cannot be reached without a sponsor-fit assessment. Adding a
+  required field is a breaking change, so both the file version and the
+  contract_id move to 0.2.0 rather than letting the declaration drift from the
+  code.
 contract:
-  contract_id: ProgramCommitmentReview@0.1.0
+  contract_id: ProgramCommitmentReview@0.2.0
   role: >-
     Separates a scientifically valid T12 opportunity from a sponsor-relative
     decision to invest toward a defined value-transfer boundary.
@@ -41,6 +47,7 @@ contract:
     - capital_envelope_ref
     - capability_gap_ref
     - buyer_map_ref
+    - sponsor_fit_assessment_ref
     - value_inflection_plan_ref
     - decision
     - commitment_status
@@ -59,3 +66,5 @@ contract:
     - human_decision_is_required_for_commitment
     - value_inflection_plan_is_referenced_but_not_defined_here
     - stop_for_sponsor_is_not_scientific_kill
+    - program_commitment_cannot_exist_without_sponsor_fit
+    - sponsor_fit_assessment_ref_is_opaque_and_never_dereferenced_here

@@ -3016,3 +3016,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Scope: 本轮只改 `SponsorFitAssessment` 语义，未修改 45 个科学 Gate、`ProgramCommitmentReview`、lifecycle、core objects 或任何下游绑定，未夹带无关改动。
 - Validation: `Ran 442 tests OK`（本文件 29）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；无数据、cache、result、database、model weights 或实例进入仓库。
 - Next: 推送到同一 PR #75，不新开 PR；等待复审。
+
+### 2026-08-07T01:10 — 合并 PR #75 并建立 Sponsor Fit → Program Commitment 绑定
+
+- Merge: ChatGPT 对 PR #75 返回第二轮 `APPROVE`，审核 HEAD `611a91f4b2527d34cfe40d137331ca9542ce30dd`，CI 通过。核对 HEAD 未漂移后以 merge commit 合入，得 `cb5c7f1`。**WP1 合同层完成**，四份齐备：`DevelopmentSponsorProfile@0.1.0`、`ProgramThesis@0.1.0`、`SponsorFitAssessment@0.1.0`、`ValueInflectionPlan@0.1.0`。
+- Non-blocking carried: 审核方两条非阻断意见连同其判断依据写入合并说明——(1) `DATA_PACKAGE_ONLY` 无正证据门槛而其 note 写「own data advantage」，措辞不精确，但规则本身正确，因为该路线是低承诺的 information-buying route，可能正是用来发现有无非对称优势，建议改为 `using sponsor-accessible data or evidence capabilities`；(2) `PARTNER_NOW` 不禁止 `ip_capture = UNSATISFIED` 可接受，因为 `partnerability` 已须由外部证据支撑，而该证据可来自专有数据、独家样本／模型访问、option rights、know-how、抗体访问或未来 IP 路径。两条均未在本轮修改。
+- Decision: 按审核方建议，**先做 binding PR 再做 WP2**。理由不是技术依赖而是架构纪律：PR #75 合并后 `SponsorFitAssessment` 无任何消费者，若直接进入 WP2 开始产生 territory／wedge／candidate，链路极易变成 `Territory → Wedge → Candidate → T Gates` 而把 Sponsor Fit 绕过去——与 `authorises_extraction_run_count`、Phase 1／2、PR #72 之前的 Phase 3／4 属同一类「合同存在、运行时无人消费」问题。
+- Change: `ProgramCommitmentReview` 新增无默认值必填字段 `sponsor_fit_assessment_ref`，位置在 `buyer_map_ref` 与 `value_inflection_plan_ref` 之间——两个前置工件相邻且夹在必填字段中间，故加默认值会在类定义阶段直接 `TypeError`，比任何测试更早失败（同 PR #72 的字段排布思路）。新增 invariant `program_commitment_cannot_exist_without_sponsor_fit` 与 `sponsor_fit_assessment_ref_is_opaque_and_never_dereferenced_here`；有 AST 测试断言 `program_commitment_review.py` 的 import 集合恰为 `{__future__, dataclasses, enum, typing}`，绑定未把 `SponsorFitAssessment` 拉进消费者。
+- Version: 新增必填字段属 breaking change，`ProgramCommitmentReview@0.1.0` -> `@0.2.0`，YAML `version` 同步并加 `version_change_reason`。**同时更新所有指名该版本的引用**（`binder_adc_routes.{py,yaml}`、`sponsor_fit_assessment.{py,yaml}`、两处 README、`docs/architecture/program-commitment-review.zh-CN.md`、`tests/test_phase5_binder_adc_routes.py`），否则会复制 `v4-draft` §6.2 已登记的 `GateInputEnvelope` `2.0.0`/`2.1.0` 漂移。
+- Status field: `sponsor_fit_assessment.yaml` 的 `binding_status` 由 `not_bound` 改为 `bound`，`consumed_by` 版本串同步。审核方要求「不要碰 `SponsorFitAssessment`」，此处只改这一个状态字段与版本串——该字段的作用就是如实反映绑定状态，绑定后不改就是留下一处假话；其语义、门槛与枚举一字未动。
+- Closure: 审核方提出的检验问题「没有 `SponsorFitAssessment` 还能不能绕路进入 `ProgramCommitment`」现在的答案是不能——缺该字段时 Python 层面无法构造。有测试逐个 decision 验证，**包括 `STOP_FOR_SPONSOR` 与 `MONITOR`**：即使是不承诺的结论也必须写明所基于的评估。链路闭环为 `T12 → SponsorFitAssessment → ProgramCommitmentReview@0.2.0 → BinderAdcRouteRequest@0.2.0 → route`。
+- Deliberately unchanged: 架构说明文档 `v4-draft` 第 253 行仍写 `ProgramCommitmentReview@0.1.0`。不改的理由是该文档第 0 节声明了自己的基线 `main@4d895d7` 与版本状态，改正文会让它与自己声明的基线不符；按其第 17 节规则应升 `v5-draft` 另立 PR。此处登记不修。同理未回写任何历史 handoff、审核记录或 worklog。
+- Mutation: 四项——给绑定字段加默认值 -> 类定义阶段 `TypeError`；从校验列表删除 -> `failures=3`；整个删除该字段 -> `errors=13`；删除 `program_commitment_cannot_exist_without_sponsor_fit` invariant -> `failures=1`。四项回滚均以 `diff -q` 确认无差异。
+- Validation: `Ran 448 tests OK`（合并前 442，净增 6）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；无数据、cache、result、database、model weights 或实例进入仓库。
+- Remaining unbound: 仍无消费者的 sponsor-relative 合同还剩三份——`DevelopmentSponsorProfile`、`ProgramThesis`、`SearchSpaceAdmission`。其中 `SearchSpaceAdmission` 的天然消费者正是 WP2 的 territory 路由。
+- Next: WP2A CRC Opportunity Territory Schema（纯 schema，无 CRC 内容）；WP2B territories 内容按硬边界须在仓库外产出再走结果 PR。

@@ -3,6 +3,11 @@
 The contract records an externally adjudicated sponsor-relative decision. It
 does not score inputs, run T12, choose a binder route, or start Asset
 Generation.
+
+From `ProgramCommitmentReview@0.2.0` a commitment cannot exist without a
+`SponsorFitAssessment@0.1.0` reference. Adding a required field is a breaking
+change, hence the version move. The reference is opaque: this module never
+dereferences it, re-adjudicates the route it recommends, or generates one.
 """
 
 from __future__ import annotations
@@ -70,6 +75,7 @@ class ProgramCommitmentReview:
     capital_envelope_ref: str
     capability_gap_ref: str
     buyer_map_ref: str
+    sponsor_fit_assessment_ref: str
     value_inflection_plan_ref: str
     decision: ProgramCommitmentDecision
     commitment_status: CommitmentStatus
@@ -92,6 +98,7 @@ class ProgramCommitmentReview:
             "capital_envelope_ref",
             "capability_gap_ref",
             "buyer_map_ref",
+            "sponsor_fit_assessment_ref",
             "value_inflection_plan_ref",
             "decision_rationale_ref",
             "human_decision_ref",

@@ -2,7 +2,7 @@
 
 This is the evidence-bearing sponsor-relative assessment that sits between
 scientific opportunity qualification and the capital authorisation recorded by
-`ProgramCommitmentReview@0.1.0`. It answers "is this sponsor the right one to
+`ProgramCommitmentReview@0.2.0`. It answers "is this sponsor the right one to
 carry this program, and by which route", not "is the opportunity sound".
 
 Route eligibility is **affirmative**: a route is permitted because sufficient
