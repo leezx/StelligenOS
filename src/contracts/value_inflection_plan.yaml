@@ -1,0 +1,62 @@
+version: "0.1.0"
+name: stelligenos-value-inflection-plan-contract
+description: >-
+  External-only cross-lifecycle plan for buying the next evidence boundary
+  that increases an opportunity's transfer value.
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  database: forbidden
+  cache: forbidden
+  result_files: forbidden
+transaction_type_values:
+  - PARTNERSHIP
+  - OPTION_DEAL
+  - LICENSE
+  - CO_DEVELOPMENT
+  - NEWCO
+  - DATA_PACKAGE_TRANSFER
+lifecycle_stage_values:
+  - OPPORTUNITY
+  - TARGET_OPPORTUNITY
+  - TARGET_ANTIBODY_HYPOTHESIS
+  - CONJUGATE_PROTOTYPE
+  - TRANSLATIONAL_POC
+  - PARTNERABLE_PACKAGE
+contract:
+  contract_id: ValueInflectionPlan@0.1.0
+  role: >-
+    Defines the target inflection stage, minimum evidence package, stop
+    conditions, capabilities, and buyer-facing requirements for a human-
+    approved value-transfer plan.
+  required_fields:
+    - plan_id
+    - program_thesis_ref
+    - program_commitment_review_ref
+    - current_stage
+    - target_inflection_stage
+    - target_transaction_type
+    - critical_uncertainty_refs
+    - planned_evidence_package_refs
+    - minimum_success_criteria_refs
+    - stop_condition_refs
+    - estimated_cost_band_ref
+    - estimated_duration_band_ref
+    - required_capability_refs
+    - capability_source_refs
+    - expected_buyer_type_refs
+    - buyer_requirement_refs
+    - fallback_route_ref
+    - human_approval_ref
+    - source_refs
+  invariants:
+    - all_instances_external_only
+    - all_cross_boundary_and_source_refs_use_external_scheme
+    - cost_and_duration_are_external_bands_not_numeric_estimates
+    - minimum_success_criteria_are_required_before_transfer
+    - stop_conditions_are_required_before_work_is_committed
+    - no_value_inflection_plan_blocks_asset_generation
+    - plan_does_not_execute_experiments_or_advance_lifecycle
+    - plan_does_not_define_scientific_gate_truth
+    - plan_does_not_define_transaction_probability_or_buyer_matching
+    - human_approval_is_required
