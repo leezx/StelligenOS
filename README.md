@@ -54,6 +54,7 @@ git diff --check
 - `architecture.md`
 - `docs/architecture/contract.zh-CN.md`
 - `docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md`
+- `docs/architecture/sponsor-strategy.zh-CN.md`
 - `docs/architecture/versions/README.md`
 - `extensions/README.md`
 - `extensions/BACKLOG.zh-CN.md`

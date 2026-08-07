@@ -9,6 +9,7 @@
 - [Lifecycle](./docs/architecture/lifecycle.zh-CN.md)
 - [Current Design Architecture and Module Logic](./docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md)
 - [Biotech Infrastructure Catalog](./docs/architecture/BIOTECH_INFRASTRUCTURE_CATALOG.zh-CN.md)
+- [Sponsor Strategy Contracts](./docs/architecture/sponsor-strategy.zh-CN.md)
 - [Legacy Inventory](./docs/architecture/legacy_inventory.zh-CN.md)
 - [Migration Prompt](./prompts/system/STELLIGENOS_MIGRATION_MASTER_PROMPT.zh-CN.md)
 

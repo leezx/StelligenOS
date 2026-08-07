@@ -2798,3 +2798,33 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Tests: `test_evgap_01_surface_localization.py` 两条改为断言绑定后的不变式（含记录文件必须真实存在、条件列表逐项相等）；`test_srcadm_01_surfaceome_admission.py` 拆为「准入来自记录而非本文件」与「授权到抽取为止、不得触及 Level 01」两条。全库 `Ran 372 tests` OK，boundary check 通过。
 - Deliberately not done: **未执行 `EVGAP-01` 抽取**；未执行 Level 01；未解除任何缺口；未改 target 轴；未碰 `EVGAP-02` 契约；未扩大字段白名单；未纳入 `SRCADM-02`..`05`。
 - Next: 本 PR 获批后执行一次 `EVGAP-01` 抽取（外部运行，产物不入仓）→ 结果 PR → 解除 `EVGAP-01`。
+### 2026-08-06 17:42 EDT — 小微 Biotech 架构调整第 1 步：Sponsor Strategy Contracts
+
+- Instruction: 读取 `Zhixins-KB/2.Biotech/Asset-Generation-OS-architecture.md#小微Biotech的架构调整`，按其中四步顺序开始实施；当前阶段必须提交 PR，由 Chrome 网页版 ChatGPT 审核，通过后才进入下一步。
+- Scope frozen: 只建立 `DevelopmentSponsorProfile@0.1.0` 与 `ProgramThesis@0.1.0` 合同；不修改 45 个 Gate，不实现 Early Search-Space Admission、Program Commitment Review 或 ValueInflectionPlan，不运行外部数据或资产生成。
+- Read: repository `AGENTS.md`、`architecture.md`、`docs/architecture/contract.zh-CN.md`、`src/contracts/README.md`、`src/objects/README.md`、现有合同/测试和 `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md`；确认 `main@b497246` 干净。
+- Branch: 创建 `/private/tmp/StelligenOS-sponsor-contracts` worktree，分支 `task_20260806_sponsor-contracts`，基线 `main@b497246`。
+- Changed: 新增 `src/contracts/sponsor_strategy.yaml`、`src/contracts/sponsor_strategy.py`、`tests/test_sponsor_strategy_contracts.py`、`docs/architecture/sponsor-strategy.zh-CN.md`；更新 `architecture.md`、`README.md`、`src/contracts/README.md`；新增本任务 handoff。
+- Design: 合同实例只允许存在于外部 runtime；跨边界引用和来源引用必须使用 `external:`；Sponsor-relative 信息不得改变资产内在科学 Gate 结果；Program Thesis 不授予承诺、不执行 Gate、不启动 Asset Generation。
+- Validation: 定向合同测试 4/4 通过；全量 `PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'` 为 `376 tests` 全部通过；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
+- Failure/fix: 首次导航补丁因 README 目标行不匹配而未应用，未产生文件变更；重新读取目标行后拆分补丁成功。其余命令无失败。
+- Boundary: 未新增数据、cache、result、数据库、模型权重或临时产物；未执行外部运行。
+- Next: 显式检查状态和文件范围后提交、推送并创建 PR；使用 Chrome 网页版 ChatGPT 审核当前 PR，未获明确 `APPROVE` 前不得进入第 2 步。
+
+### 2026-08-06 17:45 EDT — 第 1 步 PR 创建与描述修正
+
+- Git: 按显式文件清单暂存 9 个文件，提交 `e558181`，推送分支 `task_20260806_sponsor-contracts`，创建 PR #67 指向 `main`。
+- PR description correction: 初次创建命令中的 Markdown 反引号被 shell 当作命令替换，造成描述文字被污染；代码、commit 和工作区文件未受影响。已用不含 shell 特殊反引号的正文执行 `gh pr edit 67` 修正描述。
+- Handoff: 更新 `docs/handoff/2026-08-06-sponsor-strategy-contracts.zh-CN.md`，补入 PR URL 与 code commit。
+- Next: 提交 handoff/worklog metadata commit 并推送 PR #67；使用 Chrome 网页版 ChatGPT 审核 PR #67，未获明确 `APPROVE` 前不进入第 2 步。
+
+### 2026-08-06 17:47 EDT — Chrome ChatGPT 审核 Phase 1 PR #67
+
+- Method: 在 Chrome 网页版 ChatGPT 的 `ADC研发框架优化` 对话中，通过聊天框 `+` 菜单显式选择 GitHub 来源，提交 PR #67 审核指令；未使用本地工作区替代 GitHub PR 审核。
+- Review scope: ChatGPT 读取 PR #67 的完整 changed files、两个 commits、aggregate diff、handoff、worklog、合同实现、YAML、测试与 GitHub 状态。
+- Result: ChatGPT 返回明确 `APPROVE`，审核 HEAD 为 `7307705a84e13d6740355a25ad24b36c4bb91a8b`。
+- Accepted: 严格只完成第 1 步；只增加 `DevelopmentSponsorProfile@0.1.0` 与 `ProgramThesis@0.1.0`；未修改 45-Gate、T0-T12/P0-P15/C0-C15、lifecycle、core objects 或 Asset Generation routing；未实现第 2–4 步；未引入数据或外部运行；sponsor-relative 与 asset-intrinsic 分离正确；测试和 boundary 声明一致。
+- Non-blocking observation: GitHub 初始 metadata 的 `mergeable=false` 经 compare 核对为 ahead 2、behind 0、merge base 一致，ChatGPT 判断为状态未刷新，不是真冲突；合并前需重新刷新状态。
+- Explicit boundary: 批准只覆盖合并 Phase 1；不批准或授权 Search-Space Admission、Program Commitment Review、SponsorFitAssessment、ValueInflectionPlan、实例、数据、外部运行或 Gate/lifecycle/core-object 修改。
+- Persisted: 新增 `logs/chatgpt-review-2026-08-06-sponsor-strategy-phase1.md`，并更新 handoff 状态为 `APPROVED_WAITING_HUMAN_MERGE`。
+- Next: 提交并推送本次审核记录 metadata；等待人类负责人合并 PR #67。合并前不进入第 2 步。
