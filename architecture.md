@@ -21,5 +21,5 @@
 StelligenOS 已定义为 biotechnology asset operating system 的实现仓库。
 正式架构契约与运行 Prompt 分离。
 
-当前专家审核基线为 `STELLIGENOS-ARCH-2026.08.06-v3-draft`，以规范路径上的
+当前专家审核基线为 `STELLIGENOS-ARCH-2026.08.06-v4-draft`，以规范路径上的
 Current Design Architecture 文档为准。该版本是审核草案，不改变现有合同版本。

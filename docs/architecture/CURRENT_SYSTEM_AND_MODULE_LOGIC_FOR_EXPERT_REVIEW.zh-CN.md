@@ -3,31 +3,38 @@
 ## 0. 版本与审核基线
 
 - 文档 ID：`CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW`
-- 当前文档版本：`v3-draft`
-- 架构审核基线：`STELLIGENOS-ARCH-2026.08.06-v3-draft`
-- 仓库基线：`main@8aa7e87`
+- 当前文档版本：`v4-draft`
+- 架构审核基线：`STELLIGENOS-ARCH-2026.08.06-v4-draft`
+- 仓库基线：`main@4d895d7`
 - 基线日期：`2026-08-06`
 - 版本状态：`PENDING_EXPERT_REVIEW`
 - 规范路径：本文件固定为最新版本，不在文件名中写版本号。
 - 已冻结快照：`docs/architecture/versions/`；当前只有经 PR #42 批准的 `v1`。
+  `v2-draft` 与 `v3-draft` 均未获批，因此都没有快照，也不补造快照。
 
 StelligenOS 当前没有一个覆盖全部模块的单一软件 SemVer。核心合同、Gate
-拓扑和 GenModule 各自独立版本化。因此，本节的 `v3-draft` 是**架构说明文档
+拓扑和 GenModule 各自独立版本化。因此，本节的 `v4-draft` 是**架构说明文档
 版本**，不是新的运行时发布标签，也不改变任何现有合同版本。
 
-本版相对旧 `v2-draft` 的主要变化：
+本版相对旧 `v3-draft` 的主要变化：
 
-1. 纳入已经合并的 CRC ADC Pool Level 01、输入绑定、EVGAP-01/02 契约和 Preview 状态。
-2. 纳入 Public-Evidence Target Safety Pre-screen `0.4.0`。
-3. 纳入 Biotech 基础设施目录和 Cancer Patient-Anchored Data Infrastructure。
-4. 明确区分已实现逻辑、合同壳、外部运行和仅登记扩展。
-5. 记录截至 2026-08-06 的开放 PR 与真实阻断，不把活动分支当成 `main`。
+1. 纳入 Phase 1–4 的 sponsor-relative 决策轴，并把它与科学 Gate 轴明确分开
+   （新增第 7 节、新增设计原则 11）。
+2. 纳入 PR #72：`BinderAdcRouteRequest` 升到 `0.2.0`，Phase 3–4 的两条硬控制
+   第一次成为代码层前置条件，而不再只是文档表述。
+3. 更新仓库基线 `main@8aa7e87` -> `main@4d895d7`，测试数 `338` -> `413`。
+4. 更正 CRC 章节：`v3-draft` 记录的三个开放 PR（#62／#63／#55）已分别合并或
+   关闭；`EVGAP-01` 的阻断理由已改变，不再是「admission 未绑定」。
+5. 把 `v3-draft` 遗留的审核问题与本轮新发现的缺口一并登记到第 16 节。
+
+**本版仍不修改任何 Gate、合同、代码或科学决策。**发现的不一致只登记为审核
+问题，另立治理任务修复。
 
 ## 1. 一句话定义
 
 StelligenOS 是一个面向 biotechnology asset generation 的**软件操作系统实现**：
-它把临床问题、靶点机会、证据、Gate、抗体/ADC 设计、尽调和人类决策组织成
-版本化、可审计、可逐步推进的流程。
+它把临床问题、靶点机会、证据、Gate、抗体/ADC 设计、发起方承诺、尽调和人类
+决策组织成版本化、可审计、可逐步推进的流程。
 
 它不是数据库，也不是一个可以自行宣布资产成功的自治代理。真实数据、证据、
 模型权重、运行结果、法律意见、投资结论和生命周期状态全部由外部工作区持有；
@@ -77,6 +84,12 @@ x Intended Benefit / Product Hypothesis
 8. **Fatal-first 先于加权平均。** 明确致命风险不能被其他高分抵消。
 9. **外部引用优先。** 跨边界对象使用版本化 `external:` reference，不把业务记录复制进仓库。
 10. **全过程可审计。** 输入版本、合同、代码提交、来源、缺失、审核和人类决定均须可追溯。
+11. **发起方判断与科学事实分离。** Sponsor-relative 的路由、承诺和资源计划
+    不得改写、覆盖或反向污染任何科学 Gate 事实。`OUT_OF_MANDATE` 与
+    `STOP_FOR_SPONSOR` 表示「当前发起方不推进」，**不是** KILL，也不否定机会
+    本身；反过来，科学上成立也不自动构成发起方承诺。
+
+原则 11 是 `v4-draft` 新增。它对应的软件形态见第 7 节。
 
 ## 4. 总体软件架构
 
@@ -93,6 +106,14 @@ x Intended Benefit / Product Hypothesis
 
 依赖方向必须从模块实现指向内核合同，内核 `src/` 不得反向依赖
 `genmodules/` 或 `extensions/`。这条边界已有测试保护。
+
+**需要专家注意的一处形态变化：**`src/contracts/` 现在同时承载两类工件——
+既有的 YAML 身份/Schema 声明（如 `core_objects.yaml`、`gate_system.yaml`），
+以及 Phase 1–4 引入的 Python 形状校验器（`sponsor_strategy.py`、
+`search_space_admission.py`、`program_commitment_review.py`、
+`value_inflection_plan.py`）。后者是可执行的边界校验，不是对象身份声明。
+上表把 `src/contracts/` 归入 Objects 层，已不足以描述这一层的实际内容。
+是否需要为 sponsor-relative 合同单列一层，见第 16 节问题 13。
 
 ### 4.2 四阶段生命周期
 
@@ -125,6 +146,11 @@ Opportunity Generation
 
 每个对象至少具有 `object_type`、`object_id` 和 `schema_version`。对象实例仍在
 外部系统中，仓库内只有类型和身份合同。
+
+Phase 1–4 引入的 `DevelopmentSponsorProfile`、`ProgramThesis`、
+`SearchSpaceAdmission`、`ProgramCommitmentReview` 和 `ValueInflectionPlan`
+**没有**被登记为核心对象。它们目前是跨边界合同形状，实例完全在外部。这是有意
+的，也应由专家确认是否需要长期保持。
 
 ### 4.4 ClinicalHypothesis 递进锁定
 
@@ -163,11 +189,11 @@ Due Diligence、Portfolio Management。
 - Architecture freeze/release
 - External runtime
 
-这些端口的含义是“外部实现必须遵守什么”，不是“仓库已经内置全部数据和科学
-执行器”。`boot()` 只返回静态架构计划和外部引用，状态是
+这些端口的含义是「外部实现必须遵守什么」，不是「仓库已经内置全部数据和科学
+执行器」。`boot()` 只返回静态架构计划和外部引用，状态是
 `ready_for_external_runtime`；它不会加载数据、运行模型或写结果。
 
-## 6. Gate 系统
+## 6. Gate 系统（科学轴）
 
 ### 6.1 冻结拓扑
 
@@ -198,18 +224,97 @@ evidence、missing information 和 validation recommendation。
 - T12 结果不自动创建 Asset，也不自动切换生命周期。
 - Gate 仍需要外部运行时和显式审核。
 
-当前存在一个需专家注意的版本一致性问题：`src/contracts/gate_system.yaml` 仍把
-source envelope 写为 `2.0.0`，而 `src/capabilities/gates.py` 的当前默认合同版本
-是 `2.1.0`。现有测试通过，但两处声明需要在独立治理任务中统一，本文不擅自
-修改合同。
+**版本一致性问题仍未解决（`v3-draft` 已登记，`v4-draft` 复核后确认依旧存在）：**
+`src/contracts/gate_system.yaml` 仍把 source envelope 写为
+`GateInputEnvelope@2.0.0` / `GateModelOutput@2.0.0`，而
+`src/capabilities/gates.py` 的当前默认合同版本是 `2.1.0`。现有测试通过，但两处
+声明不一致，需要在独立治理任务中统一。本文不擅自修改合同。
 
-## 7. GenModule 与目录模块
+作为对照：PR #72 处理 `BinderAdcRouteRequest` 的 breaking change 时，代码与
+`src/contracts/binder_adc_routes.yaml` 同步升到 `0.2.0`，并显式区分
+`request_contract_version` 与 `result_contract_version`。Gate envelope 可以参考
+这一形态，但**必须另立 PR**。
+
+## 7. Sponsor-relative 决策轴（Phase 1–4）
+
+这是 `v4-draft` 新增的一节。第 6 节的 45 个 Gate 回答「这个机会科学上成不成
+立」；本节的四个合同回答一个**独立且不可互相替代**的问题：「当前这个发起方
+要不要投、投到哪个风险转移边界为止」。
+
+对小微 Biotech，这两个问题最容易被混为一谈——把「我们做不了」写成「这个靶点
+不行」。因此四个合同的枚举都刻意避免使用 KILL/FAIL 词汇。
+
+### 7.1 四个合同
+
+| 阶段 | 合同 | 位置 | 语义 |
+|---|---|---|---|
+| 1 | `DevelopmentSponsorProfile@0.1.0`、`ProgramThesis@0.1.0` | `src/contracts/sponsor_strategy.{py,yaml}` | 描述发起方能力/资本/时间边界；把 Opportunity、ClinicalHypothesis、产品位置和目标转移里程碑绑成可审计主张 |
+| 2 | `SearchSpaceAdmission@0.1.0` | `src/contracts/search_space_admission.{py,yaml}` | 正式证据抽取之前的 sponsor-relative 路由 |
+| 3 | `ProgramCommitmentReview@0.1.0` | `src/contracts/program_commitment_review.{py,yaml}` | T12 之后、route selection 之前的承诺检查点 |
+| 4 | `ValueInflectionPlan@0.1.0` | `src/contracts/value_inflection_plan.{py,yaml}` | 横跨生命周期的价值拐点计划 |
+
+**Phase 2 的四种路由：**`ACTIVE_SEARCH`、`WATCHLIST`、`PARTNER_ONLY`、
+`OUT_OF_MANDATE`。八个低成本条件各自只能取 `SATISFIED`／`UNKNOWN`／
+`UNSATISFIED`，`UNKNOWN` 保留为未知，不得自动转为 KILL、FAIL 或任何科学 Gate
+结论。`HER2`、`TROP2` 等成熟靶点不得因为热门被全局删除，只能在当前 sponsor
+上下文里被路由为 `PARTNER_ONLY` 或 `OUT_OF_MANDATE`。
+
+**Phase 3 的六个结果：**`SELF_DEVELOP`、`CO_DEVELOP`、`DATA_PACKAGE_ONLY`、
+`PARTNER_NOW`、`MONITOR`、`STOP_FOR_SPONSOR`。其中 `MONITOR`、
+`DATA_PACKAGE_ONLY`、`STOP_FOR_SPONSOR` 保持 `BLOCKED_NO_COMMITMENT`；
+`SELF_DEVELOP`、`CO_DEVELOP`、`PARTNER_NOW` 只产生
+`EXTERNAL_HANDOFF_REQUIRED`，不自动执行 Asset Generation。
+
+**Phase 4** 要求最小证据包、最低成功标准和停止条件三者都不得留空。
+`estimated_cost_band_ref` 只是外部估算分档的引用，不是成本模型。
+
+### 7.2 与 Binder/ADC route 的绑定（PR #72）
+
+Phase 3–4 的两条硬控制原本**只存在于文档**。PR #72 之前，`src/` 中对四个
+sponsor-relative 合同零引用，因此可以完整构造并执行一次 binder route 而不提供
+任何 commitment 记录，且全量测试不会失败。
+
+PR #72 把这两条接到真正的入口。`BinderAdcRouteRequest` 升到 `0.2.0`，新增三个
+**无默认值**的必填字段：
+
+| 字段 | 证明什么 |
+|---|---|
+| `program_commitment_review_ref` | Phase 3 已完成 |
+| `value_inflection_plan_ref` | Phase 4 已完成 |
+| `asset_generation_authorization_ref` | 外部 human handoff 已确认前两者允许进入当前 route |
+
+第三个字段是关键，且不能省略：**仅仅存在一份 `ProgramCommitmentReview`，不等于
+可以进入 binder route**——`MONITOR`、`DATA_PACKAGE_ONLY`、`STOP_FOR_SPONSOR`
+同样是合法 review，却必须保持 blocked。如果只要求
+`program_commitment_review_ref`，一份 `MONITOR` review 也能满足存在性检查。
+第三个字段承接 Phase 3 已冻结的 `EXTERNAL_HANDOFF_REQUIRED`，让放行判断留在
+外部 human-governance layer。
+
+合同中以 `field_presence_is_not_a_decision: true` 明确记录这一点。
+
+八个引用字段现在共用一套校验：必须是字符串、必须以 `external:` 开头、前缀之后
+必须非空。
+
+### 7.3 这条轴当前的实现边界
+
+**仓库不读取、不反序列化、不重新裁定、不生成 authorization。**
+`src/capabilities/binder_adc_routes.py` 的 import 集合恰为
+`{dataclasses, typing}`，有测试用 AST 解析源文件断言这一点。仓库只强制要求三个
+不可缺失的外部工件存在，放行判断本身在外部。
+
+**Phase 1 与 Phase 2 目前仍没有消费者。** `DevelopmentSponsorProfile`、
+`ProgramThesis` 和 `SearchSpaceAdmission` 仍只是形状校验器，没有任何代码路径
+要求它们存在。第 16 节问题 14 登记此事。
+
+**这条轴不新增 Gate。** 45 个 Gate 拓扑未变，没有第 46 个 Gate。
+
+## 8. GenModule 与目录模块
 
 当前有 7 个模块区域，其中 6 个具有 `module.yaml`；
 `gen_indication_endpoint_target` 是当前被登记为 active 的纯合同包，但尚无模块
 manifest。这一差异应由专家确认是否需要统一注册方式。
 
-### 7.1 `gen_indication_endpoint_target@0.1.0`
+### 8.1 `gen_indication_endpoint_target@0.1.0`
 
 用途：定义受约束的 ADC clinical context、endpoint class 和 target opportunity
 生成合同。
@@ -221,7 +326,7 @@ evidence collector、ranking engine、Gate evaluator、runner 或数据库**。
 逻辑：外部实现先形成 anchor clinical context 和 intended benefit，再生成 target
 候选，保留 missing/unknown，经过证据和对抗审核后交给 T-chain。
 
-### 7.2 `assetgenos_catalog@0.1.0`
+### 8.2 `assetgenos_catalog@0.1.0`
 
 状态：`migrated_contracts_only`。从 AssetGenOS 迁入：
 
@@ -233,14 +338,14 @@ evidence collector、ranking engine、Gate evaluator、runner 或数据库**。
 它是软件目录，不是 Gate runtime。模型权重、runner、数据、结果、治理记录和
 work package 均未迁入仓库。
 
-### 7.3 `gate_model_rule@0.1.0`
+### 8.3 `gate_model_rule@0.1.0`
 
 用途：保存历史 Rule 的身份、引用和审计合同，不执行自然语言规则。
 
 规则实例、case、数据库和生成结果保持外部；Rule 不能自动改分、改状态或绑定
 Profile。它的存在是为了迁移可追溯性，不是第二套 Gate 系统。
 
-### 7.4 `target_safety_therapeutic_window_prescreen@0.4.0`
+### 8.4 `target_safety_therapeutic_window_prescreen@0.4.0`
 
 用途：用已经标准化的公共证据 claim 做 ADC target-level 安全预筛，不宣称
 product-specific therapeutic window。
@@ -258,7 +363,10 @@ shedding / sink、既有 modality 毒性、组织后果与可恢复性。
 合同强制 claim/evidence reference 唯一且集合一致，mitigation 只能指向同请求中
 的 `SUPPORTS_RISK` claim，避免集合压缩造成错误放行。
 
-### 7.5 `antibody_binder_asset_engineering@0.4.0`
+注意：这里的 `KILL` 是**科学轴**的致命风险判定，与第 7 节
+`OUT_OF_MANDATE`／`STOP_FOR_SPONSOR` 完全不同，两者不得互相替代或互相推导。
+
+### 8.5 `antibody_binder_asset_engineering@0.4.0`
 
 用途：把已有 binder 工程化成 ADC carrier/asset package。
 
@@ -268,11 +376,11 @@ shedding / sink、既有 modality 毒性、组织后果与可恢复性。
 - Track A：序列/结构、humanization、liability 和 developability。
 - Track B：结合、内吞、运输和 payload delivery 的版本化实验 phenotype。
 
-两轴只通过 Pareto dominance 选择。序列干净不能补偿“不内吞”，高内吞也不能
+两轴只通过 Pareto dominance 选择。序列干净不能补偿「不内吞」，高内吞也不能
 掩盖严重分子 liability。模块还提供 evidence graph、failure mode、信息增益实验
 排序和 cross-asset retrieval。外部结构预测默认关闭，需要显式授权。
 
-### 7.6 `epitope_conditioned_de_novo_antibody_discovery@0.1.0`
+### 8.6 `epitope_conditioned_de_novo_antibody_discovery@0.1.0`
 
 用途：从 antigen 和人为定义的 epitope 约束出发，形成 de novo antibody
 discovery package。
@@ -284,7 +392,7 @@ negative design、de novo design、计算排序、多样性、实验设计、结
 外部科学工具默认不自动调用；工具不可用时只能输出约束和实验计划，不能虚构
 真实抗体序列、结合或 ADC readiness。
 
-### 7.7 `biotech_asset_due_diligence@0.1.0`
+### 8.7 `biotech_asset_due_diligence@0.1.0`
 
 用途：对外部资产 artifact 建立可审计、modality-neutral 的尽调链。
 
@@ -298,7 +406,7 @@ Asset -> AssetVariant -> AssessmentRun -> ArtifactRef
 `SystemRecommendation` 与 `HumanDecision` 严格分离。模块不能声称法律 FTO、
 临床安全、临床有效、portfolio 排名或最终资本配置。
 
-## 8. Cross-cutting 逻辑
+## 9. Cross-cutting 逻辑
 
 - **Knowledge Ledger**：以外部引用组织 evidence、rule、hypothesis、experiment、failure、decision、calibration 和 lesson。
 - **Model lifecycle**：使用 `model_id@SemVer`；注册、权重、验证、晋级和退役由外部治理系统承担。
@@ -307,7 +415,7 @@ Asset -> AssetVariant -> AssessmentRun -> ArtifactRef
 - **Portfolio**：只定义端口，不保存估值、资本分配或组合决策。
 - **Audit/versioning**：每次运行记录 input、contract、model/Gate、evidence、review 和时间戳。
 
-## 9. Biotech 与患者数据基础设施
+## 10. Biotech 与患者数据基础设施
 
 仓库已经登记可复用的外部 provider 方向，但尚未接通完整 provider runtime：
 
@@ -339,14 +447,16 @@ PDX 和低传代 culture 属于患者来源模型；DepMap、GDSC、PRISM 等主
 当前这部分是基础设施目录和未来 provider 设计，不是已下载数据，也不是已经
 完成的患者数据分析。
 
-## 10. CRC ADC Pool Level 01 当前状态
+## 11. CRC ADC Pool Level 01 当前状态
 
-### 10.1 已进入 `main` 的正式内容
+### 11.1 已进入 `main` 的正式内容
 
 - Level 01 定义与三把 eligibility lock 已冻结。
 - 输入绑定固定为 9 个 clinical contexts、41 个 targets、369 个原始 pair。
-- EVGAP-01 surface-localization extraction contract 已合并。
-- EVGAP-02 CRC linkage extraction contract `0.1.0` 已合并。
+- `EVGAP-01` surface-localization extraction contract 已合并。
+- `EVGAP-02` CRC linkage extraction contract 已修订为 `0.2.0` 并合并（PR #62）。
+- `SRCADM-01` surfaceome source admission audit 已合并并获批（PR #63）。
+- `SRCADM-01` 准入绑定已完成（PR #66）。
 - Level 01 Preview revision 2 已合并，但状态是
   `PROVISIONAL_NOT_AUTHORIZED_FOR_ADVANCEMENT`。
 
@@ -366,26 +476,38 @@ Preview 当前结果：
 `active=0` 不表示没有候选，而表示没有 pair 同时通过三把锁。HOLD 是缺证据，
 不是负面结论。当前不得生成 `ADC_POOL_LEVEL_01_ACCEPTED`。
 
-### 10.2 截至 2026-08-06 的开放工作
+### 11.2 `v3-draft` 记录的开放工作已全部结清
 
-- PR #62：把 EVGAP-02 契约修订为 `0.2.0`，将已有运行降级为 retrieval
-  candidates；979 条 retrieval candidates、0 条 linkage assertions，369 pairs
-  全部保持 DEFER/HOLD。该 PR 未合并，因此不是当前 `main` 合同。
-- PR #63：执行 SRCADM-01 surfaceome source admission audit，结论为
-  `admissible_with_conditions`，但 PR 明确没有自行授予 admission，也没有解除
-  EVGAP-01。
-- PR #55：旧 target-safety PR 仍开放且 merge state 为 DIRTY；其修订版本已由
-  PR #56 合并，属于应关闭的历史重复 PR，不代表当前模块缺失。
+`v3-draft` 第 10.2 节记录的三项均已处理，此处更正：
 
-### 10.3 已知 CRC 阻断
+| `v3-draft` 记录 | 当前事实 |
+|---|---|
+| PR #62 未合并 | 已合并（`17c5707`）。979 条 retrieval candidates、0 条 linkage assertions、369 pairs 全部 HOLD 的结论不变 |
+| PR #63 开放 | 已合并（`98a1698`），结论 `admissible_with_conditions`，四项条件 `COND-01`..`COND-04` 仍在效 |
+| PR #55 开放且 DIRTY | 已关闭，标记 superseded by PR #56 |
 
-1. Surfaceome snapshot 尚未完成正式 admission 引用绑定，EVGAP-01 未解除。
-2. EVGAP-02 当前只有 retrieval，没有可支撑 LOCK-03 的结构化 assertions。
-3. 41-target 轴含至少四个不可直接消歧实体：`Undisclosed`、`EDBN`、`AG7`、`CA19-9`。
+截至基线日期，**仓库没有开放 PR**。
+
+### 11.3 已知 CRC 阻断（本版有实质变化）
+
+1. **`EVGAP-01`：已授权，未执行。** 这是相对 `v3-draft` 的实质变化——阻断理由
+   不再是「admission 引用未绑定」。PR #66 已完成绑定：`SRCADM-01` 为
+   `approved`，`EVGAP-01` 的 `extraction_blocked_by` 为空，
+   `admission_status` 为 `admitted_with_conditions`，并授权**一次**抽取
+   （`authorises_extraction_run_count: 1`）。该抽取尚未执行，
+   `execution_status` 为 `authorised_not_yet_executed`。
+2. **`EVGAP-02`：只有 retrieval，没有 assertion。** `execution_status` 为
+   `retrieval_layer_executed_assertion_layer_not_executed`，
+   `gap_discharged` 为 `false`。没有可支撑 `LOCK-03` 的结构化 assertions。
+3. **`GAP-P07`：41-target 轴含四个待裁定实体。** `Undisclosed`、`EDBN`、`AG7`
+   三个无法消歧；`CA19-9` 已解析为 `resolved_as_non_protein_antigen`，但**它是否
+   属于「膜蛋白 target universe」必须由人裁定**，不是抽取层能决定的问题。
 4. Accepted Level 01 pool 尚未形成，不能进入 Level 02、T-Gate scoring 或资产生成。
 5. 尚无被批准的 CRC pair 进入 binder/ADC generation。
 
-## 11. Extensions：已登记但未进入内核
+两个缺口都解除后，才能生成 `ADC_POOL_LEVEL_01_ACCEPTED`。
+
+## 12. Extensions：已登记但未进入内核
 
 扩展只能依赖内核，内核不能依赖扩展；扩展不能改 Gate 或生命周期状态。
 
@@ -399,22 +521,31 @@ Preview 当前结果：
 Backlog 还包括 evidence independence、动态剪枝、早期 DD、commercial refresh、
 success probability、resource-aware planning 和 portfolio learning。登记不等于批准。
 
-## 12. 系统实际运行逻辑
+`EXT-04` stop rule 与 Phase 4 `ValueInflectionPlan` 的 `stop_condition_refs`
+在概念上相邻，但目前是两套互不相通的工件。是否合并见第 16 节问题 15。
+
+## 13. 系统实际运行逻辑
 
 ```text
 Human strategy + external evidence providers
   -> BootRequest（只验证外部引用）
+  -> DevelopmentSponsorProfile / ProgramThesis（sponsor 边界，Phase 1）
   -> Clinical unmet need / entry mode
   -> ClinicalHypothesis（递进 lock）
   -> target/context enumeration
+  -> Search-Space Admission（sponsor-relative 路由，Phase 2；
+       在正式证据抽取之前，不删除候选）
   -> evidence retrieval
   -> structured assertion + provenance
   -> expert/adversarial review
   -> T0-T11 Gate evaluation
   -> evidence readiness
   -> T12 decision/ranking
+  -> Program Commitment Review（Phase 3）
+  -> ValueInflectionPlan（Phase 4）
+  -> external human authorization
   -> explicit human handoff
-  -> route selection
+  -> route selection（BinderAdcRouteRequest@0.2.0：三个引用缺一不可）
        -> existing-binder engineering
        -> epitope-conditioned de novo discovery
   -> ADC product / lead / candidate
@@ -422,21 +553,28 @@ Human strategy + external evidence providers
   -> explicit HumanDecision
 ```
 
-每个箭头传递版本化对象或外部 artifact reference。任何单个模块只能完成自己的
-合同职责，不能因为“运行成功”就跳过证据、Gate、审核或人类决定。
+相对 `v3-draft`，本图新增了 Phase 1–4 的四个控制点。其中
+`Program Commitment Review` -> `ValueInflectionPlan` -> `external human
+authorization` -> `route selection` 这一段，**是目前唯一在代码层强制的
+sponsor-relative 控制**；Phase 1 与 Phase 2 两处仍只是流程约定。
 
-## 13. 现在能运行什么，不能运行什么
+每个箭头传递版本化对象或外部 artifact reference。任何单个模块只能完成自己的
+合同职责，不能因为「运行成功」就跳过证据、Gate、审核或人类决定。
+
+## 14. 现在能运行什么，不能运行什么
 
 ### 可以运行或验证
 
 - data-free OS boot 和架构 smoke test。
 - 8 类对象、4 阶段生命周期、ClinicalHypothesis lock、45 Gate 拓扑和 envelope 校验。
 - 各 capability 的输入输出合同与外部引用边界。
+- Phase 1–4 四个 sponsor-relative 合同的形状校验。
+- `BinderAdcRouteRequest@0.2.0` 的三项 sponsor 前置引用强制校验。
 - Existing-binder pipeline 的大部分软件逻辑和受控外部工具调用。
 - De novo route 的流程骨架与外部 package 生成。
 - Target-safety `0.4.0` 的纯内存、确定性预筛，只要外部提供合格 claims。
 - CRC Level 01/EVGAP 合同、Preview 和机器可读验证。
-- 当前 `main` 的 338 项单元测试和 repository boundary check。
+- 当前 `main` 的 413 项单元测试和 repository boundary check。
 
 ### 不能声称已经完成
 
@@ -448,10 +586,12 @@ Human strategy + external evidence providers
 - Level 01 Preview 不等于 Accepted pool。
 - Retrieval hit 不等于 evidence assertion。
 - Target safety GO 不等于产品 therapeutic window。
+- **三个 sponsor 引用齐全不等于已获批准**——仓库只校验引用存在，放行判断在外部。
+- **Phase 1／Phase 2 合同存在不等于已被强制执行**——它们目前没有消费者。
 - Binder/de novo package 不等于实验验证或 development candidate。
 - SystemRecommendation 不等于 HumanDecision。
 
-## 14. 当前实现成熟度
+## 15. 当前实现成熟度
 
 | 范围 | 成熟度 | 说明 |
 |---|---|---|
@@ -459,6 +599,8 @@ Human strategy + external evidence providers
 | Gate/Model/Profile 目录 | 合同已迁移 | 45/59/53；真实运行在外部 |
 | ClinicalHypothesis v5 | 已进入内核 | 递进锁定和三入口已实现 |
 | Opportunity generation | 合同完整度较高 | 真实 generator/provider 尚在外部 |
+| Sponsor 轴 Phase 3–4 | **已接入并强制** | route request 缺任一引用即无法构造 |
+| Sponsor 轴 Phase 1–2 | **仅合同形状** | 无消费者，未强制 |
 | Existing-binder route | 可运行软件逻辑较多 | 依赖外部输入和科学工具 |
 | De novo route | 流程骨架可运行 | 真实序列设计和验证依赖外部工具/实验 |
 | Target safety pre-screen | 确定性引擎已实现 | 依赖外部标准化 evidence claims |
@@ -467,28 +609,54 @@ Human strategy + external evidence providers
 | CRC Level 01 | Preview 已形成 | Accepted pool 尚未形成 |
 | 端到端真实资产生成 | 未完成 | 尚无批准 pair 贯通全部 Gate 与生成路线 |
 
-## 15. 当前需要专家审核的问题
+## 16. 当前需要专家审核的问题
+
+问题 1–12 承接 `v3-draft`（3、4 已复核确认仍然成立，其余未变）；13–17 为
+`v4-draft` 新增。
 
 1. `ClinicalHypothesis` 的三种入口和递进 lock 是否足以覆盖真实 ADC 开发路径。
 2. T0-T12 的顺序、Hard Gate、fatal-first、HOLD 和 T12 handoff 是否合理。
-3. Gate envelope `2.0.0`/`2.1.0` 版本漂移应如何统一。
+3. Gate envelope `2.0.0`/`2.1.0` 版本漂移应如何统一（复核确认仍存在）。
 4. `gen_indication_endpoint_target` 是否应补正式 `module.yaml`，还是继续作为内核共享合同包。
 5. 患者直接观测、患者来源模型、模型扰动和临床干预的 P1-P4 分层是否足够。
 6. Evidence independence 应按 primary source、dataset lineage 还是实验批次定义。
 7. Retrieval -> assertion -> disposition 三层是否足以阻止检索命中被误当成证据。
 8. CRC target 轴中非标准实体应在何处消歧，是否需要重开 41/369 冻结计数。
-9. EVGAP-01/02 解除后，Level 01 Accepted 的最低人工审核门槛是什么。
+9. `EVGAP-01`/`EVGAP-02` 解除后，Level 01 Accepted 的最低人工审核门槛是什么。
 10. Existing-binder 双轴 Pareto 和 de novo 15-stage 路线是否符合实际实验决策。
 11. 哪些判断必须专家签字，哪些可由模型辅助，哪些才允许确定性自动化。
 12. 何时应把 stop rule、evidence independence 和 resource-aware planning 纳入内核。
+13. `src/contracts/` 现在同时承载 YAML 身份声明与 Python 形状校验器；
+    sponsor-relative 合同是否应在六层模型中单列一层，还是并入 Capabilities。
+14. **Phase 1 与 Phase 2 仍无消费者。** `DevelopmentSponsorProfile`、
+    `ProgramThesis`、`SearchSpaceAdmission` 目前只有形状校验器。是否应像
+    Phase 3–4 一样接到某个入口？如果接，接在哪里——`SearchSpaceAdmission`
+    位于证据抽取之前，而抽取目前由 EVGAP 契约而非代码入口驱动。
+15. `EXT-04` stop rule 与 `ValueInflectionPlan.stop_condition_refs` 是否应合并，
+    还是刻意保持为「扩展提案」与「已冻结合同」两类工件。
+16. **`authorises_extraction_run_count` 没有消费机制。** `EVGAP-01` 声明授权
+    一次抽取，但执行后不会自动递减或归零，目前只是声明字段。防重复执行依赖
+    流程而非代码。审核方已将此登记为非阻断项，此处继续登记。
+17. **三处 YAML 引号缺陷仍在。** 未加引号的列表条目中 ` #<数字>` 之后的内容被
+    YAML 当作注释丢弃：
 
-## 16. 版本维护规则
+    | 文件 | 行 | 解析后退化为 |
+    |---|---:|---|
+    | `docs/pools/adc_pool_level_01_input_binding.yaml` | 498 | `把 raw clinical context 轴与 raw target 轴绑定到 PR` |
+    | `docs/pools/evgap_01_surface_localization_extraction.yaml` | 551 | `把被隔离运行（PR` |
+    | `docs/pools/evgap_02_crc_linkage_extraction.yaml` | 1104 | `把被隔离运行（PR` |
 
-1. 规范路径保持不变，下一次实质更新升为 `v4-draft`。
+    影响有界：原文对人类读者仍可读，丢的只是机器解析后的内容，且现有测试断言
+    的都是其他条目。建议另开一个极小 PR 统一加引号并加防回归检查。
+
+## 17. 版本维护规则
+
+1. 规范路径保持不变，下一次实质更新升为 `v5-draft`。
 2. 每个版本必须记录 repository baseline、日期和审核状态。
 3. 只有获得明确批准的版本才复制到 `docs/architecture/versions/` 形成只读快照。
-4. 未批准 draft 被新 draft 取代时不补造“已批准快照”。
+4. 未批准 draft 被新 draft 取代时不补造「已批准快照」。`v2-draft` 与 `v3-draft`
+   都未获批，因此都没有快照。
 5. 架构文档必须分别标记 `implemented`、`contract-only`、`external runtime`、
-   `planned` 和 `pending review`，不得用一个“已完成”概括所有层。
+   `planned` 和 `pending review`，不得用一个「已完成」概括所有层。
 6. 架构更新不得顺带改变 Gate、合同或科学决策；发现不一致只登记为审核问题，
    另立治理任务修复。

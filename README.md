@@ -46,7 +46,7 @@ git diff --check
 - Phase 6 已建立 IP/FTO、Due Diligence 和 Portfolio 外部合同并合并
 - Phase 7 已建立端到端闭环和 TWEAKR 外部示范引用合同并合并
 - Phase 8 已冻结架构并建立发布与后续开发规范
-- 当前架构说明审核基线：`STELLIGENOS-ARCH-2026.08.06-v3-draft`
+- 当前架构说明审核基线：`STELLIGENOS-ARCH-2026.08.06-v4-draft`
 - 当前 `main` 已有 CRC ADC Pool Level 01 Preview，但尚未形成 Accepted pool
 
 ## 关键入口
