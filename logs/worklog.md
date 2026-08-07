@@ -2908,3 +2908,12 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - PR: 创建 https://github.com/leezx/StelligenOS/pull/70，目标为 `main`；PR 正文冻结了 external-only、无数据、无执行和必须 ChatGPT `APPROVE` 的边界。
 - Failure/fix: 初次沙箱推送因 DNS 无法解析 GitHub 失败；申请网络权限后推送成功。没有代码回滚或内容丢失。
 - Next: 使用 Chrome 网页版 ChatGPT 的 `ADC研发框架优化` 对话，通过聊天框 `+` 显式选择 GitHub 来源审核 PR #70；在明确 `APPROVE` 前不合并。
+
+### 2026-08-06 — Chrome ChatGPT 审核 Phase 4 PR #70
+
+- Method: 在 Chrome 网页版 ChatGPT 的 `ADC研发框架优化` 对话中，通过聊天框 `+` 显式选择 GitHub 来源，提交 PR #70 审核指令；审核结束后保留 handoff tab 并结束浏览器会话。
+- Result: ChatGPT 返回明确 `APPROVE`；审核 HEAD 为 `78a9a62`；GitHub 显示 open、non-draft、mergeable，CI run `#63` 成功。
+- Accepted: 严格只完成 ValueInflectionPlan@0.1.0；字段、external-only、非空约束、Asset Generation 阻断、非自动执行、无科学 Gate/商业预测/交易执行和无核心架构改动均通过。
+- Non-blocking note: ChatGPT 说明 handoff 初始提交里的“待执行全量验证”已由最终 CI run #63 的成功结果覆盖，不构成阻断。
+- Persisted: 新增 `logs/chatgpt-review-2026-08-06-value-inflection-plan-phase4.md`，更新本 handoff 状态为 `APPROVED_WAITING_MERGE`。
+- Next: 提交审核记录 metadata 并推送；按批准范围合并 PR #70。合并后四步架构调整完成，不自动开始 Asset Generation 或任何外部运行。
