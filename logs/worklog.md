@@ -3139,3 +3139,19 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Unchanged: profile 内容、外部包、机构资源边界处理、授权机制本身一律未动。冻结包保持 `gen_sponsor_profile_stelligen_20260807T050000Z_frozen`（ZIP `5f057fde...`，实例 `65253e10...`，19/19 MATCH），未重做。
 - Validation: `Ran 544 tests OK`；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
 - Next: 把完整 profile（人读摘要 + 逐字段 provenance 表）交人类负责人审阅，逐项答复三处疑问；接受后再更新 #80 写入 `human_approval_ref` 与 `approved_instance_sha256`、开启授权。
+
+## 2026-08-07T13:20 — PR #80 第二轮审核修订：profile 换为 v0.1.1 候选实例
+
+- 分支 `task_20260807_wp2b-authorization`
+- 审核裁决：`REQUEST_CHANGES`（三条阻断 + 三处疑问裁定），全部接受
+- 外部包 v0.1.0 **作废**（包内四文件状态自相矛盾；把机器校验记作人工批准）
+  - 作废实例 SHA-256 `65253e10cb37a5341c34ac5c5105d38c6d044fe99ea4382f0c4e138a206814ed`
+  - 旧包字节未改；作废说明写在包外 `.WITHDRAWN.md`
+- 新候选包 `gen_sponsor_profile_stelligen_v0.1.1_20260807T130000Z_draft`
+  - 实例 SHA-256 `7582ca157ec769c170c390e6dc8a99d55adf2e1dffc3d1af461434797e0ec421`
+  - ZIP SHA-256 `cf410e6278f8d78fa2e9aa937b14a72bc878cb9533059ae66374af0e5eb5f8a8`（22,972 bytes，7 文件）
+  - `validate_profile.py` 47/47 MATCH；变异检验 16/16 CAUGHT
+- 仓库侧：契约记录候选实例与作废实例，要求人工批准工件六字段；新增 3 项测试
+- **`authorises_run` 仍为 `false`，`blocked_by` 仍为 `[BLOCK-01]`——未清除任何 blocker**
+- 547 tests OK；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过
+- 等待人类负责人对 v0.1.1 的批准工件

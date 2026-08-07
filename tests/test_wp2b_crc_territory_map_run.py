@@ -75,6 +75,55 @@ class RunAuthorisationTests(unittest.TestCase):
             )
             self.assertTrue(blocker["not_yet_cleared_because"].strip())
 
+    def test_a_candidate_instance_is_not_an_approved_instance(self):
+        """A profile can exist, validate, and still not be approved."""
+
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        self.assertTrue(blocker["candidate_instance_sha256"].strip())
+        self.assertTrue(blocker["candidate_is_not_approved"])
+        if not blocker["human_approval_ref"]:
+            self.assertIsNone(
+                blocker["approved_instance_sha256"],
+                "a candidate SHA-256 must not be promoted to an approved one",
+            )
+            self.assertNotEqual(
+                blocker["candidate_instance_sha256"],
+                blocker["approved_instance_sha256"],
+            )
+
+    def test_a_withdrawn_candidate_can_never_become_the_approved_instance(self):
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        withdrawn = blocker["withdrawn_candidates"]
+        self.assertTrue(withdrawn, "the withdrawn v0.1.0 artifact must stay recorded")
+        for entry in withdrawn:
+            with self.subTest(package=entry["package"]):
+                self.assertTrue(entry["withdrawn_because"].strip())
+                self.assertTrue(entry["must_never_be_approved_instance_sha256"])
+                self.assertNotEqual(
+                    entry["instance_sha256"], blocker["approved_instance_sha256"]
+                )
+                self.assertNotEqual(
+                    entry["instance_sha256"], blocker["candidate_instance_sha256"]
+                )
+                self.assertNotIn(entry["package"], blocker["machine_validation_evidence"])
+
+    def test_human_approval_needs_an_artifact_not_only_a_yes(self):
+        """Six recorded fields, so a later version has an audit chain to compare."""
+
+        blocker = next(b for b in CONTRACT["blockers"] if b["id"] == "BLOCK-01")
+        self.assertEqual(
+            blocker["human_approval_artifact_must_record"],
+            [
+                "approved_profile_version",
+                "approved_instance_sha256",
+                "approval_timestamp_utc",
+                "approving_role",
+                "acknowledges_operating_assumptions",
+                "acknowledges_no_institutional_resource_ownership",
+            ],
+        )
+        self.assertTrue(blocker["human_approval_artifact_rationale"].strip())
+
     def test_every_blocker_states_why_and_how_it_clears(self):
         blockers = {blocker["id"]: blocker for blocker in CONTRACT["blockers"]}
         self.assertEqual(set(blockers), {"BLOCK-01", "BLOCK-02"})

@@ -59,21 +59,43 @@ blockers:
     cleared_by: 人类负责人提供事实并冻结该实例，且实例经审核接受
     cleared: false
     machine_validation: PASS
-    machine_validation_evidence: gen_sponsor_profile_stelligen_20260807T050000Z_frozen
-    machine_validation_detail: validate_profile.py 19/19 MATCH
+    machine_validation_evidence: gen_sponsor_profile_stelligen_v0.1.1_20260807T130000Z_draft
+    machine_validation_detail: validate_profile.py 47/47 MATCH
+    candidate_instance_version: "0.1.1"
+    candidate_instance_sha256: 7582ca157ec769c170c390e6dc8a99d55adf2e1dffc3d1af461434797e0ec421
     human_approval_ref: null
     approved_instance_sha256: null
+    # 候选实例不是已批准实例。审核通过前 approved_instance_sha256 必须为 null。
+    candidate_is_not_approved: true
+    withdrawn_candidates:
+      - package: gen_sponsor_profile_stelligen_20260807T050000Z_frozen
+        instance_sha256: 65253e10cb37a5341c34ac5c5105d38c6d044fe99ea4382f0c4e138a206814ed
+        withdrawn_because: >-
+          包内四个文件状态自相矛盾——instance 与 manifest 写 FROZEN／clears_block_01,
+          summary 与 provenance table 写 DRAFT／未清；且把机器校验记作人工批准。
+        must_never_be_approved_instance_sha256: true
     # 机器校验只能证明形状，证明不了这些值是不是人类负责人认可的经营事实。
     not_yet_cleared_because: >-
       capital envelope、time horizon、active program capacity、最大自研阶段、
       transaction stage、risk tolerance、IP strategy 与 accessible_patient_samples
       的具体边界，都是人类负责人的主观经营承诺，不是可由脚本判定的事实。
-      profile 已生成并通过机器校验，但尚无可引用的人工批准记录。
+      候选实例 v0.1.1 已生成并通过机器校验，但尚无可引用的人工批准记录。
     clearing_conditions:
       - machine_validation == PASS
       - human_approval_ref exists
       - approved_instance_sha256 == frozen instance sha256
     clearing_conditions_are_conjunctive: true
+    human_approval_artifact_must_record:
+      - approved_profile_version
+      - approved_instance_sha256
+      - approval_timestamp_utc
+      - approving_role
+      - acknowledges_operating_assumptions
+      - acknowledges_no_institutional_resource_ownership
+    human_approval_artifact_rationale: >-
+      人工批准不能只是一句「同意」。批准工件必须绑定具体实例 SHA-256，并显式承认
+      OPERATING_ASSUMPTION 是当前经营政策而非事实、且未把任何机构资源计为公司资产。
+      否则 profile 换版时没有可追溯的审计链。
     clearing_rationale: >-
       「已生成且通过机器校验」不得被记作「已获人工批准」。这条不变量存在的目的
       是让以后换 profile 版本时，同一个跳跃不会再发生一次。

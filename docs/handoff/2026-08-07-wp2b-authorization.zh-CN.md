@@ -20,17 +20,22 @@
 
 **不改任何语义、范围、来源策略、证据标准或校验规则。**
 
-## 二、`BLOCK-01` 的机器校验证据（**尚不足以清除**）
+## 二、`BLOCK-01` 的候选实例（**尚不足以清除**）
 
-外部包（**不入仓**）：
+外部包（**不入仓**）。第二轮审核后已换为 v0.1.1：
 
 ```
-gen_sponsor_profile_stelligen_20260807T050000Z_frozen
-ZIP SHA-256   5f057fde5739a4813114546dc292d20cb260a82a842fd6adeeabfc8efcd016ed
-实例 SHA-256  65253e10cb37a5341c34ac5c5105d38c6d044fe99ea4382f0c4e138a206814ed
-13,660 bytes，6 个文件
-validate_profile.py -> 19/19 MATCH
+gen_sponsor_profile_stelligen_v0.1.1_20260807T130000Z_draft
+ZIP SHA-256   cf410e6278f8d78fa2e9aa937b14a72bc878cb9533059ae66374af0e5eb5f8a8
+实例 SHA-256  7582ca157ec769c170c390e6dc8a99d55adf2e1dffc3d1af461434797e0ec421
+22,972 bytes，7 个文件
+validate_profile.py -> 47/47 MATCH
 ```
+
+**v0.1.0 全部作废**，实例 SHA-256 `65253e10…` 写入契约的
+`withdrawn_candidates`，并带 `must_never_be_approved_instance_sha256: true`。
+作废理由见第九节。旧包保持原样不动（SHA 仍可验证），作废说明写在包外的同名
+`.WITHDRAWN.md` 里，不改动包内字节。
 
 校验脚本直接 import 仓库里冻结的 `DevelopmentSponsorProfile@0.1.0` 构造实例，
 形状错会当场失败而不是留到下游。
@@ -65,9 +70,11 @@ PDX、以及机构雇佣下产生的发明，全部进 `NOT_YET_CONTROLLED` 登�
 - **`accessible_data` 只列公开源**，且 summary 中点明：公开数据人人可得，
   **本身不构成非对称优势**。
 - **`partnered_capabilities` 标为 `OPERATING_ASSUMPTION` 而非事实**——今天没有
-  任何 CRO 或合作方已签约。
+  任何 CRO 或合作方已签约。v0.1.1 起，这句限定写进实例本身的每一条能力条目，
+  不再只写在分类表里。
 - 每个字段都有 `CONFIRMED_CURRENT_FACT`／`OPERATING_ASSUMPTION`／`UNKNOWN` 的
-  分类表，**操作假设不得被静默升格为事实**。
+  分类表，**操作假设不得被静默升格为事实**。19 个字段中 9 个事实、9 个操作假设、
+  1 个逐条分类。
 
 ## 三、承接 PR #66 的非阻断意见
 
@@ -112,18 +119,22 @@ git diff --check                        通过
 
 ## 七、后续顺序
 
-1. **人类负责人审阅完整 profile**（人读摘要 + 逐字段 provenance 表），逐项答复
-   此前标出的三处疑问，并明确接受或指出要改的字段。
-2. 接受后更新本 PR：`BLOCK-01.cleared: true`、写入 `human_approval_ref`
-   （形如 `external:human_approval/stelligen_sponsor_profile_20260807`）与
-   `approved_instance_sha256`，再开启 `authorises_run`。
-3. 本 PR `APPROVE` 并合并 —— **WP2B 才获得一次执行授权**。
-4. 执行 CRC Territory Map（**外部运行**，产物不入仓）。按契约必须产出
+1. **人类负责人审阅 v0.1.1 完整 profile**（人读摘要 + 逐字段 provenance 表），
+   明确接受或指出要改的字段。
+2. 接受后填写包内 `human_approval_template.json`——它要求记录被批准的版本、
+   实例 SHA-256、时间戳、批准角色，以及两项显式承认（操作假设是当前政策而非
+   事实；未把任何机构资源计为公司资产）。**签署后的工件才是
+   `human_approval_ref`。**
+3. 再更新本 PR：`BLOCK-01.cleared: true`、写入 `human_approval_ref` 与
+   `approved_instance_sha256`（须等于 `7582ca15…`），并把 profile 重新以
+   `FROZEN` 出包，再开启 `authorises_run`。
+4. 本 PR `APPROVE` 并合并 —— **WP2B 才获得一次执行授权**。
+5. 执行 CRC Territory Map（**外部运行**，产物不入仓）。按契约必须产出
    `territory_map.json`、`territories.tsv`、`search_space_admissions.json`、
    `sponsor_evidence_advantage.json`、`source_manifest.json`、`run_report.md`
    与包内可独立运行的 `verify_package.py`，逐文件 SHA-256，整包 SHA-256。
-5. 结果 PR：`VAL-T01`..`VAL-T21` 全部校验，并把 `authorises_run_count` 归零。
-6. 获批后进入 WP3 Program Wedge Generator。
+6. 结果 PR：`VAL-T01`..`VAL-T21` 全部校验，并把 `authorises_run_count` 归零。
+7. 获批后进入 WP3 Program Wedge Generator。
 
 ### 一件后续必须注意的事
 
@@ -198,3 +209,139 @@ clearing_conditions_are_conjunctive: true
 
 profile 内容、外部包、机构资源边界处理、授权机制本身一律未动——审核方确认这些
 方向正确。
+
+## 九、第二轮审核裁决与修订（`REQUEST_CHANGES`，三条，全部接受）
+
+审核方判定「方向通过，但暂不批准当前 artifact」，并逐项裁定了此前标出的三处疑问。
+
+### 三处疑问的裁定（照办，未改内容实质）
+
+| 项 | 裁定 |
+|---|---|
+| `partnered_capabilities` | 维持 `OPERATING_ASSUMPTION`。今天没有任何 CRO／合作方签约或被 Stelligen 锁定。更准确的语义是「可通过市场采购或合作获得」，不是「已 partnered」。**不得升为事实。** |
+| `company_stage` | 维持 `pre_company_founder_led_micro_biotech_asset_studio`。无证据证明已有独立法律实体；**不得为了「像公司」而假定存在实体**。 |
+| `risk_tolerance`／`geographic_scope` | 两项均归 `OPERATING_ASSUMPTION`。风险偏好是当前研发经营策略，不是客观事实——融资、合作结构、团队能力变化都可能改变它。内容本身接受。 |
+
+### 阻断一：`maximum_self_funded_stage` 与资本边界自相矛盾
+
+v0.1.0 把最大自研阶段写成「带现成 linker-payload 原型的 focused translational
+POC」，而同一份实例的资本边界又说六位数以上需要外部资本。抗体生成、偶联、
+分析表征、多构建体、organoid panel、xenograft——这些放不进「低万美元级」。
+
+**为什么这比措辞重要：** `key_uncertainty_addressable` 读的就是最大自研阶段。
+按旧值，系统会认为「这个关键不确定性 Stelligen 自己有能力买下来」，把本该
+`ONLY_WITH_EXTERNAL_CAPITAL_OR_PARTNER` 的项判成 `SATISFIED`。
+
+修订：两个字段承担两个不同含义。
+
+- `maximum_self_funded_stage` 收紧为
+  `target_state_and_biomarker_validation_plus_focused_low_cost_in_vitro_feasibility`
+  ——今天自己掏钱能做到哪里。
+- `preferred_transaction_stage` **保持不变**，但显式标注
+  `preferred_transaction_stage_is_not_self_funded: true`，并写明到达它可能需要
+  partner／grant／NewCo／外部融资。
+
+实例另加 `key_uncertainty_addressable_semantics`，逐条列出哪些不确定性落在自研
+阶段内、哪些必须外部资本或合作方。
+
+### 阻断二：公开数据不足以形成非对称证据优势
+
+v0.1.0 的 summary 已意识到这点，但只写在散文里。审核方要求写成硬不变量，理由是
+「我比别人分析得更聪明」本身很容易成为自我叙事。
+
+修订：`hard_invariants` 新增
+
+> public data plus generic bioinformatics competence is insufficient to mark
+> `asymmetric_evidence_advantage = SATISFIED`; the territory-specific assessment
+> must identify a concrete, reproducible and non-trivial derived advantage.
+
+并新增 `asymmetric_evidence_advantage_semantics`，列出六种可审计的合格形式，
+外加一条 `self_narrative_is_not_a_qualifying_advantage`。
+
+### 阻断三：上传包内部状态自相矛盾（审核方直接检查文件发现）
+
+同一个 ZIP 里，`development_sponsor_profile.json` 与 `source_manifest.json` 写
+`FROZEN`／`frozen: true`／`clears_block_01: true`／`frozen_by: human lead
+confirmation`；而 `profile_summary.md` 与 `provenance_table.md` 写
+`DRAFT_PENDING_HUMAN_REVIEW`／未冻结／`BLOCK-01` 未清。
+
+**成因（执行者的错）：** 冻结时只重新生成了 JSON 与 manifest，两份 markdown 是从
+草稿包整份沿用的。`diff -q` 对两份文件均无差异——即 100% 未更新。
+**这是本轮最严重的审计问题**：#80 已经收回授权，外部证据包却仍自称已获人工确认。
+
+修订不是改那两行，而是改生成方式：
+
+- 新包 v0.1.1，`STATUS`／`FROZEN`／`CLEARS_BLOCK_01` 三个常量在构建脚本里只写
+  一处，四个文件的状态行全部由它派生；
+- `provenance_table.md` 改为**由实例里的 `field_provenance` 生成**，不再手写，
+  两者不可能再各说各话；
+- 校验脚本新增跨文件状态一致性检查——instance／manifest 三个状态字段必须相等，
+  summary 与 provenance 必须出现同一个状态 token 且不得出现相反的状态行。
+
+### 其余采纳的修订
+
+- `accessible_patient_samples` 拆成两问：**当前**没有任何 sponsor-controlled 样本
+  是 `CONFIRMED_CURRENT_FACT`；**将来**能否通过协议获得哪些具体样本才是 `UNKNOWN`。
+  v0.1.0 把两者混成一类。
+- `accessible_models` 改为 `MIXED_PER_ITEM`：商业可得细胞系是当前事实，CRO
+  organoid／xenograft 服务是可采购的操作假设，学术 organoid／PDX 整体排除在字段外。
+- 九个经营政策字段（partnered capabilities、capital envelope、time horizon、
+  最大自研阶段、transaction stage、capacity、risk tolerance、geographic scope、
+  IP strategy）统一归 `OPERATING_ASSUMPTION`。
+- 新增 `human_approval_template.json`：批准工件必须记录版本、实例 SHA-256、
+  时间戳、批准角色，以及两项显式承认。**「用户说 OK」不构成批准工件。**
+- 校验脚本设 `sys.dont_write_bytecode = True`——它 import 仓库合同，此前会在
+  data-free 的仓库里留下 `__pycache__`。
+
+### 契约侧改动（仓库内，仍不开启授权）
+
+`BLOCK-01` 新增 `candidate_instance_sha256`／`candidate_instance_version`／
+`candidate_is_not_approved: true`／`withdrawn_candidates`／
+`human_approval_artifact_must_record`。`machine_validation_evidence` 指向 v0.1.1。
+**`authorises_run` 仍为 `false`，`blocked_by` 仍为 `[BLOCK-01]`。**
+
+### 变异检验
+
+外部包 16 项，全部 CAUGHT，回滚后整树 SHA-256 逐次比对无差异：
+
+| 变异 | 结果 |
+|---|---|
+| manifest 写 FROZEN 而 instance 写 DRAFT（**v0.1.0 的原始缺陷**） | `45/47` FAIL |
+| summary 状态行翻成 FROZEN | `44/47` FAIL |
+| 草稿自称清除 `BLOCK-01` | `44/47` FAIL |
+| 无工件却记 human approval received | `45/47` FAIL |
+| `risk_tolerance` 改回 `CONFIRMED_CURRENT_FACT` | `44/47` FAIL |
+| `maximum_self_funded_stage` 还原为 v0.1.0 的值 | `45/47` FAIL |
+| 自研阶段与 transaction stage 设为相同 | `44/47` FAIL |
+| 从 `hard_invariants` 删掉公开数据不足条 | `45/47` FAIL |
+| 公开数据不足标志翻为 false | `45/47` FAIL |
+| 关键不确定性规则去掉自研阶段约束 | `45/47` FAIL |
+| 当前样本缺失塌回 `UNKNOWN` | `45/47` FAIL |
+| `accessible_models` 改回统一分类 | `45/47` FAIL |
+| 某项 partnered capability 写成已签约 | `45/47` FAIL |
+| 机构 PDX 混入 `accessible_models` | `45/47` FAIL |
+| 删掉某个字段的 provenance 条目 | `45/47` FAIL |
+| 批准模板预填版本号 | `46/47` FAIL |
+
+仓库侧 4 项：把候选 SHA 提升为已批准（`failures=1`）、把已作废 SHA 写成已批准
+（`failures=2`）、删掉一项承认字段（`failures=1`）、`machine_validation_evidence`
+指回已作废的包（`failures=1`）。回滚后 `diff -q` 无差异。
+
+**一处自查修正：** 「删掉 provenance 条目」最初是靠 `KeyError` 崩溃退出而非报
+FAIL，后面的检查全部丢失。已改为所有 `field_provenance` 访问走 `class_of()`，
+缺失报 `<MISSING>` 并正常出报告。**退出码正确不等于检查有效。**
+
+### 验证
+
+```
+Ran 547 tests  OK              （上一轮 544，净增 3）
+scripts/verify_repository_boundary.sh   通过
+git diff --check                        通过
+外部包 validate_profile.py              47/47 MATCH（上一轮 19/19）
+```
+
+### 未改的部分
+
+profile 的实质内容方向、机构资源边界处理、`company_stage`、
+`preferred_transaction_stage` 的内容、`geographic_scope` 的内容、
+`BLOCK-01` 三条件合取不变量、授权机制本身——一律未动。
