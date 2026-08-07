@@ -1,6 +1,6 @@
 # Program Commitment Review
 
-版本：`ProgramCommitmentReview@0.1.0`
+版本：`ProgramCommitmentReview@0.2.0`
 
 这是小微 Biotech 架构调整的第 3 步。它位于外部 T12 opportunity decision 与 binder/ADC route selection 之间，回答的不是“科学机会是否成立”，而是“当前 sponsor 是否承诺投入到一个明确的风险转移边界”。
 

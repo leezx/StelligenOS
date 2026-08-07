@@ -408,7 +408,11 @@ class SponsorFitBoundaryTests(unittest.TestCase):
         )
         self.assertEqual(contract["contract"]["aggregate_score"], "forbidden")
         self.assertEqual(
-            contract["downstream_relationship"]["binding_status"], "not_bound"
+            contract["downstream_relationship"]["binding_status"], "bound"
+        )
+        self.assertEqual(
+            contract["downstream_relationship"]["consumed_by"],
+            "ProgramCommitmentReview@0.2.0",
         )
 
     def test_contract_declares_the_invariants_that_carry_the_meaning(self):

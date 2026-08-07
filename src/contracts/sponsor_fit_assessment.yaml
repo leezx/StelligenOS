@@ -168,10 +168,10 @@ contract:
     - stop_for_sponsor_is_not_scientific_kill
     - route_is_a_recommendation_not_an_authorisation
 downstream_relationship:
-  consumed_by: ProgramCommitmentReview@0.1.0
-  binding_status: not_bound
+  consumed_by: ProgramCommitmentReview@0.2.0
+  binding_status: bound
   binding_note: >-
-    ProgramCommitmentReview@0.1.0 is frozen and does not yet require a
-    sponsor_fit_assessment_ref. Adding one is a breaking change to a merged
-    contract and belongs in a separate binding PR, in the same shape as the
-    BinderAdcRouteRequest binding in PR #72.
+    ProgramCommitmentReview@0.2.0 requires a mandatory sponsor_fit_assessment_ref,
+    so a commitment cannot be reached without a sponsor-fit assessment. The
+    consumer holds the reference only; it never dereferences this contract or
+    re-adjudicates the route recommended here.

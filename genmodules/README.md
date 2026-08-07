@@ -49,7 +49,7 @@ or create a second lifecycle.
 
 From `BinderAdcRouteRequest@0.2.0`, entering either route additionally requires
 three external references that cannot be omitted or defaulted:
-`program_commitment_review_ref` (`ProgramCommitmentReview@0.1.0`),
+`program_commitment_review_ref` (`ProgramCommitmentReview@0.2.0`),
 `value_inflection_plan_ref` (`ValueInflectionPlan@0.1.0`), and
 `asset_generation_authorization_ref`, the external human handoff confirming that
 the commitment outcome and the plan permit this route. A review whose outcome is

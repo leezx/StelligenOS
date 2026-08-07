@@ -5,7 +5,7 @@ models, observations, candidates, and reports remain in an external workspace.
 
 `BinderAdcRouteRequest@0.2.0` additionally binds the two frozen sponsor-relative
 hard controls to the route entry point: no route request can be constructed
-without a `ProgramCommitmentReview@0.1.0` reference, a `ValueInflectionPlan@0.1.0`
+without a `ProgramCommitmentReview@0.2.0` reference, a `ValueInflectionPlan@0.1.0`
 reference, and an external human authorization reference. The three values are
 opaque external references. This module never dereferences, re-adjudicates, or
 generates them, and it does not import either contract's classes.

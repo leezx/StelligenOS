@@ -32,6 +32,7 @@ def review_kwargs() -> dict[str, object]:
         "capital_envelope_ref": "external:capital/1",
         "capability_gap_ref": "external:capability-gap/1",
         "buyer_map_ref": "external:buyer-map/1",
+        "sponsor_fit_assessment_ref": "external:sponsor-fit-assessment/1",
         "value_inflection_plan_ref": "external:value-inflection-plan/1",
         "decision": ProgramCommitmentDecision.SELF_DEVELOP,
         "commitment_status": CommitmentStatus.COMMITTED,
@@ -43,12 +44,95 @@ def review_kwargs() -> dict[str, object]:
     }
 
 
+class SponsorFitBindingTests(unittest.TestCase):
+    """A commitment must not be reachable without a sponsor-fit assessment."""
+
+    def test_commitment_cannot_be_constructed_without_sponsor_fit(self):
+        kwargs = review_kwargs()
+        del kwargs["sponsor_fit_assessment_ref"]
+        with self.assertRaises(TypeError):
+            ProgramCommitmentReview(**kwargs)
+
+    def test_the_binding_field_has_no_default(self):
+        """A default would silently reopen the route it closes."""
+
+        import dataclasses
+
+        field = ProgramCommitmentReview.__dataclass_fields__[
+            "sponsor_fit_assessment_ref"
+        ]
+        self.assertIs(field.default, dataclasses.MISSING)
+        self.assertIs(field.default_factory, dataclasses.MISSING)
+
+    def test_a_local_sponsor_fit_reference_is_rejected(self):
+        for value in ("local:sponsor-fit/1", "", "sponsor-fit/1"):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    ProgramCommitmentReview(
+                        **{**review_kwargs(), "sponsor_fit_assessment_ref": value}
+                    )
+
+    def test_no_commitment_decision_bypasses_the_requirement(self):
+        """Even STOP_FOR_SPONSOR must name the assessment it rests on."""
+
+        for decision, status, downstream in (
+            (ProgramCommitmentDecision.STOP_FOR_SPONSOR,
+             CommitmentStatus.NOT_COMMITTED,
+             DownstreamStatus.BLOCKED_NO_COMMITMENT),
+            (ProgramCommitmentDecision.MONITOR,
+             CommitmentStatus.NOT_COMMITTED,
+             DownstreamStatus.BLOCKED_NO_COMMITMENT),
+            (ProgramCommitmentDecision.CO_DEVELOP,
+             CommitmentStatus.COMMITTED,
+             DownstreamStatus.EXTERNAL_HANDOFF_REQUIRED),
+        ):
+            with self.subTest(decision=decision):
+                kwargs = review_kwargs()
+                kwargs.update(
+                    decision=decision,
+                    commitment_status=status,
+                    downstream_status=downstream,
+                )
+                del kwargs["sponsor_fit_assessment_ref"]
+                with self.assertRaises(TypeError):
+                    ProgramCommitmentReview(**kwargs)
+
+    def test_contract_declares_the_binding(self):
+        document = yaml.safe_load(CONTRACT_PATH.read_text())
+        self.assertEqual(document["version"], "0.2.0")
+        self.assertIn(
+            "sponsor_fit_assessment_ref", document["contract"]["required_fields"]
+        )
+        invariants = document["contract"]["invariants"]
+        self.assertIn("program_commitment_cannot_exist_without_sponsor_fit", invariants)
+        self.assertIn(
+            "sponsor_fit_assessment_ref_is_opaque_and_never_dereferenced_here",
+            invariants,
+        )
+
+    def test_the_commitment_module_does_not_import_the_assessment(self):
+        """Binding must not pull the assessment back into the consumer."""
+
+        import ast
+
+        source = (
+            ROOT / "src" / "contracts" / "program_commitment_review.py"
+        ).read_text(encoding="utf-8")
+        modules = set()
+        for node in ast.walk(ast.parse(source)):
+            if isinstance(node, ast.Import):
+                modules.update(alias.name for alias in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                modules.add(node.module)
+        self.assertEqual(modules, {"__future__", "dataclasses", "enum", "typing"})
+
+
 class ProgramCommitmentReviewContractTests(unittest.TestCase):
     def test_contract_freezes_six_commitment_decisions(self):
         document = yaml.safe_load(CONTRACT_PATH.read_text())
         self.assertEqual(
             document["contract"]["contract_id"],
-            "ProgramCommitmentReview@0.1.0",
+            "ProgramCommitmentReview@0.2.0",
         )
         self.assertEqual(
             document["decision_values"],

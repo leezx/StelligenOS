@@ -21,7 +21,7 @@ sponsor-relative routes and eight externally evidenced criteria; it does not
 evaluate a scientific Gate or persist a route instance.
 
 Phase 3 adds `program_commitment_review.yaml` and
-`program_commitment_review.py` for `ProgramCommitmentReview@0.1.0`. It records
+`program_commitment_review.py` for `ProgramCommitmentReview@0.2.0`. It records
 an externally adjudicated sponsor-relative commitment checkpoint after T12;
 it does not define ValueInflectionPlan or execute binder/ADC routes.
 
@@ -38,4 +38,5 @@ map and a resource map, and produces a route recommendation. It computes no
 aggregate score by design, keeps `UNKNOWN` distinct from `UNSATISFIED`, and
 requires an explicit external waiver before `SELF_DEVELOP` without an
 asymmetric evidence advantage. It grants no commitment and authorises no
-capital; `ProgramCommitmentReview@0.1.0` does not yet reference it.
+capital; `ProgramCommitmentReview@0.2.0` requires a reference to it, so a
+commitment cannot be reached without one.

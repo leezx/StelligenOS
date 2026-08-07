@@ -284,7 +284,7 @@ class SponsorControlBindingTests(unittest.TestCase):
         self.assertEqual(
             binding["bound_contracts"],
             {
-                "program_commitment_review": "ProgramCommitmentReview@0.1.0",
+                "program_commitment_review": "ProgramCommitmentReview@0.2.0",
                 "value_inflection_plan": "ValueInflectionPlan@0.1.0",
             },
         )
