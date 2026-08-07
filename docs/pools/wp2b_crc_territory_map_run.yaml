@@ -1,0 +1,312 @@
+# WP2B：CRC Opportunity Territory Map 运行契约（machine-readable）
+#
+# 目的：**预先冻结**一次 CRC territory 测绘运行的范围、来源、证据标准与输出校验，
+# 使该运行的产物可被接受。本文件不含任何 territory 内容、不含任何 CRC 结论，
+# 也不授权执行——两个 blocker 未解除前不得开跑。
+#
+# 顺序依据 2026-08-04 对 PR #53／#54 的隔离裁决：contract-only PR 预先冻结范围与
+# 语义 → APPROVE → 再运行。本文件就是 WP2B 的那个前置契约。
+#
+# 输出形状由 src/contracts/opportunity_territory.{py,yaml} 定义（PR #77）。
+# 由 tests/test_wp2b_crc_territory_map_run.py 校验。
+
+run:
+  run_id: wp2b_crc_territory_map
+  run_version: 0.1.0
+  work_package: WP2B
+  produces: OpportunityTerritoryMap@0.1.0
+  produces_element: OpportunityTerritory@0.1.0
+  status: contract_only_pending_review
+  execution_status: not_authorized_not_executed
+  authorises_run: false
+  authorises_run_count: 0
+  blocked_by:
+    - BLOCK-01
+    - BLOCK-02
+  requires_result_pr: true
+  requires_followup_binding_pr: false
+  # 本契约获批不等于可以开跑。两个 blocker 各自需要独立交付并获批。
+  approval_does_not_authorise_execution: true
+
+# ---------------------------------------------------------------- blockers
+
+blockers:
+  - id: BLOCK-01
+    title: DevelopmentSponsorProfile 实例尚不存在
+    blocks: 本运行的上游输入——territory-specific 优势评估无基线可依
+    role: upstream_input_not_the_advantage_evidence_itself
+    why: >-
+      每个 territory 必须声明发起方在该临床水域是否具有非对称证据优势。该判断
+      需要一份已冻结的 DevelopmentSponsorProfile 作为**稳定基线**，但 profile
+      本身不是该优势的证据——见 sponsor_evidence_advantage_semantics。目前仓库内
+      只有 DevelopmentSponsorProfile@0.1.0 的合同形状（PR #67），没有任何实例。
+    source_requirement: >-
+      按执行策略 Stage 0，该 profile 必须写当前事实而非理想中的未来公司：当前
+      优势、可通过合作获得的能力、当前不可独立承担的能力、默认交易终点。
+    must_be: external_instance
+    must_be_frozen_before_run: true
+    cleared_by: 人类负责人提供事实并冻结该实例，且实例经审核接受
+    cleared: false
+  - id: BLOCK-02
+    title: SearchSpaceAdmission 的 route_policy_ref 尚不存在
+    blocks: 全部 territory 的 search_space_admission_ref
+    why: >-
+      每个 territory 必须指向一份 SearchSpaceAdmission 实例说明它被如何路由，
+      而 SearchSpaceAdmission@0.1.0 要求一个外部、可审计的 route_policy_ref。
+      该 policy 目前不存在。没有它，八个条件到四种路由的映射就没有依据，
+      ACTIVE_SEARCH／WATCHLIST／PARTNER_ONLY／OUT_OF_MANDATE 会退化为无据判断。
+    must_be: external_auditable_policy
+    must_be_frozen_before_run: true
+    must_define:
+      - 八个条件各自的判定标准
+      - 条件状态组合到四种路由的映射
+      - UNKNOWN 的处理方式
+      - 重评估触发条件
+    cleared_by: route policy 冻结并经审核接受
+    cleared: false
+
+# ---------------------------------------------------------------- scope
+
+scope:
+  disease_scope: colorectal_cancer
+  disease_scope_ref_required: true
+  unit_of_work: clinical_territory
+  # 规模取自执行策略第九节的推荐漏斗。这是**规划容量，不是有效性判据**。
+  # 若严格梳理后只有 12 个可区分、可判定的 territory，不得为通过校验而拆出 3 个；
+  # 若有 34 个合理 territory，也不得被区间逼着合并。先规定漏斗形状再让知识生产
+  # 去迎合漏斗，正是本工作包要消灭的东西。
+  territory_count_band:
+    min: 15
+    max: 30
+    is_a_target: false
+    is_a_reconciliation_reference: true
+    rationale: 执行策略第九节推荐 CRC territories 15–30，属规划容量。
+    out_of_band_is_not_a_failure: true
+    out_of_band_requires_reconciliation_note: true
+  # ACTIVE 的数量不由本契约规定，由 route policy 与实际证据决定。
+  # 此处只记录预期区间，用于事后对账，**不作为达标要求**。
+  expected_active_band:
+    min: 4
+    max: 8
+    is_a_target: false
+    is_a_reconciliation_reference: true
+  one_territory_per_row: true
+  territory_granularity_must_be_decidable: true
+  territory_granularity_rule: >-
+    两个 territory 若在临床人群、治疗线次、既往治疗、转移部位与失败机制上完全
+    一致，则不得并存；粒度必须能由这五项区分开。
+
+# ---------------------------------------------------------------- 与旧管线的关系
+
+relationship_to_legacy_level_01:
+  # 这是本工作包存在的理由，必须写清楚。
+  replaces_candidate_generation_order: true
+  statement: >-
+    本运行不消费、不复用、不复活 Level 01 的 9 clinical contexts × 41 targets ×
+    369 pairs 轴。那条轴是「先生成候选再收敛」的产物；territory-first 的顺序是
+    先约束搜索空间再生成候选。
+  may_read_legacy_axis: false
+  may_cite_legacy_axis_as_evidence: false
+  legacy_axis_remains_frozen: true
+  legacy_axis_not_deleted: true
+  legacy_axis_note: >-
+    旧轴与其 EVGAP／GAP-P07 状态保持不变，不因本运行变化，也不被本运行解除。
+
+# ---------------------------------------------------------------- 来源
+
+source_policy:
+  # 沿用 EVGAP-02 契约确立的 Tier 划分理由：原始公开来源可由 source_locator
+  # 直接回溯到原始记录，不存在「构建逻辑是否遵守声明」的问题。
+  tier_1_primary_public_permitted: true
+  tier_1_sources:
+    - pubmed
+    - pmc
+    - clinicaltrials_gov
+    - fda_labels_and_approvals
+    - ema_labels_and_approvals
+    - company_public_disclosure
+    - conference_abstract_public_record
+  tier_2_derived_databases_permitted: false
+  tier_2_bar_reason: >-
+    派生数据库需各自的 source admission（SRCADM-02..05），本运行不纳入任何一个。
+  barred_sources:
+    - source: gen_iet_crc_clinical_frame_and_membrane_target_screen_20260804
+      pr: 53
+      status: UNAUTHORIZED_QUARANTINED_NOT_ACCEPTED
+      barred_content: 全部 RETAIN／DEFER／EXCLUDE disposition、全部科学结论、20 个 unmet need 场景、7 类收益排序、12 条终点门槛
+    - source: gen_iet_adc_seed_playbook_v0_1_20260804
+      pr: 54
+      status: UNAUTHORIZED_QUARANTINED_NOT_ACCEPTED
+      barred_content: Seed Admission Standard、抗体进入 10 条件、17 靶点 disposition、压力测试判定、全部实验建议
+  barred_sources_must_be_declared_unused: true
+  every_field_requires_source_ref: true
+  model_domain_knowledge_alone_is_insufficient: true
+  model_domain_knowledge_rule: >-
+    未经原始来源验证的模型领域知识只能形成待验证假设，不支撑 territory 的任何
+    正式字段。此规则沿用 PR #53 第 4 条裁决。
+
+# ------------------------------------------- sponsor advantage 的证据关系
+
+# 这一段是第一轮审核纠正的语义，单列以免再被读错。
+sponsor_evidence_advantage_semantics:
+  profile_is_a_baseline_not_the_evidence: true
+  statement: >-
+    DevelopmentSponsorProfile 描述的是发起方的稳定基线：拥有什么能力、能接触什么
+    数据、缺什么能力、最大自研阶段、默认交易节点。而「在某个具体 territory 里
+    是否存在非对称证据优势」是 territory-relative 判断。同一份 profile 对
+    oncofetal territory 可能优势很强，对另一片水域可能与所有人没有区别。
+  derivation:
+    - DevelopmentSponsorProfile（稳定基线）
+    - 该 territory 可触及的数据／模型／know-how
+    - 该 territory 的证据要求
+    - "-> territory-specific 优势评估 -> sponsor_evidence_advantage_ref"
+  ref_points_to: territory_specific_external_evidence_or_assessment
+  ref_must_not_point_directly_at_the_profile: true
+  ref_must_not_be_shared_across_territories: true
+  shared_ref_failure_mode: >-
+    若 20 个 territory 的 sponsor_evidence_advantage_ref 全部指向同一份
+    DevelopmentSponsorProfile 实例，该字段就只是「公司简介引用」，并未证明任何
+    territory 中存在非对称优势。
+  formal_contract_required_now: false
+  formal_contract_note: >-
+    本轮不新增正式评估合同。该评估先作为外部证据工件，由本运行产出并记入
+    sponsor_evidence_advantage.json。语义在此冻结，形态可留待后续。
+
+# ---------------------------------------------------------------- 证据标准
+
+evidence_standards:
+  - field_group: clinical_definition
+    fields: [disease_ref, clinical_population_ref, molecular_subtype_ref, treatment_line_ref, prior_therapy_refs, metastatic_site_refs]
+    requires: 公开指南、标签或同行评议文献
+    unknown_permitted: false
+    unknown_rule: 临床定义不完整的 territory 不成立，不得录入。
+  - field_group: current_failure
+    fields: [current_soc_ref, clinical_failure_mode_ref, patient_size_band_ref]
+    requires: 公开指南／标签／同行评议文献；patient_size_band 只需分档不需精确数字
+    unknown_permitted: false
+  - field_group: competition
+    fields: [current_competitor_refs, leading_asset_refs, expected_readout_refs, position_occupancy_ref]
+    requires: ClinicalTrials.gov、公司公开披露、监管文件、会议摘要公开记录
+    empty_permitted: true
+    empty_meaning: 无竞争者或无预期 readout 是真实且有信息量的状态，不等于未调查。
+    empty_must_be_distinguishable_from_uninvestigated: true
+  - field_group: availability
+    fields: [known_target_biology_refs, available_patient_data_refs, available_model_refs]
+    requires: 公开文献或发起方可核验的资源清单
+    empty_permitted: true
+    # 承接 PR #77 审核方的非阻断意见。
+    known_target_biology_constraint: >-
+      known_target_biology_refs 是背景情报，不是 target candidate。本运行不得据此
+      产出任何靶点，WP3 也不得把它当作候选生成的权威。
+  - field_group: sponsor_fit_context
+    fields: [sponsor_evidence_advantage_ref]
+    requires: >-
+      已冻结的 DevelopmentSponsorProfile 实例（BLOCK-01）**加上**该 territory 可
+      触及的数据／模型／know-how 与该 territory 的证据要求，三者共同支撑一份
+      territory-specific 优势评估。
+    ref_points_to: territory_specific_external_evidence_or_assessment
+    profile_alone_is_insufficient: true
+    unknown_permitted: true
+    unknown_rule: >-
+      优势未知即记未知，不得因「看起来我们能做」而记为具有优势。未知不转为
+      不具优势，也不转为具有优势。
+  - field_group: timing
+    fields: [window_closure_risk_ref]
+    requires: >-
+      竞争与 readout 时间证据（leading assets、competitor stage、expected
+      readouts、监管时间、SOC 演进）**加上**发起方执行时间跨度。
+    formula: competition_dynamics × expected_time_to_sponsor_inflection
+    profile_alone_is_insufficient: true
+    profile_contributes: 仅执行能力与时间约束的那一半
+    unknown_permitted: true
+    downstream_note: >-
+      这一组是 SearchSpaceAdmission 的 time_fit 条件的证据来源；若只靠 profile
+      支撑，time_fit 将失去依据。
+
+# ---------------------------------------------------------------- 输出
+
+output:
+  location: external_workspace
+  location_in_repository: forbidden
+  conforms_to: OpportunityTerritory@0.1.0
+  map_conforms_to: OpportunityTerritoryMap@0.1.0
+  every_territory_requires_admission: true
+  admission_conforms_to: SearchSpaceAdmission@0.1.0
+  # 承接 PR #77 的核心裁决：territory 不保存路由状态。
+  territory_must_not_carry_route_state: true
+  route_lives_only_in_admission: true
+  # 承接 PR #60 第二轮裁决确立的规则。
+  packaging_required: true
+  packaging_rules:
+    - 每次交付必须产出带 SHA-256 的打包
+    - 每个修订单独出包并各带自己的 SHA-256
+    - 包内必须含可独立运行的校验脚本
+    - manifest 必须逐文件记录 SHA-256
+  required_artifacts:
+    - territory_map.json
+    - territories.tsv
+    - search_space_admissions.json
+    - sponsor_evidence_advantage.json
+    - source_manifest.json
+    - run_report.md
+    - verify_package.py
+
+# ---------------------------------------------------------------- 校验规则
+
+validation_rules:
+  - id: VAL-T01
+    rule: 报告实际 territory 数量；落在 territory_count_band 之外不构成失败，但须给出 reconciliation note 说明为何该数量是梳理结果
+  - id: VAL-T02
+    rule: territory_id 全局唯一
+  - id: VAL-T03
+    rule: "每个 territory 的全部引用字段使用 external: 前缀且前缀后内容非空"
+  - id: VAL-T04
+    rule: 每个 territory 有且仅有一个 search_space_admission_ref
+  - id: VAL-T05
+    rule: 每个 search_space_admission_ref 在 search_space_admissions.json 中可解析到一条实例
+  - id: VAL-T06
+    rule: 每条 admission 恰好覆盖八个条件各一次
+  - id: VAL-T07
+    rule: 每条 admission 引用的 route_policy_ref 与 BLOCK-02 冻结的 policy 一致
+  - id: VAL-T08
+    rule: territory 记录中不出现任何路由状态字段
+  - id: VAL-T09
+    rule: 输出中不出现任何 target、gene、pair 标识
+  - id: VAL-T10
+    rule: 输出中不出现任何 score 或 rank
+  - id: VAL-T11
+    rule: 两个被隔离运行（PR 53、PR 54）在 manifest 中记为 barred 且 used=false
+  - id: VAL-T12
+    rule: 未读取 Level 01 的 9×41×369 轴，manifest 中记为 not_read
+  - id: VAL-T13
+    rule: 每个非空字段有至少一条 source_ref
+  - id: VAL-T14
+    rule: 竞争字段为空时须显式标注 investigated_and_empty，与未调查区分
+  - id: VAL-T15
+    rule: sponsor_evidence_advantage 未知时记 UNKNOWN，不得省略该字段
+  - id: VAL-T16
+    rule: 无任何 Tier 2 派生数据库出现在 source_manifest
+  - id: VAL-T17
+    rule: territory 粒度满足 territory_granularity_rule，无完全重复的五元组
+  - id: VAL-T18
+    rule: 包内 verify_package.py 可独立运行且全部检查通过
+  - id: VAL-T19
+    rule: 每个 sponsor_evidence_advantage_ref 在 sponsor_evidence_advantage.json 中解析到一条 territory-specific 记录，且不直接指向 DevelopmentSponsorProfile 实例
+  - id: VAL-T20
+    rule: 任意两个 territory 不得共用同一个 sponsor_evidence_advantage_ref
+  - id: VAL-T21
+    rule: 每条 window_closure_risk 记录至少引用一条竞争或 readout 时间来源，不得仅由 DevelopmentSponsorProfile 支撑
+
+# ---------------------------------------------------------------- 明确不授权
+
+not_authorised:
+  - "执行本运行——两个 blocker 未解除"
+  - "生成任何 program wedge"
+  - "生成任何 target 或 target-territory pair"
+  - "执行任何 Gate、T-chain 或三重预筛"
+  - "解除 EVGAP-01 或 EVGAP-02"
+  - "复活或修改 Level 01 的 9×41×369 轴"
+  - "裁定 GAP-P07"
+  - "纳入任何 Tier 2 派生数据库"
+  - "把 territory 的 ACTIVE_SEARCH 当作靶点生成授权"
+  - "在仓库内保存任何 territory 内容或运行产物"
