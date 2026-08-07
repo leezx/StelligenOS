@@ -3246,3 +3246,29 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Next: 审核方明确「不该再继续磨 authorization 机制，应正式执行 WP2B CRC
   Opportunity Territory Map」。执行前需先与人类负责人确定运行范围（数据来源、
   执行环境、交付物清单）——运行本身在仓库外进行，产物不入仓。
+
+## 2026-08-07T16:20 — 起草 WP2B CRC Opportunity Territory Map Execution Plan v0.1
+
+- 分支 `task_20260807_wp2b-execution-plan`
+- 新文件 `docs/protocols/WP2B_EXECUTION_PLAN_v0.1.md`——execution protocol，
+  **不新增 architecture semantics，不修改 #77–#80 已冻结的 contracts/policies**，
+  **不消费 `authorises_run_count: 1`，不执行任何 territory 枚举**
+- 按人类负责人给定的 16 点要求逐条编写（executor、search objective、五层
+  source hierarchy、knowledge cutoff、两段式枚举、18 项最小调查深度、广度优先
+  证据深度、ACTIVE_SEARCH 特别规则、sponsor advantage rule、竞争/window
+  closure、交付目录、必需交付物、field-level provenance、run manifest、
+  stop/checkpoint policy、result PR 形态）
+- 起草阶段即验证交付目录真实存在且可写：
+  `/Volumes/Stelligen_SSD/Stelligen/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result`
+- 如实记录当前会话工具清单：`WebSearch`／`WebFetch` 可直接用；`PubMed`／
+  `Clinical Trials`／`bioRxiv` MCP connector 已安装但需人类在浏览器完成 OAuth——
+  建议至少授权 `Clinical Trials` 与 `PubMed` 以取得结构化字段，供人类负责人决定
+  是否授权
+- 计划中每个字段/术语均对照冻结契约核实：`OpportunityTerritory@0.1.0` 的 21
+  个字段、`SEARCH_SPACE_CRITERIA` 的八项标准名、`search_space_route_policy.yaml`
+  的 `ACTIVE-01` 规则、profile v0.1.2 的 `asymmetric_evidence_advantage_semantics`
+  ——未凭空发明新字段名
+- 555 tests OK（未改代码，数字不变）；`scripts/verify_repository_boundary.sh`
+  通过；`git diff --check` 通过
+- Next: 等待人类负责人（及若适用的 ChatGPT）对本计划的审核结论；批准后才真正
+  执行 territory 枚举并消费这一次授权
