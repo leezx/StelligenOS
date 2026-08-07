@@ -53,16 +53,14 @@ false`，`src/` 中不含任何路由求值器（有测试断言
 | 3 | `PARTNER-01` | `PARTNER_ONLY` | 位置已锁，但价值真实且有合作方 |
 | 4 | `OUT-03` | `OUT_OF_MANDATE` | 位置已锁 **且** 无人接手 |
 | 5 | `PARTNER-02` | `PARTNER_ONLY` | 无非对称优势，但价值真实且有合作方 |
-| 6 | `ACTIVE-01` | `ACTIVE_SEARCH` | 四项全部 `SATISFIED` |
+| 6 | `ACTIVE-01` | `ACTIVE_SEARCH` | **八项全部 `SATISFIED`** |
 | 7 | `WATCH-01` | `WATCHLIST` | catch-all |
 
 第 3 条是 `HER2`／`TROP2` 那类成熟热门靶点的归宿——**「进入门槛高」，不是科学
 失败**。规则上标了 `not_a_scientific_kill: true`。
 
-`ACTIVE_SEARCH` 是唯一会消耗后续搜索资源的路由，因此要求
-`clinical_value_exists`、`competitive_position_not_locked`、
-`asymmetric_evidence_advantage`、`key_uncertainty_addressable` **四项全部正向**
-——不接受「没有反证」。这与 `SponsorFitAssessment` 第一轮审核确立的原则一致。
+`ACTIVE_SEARCH` 是唯一会消耗后续主动搜索资源的路由，因此要求**八项全部正向**
+——不接受「没有反证」。（初版只要求四项，第一轮审核后收紧，见第十节。）
 
 ## 四、`UNKNOWN` 的处理：不判死刑，也不放行
 
@@ -82,7 +80,7 @@ false`，`src/` 中不含任何路由求值器（有测试断言
 
 - 表是**完备的**（每种组合都能解析）与**确定的**（first-match-wins）；
 - 任何 `OUT_OF_MANDATE` 结果都伴随至少一个 `UNSATISFIED`；
-- 任何 `ACTIVE_SEARCH` 结果都伴随四项 `SATISFIED`；
+- 任何 `ACTIVE_SEARCH` 结果都伴随**八项** `SATISFIED`；
 - 任何 `PARTNER_ONLY` 结果都伴随 `plausible_buyer_partner_map = SATISFIED`
   ——否则这个路由名没有依据；
 - 四种路由**全部可达**。
@@ -90,13 +88,16 @@ false`，`src/` 中不含任何路由求值器（有测试断言
 实际分布（供审核方核对，非达标要求）：
 
 ```
-WATCHLIST       3087  47.1%
-OUT_OF_MANDATE  2997  45.7%   其中 OUT-01 占 2187
-PARTNER_ONLY     405   6.2%
-ACTIVE_SEARCH     72   1.1%
+WATCHLIST       3158  48.13%
+OUT_OF_MANDATE  2997  45.68%   其中 OUT-01 占 2187
+PARTNER_ONLY     405   6.17%
+ACTIVE_SEARCH      1   0.02%
 ```
 
-`ACTIVE_SEARCH` 只有 1.1% 是设计结果：它要求四项正证据，本就该难以到达。
+**`ACTIVE_SEARCH` 现在恰好只有 1 种组合可达**——八项全 `SATISFIED`。这是收紧后
+的直接结果，有专门测试断言。数字看起来极端，但它衡量的是「状态组合空间」而不是
+「真实 territory 的分布」：八个条件都只是 territory 级的初步可行性，一片真正值得
+主动搜索的水域本来就应该八项都能说清。
 
 ## 六、变异检验，两处首轮逃逸
 
@@ -133,7 +134,7 @@ ACTIVE_SEARCH     72   1.1%
 ## 八、验证
 
 ```
-Ran 534 tests  OK              （合并前 508，净增 26）
+Ran 538 tests  OK              （合并前 508，净增 30；本文件 30）
 scripts/verify_repository_boundary.sh   通过
 git diff --check                        通过
 YAML 解析后全文件扫描              无截断
@@ -149,3 +150,71 @@ YAML 解析后全文件扫描              无截断
 3. 两个 blocker 都清除后，另开极小 authorization PR 把 `authorises_run` 转
    `true`、`blocked_by` 清空（形态同 PR #66）。
 4. 然后才执行 CRC Territory Map（外部运行）→ 结果 PR。
+
+## 十、第一轮审核裁决与修订（`REQUEST_CHANGES`，一条阻断，接受）
+
+### 阻断：八个条件里有四个管不住唯一会花钱的路由
+
+审核方指出，policy 声明了八个准入条件，`ACTIVE-01` 却只要求其中四项。因此下面
+这种组合在初版中会命中 `ACTIVE_SEARCH`：
+
+```text
+clinical_value_exists               SATISFIED
+competitive_position_not_locked     SATISFIED
+asymmetric_evidence_advantage       SATISFIED
+key_uncertainty_addressable         SATISFIED
+differentiation_visible_preclinical UNSATISFIED
+defensible_ip_path                  UNSATISFIED
+plausible_buyer_partner_map         UNSATISFIED
+time_window_compatible              SATISFIED
+```
+
+——已经明确没有可保护的 IP 路径、没有可见的临床前差异、没有任何合理买家，却仍然
+进入主动搜索、消耗 Stelligen 资源。
+
+审核方的判断是对的：后四项**不是「以后再看的商业 Gate」**，它们正是把大药企式
+搜索改造成小微 Biotech 搜索的新增内容。否则系统仍然会「科学上有意思 + 我能做
+实验 → ACTIVE」，做到后面才发现没 IP、没买家、差异只能靠三期证明——**那就是旧
+架构的问题原样搬了过来**。这也正是 Search-Space Admission 被放在 target
+generation 之前的理由。**阻断成立，接受。**
+
+### 修订
+
+`ACTIVE-01` 改为要求**八项全部 `SATISFIED`**。审核方同时否掉了较松的变体
+（后四项只要求 `!= UNSATISFIED`），理由是那会重新引入「`UNKNOWN` 不阻断
+`ACTIVE`」，与本文件自己写的 `UNKNOWN` 语义冲突。接受该理由，采用八项全 SAT。
+
+合同中并记明这不是苛刻门槛：八项都只是 territory 级初步可行性——IP 不是完整
+FTO，只要求存在可主张的入口；buyer 不是已签 BD，只要求存在合理接手方类型；
+differentiation 不是证明临床优效，只要求能在临床前展示；time fit 不是预测未来，
+只要求当前已知的竞争时钟没有明显关窗。
+
+`unknown_handling` 增补 `unknown_blocks_active_search_scope: all_eight_criteria`。
+
+### 测试
+
+`test_active_search_always_rests_on_four_affirmative_criteria` 升级为
+`..._requires_all_eight_affirmative_criteria`，并新增四条：
+
+- `test_exactly_one_status_tuple_reaches_active_search`
+- `test_a_declared_negative_on_any_criterion_blocks_active_search`（遍历八项）
+- `test_an_unsatisfied_commercial_criterion_is_named_explicitly`（四项**字面
+  列名**，避免参数化测试随常量自我收缩——这是我在 PR #72、#77 上各犯过一次的错）
+- `test_any_single_unknown_falls_through_to_the_watchlist`
+
+### 第二轮变异检验
+
+| 变异 | 结果 |
+|---|---|
+| 从 `ACTIVE-01` 去掉 `defensible_ip_path` | `FAILED (failures=5)` |
+| 去掉 `plausible_buyer_partner_map` | `FAILED (failures=5)` |
+| 去掉 `differentiation_visible_preclinical` | `FAILED (failures=5)` |
+| **退回初版的四项** | `FAILED (failures=14)` |
+| 让 `ACTIVE` 接受 IP 为 `UNKNOWN` | `FAILED (failures=4)` |
+
+五项回滚后 `diff -q` 均无差异。
+
+### 范围未扩大
+
+未改 OUT／PARTNER 语义、blocker 状态、执行授权、`SearchSpaceAdmission` schema，
+未加任何疾病内容。

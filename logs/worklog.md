@@ -3101,3 +3101,15 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Executor mistake, self-caught: 初稿 YAML 无法解析——`reassessment_triggers` 之后的三个兄弟键写在了列表项缩进上。**这与 EVGAP-02 契约当初踩的是同一个坑。** 修正后照例做解析后扫描，确认无字符串被截断。另有一条边界测试用整文件子串匹配查疾病术语，把文件自己「不含任何 CRC 内容」这句注释和 `blocker_source` 路径都误判了；已改为只扫描规范段落的解析值。
 - Validation: `Ran 534 tests OK`（合并前 508，净增 26）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
 - Next: `BLOCK-01` 仍未清，需人类负责人提供 Stelligen 当前事实——文档未写、只有负责人知道的是：资本与时间边界分档、患者样本与模型的实际清单及自有／合作划分、可承担 active program 数量、风险容忍度、地域范围、IP 策略。两个 blocker 都清后才做 authorization PR，再执行运行。
+
+### 2026-08-07T05:00 — PR #79 第一轮审核裁决与修订（一条阻断，接受）
+
+- Review: ChatGPT 对 PR #79 返回 `REQUEST_CHANGES`。`UNKNOWN` 语义、规则完备性、重评估、sponsor-relative 边界、policy 在仓库而实例路由在外部等设计均获认可，一条实质阻断。**接受，未作辩解。**
+- Blocker accepted: policy 声明了八个准入条件，`ACTIVE-01` 却只要求四项，因此「`differentiation_visible_preclinical`／`defensible_ip_path`／`plausible_buyer_partner_map` 三项明确 `UNSATISFIED`，其余四项 `SATISFIED`」这种组合仍会命中 `ACTIVE_SEARCH`——已经明确没有可保护 IP 路径、没有可见临床前差异、没有任何合理买家，却仍进入主动搜索消耗资源。审核方的判断成立：后四项不是「以后再看的商业 Gate」，而正是把大药企式搜索改造成小微 Biotech 搜索的新增内容；否则系统仍会「科学上有意思 + 我能做实验 → ACTIVE」，做到后面才发现没 IP、没买家、差异只能靠三期证明——**旧架构的问题原样搬过来**。这也正是 Search-Space Admission 被放在 target generation 之前的理由。
+- Fix: `ACTIVE-01` 改为要求**八项全部 `SATISFIED`**。审核方同时否掉较松变体（后四项只要求 `!= UNSATISFIED`），理由是那会重新引入「`UNKNOWN` 不阻断 `ACTIVE`」，与本文件自己的 `UNKNOWN` 语义冲突；接受该理由。合同记明八项都只是 territory 级初步可行性——IP 不是完整 FTO 只要求可主张入口；buyer 不是已签 BD 只要求合理接手方类型；differentiation 不是证明临床优效只要求临床前可展示；time fit 不是预测未来只要求当前已知竞争时钟未明显关窗。`unknown_handling` 增补 `unknown_blocks_active_search_scope: all_eight_criteria`。
+- Consequence measured: 收紧后 `ACTIVE_SEARCH` 在 6561 种状态组合中**恰好只有 1 种可达**（八项全 SAT），有专门测试断言。新分布 `WATCHLIST` 3158／`OUT_OF_MANDATE` 2997／`PARTNER_ONLY` 405／`ACTIVE_SEARCH` 1。该数字衡量的是状态组合空间而非真实 territory 分布，已在 handoff 与 PR 中说明以免被误读为门槛过高。
+- Tests: `test_active_search_always_rests_on_four_affirmative_criteria` 升级为 `..._requires_all_eight_affirmative_criteria`，新增 `test_exactly_one_status_tuple_reaches_active_search`、`test_a_declared_negative_on_any_criterion_blocks_active_search`（遍历八项）、`test_an_unsatisfied_commercial_criterion_is_named_explicitly`（四项**字面列名**，避免参数化测试随常量自我收缩——**这是 PR #72、#77 上各犯过一次的错**）、`test_any_single_unknown_falls_through_to_the_watchlist`。
+- Mutation: 第二轮五项——从 `ACTIVE-01` 去掉 `defensible_ip_path` -> `failures=5`；去掉 `plausible_buyer_partner_map` -> `failures=5`；去掉 `differentiation_visible_preclinical` -> `failures=5`；**退回初版四项** -> `failures=14`；让 `ACTIVE` 接受 IP 为 `UNKNOWN` -> `failures=4`。五项回滚均以 `diff -q` 确认无差异。
+- Scope: 未改 OUT／PARTNER 语义、blocker 状态、执行授权、`SearchSpaceAdmission` schema，未加任何疾病内容。
+- Validation: `Ran 538 tests OK`（本文件 30）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
+- Next: 推送到同一 PR #79，不新开 PR；等待复审。`BLOCK-01` 仍未清。

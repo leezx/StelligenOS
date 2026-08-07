@@ -145,22 +145,72 @@ class TableProofTests(unittest.TestCase):
         statuses = {c: CriterionStatus.UNKNOWN.value for c in SEARCH_SPACE_CRITERIA}
         self.assertEqual(resolve(statuses)[0], SearchSpaceRoute.WATCHLIST.value)
 
-    def test_active_search_always_rests_on_four_affirmative_criteria(self):
-        required = (
-            "clinical_value_exists",
-            "competitive_position_not_locked",
-            "asymmetric_evidence_advantage",
-            "key_uncertainty_addressable",
-        )
+    def test_active_search_requires_all_eight_affirmative_criteria(self):
+        """The only route that spends search resource demands every criterion."""
+
         for statuses in all_status_tuples():
             route, _ = resolve(statuses)
             if route == SearchSpaceRoute.ACTIVE_SEARCH.value:
-                for criterion in required:
+                for criterion in SEARCH_SPACE_CRITERIA:
                     self.assertEqual(
                         statuses[criterion],
                         CriterionStatus.SATISFIED.value,
                         f"ACTIVE_SEARCH reached with {criterion}={statuses[criterion]}",
                     )
+
+    def test_exactly_one_status_tuple_reaches_active_search(self):
+        active = [
+            statuses
+            for statuses in all_status_tuples()
+            if resolve(statuses)[0] == SearchSpaceRoute.ACTIVE_SEARCH.value
+        ]
+        self.assertEqual(len(active), 1)
+        self.assertEqual(
+            set(active[0].values()), {CriterionStatus.SATISFIED.value}
+        )
+
+    def test_a_declared_negative_on_any_criterion_blocks_active_search(self):
+        """The four commercial criteria must be able to block, not just exist."""
+
+        for criterion in SEARCH_SPACE_CRITERIA:
+            with self.subTest(criterion=criterion):
+                statuses = {
+                    c: CriterionStatus.SATISFIED.value for c in SEARCH_SPACE_CRITERIA
+                }
+                statuses[criterion] = CriterionStatus.UNSATISFIED.value
+                self.assertNotEqual(
+                    resolve(statuses)[0], SearchSpaceRoute.ACTIVE_SEARCH.value
+                )
+
+    def test_an_unsatisfied_commercial_criterion_is_named_explicitly(self):
+        """Named one by one so a parameterised loop cannot quietly shrink."""
+
+        for criterion in (
+            "differentiation_visible_preclinical",
+            "defensible_ip_path",
+            "plausible_buyer_partner_map",
+            "time_window_compatible",
+        ):
+            with self.subTest(criterion=criterion):
+                statuses = {
+                    c: CriterionStatus.SATISFIED.value for c in SEARCH_SPACE_CRITERIA
+                }
+                statuses[criterion] = CriterionStatus.UNSATISFIED.value
+                route, _ = resolve(statuses)
+                self.assertNotEqual(route, SearchSpaceRoute.ACTIVE_SEARCH.value)
+
+    def test_any_single_unknown_falls_through_to_the_watchlist(self):
+        """UNKNOWN neither kills nor permits."""
+
+        for criterion in SEARCH_SPACE_CRITERIA:
+            with self.subTest(criterion=criterion):
+                statuses = {
+                    c: CriterionStatus.SATISFIED.value for c in SEARCH_SPACE_CRITERIA
+                }
+                statuses[criterion] = CriterionStatus.UNKNOWN.value
+                self.assertEqual(
+                    resolve(statuses)[0], SearchSpaceRoute.WATCHLIST.value
+                )
 
     def test_partner_only_always_has_a_partner(self):
         """Otherwise the route name has no basis."""
@@ -211,6 +261,9 @@ class UnknownHandlingTests(unittest.TestCase):
         self.assertTrue(handling["unknown_never_produces_out_of_mandate"])
         self.assertTrue(handling["out_of_mandate_requires_at_least_one_unsatisfied"])
         self.assertTrue(handling["unknown_blocks_active_search"])
+        self.assertEqual(
+            handling["unknown_blocks_active_search_scope"], "all_eight_criteria"
+        )
         self.assertEqual(
             handling["all_unknown_resolves_to"], SearchSpaceRoute.WATCHLIST.value
         )

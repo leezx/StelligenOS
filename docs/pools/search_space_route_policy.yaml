@@ -152,11 +152,24 @@ routing:
         competitive_position_not_locked: SATISFIED
         asymmetric_evidence_advantage: SATISFIED
         key_uncertainty_addressable: SATISFIED
+        differentiation_visible_preclinical: SATISFIED
+        defensible_ip_path: SATISFIED
+        plausible_buyer_partner_map: SATISFIED
+        time_window_compatible: SATISFIED
       rationale: >-
-        四项全部正向：有真实缺口、位置未锁、我们有他人不易复制的证据优势、
-        关键未知可在资源边界内降低。这是唯一会消耗后续搜索资源的路由，
-        因此要求正证据，不接受「没有反证」。
+        八项全部正向。这是唯一会消耗后续主动搜索资源的路由，因此要求全部正证据，
+        不接受「没有反证」。后四项不是「以后再看的商业 Gate」，而正是把大药企式
+        搜索改造成小微 Biotech 搜索的新增内容：一片水域若已经明确没有可见的临床前
+        差异路径、没有可主张的 IP 入口、没有合理的风险转移终点，或竞争时钟已经
+        关窗，那么即使科学问题真实、我们有数据优势、实验也做得起，也不该在这里
+        投入搜索资源。
       requires_affirmative_evidence: true
+      requires_all_eight_criteria: true
+      threshold_note: >-
+        八项并非苛刻：它们都只是 territory 级的初步可行性——IP 不是完整 FTO，
+        只要求存在可主张的入口；buyer 不是已签 BD，只要求存在合理接手方类型；
+        differentiation 不是证明临床优效，只要求能在临床前展示；time fit 不是
+        预测未来，只要求当前已知的竞争时钟没有明显关窗。
 
     - id: WATCH-01
       route: WATCHLIST
@@ -174,9 +187,11 @@ unknown_handling:
   unknown_never_produces_out_of_mandate: true
   out_of_mandate_requires_at_least_one_unsatisfied: true
   unknown_blocks_active_search: true
+  unknown_blocks_active_search_scope: all_eight_criteria
   unknown_blocks_active_search_rationale: >-
-    ACTIVE_SEARCH 是唯一消耗后续搜索资源的路由，必须由正证据支撑。关键条件为
-    UNKNOWN 时并未证明这片水域值得投入，只是没有证伪。
+    ACTIVE_SEARCH 是唯一消耗后续搜索资源的路由，必须由正证据支撑。**八项中任一
+    为 UNKNOWN 即落入 WATCHLIST**——UNKNOWN 并未证明这片水域值得投入，只是没有
+    证伪。这与「UNKNOWN 不判死刑」并不矛盾：不放行，也不排除。
   all_unknown_resolves_to: WATCHLIST
   all_unknown_rationale: >-
     七、八项全未知既不构成推进理由，也不构成排除理由。把它判成 OUT_OF_MANDATE
