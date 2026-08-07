@@ -3155,3 +3155,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - **`authorises_run` 仍为 `false`，`blocked_by` 仍为 `[BLOCK-01]`——未清除任何 blocker**
 - 547 tests OK；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过
 - 等待人类负责人对 v0.1.1 的批准工件
+
+## 2026-08-07T14:05 — PR #80 第三轮审核修订：清除 evidence_standards 的状态残留
+
+- 分支 `task_20260807_wp2b-authorization`
+- 审核裁决：`REQUEST_CHANGES`（一条，接受）——`sponsor_fit_context` 仍写「BLOCK-01，已清」
+- 成因：第一轮收回授权时改了 blocker 条目，未回改引用它的散文（与 v0.1.0 包内
+  markdown 未随 JSON 更新是同一类错误）
+- 修订：改为「已获人工批准并冻结……须先按 clearing_conditions 清除 BLOCK-01」，
+  并去掉写死的 `@0.1.0`
+- 新增 2 项测试：解析后遍历全契约的状态漂移检查（豁免 blockers 子树）＋
+  sponsor_fit_context 必须要求已批准实例
+- 变异检验 3 正 2 反，反向对照未误报；回滚 `diff -q` 无差异
+- **未动其他任何内容**：`authorises_run: false`、`blocked_by: [BLOCK-01]`、两个 null 不变
+- 外部包 v0.1.1 未重新生成，实例 SHA-256 `7582ca15…` 不变
+- 549 tests OK；boundary 通过；`git diff --check` 通过

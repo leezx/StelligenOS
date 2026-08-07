@@ -260,7 +260,8 @@ evidence_standards:
   - field_group: sponsor_fit_context
     fields: [sponsor_evidence_advantage_ref]
     requires: >-
-      已冻结的 DevelopmentSponsorProfile@0.1.0 实例（BLOCK-01，已清）**加上**该 territory 可
+      已获人工批准并冻结的 DevelopmentSponsorProfile 实例（须先按 clearing_conditions
+      清除 BLOCK-01；候选实例在清除前不得作为基线）**加上**该 territory 可
       触及的数据／模型／know-how 与该 territory 的证据要求，三者共同支撑一份
       territory-specific 优势评估。
     ref_points_to: territory_specific_external_evidence_or_assessment

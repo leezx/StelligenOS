@@ -345,3 +345,84 @@ git diff --check                        通过
 profile 的实质内容方向、机构资源边界处理、`company_stage`、
 `preferred_transaction_stage` 的内容、`geographic_scope` 的内容、
 `BLOCK-01` 三条件合取不变量、授权机制本身——一律未动。
+
+## 十、第三轮审核裁决与修订（`REQUEST_CHANGES`，一条，接受）
+
+### 阻断：`evidence_standards` 里残留「`BLOCK-01`，已清」
+
+`sponsor_fit_context` 的 `requires` 仍写着「已冻结的
+`DevelopmentSponsorProfile@0.1.0` 实例（`BLOCK-01`，已清）」，而同一文件上方
+`BLOCK-01` 是 `cleared: false`、`human_approval_ref: null`、
+`approved_instance_sha256: null`。文件内部自相矛盾。
+
+**成因，且与前两轮是同一个漏洞：** 这句是第一版开启授权时改的。第一轮收回授权
+时，我改了 blocker 条目本身，**没有回改依赖它的散文**。v0.1.0 包里 markdown 未
+随 JSON 更新，是同一类错误的另一种形式——改了状态源，没有改引用状态的地方。
+
+**为什么不是 typo：** 它位于 `evidence_standards`，runtime 与后续审核者会据此
+理解 sponsor baseline 已正式生效，而目前只有候选 profile。
+
+### 修订
+
+```yaml
+requires: >-
+  已获人工批准并冻结的 DevelopmentSponsorProfile 实例（须先按 clearing_conditions
+  清除 BLOCK-01；候选实例在清除前不得作为基线）**加上**该 territory 可
+  触及的数据／模型／know-how 与该 territory 的证据要求……
+```
+
+去掉了版本号 `@0.1.0`——基线是哪一版由批准工件决定，不该在证据标准里写死。
+
+### 测试
+
+审核方建议「字符串检查就够」。实际做成解析后遍历，而不是原文 `grep`：
+`test_no_section_claims_an_uncleared_blocker_is_cleared` 递归走整份契约的**解析
+结果**，只豁免 `blockers` 子树（那里本就在讨论清除状态），对每个 `cleared: false`
+的 blocker，断言没有任何字符串同时出现它的 id 与「已清／已解除／cleared」。
+
+这样做的理由是 PR #78 的教训：`assertNotIn("territories:", text)` 曾被新键
+`ref_must_not_be_shared_across_territories:` 误中。原文匹配会重演。
+
+另加 `test_the_advantage_baseline_waits_for_human_approval`，锁住
+`sponsor_fit_context` 必须要求「已获人工批准」而非候选实例。
+
+### 变异检验（含两项反向对照）
+
+| 变异 | 结果 |
+|---|---|
+| 还原为「（`BLOCK-01`，已清）」原句 | `failures=2` |
+| 在 `run` 段另写「`BLOCK-01` 已清，可直接读取 sponsor baseline」 | `failures=1` |
+| 用英文写 `BLOCK-01 is cleared` | `failures=1` |
+| **反向对照**：既有的「`BLOCK-01` 未清」措辞 | `OK`（未误报） |
+| **反向对照**：新增「清除 `BLOCK-01` 之后方可使用」 | `OK`（未误报） |
+
+反向对照是必要的：只验证会 FAIL，不能证明它不会把正确措辞也判为矛盾。回滚后
+`diff -q` 无差异。
+
+### 验证
+
+```
+Ran 549 tests  OK              （上一轮 547，净增 2）
+scripts/verify_repository_boundary.sh   通过
+git diff --check                        通过
+```
+
+### 未改的部分
+
+按审核方要求，**其他一律未动**。`authorises_run: false`、
+`authorises_run_count: 0`、`blocked_by: [BLOCK-01]`、`cleared: false`、
+两个 null 均保持不变。外部包 v0.1.1 未重新生成，实例 SHA-256 仍为
+`7582ca157ec769c170c390e6dc8a99d55adf2e1dffc3d1af461434797e0ec421`。
+
+### 审核方尚未能独立验证的一项（如实记录）
+
+审核方指出：v0.1.1 外部包不在仓库内，其手上的 ZIP 仍是 v0.1.0，因此目前只能确认
+本 PR 对新包的声明与机器校验记录，**无法逐字段独立验证 v0.1.1 的文件内容**。
+这不影响当前「未授权」状态，但人工批准前必须先看到 v0.1.1 本体。
+
+供审核的路径（**不入仓**）：
+
+```
+…/result/gen_sponsor_profile_stelligen_v0.1.1_20260807T130000Z_draft.zip
+ZIP SHA-256  cf410e6278f8d78fa2e9aa937b14a72bc878cb9533059ae66374af0e5eb5f8a8
+```

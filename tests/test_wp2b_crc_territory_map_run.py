@@ -107,6 +107,51 @@ class RunAuthorisationTests(unittest.TestCase):
                 )
                 self.assertNotIn(entry["package"], blocker["machine_validation_evidence"])
 
+    def test_no_section_claims_an_uncleared_blocker_is_cleared(self):
+        """The rest of the contract may not contradict the blocker list.
+
+        A stale "BLOCK-01, cleared" survived in evidence_standards after the
+        authorization was withdrawn, because withdrawing edited the blocker
+        entry and not the prose that depended on it. Walk the parsed contract
+        rather than the raw text, and exempt only the blockers subtree, which
+        is where cleared state is legitimately discussed.
+        """
+
+        uncleared = [b["id"] for b in CONTRACT["blockers"] if not b["cleared"]]
+        claims = ("已清", "已解除", "cleared")
+        offenders = []
+
+        def walk(node, path):
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    walk(value, f"{path}.{key}")
+            elif isinstance(node, list):
+                for index, value in enumerate(node):
+                    walk(value, f"{path}[{index}]")
+            elif isinstance(node, str):
+                for blocker_id in uncleared:
+                    if blocker_id in node and any(c in node for c in claims):
+                        offenders.append((path, node.strip()[:90]))
+
+        for section, body in CONTRACT.items():
+            if section == "blockers":
+                continue
+            walk(body, section)
+
+        self.assertEqual(offenders, [], f"uncleared blockers claimed cleared: {offenders}")
+
+    def test_the_advantage_baseline_waits_for_human_approval(self):
+        """sponsor_fit_context must require an approved profile, not a candidate."""
+
+        group = next(
+            g
+            for g in CONTRACT["evidence_standards"]
+            if g["field_group"] == "sponsor_fit_context"
+        )
+        self.assertIn("已获人工批准", group["requires"])
+        self.assertIn("clearing_conditions", group["requires"])
+        self.assertTrue(group["profile_alone_is_insufficient"])
+
     def test_human_approval_needs_an_artifact_not_only_a_yes(self):
         """Six recorded fields, so a later version has an audit chain to compare."""
 
