@@ -15,25 +15,58 @@ CONTRACT = yaml.safe_load(CONTRACT_PATH.read_text(encoding="utf-8"))
 
 
 class RunAuthorisationTests(unittest.TestCase):
-    """Approving this contract must not, by itself, let the run start."""
+    """One run is authorised, and only because both blockers were cleared."""
 
-    def test_the_run_is_not_authorised(self):
+    def test_exactly_one_run_is_authorised(self):
         run = CONTRACT["run"]
-        self.assertFalse(run["authorises_run"])
-        self.assertEqual(run["authorises_run_count"], 0)
-        self.assertEqual(run["execution_status"], "not_authorized_not_executed")
-        self.assertTrue(run["approval_does_not_authorise_execution"])
+        self.assertTrue(run["authorises_run"])
+        self.assertEqual(run["authorises_run_count"], 1)
+        self.assertEqual(run["execution_status"], "authorised_not_yet_executed")
+        self.assertEqual(run["blocked_by"], [])
 
-    def test_both_blockers_are_declared_and_uncleared(self):
-        self.assertEqual(CONTRACT["run"]["blocked_by"], ["BLOCK-01", "BLOCK-02"])
+    def test_authorisation_is_traceable_to_cleared_blockers(self):
+        """A cleared blocker must name what cleared it, not merely flip a flag."""
+
+        cleared = {entry["blocker"]: entry for entry in CONTRACT["run"]["blocked_by_cleared"]}
+        self.assertEqual(set(cleared), {"BLOCK-01", "BLOCK-02"})
+        self.assertEqual(
+            cleared["BLOCK-01"]["evidence_package"],
+            "gen_sponsor_profile_stelligen_20260807T050000Z_frozen",
+        )
+        for key in ("evidence_zip_sha256", "instance_sha256"):
+            self.assertEqual(len(cleared["BLOCK-01"][key]), 64)
+        self.assertEqual(
+            cleared["BLOCK-02"]["evidence_path"],
+            "docs/pools/search_space_route_policy.yaml",
+        )
+        self.assertEqual(cleared["BLOCK-02"]["cleared_by_pr"], 79)
+
+    def test_both_blockers_record_their_clearing_evidence(self):
         blockers = {blocker["id"]: blocker for blocker in CONTRACT["blockers"]}
         self.assertEqual(set(blockers), {"BLOCK-01", "BLOCK-02"})
         for blocker_id, blocker in blockers.items():
             with self.subTest(blocker=blocker_id):
-                self.assertFalse(blocker["cleared"])
+                self.assertTrue(blocker["cleared"])
                 self.assertTrue(blocker["must_be_frozen_before_run"])
                 self.assertTrue(blocker["why"].strip())
                 self.assertTrue(blocker["cleared_by"].strip())
+                self.assertTrue(str(blocker["cleared_evidence"]).strip())
+
+    def test_the_run_count_names_its_consumption_point_honestly(self):
+        """Carried forward from the PR #66 note on a declarative counter."""
+
+        run = CONTRACT["run"]
+        self.assertEqual(run["run_count_consumed_by"], "result_pr")
+        self.assertTrue(
+            run["run_count_consumption_is_process_enforced_not_code_enforced"],
+            "the counter must not claim an enforcement the repository lacks",
+        )
+
+    def test_a_second_run_is_still_not_authorised(self):
+        self.assertIn(
+            "在 authorises_run_count 归零后再次执行本运行",
+            CONTRACT["not_authorised"],
+        )
 
     def test_blocker_one_treats_the_profile_as_an_upstream_input(self):
         """The profile is a baseline, not the advantage evidence itself."""
@@ -287,8 +320,8 @@ class ValidationRuleTests(unittest.TestCase):
 
 
 class NotAuthorisedTests(unittest.TestCase):
-    def test_the_run_itself_heads_the_not_authorised_list(self):
-        self.assertIn("执行本运行", CONTRACT["not_authorised"][0])
+    def test_a_repeat_run_heads_the_not_authorised_list(self):
+        self.assertIn("再次执行本运行", CONTRACT["not_authorised"][0])
 
     def test_downstream_work_is_not_authorised(self):
         joined = " ".join(CONTRACT["not_authorised"])

@@ -3113,3 +3113,17 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Scope: 未改 OUT／PARTNER 语义、blocker 状态、执行授权、`SearchSpaceAdmission` schema，未加任何疾病内容。
 - Validation: `Ran 538 tests OK`（本文件 30）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
 - Next: 推送到同一 PR #79，不新开 PR；等待复审。`BLOCK-01` 仍未清。
+
+### 2026-08-07T05:40 — 合并 PR #79，冻结 Sponsor Profile v0.1.0，WP2B 取得一次执行授权
+
+- Merge: ChatGPT 对 PR #79 返回第二轮 `APPROVE`，审核 HEAD `3e0836fce60154702bcbfe90166ff1080c6e448d`，CI 通过，合入得 `0c030c2`。合并前按审核方的非阻断意见修正了 PR 描述里 stale 的「四项」表述——改的是 PR body 不是 commit，核验获批 HEAD 未动。审核方确认后四项条件终于具备真正否决能力，而不是「写在 schema 里但不参与路由」。
+- BLOCK-01 draft: 按人类负责人给出的当前事实起草 `DevelopmentSponsorProfile@0.1.0` 外部实例，产出 `gen_sponsor_profile_stelligen_20260807T050000Z`（草稿，`DRAFT_PENDING_HUMAN_REVIEW`），含实例、引用定义、人读摘要、逐字段 provenance 表与 `validate_profile.py`；草稿校验 17/17 MATCH。按指示**停下等人工确认**，未擅自清 blocker。
+- Hard invariant encoded: **创始人的科学接触不等于公司可用。** `accessible_patient_samples` 为空并带 `empty_list_semantics: INVESTIGATED_AND_CONFIRMED_NONE_SPONSOR_CONTROLLED`（空表示查过确认没有，不是没查）；机构队列、未发表机构数据集、学术 organoid、机构 PDX、机构雇佣下产生的发明进 `NOT_YET_CONTROLLED` 登记表，各写明转化所需法律工具；校验脚本扫 `accessible_data`／`accessible_models`，命中 `dfci`／`hospital`／`academic`／`institution`／`pdx` 即 FAIL。**理由是可量化的**：若把机构资源写成公司资产，`asymmetric_evidence_advantage` 会评为 `SATISFIED`，而它是 PR #79 规则表里 `ACTIVE_SEARCH` 必需八项之一，系统会为法律上不存在的资产投入真实搜索资源。
+- Conservative fields: `capital_envelope` 四档不填数字（六位数以上默认需外部资本，IND-enabling／GLP／GMP／临床完全在自有边界外）；capacity 定 1–2 active、第三个只能 `DATA_PACKAGE_ONLY`／`PARTNER_ONLY` 并在文件内写明比早前 1–3 更窄是有意的；`accessible_data` 只列公开源并点明公开数据人人可得、本身不构成非对称优势；`partnered_capabilities` 标 `OPERATING_ASSUMPTION` 而非事实（今天无任何已签 CRO／合作方）；每字段有 `CONFIRMED_CURRENT_FACT`／`OPERATING_ASSUMPTION`／`UNKNOWN` 分类，操作假设不得静默升格为事实。
+- Freeze: 人类负责人确认后冻结为 `v0.1.0`，产出独立包 `gen_sponsor_profile_stelligen_20260807T050000Z_frozen`，ZIP SHA-256 `5f057fde5739a4813114546dc292d20cb260a82a842fd6adeeabfc8efcd016ed`，实例 SHA-256 `65253e10cb37a5341c34ac5c5105d38c6d044fe99ea4382f0c4e138a206814ed`，13,660 bytes，校验 19/19 MATCH。按 PR #60 确立的规则，修订单独出包并各带自己的 SHA-256。
+- Authorization: `docs/pools/wp2b_crc_territory_map_run.yaml` 的 `authorises_run` 转 `true`、`authorises_run_count` 设 1、`blocked_by` 清空，两个 blocker 各记 `cleared: true` 与清除证据（`BLOCK-01` 记包名与两个 SHA-256；`BLOCK-02` 记 policy 路径、PR 79、merge commit）。形态同 PR #66。**未改任何语义、范围、来源策略、证据标准或校验规则。**
+- PR #66 note carried: 该轮审核方指出 `authorises_extraction_run_count` 无消费机制、只是声明字段。本契约写明 `run_count_consumed_by: result_pr`，并**诚实标注** `run_count_consumption_is_process_enforced_not_code_enforced: true`，有测试断言该字段为 `true`（注释：计数器不得声称仓库并不具备的强制力）。**这不是解决了问题，是把问题标注清楚了**——仓库仍不会自动递减。`not_authorised` 首条由「执行本运行」改为「在 `authorises_run_count` 归零后再次执行本运行」。
+- Executor mistake, self-caught: 授权脚本首版因 heredoc 引号嵌套语法错、次版因一处替换目标字符串缩进不符而 assert 失败。两次都**在写盘前失败**，契约未被部分修改——这正是逐条 assert 的作用（对照 PR #77 那次未加 assert 的静默未命中）。
+- Mutation: 五项——授权次数改 3 -> `failures=1`；把计数器标成代码强制 -> `failures=1`；清 blocker 但不给证据包 -> `failures=1`；截断实例哈希 -> `failures=1`；标记已清但证据为空 -> `failures=1`。五项回滚均以 `diff -q` 确认无差异。测试要求「已清的 blocker 必须写明是什么清的，而不是只翻一个布尔位」。
+- Validation: `Ran 541 tests OK`（合并前 538，净增 3）；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；无数据、cache、result、database、model weights 或实例进入仓库。
+- Next: 本 PR 获批合并后执行一次 CRC Territory Map 外部运行 → 结果 PR（跑 `VAL-T01`..`VAL-T21` 并把 `authorises_run_count` 归零）→ WP3。注意 profile 一旦改版，按 route policy `RT-03` 所有已路由 territory 的 `asymmetric_evidence_advantage`／`key_uncertainty_addressable`／`time_window_compatible` 都要重评估；`NOT_YET_CONTROLLED` 任一项被法律工具转化时不是改一行，而是升版本并触发重评估。
