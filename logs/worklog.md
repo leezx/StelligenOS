@@ -2858,3 +2858,35 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Explicit boundary: 批准只覆盖合并 `SearchSpaceAdmission@0.1.0` 合同及其校验边界；不批准或授权科学评价、自动路由、Gate/EVGAP/provider 运行、Program Commitment Review、ValueInflectionPlan、实例或外部运行。
 - Persisted: 新增 `logs/chatgpt-review-2026-08-06-search-space-admission-phase2.md`，更新 handoff 状态为 `APPROVED_WAITING_HUMAN_MERGE`。
 - Next: 提交并推送审核记录 metadata，随后合并 PR #68；合并后再创建第 3 步 PR。
+
+### 2026-08-06 20:47 EDT — 小微 Biotech 架构调整第 3 步：Program Commitment Review
+
+- Instruction: PR #68 已获 Chrome 网页版 ChatGPT `APPROVE` 并合并为 `9abd66f`；按四步路线进入第 3 步，只实现 T12 后 Program Commitment Review 合同，之后仍须新 PR 审核。
+- Scope frozen: 只建立 sponsor-relative commitment checkpoint；正式结果为 `SELF_DEVELOP`、`CO_DEVELOP`、`DATA_PACKAGE_ONLY`、`PARTNER_NOW`、`MONITOR`、`STOP_FOR_SPONSOR`；不实现 ValueInflectionPlan、binder/ADC/de novo route、Gate、EVGAP、provider、数据或模型运行。
+- Resolution: 文档前段的 `PARTNER_BEFORE_CONJUGATION`／`GENERATE_DATA_ONLY` 作为自然语言描述，机器可读合同收敛为后段实施顺序的 `PARTNER_NOW`／`DATA_PACKAGE_ONLY`，并在架构文档中记录映射。
+- Read: 重新读取四步实施段落、Phase 1/2 合同、T12 decision/ranking 和 binder route 外部边界；确认基线为 `origin/main@9abd66f`。
+- Branch: 创建 `/private/tmp/StelligenOS-program-commitment-review` worktree，分支 `task_20260807_program-commitment-review`。
+- Changed: 新增 `src/contracts/program_commitment_review.yaml`、`src/contracts/program_commitment_review.py`、`tests/test_program_commitment_review.py`、`docs/architecture/program-commitment-review.zh-CN.md`、本任务 handoff；更新 `architecture.md`、`README.md`、`src/contracts/README.md`。
+- Design: 所有输入、Value Inflection Plan、理由、来源和 human decision 都是 external refs；`MONITOR`、`DATA_PACKAGE_ONLY`、`STOP_FOR_SPONSOR` 阻断 binder/de novo；`SELF_DEVELOP`、`CO_DEVELOP`、`PARTNER_NOW` 只产生 `EXTERNAL_HANDOFF_REQUIRED`，不自动执行下游工作。
+- Validation: 定向测试 15/15 通过；全量 `PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'` 为 `387 tests` 全部通过；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过；无 `__pycache__`、数据库或数据文件。
+- Failure/fix: 本轮无命令失败、无内容回滚、无外部运行。
+- Boundary: 未修改 Gate、lifecycle、core objects、ClinicalHypothesis、TargetHypothesis 或 Asset Generation routing；未定义 Phase 4 的 ValueInflectionPlan。
+- Next: 显式检查状态后提交、推送并创建 Phase 3 PR；使用 Chrome 网页版 ChatGPT 审核，未获明确 `APPROVE` 前不进入第 4 步。
+
+### 2026-08-06 20:50 EDT — Phase 3 PR #69 创建
+
+- Git: 提交 `28f0857` 已推送到 `task_20260807_program-commitment-review`，创建 PR #69 指向 `main`。
+- PR scope: PR 描述明确六个正式承诺结果、T12 后位置、external-only 输入、无承诺阻断下游和人类 handoff 要求；明确不包含 Phase 4 ValueInflectionPlan 实现。
+- Handoff: 更新 `docs/handoff/2026-08-06-program-commitment-review.zh-CN.md`，补入 PR URL。
+- Next: 推送 handoff/worklog metadata 后，通过 Chrome 网页版 ChatGPT 的 GitHub 来源提交 PR #69 审核，未获明确 `APPROVE` 前不进入第 4 步。
+
+### 2026-08-06 20:55 EDT — Chrome ChatGPT 审核 Phase 3 PR #69
+
+- Method: 在 Chrome 网页版 ChatGPT 的 `ADC研发框架优化` 对话中，通过聊天框 `+` 菜单显式选择 GitHub 来源，提交 PR #69 审核指令。
+- Review scope: ChatGPT 读取 PR #69 的完整 changed files、两个 commits、aggregate diff、ProgramCommitmentReview Python/YAML 合同、架构说明、handoff/worklog、6 个新增测试和 GitHub Actions 状态。
+- Result: ChatGPT 返回明确 `APPROVE`，审核 HEAD 为 `adfead598db5fa88eee5a14edb122fa15ec3a1f7`；GitHub 显示 open、non-draft、mergeable，CI run #59 completed successfully。
+- Accepted: 严格只完成第 3 步；六个正式结果和自然语言别名映射正确；所有输入和 `human_decision_ref` external-only；无承诺结果保持 `BLOCKED_NO_COMMITMENT`；资产导向结果仅 `EXTERNAL_HANDOFF_REQUIRED`；`STOP_FOR_SPONSOR` 不是科学 KILL；未定义 Phase 4、未实现 binder/ADC/de novo、Gate、EVGAP、provider、模型、数据或 Asset Generation；核心架构未改动。
+- Non-blocking observation: `MONITOR` 与 `DATA_PACKAGE_ONLY` 可以使用 `CONDITIONALLY_COMMITTED` 表示对监测/数据包的有限承诺，但下游必须同时使用 `decision` 和 `downstream_status`，不得只看 `commitment_status`；当前 validator 已防止错误放行。
+- Explicit boundary: 批准只覆盖合并 `ProgramCommitmentReview@0.1.0` 及其六个结果、external-only 输入、下游阻断和 human handoff 语义；不批准或授权 ValueInflectionPlan、binder/ADC/de novo、Gate/EVGAP/provider/model/data、Asset Generation、实例或外部运行。
+- Persisted: 新增 `logs/chatgpt-review-2026-08-06-program-commitment-review-phase3.md`，更新 handoff 状态为 `APPROVED_WAITING_HUMAN_MERGE`。
+- Next: 提交并推送审核记录 metadata，随后合并 PR #69；合并后再创建第 4 步 PR。

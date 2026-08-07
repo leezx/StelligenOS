@@ -11,6 +11,7 @@
 - [Biotech Infrastructure Catalog](./docs/architecture/BIOTECH_INFRASTRUCTURE_CATALOG.zh-CN.md)
 - [Sponsor Strategy Contracts](./docs/architecture/sponsor-strategy.zh-CN.md)
 - [Early Search-Space Admission](./docs/architecture/search-space-admission.zh-CN.md)
+- [Program Commitment Review](./docs/architecture/program-commitment-review.zh-CN.md)
 - [Legacy Inventory](./docs/architecture/legacy_inventory.zh-CN.md)
 - [Migration Prompt](./prompts/system/STELLIGENOS_MIGRATION_MASTER_PROMPT.zh-CN.md)
 
