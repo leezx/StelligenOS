@@ -40,6 +40,18 @@ class RunAuthorisationTests(unittest.TestCase):
         if uncleared:
             self.assertEqual(run["authorises_run_count"], 0)
             self.assertEqual(run["execution_status"], "not_authorized_not_executed")
+        elif run["execution_status"] == "executed_result_delivered":
+            # The result PR is the documented consumption point
+            # (run_count_consumed_by: result_pr): once delivered, the count
+            # must be zeroed, never left at 1 as a standing licence, and
+            # never silently incremented back up without a fresh blocker
+            # clearance cycle.
+            self.assertEqual(
+                run["authorises_run_count"],
+                0,
+                "a delivered result must consume the single authorised run",
+            )
+            self.assertTrue(run["result"]["delivered"])
         else:
             self.assertEqual(
                 run["authorises_run_count"],

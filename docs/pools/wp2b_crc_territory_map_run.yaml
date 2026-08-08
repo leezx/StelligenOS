@@ -16,11 +16,12 @@ run:
   work_package: WP2B
   produces: OpportunityTerritoryMap@0.1.0
   produces_element: OpportunityTerritory@0.1.0
-  status: authorised_not_yet_executed
-  execution_status: authorised_not_yet_executed
+  status: executed_result_delivered
+  execution_status: executed_result_delivered
   authorises_run: true
-  # 授权范围是**一次**测绘运行，不是长期许可。
-  authorises_run_count: 1
+  # 授权范围是**一次**测绘运行，不是长期许可。该次运行已执行并交付结果
+  # （见 run.result），本字段按 result PR 流程归零。
+  authorises_run_count: 0
   blocked_by: []
   blocked_by_cleared:
     - blocker: BLOCK-01
@@ -43,6 +44,43 @@ run:
   # ——结果 PR 必须把 authorises_run_count 归零，仓库不会自动递减。
   run_count_consumed_by: result_pr
   run_count_consumption_is_process_enforced_not_code_enforced: true
+  # 结果摘要：仅聚合数字与校验状态，不含任何 territory 内容。完整交付物在外部
+  # 工作区，按 output.location_in_repository: forbidden 不进入本仓库。
+  result:
+    delivered: true
+    delivered_at_utc: "2026-08-08T00:00:00Z"
+    external_workspace: DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/wp2b_crc_territory_map_20260807T180000Z/
+    handoff_ref: docs/handoff/2026-08-08-wp2b-territory-map-result.zh-CN.md
+    required_artifacts_produced:
+      - territory_map.json
+      - territories.tsv
+      - search_space_admissions.json
+      - sponsor_evidence_advantage.json
+      - source_manifest.json
+      - run_report.md
+      - verify_package.py
+    validation:
+      checked_rules: 21
+      passed_rules: 21
+      checker: verify_package.py（外部工作区内，独立可运行）
+    territory_count_reconciliation:
+      pass_a_numbered_candidates: 25
+      pass_a_working_ids: 27
+      admitted_this_run: 17
+      merged: 1
+      excluded_in_pass_b: 1
+      enumerated_not_grounded_this_run: 8
+      in_territory_count_band: true
+    route_distribution:
+      ACTIVE_SEARCH: 0
+      WATCHLIST: 17
+      PARTNER_ONLY: 0
+      OUT_OF_MANDATE: 0
+      expected_active_band_met: false
+      expected_active_band_shortfall_is_a_failure: false
+    wp3_authorisation:
+      any_territory_holds_active_search_admission: false
+      wp3_work_authorised_by_this_run: false
 
 # ---------------------------------------------------------------- blockers
 
