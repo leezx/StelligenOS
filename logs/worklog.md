@@ -3366,3 +3366,44 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   通过；`git diff --check` 通过
 - Next: 等待审核方对本轮修订的结论；据审核方预期，通过后即可 `APPROVE`
   并开始正式执行
+
+## 2026-08-08T03:10 — WP2B 结果 PR（#83）：自查后合并，本次跳过 ChatGPT 审核
+
+- 分支 `task_20260808_wp2b-territory-map-result`，对应 PR #83
+- 内容：仅仓库侧记账——`docs/pools/wp2b_crc_territory_map_run.yaml` 的
+  `authorises_run_count` 归零（1→0）、`execution_status` 改为
+  `executed_result_delivered`、新增 `run.result` 聚合小节；
+  `tests/test_wp2b_crc_territory_map_run.py` 补上该状态分支的断言；新增
+  `docs/handoff/2026-08-08-wp2b-territory-map-result.zh-CN.md`。不含任何
+  territory 内容、target/gene/company 名称或 CRC 结论——全部七份必需交付物
+  仍留在外部工作区
+  `DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/wp2b_crc_territory_map_20260807T180000Z/`
+- **审核路径偏离**：`AGENTS.md` 的全局 PR 审核门禁要求提交 ChatGPT 审核并拿到
+  `APPROVE` 后才能合并，豁免范围仅限 `prompts/GPT-Feedback.md` 一个文件，本
+  PR 不在豁免集合内。人类负责人于本轮明确指示由执行方（Claude）自查后直接
+  合并，跳过 ChatGPT 审核这一步——理由是内容纯属仓库侧记账、无架构改动、无
+  territory 内容，风险面小。已就此与人类负责人当面确认（非默认行为，仅本次
+  显式授权，不构成对该门禁规则的修改）
+- 自查过程与发现：
+  1. 全文 diff 复核，确认三个文件改动与 PR 描述一致
+  2. 对 diff 新增行做 target/gene/territory-ID 关键词扫描——命中一处
+     "A6/A12 各拆分为二"，判定为对 Pass A 编号机制的算术说明，不属于
+     territory 内容或处置结果泄露（与已单独脱敏的 merge/exclude 编号不冲突）
+  3. **发现并修正一处不一致**：handoff 文档原文声称新增的 `run.result`
+     小节会记录七份交付物的 SHA-256，但实际 yaml diff 里没有任何 SHA-256
+     字段——哈希只应存在于外部 `manifest_sha256.json` 一处。已改写 handoff
+     文档措辞，明确 `run.result` 只记录交付物清单（文件名），不复制哈希，
+     避免仓库内出现第二份可能漂移的哈希记录
+  4. `python3 -c "import yaml..."` 校验新增 `run.result` 各字段可解析，且
+     `authorises_run_count`/`execution_status`/`validation`/
+     `route_distribution` 数字与外部 `run_report.md` 一致
+  5. `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest tests/ -q -p no:cacheprovider`
+     ：555 passed, 4019 subtests passed
+  6. `scripts/verify_repository_boundary.sh`：首次运行因本地 `.pytest_cache`
+     产物报违规，清理后二次运行通过
+  7. `git status --short` 干净，暂存区只含三个预期文件，未用
+     `git add .`/`-A`
+- 结论：无阻断项；一处发现（SHA-256 措辞不符）已在合并前修正
+- 合并：PR #83 → `main`
+- Next: 8 个未 grounding 的 Pass A 候选（A1–A5、A21、A22、A24）留待后续
+  `authorises_run_count` 重新授权；本 PR 不构成、也不暗示任何 WP3 授权
