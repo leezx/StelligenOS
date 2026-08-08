@@ -27,9 +27,11 @@
 2. 对 `docs/pools/wp2b_crc_territory_map_run.yaml` 的更新：
    - `run.execution_status`: `authorised_not_yet_executed` → `executed_result_delivered`
    - `run.authorises_run_count`: `1` → `0`
-   - 新增 `run.result` 小节，记录七份交付物的 SHA-256（与外部 manifest 一致）、
-     `VAL-T01`~`VAL-T21` 的通过状态、以及 `territory_count`/`route_distribution`
-     这两个**不含 territory 内容**的汇总数字。
+   - 新增 `run.result` 小节，记录七份交付物的清单（文件名，不含 SHA-256——哈希
+     只保留在外部 `manifest_sha256.json` 一处，避免仓库内出现第二份可能漂移的
+     哈希记录）、`VAL-T01`~`VAL-T21` 的通过状态、以及
+     `territory_count`/`route_distribution` 这两个**不含 territory 内容**的
+     汇总数字。
 
 ## 三、校验结果摘要
 
