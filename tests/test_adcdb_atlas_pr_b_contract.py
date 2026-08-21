@@ -31,6 +31,7 @@ class PRBProductionContractTests(unittest.TestCase):
         self.assertEqual(run["batch_capacity"]["min"], 20)
         self.assertEqual(run["batch_capacity"]["max"], 50)
         self.assertTrue(run["batch_capacity"]["is_capacity_target_not_pass_criterion"])
+        self.assertTrue(run["run_id_equals_pipeline_run_id"])
 
     def test_seed_and_atlas_boundaries(self):
         seed = CONTRACT["target_seed"]
@@ -51,6 +52,12 @@ class PRBProductionContractTests(unittest.TestCase):
         self.assertIn("TargetCommit", prohibited)
         self.assertIn("PRIMARY_TARGET", prohibited)
         self.assertIn("G5_G6_G7_results", prohibited)
+
+    def test_output_root_matches_canonical_v03_root(self):
+        root = CONTRACT["outputs"]["external_run_root"]
+        self.assertEqual(root, "${BIOWORKSPACE_ROOT}/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/<pipeline_run_id>/")
+        self.assertFalse(any(path.startswith("03_atlas_must_pass/") for path in CONTRACT["outputs"]["required_artifacts"]))
+        self.assertTrue(any(path.startswith("03_atlas_kill_screen/") for path in CONTRACT["outputs"]["required_artifacts"]))
 
 
 if __name__ == "__main__":

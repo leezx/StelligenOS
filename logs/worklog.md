@@ -3560,3 +3560,10 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Added handoff: `docs/handoff/2026-08-22-adcdb-atlas-aidd-pr-b-production.zh-CN.md`。
 - Scope: 未创建 DATA/result/cache/model output，未生成真实 TargetSeed，未运行 G1–G4，未执行 G5–G7/TargetCommit/AIDD，未修改 frozen v0.3。
 - Next: 完成全量测试，显式提交并推送 PR-B，使用同一 ChatGPT 对话审核；在 PR-B `APPROVE` 前不得开始真实生产运行。
+
+## 2026-08-22T01:15 EDT — PR-B canonical run-root blocker 修复
+
+- Review result: ChatGPT 对 PR #91 返回 `REQUEST_CHANGES`，唯一 blocker 是 PR-B 使用了新结果根目录和 `03_atlas_must_pass/`，与 frozen v0.3 canonical root/path 不一致。
+- Fix: 统一 human/machine contract 到 `${BIOWORKSPACE_ROOT}/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/<pipeline_run_id>/` 和 `03_atlas_kill_screen/`；明确 `run_id == pipeline_run_id`，不得创建第二个运行标识。
+- Test: 增加 canonical output-root、directory-name 和 run-id invariant；未读取 ADCdb/Atlas，未生成真实结果。
+- Boundary: 只修改 PR-B contract/test/worklog；不改 v0.3、不改 Gate、不扩大 PR-B scope；等待同一 ChatGPT 对话复审后才能运行外部生产。

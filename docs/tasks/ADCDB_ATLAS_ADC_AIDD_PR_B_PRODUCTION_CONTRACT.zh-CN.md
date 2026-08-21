@@ -37,11 +37,13 @@ ADCdb、Atlas matrix、文献全文和运行结果只通过外部路径与 prove
 所有输出位于外部 DATA 的单一 run root：
 
 ```text
-<BIOWORKSPACE_ROOT>/DATA/adcdb_atlas_adc_aidd/result/<run_id>/
+${BIOWORKSPACE_ROOT}/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/<pipeline_run_id>/
 ├── 00_governance/{run_lock.json,source_admission_bundle.json,source_snapshot_manifest.json,input_provenance.json,execution_log.json}
 ├── 02_adcdb_seed/{target_seed_candidates.tsv,seed_generation_summary.json,deferred_seed_candidates.tsv}
-└── 03_atlas_must_pass/{atlas_gate_results.tsv,atlas_must_pass.tsv,endpoint_population_map.tsv,population_causality_evidence.tsv,coverage_summary.tsv,atlas_failure_distribution.json,atlas_kill_decision.json}
+└── 03_atlas_kill_screen/{atlas_gate_results.tsv,atlas_must_pass.tsv,endpoint_population_map.tsv,population_causality_evidence.tsv,coverage_summary.tsv,atlas_failure_distribution.json,atlas_kill_decision.json}
 ```
+
+`run_id` 只是兼容字段，必须满足 `run_id == pipeline_run_id`，不得创建第二个运行标识或第二套结果根目录。
 
 仓库只提交契约、代码、测试和 handoff，不提交上述运行产物。
 
