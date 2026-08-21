@@ -3446,3 +3446,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Local preservation: 主工作区原有未跟踪 `AI_RESULT_ACCEPTANCE.md`、`CRC Patient Territory Map.png`、`STELLIGEN_CONSTRAINTS.md` 与新出现的 `pipelines/` 全部保留，未暂存、未修改。
 - Progress: 总体 `8% -> 10% (+2%)`；完成里程碑为设计批准并合并；未解除 blocker `SRCADM-02`；科学就绪度和实验/运营就绪度仍为 0%。
 - Next: 以独立任务分支和 PR 开始 Stage 0 source-admission contract；该合同通过前不得抓取或解析 ADCdb。
+
+## 2026-08-21T13:00 EDT — 参考用户 pipeline 第一版并启动 Design v0.2
+
+- Human input: 人类负责人指出主工作区 `pipelines/ADCdb_Atlas_ADC_AIDD_design.v0.1` 是第一版，可用于参考修改。
+- Preservation: 该文件为用户未跟踪原稿，完整读取但未修改、未暂存、未移动、未删除；主工作区其他未跟踪文件同样未触碰。
+- Baseline: PR #85 经同一 ChatGPT 对话明确 `APPROVE` 后，以精确 HEAD `b123b23` 合并为 `5b2fa3a`；从最新 `origin/main@5b2fa3a` 创建独立 worktree `/private/tmp/StelligenOS-adcdb-aidd-v0.2` 和分支 `task_20260821_adcdb-aidd-design-v0.2`。
+- Comparison: 第一版有更细的 output schemas、failure taxonomy、cross-stage provenance、cost-escalation checkpoints 和独立 antibody-hit validation；但其 S0-S10 编号与 `ADVANCE/KILL/GO` authority 不兼容当前 frozen Stage/Gate architecture，因此只吸收可兼容设计，不复制旧 authority。
+- Critical gap found: 0.1.0 Stage 8 需要实测 binder/epitope/internalization evidence，但 Stage 7 不产生 experimental binder hit，Stage 9A/9B 又位于 ADC assembly 后，形成 pre-assembly qualification 循环依赖。
+- Design v0.2: Stage 7 拆为 7A epitope/AIDD prediction 与 7B experimental antibody-hit validation；只有 `ADC_GRADE_HIT` 加 human conjugation authorization 才能进入 Stage 8。Stage 9A/9B 改为验证偶联后 construct 的 binding/delivery retention。
+- Contract detail: 新增 11 类主要 artifact 的最低字段、统一 provenance envelope、failure/block/error taxonomy，以及 AIDD、synthesis、conjugation、focused in-vivo 四个 human cost-escalation decisions。
+- Version/progress: canonical design 升为 `0.2.0-draft`，状态为 pending review 且 execution not authorized；总体仍为 `10% -> 10% (+0%)`，科学和实验/运营就绪度均为 0%。
+- Scope: 仅设计文档、handoff 和 worklog；未改 code/contracts/Gates/lifecycle/core objects；未执行数据、模型、AIDD、synthesis、ADC 或实验。
+- Self-review: 将 prototype 的 `target_landscape.tsv` 拆回当前 Stage 3 已声明的 crowding/IP/route 三份 artifact，Atlas schema 也改用既有 `target_atlas_evidence.tsv`，防止 appendix 生成第二套 authority；Stage 8 新增 `manufactured_lot_manifest.json` 并把无 `ADC_GRADE_HIT` 写成硬阻断；Stage 9C 去除与 9A 重复的 binding retention。
+- Validation: `555 passed, 4019 subtests passed`；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
+- Next: 自检一致性，运行全量 tests、repository boundary 和 diff check，提交新 PR 后沿用同一 ChatGPT 对话审核。

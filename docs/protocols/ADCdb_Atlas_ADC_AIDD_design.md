@@ -1,10 +1,11 @@
 # ADCdb–Atlas–ADC AIDD Design Pipeline
 
-- 文档版本：`ADCdb_Atlas_ADC_AIDD_Design@0.1.0`
-- 状态：`DESIGN_APPROVED_EXECUTION_NOT_AUTHORIZED`
+- 文档版本：`ADCdb_Atlas_ADC_AIDD_Design@0.2.0-draft`
+- 状态：`DESIGN_REVISION_PENDING_CHATGPT_REVIEW_EXECUTION_NOT_AUTHORIZED`
 - 首个疾病试点：`MSS/pMMR refractory metastatic colorectal cancer`
 - 适用策略：Small Biotech、repurposing-first、计算优先、外部平台协作
 - 当前授权：只设计，不执行 ADCdb 抽取、Atlas 分析、Gate 评分、AIDD、ADC 组装或实验
+- 修订基线：`0.1.0` 已由 PR #84/#85 审核收口；`0.2.0-draft` 只补 artifact contract、成本门控和 pre-assembly antibody-hit 接口
 
 ## 1. 最终目标与 100% 定义
 
@@ -104,6 +105,15 @@ NOT_AUTHORIZED
 5. ChatGPT 明确 `APPROVE` 后，下一 Stage 才可开始。
 
 `APPROVE_WITH_NONBLOCKING_COMMENTS` 不放行下一 Stage。脚本成功、产物存在或 AI 没发现 bug 也不构成放行。
+
+### 4.1 全局工程控制
+
+- **Fatal-first**：source、identity、patient territory、normal-tissue、surface accessibility、platform access 和明显 IP blocker 必须先于昂贵生成或实验工作求值。
+- **Unknown is not safe**：`UNKNOWN`、`UNRESOLVED`、`CONFLICTING` 和缺失证据都不能转成正结论，也不能静默丢弃。
+- **No silent fallback**：parser 失败、alias 无法消歧、structure 缺失、模型失败、平台不可用或实验批次失败必须形成显式 blocker/error artifact；不得用空表或 mock 输出继续。
+- **Immutable outputs**：任何被下游消费的 Stage 输出必须由 immutable run ID、pipeline version、source snapshot、code commit 和 checksum 唯一定位；修订必须产生新版本，不能原位覆盖。
+- **Stage-local claims**：target prior、Atlas context、binder prediction、实测 binder 和 ADC construct 是不同证据层，不得向下游升级宣称。
+- **Cost-escalation approval**：启动 AIDD、下单 binder synthesis、开始 ADC conjugation 和进入 focused in-vivo 前，分别需要独立 human decision artifact。
 
 ## 5. 单一外部运行根目录
 
@@ -237,20 +247,36 @@ Stage 5 的 shortlist 是 Target Opportunity shortlist，不是 ADC hit shortlis
 
 Stage 6 的正式承重链是：`SponsorFitAssessment@0.1.0` -> `ProgramCommitmentReview@0.2.0` -> `ValueInflectionPlan@0.1.0` -> human authorization -> asset-directed route。具有人类批准不等于获得 asset-directed commitment；non-asset-directed outcome 不得绕过 `BLOCKED_NO_COMMITMENT`。
 
-## 13. Stage 7 — Epitope White-space 与 AIDD Binder Discovery
+## 13. Stage 7 — Epitope White-space、AIDD 与 Experimental Antibody Hit
 
-目的：在 target biology 已部分去风险后，把创新集中到新的、可及的、可设计绕开的 epitope 和 binder。
+目的：在 target biology 已部分去风险后，把创新集中到新的、可及的 epitope 和 binder，并在 ADC assembly 前补齐真实 antibody-hit 证据。
+
+### 13.1 Stage 7A — Epitope hypothesis 与 AIDD design candidate
 
 | 项目 | 定义 |
 |---|---|
-| 输入 | approved TargetHypothesis；asset-directed `ProgramCommitmentReview@0.2.0` ref；`SponsorFitAssessment@0.1.0` ref；完整 ValueInflectionPlan ref；human authorization ref；extracellular-domain/topology/isoform/PTM evidence；known antibody/epitope map；target/antibody/epitope patent triage；species orthology；negative-design constraints；AIDD tool manifest |
+| 输入 | approved TargetHypothesis；asset-directed `ProgramCommitmentReview@0.2.0` ref；`SponsorFitAssessment@0.1.0` ref；完整 ValueInflectionPlan ref；human authorization ref；`aidd_execution_decision.json`；extracellular-domain/topology/isoform/PTM evidence；known antibody/epitope map；target/antibody/epitope patent triage；species orthology；negative-design constraints；AIDD tool manifest |
 | 顺序 | target biology → antigen engineering → epitope engineering → IP-guided epitope selection → structural preparation → negative design → de novo design → multi-objective ranking → diversity → focused wet-lab plan |
-| 输出 | `epitope_landscape.tsv`、`epitope_whitespace_brief.md`、`aidd_input.yaml`、`binder_candidates.fasta`（仅真实工具输出时）、`predicted_structures/`、`binder_ranking.tsv`、`focused_validation_plan.yaml`、`patent_triage.md` |
-| 放行条件 | epitope 在结构/拓扑上可及；避开明显已知 footprint/claims；候选保持 sequence diversity；developability、specificity、cross-reactivity 和 ADC carrier constraints 已进入目标函数；实验计划可执行 |
-| STOP/BLOCK | 没有可用 extracellular epitope；只有受阻断 claims 覆盖的 epitope；外部 AIDD 工具不可用却生成虚构序列；只按 affinity prediction 排序；没有 negative controls |
+| 输出 | `epitope_opportunities.tsv`、`epitope_packets/`、`aidd_input.yaml`、`binder_candidates.fasta`（仅真实工具输出时）、`predicted_structures/`、`binder_ranking.tsv`、`synthesis_panel.tsv`、`focused_validation_plan.yaml`、`patent_triage.md` |
+| 放行条件 | epitope 在结构/拓扑上可及；避开明显已知 footprint/claims；候选保持 sequence/structure diversity；developability、specificity、cross-reactivity 和 ADC carrier constraints 已进入目标函数；human synthesis decision 已存在 |
+| STOP/BLOCK | 没有可用 extracellular epitope；只有受阻断 claims 覆盖的 epitope；外部 AIDD 工具不可用却生成虚构序列；只按 affinity prediction 排序；没有 negative controls；没有 reproducible model/version/seed/input manifest |
 | 不得声称 | prediction 证明结合、epitope、internalization、可制造性、专利性或 ADC readiness |
 
-新 epitope 在律师和实验确认前只能称为 `epitope whitespace hypothesis`，不能称为已验证 novel epitope。
+新 epitope 在律师和实验确认前只能称为 `epitope whitespace hypothesis`，不能称为已验证 novel epitope。AIDD 输出只能称为 `design candidate`，不能称为 binder。
+
+### 13.2 Stage 7B — Experimental antibody-hit validation
+
+| 项目 | 定义 |
+|---|---|
+| 输入 | human-approved synthesis panel；真实 expressed binder lots；recombinant target；target-positive/negative cells；relevant refractory CRC models；benchmark/known-binder controls |
+| 最小实验 | identity/purity/aggregation/expression；biochemical binding；cell-surface binding；specificity；epitope verification/binning；internalization kinetics；trafficking/lysosomal delivery；cross-reactivity；developability |
+| 输出 | `antibody_hit_validation.tsv`、`binding_kinetics.tsv`、`epitope_validation.tsv`、`internalization_trafficking.tsv`、`developability_qc.tsv`、external experimental refs、`adc_grade_binder_decision.json` |
+| 允许状态 | `ADC_GRADE_HIT`、`NEEDS_OPTIMIZATION`、`BINDER_NOT_ADC_GRADE`、`FAIL` |
+| 放行条件 | 只有实验确认的 `ADC_GRADE_HIT`，且 identity/QC、specific binding、cell binding、epitope status、internalization/delivery 和 developability 可追溯，才允许进入 Stage 8 |
+| STOP/BLOCK | 未表达或错误 identity；无 target-specific binding；错误/未解析 epitope；只结合不内吞/不递送；严重 cross-reactivity 或 developability defect；实验数据只有转述无 source refs |
+| 不得声称 | 单一 affinity、单一 internalization readout 或计算预测等于 ADC-grade antibody；binder-level evidence 等于 ADC therapeutic window |
+
+Stage 7A 与 7B 是同一顶层 Stage 内的两个独立成本门。两者各自执行 contract approval、外部运行、result review 和 immutable output manifest；产物分别位于单一运行根下的 `07_epitope_aidd/7A_design/` 与 `07_epitope_aidd/7B_antibody_validation/`。7A result 获批后才能下单 synthesis；7B result 获批后才能开始 conjugation。这样避免 Stage 8 依赖尚未被任何上游 Stage 产生的实测 binder evidence。
 
 ## 14. Stage 8 — ADC Platform Assembly 与 Construct Design
 
@@ -258,11 +284,11 @@ Stage 6 的正式承重链是：`SponsorFitAssessment@0.1.0` -> `ProgramCommitme
 
 | 项目 | 定义 |
 |---|---|
-| 输入 | BinderCandidate sequences；实测 binding/epitope/internalization evidence；target density与heterogeneity；payload-cell-state hypothesis；platform capability/quality agreement；linker-payload/conjugation patent triage |
+| 输入 | Stage 7B `ADC_GRADE_HIT` ref；BinderCandidate sequences；实测 binding/epitope/internalization/trafficking/developability evidence；target density 与 heterogeneity；payload-cell-state hypothesis；platform capability/quality agreement；linker-payload/conjugation patent triage；human conjugation authorization |
 | 设计轴 | antibody format/Fc；conjugation site；linker release；payload class；DAR；hydrophobicity；stability；bystander requirement；cross-resistance；manufacturability；platform licence/FTO |
-| 输出 | `adc_design_matrix.tsv`、`platform_selection.md`、`construct_specifications.yaml`、`linker_payload_fto_triage.tsv`、`manufacturing_qc_plan.yaml`、外部 `manufactured_lot_refs`、batch-release QC refs、`ADCConstruct` refs |
+| 输出 | `adc_design_matrix.tsv`、`platform_selection.md`、`construct_specifications.yaml`、`linker_payload_fto_triage.tsv`、`manufacturing_qc_plan.yaml`、`manufactured_lot_manifest.json`、batch-release QC refs、`ADCConstruct` refs |
 | 放行条件 | 至少一个平台已实际承接并返回可追溯 lot；每个 construct 的 binder/linker/payload/site/DAR/spec 可追溯；基础 identity/purity/DAR/free-payload/aggregation release QC 合格；成熟组件优先；专利和许可边界已审查；构型有明确 failure hypothesis |
-| STOP/BLOCK | binder 未有基本实验支持就组装；payload 与 disease state/既往治疗明显不匹配；平台不能提供所需 chemistry；组合 claims 无 plausible design-around；同时引入多个未验证高风险组件 |
+| STOP/BLOCK | binder 没有 Stage 7B `ADC_GRADE_HIT` 就组装；payload 与 disease state/既往治疗明显不匹配；平台不能提供所需 chemistry；组合 claims 无 plausible design-around；同时引入多个未验证高风险组件 |
 | 不得声称 | 计算组合等于已制造 ADC；平台可用等于 construct 已满足质量标准；AI triage 等于 FTO clearance |
 
 Linker-payload 的正式选择和专利避让发生在这里，而不是 Stage 2 的 target universe 生成阶段。
@@ -273,12 +299,12 @@ Linker-payload 的正式选择和专利避让发生在这里，而不是 Stage 2
 
 | 子阶段 | 输入 | 最小输出 | 通过/停止重点 |
 |---|---|---|---|
-| 9A Binder identity | expressed binder、target/negative controls | identity/purity、binding kinetics、epitope binning、cell-surface binding、cross-reactivity | 无特异结合、错误 epitope、严重 cross-reactivity 即 STOP/ITERATE |
-| 9B Delivery phenotype | binder + target-positive/negative cells | internalization kinetics、trafficking/lysosomal delivery、antigen-density response | 只结合不递送不得进入 ADC hit |
-| 9C Extended conjugate QC | Stage 8 release-qualified constructs | 加速/血浆稳定性、binding retention、payload release、批间一致性 | 质量或稳定性不达标先修构型，不用 efficacy 掩盖 CMC 缺陷 |
+| 9A Construct identity + binding retention | Stage 8 release-qualified construct、matched unconjugated binder、target/negative controls | construct identity/QC trace、binding retention、cell-surface binding、specificity | 偶联后 binding/specificity 丢失即 STOP/ITERATE；不得用 Stage 7B binder 结果替代 construct 测量 |
+| 9B Delivery retention | release-qualified construct + target-positive/negative cells | ADC internalization kinetics、trafficking/lysosomal delivery、antigen-density response、与 unconjugated binder 的差异 | 偶联后只结合不递送，或 delivery 明显丢失，不得进入 ADC hit |
+| 9C Extended conjugate QC | Stage 8 release-qualified constructs | 加速/血浆稳定性、payload release、批间一致性 | 质量或稳定性不达标先修构型，不用 efficacy 掩盖 CMC 缺陷 |
 | 9D In-vitro ADC activity | qualified constructs + state-matched models | target-dependent killing、density threshold、bystander、payload sensitivity、resistance controls | killing 必须依赖 target/construct；游离 payload 对照不可缺 |
 | 9E Translational models | refractory mCRC cell/PDO/organoid/co-culture models | patient-state coverage、heterogeneity、normal-cell selectivity、combination hypothesis | 模型必须与 Stage 1 territory 匹配 |
-| 9F Focused in-vivo POC | selected hit(s) | exposure、efficacy、tolerability、PD/biomarker、failure analysis | 只做 ValueInflectionPlan 要求的最小 POC，不惯性扩张 |
+| 9F Focused in-vivo POC | selected hit(s) + `in_vivo_cost_escalation_decision.json` | exposure、efficacy、tolerability、PD/biomarker、failure analysis | 只做 ValueInflectionPlan 要求且经人类批准的最小 POC，不惯性扩张 |
 
 Stage 9 最终输出：
 
@@ -307,12 +333,97 @@ adc_hit_decision_package/
 | Stage 3 | Stage 4 | sponsor-relative routed target refs，不是科学 PASS |
 | Stage 4 | Stage 5 | Atlas evidence refs，不是 Gate result |
 | Stage 5 | Stage 6 | reviewed T12 Target Opportunity decision |
-| Stage 6 | Stage 7 | `ProgramCommitmentReview@0.2.0` 的 `SELF_DEVELOP`/`CO_DEVELOP`/`PARTNER_NOW` + `EXTERNAL_HANDOFF_REQUIRED` + `SponsorFitAssessment@0.1.0` ref + 完整 ValueInflectionPlan + human authorization；其余结果必须为 `BLOCKED_NO_COMMITMENT` |
-| Stage 7 | Stage 8 | binder candidates + real validation status + epitope/IP refs |
+| Stage 6 | Stage 7A | `ProgramCommitmentReview@0.2.0` 的 `SELF_DEVELOP`/`CO_DEVELOP`/`PARTNER_NOW` + `EXTERNAL_HANDOFF_REQUIRED` + `SponsorFitAssessment@0.1.0` ref + 完整 ValueInflectionPlan + human authorization + `aidd_execution_decision.json`；其余结果必须为 `BLOCKED_NO_COMMITMENT` |
+| Stage 7A | Stage 7B | human-approved diverse synthesis panel + epitope/IP refs + reproducible AIDD manifest；prediction 不是 binder |
+| Stage 7B | Stage 8 | experimental `ADC_GRADE_HIT` ref + binding/epitope/internalization/trafficking/developability refs + human conjugation authorization |
 | Stage 8 | Stage 9 | physically realized construct refs + QC plan |
 | Stage 9 | final | evidence-backed human `GO/ITERATE/STOP` decision |
 
 任何 Stage 不得通过复制下游字段、预填 PASS 或自然语言暗示绕过上游结果审核。
+
+### 16.1 最小机器可读 artifact contract
+
+下表定义的是每个输出投影的最低字段，不复制或取代现有 authoritative contract、Gate RuleBook 或外部 evidence store。后续 Stage contract PR 可以增加字段，但不能删除这些 provenance 和 decision-boundary 字段。
+
+| Stage artifact | 最低字段 |
+|---|---|
+| `source_admission_bundle.json` | source_id；admission_record_ref；snapshot_id；cutoff；checksum；licence/access；field whitelist；identity policy ref；review status |
+| `clinical_hypothesis.json` | clinical_hypothesis_id；disease/stage/biomarker；refractory definition；line/prior therapies；metastatic context；unmet need；intended benefit；endpoint class；patient-selection hypothesis；source refs；review status |
+| `adcdb_target_universe.tsv` | target_id；canonical gene/protein；aliases；n assets/clinical assets/sponsors/indications；highest credible stage；active/terminated counts；antibody/internalization/delivery refs；unknowns；source record refs |
+| `target_crowding_matrix.tsv` | target_id；global/CRC crowding evidence；active/late-stage/approved programme counts；sponsor concentration；same-territory occupancy；epitope crowding；termination/readout refs；unknowns |
+| `target_ip_triage.tsv` | target_id；target/antibody/epitope claim refs；design-around plausibility；preliminary risk；counsel-required flag；unknowns；evidence refs；不得写 `FTO_CLEARED` |
+| `target_route_decisions.tsv` | target_id；crowding ref；IP triage ref；early platform feasibility；differentiation hypothesis；sponsor route；fatal blocker；human reviewer；decision rationale |
+| `target_atlas_evidence.tsv` | target_id；malignant expression/specificity；patient/tumor-cell prevalence；heterogeneity/spatial coverage；refractory-state evidence；normal-tissue risk；protein/surface support；conflicts；unknowns；evidence refs |
+| `gate_results.tsv` | target_id；gate_id/version；status；score/confidence when defined；fatal flag；supporting/opposing refs；missing information；recommended validation；human reviewer；T12 disposition ref |
+| `program_commitment_review.json` | target decision ref；sponsor fit ref；commitment outcome；downstream status；ValueInflectionPlan ref；stop conditions；capability sources；human authorization ref |
+| `epitope_opportunities.tsv` | target_id；epitope_id；residue/structural patch；structure ref；surface accessibility；glycosylation/PTM risk；membrane proximity；known-binder/patent overlap；internalization hypothesis；uncertainty；decision |
+| `binder_ranking.tsv` | target_id；epitope_id；candidate_id；sequence refs；model/version/seed；predicted epitope engagement；structure confidence；developability/specificity/cross-reactivity proxies；family cluster；uncertainty；decision |
+| `antibody_hit_validation.tsv` | target/epitope/candidate/lot IDs；identity/QC；binding and cell-binding status；specificity；epitope status；internalization/trafficking；cross-reactivity；developability；experimental refs；overall status |
+| `adc_design_matrix.tsv` | target/binder/design IDs；conjugation method/site；linker/payload classes；DAR target；bystander hypothesis；platform/source/access；preliminary IP risk；rationale；design decision |
+| `manufactured_lot_manifest.json` | design/construct/lot IDs；platform/manufacturer refs；binder/linker/payload/site/DAR identity；manufacturing date；chain of custody；release-QC refs；artifact checksum；release status |
+| `adc_hit_decision_package` | construct refs；release/extended QC；binding/delivery retention；target-dependent activity；controls；reproducibility；translational evidence；failure analysis；human `GO/ITERATE/STOP` |
+
+每一行或 evidence object 还必须携带适用的通用 envelope：
+
+```text
+pipeline_run_id
+pipeline_version
+stage_id
+artifact_schema_version
+record_id
+source_snapshot_refs
+source_record_refs
+code_commit
+software_or_model_versions
+config_checksum
+artifact_checksum
+created_at
+created_by
+evidence_refs
+review_status
+```
+
+### 16.2 Failure、blocker 与 pipeline error 分类
+
+失败必须可学习、可路由，不能只留一个 `FAIL`。至少使用以下分类：
+
+```text
+SOURCE_ADMISSION_BLOCK
+IDENTITY_RESOLUTION_BLOCK
+CLINICAL_TERRITORY_BLOCK
+ADC_PRECEDENT_INSUFFICIENT
+CRC_CONTEXT_FAIL
+NORMAL_TISSUE_FAIL
+SURFACE_ACCESS_FAIL
+INTERNALIZATION_FAIL
+TRAFFICKING_FAIL
+COMPETITION_ROUTE_BLOCK
+IP_RISK_BLOCK
+PLATFORM_ACCESS_BLOCK
+EPITOPE_FAIL
+AIDD_PIPELINE_ERROR
+BINDER_BINDING_FAIL
+BINDER_DEVELOPABILITY_FAIL
+ADC_CONJUGATION_FAIL
+ADC_MECHANISM_FAIL
+PAYLOAD_MISMATCH
+TRANSLATIONAL_FAIL
+EVIDENCE_INSUFFICIENT
+PIPELINE_ERROR
+```
+
+`BLOCK` 表示当前不能继续，不等于科学 KILL；`PIPELINE_ERROR` 表示流程/工具失败，不得转成资产结论；`EVIDENCE_INSUFFICIENT` 保持未知并进入补证或 HOLD。每条记录必须有 `failure_class`、`failed_stage`、`affected_claims`、`evidence_refs`、`recoverable`、`recommended_next_action`。
+
+### 16.3 成本跃迁的人类审批点
+
+| 成本跃迁 | 必须的人类 decision artifact | 未获批时 |
+|---|---|---|
+| Stage 6 -> 7A AIDD execution | asset-directed commitment + `aidd_execution_decision.json` | `BLOCKED_NO_COMMITMENT` |
+| Stage 7A -> 7B synthesis/experimental validation | `synthesis_panel_decision.json` | 不下单、不生成虚构实验结果 |
+| Stage 7B -> 8 conjugation/manufacturing | `conjugation_authorization.json` + `ADC_GRADE_HIT` ref | 不组装 ADC |
+| Stage 9E -> 9F focused in-vivo | `in_vivo_cost_escalation_decision.json` + ValueInflectionPlan criterion | 不惯性扩张到动物实验 |
+
+这些 decision artifact 只授权指定的一次成本跃迁，不授权后续 Stage，也不替代 result review。
 
 ## 17. 全局验收规则
 
@@ -333,7 +444,7 @@ adc_hit_decision_package/
 
 | Workstream | 权重 | 100% 完成标准 | 当前状态 | 当前 blocker | 下一里程碑 |
 |---|---:|---|---|---|---|
-| Pipeline 设计与治理 | 10% | 本设计通过 PR/ChatGPT 审核并合并 | complete，10/10 | none | Stage 0 contract PR |
+| Pipeline 设计与治理 | 10% | 本设计通过 PR/ChatGPT 审核并合并 | approved baseline 0.1.0；0.2.0 draft pending review，10/10 | 0.2.0 尚未 `APPROVE` | 设计修订 PR |
 | Source admission 与快照 | 10% | ADCdb/Atlas/专利/临床来源可审计并冻结 | not started | `SRCADM-02` ADCdb 未准入 | Stage 0 contract PR |
 | Refractory territory lock | 10% | ClinicalHypothesis anchored | not started | 需把人类约束固化为版本化输出 | Stage 1 contract/run |
 | Target prior 与 crowding/IP triage | 15% | ADCdb universe 和 sponsor-relative route 结果获批 | not started | 依赖 Stage 0/1 | Stage 2/3 |
@@ -342,7 +453,7 @@ adc_hit_decision_package/
 | ADC assembly | 10% | 至少一个 construct 被实际制造并 QC | not started | 依赖 binder 实验证据与平台协议 | Stage 8 |
 | Progressive validation | 10% | 至少一个 ADC hit 有 `GO/ITERATE/STOP` 决策包 | not started | 依赖 wet-lab/CRO 资源 | Stage 9 |
 
-当前总体进度：`8% → 10% (+2%)`。这 10% 只表示设计与治理里程碑经 ChatGPT `APPROVE` 并由 PR #84 合并；不表示任何 source admission、科学分析或实验执行已经开始。
+当前总体进度：`10% → 10% (+0%)`。获批的 0.1.0 已完成设计与治理里程碑；0.2.0-draft 只关闭接口和 schema 缺口，不增加科学或运行完成度。它获批前以 0.1.0 为有效基线。
 
 - 工程/设计治理完成度：`10%`
 - 科学就绪度：`0%`（尚未运行 ADCdb、Atlas 或 Gate）
