@@ -5,8 +5,8 @@
 - 任务编号：`task_20260821`
 - 分支：`task_20260821_adcdb-atlas-adc-aidd-design`
 - 基线：`origin/main@2eeb298`
-- PR：待创建
-- Commit：待提交
+- PR：https://github.com/leezx/StelligenOS/pull/84
+- Commit：`3d3d6c5`
 - 时间：`2026-08-21 12:30 EDT`
 - 状态：`DESIGN_COMPLETE_PENDING_CHATGPT_REVIEW`
 
@@ -73,8 +73,8 @@
 
 ## 下一步
 
-1. 创建 design-only PR。
-2. ChatGPT 审核当前 PR；若 `REQUEST_CHANGES`，只在同一 PR 修订设计。
+1. 将 PR #84 标记 ready for review。
+2. ChatGPT 审核 PR #84；若 `REQUEST_CHANGES`，只在同一 PR 修订设计。
 3. 明确 `APPROVE` 并合并后，再开始 Stage 0 ADCdb source-admission contract；本 PR 不授权真实运行。
 
 ## 数据边界声明

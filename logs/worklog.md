@@ -3419,4 +3419,5 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Blocker: `SRCADM-02` ADCdb 尚未准入；本 design-only PR 不解除 blocker，也不授权任何外部运行。
 - Self-review: 发现 Stage 5 使用泛化 `ADVANCE/REJECT` 而非冻结 T12 disposition；已修正为 `PROVISIONAL_ADVANCE`、`EXPLORATION`、`HOLD`、`FAIL`。同时补明 Stage 8 必须包含真实 manufactured lot 与基础 batch-release QC，Stage 9C 只承接 extended conjugate QC，避免“只有 construct spec 却声称已进入验证”的接口矛盾。
 - Validation: `555 passed, 4019 subtests passed`；repository boundary 通过；`git diff --check` 通过；10 个 Stage 标题完整。
-- Next: 显式暂存设计、导航、handoff 和 worklog，创建 PR 并沿用本项目同一 ChatGPT 网页审核对话。
+- Git: 显式暂存 4 个文件，提交 `3d3d6c5` 并推送；创建 draft PR #84，base 为 `main`。未使用 `git add .`、`git add -A` 或 `git add --all`。
+- Next: 补入 PR metadata、标记 ready for review，并沿用本项目同一 ChatGPT 网页审核对话。
