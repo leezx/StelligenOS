@@ -3526,3 +3526,10 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Added handoff: `docs/handoff/2026-08-21-adcdb-atlas-aidd-pr-a-contract.zh-CN.md`。
 - Key operationalization: G1/G4 默认阈值与 patient ID 聚合规则；G2 mapping cohort/classifier/effect 规则；G3 Tier A/B/C causality evidence tiers；G5-G7 pass/kill/unknown；TargetCommit 严格一个 primary、最多一个 backup 或 NO_GO。
 - Scope: 未修改 v0.3 canonical design；未下载/读取 ADCdb，未生成 TargetSeed，未运行 Atlas/Gate/AIDD，未创建 DATA/result/cache/model output。
+
+## 2026-08-21T19:35 EDT — PR-A 创建与审核前交接
+
+- Validation: `562 passed, 4019 subtests passed`；`git diff --check` 通过。仓库边界脚本仍只报告既有用户未跟踪文件，均未加入暂存区。
+- Git: 仅提交 5 个 PR-A 文件，commit `de96148`；推送分支 `task_20260821_adcdb-aidd-pr-a-contract`。
+- Pull request: 创建非 draft PR #89：`https://github.com/leezx/StelligenOS/pull/89`。
+- Review boundary: PR #89 仍是 contract-only；尚未获得 ChatGPT `APPROVE` 前，不读取 ADCdb、不生成 TargetSeed、不运行 Atlas。PR-A 获批后只进入 PR-B，仍需 PR-B 的独立审核才能执行真实生产。

@@ -6,6 +6,8 @@
 - 状态：`CONTRACT_REVIEW_REQUIRED_EXECUTION_NOT_AUTHORIZED`
 - 合同：`ADCdb_Atlas_ADC_AIDD_PR_A_Contract@0.1.0`
 - 审核对话：Chrome ChatGPT `Biotech ideas → ADCdb_Atlas_ADC_AIDD_design`
+- PR：[#89](https://github.com/leezx/StelligenOS/pull/89)
+- 提交：`de96148`
 
 ## 本 PR 做什么
 
@@ -22,5 +24,5 @@ PR-A 获批后，PR-B 才能固定 ADCdb snapshot，生成第一批约 20–50 �
 ## 当前阻断与下一步
 
 - 当前阻断：PR-A 尚未获得 ChatGPT `APPROVE`。
-- 下一步：完成本地测试和边界检查，创建 PR-A，提交同一 ChatGPT 对话审核。
+- 下一步：把 PR #89 提交到同一 ChatGPT 对话审核，等待明确 `APPROVE`。
 - 只有明确 `APPROVE` 后，才允许进入 PR-B。
