@@ -3473,3 +3473,29 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Merge: 重新核对 GitHub HEAD/mergeability/CI 后，按精确获批 SHA 合并 PR #86，merge commit `ad92c5aaa02216e8d8342b9e9b124e0dc1658196`。
 - Progress: 总体保持 `10% -> 10% (+0%)`；设计版本收口为 `0.2.0`，科学与实验/运营就绪度仍为 0%，`SRCADM-02` 未解除。
 - Next: 纯审计 closeout 保存批准事实；之后另建 Stage 0 source-admission contract PR。
+
+## 2026-08-21T14:20 EDT — ADCdb–Atlas–ADC AIDD Design v0.3 编制
+
+- Input: 读取用户提供的 v0.3 feedback；核心要求是把 v0.2 从过度工程化的 target evaluation system 改成有限步骤内强制输出 `PRIMARY_TARGET`、最多一个 `BACKUP_TARGET` 或 `NO_GO` 的 funnel。
+- Preservation: 原 v0.2 canonical 文档原样保存为 `docs/protocols/ADCdb_Atlas_ADC_AIDD_design.v0.2.md`；用户未跟踪的 prototype `pipelines/ADCdb_Atlas_ADC_AIDD_design.v0.1` 未修改、未暂存、未移动。
+- Revision: canonical `docs/protocols/ADCdb_Atlas_ADC_AIDD_design.md` 升为 `ADCdb_Atlas_ADC_AIDD_Design@0.3.0`，加入明确的 v0.3 precedence rule 和执行配置。
+- Design changes: target-selection critical path 压缩为 `LOCK -> ADCdb SEED -> ATLAS MUST-PASS -> DEVELOPABILITY MUST-PASS -> TARGET_COMMIT`；Atlas 只做 G1 expression/prevalence、G2 endpoint-driving population mapping、G3 endpoint-population causality、G4 coverage；developability 只对约 3-5 个 active target 做 G5 normal-tissue fatal risk、G6 competition/Small-Biotech feasibility、G7 epitope whitespace。
+- Scientific boundary: 将原 T3 causality 明确解释为 `endpoint_population_causality`，不要求 ADC target 本身必须 causal；保留 RNA != surface protein、ADC precedent != CRC efficacy/internalization、target-level precedent != new binder evidence 的边界。
+- Decision contract: 新增 `target_commit.json` / `target_commit_table.tsv` 最低 contract，主干输出严格为 `PRIMARY_TARGET`、最多一个 `BACKUP_TARGET` 或 `NO_GO`；采用 ADC precedent、patient coverage、population evidence、normal-tissue margin、competition whitespace、epitope whitespace、execution ease 的 lexicographic tie-break，不训练黑盒综合分数。
+- Uncertainty: 新增 `FATAL_UNKNOWN`、`RESOLVABLE_CRITICAL_UNKNOWN`、`CARRIED_RISK` 三分类；一次性 critical evidence acquisition 仍未解决时退出 active funnel，构型特异 internalization 作为 carried risk 延后到 binder 实验。
+- Governance: SponsorFit/ProgramCommitment/ValueInflection 不删除，降级为 target commit 后的 `DevelopmentRoute` metadata；target selection 审核分为 PR-A contract、PR-B seed+Atlas result、PR-C developability+TargetCommit，PR-C APPROVE 后才可建立 PR-D Epitope/AIDD。
+- Scope: 本 PR 只修改设计文档、v0.2 historical snapshot 和 worklog；根级 HANDOFF 另行更新但不属于本 PR changed files。未执行 ADCdb/Atlas/Gate/TargetCommit/AIDD/synthesis/ADC/实验，未写入 DATA，未改 authoritative contracts、Gate、lifecycle 或 core objects。
+- Progress: `10% -> 10% (+0%)`; design/governance remains `10%`, scientific and experimental/operational readiness remain `0%`; unresolved blocker remains `SRCADM-02` ADCdb admission.
+- Next: run repository tests/boundary/diff checks, explicitly stage only confirmed text files, commit/push branch, create PR, then submit to the existing ChatGPT `ADC研发框架优化` review conversation.
+- Validation: `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest tests/ -q -p no:cacheprovider` passed (`555 passed, 4019 subtests passed`); `git diff --check` passed. `scripts/verify_repository_boundary.sh` reported only pre-existing user-owned untracked `pipelines/`, `STELLIGEN_CONSTRAINTS.md`, `CRC Patient Territory Map.png`, and `AI_RESULT_ACCEPTANCE.md`; none were modified or staged.
+- Git: explicitly staged only the canonical v0.3 design, immutable v0.2 snapshot, and worklog; committed `f04fc06`; pushed branch `task_20260821_adcdb-aidd-design-v0.3`; created non-draft PR #88: https://github.com/leezx/StelligenOS/pull/88. No unrelated user files were staged.
+
+## 2026-08-21T18:20 EDT — PR #88 REQUEST_CHANGES 修复
+
+- Review input: 指定 ChatGPT 审核返回 `REQUEST_CHANGES`，确认 CI success，并指出两个 blocker：canonical v0.3 同时保留旧 v0.2 authoritative critical path；`TargetSeed` 把 Atlas 才能发现的 endpoint-driving population 当成 ADCdb seed 输入。
+- Fix 1: 将 canonical `docs/protocols/ADCdb_Atlas_ADC_AIDD_design.md` 重写为唯一的 v0.3 authoritative pipeline；v0.2 完整内容只保留在 `docs/protocols/ADCdb_Atlas_ADC_AIDD_design.v0.2.md`，不再在 canonical 末尾复制。v0.3 正式迁入 provenance/source boundary、Stage 7B antibody validation、ADC assembly、progressive validation 和最小 I/O contract。
+- Fix 2: 将 TargetSeed minimum contract 修正为 `Patient Territory × Intended Benefit/Endpoint Class × ADC Target × ADC Precedent × Initial Development Hypothesis`；`endpoint_driving_population=UNRESOLVED` 与 `population_causality=UNRESOLVED` 在 Stage 1 合法且必须显式写出，Stage 2 Atlas survivor 后才 materialize TargetHypothesis fields。
+- Fix 3: 明确 Stage 3 Developability MUST-PASS 只消费 Atlas MUST-PASS survivors，理想规模约 3-5 个，数字 descriptive、非 hard-coded。
+- Fix 4: 修正 scope 事实记录：本 PR changed files 是 protocol、v0.2 historical snapshot、worklog；根级 HANDOFF 虽已另行更新，但不属于 PR changed files。
+- Preserved: population causality != target causality、RNA != surface protein、ADC precedent != CRC efficacy、carried internalization risk、lexicographic tie-break、TargetCommit、Sponsor route 非 science gate、PR-A/B/C/D 分组均保留。
+- Validation pending: 重新运行 pytest、diff check、boundary check；仅显式暂存上述 3 个仓库文件，追加修复提交到 PR #88，等待同一 ChatGPT 对话复审。
