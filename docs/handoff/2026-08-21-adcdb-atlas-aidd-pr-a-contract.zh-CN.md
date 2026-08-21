@@ -3,7 +3,7 @@
 - 日期：2026-08-21
 - 分支：`task_20260821_adcdb-aidd-pr-a-contract`
 - 基线：远程 `main`，包含 PR #88 merge commit `a8afcd4`
-- 状态：`CONTRACT_REVIEW_REQUIRED_EXECUTION_NOT_AUTHORIZED`
+- 状态：`APPROVED_PR_A_PREPARE_PR_B_EXECUTION_NOT_AUTHORIZED`
 - 合同：`ADCdb_Atlas_ADC_AIDD_PR_A_Contract@0.1.0`
 - 审核对话：Chrome ChatGPT `Biotech ideas → ADCdb_Atlas_ADC_AIDD_design`
 - PR：[#89](https://github.com/leezx/StelligenOS/pull/89)
@@ -24,6 +24,6 @@ PR-A 获批后，PR-B 才能固定 ADCdb snapshot，生成第一批约 20–50 �
 
 ## 当前阻断与下一步
 
-- 当前阻断：ChatGPT 对 PR #89 返回 `REQUEST_CHANGES`，要求补齐 LOCK schema 和 G1/G2/G4 的统计闭合规则。
-- 下一步：只修复上述两个 execution-closure blocker，追加测试并在同一 ChatGPT 对话复审。
+- 当前状态：ChatGPT 已对 PR #89 最新 HEAD `2a2e21b` 返回明确 `APPROVE`；确认两个 execution-closure blocker 已关闭，CI #125 通过。
+- 下一步：准备独立 PR-B；PR-A 批准不授权读取/下载 ADCdb 或运行真实 Atlas。
 - 只有明确 `APPROVE` 后，才允许进入 PR-B。

@@ -3542,3 +3542,21 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Fix 3: 固定 G2 mapping effect 为 `population_state_prevalence_ratio = prevalence(state|target_positive) / max(prevalence(state|target_negative), 0.01)`，最低 2.0，执行前冻结；G4 PASS 明确至少 2 个独立 cohort。
 - Fix 4: 增加 contract tests 覆盖 LOCK schema、patient reducer、G2 metric、G4 cohort minimum；同步修正 handoff 中 contract commit 与 review-handoff HEAD 的事实记录。
 - Boundary: 仍未修改 v0.3 canonical design，未读取/下载 ADCdb，未生成 TargetSeed/Atlas/TargetCommit，未创建 DATA/result/cache/model output；修复后需在同一 ChatGPT 对话复审，未 APPROVE 前不得进入 PR-B。
+
+## 2026-08-21T23:55 EDT — PR-A ChatGPT APPROVE
+
+- Review result: 指定 ChatGPT 在同一 `Biotech ideas → ADCdb_Atlas_ADC_AIDD_design` 对话复审 PR #89 最新 HEAD `2a2e21b07c946e3b2b4f3e83a047c260cb5a3e28`，明确返回 `APPROVE`，确认上一轮两个 blocker 均已关闭。
+- Verified: `TargetSelectionLock@0.1.0`、authoritative `clinical_territory.yaml`、derived `clinical_hypothesis.json`、cross-field invariants、统一 patient aggregation、G2 prevalence-ratio metric、G4 two-cohort minimum 和 regression tests 均被确认。
+- CI/review facts: PR #89 open/non-draft/mergeable；CI #125 Python 3.11/3.12 success；564 tests passed；5 changed files；v0.3 canonical、ADCdb、TargetSeed、Atlas、TargetCommit、data/result/cache/model output 均未进入 PR。
+- Approval boundary: 只批准 PR-A execution contract，并允许准备 PR-B；不授权 PR-A 中读取/下载 ADCdb、生成真实 TargetSeed、运行 Atlas/Gates、生成 TargetCommit、G5-G7、PR-C 或 AIDD。
+- Next: 准备独立 PR-B contract/result workflow；在 PR-B 获得独立 ChatGPT `APPROVE` 前，不执行真实 ADCdb/Atlas 生产运行。此条审核记录先保留在本地 worklog，避免改变已批准的 PR-A HEAD。
+
+## 2026-08-22T00:20 EDT — PR-B production contract preparation
+
+- Baseline: 从已获 PR-A `APPROVE` 的 HEAD `2a2e21b` 建立分支 `task_20260821_adcdb-aidd-pr-b-production-contract`；未读取 ADCdb 或 Atlas 外部数据。
+- Added human contract: `docs/tasks/ADCDB_ATLAS_ADC_AIDD_PR_B_PRODUCTION_CONTRACT.zh-CN.md`，说明 PR-B 的运行前置、固定顺序、输入、外部 DATA 输出、G1–G4 结果和空 survivor 路由。
+- Added machine contract: `docs/pools/adcdb_atlas_adc_aidd_pr_b_production.yaml`，固定 PR-A head dependency、source/snapshot approval、20–50 capacity target、G1–G4 only、prohibited outputs 和 external-run approval boundary。
+- Added tests: `tests/test_adcdb_atlas_pr_b_contract.py`，只检查 contract shape，不读取或运行外部数据；PR-B contract tests `6 passed`。
+- Added handoff: `docs/handoff/2026-08-22-adcdb-atlas-aidd-pr-b-production.zh-CN.md`。
+- Scope: 未创建 DATA/result/cache/model output，未生成真实 TargetSeed，未运行 G1–G4，未执行 G5–G7/TargetCommit/AIDD，未修改 frozen v0.3。
+- Next: 完成全量测试，显式提交并推送 PR-B，使用同一 ChatGPT 对话审核；在 PR-B `APPROVE` 前不得开始真实生产运行。
