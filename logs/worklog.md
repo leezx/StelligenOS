@@ -3407,3 +3407,16 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 合并：PR #83 → `main`
 - Next: 8 个未 grounding 的 Pass A 候选（A1–A5、A21、A22、A24）留待后续
   `authorises_run_count` 重新授权；本 PR 不构成、也不暗示任何 WP3 授权
+
+## 2026-08-21T12:30 EDT — ADCdb–Atlas–ADC AIDD Pipeline 设计
+
+- Instruction: 人类负责人要求先设计一条 Small Biotech 约束下的完整 pipeline，再逐步运行并逐 Stage 通过 PR/ChatGPT 审核；CRC 首个硬约束为 MSS/pMMR refractory mCRC。
+- Baseline: 从 `origin/main@2eeb298` 创建独立 worktree `/private/tmp/StelligenOS-adcdb-atlas-aidd` 和分支 `task_20260821_adcdb-atlas-adc-aidd-design`；主工作区已有 3 个用户未跟踪文件，全部保留不动。
+- Read: workspace/repo AGENTS、HANDOFF、环境与索引、当前 architecture/lifecycle/Gate、WP2B、Search-Space Admission、Program Commitment、ValueInflectionPlan、ADCdb 派生 reference metadata，以及 epitope AIDD、binder engineering、target safety 和 due-diligence 模块。
+- Design: 新增 `docs/protocols/ADCdb_Atlas_ADC_AIDD_design.md`，把流程拆成 Stage 0–9：source admission → refractory territory lock → ADCdb target prior → crowding/IP triage → Atlas transfer validation → T-chain → commitment/value inflection → epitope AIDD → ADC platform assembly → progressive validation。
+- Key boundary: target crowding、epitope/antibody IP 和 linker-payload FTO 分开；linker-payload 正式选择延后到 ADC assembly；ADCdb precedent 只降风险，不自动通过 CRC transfer、internalization、Gate 或 safety。
+- Progress definition: 100% 为一次完整、可复现、可审计运行达到至少一个实验支持 ADC hit 的 `GO/ITERATE/STOP` 决策包；当前 `0% → 8% (+8%)`，仅代表设计草案，科学/实验就绪度均为 0%。
+- Blocker: `SRCADM-02` ADCdb 尚未准入；本 design-only PR 不解除 blocker，也不授权任何外部运行。
+- Self-review: 发现 Stage 5 使用泛化 `ADVANCE/REJECT` 而非冻结 T12 disposition；已修正为 `PROVISIONAL_ADVANCE`、`EXPLORATION`、`HOLD`、`FAIL`。同时补明 Stage 8 必须包含真实 manufactured lot 与基础 batch-release QC，Stage 9C 只承接 extended conjugate QC，避免“只有 construct spec 却声称已进入验证”的接口矛盾。
+- Validation: `555 passed, 4019 subtests passed`；repository boundary 通过；`git diff --check` 通过；10 个 Stage 标题完整。
+- Next: 显式暂存设计、导航、handoff 和 worklog，创建 PR 并沿用本项目同一 ChatGPT 网页审核对话。

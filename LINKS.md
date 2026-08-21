@@ -14,6 +14,7 @@
 - [Phase 0.5 Report](./docs/phases/PHASE_0_5_REPORT.zh-CN.md)
 - [ChatGPT-Codex Talk](./ChatGPT-Codex-talk.md)
 - [ChatGPT-Codex Phase Gate Protocol](./docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md)
+- [ADCdb–Atlas–ADC AIDD Design Pipeline](./docs/protocols/ADCdb_Atlas_ADC_AIDD_design.md)
 - [Worklog](./logs/worklog.md)
 - [Git Sync Script](./scripts/git_sync.sh)
 - [Handoff Template](./docs/handoff/TEMPLATE.zh-CN.md)
