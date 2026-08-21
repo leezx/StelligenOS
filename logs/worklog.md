@@ -3433,4 +3433,5 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Scope: 仍是 design-only；未修改合同、Gate、lifecycle、core objects 或代码；未执行任何数据抓取、Atlas、Gate、AIDD、ADC manufacture 或外部运行。
 - Progress: 总体保持 `0% -> 8% (+8%)`；当前修复不等于 `APPROVE`，科学与实验/运营就绪度仍为 0%。
 - Validation after fix: `555 passed, 4019 subtests passed`；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
+- Git: 显式暂存上述 4 个文本文件并提交 `5ac8595`（`task_20260821: align AIDD authorization gate`）；未使用 `git add .`、`-A` 或 `--all`。
 - Next: 全量验证，显式暂存预期文本文件，推送同一 PR #84，再在同一 ChatGPT 对话复审。
