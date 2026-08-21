@@ -47,3 +47,13 @@
 - Escalated push was rejected by the safety reviewer because the new handoff contained the private ChatGPT conversation URL, which was unnecessary metadata for the public GitHub PR.
 - Removed the private URL from the task-owned handoff; retained only the human-readable designated conversation name.
 - No design, scientific, stage, Gate, data or authorization semantics changed.
+
+## 2026-08-21T15:13-04:00 — Push 与 PR 创建
+
+- Re-amended safe initial commit: `f440b50`, still exactly three newly created files.
+- Push succeeded to `origin/task_20260821_cancer-vaccine-phase0`.
+- GitHub connector PR creation returned 403 (`Resource not accessible by integration`); no repository state was changed by that failed attempt.
+- Used authenticated GitHub CLI fallback to create non-draft PR #90: `https://github.com/leezx/StelligenOS/pull/90`.
+- PR base is `main`; PR description includes project background, Phase 0/new-file-only scope, validation, parallel safety and explicit non-authorization boundary.
+- Open concurrent PR #89 changed-file list was checked. It changes ADC PR-A contract/test/worklog files; there is zero filename overlap with this PR's three task-owned files.
+- Next: add PR metadata in the existing task-owned handoff/worklog, push final review HEAD, wait for CI, and submit to the already initialized ChatGPT conversation.

@@ -5,8 +5,9 @@
 - 任务编号：`task_20260821_cancer_vaccine_phase0`
 - 分支：`task_20260821_cancer-vaccine-phase0`
 - 基线：`origin/main@a8afcd4f50cf676189e268d1a8c0674972e5d4c6`
-- PR：待创建
-- Commit：待创建
+- PR：`https://github.com/leezx/StelligenOS/pull/90`
+- Initial design commit：`f440b50`
+- Review HEAD：以远程 PR tip 为准，并在 ChatGPT 审核指令中锁定精确 SHA
 - Design：`docs/protocols/Cancer_Vaccine_Indication_Neoantigen_Portfolio_design.md`
 - Version：`Cancer_Vaccine_Indication_Neoantigen_Portfolio_Design@0.1.0-draft`
 - Status：`DESIGN_REVIEW_REQUIRED_EXECUTION_NOT_AUTHORIZED`
@@ -109,6 +110,6 @@ git status --short
 
 ## 下一步与放行边界
 
-下一步是验证、显式暂存三个新文件、提交/推送、创建 PR，并在同一 ChatGPT 对话附加 PR、背景、HEAD、CI 与 new-file-only 清单进行审核。
+下一步是提交本 PR metadata、推送最新 HEAD、等待 CI，并在同一 ChatGPT 对话附加 PR、背景、HEAD、CI 与 new-file-only 清单进行审核。
 
 在 ChatGPT 对当前 PR 明确 `APPROVE` 前，不得进入 PR-A、建立 source registry、下载数据、运行 territory discovery、建立 truth set 或执行任何后续 stage。
