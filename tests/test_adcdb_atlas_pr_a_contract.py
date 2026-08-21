@@ -25,6 +25,15 @@ class PRATargetSelectionContractTests(unittest.TestCase):
             self.assertIn(field, source["required_fields"])
         self.assertIn("manifest_sha256", source["snapshot_required_fields"])
 
+    def test_lock_freezes_authoritative_territory_and_hypothesis_boundary(self):
+        lock = CONTRACT["lock"]
+        self.assertEqual(lock["schema"], "TargetSelectionLock@0.1.0")
+        self.assertEqual(lock["authoritative_clinical_territory"], "clinical_territory.yaml")
+        self.assertEqual(lock["derived_clinical_hypothesis"], "clinical_hypothesis.json")
+        for field in ("territory_id", "schema_version", "refractory_definition", "intended_benefit", "endpoint_class", "review_status"):
+            self.assertIn(field, lock["required_fields"])
+        self.assertTrue(any("cannot widen" in rule for rule in lock["cross_field_invariants"]))
+
     def test_seed_keeps_population_and_causality_unresolved(self):
         seed = CONTRACT["target_seed"]
         self.assertEqual(
@@ -40,6 +49,17 @@ class PRATargetSelectionContractTests(unittest.TestCase):
         for gate in ("g1_expression_prevalence", "g2_population_mapping", "g3_population_causality", "g4_coverage"):
             self.assertIn("policy_id", atlas[gate])
             self.assertIn("otherwise", atlas[gate])
+
+    def test_patient_aggregation_and_g2_metric_are_frozen(self):
+        atlas = CONTRACT["atlas"]
+        aggregation = CONTRACT["patient_aggregation_policy"]
+        self.assertEqual(aggregation["reducer"], "pooled_malignant_cells_across_valid_samples_within_patient")
+        self.assertEqual(aggregation["numerator"], "target_positive_malignant_cells")
+        self.assertEqual(aggregation["denominator"], "all_valid_malignant_cells")
+        self.assertEqual(atlas["g2_population_mapping"]["pass"]["effect_metric"], "population_state_prevalence_ratio")
+        self.assertEqual(atlas["g2_population_mapping"]["pass"]["effect_min"], 2.0)
+        self.assertTrue(atlas["g2_population_mapping"]["pass"]["metric_must_be_frozen_before_run"])
+        self.assertEqual(atlas["g4_coverage"]["pass"]["independent_cohorts_min"], 2)
 
     def test_developability_consumes_atlas_survivors(self):
         developability = CONTRACT["developability"]

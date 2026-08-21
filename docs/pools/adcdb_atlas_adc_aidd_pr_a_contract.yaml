@@ -11,6 +11,40 @@ contract:
   authorizes_external_run: false
   authorizes_next_stage_only_after_approval: PR-B
 
+lock:
+  schema: TargetSelectionLock@0.1.0
+  authoritative_clinical_territory: clinical_territory.yaml
+  derived_clinical_hypothesis: clinical_hypothesis.json
+  required_fields:
+    - territory_id
+    - schema_version
+    - disease
+    - biomarker_state
+    - metastatic_status
+    - operational_line
+    - refractory_definition
+    - prior_treatment_classes
+    - current_failure_mode
+    - intended_benefit
+    - endpoint_class
+    - patient_selection_hypothesis
+    - source_refs
+    - human_review_ref
+    - review_status
+  field_rules:
+    schema_version: "exactly TargetSelectionLock@0.1.0"
+    review_status: "APPROVED only; PENDING or BLOCKED cannot enter PR-B"
+    biomarker_state: "controlled value; MSS/pMMR"
+    metastatic_status: "controlled value; metastatic"
+    operational_line: "controlled value; >=3L"
+    source_refs: "non-empty stable references"
+    human_review_ref: "required when review_status is APPROVED"
+  cross_field_invariants:
+    - "clinical_territory.yaml is the sole authoritative territory object"
+    - "clinical_hypothesis.json must reference the same territory_id and schema_version"
+    - "clinical_hypothesis.json cannot widen disease, biomarker, metastatic, line, refractory, benefit, or endpoint scope"
+    - "all enum values and null handling are resolved before source admission"
+
 source_admission:
   required_status: APPROVED
   required_fields:
@@ -78,13 +112,19 @@ atlas:
       independent_cohorts_min: 2
       patient_prevalence_max: 0.05
       malignant_cell_detection_max: 0.05
+    patient_positive_definition_ref: PR-A-PATIENT-AGGREGATION-v0.1.0
     otherwise: UNKNOWN
   g2_population_mapping:
     policy_id: PR-A-G2-default-v0.1.0
     pass:
       independent_cohorts_min: 2
       classifier: predeclared_and_versioned
-      effect_requirement: target_positive_mapping_effect_at_least_2x_target_negative_or_preregistered_equivalent
+      effect_metric: population_state_prevalence_ratio
+      effect_formula: "prevalence(state | target_positive) / max(prevalence(state | target_negative), 0.01)"
+      effect_min: 2.0
+      denominator_floor: 0.01
+      group_definition_ref: PR-A-PATIENT-AGGREGATION-v0.1.0
+      metric_must_be_frozen_before_run: true
       direction: concordant
     kill: stable_mapping_to_irrelevant_or_opposing_population_in_2_cohorts_after_one_shot_resolution
     otherwise: UNKNOWN
@@ -110,7 +150,15 @@ atlas:
   g4_coverage:
     policy_id: PR-A-G4-default-v0.1.0
     patient_positive_definition: patient_malignant_cell_fraction_at_least_0.10_after_patient_level_aggregation
+    patient_positive_definition_ref: PR-A-PATIENT-AGGREGATION-v0.1.0
+    patient_aggregation:
+      reducer: pooled_malignant_cells_across_valid_samples_within_patient
+      numerator: target_positive_malignant_cells
+      denominator: all_valid_malignant_cells
+      positive_floor: 0.10
+      missing_patient_id_route: UNKNOWN
     pass:
+      independent_cohorts_min: 2
       patient_prevalence_min: 0.20
       malignant_burden_median_min: 0.10
     kill:
@@ -119,6 +167,21 @@ atlas:
       malignant_burden_median_max: 0.05
     otherwise: UNKNOWN
     sample_count_is_patient_count: false
+
+patient_aggregation_policy:
+  policy_id: PR-A-PATIENT-AGGREGATION-v0.1.0
+  valid_sample_requirements:
+    - patient_id
+    - malignant_cell_annotation
+    - assay_native_target_measurement
+  reducer: pooled_malignant_cells_across_valid_samples_within_patient
+  numerator: target_positive_malignant_cells
+  denominator: all_valid_malignant_cells
+  patient_positive_rule: "numerator / denominator >= 0.10"
+  sample_weighting: none
+  missing_denominator_route: UNKNOWN
+  missing_patient_id_route: UNKNOWN
+  sample_count_is_patient_count: false
 
 developability:
   consumes: atlas_must_pass_survivors_only

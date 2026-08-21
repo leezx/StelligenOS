@@ -3533,3 +3533,12 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Git: 仅提交 5 个 PR-A 文件，commit `de96148`；推送分支 `task_20260821_adcdb-aidd-pr-a-contract`。
 - Pull request: 创建非 draft PR #89：`https://github.com/leezx/StelligenOS/pull/89`。
 - Review boundary: PR #89 仍是 contract-only；尚未获得 ChatGPT `APPROVE` 前，不读取 ADCdb、不生成 TargetSeed、不运行 Atlas。PR-A 获批后只进入 PR-B，仍需 PR-B 的独立审核才能执行真实生产。
+
+## 2026-08-21T23:10 EDT — PR-A REQUEST_CHANGES blocker 修复
+
+- Review result: 指定 ChatGPT 对 PR #89 返回 `REQUEST_CHANGES`，指出两个 execution-closure blocker：LOCK 没有 machine-executable clinical territory schema；G1/G2/G4 的 patient aggregation、G2 effect metric 和 G4 cohort minimum 仍存在运行时自由度。
+- Fix 1: 在 machine contract 增加 `TargetSelectionLock@0.1.0`，明确 `clinical_territory.yaml` 是唯一 authoritative object，`clinical_hypothesis.json` 只能引用同一 territory/schema 且不得扩大范围；加入最低字段、枚举/review 规则和 cross-field invariants。
+- Fix 2: 固定 `PR-A-PATIENT-AGGREGATION-v0.1.0`：同一患者有效样本 pooled malignant cells，不做 sample weighting；target-positive malignant cells / all valid malignant cells >=10% 才是 patient_positive；缺失 patient ID 或 denominator 进入 UNKNOWN。
+- Fix 3: 固定 G2 mapping effect 为 `population_state_prevalence_ratio = prevalence(state|target_positive) / max(prevalence(state|target_negative), 0.01)`，最低 2.0，执行前冻结；G4 PASS 明确至少 2 个独立 cohort。
+- Fix 4: 增加 contract tests 覆盖 LOCK schema、patient reducer、G2 metric、G4 cohort minimum；同步修正 handoff 中 contract commit 与 review-handoff HEAD 的事实记录。
+- Boundary: 仍未修改 v0.3 canonical design，未读取/下载 ADCdb，未生成 TargetSeed/Atlas/TargetCommit，未创建 DATA/result/cache/model output；修复后需在同一 ChatGPT 对话复审，未 APPROVE 前不得进入 PR-B。

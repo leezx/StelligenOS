@@ -28,11 +28,34 @@
 
 | 输入 | 作用 | PR-A 要冻结的内容 |
 |---|---|---|
-| `clinical_territory.yaml` | 锁定为谁解决什么问题 | territory、refractory definition、prior-treatment、intended benefit、endpoint class |
+| `clinical_territory.yaml` | 锁定为谁解决什么问题 | 唯一权威的 territory lock：字段、schema version、枚举、空值规则、review status |
+| `clinical_hypothesis.json` | 记录初始开发假设 | 只能引用同一 `territory_id/schema_version`，不得扩大 clinical territory；其假设内容和引用必须在运行前冻结 |
 | ADCdb source record | 证明来源是什么 | source id、版本、locator、license/access、field whitelist |
 | ADCdb snapshot manifest | 证明本次读的是哪一份 | snapshot id、cutoff、文件清单、逐文件 SHA-256、整体 manifest checksum |
 | identity policy | 统一 target/ADC/antibody/indication 别名 | canonicalization、collision、unresolved 处理 |
 | run policy | 固定 G1–G7 的规则版本 | policy id/version、阈值、证据层级、decision precedence |
+
+`clinical_territory.yaml` 是唯一 authoritative clinical territory object。`clinical_hypothesis.json` 是受其约束的 derived hypothesis object；二者必须在 LOCK 中引用同一 `territory_id` 和 `schema_version`，且 hypothesis 不能扩大 disease、biomarker、metastatic status、line、refractory definition、intended benefit 或 endpoint scope。`review_status` 只有 `APPROVED` 可以进入 PR-B；枚举值、空值处理和 cross-field invariant 必须在 source admission 前冻结。
+
+LOCK 的最低字段是：
+
+```yaml
+territory_id: <required>
+schema_version: TargetSelectionLock@0.1.0
+disease: colorectal_cancer
+biomarker_state: MSS/pMMR
+metastatic_status: metastatic
+operational_line: ">=3L"
+refractory_definition: <required>
+prior_treatment_classes: [<required controlled values>]
+current_failure_mode: <required>
+intended_benefit: <required>
+endpoint_class: <required controlled value>
+patient_selection_hypothesis: <required>
+source_refs: [<non-empty stable refs>]
+human_review_ref: <required when APPROVED>
+review_status: APPROVED
+```
 
 ### 2.2 输出
 
@@ -177,9 +200,11 @@ review_status
 - `independent_cohort` 是不同 study/cohort accession；同一数据集的不同 batch 不算独立 cohort。
 - RNA 是 proxy；protein/surface 结果必须单独列出。
 
+统一的 `PR-A-PATIENT-AGGREGATION-v0.1.0` 规定：有效样本必须同时有 `patient_id`、预先冻结的 malignant-cell annotation 和 assay-native target measurement；同一患者的所有有效样本先合并 malignant cells，不做 sample weighting；分子是 target-positive malignant cells，分母是该患者全部有效 malignant cells。患者只有在 `target-positive malignant cells / all valid malignant cells >= 10%` 时才算 `patient_positive`。缺失 patient ID 或恶性细胞分母不可计算直接为 `UNKNOWN`，不能用样本数替代患者数。
+
 ### 5.2 G1：expression / prevalence
 
-默认 `target_positive_cell` 是 assay-native normalized expression 高于预先声明 detection threshold 且 malignant-cell annotation 有效的细胞。运行 manifest 必须锁定 threshold。
+默认 `target_positive_cell` 是 assay-native normalized expression 高于预先声明 detection threshold 且 malignant-cell annotation 有效的细胞。运行 manifest 必须锁定 threshold。G1 的 patient prevalence 必须引用统一的 `PR-A-PATIENT-AGGREGATION-v0.1.0` patient-positive definition。
 
 | 状态 | 默认 operational criterion |
 |---|---|
@@ -191,11 +216,11 @@ review_status
 
 ### 5.3 G2：endpoint-driving population mapping
 
-mapping 必须在运行前声明 population classifier、marker/state definition 和 target-positive 分组方法。
+mapping 必须在运行前声明 population classifier、marker/state definition 和 target-positive 分组方法。默认且唯一的 mapping effect 是同一 cohort 内 population-state prevalence ratio：`prevalence(state | target_positive) / max(prevalence(state | target_negative), 0.01)`；PASS 要求该 ratio `>=2.0`、方向在至少 2 个独立 cohort 一致。classifier、分组方法、denominator floor 和 effect metric 必须在运行前冻结，不能在 PR-B 边跑边选。
 
 | 状态 | 默认 operational criterion |
 |---|---|
-| `PASS` | 至少 2 个独立 cohort；同一 predeclared classifier 稳定映射到一个 population/state；方向一致，mapping effect >=2x target-negative 或预注册等效效应 |
+| `PASS` | 至少 2 个独立 cohort；同一 predeclared classifier 稳定映射到一个 population/state；方向一致，默认 population-state prevalence ratio >=2.0 |
 | `KILL` | 至少 2 个独立 cohort 稳定落入与 intended benefit 无关或明确相反的 malignant population，且一次补证不能解决 |
 | `UNKNOWN` | 只有 association、classifier 未冻结、只有 1 cohort、effect 不稳定或 population identity 冲突 |
 
@@ -213,11 +238,11 @@ G3 评估 population causality，不要求 target gene/protein 本身 causal。
 
 ### 5.5 G4：patient and malignant-burden coverage
 
-`patient_positive` 以 patient ID 聚合：患者至少有一个有效 malignant sample，且 target-positive malignant-cell fraction 达到 run policy 的 density floor。默认 density floor 为 `>=10%` malignant cells；多样本先合并，不能把样本数当患者数。
+`patient_positive` 以 patient ID 聚合：同一患者所有有效样本的 malignant cells pooled；分子是 target-positive malignant cells，分母是全部有效 malignant cells；比例达到 `>=10%` 才算阳性。没有 sample weighting，也不能把样本数当患者数。这个定义同时用于 G1 patient prevalence 和 G4 coverage。
 
 | 状态 | 默认 operational criterion |
 |---|---|
-| `PASS` | patient_positive prevalence >=20%，且 target-positive malignant-cell burden 的 cohort-level median >=10% |
+| `PASS` | 至少 2 个独立 cohort；patient_positive prevalence >=20%，且 target-positive malignant-cell burden 的 cohort-level median >=10% |
 | `KILL` | 至少 2 个独立 cohort 的 patient_positive prevalence <10%，且 burden median <5% |
 | `UNKNOWN` | patient ID 缺失、malignant denominator 不可核对、只有 1 cohort 或方向冲突 |
 
