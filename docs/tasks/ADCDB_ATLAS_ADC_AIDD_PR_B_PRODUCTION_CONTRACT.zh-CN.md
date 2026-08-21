@@ -1,8 +1,8 @@
 # PR-B：ADCdb SEED + Atlas MUST-PASS 生产契约
 
-**合同版本：** `ADCdb_Atlas_ADC_AIDD_PR_B_Production@0.2.0`
+**合同版本：** `ADCdb_Atlas_ADC_AIDD_PR_B_Production@0.3.0`
 **前置批准：** PR-A `APPROVE`，基线 `2a2e21b`  
-**当前状态：** `PR_B_CROSS_INDICATION_SEED_SCOPE_REVIEW_REQUIRED`
+**当前状态：** `PR_B_CRC_ATLAS_COHORT_BINDING_REVIEW_REQUIRED`
 **范围：** `MSS/pMMR refractory metastatic CRC, operationally >=3L`
 
 ## 1. 通俗说明
@@ -14,6 +14,8 @@ PR-B 先做四件事：锁定 ADCdb 来源和快照；不按 ADCdb 的 disease/i
 这里的逻辑是：ADCdb 的其他癌种/疾病只提供 target-level ADC modality prior，不提供 CRC efficacy 结论。CRC 的临床 territory 仍由 LOCK 固定，CRC transfer 由 Atlas G1–G4 决定。
 
 PR-B 不做 G5–G7、不选 `PRIMARY_TARGET`/`BACKUP_TARGET`、不生成 `NO_GO`、不做 epitope/AIDD、不做抗体或 ADC 设计。
+
+本轮 Atlas 来源固定为 `CRC-Atlas`。主分析只使用两个独立 cohort：`GSE178318` 和 `HTAN_CRC_progressive_plasticity`；`CRLM_NMP_ATLAS` 只能作为辅助证据，不能替代两个独立 cohort 的最低要求。CRC-Atlas registry 中其他条目默认不进入本次运行，除非另有 admission review。
 
 ## 2. 执行前置条件
 
@@ -30,9 +32,12 @@ PR-B 只有在以下条件全部满足并写入 run lock 后才可执行：PR-A 
 | ADCdb snapshot manifest | snapshot id、cutoff、文件清单、size、逐文件 SHA-256、manifest checksum | 保证输入可复现 |
 | identity policy | canonical target/ADC/antibody/indication mapping、collision 和 unresolved 路由 | 生成唯一 target identity |
 | PR-A run policy | TargetSeed、G1–G4 policy id、阈值和统计单位 | 禁止运行时改规则 |
+| CRC-Atlas cohort admission | registry ref、cohort role、accession、admission status、source manifest | 固定本次允许使用的 cohort |
 | Atlas evidence inputs | cohort/accession、patient id、malignant annotation、assay measurement、证据来源 | 执行 G1–G4 |
 
-ADCdb、Atlas matrix、文献全文和运行结果只通过外部路径与 provenance ref 进入运行，不复制进仓库。
+ADCdb、CRC-Atlas matrix、文献全文和运行结果只通过外部路径与 provenance ref 进入运行，不复制进仓库。
+
+进入运行前，`GSE178318` 与 `HTAN_CRC_progressive_plasticity` 必须分别有本次运行的 cohort admission、source manifest、checksum、patient/sample map、malignant-cell annotation 和 assay-native target measurement。若任一主 cohort 仍为 `CANDIDATE` 或字段缺失，必须 `RUN_BLOCKED`；不能用 `CRLM_NMP_ATLAS` 或其他候选 cohort 静默替代。
 
 ## 4. 输出契约
 

@@ -23,6 +23,8 @@ class PRBProductionContractTests(unittest.TestCase):
         self.assertEqual(preconditions["required_territory_review_status"], "APPROVED")
         self.assertEqual(preconditions["required_source_admission_status"], "APPROVED")
         self.assertEqual(preconditions["required_snapshot_checksum_status"], "PASS")
+        self.assertEqual(preconditions["required_atlas_registry_status"], "APPROVED_FOR_PR_B")
+        self.assertEqual(preconditions["required_primary_cohort_count"], 2)
 
     def test_run_order_and_capacity_are_explicit(self):
         run = CONTRACT["run"]
@@ -44,6 +46,10 @@ class PRBProductionContractTests(unittest.TestCase):
         self.assertEqual(seed["unresolved_at_stage_1"]["endpoint_driving_population"], "UNRESOLVED")
         self.assertEqual(seed["unresolved_at_stage_1"]["population_causality"], "UNRESOLVED")
         atlas = CONTRACT["atlas"]
+        self.assertEqual(atlas["source_project_ref"], "external:${BIOWORKSPACE_ROOT}/PR/CRC-Atlas")
+        self.assertEqual(atlas["primary_independent_cohorts"], ["GSE178318", "HTAN_CRC_progressive_plasticity"])
+        self.assertEqual(atlas["supplementary_cohorts"], ["CRLM_NMP_ATLAS"])
+        self.assertTrue(atlas["primary_cohort_admission_rule"].startswith("both_cohorts"))
         self.assertEqual(atlas["shared_patient_policy_ref"], "PR-A-PATIENT-AGGREGATION-v0.1.0")
         self.assertFalse(atlas["rna_surface_boundary"]["rna_is_surface_protein"])
 

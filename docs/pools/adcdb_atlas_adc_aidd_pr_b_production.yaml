@@ -1,10 +1,10 @@
 # PR-B production contract. No ADCdb, Atlas, seed, or result data belongs here.
 contract:
   id: ADCdb_Atlas_ADC_AIDD_PR_B_Production
-  version: 0.2.0
+  version: 0.3.0
   pipeline_version: ADCdb_Atlas_ADC_AIDD_Design@0.3.0
   parent_contract: ADCdb_Atlas_ADC_AIDD_PR_A_Contract@0.1.0
-  status: PR_B_CROSS_INDICATION_SEED_SCOPE_REVIEW_REQUIRED
+  status: PR_B_CRC_ATLAS_COHORT_BINDING_REVIEW_REQUIRED
   disease_scope: MSS/pMMR refractory metastatic CRC
   operational_line: ">=3L"
   approval_required_before_external_run: true
@@ -18,6 +18,8 @@ preconditions:
   required_territory_review_status: APPROVED
   required_source_admission_status: APPROVED
   required_snapshot_checksum_status: PASS
+  required_atlas_registry_status: APPROVED_FOR_PR_B
+  required_primary_cohort_count: 2
   required_identity_policy: frozen
   required_run_policy: frozen
   failure_route: RUN_BLOCKED
@@ -31,6 +33,15 @@ inputs:
     file_checksum_algorithm: SHA-256
   atlas_evidence:
     required_fields: [cohort_ref, patient_id, malignant_cell_annotation, assay_native_target_measurement, evidence_source_ref]
+  atlas_registry:
+    registry_ref: external:${BIOWORKSPACE_ROOT}/PR/CRC-Atlas/DATA/registry/datasets.tsv
+    registry_admission_status: APPROVED_FOR_PR_B
+    primary_independent_cohorts:
+      - GSE178318
+      - HTAN_CRC_progressive_plasticity
+    supplementary_cohorts:
+      - CRLM_NMP_ATLAS
+    default_excluded_cohort_policy: all_other_CRC_Atlas_registry_entries_require_separate_admission
 
 run:
   run_id_equals_pipeline_run_id: true
@@ -56,6 +67,12 @@ target_seed:
   unresolved_identity_route: DEFERRED_SEED
 
 atlas:
+  source_project_ref: external:${BIOWORKSPACE_ROOT}/PR/CRC-Atlas
+  source_registry_ref: external:${BIOWORKSPACE_ROOT}/PR/CRC-Atlas/DATA/registry/datasets.tsv
+  primary_independent_cohorts: [GSE178318, HTAN_CRC_progressive_plasticity]
+  supplementary_cohorts: [CRLM_NMP_ATLAS]
+  primary_cohort_admission_rule: both_cohorts_must_be_approved_for_this_run
+  cohort_role_boundary: supplementary_cohorts_cannot_substitute_for_primary_independent_cohort_minimum
   units: {patient: patient_id, malignant_cell: predeclared_malignant_cell_annotation, independent_cohort: study_or_cohort_accession}
   shared_patient_policy_ref: PR-A-PATIENT-AGGREGATION-v0.1.0
   rna_surface_boundary: {rna_is_surface_protein: false, rna_is_adc_delivery_evidence: false}

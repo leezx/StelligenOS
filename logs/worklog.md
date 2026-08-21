@@ -3587,3 +3587,21 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Human contract: 补充跨癌种/跨疾病 seed 的通俗说明与边界；新增 seed provenance 字段要求。
 - Test: 增加跨癌种 seed scope、CRC precedent 非必需和 provenance 字段测试；待运行完整测试。
 - Review boundary: 这是对已批准 PR-B 语义的最小修订，必须新建独立 PR 并在同一 ChatGPT 对话复审；新修订获批前不得按跨癌种范围运行。
+
+## 2026-08-22T02:20 EDT — PR #92 跨癌种 seed scope APPROVE
+
+- Review result: 指定 ChatGPT 在同一 `Biotech ideas -> ADCdb_Atlas_ADC_AIDD_design` 对话审核 PR #92 最新 HEAD `edfeb6d662265aa7b7102287275688a105dd3234`，返回 `APPROVE`，确认没有真实 blocker。
+- Verified: `adcdb_indication_filter: NONE`、允许 approved snapshot 中所有癌种/疾病 precedent、CRC precedent 非 seed 必需、CRC filter 只在 Atlas kill screen 生效；`precedent_disease_or_indication_refs`、ADCdb record ref、snapshot ref 和 identity boundary 完整。
+- Boundary: v0.3、PR-A、G1–G4、G5–G7、TargetCommit、AIDD 和运行授权边界均未被扩大；相对已批准 PR-B HEAD `5a4b659` 只有 1 个修订 commit、4 个文件变化。
+- CI: GitHub CI #129 Python 3.11/3.12 success；3.11 实际运行 571 tests，repository boundary、git-sync、clean working tree checks 均通过。
+- Approval meaning: 允许扩大 candidate-generation recall，不等于 CRC efficacy；其他癌种/疾病只提供 target-level ADC modality prior，CRC Atlas 仍负责 transfer validation。
+- Next: 可按跨癌种 seed scope 进入 PR-B 输入准入和真实 seed materialization；仍须先满足 approved source bundle、checksum snapshot、approved territory lock 和 Atlas evidence preconditions，不进入 PR-C。
+
+## 2026-08-22T02:45 EDT — PR-B 绑定 CRC-Atlas cohort
+
+- Decision: 人类负责人指定 `PR/CRC-Atlas` 为唯一 Atlas cohort 来源，不再使用其他 Atlas 入口。
+- Binding: PR-B machine contract 升至 `ADCdb_Atlas_ADC_AIDD_PR_B_Production@0.3.0`；主独立 cohort 固定为 `GSE178318` 与 `HTAN_CRC_progressive_plasticity`，`CRLM_NMP_ATLAS` 仅为 supplementary，其他 CRC-Atlas registry entries 默认不进入本次运行。
+- Admission boundary: 两个主 cohort 必须分别完成本次运行的 admission、source manifest、checksum、patient/sample map、malignant-cell annotation 和 assay-native target measurement；任一仍为 `CANDIDATE` 或字段缺失即 `RUN_BLOCKED`，不得静默替换。
+- Path boundary: 使用 `${BIOWORKSPACE_ROOT}/PR/CRC-Atlas`，不在 reusable contract 中硬编码 mount path；不修改 CRC-Atlas 原始数据或其 registry。
+- Test: PR-B contract tests `7 passed`，`git diff --check` 通过。
+- Review boundary: 这是对已批准跨癌种 seed scope 的下一项最小输入绑定修订，需新建 PR 并在同一 ChatGPT 对话审核；批准前不执行真实 Atlas。
