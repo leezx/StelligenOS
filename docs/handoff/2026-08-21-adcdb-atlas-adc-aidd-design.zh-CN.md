@@ -7,8 +7,10 @@
 - 基线：`origin/main@2eeb298`
 - PR：https://github.com/leezx/StelligenOS/pull/84
 - Commit：`3d3d6c5`、`a66c3d2`、`5ac8595`
+- 获批 HEAD：`00f3053894c32ee759777aa49ee458a05e3a3666`
+- Merge commit：`c0ceae8052a8e2385a6453a74415d50249a0e04e`
 - 时间：`2026-08-21 12:30 EDT`
-- 状态：`ROUND_1_REQUEST_CHANGES_FIXED_PENDING_REVIEW`
+- 状态：`DESIGN_APPROVED_MERGED_EXECUTION_NOT_AUTHORIZED`
 
 ## 任务目标
 
@@ -30,7 +32,7 @@
 
 | Workstream | 权重 | 当前状态 | Blocker | 下一里程碑 |
 |---|---:|---|---|---|
-| Pipeline 设计与治理 | 10% | draft complete，8/10 | ChatGPT 尚未 `APPROVE` | 本 PR 审核并合并 |
+| Pipeline 设计与治理 | 10% | approved and merged，10/10 | none | Stage 0 contract PR |
 | Source admission 与快照 | 10% | 0/10 | `SRCADM-02` ADCdb 未准入 | Stage 0 contract PR |
 | Refractory territory lock | 10% | 0/10 | 尚未固化为本 pipeline 输出 | Stage 1 |
 | Target prior + crowding/IP | 15% | 0/15 | 依赖 Stage 0/1 | Stage 2/3 |
@@ -39,7 +41,7 @@
 | ADC assembly | 10% | 0/10 | 依赖 binder 实验和 ADC 平台 | Stage 8 |
 | Progressive validation | 10% | 0/10 | 依赖 wet-lab/CRO | Stage 9 |
 
-当前总体进度：`0% → 8% (+8%)`。工程/基础设施 8%；科学就绪度 0%；实验/运营就绪度 0%。
+当前总体进度：`8% → 10% (+2%)`。工程/设计治理 10%；科学就绪度 0%；实验/运营就绪度 0%。
 
 ## 已核实的现有基础设施
 
@@ -73,13 +75,15 @@
 - 唯一阻断：Stage 6->7 未显式消费 `SponsorFitAssessment`，且未把 non-asset-directed commitment 固定为 `BLOCKED_NO_COMMITMENT`。
 - 修复：补齐 `SponsorFitAssessment@0.1.0 -> ProgramCommitmentReview@0.2.0 -> ValueInflectionPlan@0.1.0 -> human authorization -> asset-directed route` 承重链；只有 `SELF_DEVELOP`、`CO_DEVELOP`、`PARTNER_NOW` 且状态为 `EXTERNAL_HANDOFF_REQUIRED` 才能进入 Stage 7。
 - 完整审核记录：`logs/chatgpt-review-2026-08-21-adcdb-atlas-aidd-design-pr84.md`。
-- 只有明确 `APPROVE` 并合并后，设计里程碑才由 8% 升至 10%，才允许另建 Stage 0 contract PR。
+- Round 2：ChatGPT 锁定最终 HEAD `00f3053`，核对 5 个文本/治理文件与 CI run #110 后明确 `APPROVE`，并确认“PR #84 可以合并”。
+- PR #84 已以 merge commit `c0ceae8` 合入 `main`；设计里程碑因此由 8% 升至 10%。
+- 该批准只允许另建 Stage 0 contract PR，不授权任何真实运行。
 
 ## 下一步
 
-1. 重新运行全量测试、repository boundary 和 `git diff --check`。
-2. 将最小修复推送到同一 PR #84，并在同一 ChatGPT 对话复审最终 HEAD。
-3. 明确 `APPROVE` 并合并后，再开始 Stage 0 ADCdb source-admission contract；本 PR 不授权真实运行。
+1. 从最新 `main` 新建 Stage 0 contract task branch。
+2. 只设计 ADCdb/source snapshot admission contract，继续使用同一 ChatGPT 对话审核。
+3. Stage 0 contract 获明确 `APPROVE` 前，不抓取或解析 ADCdb，不执行任何外部运行。
 
 ## 数据边界声明
 

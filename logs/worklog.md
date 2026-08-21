@@ -3435,3 +3435,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation after fix: `555 passed, 4019 subtests passed`；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
 - Git: 显式暂存上述 4 个文本文件并提交 `5ac8595`（`task_20260821: align AIDD authorization gate`）；未使用 `git add .`、`-A` 或 `--all`。
 - Next: 全量验证，显式暂存预期文本文件，推送同一 PR #84，再在同一 ChatGPT 对话复审。
+
+## 2026-08-21T12:48 EDT — PR #84 最终批准、合并与设计里程碑收口
+
+- Final review method: 在同一 Chrome ChatGPT `ADC研发框架优化` 对话中再次显式选择 GitHub 来源，锁定最新 HEAD `00f3053894c32ee759777aa49ee458a05e3a3666`，要求只复核 Round 1 blocker、Stage 16 接口、新增审核记录、handoff/worklog 与最新 CI。
+- Final decision: ChatGPT 返回明确 `APPROVE`，确认 Stage 6->7 frozen authorization chain 已闭合、non-asset-directed outcomes 无法绕过 `BLOCKED_NO_COMMITMENT`、5 个 changed files 均为文本/治理文件、CI run #110 的 Python 3.11/3.12 两组 verify 均成功，并明确“PR #84 可以合并”。
+- Approval boundary: 仅批准 design architecture 合并，并允许之后另开 Stage 0 source-admission contract PR；不授权 ADCdb、Atlas、target scoring、T0-T12、AIDD、antibody/epitope generation、ADC assembly/manufacturing、CRO/wet-lab 或任何外部 DATA run。
+- Pre-merge guard: 重新核对 GitHub HEAD 未漂移、PR open/non-draft/mergeable、两组 checks 为 `SUCCESS` 后才合并。
+- Merge: GitHub API 按精确获批 SHA 合并 PR #84，merge commit 为 `c0ceae8052a8e2385a6453a74415d50249a0e04e`；主工作区随后以 `git pull --ff-only origin main` 同步。
+- Local preservation: 主工作区原有未跟踪 `AI_RESULT_ACCEPTANCE.md`、`CRC Patient Territory Map.png`、`STELLIGEN_CONSTRAINTS.md` 与新出现的 `pipelines/` 全部保留，未暂存、未修改。
+- Progress: 总体 `8% -> 10% (+2%)`；完成里程碑为设计批准并合并；未解除 blocker `SRCADM-02`；科学就绪度和实验/运营就绪度仍为 0%。
+- Next: 以独立任务分支和 PR 开始 Stage 0 source-admission contract；该合同通过前不得抓取或解析 ADCdb。

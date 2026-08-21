@@ -1,7 +1,7 @@
 # ADCdb–Atlas–ADC AIDD Design Pipeline
 
-- 文档版本：`ADCdb_Atlas_ADC_AIDD_Design@0.1.0-draft`
-- 状态：`DESIGN_ONLY_PENDING_CHATGPT_REVIEW`
+- 文档版本：`ADCdb_Atlas_ADC_AIDD_Design@0.1.0`
+- 状态：`DESIGN_APPROVED_EXECUTION_NOT_AUTHORIZED`
 - 首个疾病试点：`MSS/pMMR refractory metastatic colorectal cancer`
 - 适用策略：Small Biotech、repurposing-first、计算优先、外部平台协作
 - 当前授权：只设计，不执行 ADCdb 抽取、Atlas 分析、Gate 评分、AIDD、ADC 组装或实验
@@ -333,7 +333,7 @@ adc_hit_decision_package/
 
 | Workstream | 权重 | 100% 完成标准 | 当前状态 | 当前 blocker | 下一里程碑 |
 |---|---:|---|---|---|---|
-| Pipeline 设计与治理 | 10% | 本设计通过 PR/ChatGPT 审核并合并 | draft complete，pending review | 尚未 `APPROVE` | 设计 PR 审核 |
+| Pipeline 设计与治理 | 10% | 本设计通过 PR/ChatGPT 审核并合并 | complete，10/10 | none | Stage 0 contract PR |
 | Source admission 与快照 | 10% | ADCdb/Atlas/专利/临床来源可审计并冻结 | not started | `SRCADM-02` ADCdb 未准入 | Stage 0 contract PR |
 | Refractory territory lock | 10% | ClinicalHypothesis anchored | not started | 需把人类约束固化为版本化输出 | Stage 1 contract/run |
 | Target prior 与 crowding/IP triage | 15% | ADCdb universe 和 sponsor-relative route 结果获批 | not started | 依赖 Stage 0/1 | Stage 2/3 |
@@ -342,9 +342,9 @@ adc_hit_decision_package/
 | ADC assembly | 10% | 至少一个 construct 被实际制造并 QC | not started | 依赖 binder 实验证据与平台协议 | Stage 8 |
 | Progressive validation | 10% | 至少一个 ADC hit 有 `GO/ITERATE/STOP` 决策包 | not started | 依赖 wet-lab/CRO 资源 | Stage 9 |
 
-当前总体进度：`0% → 8% (+8%)`。这 8% 只表示工程设计草案完成；设计经 ChatGPT `APPROVE` 并合并后才达到 10%。
+当前总体进度：`8% → 10% (+2%)`。这 10% 只表示设计与治理里程碑经 ChatGPT `APPROVE` 并由 PR #84 合并；不表示任何 source admission、科学分析或实验执行已经开始。
 
-- 工程/基础设施完成度：`8%`
+- 工程/设计治理完成度：`10%`
 - 科学就绪度：`0%`（尚未运行 ADCdb、Atlas 或 Gate）
 - 实验/运营就绪度：`0%`（尚未落实 AIDD 工具执行、ADC 平台或 CRO）
 
