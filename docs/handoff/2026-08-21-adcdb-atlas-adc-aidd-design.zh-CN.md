@@ -6,9 +6,9 @@
 - 分支：`task_20260821_adcdb-atlas-adc-aidd-design`
 - 基线：`origin/main@2eeb298`
 - PR：https://github.com/leezx/StelligenOS/pull/84
-- Commit：`3d3d6c5`
+- Commit：`3d3d6c5`、`a66c3d2`
 - 时间：`2026-08-21 12:30 EDT`
-- 状态：`DESIGN_COMPLETE_PENDING_CHATGPT_REVIEW`
+- 状态：`ROUND_1_REQUEST_CHANGES_FIXED_PENDING_REVIEW`
 
 ## 任务目标
 
@@ -69,12 +69,16 @@
 - `git diff --check`：通过。
 - 自检修正：将泛化的 T12 `ADVANCE/REJECT` 表述改为冻结的 `PROVISIONAL_ADVANCE`、`EXPLORATION`、`HOLD`、`FAIL`。
 - 创建 PR 后，沿用本项目指定的同一 ChatGPT 网页审核对话。
+- Round 1：在聊天框 `+` 中显式选择 GitHub 来源，ChatGPT 直接核对 PR #84 HEAD `a66c3d2`、4 个 changed files、aggregate diff 和 CI run #109，结论为 `REQUEST_CHANGES`。
+- 唯一阻断：Stage 6->7 未显式消费 `SponsorFitAssessment`，且未把 non-asset-directed commitment 固定为 `BLOCKED_NO_COMMITMENT`。
+- 修复：补齐 `SponsorFitAssessment@0.1.0 -> ProgramCommitmentReview@0.2.0 -> ValueInflectionPlan@0.1.0 -> human authorization -> asset-directed route` 承重链；只有 `SELF_DEVELOP`、`CO_DEVELOP`、`PARTNER_NOW` 且状态为 `EXTERNAL_HANDOFF_REQUIRED` 才能进入 Stage 7。
+- 完整审核记录：`logs/chatgpt-review-2026-08-21-adcdb-atlas-aidd-design-pr84.md`。
 - 只有明确 `APPROVE` 并合并后，设计里程碑才由 8% 升至 10%，才允许另建 Stage 0 contract PR。
 
 ## 下一步
 
-1. 将 PR #84 标记 ready for review。
-2. ChatGPT 审核 PR #84；若 `REQUEST_CHANGES`，只在同一 PR 修订设计。
+1. 重新运行全量测试、repository boundary 和 `git diff --check`。
+2. 将最小修复推送到同一 PR #84，并在同一 ChatGPT 对话复审最终 HEAD。
 3. 明确 `APPROVE` 并合并后，再开始 Stage 0 ADCdb source-admission contract；本 PR 不授权真实运行。
 
 ## 数据边界声明

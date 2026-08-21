@@ -3421,3 +3421,16 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: `555 passed, 4019 subtests passed`；repository boundary 通过；`git diff --check` 通过；10 个 Stage 标题完整。
 - Git: 显式暂存 4 个文件，提交 `3d3d6c5` 并推送；创建 draft PR #84，base 为 `main`。未使用 `git add .`、`git add -A` 或 `git add --all`。
 - Next: 补入 PR metadata、标记 ready for review，并沿用本项目同一 ChatGPT 网页审核对话。
+
+## 2026-08-21T12:41 EDT — PR #84 ChatGPT Round 1 审核与最小修复
+
+- Review method: 在 Chrome 网页版 ChatGPT 既定 `ADC研发框架优化` 对话中，通过聊天框 `+` 显式选择 GitHub 来源，提交 PR #84、锁定 HEAD `a66c3d2`，要求核对全部 commits、changed files、aggregate diff、完整设计、handoff、worklog 和 CI。
+- Review verification: ChatGPT 核实 PR open、non-draft、mergeable、ahead 2/behind 0；仅 4 个文本文件；CI run #109 成功；`555 passed, 4019 subtests passed` 与仓库记录一致。
+- Decision: `REQUEST_CHANGES`。11 项中其余均通过，唯一阻断是 Stage 6->7 没有把 `SponsorFitAssessment` 与 frozen `ProgramCommitmentReview@0.2.0` downstream status 写成硬放行条件。
+- Fix: Stage 6 输入加入 `SponsorFitAssessment@0.1.0` external ref，明示 `ProgramCommitmentReview@0.2.0` 强制消费；冻结 `SELF_DEVELOP`/`CO_DEVELOP`/`PARTNER_NOW -> EXTERNAL_HANDOFF_REQUIRED`，其余三种结果 `-> BLOCKED_NO_COMMITMENT`；只允许前三种且 human authorization、完整 ValueInflectionPlan、非空 stop conditions 和能力来源齐备时进入 Stage 7。
+- Interface sync: Stage 7 输入与 Stage 16 Stage 6->7 承重接口同步使用同一条件，防止 human-approved `MONITOR` 或 `DATA_PACKAGE_ONLY` 被误当成 AIDD 授权。
+- Audit: 新增 `logs/chatgpt-review-2026-08-21-adcdb-atlas-aidd-design-pr84.md`，保存首轮直接审核结论、阻断原文、已通过检查、非阻断建议和授权边界。
+- Scope: 仍是 design-only；未修改合同、Gate、lifecycle、core objects 或代码；未执行任何数据抓取、Atlas、Gate、AIDD、ADC manufacture 或外部运行。
+- Progress: 总体保持 `0% -> 8% (+8%)`；当前修复不等于 `APPROVE`，科学与实验/运营就绪度仍为 0%。
+- Validation after fix: `555 passed, 4019 subtests passed`；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
+- Next: 全量验证，显式暂存预期文本文件，推送同一 PR #84，再在同一 ChatGPT 对话复审。

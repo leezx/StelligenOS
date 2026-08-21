@@ -225,13 +225,17 @@ Stage 5 的 shortlist 是 Target Opportunity shortlist，不是 ADC hit shortlis
 
 | 项目 | 定义 |
 |---|---|
-| 输入 | T12 decision；Sponsor Profile；资本边界；能力缺口；IP/FTO triage；buyer/partner map；竞争窗口 |
+| 输入 | T12 decision；`SponsorFitAssessment@0.1.0` external ref；Sponsor Profile；资本边界；能力缺口；IP/FTO triage；buyer/partner map；竞争窗口 |
 | 输出 | `program_commitment_review.json`、`value_inflection_plan.json`、`capability_sourcing_plan.yaml`、`partner_platform_brief.md` |
 | 允许结果 | `SELF_DEVELOP`、`CO_DEVELOP`、`DATA_PACKAGE_ONLY`、`PARTNER_NOW`、`MONITOR`、`STOP_FOR_SPONSOR` |
+| 冻结绑定 | `ProgramCommitmentReview@0.2.0` 必须消费无默认值的 `sponsor_fit_assessment_ref`；缺少该 external ref 时不得构造 commitment review |
+| 下游状态 | `SELF_DEVELOP`、`CO_DEVELOP`、`PARTNER_NOW` -> `EXTERNAL_HANDOFF_REQUIRED`；`MONITOR`、`DATA_PACKAGE_ONLY`、`STOP_FOR_SPONSOR` -> `BLOCKED_NO_COMMITMENT` |
 | 必填计划 | target transaction stage；minimum evidence package；success criteria；stop conditions；cost/duration band refs；required capabilities；capability sources；buyer requirements；fallback route |
-| 放行条件 | 只允许具有人类批准、非空 stop conditions 和明确 AIDD/平台能力来源的项目进入 Stage 7 |
-| STOP/BLOCK | 没有 ValueInflectionPlan；没有 external platform/CRO 路径；关键未知只能用大规模新实验才能判断基本价值；资本与时间窗不匹配 |
+| 放行条件 | 只有 `SELF_DEVELOP`、`CO_DEVELOP` 或 `PARTNER_NOW`，且 `downstream_status = EXTERNAL_HANDOFF_REQUIRED`、human decision/authorization 已存在、ValueInflectionPlan 完整、stop conditions 非空、AIDD/平台能力来源明确，才允许进入 Stage 7 |
+| STOP/BLOCK | `MONITOR`、`DATA_PACKAGE_ONLY` 或 `STOP_FOR_SPONSOR` 必须停在 `BLOCKED_NO_COMMITMENT`，不得进入 epitope/AIDD；没有 SponsorFitAssessment ref；没有 ValueInflectionPlan；没有 external platform/CRO 路径；关键未知只能用大规模新实验才能判断基本价值；资本与时间窗不匹配 |
 | 不得声称 | `STOP_FOR_SPONSOR` 是科学 KILL；commitment 自动启动 Asset Generation |
+
+Stage 6 的正式承重链是：`SponsorFitAssessment@0.1.0` -> `ProgramCommitmentReview@0.2.0` -> `ValueInflectionPlan@0.1.0` -> human authorization -> asset-directed route。具有人类批准不等于获得 asset-directed commitment；non-asset-directed outcome 不得绕过 `BLOCKED_NO_COMMITMENT`。
 
 ## 13. Stage 7 — Epitope White-space 与 AIDD Binder Discovery
 
@@ -239,7 +243,7 @@ Stage 5 的 shortlist 是 Target Opportunity shortlist，不是 ADC hit shortlis
 
 | 项目 | 定义 |
 |---|---|
-| 输入 | approved TargetHypothesis；extracellular-domain/topology/isoform/PTM evidence；known antibody/epitope map；target/antibody/epitope patent triage；species orthology；negative-design constraints；AIDD tool manifest |
+| 输入 | approved TargetHypothesis；asset-directed `ProgramCommitmentReview@0.2.0` ref；`SponsorFitAssessment@0.1.0` ref；完整 ValueInflectionPlan ref；human authorization ref；extracellular-domain/topology/isoform/PTM evidence；known antibody/epitope map；target/antibody/epitope patent triage；species orthology；negative-design constraints；AIDD tool manifest |
 | 顺序 | target biology → antigen engineering → epitope engineering → IP-guided epitope selection → structural preparation → negative design → de novo design → multi-objective ranking → diversity → focused wet-lab plan |
 | 输出 | `epitope_landscape.tsv`、`epitope_whitespace_brief.md`、`aidd_input.yaml`、`binder_candidates.fasta`（仅真实工具输出时）、`predicted_structures/`、`binder_ranking.tsv`、`focused_validation_plan.yaml`、`patent_triage.md` |
 | 放行条件 | epitope 在结构/拓扑上可及；避开明显已知 footprint/claims；候选保持 sequence diversity；developability、specificity、cross-reactivity 和 ADC carrier constraints 已进入目标函数；实验计划可执行 |
@@ -303,7 +307,7 @@ adc_hit_decision_package/
 | Stage 3 | Stage 4 | sponsor-relative routed target refs，不是科学 PASS |
 | Stage 4 | Stage 5 | Atlas evidence refs，不是 Gate result |
 | Stage 5 | Stage 6 | reviewed T12 Target Opportunity decision |
-| Stage 6 | Stage 7 | human-approved Program Commitment + ValueInflectionPlan |
+| Stage 6 | Stage 7 | `ProgramCommitmentReview@0.2.0` 的 `SELF_DEVELOP`/`CO_DEVELOP`/`PARTNER_NOW` + `EXTERNAL_HANDOFF_REQUIRED` + `SponsorFitAssessment@0.1.0` ref + 完整 ValueInflectionPlan + human authorization；其余结果必须为 `BLOCKED_NO_COMMITMENT` |
 | Stage 7 | Stage 8 | binder candidates + real validation status + epitope/IP refs |
 | Stage 8 | Stage 9 | physically realized construct refs + QC plan |
 | Stage 9 | final | evidence-backed human `GO/ITERATE/STOP` decision |
