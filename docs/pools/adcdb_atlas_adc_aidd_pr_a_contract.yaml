@@ -1,0 +1,163 @@
+# PR-A machine-readable execution contract.
+# Contract only: no ADCdb/Atlas data, result, cache, or model output belongs here.
+
+contract:
+  id: ADCdb_Atlas_ADC_AIDD_PR_A_Contract
+  version: 0.1.0
+  pipeline_version: ADCdb_Atlas_ADC_AIDD_Design@0.3.0
+  status: CONTRACT_REVIEW_REQUIRED_EXECUTION_NOT_AUTHORIZED
+  disease_scope: MSS/pMMR refractory metastatic CRC
+  operational_line: ">=3L"
+  authorizes_external_run: false
+  authorizes_next_stage_only_after_approval: PR-B
+
+source_admission:
+  required_status: APPROVED
+  required_fields:
+    - source_id
+    - source_name
+    - source_type
+    - source_version
+    - source_locator
+    - retrieved_at_utc
+    - snapshot_id
+    - license_access_note
+    - read_only_boundary
+    - field_whitelist_ref
+    - identity_policy_ref
+    - admission_basis_refs
+    - human_review_ref
+  snapshot_required_fields:
+    - snapshot_id
+    - source_id
+    - source_version
+    - cutoff_utc
+    - files
+    - manifest_sha256
+  file_checksum_algorithm: SHA-256
+  checksum_failure_route: SOURCE_ADMISSION_BLOCK
+
+target_seed:
+  schema: TargetSeed@0.1.0
+  expected_first_batch_size:
+    min: 20
+    max: 50
+    is_capacity_target_not_pass_criterion: true
+  minimum_contract:
+    - patient_territory
+    - intended_benefit
+    - endpoint_class
+    - adc_target
+    - adc_precedent
+    - initial_development_hypothesis
+  mandatory_unresolved_fields:
+    endpoint_driving_population: UNRESOLVED
+    population_causality: UNRESOLVED
+  active_seed_precedent_floor:
+    - extracellular_antibody_accessible_target
+    - real_adc_construct_precedent
+    - internalization_or_delivery_precedent
+  identity_failure_route: IDENTITY_RESOLUTION_BLOCK
+  missing_precedent_route: ADC_PRECEDENT_INSUFFICIENT
+
+atlas:
+  statistical_units:
+    patient: patient_id
+    malignant_cell: predeclared_malignant_cell_annotation
+    independent_cohort: study_or_cohort_accession
+  proxy_boundary:
+    rna_is_surface_protein: false
+    rna_is_adc_delivery_evidence: false
+  g1_expression_prevalence:
+    policy_id: PR-A-G1-default-v0.1.0
+    pass:
+      independent_cohorts_min: 2
+      patient_prevalence_min: 0.20
+      malignant_cell_detection_min: 0.10
+    kill:
+      independent_cohorts_min: 2
+      patient_prevalence_max: 0.05
+      malignant_cell_detection_max: 0.05
+    otherwise: UNKNOWN
+  g2_population_mapping:
+    policy_id: PR-A-G2-default-v0.1.0
+    pass:
+      independent_cohorts_min: 2
+      classifier: predeclared_and_versioned
+      effect_requirement: target_positive_mapping_effect_at_least_2x_target_negative_or_preregistered_equivalent
+      direction: concordant
+    kill: stable_mapping_to_irrelevant_or_opposing_population_in_2_cohorts_after_one_shot_resolution
+    otherwise: UNKNOWN
+  g3_population_causality:
+    policy_id: PR-A-G3-default-v0.1.0
+    evidence_tiers:
+      tier_a:
+        - longitudinal_progression_or_recurrence
+        - perturbation_or_dependency
+        - lineage_or_direct_functional_intervention
+      tier_b:
+        - treatment_enrichment
+        - spatial_progression
+        - recurrence_or_metastasis_enrichment
+        - concordant_multi_cohort_evidence
+      tier_c:
+        - cross_sectional_association
+        - single_cohort_expression_association
+    pass: one_tier_a_or_two_independent_concordant_tier_b_linked_to_intended_benefit
+    kill: opposing_tier_a_or_tier_b_or_tier_c_only_after_one_shot_resolution
+    otherwise: UNKNOWN
+    target_gene_causality_required: false
+  g4_coverage:
+    policy_id: PR-A-G4-default-v0.1.0
+    patient_positive_definition: patient_malignant_cell_fraction_at_least_0.10_after_patient_level_aggregation
+    pass:
+      patient_prevalence_min: 0.20
+      malignant_burden_median_min: 0.10
+    kill:
+      independent_cohorts_min: 2
+      patient_prevalence_max: 0.10
+      malignant_burden_median_max: 0.05
+    otherwise: UNKNOWN
+    sample_count_is_patient_count: false
+
+developability:
+  consumes: atlas_must_pass_survivors_only
+  target_count_guidance:
+    approximate_min: 3
+    approximate_max: 5
+    hard_coded: false
+  g5_normal_tissue:
+    pass: no_fatal_surface_essential_organ_or_target_mediated_adc_toxicity_blocker
+    kill: high_normal_surface_exposure_and_essential_organ_concern_or_incompatible_known_toxicity
+    otherwise: UNKNOWN
+  g6_competition:
+    pass: auditable_crc_whitespace_or_epitope_differentiation_or_feasible_partner_route
+    route_block: crowded_target_and_crc_and_late_stage_occupancy_without_executable_differentiation
+    otherwise: UNKNOWN
+  g7_epitope:
+    pass: at_least_one_extracellular_accessible_patch_without_obvious_full_claim_blocker
+    kill: all_accessible_patches_blocked_or_structure_proves_inaccessible
+    otherwise: UNKNOWN
+
+target_commit:
+  schema: TargetCommit@0.1.0
+  primary_max: 1
+  backup_max: 1
+  no_go_allowed: true
+  no_go_false_requires_exactly_one_primary: true
+  no_go_true_requires_empty_primary_and_backup: true
+  lexicographic_priority:
+    - adc_precedent_strength
+    - patient_coverage
+    - endpoint_population_evidence
+    - normal_tissue_margin
+    - crc_competitive_whitespace
+    - epitope_whitespace
+    - antibody_aidd_execution_ease
+
+review_boundary:
+  approval_required: true
+  approval_scope: contract_only
+  next_pr_after_approval: PR-B
+  execution_authorized_by_this_contract: false
+  v0_3_design_modification_allowed: false

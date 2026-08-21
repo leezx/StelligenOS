@@ -3499,3 +3499,30 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Fix 4: 修正 scope 事实记录：本 PR changed files 是 protocol、v0.2 historical snapshot、worklog；根级 HANDOFF 虽已另行更新，但不属于 PR changed files。
 - Preserved: population causality != target causality、RNA != surface protein、ADC precedent != CRC efficacy、carried internalization risk、lexicographic tie-break、TargetCommit、Sponsor route 非 science gate、PR-A/B/C/D 分组均保留。
 - Validation pending: 重新运行 pytest、diff check、boundary check；仅显式暂存上述 3 个仓库文件，追加修复提交到 PR #88，等待同一 ChatGPT 对话复审。
+
+## 2026-08-21T19:05 EDT — PR #88 修复后 ChatGPT APPROVE
+
+- Review channel: Chrome ChatGPT 项目 `Biotech ideas` 下的 `ADCdb_Atlas_ADC_AIDD_design` 对话；通过“+”菜单选中 GitHub 插件后提交复审指令。
+- Reviewed object: `leezx/StelligenOS#88` at exact HEAD `60511e1449138e27a78743c634f5ac21b967addf`; GitHub facts verified as open, non-draft, mergeable, 2 commits, 3 changed files; CI run #120 Python 3.11/3.12 both success.
+- Decision: ChatGPT explicitly returned `APPROVE` and stated no blockers or non-blocking suggestions.
+- Approval scope: only permits merging the design-only PR #88 current HEAD. It does not authorize Stage 0, SRCADM-02 admission, ADCdb/Atlas/Gate/TargetCommit/AIDD, data download, antibody generation, synthesis, ADC assembly, CRO, experiments, or any external run.
+- Review confirmation: canonical v0.3 is now the sole authoritative pipeline; v0.2 is an independent historical snapshot; TargetSeed uses explicit unresolved population/casuality; Atlas survivors materialize TargetHypothesis; developability consumes Atlas MUST-PASS survivors; the closed v0.3 chain and all requested evidence boundaries remain intact.
+- Scope: no merge was performed in this step; no data/result/cache/model was created.
+
+## 2026-08-21T18:38 EDT — PR #88 合并
+
+- Pre-merge verification: PR #88 remained open, non-draft, mergeable; exact approved HEAD `60511e1449138e27a78743c634f5ac21b967addf`; CI Python 3.11/3.12 both success; 3 changed files.
+- Action: merged PR #88 with merge commit `a8afcd4f50cf676189e268d1a8c0674972e5d4c6`; fetched `origin/main`, now at the same merge commit.
+- Boundary: merge only incorporated the approved design-only changes. No Stage 0, ADCdb admission, Atlas, Gate, TargetCommit, AIDD, synthesis, ADC assembly, experiment, data, cache, result, database, or model weight run was performed.
+- Local state: the post-approval worklog entry remains uncommitted locally so the approved PR HEAD remains exact; pre-existing user-owned untracked files remain untouched.
+
+## 2026-08-21T19:20 EDT — PR-A Target-selection execution contract
+
+- Decision: 人类负责人要求冻结 v0.3，停止架构优化，按 `PR-A contract -> PR-B ADCdb seed + Atlas -> PR-C developability + TargetCommit -> PR-D AIDD` 推进；真实运行只有在对应 PR 明确 `APPROVE` 后才能开始。
+- Baseline: 从远程 `main@a8afcd4` 建立分支 `task_20260821_adcdb-aidd-pr-a-contract`；先 stash 并恢复此前未提交的 post-review worklog，未修改用户未跟踪文件。
+- Added contract: `docs/tasks/ADCDB_ATLAS_ADC_AIDD_PR_A_EXECUTION_CONTRACT.zh-CN.md`，定义 source admission、snapshot/checksum、TargetSeed、G1-G4、G5-G7、TargetCommit、状态、失败路由和 PR-A/PR-B 边界。
+- Added machine contract: `docs/pools/adcdb_atlas_adc_aidd_pr_a_contract.yaml`，冻结 schema/version、默认 operational thresholds、patient-level unit、unknown 和 no-go invariants；明确 `authorizes_external_run=false`。
+- Added tests: `tests/test_adcdb_atlas_pr_a_contract.py`，只验证 contract 形状，不读取或运行外部数据。
+- Added handoff: `docs/handoff/2026-08-21-adcdb-atlas-aidd-pr-a-contract.zh-CN.md`。
+- Key operationalization: G1/G4 默认阈值与 patient ID 聚合规则；G2 mapping cohort/classifier/effect 规则；G3 Tier A/B/C causality evidence tiers；G5-G7 pass/kill/unknown；TargetCommit 严格一个 primary、最多一个 backup 或 NO_GO。
+- Scope: 未修改 v0.3 canonical design；未下载/读取 ADCdb，未生成 TargetSeed，未运行 Atlas/Gate/AIDD，未创建 DATA/result/cache/model output。
