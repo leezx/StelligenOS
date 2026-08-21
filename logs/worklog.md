@@ -3462,3 +3462,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Validation: `555 passed, 4019 subtests passed`；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
 - Git/PR: 显式暂存 canonical design、新 handoff 和 worklog 三个文本文件，提交 `fe1b6e7` 并推送；创建 PR #86 `https://github.com/leezx/StelligenOS/pull/86`。未使用 `git add .`、`-A` 或 `--all`。
 - Next: 自检一致性，运行全量 tests、repository boundary 和 diff check，提交新 PR 后沿用同一 ChatGPT 对话审核。
+
+## 2026-08-21T13:12 EDT — Design v0.2 ChatGPT APPROVE 与 PR #86 合并
+
+- Review method: 在同一 Chrome ChatGPT `ADC研发框架优化` 对话中显式选择 GitHub 来源，锁定 PR #86 HEAD `93a8275db62c93222195417870b8373c29aeb12b`，要求读取完整 commits/diff/design/handoff/worklog、当前 contracts/Gates 和 CI。
+- Decision: ChatGPT 返回明确 `APPROVE`，确认 7A->7B->8->9 为无循环 DAG，Stage 9A/9B 是 post-conjugation retention，artifact schema 只是 projection floor，failure taxonomy 不塌缩 unknown，四个 cost decisions 不授权后续 Stage，并明确“PR #86 可以合并”。
+- GitHub facts: 3 个文本文件、ahead 2/behind 0、CI run #115 Python 3.11/3.12 两组 verify 成功；无 code/contract/Gate/lifecycle/core-object/data/cache/result/model/sequence/structure 变更。
+- Non-blocking: 后续 Stage 7 contract 必须把 `ADC_GRADE_HIT` 限定为 pipeline-local binder status；选择正式 epitope artifact 名；可细化“已有 commitment 但缺 AIDD execution decision”时的 operational blocker code。
+- Approval boundary: 只批准 v0.2 design architecture；不授权 Stage 0、ADCdb、Atlas、Gate、ranking、AIDD、synthesis、antibody testing、conjugation、ADC manufacture、CRO/in-vivo 或外部 DATA run。
+- Merge: 重新核对 GitHub HEAD/mergeability/CI 后，按精确获批 SHA 合并 PR #86，merge commit `ad92c5aaa02216e8d8342b9e9b124e0dc1658196`。
+- Progress: 总体保持 `10% -> 10% (+0%)`；设计版本收口为 `0.2.0`，科学与实验/运营就绪度仍为 0%，`SRCADM-02` 未解除。
+- Next: 纯审计 closeout 保存批准事实；之后另建 Stage 0 source-admission contract PR。

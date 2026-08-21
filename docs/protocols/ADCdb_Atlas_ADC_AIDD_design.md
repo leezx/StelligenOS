@@ -1,11 +1,11 @@
 # ADCdb–Atlas–ADC AIDD Design Pipeline
 
-- 文档版本：`ADCdb_Atlas_ADC_AIDD_Design@0.2.0-draft`
-- 状态：`DESIGN_REVISION_PENDING_CHATGPT_REVIEW_EXECUTION_NOT_AUTHORIZED`
+- 文档版本：`ADCdb_Atlas_ADC_AIDD_Design@0.2.0`
+- 状态：`DESIGN_APPROVED_EXECUTION_NOT_AUTHORIZED`
 - 首个疾病试点：`MSS/pMMR refractory metastatic colorectal cancer`
 - 适用策略：Small Biotech、repurposing-first、计算优先、外部平台协作
 - 当前授权：只设计，不执行 ADCdb 抽取、Atlas 分析、Gate 评分、AIDD、ADC 组装或实验
-- 修订基线：`0.1.0` 已由 PR #84/#85 审核收口；`0.2.0-draft` 只补 artifact contract、成本门控和 pre-assembly antibody-hit 接口
+- 修订基线：`0.2.0` 已由 PR #86 审核合并；只补 artifact contract、成本门控和 pre-assembly antibody-hit 接口
 
 ## 1. 最终目标与 100% 定义
 
@@ -444,7 +444,7 @@ PIPELINE_ERROR
 
 | Workstream | 权重 | 100% 完成标准 | 当前状态 | 当前 blocker | 下一里程碑 |
 |---|---:|---|---|---|---|
-| Pipeline 设计与治理 | 10% | 本设计通过 PR/ChatGPT 审核并合并 | approved baseline 0.1.0；0.2.0 draft pending review，10/10 | 0.2.0 尚未 `APPROVE` | 设计修订 PR |
+| Pipeline 设计与治理 | 10% | 本设计通过 PR/ChatGPT 审核并合并 | 0.2.0 approved and merged，10/10 | none | Stage 0 contract PR |
 | Source admission 与快照 | 10% | ADCdb/Atlas/专利/临床来源可审计并冻结 | not started | `SRCADM-02` ADCdb 未准入 | Stage 0 contract PR |
 | Refractory territory lock | 10% | ClinicalHypothesis anchored | not started | 需把人类约束固化为版本化输出 | Stage 1 contract/run |
 | Target prior 与 crowding/IP triage | 15% | ADCdb universe 和 sponsor-relative route 结果获批 | not started | 依赖 Stage 0/1 | Stage 2/3 |
@@ -453,7 +453,7 @@ PIPELINE_ERROR
 | ADC assembly | 10% | 至少一个 construct 被实际制造并 QC | not started | 依赖 binder 实验证据与平台协议 | Stage 8 |
 | Progressive validation | 10% | 至少一个 ADC hit 有 `GO/ITERATE/STOP` 决策包 | not started | 依赖 wet-lab/CRO 资源 | Stage 9 |
 
-当前总体进度：`10% → 10% (+0%)`。获批的 0.1.0 已完成设计与治理里程碑；0.2.0-draft 只关闭接口和 schema 缺口，不增加科学或运行完成度。它获批前以 0.1.0 为有效基线。
+当前总体进度：`10% → 10% (+0%)`。0.2.0 已关闭接口和 schema 缺口，但不增加科学或运行完成度；design/governance 仍占总进度 10%。
 
 - 工程/设计治理完成度：`10%`
 - 科学就绪度：`0%`（尚未运行 ADCdb、Atlas 或 Gate）
