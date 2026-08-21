@@ -5,6 +5,8 @@
 - 任务编号：`task_20260821`
 - 分支：`task_20260821_adcdb-aidd-design-v0.2`
 - 基线：`origin/main@5b2fa3a`
+- PR：https://github.com/leezx/StelligenOS/pull/86
+- Commit：`fe1b6e7`
 - 文档：`docs/protocols/ADCdb_Atlas_ADC_AIDD_design.md`
 - 版本：`ADCdb_Atlas_ADC_AIDD_Design@0.2.0-draft`
 - 时间：`2026-08-21 13:00 EDT`
@@ -75,7 +77,7 @@ Stage 9 post-conjugation binding/delivery retention + progressive validation
 
 ## 下一步
 
-1. 完成 v0.2 文本自检和全量验证。
-2. 推送独立 design-revision PR。
+1. 在同一 ChatGPT 对话审核 PR #86 的最终 HEAD。
+2. 若 `REQUEST_CHANGES`，只在 PR #86 修订并复审。
 3. ChatGPT 明确 `APPROVE` 后才合并；本 PR 不授权 Stage 0。
 4. 合并后才另建 Stage 0 source-admission contract PR。
