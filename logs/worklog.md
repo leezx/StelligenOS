@@ -3605,3 +3605,10 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Path boundary: 使用 `${BIOWORKSPACE_ROOT}/PR/CRC-Atlas`，不在 reusable contract 中硬编码 mount path；不修改 CRC-Atlas 原始数据或其 registry。
 - Test: PR-B contract tests `7 passed`，`git diff --check` 通过。
 - Review boundary: 这是对已批准跨癌种 seed scope 的下一项最小输入绑定修订，需新建 PR 并在同一 ChatGPT 对话审核；批准前不执行真实 Atlas。
+
+## 2026-08-22T03:10 EDT — PR #93 machine cohort admission blocker 修复
+
+- Review result: ChatGPT 对 PR #93 返回 `REQUEST_CHANGES`，唯一 blocker 是 primary cohort 的逐 cohort admission invariant 只在 human contract 中完整表达，machine YAML 没有要求每个 cohort 分别具备完整字段。
+- Fix: machine contract 增加每个 primary cohort 的必填字段、`APPROVED_FOR_THIS_RUN`、checksum `PASS`、malignant annotation `PASS`、assay-native target measurement `PASS` 和缺字段 `RUN_BLOCKED` 路由。
+- Boundary: 不改变主 cohort、supplementary cohort、G1–G4、CRC-Atlas 唯一来源或后续阶段边界。
+- Test: 增加 machine-readable per-cohort invariant assertions；修复后需重新运行全量测试并在同一 ChatGPT 对话复审。

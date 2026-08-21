@@ -50,6 +50,15 @@ class PRBProductionContractTests(unittest.TestCase):
         self.assertEqual(atlas["primary_independent_cohorts"], ["GSE178318", "HTAN_CRC_progressive_plasticity"])
         self.assertEqual(atlas["supplementary_cohorts"], ["CRLM_NMP_ATLAS"])
         self.assertTrue(atlas["primary_cohort_admission_rule"].startswith("both_cohorts"))
+        registry = CONTRACT["inputs"]["atlas_registry"]
+        required = set(registry["per_primary_cohort_required_fields"])
+        self.assertIn("source_manifest_ref", required)
+        self.assertIn("patient_sample_map_ref", required)
+        self.assertIn("malignant_cell_annotation_status", required)
+        self.assertIn("assay_native_target_measurement_status", required)
+        self.assertEqual(registry["per_primary_cohort_invariants"]["admission_status"], "APPROVED_FOR_THIS_RUN")
+        self.assertEqual(registry["per_primary_cohort_invariants"]["checksum_status"], "PASS")
+        self.assertEqual(registry["missing_field_route"], "RUN_BLOCKED")
         self.assertEqual(atlas["shared_patient_policy_ref"], "PR-A-PATIENT-AGGREGATION-v0.1.0")
         self.assertFalse(atlas["rna_surface_boundary"]["rna_is_surface_protein"])
 

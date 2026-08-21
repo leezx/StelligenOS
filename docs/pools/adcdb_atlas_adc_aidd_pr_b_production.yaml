@@ -42,6 +42,23 @@ inputs:
     supplementary_cohorts:
       - CRLM_NMP_ATLAS
     default_excluded_cohort_policy: all_other_CRC_Atlas_registry_entries_require_separate_admission
+    per_primary_cohort_required_fields:
+      - cohort_id
+      - accession
+      - admission_status
+      - source_manifest_ref
+      - checksum_status
+      - patient_sample_map_ref
+      - malignant_cell_annotation_ref
+      - malignant_cell_annotation_status
+      - assay_native_target_measurement_ref
+      - assay_native_target_measurement_status
+    per_primary_cohort_invariants:
+      admission_status: APPROVED_FOR_THIS_RUN
+      checksum_status: PASS
+      malignant_cell_annotation_status: PASS
+      assay_native_target_measurement_status: PASS
+    missing_field_route: RUN_BLOCKED
 
 run:
   run_id_equals_pipeline_run_id: true
