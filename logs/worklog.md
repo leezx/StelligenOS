@@ -3407,3 +3407,31 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 合并：PR #83 → `main`
 - Next: 8 个未 grounding 的 Pass A 候选（A1–A5、A21、A22、A24）留待后续
   `authorises_run_count` 重新授权；本 PR 不构成、也不暗示任何 WP3 授权
+
+## 2026-08-21T12:30 EDT — ADCdb–Atlas–ADC AIDD Pipeline 设计
+
+- Instruction: 人类负责人要求先设计一条 Small Biotech 约束下的完整 pipeline，再逐步运行并逐 Stage 通过 PR/ChatGPT 审核；CRC 首个硬约束为 MSS/pMMR refractory mCRC。
+- Baseline: 从 `origin/main@2eeb298` 创建独立 worktree `/private/tmp/StelligenOS-adcdb-atlas-aidd` 和分支 `task_20260821_adcdb-atlas-adc-aidd-design`；主工作区已有 3 个用户未跟踪文件，全部保留不动。
+- Read: workspace/repo AGENTS、HANDOFF、环境与索引、当前 architecture/lifecycle/Gate、WP2B、Search-Space Admission、Program Commitment、ValueInflectionPlan、ADCdb 派生 reference metadata，以及 epitope AIDD、binder engineering、target safety 和 due-diligence 模块。
+- Design: 新增 `docs/protocols/ADCdb_Atlas_ADC_AIDD_design.md`，把流程拆成 Stage 0–9：source admission → refractory territory lock → ADCdb target prior → crowding/IP triage → Atlas transfer validation → T-chain → commitment/value inflection → epitope AIDD → ADC platform assembly → progressive validation。
+- Key boundary: target crowding、epitope/antibody IP 和 linker-payload FTO 分开；linker-payload 正式选择延后到 ADC assembly；ADCdb precedent 只降风险，不自动通过 CRC transfer、internalization、Gate 或 safety。
+- Progress definition: 100% 为一次完整、可复现、可审计运行达到至少一个实验支持 ADC hit 的 `GO/ITERATE/STOP` 决策包；当前 `0% → 8% (+8%)`，仅代表设计草案，科学/实验就绪度均为 0%。
+- Blocker: `SRCADM-02` ADCdb 尚未准入；本 design-only PR 不解除 blocker，也不授权任何外部运行。
+- Self-review: 发现 Stage 5 使用泛化 `ADVANCE/REJECT` 而非冻结 T12 disposition；已修正为 `PROVISIONAL_ADVANCE`、`EXPLORATION`、`HOLD`、`FAIL`。同时补明 Stage 8 必须包含真实 manufactured lot 与基础 batch-release QC，Stage 9C 只承接 extended conjugate QC，避免“只有 construct spec 却声称已进入验证”的接口矛盾。
+- Validation: `555 passed, 4019 subtests passed`；repository boundary 通过；`git diff --check` 通过；10 个 Stage 标题完整。
+- Git: 显式暂存 4 个文件，提交 `3d3d6c5` 并推送；创建 draft PR #84，base 为 `main`。未使用 `git add .`、`git add -A` 或 `git add --all`。
+- Next: 补入 PR metadata、标记 ready for review，并沿用本项目同一 ChatGPT 网页审核对话。
+
+## 2026-08-21T12:41 EDT — PR #84 ChatGPT Round 1 审核与最小修复
+
+- Review method: 在 Chrome 网页版 ChatGPT 既定 `ADC研发框架优化` 对话中，通过聊天框 `+` 显式选择 GitHub 来源，提交 PR #84、锁定 HEAD `a66c3d2`，要求核对全部 commits、changed files、aggregate diff、完整设计、handoff、worklog 和 CI。
+- Review verification: ChatGPT 核实 PR open、non-draft、mergeable、ahead 2/behind 0；仅 4 个文本文件；CI run #109 成功；`555 passed, 4019 subtests passed` 与仓库记录一致。
+- Decision: `REQUEST_CHANGES`。11 项中其余均通过，唯一阻断是 Stage 6->7 没有把 `SponsorFitAssessment` 与 frozen `ProgramCommitmentReview@0.2.0` downstream status 写成硬放行条件。
+- Fix: Stage 6 输入加入 `SponsorFitAssessment@0.1.0` external ref，明示 `ProgramCommitmentReview@0.2.0` 强制消费；冻结 `SELF_DEVELOP`/`CO_DEVELOP`/`PARTNER_NOW -> EXTERNAL_HANDOFF_REQUIRED`，其余三种结果 `-> BLOCKED_NO_COMMITMENT`；只允许前三种且 human authorization、完整 ValueInflectionPlan、非空 stop conditions 和能力来源齐备时进入 Stage 7。
+- Interface sync: Stage 7 输入与 Stage 16 Stage 6->7 承重接口同步使用同一条件，防止 human-approved `MONITOR` 或 `DATA_PACKAGE_ONLY` 被误当成 AIDD 授权。
+- Audit: 新增 `logs/chatgpt-review-2026-08-21-adcdb-atlas-aidd-design-pr84.md`，保存首轮直接审核结论、阻断原文、已通过检查、非阻断建议和授权边界。
+- Scope: 仍是 design-only；未修改合同、Gate、lifecycle、core objects 或代码；未执行任何数据抓取、Atlas、Gate、AIDD、ADC manufacture 或外部运行。
+- Progress: 总体保持 `0% -> 8% (+8%)`；当前修复不等于 `APPROVE`，科学与实验/运营就绪度仍为 0%。
+- Validation after fix: `555 passed, 4019 subtests passed`；`scripts/verify_repository_boundary.sh` 通过；`git diff --check` 通过。
+- Git: 显式暂存上述 4 个文本文件并提交 `5ac8595`（`task_20260821: align AIDD authorization gate`）；未使用 `git add .`、`-A` 或 `--all`。
+- Next: 全量验证，显式暂存预期文本文件，推送同一 PR #84，再在同一 ChatGPT 对话复审。
