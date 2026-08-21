@@ -3567,3 +3567,23 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Fix: 统一 human/machine contract 到 `${BIOWORKSPACE_ROOT}/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/<pipeline_run_id>/` 和 `03_atlas_kill_screen/`；明确 `run_id == pipeline_run_id`，不得创建第二个运行标识。
 - Test: 增加 canonical output-root、directory-name 和 run-id invariant；未读取 ADCdb/Atlas，未生成真实结果。
 - Boundary: 只修改 PR-B contract/test/worklog；不改 v0.3、不改 Gate、不扩大 PR-B scope；等待同一 ChatGPT 对话复审后才能运行外部生产。
+
+## 2026-08-22T01:30 EDT — PR-B 复审通过与外部运行 preflight
+
+- Review result: 指定 ChatGPT 在同一 `Biotech ideas -> ADCdb_Atlas_ADC_AIDD_design` 对话复审 PR #91 最新 HEAD `5a4b659e59cbf0aa7e1ca75f6940e420d86938e0`，返回 `APPROVE`。
+- Verified: frozen v0.3 canonical root、`03_atlas_kill_screen/`、`run_id == pipeline_run_id`、PR-B 运行顺序和 G1–G4 边界均通过；GitHub CI #128 的 Python 3.11/3.12 均成功，3.11 报告 571 tests。
+- Approval boundary: 只授权外部 PR-B 生产链 `RUN_LOCK_VERIFY -> SOURCE_ADMISSION_VERIFY -> ADCDB_SEED_MATERIALIZE -> TARGET_IDENTITY_RESOLVE -> G1 -> G2 -> G3 -> G4 -> ATLAS_MUST_PASS_EXPORT`；不授权 PR-C、G5–G7、TargetCommit、AIDD、wet-lab 或 CRO。
+- Preflight: 只读盘点确认本地存在 ADCdb Obsidian material、旧 CRC territory map 和 Atlas 相关资产；但现有记录明确 ADCdb 仍未完成本流程 source admission，旧 territory 包也不是当前锁定的 `MSS/pMMR refractory mCRC >=3L` 专用输入。未生成真实 TargetSeed、Gate 结果、cache 或 result。
+- Decision: `RUN_BLOCKED`，原因是 approved ADCdb admission bundle、checksum-bound snapshot 和 approved territory/Atlas input package 尚未齐备；不得把旧派生资产静默升级为 PR-B approved input。
+- Handoff: 已同步更新根级 `/Volumes/Stelligen_SSD/Stelligen/HANDOFF.md`；用户已有未跟踪文件未修改、未暂存。
+- Next: 补齐输入准入与快照/territory lock 后，重新执行同一 preflight，再按已批准 PR-B 链运行并在外部 DATA 生成可审计结果。
+
+## 2026-08-22T02:00 EDT — 扩展 ADCdb seed 到跨癌种/跨疾病 target universe
+
+- Decision: 人类负责人明确：ADCdb seed 不局限于 CRC indication；其他癌种或疾病中已有 ADC precedent 的 target 也可以作为 MSS/pMMR refractory mCRC Atlas 的初始 seed。
+- Interpretation: 保持 CRC clinical territory lock 不变；ADCdb 的 disease/indication 只作为 target-level modality prior 和 provenance，不作为 CRC efficacy 证据。CRC transfer 仍必须由 Atlas G1–G4 决定。
+- Scope: 不修改 frozen `ADCdb_Atlas_ADC_AIDD_Design@0.3.0`，不改变 PR-A 的 Gate framework，不执行 ADCdb/Atlas 生产运行。
+- Contract revision: PR-B machine contract 升至 `ADCdb_Atlas_ADC_AIDD_PR_B_Production@0.2.0`，明确 `adcdb_indication_filter: NONE`、允许所有已批准 snapshot 中的癌种/疾病 precedent，并要求保留 `precedent_disease_or_indication_refs`。
+- Human contract: 补充跨癌种/跨疾病 seed 的通俗说明与边界；新增 seed provenance 字段要求。
+- Test: 增加跨癌种 seed scope、CRC precedent 非必需和 provenance 字段测试；待运行完整测试。
+- Review boundary: 这是对已批准 PR-B 语义的最小修订，必须新建独立 PR 并在同一 ChatGPT 对话复审；新修订获批前不得按跨癌种范围运行。

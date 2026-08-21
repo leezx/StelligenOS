@@ -1,10 +1,10 @@
 # PR-B production contract. No ADCdb, Atlas, seed, or result data belongs here.
 contract:
   id: ADCdb_Atlas_ADC_AIDD_PR_B_Production
-  version: 0.1.0
+  version: 0.2.0
   pipeline_version: ADCdb_Atlas_ADC_AIDD_Design@0.3.0
   parent_contract: ADCdb_Atlas_ADC_AIDD_PR_A_Contract@0.1.0
-  status: PR_B_REVIEW_REQUIRED_EXTERNAL_RUN_NOT_AUTHORIZED
+  status: PR_B_CROSS_INDICATION_SEED_SCOPE_REVIEW_REQUIRED
   disease_scope: MSS/pMMR refractory metastatic CRC
   operational_line: ">=3L"
   approval_required_before_external_run: true
@@ -41,6 +41,16 @@ run:
 
 target_seed:
   schema: TargetSeed@0.1.0
+  seed_source_scope:
+    adcdb_indication_filter: NONE
+    allowed_precedent_scope: all_cancers_and_diseases_in_approved_adcdb_snapshot
+    clinical_territory_filter_applies_at: atlas_kill_screen
+    crc_indication_precedent_required_for_seed: false
+    rationale: target_level_adc_modality_prior_is_not_the_same_as_crc_efficacy
+  required_seed_provenance:
+    - precedent_disease_or_indication_refs
+    - adcdb_record_ref
+    - source_snapshot_ref
   unresolved_at_stage_1: {endpoint_driving_population: UNRESOLVED, population_causality: UNRESOLVED}
   active_seed_requires: [resolved_target_identity, extracellular_antibody_accessible_target, real_adc_construct_precedent, internalization_or_delivery_precedent, adcdb_record_ref, snapshot_ref]
   unresolved_identity_route: DEFERRED_SEED

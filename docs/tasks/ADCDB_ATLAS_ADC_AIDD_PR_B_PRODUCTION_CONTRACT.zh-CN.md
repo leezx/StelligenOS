@@ -1,15 +1,17 @@
 # PR-B：ADCdb SEED + Atlas MUST-PASS 生产契约
 
-**合同版本：** `ADCdb_Atlas_ADC_AIDD_PR_B_Production@0.1.0`  
+**合同版本：** `ADCdb_Atlas_ADC_AIDD_PR_B_Production@0.2.0`
 **前置批准：** PR-A `APPROVE`，基线 `2a2e21b`  
-**当前状态：** `PR_B_REVIEW_REQUIRED_EXTERNAL_RUN_NOT_AUTHORIZED`  
+**当前状态：** `PR_B_CROSS_INDICATION_SEED_SCOPE_REVIEW_REQUIRED`
 **范围：** `MSS/pMMR refractory metastatic CRC, operationally >=3L`
 
 ## 1. 通俗说明
 
-PR-B 是第一次把系统从“规则”推进到“真实候选筛选”。它要回答：在已经被 ADCdb 记录过、具备 ADC 先例的靶点空间里，哪些靶点值得拿到 MSS/pMMR refractory mCRC 的公开数据中做 Atlas 验证？
+PR-B 是第一次把系统从“规则”推进到“真实候选筛选”。ADCdb seed 阶段不要求 ADC 先例已经发生在 CRC：只要靶点在已批准的 ADCdb 快照中有其他癌种或疾病的 ADC modality precedent，就可以作为初始 seed；随后统一拿到 MSS/pMMR refractory mCRC 的公开数据中做 Atlas 验证。
 
-PR-B 先做四件事：锁定 ADCdb 来源和快照；生成约 20–50 个真实 TargetSeed；运行 G1；运行 G2–G4 并输出 survivors 和失败分布。数量不足时如实输出，不补假候选。
+PR-B 先做四件事：锁定 ADCdb 来源和快照；不按 ADCdb 的 disease/indication 过滤，生成约 20–50 个真实 TargetSeed；运行 G1；运行 G2–G4 并输出 survivors 和失败分布。数量不足时如实输出，不补假候选。
+
+这里的逻辑是：ADCdb 的其他癌种/疾病只提供 target-level ADC modality prior，不提供 CRC efficacy 结论。CRC 的临床 territory 仍由 LOCK 固定，CRC transfer 由 Atlas G1–G4 决定。
 
 PR-B 不做 G5–G7、不选 `PRIMARY_TARGET`/`BACKUP_TARGET`、不生成 `NO_GO`、不做 epitope/AIDD、不做抗体或 ADC 设计。
 
@@ -47,7 +49,7 @@ ${BIOWORKSPACE_ROOT}/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/<pipeline_run_id
 
 仓库只提交契约、代码、测试和 handoff，不提交上述运行产物。
 
-`target_seed_candidates.tsv` 至少包含 `seed_id`、`territory_ref`、`canonical_target_id`、`adcdb_record_refs`、`adc_precedent_status`、`extracellular_access_status`、`internalization_delivery_precedent_status`、`intended_benefit`、`endpoint_class`、`initial_development_hypothesis`、`endpoint_driving_population`、`population_causality`、`identity_resolution_status`、`source_snapshot_refs`、证据 refs、`unknown_class` 和 `review_status`。其中 population 和 causality 必须仍为 `UNRESOLVED`。
+`target_seed_candidates.tsv` 至少包含 `seed_id`、`territory_ref`、`canonical_target_id`、`adcdb_record_refs`、`precedent_disease_or_indication_refs`、`adc_precedent_status`、`extracellular_access_status`、`internalization_delivery_precedent_status`、`intended_benefit`、`endpoint_class`、`initial_development_hypothesis`、`endpoint_driving_population`、`population_causality`、`identity_resolution_status`、`source_snapshot_refs`、证据 refs、`unknown_class` 和 `review_status`。其中 population 和 causality 必须仍为 `UNRESOLVED`；`precedent_disease_or_indication_refs` 可以是 CRC 之外的癌种或疾病，且不得被写成 CRC efficacy evidence。
 
 `atlas_gate_results.tsv` 每个 seed 每个 gate 一行，至少包含 `seed_id`、`canonical_target_id`、`gate_id`、`policy_ref`、`status`、`measurement_unit`、`cohort_refs`、patient/cell counts、effect metric/value、threshold ref、supporting/opposing/conflicting refs、`unknown_class`、missing information 和 next action。`status` 只能是 `PASS`、`KILL` 或 `UNKNOWN`。
 

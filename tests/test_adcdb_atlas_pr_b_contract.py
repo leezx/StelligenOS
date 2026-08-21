@@ -35,6 +35,12 @@ class PRBProductionContractTests(unittest.TestCase):
 
     def test_seed_and_atlas_boundaries(self):
         seed = CONTRACT["target_seed"]
+        scope = seed["seed_source_scope"]
+        self.assertEqual(scope["adcdb_indication_filter"], "NONE")
+        self.assertEqual(scope["allowed_precedent_scope"], "all_cancers_and_diseases_in_approved_adcdb_snapshot")
+        self.assertEqual(scope["clinical_territory_filter_applies_at"], "atlas_kill_screen")
+        self.assertFalse(scope["crc_indication_precedent_required_for_seed"])
+        self.assertIn("precedent_disease_or_indication_refs", seed["required_seed_provenance"])
         self.assertEqual(seed["unresolved_at_stage_1"]["endpoint_driving_population"], "UNRESOLVED")
         self.assertEqual(seed["unresolved_at_stage_1"]["population_causality"], "UNRESOLVED")
         atlas = CONTRACT["atlas"]
