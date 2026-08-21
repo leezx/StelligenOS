@@ -1,0 +1,83 @@
+# PR-B production contract. No ADCdb, Atlas, seed, or result data belongs here.
+contract:
+  id: ADCdb_Atlas_ADC_AIDD_PR_B_Production
+  version: 0.1.0
+  pipeline_version: ADCdb_Atlas_ADC_AIDD_Design@0.3.0
+  parent_contract: ADCdb_Atlas_ADC_AIDD_PR_A_Contract@0.1.0
+  status: PR_B_REVIEW_REQUIRED_EXTERNAL_RUN_NOT_AUTHORIZED
+  disease_scope: MSS/pMMR refractory metastatic CRC
+  operational_line: ">=3L"
+  approval_required_before_external_run: true
+  authorizes_external_run: false
+  output_root_policy: "${BIOWORKSPACE_ROOT}/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/<pipeline_run_id>/, never repository"
+  prohibited_outputs: [G5_G6_G7_results, TargetCommit, PRIMARY_TARGET, BACKUP_TARGET, NO_GO, Epitope_AIDD]
+
+preconditions:
+  required_pr_a_approval: true
+  required_pr_a_head_ref: 2a2e21b07c946e3b2b4f3e83a047c260cb5a3e28
+  required_territory_review_status: APPROVED
+  required_source_admission_status: APPROVED
+  required_snapshot_checksum_status: PASS
+  required_identity_policy: frozen
+  required_run_policy: frozen
+  failure_route: RUN_BLOCKED
+
+inputs:
+  territory_lock: {authoritative_file: clinical_territory.yaml, required_ref: approved_external_input}
+  source_admission_bundle:
+    required_fields: [source_id, source_version, snapshot_id, field_whitelist_ref, identity_policy_ref, human_review_ref]
+  snapshot_manifest:
+    required_fields: [snapshot_id, source_version, cutoff_utc, files, manifest_sha256]
+    file_checksum_algorithm: SHA-256
+  atlas_evidence:
+    required_fields: [cohort_ref, patient_id, malignant_cell_annotation, assay_native_target_measurement, evidence_source_ref]
+
+run:
+  run_id_equals_pipeline_run_id: true
+  run_id_required_before_start: true
+  ordered_steps: [RUN_LOCK_VERIFY, SOURCE_ADMISSION_VERIFY, ADCDB_SEED_MATERIALIZE, TARGET_IDENTITY_RESOLVE, G1_EXPRESSION_PREVALENCE, G2_POPULATION_MAPPING, G3_POPULATION_CAUSALITY, G4_COVERAGE, ATLAS_MUST_PASS_EXPORT]
+  batch_capacity: {min: 20, max: 50, is_capacity_target_not_pass_criterion: true, undersized_batch_route: record_reason_do_not_pad}
+  no_seed_route: emit_empty_tables_and_failure_distribution
+
+target_seed:
+  schema: TargetSeed@0.1.0
+  unresolved_at_stage_1: {endpoint_driving_population: UNRESOLVED, population_causality: UNRESOLVED}
+  active_seed_requires: [resolved_target_identity, extracellular_antibody_accessible_target, real_adc_construct_precedent, internalization_or_delivery_precedent, adcdb_record_ref, snapshot_ref]
+  unresolved_identity_route: DEFERRED_SEED
+
+atlas:
+  units: {patient: patient_id, malignant_cell: predeclared_malignant_cell_annotation, independent_cohort: study_or_cohort_accession}
+  shared_patient_policy_ref: PR-A-PATIENT-AGGREGATION-v0.1.0
+  rna_surface_boundary: {rna_is_surface_protein: false, rna_is_adc_delivery_evidence: false}
+  gates:
+    - {gate_id: G1, policy_ref: PR-A-G1-default-v0.1.0, output: PASS_KILL_UNKNOWN}
+    - {gate_id: G2, policy_ref: PR-A-G2-default-v0.1.0, effect_metric: population_state_prevalence_ratio, effect_formula: "prevalence(state|target_positive) / max(prevalence(state|target_negative), 0.01)", effect_min: 2.0, metric_frozen_before_run: true, output: PASS_KILL_UNKNOWN}
+    - {gate_id: G3, policy_ref: PR-A-G3-default-v0.1.0, evaluates: population_causality, target_gene_causality_required: false, output: PASS_KILL_UNKNOWN}
+    - {gate_id: G4, policy_ref: PR-A-G4-default-v0.1.0, independent_cohorts_min_for_pass: 2, output: PASS_KILL_UNKNOWN}
+  unknown_classes: [FATAL_UNKNOWN, RESOLVABLE_CRITICAL_UNKNOWN, CARRIED_RISK]
+
+outputs:
+  external_run_root: ${BIOWORKSPACE_ROOT}/DATA/2.PROJECTS/Stelligen-ADCdev-OS/result/<pipeline_run_id>/
+  required_artifacts:
+    - 00_governance/run_lock.json
+    - 00_governance/source_admission_bundle.json
+    - 00_governance/source_snapshot_manifest.json
+    - 00_governance/input_provenance.json
+    - 00_governance/execution_log.json
+    - 02_adcdb_seed/target_seed_candidates.tsv
+    - 02_adcdb_seed/seed_generation_summary.json
+    - 02_adcdb_seed/deferred_seed_candidates.tsv
+    - 03_atlas_kill_screen/atlas_gate_results.tsv
+    - 03_atlas_kill_screen/atlas_must_pass.tsv
+    - 03_atlas_kill_screen/endpoint_population_map.tsv
+    - 03_atlas_kill_screen/population_causality_evidence.tsv
+    - 03_atlas_kill_screen/coverage_summary.tsv
+    - 03_atlas_kill_screen/atlas_failure_distribution.json
+    - 03_atlas_kill_screen/atlas_kill_decision.json
+  survivor_rule: only_seeds_with_G1_G2_G3_G4_all_PASS
+  empty_survivor_status: NO_SURVIVOR
+
+review_boundary:
+  current_pr_scope: production_contract_preparation_only
+  approval_authorizes: PR_B_external_production_run
+  approval_does_not_authorize: [G5_G6_G7, TargetCommit, AIDD, wet_lab_or_CRO, v0_3_design_modification]
