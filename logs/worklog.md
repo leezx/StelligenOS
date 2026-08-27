@@ -3594,3 +3594,36 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   clean / boundary 仅报 pre-existing untracked）。
 - Next: PR body 更新交付形态措辞；追加提交到 PR #94；把本轮摘要回复到同一
   ChatGPT 对话请求复审；`APPROVE` 前不进入任何 runtime migration PR。
+
+## 2026-08-27T16:40 EDT — PR #94 APPROVE + merge；v5 审核记录补登与快照（独立 PR）
+
+- Review result: ChatGPT 在 `Biotech ideas → AI审核方案` 对话对 PR #94 @ `37fa6c2`
+  返回 `APPROVE`（两轮：`98fc29f` → `37fa6c2`）。6 个第一轮 blocker 全部关闭；
+  确认 architecture-spec 与 runtime 已通过 `MIGRATION_PENDING` 正确分层，本 PR
+  不需同步改 `core_objects.yaml` / `gate_system.yaml`；这版作为 Blueprint v1.3
+  → runtime migration 的正式治理基线，不建议再改 CURRENT_SYSTEM。
+- Merge: `gh pr merge 94 --merge` → merge 提交 `ea9dc04`。
+- Connector note: 审核方尝试通过 GitHub connector 写 `APPROVE` review 失败
+  （`403 Resource not accessible by integration`）；不影响结论，GitHub 上无
+  formal review 记录，以对话与 `logs/chatgpt-review-2026-08-27-*.md` 为准。
+- 新分支 `task_20260827_v5-approval-record-and-snapshot`（从 `ea9dc04`）承载
+  审核记录补登与快照——不能加到被批准的 branch 上，否则改掉 `37fa6c2`。
+  改动：
+  - 新增 `logs/chatgpt-review-2026-08-27-architecture-v5-blueprint-alignment.md`
+    （两轮历史 + 6 点关闭方式 + 批准范围 + PR A–E 顺序 + 403 说明 + 边界）。
+  - 新增只读快照 `docs/architecture/versions/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.v5.zh-CN.md`
+    （`git show 37fa6c2:...` 逐字节复制，`diff` 验证 IDENTICAL）。
+  - `docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md`
+    仅改 §0 元数据区块：`v5-draft` → `v5`，`PENDING_EXPERT_REVIEW` → `APPROVED`
+    （附 PR/commit/记录路径），快照清单加 `v5`。正文不动。
+  - `docs/architecture/versions/README.md` 快照表加 `v5` 行 + 说明段更新。
+  - `architecture.md` / `README.md` 审核基线字符串 `...-v5-draft` → `...-v5`，
+    补 `APPROVE`/merge/快照指针与 `MIGRATION_PENDING` 说明。
+  - 新增 `docs/handoff/2026-08-27-v5-approval-record-and-snapshot.zh-CN.md`。
+- 明确未改：v5 正文、`src/`、`genmodules/`、`extensions/`、`core_objects.yaml`、
+  `gate_system.yaml`、任何测试或合同；未启动任何 runtime migration（PR A–E）；
+  未解除 EVGAP；未改 CRC pool；用户自有 untracked 文件未暂存。
+- 验证：unittest 555 OK / test_git_sync A-D / diff --check clean / 快照 diff
+  IDENTICAL / boundary 仅报 pre-existing untracked。
+- Next: 本收尾 PR 审核合并后，`v5` 即正式治理基线；runtime migration PR A
+  需 Owner 单独授权后启动。

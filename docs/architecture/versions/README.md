@@ -27,10 +27,15 @@
 | 文档 ID | 版本 | 快照 | 审核状态 |
 |---|---|---|---|
 | `CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW` | `v1` | `CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.v1.zh-CN.md` | PR #42 `APPROVE` |
+| `CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW` | `v5` | `CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.v5.zh-CN.md` | PR #94 `APPROVE` @ `37fa6c2`（merge `ea9dc04`） |
 
 `v2-draft`, `v3-draft` and `v4-draft` were neither approved nor snapshotted,
-and all have been superseded by the canonical `v5-draft` review baseline
-(`STELLIGENOS-ARCH-2026.08.27-v5-draft`, deep alignment to Blueprint v1.3).
-Per rule 4 no snapshot is fabricated for any of them. `v5-draft` must not be
-copied into this directory until its dedicated expert/ChatGPT review returns
-`APPROVE`.
+and all have been superseded by the `v5` review baseline
+(`STELLIGENOS-ARCH-2026.08.27-v5`, deep alignment to Blueprint v1.3). Per
+rule 4 no snapshot is fabricated for any of them.
+
+The `v5` snapshot is a verbatim copy of the PR #94 approved head
+`37fa6c2`（其 §0 版本区块仍写 `v5-draft` / `PENDING_EXPERT_REVIEW`，符合规则
+「快照保存被审核时的正文」）。规范路径上的同一版本已把 §0 更新为 `v5` /
+`APPROVED` —— 这是本目录说明允许且仅允许的一处元数据差异，正文一致。审核原文
+记录见 `logs/chatgpt-review-2026-08-27-architecture-v5-blueprint-alignment.md`。
