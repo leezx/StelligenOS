@@ -28,7 +28,9 @@
 |---|---|---|---|
 | `CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW` | `v1` | `CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.v1.zh-CN.md` | PR #42 `APPROVE` |
 
-`v2-draft` and `v3-draft` were neither approved nor snapshotted, and both have
-been superseded by the canonical `v4-draft` review baseline. Per rule 4 no
-snapshot is fabricated for either. `v4-draft` must not be copied into this
-directory until its dedicated expert/ChatGPT review returns `APPROVE`.
+`v2-draft`, `v3-draft` and `v4-draft` were neither approved nor snapshotted,
+and all have been superseded by the canonical `v5-draft` review baseline
+(`STELLIGENOS-ARCH-2026.08.27-v5-draft`, deep alignment to Blueprint v1.3).
+Per rule 4 no snapshot is fabricated for any of them. `v5-draft` must not be
+copied into this directory until its dedicated expert/ChatGPT review returns
+`APPROVE`.

@@ -3499,3 +3499,98 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Fix 4: 修正 scope 事实记录：本 PR changed files 是 protocol、v0.2 historical snapshot、worklog；根级 HANDOFF 虽已另行更新，但不属于 PR changed files。
 - Preserved: population causality != target causality、RNA != surface protein、ADC precedent != CRC efficacy、carried internalization risk、lexicographic tie-break、TargetCommit、Sponsor route 非 science gate、PR-A/B/C/D 分组均保留。
 - Validation pending: 重新运行 pytest、diff check、boundary check；仅显式暂存上述 3 个仓库文件，追加修复提交到 PR #88，等待同一 ChatGPT 对话复审。
+
+## 2026-08-27T14:55 EDT — 架构说明文档 v5-draft：依据 Blueprint v1.3 深度对齐
+
+- 用户指令：读取 KB 中 `StelligenOS-产品形态-Blueprint v1.3` 与
+  `StelligenOS_Candidate_Levels_and_GateSets_Blueprint.v0.1`，以其为核心对仓库
+  架构做一轮深度修改（非重做），提交 PR 并在网页版 ChatGPT `Biotech ideas`
+  项目下的 `AI 审核方案` 对话提交审核。用户明确要求「忽略轻量级，直接深度修改
+  架构」，范围边界确认为「文档层深改」（改架构说明文档 + `contract.zh-CN.md`，
+  不改 `src/`、`core_objects.yaml`、`gate_system.yaml`、测试）。
+- 分支：从 `origin/main@a8afcd4` 新建 `task_20260827_architecture-v5-blueprint-alignment`。
+  当前分支 `task_20260822_crc-atlas-cohort-binding` 上未提交的 `logs/worklog.md`
+  改动（CRC-Atlas WIP，非本任务）已 `git stash push -- logs/worklog.md` 暂存
+  为 `stash@{0}`，不带入本分支。
+- 交付物类型：**纯文档深度对齐 + NO_ARCHITECTURE_CHANGE**（不改代码、契约、
+  测试、Gate、Model、Profile、科学决策）。
+- 改动文件：
+  1. `docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md`
+     `v4-draft` → `v5-draft`。基线 `main@4d895d7` → `main@a8afcd4`，测试数
+     `413` → `555`（逐项复核）。深改 §2（六对象决策模型 + Instantiation +
+     CRC-Atlas 重定义为 evidence engine）、§3（设计原则 11 → 16）、§4
+     （4.2 六对象软件层落点、4.3 Candidate Levels L0–L14 + canonical GateSet
+     registry、4.4 evidence regime 词表、4.5 与 `core_objects@1.1` 8 对象的
+     crosswalk、4.6 ClinicalHypothesis 映射为 Context 成熟度）、§6（6.1 Gate/
+     GateSet 两层规则分离、6.2 Direction⊥Strength/ceiling/conflict 铁律、
+     6.3 45-Gate 拓扑 → canonical GateSets 目标映射、6.4 一 Gate 一主 Module
+     施工责任制 + `TGT-01`–`TGT-08` 首批、6.5 共享 infrastructure 规则）、
+     §11（CRC Level 01 重述为第一次 Instantiation，三把 eligibility lock →
+     `TGT-02/03/04`+L1 目标映射，41/369 计数与 EVGAP 阻断状态原样保留）、
+     §13（运行流程按 Candidate 生命周期 + Instantiation 重写，保留 sponsor
+     控制点）。§14/§15 更新；§16 审核问题 17 → 27（新增 18–27）；§17 下一版
+     升 `v6-draft`。顶层章节编号保持稳定。
+  2. `docs/architecture/contract.zh-CN.md` §3 增加决策层模型指针；§3.4 重构为
+     3.4.1 决策层六对象模型（规范）/ 3.4.2 Candidate Level Registry L0–L14
+     （规范）/ 3.4.3 当前 `core_objects@1.1` 8 对象登记（待 crosswalk 实现）/
+     3.4.4 ClinicalHypothesis 递进锁定；§6 Source of Truth 增加 `v5-draft`
+     文档与外部 Blueprint 规范来源指针。
+  3. `architecture.md` / `README.md` / `docs/architecture/versions/README.md`
+     审核基线 `STELLIGENOS-ARCH-2026.08.06-v4-draft` →
+     `STELLIGENOS-ARCH-2026.08.27-v5-draft`；`versions/README.md` 记录
+     `v2/v3/v4-draft` 均未获批无快照，`v5-draft` 未获批前不入 `versions/`。
+  4. `docs/handoff/2026-08-27-architecture-v5-blueprint-alignment.zh-CN.md`（新增）。
+- 明确未改：`src/`、`genmodules/`、`extensions/`、`core_objects.yaml`、
+  `gate_system.yaml`、任何测试；未解除 `EVGAP-01`/`EVGAP-02`；未执行任何抽取或
+  外部运行；未修复 §16 登记的任何缺陷（envelope 漂移、YAML 引号等）；未把
+  `v5-draft` 复制进 `versions/`；未触碰用户自有 untracked 文件
+  （`AI_RESULT_ACCEPTANCE.md`、`STELLIGEN_CONSTRAINTS.md`、`docs/worklogs/`、
+  `pipelines/`、`CRC Patient Territory Map.png`）。
+- 验证：见 handoff「验证」节。
+- Next：显式暂存本任务 6 个文件，创建非 draft PR，在网页版 ChatGPT
+  `Biotech ideas` → `AI 审核方案` 对话粘贴完整 `v5-draft` 正文提交审核；
+  ChatGPT 明确 `APPROVE` 前不推进代码落地（问题 18–27 的实现任务）。
+
+## 2026-08-27T16:35 EDT — v5-draft REQUEST_CHANGES 第一轮修订（同一 PR #94）
+
+- Review input: ChatGPT 在 `Biotech ideas → AI审核方案` 对话对 PR #94 `98fc29f`
+  返回 `REQUEST_CHANGES`：确认改动范围与声明一致（7 文件、docs-only、未改
+  src/ 或 machine contract）、PR mergeable、对 Blueprint v1.3 主体理解正确；
+  要求一轮 docs-only 收敛修订，6 点。
+- Fixes（未触碰 `src/`、machine contract、测试、CRC 41/369 pool、EVGAP）：
+  1. 治理定位 `NO_ARCHITECTURE_CHANGE` → `DOC-LEVEL ARCHITECTURE ALIGNMENT /
+     NO_RUNTIME_CONTRACT_CHANGE`；CURRENT_SYSTEM 新增 §0.3 Runtime Conformance
+     block（Target arch / runtime contracts `core_objects@1.1` +
+     `gate_system@0.1.0/topology@0.2.0` + envelope `2.1.0` / `MIGRATION_PENDING`
+     / 未合并 migration PR 前不得声称 conformance）；`contract.zh-CN.md` §3.4.3
+     同步。
+  2. §4.5 改为 LEGACY→TARGET migration crosswalk（非一一等价）：`Opportunity`
+     = orchestration wrapper；`ClinicalHypothesis` = legacy composite；
+     `ADCConstruct` 跨 L9/L10；`LeadSeries` = L11 container；`Biomarker`/
+     `Endpoint` 等移入「尚缺的 Candidate Types」独立表。
+  3. §6.3 → `LEGACY_GATE_SYSTEM ... status = FROZEN_LEGACY`；不重开 45 冻结
+     计数、不原位转换；canonical GateSets 为新 versioned lineage。
+  4. §8 新增边界段 + §8.4：现有 multi-purpose GenModule = shared provider /
+     analysis engine / legacy composite，不拥有 Gate scientific decision
+     ownership；`target_safety`（跨 TGT-04/05/07）降级为 shared engine。
+  5. §11.2 evidence ceiling：改「贡献证据给」而非「满足」；`EVGAP-01` →
+     contributes to `TGT-04`（不 discharge density）；`EVGAP-02` → primarily
+     `TGT-02`，`TGT-03` 需独立 treatment/metastasis-context evidence。
+  6. §16 重构为 A 组（RESOLVED BY BLUEPRINT v1.3：A1–A6）与 B 组
+     （IMPLEMENTATION/MIGRATION BLOCKERS：18 Instantiation contract / 19
+     legacy 45-Gate migration / 20 EvidencePackage no-grade + Assessment
+     schema / 21 CRC lock→Gate 映射 / 22 legacy GenModule 重新分类 / 23
+     runtime migration PR 顺序，直接给出 PR A–E 推荐序列）。
+- 章节内交叉引用（问题 18–27 → A 组 A1–A6 / B 组 18–23）已逐处校正。
+- 改动文件（本轮）：`docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md`、
+  `docs/architecture/contract.zh-CN.md`、`docs/handoff/2026-08-27-architecture-v5-blueprint-alignment.zh-CN.md`、
+  `logs/worklog.md`。`architecture.md` / `README.md` / `versions/README.md`
+  本轮无需再改。
+- 明确未改：`src/`、`genmodules/`、`extensions/`、`core_objects.yaml`、
+  `gate_system.yaml`、任何测试；未创建新 Gate、未迁移 45 Gate、未实现 Module、
+  未改 CRC pool、未解除 EVGAP、未新增 Blueprint 抽象；用户自有 untracked 文件
+  未暂存。
+- 验证：见 handoff 第七节（unittest 555 OK / test_git_sync A-D / diff --check
+  clean / boundary 仅报 pre-existing untracked）。
+- Next: PR body 更新交付形态措辞；追加提交到 PR #94；把本轮摘要回复到同一
+  ChatGPT 对话请求复审；`APPROVE` 前不进入任何 runtime migration PR。
