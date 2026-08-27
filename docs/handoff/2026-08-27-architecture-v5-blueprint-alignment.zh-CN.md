@@ -164,8 +164,70 @@
    Candidate Type / Level Registry，再 `gate_system.yaml` GateSet 两层拆分，
    最后 `Instantiation` contract）。
 
-## 七、数据边界声明
+## 七、REQUEST_CHANGES 第一轮修订（2026-08-27，同一 PR）
+
+ChatGPT 在 `Biotech ideas → AI审核方案` 对话对 `98fc29f` 返回 `REQUEST_CHANGES`
+（确认范围与声明一致、PR mergeable、主体理解正确），要求一轮 docs-only 收敛
+修订。已按 6 点反馈修改，未触碰 `src/`、machine contract、测试、CRC pool、
+EVGAP：
+
+1. **治理定位。** `NO_ARCHITECTURE_CHANGE` → `DOC-LEVEL ARCHITECTURE ALIGNMENT
+   / NO_RUNTIME_CONTRACT_CHANGE`（spec 已变、runtime 未变）。CURRENT_SYSTEM
+   新增 **§0.3 Runtime Conformance** block（Target architecture / Current
+   runtime contracts / `MIGRATION_PENDING` / 「未合并 migration PR 前不得声称
+   Blueprint v1.3 conformance」）；`contract.zh-CN.md` §3.4.3 同步加入同一
+   conformance block。
+2. **§4.5 crosswalk → LEGACY → TARGET migration crosswalk。** 明确不是一一
+   等价：`Opportunity` = search/orchestration wrapper；`ClinicalHypothesis` =
+   legacy composite（拆到 Context + Candidate + biomarker/product ref）；
+   `ADCConstruct` = 跨 L9/L10 composite；`LeadSeries` = L11 series/container；
+   `Biomarker`/`Endpoint` 等移入「`core_objects@1.1` 尚缺的 Candidate Types」
+   独立表。
+3. **legacy 45-Gate。** §6.3 改写为 `LEGACY_GATE_SYSTEM ... status =
+   FROZEN_LEGACY`；不重开 45 冻结计数、不原位转换；Candidate-Level canonical
+   GateSets 是新的 versioned lineage。§16 B 组问题 19 改为「不修改 frozen
+   topology 前提下的 migration/compatibility strategy」。
+4. **一 Gate 一主 Module vs 现有 broad GenModule。** §8 总述新增边界段：现有
+   multi-purpose GenModule = shared provider / shared analysis engine /
+   legacy composite library，不拥有任何 Gate 的 scientific decision
+   ownership；§8.4 `target_safety`（跨 TGT-04/05/07）明确降级为 shared
+   engine，三个 Gate 各有独立 primary Module。
+5. **§11.2 evidence ceiling。** 改为「贡献证据给」而非「满足」：clinical
+   context lock → upstream L1 Context freeze；`EVGAP-01` → contributes to
+   `TGT-04`（不 discharge density）；`EVGAP-02` → primarily `TGT-02`，
+   `TGT-03` 需独立 treatment/metastasis-context evidence。
+6. **§16 重构为两组。** **A 组 RESOLVED BY BLUEPRINT v1.3**（A1 泛化
+   Candidate / A2 canonical GateSets / A3 sponsor 轴非 canonical Gate /
+   A4 Knowledge Ledger ⊃ EvidencePackage / A5 Target 先行 / A6 BVG +
+   human APPROVE 并行不二选一）；**B 组 IMPLEMENTATION / MIGRATION BLOCKERS**
+   （18 Instantiation contract / 19 legacy 45-Gate migration / 20
+   EvidencePackage no-grade + Assessment schema / 21 CRC lock→Gate 映射 /
+   22 legacy GenModule 重新分类 / 23 runtime migration PR 顺序 —— 直接给出
+   PR A–E 推荐序列，legacy 8 对象与 45 Gate 迁移完成前保留 compatibility）。
+
+**改动文件（本轮）：** `docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md`、
+`docs/architecture/contract.zh-CN.md`、`logs/worklog.md`、本 handoff。
+`architecture.md` / `README.md` / `versions/README.md` 本轮无需再改（基线
+字符串已是 `v5-draft`）。
+
+**验证（本轮）：**
+
+```text
+PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'  → Ran 555 tests — OK
+bash tests/test_git_sync.sh          → passed (A-D)
+git diff --check                     → clean
+bash scripts/verify_repository_boundary.sh → 仅报 pre-existing 用户自有 untracked（未暂存）
+git status --short                   → 仅本轮 4 个文件 + 之前提交的文件
+```
+
+**PR body 已更新：** 交付形态由 `NO_ARCHITECTURE_CHANGE` 改为
+`DOC-LEVEL ARCHITECTURE ALIGNMENT / NO_RUNTIME_CONTRACT_CHANGE`。
+
+**下一步：** 把本轮修改摘要回复到同一 ChatGPT 对话请求复审；`APPROVE` 前
+不进入任何 runtime migration PR。
+
+## 八、数据边界声明
 
 本仓库只保存架构系统文档、代码和小型治理文本；本任务没有新增任何数据、缓存
-或结果文件。所有数据和处理仍位于外部工作区。本任务只改动 5 个既有文档 +
-新增 1 个 handoff，均为治理文本。
+或结果文件。所有数据和处理仍位于外部工作区。本任务只改动既有架构文档 +
+worklog + 本 handoff，均为治理文本。

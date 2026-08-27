@@ -129,28 +129,49 @@ Candidate 生命周期是一系列逐层收敛的搜索空间；上一级 Candid
 `docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md`
 （`v5-draft`）在仓库侧维护。
 
-#### 3.4.3 当前对象登记（`core_objects@1.1`，待 crosswalk 实现）
+#### 3.4.3 Runtime Conformance 与 legacy → target migration crosswalk
 
-`src/contracts/core_objects.yaml` 当前仍登记 8 个具名对象，作为决策层模型的
-当前实现映射：
+**本契约的 3.4.1 / 3.4.2 是 architecture specification 的规范目标；它已变，
+但 runtime implementation 未变。** 两者关系：
 
-1. Opportunity —— L0–L2 搜索问题声明 + Instantiation 绑定意图
-2. ClinicalHypothesis —— 逐步收敛的 `Context`（L1+L2 已锁定组合），其递进 lock = Context 成熟度
-3. TargetHypothesis —— `Candidate`，`candidate_type = ADC Target`（L4）
-4. BinderCandidate —— `Candidate`（L6）
-5. ADCConstruct —— `Candidate`（L9 → L10）
-6. LeadSeries —— `Candidate`（L11）
-7. DevelopmentCandidate —— `Candidate`（L13）
-8. Asset —— L11–L13 经 `NOMINATE` / `COMMIT` 后的对外可交易表述，非新 Level
+```text
+Target architecture:
+  Blueprint v1.3 six-object model + Instantiation binding layer
 
-`Biomarker`（L12）与 `Endpoint`（L2）为支持性 Candidate 类型，未登记为核心对象。
+Current runtime contracts:
+  core_objects@1.1                          （8 legacy object types）
+  gate_system@0.1.0 / topology@0.2.0        （45 legacy gates, FROZEN_LEGACY）
+  GateInputEnvelope / GateModelOutput@2.1.0  （score/confidence/status）
 
-8 个具名对象是否应折叠为泛化 `Candidate` + `candidate_type` + `level`（把
-`core_objects.yaml` 改为 Candidate Type Registry + Candidate Level Registry），
-以及 45-Gate 拓扑如何映射到 canonical GateSets，是待专家审核的开放实现问题，
-见 `CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md` 第 16 节
-问题 18–27。本契约的决策层模型（3.4.1 / 3.4.2）已按 Blueprint v1.3 规范；
-其代码落地属独立实现任务。
+Runtime conformance:
+  MIGRATION_PENDING
+
+Rule:
+  在后续 runtime migration PR（顺序见 CURRENT_SYSTEM v5-draft §16 B 组问题 23，
+  PR A–E）合并之前，repository runtime 不得声称已实现 Blueprint v1.3 conformance。
+```
+
+`src/contracts/core_objects.yaml` 当前仍登记 8 个 **legacy object type**。它们到
+目标 ontology 的映射是**迁移拆分，不是一一等价**（多数是 composite）：
+
+1. `Opportunity` —— legacy search/orchestration wrapper → `Instantiation` intent + `Context` seed + Candidate-generation request（不属于任何 Candidate Level）
+2. `ClinicalHypothesis` —— legacy composite（当前组合 target、anchor clinical context、intended benefit、biomarker hypothesis、product hypothesis）→ `Context` + `Candidate`/reference + biomarker/product hypothesis reference；lock state → `Context` maturity
+3. `TargetHypothesis` —— `Candidate`，`candidate_type = ADC Target`（L4）
+4. `BinderCandidate` —— `Candidate`（L6）
+5. `ADCConstruct` —— legacy composite，跨 L9 ADC Design / L10 ADC Hit（未来需 stage/type discriminator 或 distinct Candidate objects）
+6. `LeadSeries` —— legacy series/container around L11 ADC Lead candidates（decomposition pending）
+7. `DevelopmentCandidate` —— `Candidate`（L13）
+8. `Asset` —— `NOMINATE` / `COMMIT` 后的对外商业/交易表述，非新 Candidate Level
+
+`Biomarker`（L12）、`Endpoint`（L2）及 `Epitope` / `Linker` / `Payload` /
+`ADC Lead` / `Clinical Regimen` 是 `core_objects@1.1` **尚缺、migration 时须新增**
+的 Candidate Type，不是上表 8 对象的 crosswalk。
+
+架构方向（8 对象折叠为泛化 `Candidate` + `candidate_type` + `level`；旧 45-Gate
+冻结为 legacy、新建 canonical GateSet lineage）已由 Blueprint v1.3 决定，登记在
+`CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md` 第 16 节 **A 组**；
+尚待实现设计的 blocker 在同节 **B 组**。本契约的决策层模型（3.4.1 / 3.4.2）
+是规范目标，其代码落地属独立实现任务。
 
 #### 3.4.4 ClinicalHypothesis 递进锁定
 

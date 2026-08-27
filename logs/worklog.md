@@ -3550,3 +3550,47 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Next：显式暂存本任务 6 个文件，创建非 draft PR，在网页版 ChatGPT
   `Biotech ideas` → `AI 审核方案` 对话粘贴完整 `v5-draft` 正文提交审核；
   ChatGPT 明确 `APPROVE` 前不推进代码落地（问题 18–27 的实现任务）。
+
+## 2026-08-27T16:35 EDT — v5-draft REQUEST_CHANGES 第一轮修订（同一 PR #94）
+
+- Review input: ChatGPT 在 `Biotech ideas → AI审核方案` 对话对 PR #94 `98fc29f`
+  返回 `REQUEST_CHANGES`：确认改动范围与声明一致（7 文件、docs-only、未改
+  src/ 或 machine contract）、PR mergeable、对 Blueprint v1.3 主体理解正确；
+  要求一轮 docs-only 收敛修订，6 点。
+- Fixes（未触碰 `src/`、machine contract、测试、CRC 41/369 pool、EVGAP）：
+  1. 治理定位 `NO_ARCHITECTURE_CHANGE` → `DOC-LEVEL ARCHITECTURE ALIGNMENT /
+     NO_RUNTIME_CONTRACT_CHANGE`；CURRENT_SYSTEM 新增 §0.3 Runtime Conformance
+     block（Target arch / runtime contracts `core_objects@1.1` +
+     `gate_system@0.1.0/topology@0.2.0` + envelope `2.1.0` / `MIGRATION_PENDING`
+     / 未合并 migration PR 前不得声称 conformance）；`contract.zh-CN.md` §3.4.3
+     同步。
+  2. §4.5 改为 LEGACY→TARGET migration crosswalk（非一一等价）：`Opportunity`
+     = orchestration wrapper；`ClinicalHypothesis` = legacy composite；
+     `ADCConstruct` 跨 L9/L10；`LeadSeries` = L11 container；`Biomarker`/
+     `Endpoint` 等移入「尚缺的 Candidate Types」独立表。
+  3. §6.3 → `LEGACY_GATE_SYSTEM ... status = FROZEN_LEGACY`；不重开 45 冻结
+     计数、不原位转换；canonical GateSets 为新 versioned lineage。
+  4. §8 新增边界段 + §8.4：现有 multi-purpose GenModule = shared provider /
+     analysis engine / legacy composite，不拥有 Gate scientific decision
+     ownership；`target_safety`（跨 TGT-04/05/07）降级为 shared engine。
+  5. §11.2 evidence ceiling：改「贡献证据给」而非「满足」；`EVGAP-01` →
+     contributes to `TGT-04`（不 discharge density）；`EVGAP-02` → primarily
+     `TGT-02`，`TGT-03` 需独立 treatment/metastasis-context evidence。
+  6. §16 重构为 A 组（RESOLVED BY BLUEPRINT v1.3：A1–A6）与 B 组
+     （IMPLEMENTATION/MIGRATION BLOCKERS：18 Instantiation contract / 19
+     legacy 45-Gate migration / 20 EvidencePackage no-grade + Assessment
+     schema / 21 CRC lock→Gate 映射 / 22 legacy GenModule 重新分类 / 23
+     runtime migration PR 顺序，直接给出 PR A–E 推荐序列）。
+- 章节内交叉引用（问题 18–27 → A 组 A1–A6 / B 组 18–23）已逐处校正。
+- 改动文件（本轮）：`docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md`、
+  `docs/architecture/contract.zh-CN.md`、`docs/handoff/2026-08-27-architecture-v5-blueprint-alignment.zh-CN.md`、
+  `logs/worklog.md`。`architecture.md` / `README.md` / `versions/README.md`
+  本轮无需再改。
+- 明确未改：`src/`、`genmodules/`、`extensions/`、`core_objects.yaml`、
+  `gate_system.yaml`、任何测试；未创建新 Gate、未迁移 45 Gate、未实现 Module、
+  未改 CRC pool、未解除 EVGAP、未新增 Blueprint 抽象；用户自有 untracked 文件
+  未暂存。
+- 验证：见 handoff 第七节（unittest 555 OK / test_git_sync A-D / diff --check
+  clean / boundary 仅报 pre-existing untracked）。
+- Next: PR body 更新交付形态措辞；追加提交到 PR #94；把本轮摘要回复到同一
+  ChatGPT 对话请求复审；`APPROVE` 前不进入任何 runtime migration PR。

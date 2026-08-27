@@ -53,12 +53,21 @@ v1.3**）确立的决策模型，正式提升为本仓库架构说明的**主干
    Candidate Type × Level / canonical GateSet。
 8. **仓库基线 `main@4d895d7` → `main@a8afcd4`；测试数 `413` → `555`**
    （逐项复核，见第 15/16 节）。
-9. **第 16 节审核问题 17 条 → 27 条。** 新增 18–27，集中登记本次深度对齐引出的
-   核对项。
+9. **第 16 节审核问题重构为两组。** 承接 1–17；新增内容分为 **A 组
+   RESOLVED BY BLUEPRINT v1.3**（架构方向已定，开放的只是 migration 策略）
+   与 **B 组 IMPLEMENTATION / MIGRATION BLOCKERS**（真正待实现设计的问题），
+   并在 B 组问题 23 直接给出推荐的 runtime migration PR 顺序（PR A–E）。
 
 ### 0.2 本版**不**修改的内容
 
-**本版仍不修改任何 Gate、合同、代码、测试或科学决策。**具体：
+**本版不修改任何 runtime 工件——`src/` 代码、machine contract、测试或科学 Gate
+判据；但本版确实是一次 architecture-specification change**：它把 Blueprint v1.3
+六对象模型提升为 `contract.zh-CN.md` 的规范目标架构。因此本 PR 的治理定位是
+
+> **DOC-LEVEL ARCHITECTURE ALIGNMENT / NO_RUNTIME_CONTRACT_CHANGE**
+
+不再使用 `NO_ARCHITECTURE_CHANGE`（该措辞不准确：spec 已变，只是 runtime
+implementation 未变）。具体不改动：
 
 - 不修改 `src/contracts/core_objects.yaml`（仍为 8 对象，`version: "1.1"`）。
 - 不修改 `src/contracts/gate_system.yaml`（仍为 45 Gate，拓扑 `0.2.0`）。
@@ -68,10 +77,33 @@ v1.3**）确立的决策模型，正式提升为本仓库架构说明的**主干
 
 Blueprint v1.3 的六对象模型在本版中作为**目标决策层契约**呈现；把它落到
 `core_objects.yaml` / `gate_system.yaml` / `src/` 是本 PR 获批之后的独立实现
-任务，见第 16 节问题 18–21、26。发现的实现层不一致只登记为审核问题，另立
-治理任务修复（第 17 节规则 6）。
+任务，见第 16 节 B 组 blocker 与推荐 migration 顺序。发现的实现层不一致只
+登记为审核问题，另立治理任务修复（第 17 节规则 6）。
 
-### 0.3 章节编号说明
+### 0.3 Runtime Conformance（运行时符合性）
+
+```text
+Target architecture:
+  Blueprint v1.3 six-object model
+  （Candidate · Context · Gate/GateSet · EvidencePackage ·
+   CandidateGateAssessment · Decision + Instantiation binding layer）
+
+Current runtime contracts:
+  core_objects@1.1                       （8 legacy object types）
+  gate_system@0.1.0 / topology@0.2.0     （45 legacy gates, 3 chains）
+  GateInputEnvelope / GateModelOutput@2.1.0  （score/confidence/status，无 Direction×Strength）
+
+Runtime conformance:
+  MIGRATION_PENDING
+
+Rule:
+  在后续 migration PR（见 §16 推荐顺序 PR A–E）合并之前，
+  repository runtime 不得声称已实现 Blueprint v1.3 conformance。
+  "architecture target 已冻结" 与 "runtime implementation 仍 legacy"
+  是两个不同事实，任何执行 agent 不得混用。
+```
+
+### 0.4 章节编号说明
 
 `v5-draft` 保持 `v4-draft` 的顶层章节编号不变（§7 sponsor 轴、§16 审核问题等
 引用位置稳定），深度改写发生在 §2 / §4 / §6 / §11 / §13 的**节内**。历史
@@ -204,7 +236,7 @@ dataset。
     `CONFLICTING` 是一等状态，不被消解为假阳性/假阴性。
 
 原则 12–16 是 `v5-draft` 依据 Blueprint v1.3 新增。它们对应的目标软件形态见
-第 4–6 节；对应的当前实现差距见第 16 节问题 18–21。
+第 4–6 节；对应的当前实现差距见第 16 节 A 组 A1/A2 与 B 组问题 18–20。
 
 ---
 
@@ -242,7 +274,7 @@ dataset。
 | `EvidencePackage`（无固有 grade、引用而非复制） | Cross-cutting（Knowledge Ledger） | **doc-level**；当前 evidence 以外部引用组织，未强制「无固有 grade」属性 |
 | `CandidateGateAssessment` | Capabilities | **contract-only**；`GateModelOutput` 输出 score/status/rationale，未拆 `Direction ⊥ Strength` |
 | `Decision` | Lifecycle / Capabilities | **contract-only**；T12 decision + lifecycle 状态机存在，未按 GateSet `decision_rule` 组织 |
-| `Instantiation`（配置层，非核心对象） | Repository implementation / Operating System | **doc-level**；无独立 machine contract（第 16 节问题 20） |
+| `Instantiation`（配置层，非核心对象） | Repository implementation / Operating System | **doc-level**；无独立 machine contract（第 16 节 B 组问题 18） |
 
 「doc-level」= 仅在本架构文档中定义；「contract-only」= 已有 `src/contracts/`
 或 `src/capabilities/` 合同形状，但语义与 Blueprint v1.3 不完全一致。
@@ -299,27 +331,38 @@ Evidence regime 只决定 Module 当前应优先施工到什么程度；
 `DIRECT / INDIRECT_STRONG / WEAK / UNKNOWN` 仍完全由 Gate-specific Evidence
 Ladder 决定（原则 14）。
 
-### 4.5 与 `core_objects@1.1` 的 crosswalk
+### 4.5 LEGACY → TARGET ARCHITECTURE migration crosswalk
 
-`v5-draft` 不修改 `core_objects.yaml`。以下是 8 个现有具名对象到 Blueprint
-v1.3 Candidate Type × Level 的映射，作为后续实现任务的输入（第 16 节问题 18）：
+`v5-draft` 不修改 `core_objects.yaml`。下表是 `core_objects@1.1` 的 8 个 legacy
+object type 到 Blueprint v1.3 目标 ontology 的**迁移映射**——**不是一一等价**。
+多数 legacy 对象是 composite，迁移时要拆分到多个目标概念；具体 decomposition
+在 migration implementation（§16 B 组、PR A）中完成。
 
-| `core_objects@1.1` 对象 | Blueprint v1.3 映射 | 说明 |
+| legacy object | 定位 | migration target（拆分） |
 |---|---|---|
-| `Opportunity` | 跨 L0–L2 的搜索问题声明 + `Instantiation` 绑定意图 | 「机会」= 在某 Context 下开启一次 Candidate 搜索 |
-| `ClinicalHypothesis` | `Context`（L1 Patient Territory + L2 Endpoint 已锁定的组合）+ 其递进 lock = Context 成熟度 | 见第 4.6 节 |
-| `TargetHypothesis` | `Candidate`，`candidate_type = ADC Target`，`level = L4` | CRC Level 01 的 41 个 target 即此类 |
-| `BinderCandidate` | `Candidate`，`candidate_type = Antibody / Binder`，`level = L6` | |
-| `ADCConstruct` | `Candidate`，`candidate_type = ADC Design`，`level = L9`（构建后进入 L10 ADC Hit） | |
-| `LeadSeries` | `Candidate`，`candidate_type = ADC Lead`，`level = L11` | |
-| `DevelopmentCandidate` | `Candidate`，`candidate_type = Development Candidate`，`level = L13` | |
-| `Asset` | L11–L13 通过 `NOMINATE` / `COMMIT` `Decision` 后的对外可交易表述 | `Asset` 保留为商业语境对象，不是新 Candidate Level |
-| `Biomarker`（未登记为核心对象） | `Candidate`，`candidate_type = Biomarker`，`level = L12`（支持性，不进主链） | |
-| `Endpoint`（未登记为核心对象） | `Candidate`（L2）→ 锁定后成为 `Context` 维度 | |
+| `Opportunity` | legacy search/orchestration wrapper | `Instantiation` intent + `Context` seed + Candidate-generation request；**不属于任何 Candidate Level** |
+| `ClinicalHypothesis` | legacy composite object（当前组合 target、anchor clinical context、intended benefit、biomarker hypothesis、product hypothesis） | clinical/patient/endpoint 维度 → `Context`；target identity → `Candidate` / candidate reference；biomarker hypothesis → Biomarker candidate/reference；product hypothesis → 下游 candidate/context reference；lock state → `Context` maturity（见 §4.6） |
+| `TargetHypothesis` | 接近单一 Candidate | `Candidate`，`candidate_type = ADC Target`，`level = L4`。CRC Level 01 的 41 个 target 即此类 |
+| `BinderCandidate` | 接近单一 Candidate | `Candidate`，`candidate_type = Antibody / Binder`，`level = L6` |
+| `ADCConstruct` | legacy composite，跨 **L9 ADC Design / L10 ADC Hit** | 未来需 stage/type discriminator 或 distinct Candidate objects 区分「设计」与「已物理构建并达到 hit qualification」；不得让一个对象一半 design 一半 hit |
+| `LeadSeries` | legacy series/container | 围绕 **L11 ADC Lead candidates** 的集合/容器；精确 decomposition pending migration，不强行等同单个 L11 Candidate |
+| `DevelopmentCandidate` | 接近单一 Candidate | `Candidate`，`candidate_type = Development Candidate`，`level = L13` |
+| `Asset` | 非 Candidate Level | L11–L13 经 `NOMINATE` / `COMMIT` `Decision` 后的对外商业/交易表述；不新增 Candidate Level |
 
-**开放问题（第 16 节问题 18）：** 8 个具名对象是否应折叠为单一泛化 `Candidate`
-+ `candidate_type` + `level`，`core_objects.yaml` 从「对象枚举」改为「Candidate
-Type Registry（受控词表）+ Candidate Level Registry」。本 PR 不做此改动。
+**`core_objects@1.1` 尚缺的 Candidate Types（不是上表 8 对象的 crosswalk，而是
+migration 时必须新增的类型）：**
+
+| 缺失 Candidate Type | 目标 |
+|---|---|
+| `Biomarker` | `Candidate`，`candidate_type = Biomarker`，`level = L12`（支持性，不进主链） |
+| `Endpoint` | `Candidate`（L2）→ 锁定后成为 `Context` 维度 |
+| `Epitope` / `Linker` / `Payload` / `ADC Lead` / `Clinical Regimen` … | 见 §4.3 Candidate Level Registry（L5/L7/L8/L11/L14） |
+
+**架构方向（§16 A 组，已由 Blueprint v1.3 决定）：** 8 个 legacy object type
+折叠为泛化 `Candidate` + `candidate_type` + `level`，`core_objects.yaml` 从
+「对象枚举」改为「Candidate Type Registry（受控词表）+ Candidate Level
+Registry」。开放的只是 **migration 策略**（是否保留 legacy adapter、分几个
+PR），不是「要不要做」。本 PR 不做代码改动。
 
 ### 4.6 ClinicalHypothesis 递进锁定（映射为 Context 成熟度）
 
@@ -396,20 +439,35 @@ Gate 的 `fatal_conditions` 只声明「本 Gate 上什么样的结果构成**�
 Worked example（`ADC Addressability` Gate 的 `evidence_ladder`）见 Blueprint
 v1.3 §I M03。
 
-### 6.3 当前冻结的 45-Gate 拓扑（保留，映射到 canonical GateSets）
+### 6.3 LEGACY_GATE_SYSTEM（冻结）→ semantic migration/reference → Canonical GateSet Registry
 
-Gate 系统合同为 `gate_system@0.1.0`，拓扑架构版本 `0.2.0`，共 45 个 Gate：
+现有 45-Gate 拓扑是**迁移来源，不是未来架构**：
 
-| Gate chain | 数量 | Blueprint v1.3 canonical GateSet 映射（目标） |
+```text
+LEGACY_GATE_SYSTEM
+  gate_system@0.1.0
+  topology@0.2.0
+  45 gates（Target Opportunity 13 / Product Realization 16 / Commercial Executability 16）
+  status = FROZEN_LEGACY
+```
+
+它原样保留用于 provenance / compatibility / migration reference，**不重写、
+不原位转换、不重开 45 的冻结计数**。
+
+Blueprint v1.3 的 **Candidate-Level canonical GateSets 是新的 canonical GateSet
+lineage**，通过全新的 versioned GateSet contract 实现，拥有自己的 version
+history。下表只是 legacy Gate 语义在新 registry 中的**归属参考**，供 migration
+mapping 使用：
+
+| legacy Gate chain | 数量 | 语义迁移到（新 canonical GateSet） |
 |---|---:|---|
-| Target Opportunity（T0–T12） | 13 | 拆分并重新归属：临床上下文/人群 → `INDICATION_GATESET` / `PATIENT_TERRITORY_GATESET`；endpoint benefit → `ENDPOINT_GATESET`；target mapping / persistence / surface / internalization / TI → `ADC_TARGET_GATESET`（`TGT-01`–`TGT-08`）；epitope 可实现性 → `ADC_EPITOPE_GATESET` |
+| Target Opportunity（T0–T12） | 13 | 临床上下文/人群 → `INDICATION_GATESET` / `PATIENT_TERRITORY_GATESET`；endpoint benefit → `ENDPOINT_GATESET`；target mapping / persistence / surface / internalization / TI → `ADC_TARGET_GATESET`（`TGT-01`–`TGT-08`）；epitope 可实现性 → `ADC_EPITOPE_GATESET` |
 | Product Realization | 16 | `ADC_EPITOPE_GATESET` / `ANTIBODY_BINDER_GATESET` / `LINKER_GATESET` / `PAYLOAD_GATESET` / `ADC_DESIGN_GATESET` / `ADC_HIT_GATESET` |
 | Commercial Executability | 16 | 早期 IP whitespace 分散在各层 Gate；formal FTO / 监管 / 交易 → `DEVELOPMENT_CANDIDATE_GATESET` + sponsor 轴（第 7 节） |
 
-这一映射是**目标状态**。它意味着把「一条 T0–T12 长链」改为「按 Candidate
-Level 归属独立决策不确定性」，是一次 GateSet version revision，需要独立科学
-审核（第 16 节问题 19）。`v5-draft` 不改 `gate_system.yaml`，也不重开 45 的
-冻结计数。
+开放的实现问题（§16 B 组问题 19）不是「要不要重开 45」，而是「如何在**不修改
+frozen legacy topology** 的前提下，建立新的 canonical GateSet contract、migration
+mapping 与 compatibility strategy」。
 
 **版本一致性问题仍未解决（`v3-draft` 起已登记，本版复核确认依旧存在）：**
 `gate_system.yaml` 把 source envelope 写为 `GateInputEnvelope@2.0.0` /
@@ -488,7 +546,7 @@ status / Profile；T12 结果不自动创建 Asset，也不自动切换生命周
 回答一个**独立且不可互相替代**的问题：「当前这个发起方要不要投、投到哪个风险
 转移边界为止」。在 Blueprint v1.3 的 Candidate–Gate 模型中，**sponsor 轴映射到
 零个 canonical Gate**——它不是某个 GateSet 的成员 Gate，而是 GateSet `Decision`
-之外的独立治理层（第 16 节问题 23）。
+之外的独立治理层（第 16 节 A 组 A3）。
 
 对小微 Biotech，这两个问题最容易被混为一谈——把「我们做不了」写成「这个靶点
 不行」。因此四个合同的枚举都刻意避免使用 KILL/FAIL 词汇。
@@ -545,8 +603,19 @@ Gate**——45 个 Gate 拓扑未变，没有第 46 个 Gate，也没有 canonic
 
 当前有 7 个模块区域，其中 6 个具有 `module.yaml`；`gen_indication_endpoint_target`
 是当前被登记为 active 的纯合同包，但尚无模块 manifest。在 Blueprint v1.3 视角
-下，这些模块是**降级为后台的证据生产机器**（M09），不是产品层一等对象；每个
-最终应对应一个或多个 Gate 的 primary Evidence Production Module。
+下，这些模块是**降级为后台的证据生产机器**（M09），不是产品层一等对象。
+
+> **重要边界（对应 §6.4「一 Gate 一主 Module」与 §16 B 组问题 22）：**
+> 现有 GenModule 大多是 **legacy composite engine**，一个模块同时覆盖多个 Gate
+> （最明显是 `target_safety_therapeutic_window_prescreen` 同时覆盖 `TGT-04` /
+> `TGT-05` / `TGT-07`）。**这些 legacy composite module 不是未来 canonical Gate
+> 的 primary Evidence Production Module。** 迁移后它们的定位是：
+> **shared evidence provider / shared analysis engine / legacy composite
+> library**，可被多个 Gate Module 调用，但不拥有任何 Gate 的 scientific
+> decision ownership。未来每个 Gate 仍必须有自己独立的 primary Module，其
+> EvidencePackage 输出、CandidateGateAssessment proposal 与验收严格对应该
+> 一个 Gate。下文各模块的「目标映射」按此原则读作「其能力将被哪些 Gate 的
+> primary Module 复用」，不是「它将成为这些 Gate 的 primary Module」。
 
 ### 8.1 `gen_indication_endpoint_target@0.1.0`
 
@@ -574,8 +643,12 @@ axis：正常组织表达、表面可达性、抗原密度、soluble antigen / s
 既有 modality 毒性、组织后果与可恢复性。逻辑 fatal-first：
 `KILL` / `HOLD` / `CONDITIONAL_GO` / `GO`。
 
-目标映射：`ADC_TARGET_GATESET` 的 `TGT-04`（Tumor Surface Availability）、
-`TGT-05`（Normal-Tissue Fatal Liability）、`TGT-07`（Shedding / Sink）。
+**legacy composite engine**：当前一个模块同时覆盖 `ADC_TARGET_GATESET` 的
+`TGT-04`（Tumor Surface Availability）、`TGT-05`（Normal-Tissue Fatal
+Liability）、`TGT-07`（Shedding / Sink）三个 Gate。迁移后它降级为
+**shared target-safety analysis engine**；`TGT-04` / `TGT-05` / `TGT-07` 各自
+有独立 primary Module，可共同调用本 engine，但**一个包工头不得同时验收三个
+不同房间**——每个 Gate 的 EvidencePackage、Assessment proposal 与验收独立。
 注意：这里的 `KILL` 是**科学轴**的致命风险判定，与第 7 节
 `OUT_OF_MANDATE` / `STOP_FOR_SPONSOR` 完全不同，两者不得互相替代或互相推导。
 
@@ -608,7 +681,7 @@ stage-aware DD + `DEVELOPMENT_CANDIDATE_GATESET`。
 - **Knowledge Ledger**：以外部引用组织 evidence、rule、hypothesis、experiment、
   failure、decision、calibration 和 lesson。在 Blueprint v1.3 视角下，它是
   **累积的、可引用复用的 EvidencePackage 库**的当前形态——同一 EvidencePackage
-  被多个 Assessment 通过 `evidence_package_ids` 引用而不复制（第 16 节问题 24）。
+  被多个 Assessment 通过 `evidence_package_ids` 引用而不复制（第 16 节 A 组 A4）。
 - **Model lifecycle**：使用 `model_id@SemVer`；注册、权重、验证、晋级和退役由
   外部治理系统承担。
 - **IP/FTO**：返回外部 decision package，不在仓库保存法律结论。
@@ -687,13 +760,19 @@ Preview 当前结果：
 不是负面结论（对应 Blueprint v1.3 `UNKNOWN` 一等状态）。当前不得生成
 `ADC_POOL_LEVEL_01_ACCEPTED`。
 
-### 11.2 三把 eligibility lock 到 TGT Gate 的目标映射（开放，第 16 节问题 22）
+### 11.2 三把 eligibility lock 到 canonical Gate 的证据贡献映射（第 16 节 B 组问题 21）
 
-| Level 01 lock | 目标 canonical Gate |
-|---|---|
-| eligible clinical context lock | `PATIENT_TERRITORY_GATESET`（L1，上游 Context 冻结） |
-| surface-localization lock（`EVGAP-01`） | `TGT-04` Tumor Surface Availability / Density Plausibility |
-| CRC linkage lock（`EVGAP-02`） | `TGT-02` Indication-Specific Malignant-Cell Coverage / `TGT-03` Treatment / Metastatic Persistence |
+映射按 **evidence ceiling** 表述——每把锁**贡献证据给**某个 Gate，**不等于
+"满足" 该 Gate**：
+
+| Level 01 lock | 目标 | evidence ceiling 约束 |
+|---|---|---|
+| eligible clinical context lock | **upstream L1 `Context` freeze**（不是 Target Gate） | — |
+| surface-localization lock（`EVGAP-01`） | **contributes evidence to `TGT-04`** Tumor Surface Availability / Density Plausibility | 只提供 surface-localization evidence；**不能单独 discharge `TGT-04` 的 antigen density requirement**（surface localization ≠ 定量抗原密度，典型 evidence ceiling） |
+| CRC linkage lock（`EVGAP-02`） | **primarily contributes to `TGT-02`** Indication-Specific Malignant-Cell Coverage | generic CRC linkage **不自动支持 `TGT-03`** Treatment / Metastatic Persistence；`TGT-03` 需要**独立的** treatment/metastasis-context evidence（来自 refractory / treated / paired pre-post / metastatic / CRLM / resistance context），`EVGAP-02` 的 EvidencePackage 只有在其 source/context 明确 qualify 时才可贡献 |
+
+> 这条修正正是 StelligenOS 要制度化阻止的推理谬误：**"有 CRC evidence" ⇏
+> "因此 refractory persistence 也有 evidence"**。
 
 此映射为目标状态，需科学审核确认后才写入 `CRC-ADC-TARGET-GATESET-v1` 的
 Context-specific Evidence Ladder。`v5-draft` 不改三把锁的当前定义。
@@ -842,8 +921,11 @@ canonical GateSet，复用同一套六对象模型与同一条 EvidencePackage �
 
 ## 16. 当前需要专家审核的问题
 
-问题 1–17 承接 `v4-draft`（3、4 复核确认仍成立，其余未变）；18–27 为 `v5-draft`
-依据 Blueprint v1.3 深度对齐后新增。
+问题 1–17 承接 `v4-draft`（3、4 复核确认仍成立，其余未变）。`v5-draft` 依据
+Blueprint v1.3 深度对齐后新增的内容分为 **A 组（架构方向已由 Blueprint v1.3
+决定，登记为 Architecture Decision Record，不再作为「专家决定 yes/no」）** 与
+**B 组（真正待实现设计的 blocker）**。架构文档的价值在于**不断减少开放问题
+数量**，不是把已决定的事重新变成问题。
 
 1. `ClinicalHypothesis` 的三种入口和递进 lock 是否足以覆盖真实 ADC 开发路径。
 2. T0-T12 的顺序、Hard Gate、fatal-first、HOLD 和 T12 handoff 是否合理。
@@ -871,36 +953,77 @@ canonical GateSet，复用同一套六对象模型与同一条 EvidencePackage �
     `docs/pools/evgap_01_surface_localization_extraction.yaml:551`、
     `docs/pools/evgap_02_crc_linkage_extraction.yaml:1104`）——` #<数字>` 之后
     内容被 YAML 当注释丢弃。建议另开极小 PR 统一加引号。
-18. **8 个具名核心对象是否应折叠为泛化 `Candidate` + `candidate_type` +
-    `level`？** 即 `core_objects.yaml` 从「对象枚举」改为「Candidate Type
-    Registry（受控词表）+ Candidate Level Registry（L0–L14）」。`Asset`、
-    `Biomarker`、`Endpoint` 的归属见第 4.5 节 crosswalk。这是 v5-draft 引出的
-    最大结构问题。
-19. **45-Gate 拓扑如何映射到 canonical GateSets？** 把「一条 T0–T12 长链」
-    改为「按 Candidate Level 归属独立决策不确定性」（第 6.3 节表）是一次
-    GateSet version revision；是否重开 45 的冻结计数？`gate_system.yaml` 的
-    单一 `score` 输出是否拆为 `Direction ⊥ Strength`？
-20. **`Instantiation` 是否需要独立 machine contract？** 最小字段
-    `{candidate_type, context_id, modality, gateset_id, gateset_version}`。
-    如何保证它不被静默升格为第七个核心对象（Blueprint v1.3 §N 明确禁止）？
-21. **`EvidencePackage`「无固有 Strength grade」如何在当前 Knowledge Ledger /
-    gate evidence 结构中强制？** 现有实现是否已在某处给 evidence 赋了跨 Gate
-    通用等级？
-22. **CRC Level 01 三把 eligibility lock 到 `TGT-02/03/04` + L1 的映射
-    （第 11.2 节）是否正确？** 确认后才写入 `CRC-ADC-TARGET-GATESET-v1` 的
+### A 组 — RESOLVED BY BLUEPRINT v1.3（Architecture Decision Record）
+
+以下方向已定，**不再作为开放问题**；每条后面括注的才是尚未定的 migration 细节。
+
+- **A1 泛化 `Candidate` 是目标 core model。** 8 个 legacy object type 折叠为
+  `Candidate` + `candidate_type` + `level`，`core_objects.yaml` → Candidate Type
+  Registry + Candidate Level Registry。（开放：migration 策略、是否保留 legacy
+  adapter、分几个 PR —— 见 B 组。）
+- **A2 Candidate-Level canonical GateSets 是目标 GateSet 架构。** 旧 45-Gate
+  三组拓扑不是未来架构。（开放：legacy → 新 GateSet 的 migration mapping 与
+  versioning —— 见 B 组。）
+- **A3 sponsor 轴（第 7 节）不属于 canonical scientific GateSet。** 它是 GateSet
+  `Decision` 之外的独立 governance layer，映射到零个 canonical Gate。
+- **A4 Knowledge Ledger ≠ EvidencePackage Library。** Knowledge Ledger 范围更大，
+  包含 rules / hypotheses / experiments / failures / decisions / lessons；
+  `EvidencePackage` 是 Ledger 中的一个**强类型子域 / 视图**：
+  `Knowledge Ledger ⊃ { EvidencePackage namespace, hypotheses, experiments,
+  failures, decisions, lessons }`。
+- **A5 施工顺序：先 Target 层（`TGT-01`–`TGT-08`）跑通，再进入 Epitope。**
+- **A6 BVG 与 human/ChatGPT `APPROVE` 不是二选一。** `BVG = architecture
+  validation criteria`；`ChatGPT / human APPROVE = governance approval
+  mechanism`。放行 = **BVG pass + human approval**，两者同时适用。
+
+### B 组 — IMPLEMENTATION / MIGRATION BLOCKERS（真正待设计）
+
+18. **`Instantiation` machine contract。** 最小字段
+    `{candidate_type, context_id, modality, gateset_id, gateset_version}`；
+    如何在有 machine contract 的同时保证它不被静默升格为第七个核心对象
+    （Blueprint v1.3 §N 明确禁止）？
+19. **legacy 45-Gate → 新 canonical GateSet 的 migration / compatibility
+    strategy。** 前提：**不修改 frozen legacy topology、不重开 45 的冻结计数**。
+    如何建立新的 versioned canonical GateSet contract、legacy → 新的语义
+    mapping、以及迁移期兼容层？`GateModelOutput` 的单一 `score` 如何演进为
+    `Direction ⊥ Strength`（在新 GateSet contract 中，不在 legacy 中）？
+20. **`EvidencePackage` 无 universal Strength grade + `CandidateGateAssessment`
+    schema。** 如何在当前 Knowledge Ledger / gate evidence 结构中强制
+    「Strength 只存在于 Assessment 层」？现有实现是否已在某处给 evidence 赋了
+    跨 Gate 通用等级？
+21. **CRC legacy lock → canonical Gate 的 evidence 贡献映射（第 11.2 节）。**
+    `EVGAP-01 → contributes to TGT-04`（不 discharge density）、
+    `EVGAP-02 → primarily TGT-02`（`TGT-03` 需独立 treatment/metastasis-context
+    evidence）—— 需科学审核确认后才写入 `CRC-ADC-TARGET-GATESET-v1` 的
     Context-specific Evidence Ladder。
-23. **sponsor 轴（第 7 节）在 Candidate–Gate 模型中的位置。** 确认它映射到
-    零个 canonical Gate、是 GateSet `Decision` 之外的独立治理层，而不是某个
-    GateSet 的隐藏成员。
-24. **Knowledge Ledger 与「可引用复用的 EvidencePackage 库」是同一对象吗？**
-    是否需要显式的 `evidence_package_ids` 引用机制与禁止内容重复副本的检查。
-25. **7 个 GenModule → Evidence Production Module 的迁移顺序。** 是否按
-    Blueprint v1.3「先 `TGT-01`–`TGT-08`，Target 层跑通再进 Epitope」执行？
-26. **`core_objects.yaml` / `gate_system.yaml` / `src/` 的更新排序。** 本 PR
-    为 docs-only；实现任务应拆成几个独立 PR，各自的验收边界是什么？
-27. **Blueprint v1.3 的 BVG-01/02/03（Blueprint Validation Gate）是否适用于
-    本仓库的架构冻结流程？** 还是本仓库沿用自己的 Phase gate + ChatGPT
-    `APPROVE` 机制，BVG 只作为 Blueprint 侧的自校验。
+22. **legacy GenModule 的重新分类。** 逐个把现有 7 个 GenModule 判为
+    `primary Gate Module` 还是 `shared provider / shared analysis engine /
+    legacy composite library`（§8 已给出 `target_safety` 的判定；其余待定）。
+23. **runtime migration PR 排序（本条不再完全开放，推荐顺序如下）：**
+
+```text
+PR A  — Core decision objects
+        Candidate / Context / EvidencePackage / CandidateGateAssessment /
+        Instantiation config + legacy core-object adapters
+        （不删 legacy 8-object support）
+
+PR B  — Canonical GateSet contracts
+        Gate / GateSet / Evidence Ladder / Direction×Strength /
+        assessment_rule / decision policy
+        （旧 45-Gate 保持 FROZEN_LEGACY）
+
+PR C  — Matrix / provenance / reusable EP references
+        （evidence_package_ids 引用机制）
+
+PR D  — CRC-ADC-TARGET-GATESET-v1
+        冻结 TGT-01…TGT-08 的 context-specific contract 与 Evidence Ladder
+
+PR E+ — 逐 Gate primary Evidence Production Module
+        TGT-01 primary Module / TGT-02 primary Module / … / TGT-08 primary Module
+```
+
+    legacy 8 objects 与 legacy 45 Gate 在 migration 完成前保留 compatibility，
+    不在任何单个 PR 中一次性删除。
 
 ---
 
