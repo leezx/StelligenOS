@@ -3,20 +3,14 @@
 ## 0. 版本与审核基线
 
 - 文档 ID：`CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW`
-- 当前文档版本：`v5`
-- 架构审核基线：`STELLIGENOS-ARCH-2026.08.27-v5`
-- 仓库基线：`main@a8afcd4`（`v5-draft` 冻结时）
+- 当前文档版本：`v5-draft`
+- 架构审核基线：`STELLIGENOS-ARCH-2026.08.27-v5-draft`
+- 仓库基线：`main@a8afcd4`
 - 基线日期：`2026-08-27`
-- 版本状态：`APPROVED` —— PR #94 @ `37fa6c2`，ChatGPT `Biotech ideas → AI审核方案`
-  对话返回 `APPROVE`（两轮：`98fc29f` 首版 → `37fa6c2` REQUEST_CHANGES 修订），
-  merge 提交 `ea9dc04`。审核记录见
-  `logs/chatgpt-review-2026-08-27-architecture-v5-blueprint-alignment.md`。
+- 版本状态：`PENDING_EXPERT_REVIEW`
 - 规范路径：本文件固定为最新版本，不在文件名中写版本号。
-- 已冻结快照：`docs/architecture/versions/`——经 PR #42 批准的 `v1`，以及本次经
-  PR #94 批准的 `v5`（`CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.v5.zh-CN.md`）。
+- 已冻结快照：`docs/architecture/versions/`；当前只有经 PR #42 批准的 `v1`。
   `v2-draft`、`v3-draft`、`v4-draft` 均未获批，因此都没有快照，也不补造快照。
-- 后续实质更新升为 `v6-draft`（见第 17 节）。`v5` 之后的 runtime migration
-  （PR A–E，见第 16 节 B 组问题 23）不修改本文档，只按其冻结的顺序施工。
 
 StelligenOS 当前没有一个覆盖全部模块的单一软件 SemVer。核心合同、Gate
 拓扑和 GenModule 各自独立版本化。因此，本节的 `v5-draft` 是**架构说明文档

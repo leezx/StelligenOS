@@ -23,8 +23,11 @@
 StelligenOS 已定义为 biotechnology asset operating system 的实现仓库。
 正式架构契约与运行 Prompt 分离。
 
-当前专家审核基线为 `STELLIGENOS-ARCH-2026.08.27-v5-draft`，以规范路径上的
-Current Design Architecture 文档为准。`v5-draft` 依据 Blueprint v1.3 把
-Candidate × Gate × Evidence 六对象决策模型、Candidate Levels L0–L14 与
-canonical GateSet registry 提升为架构主干；它仍是审核草案，不改变
-`core_objects.yaml`、`gate_system.yaml` 或任何现有合同版本。
+当前专家审核基线为 `STELLIGENOS-ARCH-2026.08.27-v5`（PR #94 `APPROVE`，merge
+`ea9dc04`；快照 `docs/architecture/versions/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.v5.zh-CN.md`），
+以规范路径上的 Current Design Architecture 文档为准。`v5` 依据 Blueprint v1.3
+把 Candidate × Gate × Evidence 六对象决策模型、Candidate Levels L0–L14 与
+canonical GateSet registry 提升为架构主干。这是 **architecture-specification**
+批准：`core_objects.yaml`、`gate_system.yaml`、`src/` 仍为 legacy，runtime
+conformance 为 `MIGRATION_PENDING`，须按 v5 文档第 16 节 B 组的 PR A–E 顺序
+逐步施工。
