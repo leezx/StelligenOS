@@ -47,6 +47,10 @@ StelligenOS 采用以下分层：
 5. Objects
 6. Repository Implementation
 
+分层是**软件结构**。决策层模型（Candidate × Gate × Evidence 六对象 +
+Instantiation 绑定层）见 3.4.1，它是所有生命周期阶段与所有 Candidate 类型
+共用的骨架，冻结后不随实例化改变。
+
 ### 3.1 Lifecycle
 
 四个主生命周期阶段：
@@ -89,16 +93,66 @@ Capabilities 是操作系统提供的能力集合，不是生命周期，也不�
 
 ### 3.4 Objects
 
-核心对象：
+#### 3.4.1 决策层模型（Blueprint v1.3，规范）
 
-1. Opportunity
-2. ClinicalHypothesis
-3. TargetHypothesis
-4. BinderCandidate
-5. ADCConstruct
-6. LeadSeries
-7. DevelopmentCandidate
-8. Asset
+StelligenOS 的决策层是一个 **Candidate × Gate × Evidence** 系统。六个核心对象
+被冻结，不随 Candidate 类型或开发阶段改变：
+
+1. `Candidate` —— 与 Context 解耦（context-independent），不持有 `context_id`
+2. `Context`
+3. `Gate`（及其 `GateSet`）—— Gate 层 `assessment_rule` 产生 `Direction + Strength`；GateSet 层 `decision_rule` / `fatal_gate_policy` / `required_gate_policy` 产生 `Decision`
+4. `EvidencePackage` —— 原子、full provenance、**无固有 Strength grade**、引用而非复制
+5. `CandidateGateAssessment` —— 矩阵最小 cell，Candidate 与 Context 在此首次关联
+6. `Decision` —— `GO / CONDITIONAL_GO / HOLD / MORE_EVIDENCE / KILL / NOMINATE / COMMIT`
+
+`Instantiation` **不是第七个对象**：它是 configuration/binding 对象，只把
+`candidate_type + context_id + modality` 绑定到某个版本化的 `gateset_id`，
+本身不产生科学结论。它是唯一的跨项目/跨阶段扩展机制。
+
+正交性铁律：`Direction ⊥ Strength`，且在 `CONFLICTING` 状态下同样成立
+（不因冲突自动降级 Strength）；`evidence type ceiling > evidence quantity`；
+禁止通用数值分数；`UNKNOWN` 与 `CONFLICTING` 是一等状态。
+
+#### 3.4.2 Candidate Level Registry（L0–L14，规范）
+
+Candidate 生命周期是一系列逐层收敛的搜索空间；上一级 Candidate 被选定后冻结
+为下一级的 Context。canonical Candidate Level 与对应 GateSet：
+
+`L0` Indication · `L1` Patient Territory · `L2` Endpoint · `L3` Modality ·
+`L4` ADC Target · `L5` ADC Epitope · `L6` Antibody/Binder · `L7` Linker ·
+`L8` Payload · `L9` ADC Design · `L10` ADC Hit · `L11` ADC Lead ·
+`L12` Biomarker · `L13` Development Candidate · `L14` Clinical Regimen。
+
+完整定义（每级 GateSet、Gate ID → Candidate Level 归属、evidence regime）以
+外部 Blueprint `StelligenOS_Candidate_Levels_and_GateSets_Blueprint.v0.1` 与
+`StelligenOS-产品形态-Blueprint v1.3` 为规范来源，并由
+`docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md`
+（`v5-draft`）在仓库侧维护。
+
+#### 3.4.3 当前对象登记（`core_objects@1.1`，待 crosswalk 实现）
+
+`src/contracts/core_objects.yaml` 当前仍登记 8 个具名对象，作为决策层模型的
+当前实现映射：
+
+1. Opportunity —— L0–L2 搜索问题声明 + Instantiation 绑定意图
+2. ClinicalHypothesis —— 逐步收敛的 `Context`（L1+L2 已锁定组合），其递进 lock = Context 成熟度
+3. TargetHypothesis —— `Candidate`，`candidate_type = ADC Target`（L4）
+4. BinderCandidate —— `Candidate`（L6）
+5. ADCConstruct —— `Candidate`（L9 → L10）
+6. LeadSeries —— `Candidate`（L11）
+7. DevelopmentCandidate —— `Candidate`（L13）
+8. Asset —— L11–L13 经 `NOMINATE` / `COMMIT` 后的对外可交易表述，非新 Level
+
+`Biomarker`（L12）与 `Endpoint`（L2）为支持性 Candidate 类型，未登记为核心对象。
+
+8 个具名对象是否应折叠为泛化 `Candidate` + `candidate_type` + `level`（把
+`core_objects.yaml` 改为 Candidate Type Registry + Candidate Level Registry），
+以及 45-Gate 拓扑如何映射到 canonical GateSets，是待专家审核的开放实现问题，
+见 `CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md` 第 16 节
+问题 18–27。本契约的决策层模型（3.4.1 / 3.4.2）已按 Blueprint v1.3 规范；
+其代码落地属独立实现任务。
+
+#### 3.4.4 ClinicalHypothesis 递进锁定
 
 `ClinicalHypothesis` 是 v5 的早期研发单元，组合 target、anchor clinical
 context、intended benefit、biomarker hypothesis 和 product hypothesis。
@@ -142,9 +196,11 @@ Phase 1:
 ## 6. Source of Truth
 
 - 架构契约：`docs/architecture/contract.zh-CN.md`
+- 决策层模型与当前实现说明（`v5-draft`）：`docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md`
+- 决策层规范来源（外部 Blueprint）：`StelligenOS-产品形态-Blueprint v1.3`、`StelligenOS_Candidate_Levels_and_GateSets_Blueprint.v0.1`
 - 能力说明：`docs/architecture/capabilities.zh-CN.md`
 - 生命周期说明：`docs/architecture/lifecycle.zh-CN.md`
-- 核心对象清单：`src/contracts/core_objects.yaml`
+- 核心对象清单（当前实现登记，待 crosswalk）：`src/contracts/core_objects.yaml`
 - 运行 Prompt：`prompts/system/STELLIGENOS_MIGRATION_MASTER_PROMPT.zh-CN.md`
 
 ## 7. 尚未进入内核的扩展

@@ -23,5 +23,8 @@
 StelligenOS 已定义为 biotechnology asset operating system 的实现仓库。
 正式架构契约与运行 Prompt 分离。
 
-当前专家审核基线为 `STELLIGENOS-ARCH-2026.08.06-v4-draft`，以规范路径上的
-Current Design Architecture 文档为准。该版本是审核草案，不改变现有合同版本。
+当前专家审核基线为 `STELLIGENOS-ARCH-2026.08.27-v5-draft`，以规范路径上的
+Current Design Architecture 文档为准。`v5-draft` 依据 Blueprint v1.3 把
+Candidate × Gate × Evidence 六对象决策模型、Candidate Levels L0–L14 与
+canonical GateSet registry 提升为架构主干；它仍是审核草案，不改变
+`core_objects.yaml`、`gate_system.yaml` 或任何现有合同版本。
