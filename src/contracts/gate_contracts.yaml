@@ -20,12 +20,21 @@ migration:
     - docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md (section 6, section 17)
   parity:
     Decision:
-      kind: exact
+      kind: schema_shape_exact_runtime_semantics_stricter
       against: src/contracts/data_layout/decision.schema.json
-      note: >-
-        Decision is the same object as the disk DEC-*.json. Field set, enums,
-        assessment_snapshot oneOf shape, triggered_by shape, review closure and
-        the not/anyOf ban on forward superseded_by must match exactly.
+      relationship: runtime_valid_is_a_strict_subset_of_schema_valid
+      rule: >-
+        Runtime MUST NOT accept anything the frozen schema rejects on an
+        intrinsic shape / type / enum / pattern constraint (field set, decision
+        enum, assessment_snapshot oneOf shape, triggered_by shape, review
+        closure, the not/anyOf ban on forward superseded_by, id patterns all
+        match). Runtime MAY additionally impose cross-field and domain
+        invariants the persistence schema cannot express -- and does: a
+        non-empty assessment_snapshot, non-empty gateset_version / gate_id
+        strings, gateset_id must be the canonical GateSet for the Candidate
+        Level, and triggered_by entries must agree with their assessment_snapshot
+        pin. This continues PR A's executable-mirror principle; it does not relax
+        any validator and does not edit the frozen schema.
     Gate:
       kind: consistency
       against: src/contracts/data_layout/gate_binding.schema.yaml (gate_binding)
@@ -53,12 +62,37 @@ migration:
       Strength output is PR A's CandidateGateAssessment.
   deferred:
     concrete_evidence_ladders: PR D (per-GateSet scientific content, e.g. TGT-01..TGT-08 rungs)
-    concrete_gateset_CRC_ADC_TARGET_GATESET_v1: PR D
+    crc_adc_target_specialization_of_ADC_TARGET_GATESET: >-
+      PR D. "CRC-ADC-TARGET-GATESET-v1" is a program / specialization concept,
+      NOT a new canonical gateset_id. gateset_id is always one of the fifteen
+      canonical GateSet ids (gateset_identity below). A context-specific
+      specialization is expressed by an Instantiation
+      (e.g. INST-CRC-REFRACTORY-ADC-TARGET-v1) plus context-specific
+      gateset_binding / gate_binding refs over the SAME canonical
+      ADC_TARGET_GATESET -- exactly the shape the frozen Data Layout Spec v1.0
+      uses. PR D freezes those CRC-specific binding refs and the TGT-01..TGT-08
+      evidence ladders; it does not mint a second GateSet identity.
     matrix_and_reusable_evidence_references: PR C
     per_gate_primary_modules: "PR E+"
     decision_engine: >-
       No evaluate_decision() in this repo. Computing a Decision from Assessments
       is Module/runtime work; PR B freezes only the object and policy shapes.
+
+gateset_identity:
+  rule: >-
+    gateset_id is ALWAYS one of the fifteen canonical GateSet ids, one per
+    Candidate Level (vocabularies.canonical_gateset_ids). Gate, GateSet and
+    Decision all machine-enforce gateset_id == canonical GateSet for the
+    relevant Candidate Level. Context / program specialization never creates a
+    second gateset_id; it lives in the Instantiation + binding refs.
+  candidate_level_source:
+    Gate: gate.candidate_level
+    GateSet: gateset.candidate_level
+    Decision: parsed from candidate_id (CAND-Lnn-nnnnnn -> Lnn)
+  member_uniqueness: >-
+    GateSet.gates must have unique gate_id. A GateSet with two versions of the
+    same gate_id cannot be decided unambiguously, because Decision
+    assessment_snapshot maps one gate_id to one assessment.
 repository_policy:
   instances_external_only: true
   persistence_in_repository: forbidden
@@ -180,6 +214,7 @@ contracts:
       - gate_fatal_conditions_are_potential_signals_only_the_gateset_decides
       - one_gate_has_one_primary_evidence_production_module
       - gate_carries_no_numeric_score
+      - gateset_id_must_be_the_canonical_gateset_for_gate_candidate_level
 
   GateSet:
     contract_id: GateSet@0.1.0
@@ -218,8 +253,11 @@ contracts:
     invariants:
       - gateset_instances_must_be_external
       - gateset_has_at_least_one_gate
+      - gateset_member_gate_ids_must_be_unique
+      - gateset_id_must_be_the_canonical_gateset_for_its_candidate_level
       - only_the_gateset_maps_assessments_to_a_candidate_level_decision
       - module_must_not_modify_the_gateset_decision_policy
+      - context_specialization_never_creates_a_second_gateset_id
       - new_canonical_gatesets_have_their_own_version_lineage_separate_from_legacy_45
 
   Decision:
@@ -230,7 +268,10 @@ contracts:
       HUMAN_APPROVED only; assessment_snapshot pins {assessment_id,
       assessment_version, cell} per gate so a historical Decision is
       reproducible. Immutable once written.
-    parity: exact against src/contracts/data_layout/decision.schema.json
+    parity: >-
+      schema_shape_exact_runtime_semantics_stricter against
+      src/contracts/data_layout/decision.schema.json (see migration.parity.Decision):
+      runtime-valid is a strict subset of schema-valid.
     required_fields:
       - decision_id
       - instantiation_id
@@ -280,6 +321,9 @@ contracts:
       - assessment_snapshot_pins_assessment_id_version_and_cell_per_gate
       - not_evaluated_gates_use_the_literal_string_NOT_EVALUATED
       - immutable_once_written_no_forward_superseded_by
+      - gateset_id_must_be_the_canonical_gateset_for_the_candidate_id_level
+      - every_triggered_by_gate_must_be_pinned_in_assessment_snapshot_and_agree
+      - triggered_by_gate_must_not_be_NOT_EVALUATED_in_the_snapshot
 
 legacy_gatechain_crosswalk:
   note: >-

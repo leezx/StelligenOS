@@ -3992,3 +3992,36 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   （609 + 37）/ `git diff --check` clean / 干净 tracked-tree worktree
   `verify_repository_boundary` passed / `gate_contracts.yaml` 结构合法 / CI 待绿。
 - Next: 提交、推送、开 PR #100，走 ChatGPT `AI审核方案` 审核。
+
+## 2026-08-28T23:20 EDT — Runtime Migration PR B REQUEST_CHANGES 第一轮修订（同一 PR #100）
+
+- Review input: ChatGPT `AI审核方案` 对 PR #100 @ `6ff2420` 返回
+  `REQUEST_CHANGES`：架构方向 / scope 正确；3 个 runtime-contract blocker 一轮
+  关闭，不碰冻结文档、不做 engine、不提前进 PR C/D。
+- fix 1（canonical GateSet identity + member 唯一 + CRC specialization 表述）：
+  新增 `_require_canonical_gateset()`，在 `Gate` / `GateSet` / `Decision` 三处
+  强制 `gateset_id == CANONICAL_GATESET_IDS[level]`（Decision 从 `candidate_id`
+  解析 level）；`GateSet` 增 member `gate_id` 唯一性；`gate_contracts.yaml`
+  `concrete_gateset_CRC_ADC_TARGET_GATESET_v1` →
+  `crc_adc_target_specialization_of_ADC_TARGET_GATESET`（明确不是新 gateset_id），
+  新增 `gateset_identity` 块 + invariants。
+- fix 2（Decision `triggered_by` ↔ `assessment_snapshot` 一致性）：
+  `Decision.__post_init__` 要求每个 `TriggeredBy` 的 gate 在 snapshot 中被
+  pin、非 `NOT_EVALUATED`、`assessment_id` / `assessment_version` 一致；不要求
+  snapshot 每个 gate 都在 triggered_by。
+- fix 3（"exact parity" 措辞不真实 → 真实关系）：改为
+  `schema_shape_exact_runtime_semantics_stricter` /「runtime-valid ⊂
+  schema-valid」，规则明确「runtime 不得接受 frozen schema 因 intrinsic
+  shape/type/enum 拒绝的东西，但可额外施加 cross-field/domain invariant」。
+  改 `gate_contracts.yaml` `migration.parity.Decision` + `Decision.parity`、
+  `gate_model.py` docstring/注释。
+- 非 blocker 顺手：handoff "不 import gates.py" → "只读 import，不修改"；
+  `LadderRung.admissible_evidence_classes` 每个 class 非空。
+- 改动文件：`src/contracts/gate_contracts.yaml`、`src/objects/gate_model.py`、
+  `tests/test_gate_model.py`（49 tests，+12）、handoff、worklog。未改
+  `legacy_gate_map.py` / manifest / PR A / 冻结文档 / `gate_system.yaml` /
+  `gates.py`。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 658 OK
+  （609 + 49）/ `git diff --check` clean / 干净 tracked-tree worktree boundary
+  passed / `gate_contracts.yaml` 合法 / CI 待绿。connector 写 review 仍 403。
+- Next: 提交、推送、回复同一 ChatGPT 对话请求复审（预期本轮 APPROVE）。

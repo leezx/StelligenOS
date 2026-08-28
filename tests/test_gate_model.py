@@ -154,6 +154,13 @@ class ContractRegistryTests(unittest.TestCase):
         self.assertTrue(self.doc["repository_policy"]["decision_engine_in_repository"] == "forbidden"
                         or self.doc["repository_policy"]["decision_engine_in_repository"] is False)
 
+    def test_crc_specialization_is_not_a_new_gateset_id(self):
+        deferred = self.doc["migration"]["deferred"]
+        self.assertIn("crc_adc_target_specialization_of_ADC_TARGET_GATESET", deferred)
+        self.assertNotIn("concrete_gateset_CRC_ADC_TARGET_GATESET_v1", deferred)
+        text = deferred["crc_adc_target_specialization_of_ADC_TARGET_GATESET"]
+        self.assertIn("NOT a new canonical gateset_id", text)
+
     def test_legacy_block_marks_frozen(self):
         legacy = self.doc["legacy_gate_system"]
         self.assertEqual(legacy["gate_count"], 45)
@@ -323,6 +330,8 @@ class EvidenceLadderTests(unittest.TestCase):
             LadderRung("DIRECT", (), "c")
         with self.assertRaises(ValueError):
             LadderRung("DIRECT", ("x",), "")
+        with self.assertRaises(ValueError):
+            LadderRung("DIRECT", ("",), "c")
 
 
 class GateTests(unittest.TestCase):
@@ -347,6 +356,15 @@ class GateTests(unittest.TestCase):
     def test_has_no_score_field(self):
         self.assertNotIn("score", {f.name for f in dataclasses.fields(Gate)})
 
+    def test_gateset_id_must_be_canonical_for_the_level(self):
+        with self.assertRaises(ValueError):  # ADC_TARGET_GATESET is L04, not L05
+            make_gate(candidate_level="L05")
+        with self.assertRaises(ValueError):  # wrong canonical id for L04
+            make_gate(gateset_id="ADC_EPITOPE_GATESET")
+        # the canonical pairing for L05 is fine
+        g = make_gate(candidate_level="L05", gateset_id="ADC_EPITOPE_GATESET")
+        self.assertEqual(g.candidate_level, "L05")
+
 
 class GateSetTests(unittest.TestCase):
     def test_valid(self):
@@ -361,6 +379,16 @@ class GateSetTests(unittest.TestCase):
             make_gateset(candidate_level="L99")
         with self.assertRaises(ValueError):
             make_gateset(unknown_policy_ref="gs/unknown")
+
+    def test_gateset_id_must_be_canonical_for_the_level(self):
+        with self.assertRaises(ValueError):
+            make_gateset(candidate_level="L05")  # id is ADC_TARGET_GATESET (L04)
+        ok = make_gateset(candidate_level="L05", gateset_id="ADC_EPITOPE_GATESET")
+        self.assertEqual(ok.gateset_id, "ADC_EPITOPE_GATESET")
+
+    def test_member_gate_ids_must_be_unique(self):
+        with self.assertRaises(ValueError):
+            make_gateset(gates=(GateSetMember("TGT-04", "1.0"), GateSetMember("TGT-04", "2.0")))
 
     def test_has_no_decision_policy_body(self):
         # only *_ref fields, never an inline policy body
@@ -398,29 +426,102 @@ class DecisionTests(unittest.TestCase):
             TriggeredBy("TGT-04", "ASMT-000001", 0, "r")
 
     def test_assessment_snapshot_shapes(self):
-        d = make_decision(assessment_snapshot={"TGT-01": "NOT_EVALUATED"})
+        d = make_decision(triggered_by=(), assessment_snapshot={"TGT-01": "NOT_EVALUATED"})
         self.assertEqual(d.assessment_snapshot["TGT-01"], "NOT_EVALUATED")
         with self.assertRaises(ValueError):  # bad cell
-            make_decision(assessment_snapshot={
+            make_decision(triggered_by=(), assessment_snapshot={
                 "TGT-04": {"assessment_id": "ASMT-000001", "assessment_version": 1, "cell": "GOOD"}
             })
         with self.assertRaises(ValueError):  # extra key in ref
-            make_decision(assessment_snapshot={
+            make_decision(triggered_by=(), assessment_snapshot={
                 "TGT-04": {"assessment_id": "ASMT-000001", "assessment_version": 1, "cell": "UNKNOWN", "x": 1}
             })
         with self.assertRaises(ValueError):  # bad assessment_id
-            make_decision(assessment_snapshot={
+            make_decision(triggered_by=(), assessment_snapshot={
                 "TGT-04": {"assessment_id": "ASMT-1", "assessment_version": 1, "cell": "UNKNOWN"}
             })
         with self.assertRaises(ValueError):  # version 0
-            make_decision(assessment_snapshot={
+            make_decision(triggered_by=(), assessment_snapshot={
                 "TGT-04": {"assessment_id": "ASMT-000001", "assessment_version": 0, "cell": "UNKNOWN"}
             })
         # accepts the NOT_APPLICABLE / UNKNOWN cell literals
-        ok = make_decision(assessment_snapshot={
+        ok = make_decision(triggered_by=(), assessment_snapshot={
             "TGT-08": {"assessment_id": "ASMT-000008", "assessment_version": 2, "cell": "NOT_APPLICABLE"}
         })
         self.assertEqual(ok.assessment_snapshot["TGT-08"]["cell"], "NOT_APPLICABLE")
+
+    def test_gateset_id_must_be_canonical_for_the_candidate_level(self):
+        with self.assertRaises(ValueError):
+            make_decision(candidate_id="CAND-L05-000001")  # id stays ADC_TARGET_GATESET
+        ok = make_decision(
+            candidate_id="CAND-L05-000001",
+            gateset_id="ADC_EPITOPE_GATESET",
+            triggered_by=(),
+            assessment_snapshot={"EPI-01": "NOT_EVALUATED"},
+        )
+        self.assertEqual(ok.gateset_id, "ADC_EPITOPE_GATESET")
+
+
+# --- 5b. Decision triggered_by <-> assessment_snapshot provenance ----
+
+class DecisionProvenanceConsistencyTests(unittest.TestCase):
+    def test_trigger_gate_absent_from_snapshot_is_invalid(self):
+        with self.assertRaises(ValueError):
+            make_decision(triggered_by=(TriggeredBy("TGT-99", "ASMT-000001", 1, "r"),))
+
+    def test_trigger_gate_not_evaluated_in_snapshot_is_invalid(self):
+        with self.assertRaises(ValueError):
+            make_decision(triggered_by=(TriggeredBy("TGT-01", "ASMT-000001", 1, "r"),))
+
+    def test_trigger_assessment_id_or_version_must_match_the_snapshot_pin(self):
+        with self.assertRaises(ValueError):  # id mismatch
+            make_decision(triggered_by=(TriggeredBy("TGT-04", "ASMT-000009", 1, "r"),))
+        with self.assertRaises(ValueError):  # version mismatch
+            make_decision(triggered_by=(TriggeredBy("TGT-04", "ASMT-000001", 3, "r"),))
+
+    def test_snapshot_may_hold_gates_not_in_triggered_by(self):
+        d = make_decision(
+            triggered_by=(TriggeredBy("TGT-04", "ASMT-000001", 1, "decisive"),),
+            assessment_snapshot={
+                "TGT-04": {"assessment_id": "ASMT-000001", "assessment_version": 1, "cell": "POSITIVE/INDIRECT_STRONG"},
+                "TGT-05": {"assessment_id": "ASMT-000005", "assessment_version": 2, "cell": "CONFLICTING/DIRECT"},
+                "TGT-08": "NOT_EVALUATED",
+            },
+        )
+        self.assertEqual(len(d.assessment_snapshot), 3)
+        self.assertEqual(len(d.triggered_by), 1)
+
+
+# --- 5c. persistence-shape parity vs runtime tightening -------------
+
+class SchemaRuntimeRelationshipTests(unittest.TestCase):
+    def test_contract_declares_the_true_relationship_not_exact_parity(self):
+        doc = _load(CONTRACT_PATH)["migration"]["parity"]["Decision"]
+        self.assertEqual(doc["kind"], "schema_shape_exact_runtime_semantics_stricter")
+        self.assertIn("relationship", doc)
+        self.assertIn("rule", doc)
+        self.assertNotEqual(doc["kind"], "exact")
+
+    def test_runtime_is_a_strict_subset_of_schema_valid(self):
+        schema = _load(DATA_LAYOUT / "decision.schema.json")
+        # schema-valid: assessment_snapshot has no minProperties, so {} is allowed
+        self.assertNotIn("minProperties", schema["properties"]["assessment_snapshot"])
+        # runtime-invalid: the object rejects an empty snapshot
+        with self.assertRaises(ValueError):
+            make_decision(triggered_by=(), assessment_snapshot={})
+        # schema-valid: gateset_version is just a string (empty passes the schema)
+        self.assertEqual(schema["properties"]["gateset_version"]["type"], "string")
+        with self.assertRaises(ValueError):
+            make_decision(gateset_version="")
+
+    def test_gateset_identity_block_present_and_canonical(self):
+        block = _load(CONTRACT_PATH)["gateset_identity"]
+        self.assertIn("canonical", block["rule"].lower())
+        self.assertIn("member_uniqueness", block)
+        self.assertEqual(
+            block["candidate_level_source"]["Decision"],
+            "parsed from candidate_id (CAND-Lnn-nnnnnn -> Lnn)",
+        )
 
 
 # --- 6. deep immutability -------------------------------------------

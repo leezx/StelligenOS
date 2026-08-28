@@ -27,7 +27,7 @@
 ## 二、三个决策（用户已拍板，均取推荐项）
 
 1. **Decision policy = 只定义对象与 policy 声明形状，不做 engine。** PR B 定义
-   `Decision` 对象（与 `decision.schema.json` exact parity）+ `decision_rule` /
+   `Decision` 对象（persistence-shape parity vs `decision.schema.json`，runtime 语义更严，见 §六之二 fix 3）+ `decision_rule` /
    `fatal_gate_policy` / `required_gate_policy` / `unknown_policy` 的声明形状
    （以 `external:` ref 引用，与冻结的 `gate_binding.schema.yaml` 一致）。
    仓库内**无** `evaluate_decision()`。
@@ -43,15 +43,15 @@
 
 | 文件 | 说明 |
 |---|---|
-| `src/contracts/gate_contracts.yaml`（新） | 声明式 registry：`Gate@0.1.0` / `GateSet@0.1.0` / `EvidenceLadder@0.1.0` / `Decision@0.1.0` 的 required/optional/forbidden 字段、`field_kinds`、`allowed_values`、`id_patterns`；`two_rule_layers` 说明；`vocabularies`（`decision_values` 7 值、`dominant_evidence_regimes` 4 值、`ladder_grades` 3 值、`assessment_snapshot_cell_regex`、15 个 `canonical_gateset_ids`）；`legacy_gatechain_crosswalk`（3 条 legacy chain → canonical GateSets，逐字 v5 §6.3）；`legacy_gate_system`（`FROZEN_LEGACY`）；`migration.parity`（Decision=exact vs decision.schema.json；Gate/GateSet=consistency vs gate_binding.schema.yaml）；`migration.deferred`（concrete ladders / CRC-ADC-TARGET-GATESET-v1 → PR D，Matrix → PR C，逐 Gate Module → PR E+，decision engine = not in repo）。 |
-| `src/objects/gate_model.py`（新） | frozen `@dataclass` + `__post_init__`，**复用 PR A `decision_model.py` 的 `_deep_freeze` / `_check_block` / `_require_*` / ID 正则**（两层合同校验方式不分叉）。词表 `DECISION_VALUES` / `DOMINANT_EVIDENCE_REGIMES` / `LADDER_GRADES` / `CANONICAL_GATESET_IDS`（`MappingProxyType`，import 期自检覆盖 L00–L14 且 id 合法）。对象：`LadderRung` / `EvidenceLadder`（rung 顺序强制）、`Gate`（`gateset_id` `^[A-Z0-9_]+_GATESET$`、`primary_module_id` `^MOD-[A-Z0-9]+$`、`dominant_evidence_regime` enum、`fatal_conditions` 可空、无 `score` 字段）、`GateSetMember` / `GateSet`（≥1 gate、4 个 `*_ref` 均 `external:`、无 inline policy body）、`TriggeredBy` / `Decision`（与 `decision.schema.json` exact parity：`decision` enum、`assessment_snapshot` 值 = 字符串 `"NOT_EVALUATED"` 或 closed `{assessment_id, assessment_version, cell}`、`cell` 正则、`review` closed 且 `HUMAN_APPROVED`、`not.anyOf` forbid `superseded_by`、`supersedes_decision_id` 可选、deep-frozen）。 |
-| `src/objects/legacy_gate_map.py`（新） | `LegacyGateSystem` + `LEGACY_GATE_SYSTEM`（`gate_system` / `0.1.0` / topology `0.2.0` / 45 / `FROZEN_LEGACY`）；`LegacyGatechainCrosswalk` + `LEGACY_GATECHAIN_CROSSWALK`（`MappingProxyType`，3 条 chain）。import 期 `_check_agrees_with_kernel_topology()`：keys == `src.capabilities.gates.GATE_GROUPS`；`gate_count == len(GATE_IDS)`；每 chain legacy 计数 == `GATE_CATALOG` 分组计数（13/16/16）；canonical 目标 ⊆ `CANONICAL_GATESET_IDS.values()`。**不 import/不改** `gate_system.yaml` 或 `gates.py`。 |
+| `src/contracts/gate_contracts.yaml`（新） | 声明式 registry：`Gate@0.1.0` / `GateSet@0.1.0` / `EvidenceLadder@0.1.0` / `Decision@0.1.0` 的 required/optional/forbidden 字段、`field_kinds`、`allowed_values`、`id_patterns`；`two_rule_layers` 说明；`vocabularies`（`decision_values` 7 值、`dominant_evidence_regimes` 4 值、`ladder_grades` 3 值、`assessment_snapshot_cell_regex`、15 个 `canonical_gateset_ids`）；`legacy_gatechain_crosswalk`（3 条 legacy chain → canonical GateSets，逐字 v5 §6.3）；`legacy_gate_system`（`FROZEN_LEGACY`）；`migration.parity`（Decision = schema-shape-exact + runtime-semantics-stricter vs decision.schema.json，见 §六之二 fix 3；Gate/GateSet = consistency vs gate_binding.schema.yaml）；`gateset_identity`（`gateset_id` 永远是 15 个 canonical id 之一；specialization 由 Instantiation + binding refs 表达）；`migration.deferred`（concrete ladders → PR D、`crc_adc_target_specialization_of_ADC_TARGET_GATESET` → PR D、Matrix → PR C、逐 Gate Module → PR E+、decision engine = not in repo）。 |
+| `src/objects/gate_model.py`（新） | frozen `@dataclass` + `__post_init__`，**复用 PR A `decision_model.py` 的 `_deep_freeze` / `_check_block` / `_require_*` / ID 正则**（两层合同校验方式不分叉）。词表 `DECISION_VALUES` / `DOMINANT_EVIDENCE_REGIMES` / `LADDER_GRADES` / `CANONICAL_GATESET_IDS`（`MappingProxyType`，import 期自检覆盖 L00–L14 且 id 合法）。对象：`LadderRung` / `EvidenceLadder`（rung 顺序强制）、`Gate`（`gateset_id` `^[A-Z0-9_]+_GATESET$`、`primary_module_id` `^MOD-[A-Z0-9]+$`、`dominant_evidence_regime` enum、`fatal_conditions` 可空、无 `score` 字段）、`GateSetMember` / `GateSet`（≥1 gate、4 个 `*_ref` 均 `external:`、无 inline policy body）、`TriggeredBy` / `Decision`（persistence-shape parity vs `decision.schema.json` + runtime cross-field 收严，见 §六之二：`decision` enum、`assessment_snapshot` 值 = 字符串 `"NOT_EVALUATED"` 或 closed `{assessment_id, assessment_version, cell}`、`cell` 正则、`review` closed 且 `HUMAN_APPROVED`、`not.anyOf` forbid `superseded_by`、`supersedes_decision_id` 可选、deep-frozen）。 |
+| `src/objects/legacy_gate_map.py`（新） | `LegacyGateSystem` + `LEGACY_GATE_SYSTEM`（`gate_system` / `0.1.0` / topology `0.2.0` / 45 / `FROZEN_LEGACY`）；`LegacyGatechainCrosswalk` + `LEGACY_GATECHAIN_CROSSWALK`（`MappingProxyType`，3 条 chain）。import 期 `_check_agrees_with_kernel_topology()`：keys == `src.capabilities.gates.GATE_GROUPS`；`gate_count == len(GATE_IDS)`；每 chain legacy 计数 == `GATE_CATALOG` 分组计数（13/16/16）；canonical 目标 ⊆ `CANONICAL_GATESET_IDS.values()`。对 `src.capabilities.gates` 仅**只读 import**（`GATE_CATALOG` / `GATE_GROUPS` / `GATE_IDS` 做 compatibility self-check），**不修改** `gates.py` 或 `gate_system.yaml`。 |
 | `src/objects/__init__.py`（改） | 追加 export；PR A / legacy 符号不变。 |
-| `tests/test_gate_model.py`（新，37 tests） | 见 §四。 |
+| `tests/test_gate_model.py`（新，49 tests；首版 37 + REQUEST_CHANGES 第一轮 +12） | 见 §四 + §六之二。 |
 | `manifests/runtime_migration_pr_b_manifest.yaml`（新） | `chatgpt_review: PENDING`、boundary 声明、test 命令、artifact 清单。 |
 | `src/objects/README.md` / `src/contracts/README.md`（改） | 说明 PR B 的对象与 `gate_model.py` / `legacy_gate_map.py`。 |
 
-## 四、测试（`tests/test_gate_model.py`，37 tests）
+## 四、测试（`tests/test_gate_model.py`，49 tests）
 
 1. **contract YAML shape** —— version、合同集合 `{EvidenceLadder, Gate, GateSet,
    Decision}`、`migration.deferred`（含 `decision_engine`）、
@@ -59,7 +59,7 @@
 2. **registry ↔ Python parity** —— `required_fields` == 无默认值字段集；
    `vocabularies` == 词表元组；`canonical_gateset_ids` == `CANONICAL_GATESET_IDS`；
    Decision `forbidden_fields` == `DECISION_FORBIDDEN_FIELDS`。
-3. **Decision exact parity vs `decision.schema.json`** —— `required` 数组、
+3. **Decision persistence-shape parity vs `decision.schema.json`**（runtime 更严，见 §六之二 fix 3）—— `required` 数组、
    `decision` enum、`triggered_by` items（closed，keys == `TriggeredBy` 字段）、
    `assessment_snapshot` oneOf（`const NOT_EVALUATED` + closed
    `{assessment_id, assessment_version, cell}`，`cell` pattern）、`review`
@@ -105,16 +105,104 @@
 
 ```
 PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'
-→ Ran 646 tests ... OK   (609 baseline + 37 new)
+→ Ran 658 tests ... OK   (609 baseline + 49 new)
 
 PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest tests.test_gate_model -v
-→ Ran 37 tests ... OK
+→ Ran 49 tests ... OK
 
 git diff --check → clean
 # 干净 tracked-tree worktree（排除用户 untracked 文件）
 verify_repository_boundary.sh → Repository boundary check passed. (exit 0)
 python3 -c 'yaml.safe_load(gate_contracts.yaml)' → ok
 ```
+
+## 六之二、REQUEST_CHANGES 第一轮修订（2026-08-28，同一 PR #100）
+
+审核结论：架构方向与 scope 正确，3 个 runtime-contract blocker，一轮关闭，
+不碰冻结文档、不做 engine、不提前进 PR C/D。
+
+### fix 1 —— canonical GateSet identity + member 唯一性 + CRC specialization 表述
+
+问题：`gateset_id` 只查 `^[A-Z0-9_]+_GATESET$`，`candidate_level` 只查 L00–L14，
+两者不交叉核对，因此 `GateSet(gateset_id="ADC_TARGET_GATESET",
+candidate_level="L05")` 或 `gateset_id="FOO_GATESET", candidate_level="L04"` 都
+合法通过；`CANONICAL_GATESET_IDS` 存在但 constructor 没用它。且
+`GateSet.gates` 允许同一 `gate_id` 出现多次（`TGT-04 v1` + `TGT-04 v2`），而
+Decision 的 `assessment_snapshot` 是 `gate_id → 一个 assessment`，无法无歧义决策。
+另外 `CRC-ADC-TARGET-GATESET-v1` 曾被描述成"derived from ADC_TARGET_GATESET"的
+第二套 `gateset_id`，与冻结 Data Layout（`gateset_id: ADC_TARGET_GATESET` +
+`instantiation_id: INST-CRC-...`）以及本 PR 的 `gateset_id` 正则都冲突。
+
+修：
+- 新增 `_require_canonical_gateset(candidate_level, gateset_id, where)`，在
+  **`Gate` / `GateSet` / `Decision`** 三处强制 `gateset_id ==
+  CANONICAL_GATESET_IDS[level]`。`Decision` 的 level 从 `candidate_id`
+  （`CAND-Lnn-nnnnnn` → `Lnn`）解析。
+- `GateSet.__post_init__` 增 member `gate_id` 唯一性校验。
+- `gate_contracts.yaml`：`migration.deferred` 的
+  `concrete_gateset_CRC_ADC_TARGET_GATESET_v1` →
+  `crc_adc_target_specialization_of_ADC_TARGET_GATESET`，正文明确
+  「`CRC-ADC-TARGET-GATESET-v1` 是 program/specialization 概念，**不是**新的
+  canonical `gateset_id`；`gateset_id` 永远是 15 个 canonical id 之一；
+  context-specific specialization 由 `Instantiation` + `gateset_binding` /
+  `gate_binding` refs 表达」。新增 `gateset_identity` 顶层块 + 三个对象各加
+  invariant。
+- 新增测试：Gate/GateSet/Decision 非 canonical 配对 raise；canonical 配对
+  （如 L05 + `ADC_EPITOPE_GATESET`）通过；GateSet 重复 `gate_id` raise；
+  `gate_contracts.yaml` 的 specialization key 已改名且正文含 "NOT a new
+  canonical gateset_id"。
+
+### fix 2 —— Decision `triggered_by` ↔ `assessment_snapshot` cross-field 一致性
+
+问题：两部分各自合法但不互相核对，可构造 `triggered_by: TGT-04 ASMT-000001 v1`
+而 `assessment_snapshot: TGT-04 → ASMT-000009 v3` 或 `TGT-04 → NOT_EVALUATED` 的
+不可审计 Decision。这不是 engine，是 Decision object intrinsic invariant。
+
+修：`Decision.__post_init__` 对每个 `TriggeredBy t` 要求
+`t.gate_id ∈ assessment_snapshot`、`snapshot[t.gate_id] != "NOT_EVALUATED"`、
+`snapshot[t.gate_id].assessment_id == t.assessment_id`、
+`.assessment_version == t.assessment_version`。**不**要求 snapshot 的每个 gate
+都出现在 `triggered_by`（snapshot 是完整状态，triggered_by 是决策关键原因）。
+新增 3 个 reject 测试 + 1 个 "snapshot 可含未出现在 triggered_by 的 gate" 正例。
+
+### fix 3 —— 把不真实的 "exact parity" 改成真实关系
+
+问题：文档/测试声称 Decision 与 `decision.schema.json` "byte-for-byte /
+exact parity"，但 runtime 实际更严（schema 无 `minProperties`，runtime 拒绝空
+`assessment_snapshot`；schema `gateset_version` 只是 string，runtime 要非空；
+等）。这些 runtime invariant 合理、**不删**，但不能叫 "exact"，否则误导后人
+以为 `schema-valid ⇔ runtime-valid`。
+
+修：措辞改为
+`schema_shape_exact_runtime_semantics_stricter` /「runtime-valid ⊂ schema-valid」，
+并明确规则：**runtime 不得接受 frozen schema 因 intrinsic shape/type/enum
+约束而拒绝的东西，但 runtime 可以额外施加 cross-field / domain invariant**
+（延续 PR A 的 executable-mirror 原则，不放松任何 validator，不改冻结 schema）。
+改动：`gate_contracts.yaml` `migration.parity.Decision`（`kind` + `relationship`
++ `rule`）、`Decision` 合同 `parity:` 行、`gate_model.py` 模块 docstring 与
+section 注释。新增测试 `SchemaRuntimeRelationshipTests`：断言 `kind !=
+"exact"`、有 `relationship`/`rule`；断言 `assessment_snapshot: {}` 是
+schema-shape-valid 但 runtime raise、`gateset_version: ""` 同理。
+
+### 非 blocker（顺手一并处理）
+
+- `legacy_gate_map.py` 确实 import 了 `src.capabilities.gates`（compatibility
+  self-check），首版 handoff "不 import / 不改 gates.py" 表述不准 → 改为
+  "只读 import，不修改"（§三行 48，代码行为不变）。
+- `LadderRung.admissible_evidence_classes` 现额外要求每个 class string 非空
+  （`("",)` 被拒），加 1 个 reject 测试。
+
+**改动文件（本轮）：** `src/contracts/gate_contracts.yaml`、
+`src/objects/gate_model.py`、`tests/test_gate_model.py`（49 tests，+12）、
+本 handoff、worklog。**未改** `legacy_gate_map.py`（行为已正确）、manifest、
+PR A、冻结文档、`gate_system.yaml` / `gates.py`。
+
+**验证（本轮）：** `PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover`
+658 OK（609 + 49）/ `git diff --check` clean / 干净 tracked-tree worktree
+`verify_repository_boundary` passed / `gate_contracts.yaml` 结构合法 / CI 待绿。
+
+**GitHub connector：** 审核方尝试写 PR #100 `REQUEST_CHANGES` review，仍
+`403 Resource not accessible by integration`。
 
 ## 七、审核
 

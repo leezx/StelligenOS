@@ -14,8 +14,15 @@ diverge on how they validate.
 * ``GateSet`` -- a versioned set of Gates for one Candidate Level plus the four
   rule refs (decision_rule / fatal_gate_policy / required_gate_policy /
   unknown_policy) that turn a Candidate's assessments into a ``Decision``.
-* ``Decision`` -- the sixth decision-layer object, deferred from PR A. Kept in
-  byte parity with ``src/contracts/data_layout/decision.schema.json``.
+* ``Decision`` -- the sixth decision-layer object, deferred from PR A. Its
+  persistence shape mirrors ``src/contracts/data_layout/decision.schema.json``
+  exactly (nothing the frozen schema rejects on an intrinsic shape/type/enum/
+  pattern constraint is accepted here), and it additionally enforces
+  cross-field and domain invariants the persistence schema cannot express
+  (non-empty snapshot, canonical ``gateset_id`` for the Candidate Level, and
+  ``triggered_by`` agreeing with its ``assessment_snapshot`` pin). So
+  runtime-valid is a strict subset of schema-valid; the frozen schema is not
+  edited and no validator is relaxed.
 
 The legacy ``gate_system@0.1.0`` / 45-gate topology
 (``src/capabilities/gates.py`` / ``src/contracts/gate_system.yaml``) is
@@ -123,6 +130,18 @@ if set(_CANONICAL_GATESET_IDS) != set(CANDIDATE_LEVELS):
     raise RuntimeError("CANONICAL_GATESET_IDS must cover every Candidate Level L00-L14")
 
 
+def _require_canonical_gateset(candidate_level: str, gateset_id: str, where: str) -> None:
+    """gateset_id is always the one canonical GateSet for the Candidate Level.
+    Context / program specialization never mints a second gateset_id."""
+
+    expected = _CANONICAL_GATESET_IDS.get(candidate_level)
+    if gateset_id != expected:
+        raise ValueError(
+            f"{where}: gateset_id {gateset_id!r} is not the canonical GateSet for "
+            f"{candidate_level} (expected {expected!r})"
+        )
+
+
 # --- EvidenceLadder -----------------------------------------------------
 
 @dataclass(frozen=True)
@@ -140,8 +159,12 @@ class LadderRung:
         _require_str_tuple(
             self.admissible_evidence_classes, "admissible_evidence_classes"
         )
-        if not self.admissible_evidence_classes:
-            raise ValueError("admissible_evidence_classes must be non-empty")
+        if not self.admissible_evidence_classes or not all(
+            cls.strip() for cls in self.admissible_evidence_classes
+        ):
+            raise ValueError(
+                "admissible_evidence_classes must be a non-empty tuple of non-empty strings"
+            )
         _require_text(self.ceiling_rule, "ceiling_rule")
 
 
@@ -197,6 +220,7 @@ class Gate:
         _require_text(self.gate_version, "gate_version")
         _require_pattern(self.gateset_id, _GATESET_ID, "gateset_id")
         _require_choice(self.candidate_level, CANDIDATE_LEVELS, "candidate_level")
+        _require_canonical_gateset(self.candidate_level, self.gateset_id, "Gate")
         _require_text(self.gate_question, "gate_question")
         _require_choice(
             self.dominant_evidence_regime,
@@ -246,12 +270,19 @@ class GateSet:
         _require_pattern(self.gateset_id, _GATESET_ID, "gateset_id")
         _require_text(self.gateset_version, "gateset_version")
         _require_choice(self.candidate_level, CANDIDATE_LEVELS, "candidate_level")
+        _require_canonical_gateset(self.candidate_level, self.gateset_id, "GateSet")
         if not isinstance(self.gates, tuple) or not all(
             isinstance(member, GateSetMember) for member in self.gates
         ):
             raise ValueError("gates must be a sequence of GateSetMember")
         if not self.gates:
             raise ValueError("a GateSet must have at least one gate")
+        member_gate_ids = [member.gate_id for member in self.gates]
+        if len(member_gate_ids) != len(set(member_gate_ids)):
+            raise ValueError(
+                "GateSet.gates must have unique gate_id; a Decision "
+                "assessment_snapshot maps one gate_id to one assessment"
+            )
         for name in (
             "decision_rule_ref",
             "fatal_gate_policy_ref",
@@ -261,7 +292,8 @@ class GateSet:
             _require_external_ref(getattr(self, name), name)
 
 
-# --- Decision (exact parity: data_layout/decision.schema.json) -------------
+# --- Decision (persistence-shape parity with data_layout/decision.schema.json,
+#     runtime semantics stricter: see the module docstring) -------------------
 
 @dataclass(frozen=True)
 class TriggeredBy:
@@ -308,6 +340,11 @@ class Decision:
         _require_text(self.gateset_version, "gateset_version")
         _require_choice(self.decision, DECISION_VALUES, "decision")
 
+        # gateset_id must be the canonical GateSet for the Candidate Level parsed
+        # from candidate_id (CAND-Lnn-nnnnnn -> Lnn).
+        candidate_level = self.candidate_id.split("-")[1]
+        _require_canonical_gateset(candidate_level, self.gateset_id, "Decision")
+
         if not isinstance(self.triggered_by, tuple) or not all(
             isinstance(item, TriggeredBy) for item in self.triggered_by
         ):
@@ -336,6 +373,31 @@ class Decision:
             if not _CELL.match(str(value["cell"])):
                 raise ValueError(
                     f"assessment_snapshot[{gate_id}].cell does not match {_CELL.pattern}"
+                )
+
+        # Cross-field provenance: every triggered_by entry must be pinned in the
+        # snapshot and agree with it. (Not every snapshot gate has to appear in
+        # triggered_by: the snapshot is the full state, triggered_by is only the
+        # decisive reasons.)
+        for trigger in self.triggered_by:
+            pin = self.assessment_snapshot.get(trigger.gate_id)
+            if pin is None:
+                raise ValueError(
+                    f"triggered_by gate {trigger.gate_id!r} is not in assessment_snapshot"
+                )
+            if pin == "NOT_EVALUATED":
+                raise ValueError(
+                    f"triggered_by gate {trigger.gate_id!r} is NOT_EVALUATED in "
+                    "assessment_snapshot"
+                )
+            if (
+                pin["assessment_id"] != trigger.assessment_id
+                or pin["assessment_version"] != trigger.assessment_version
+            ):
+                raise ValueError(
+                    f"triggered_by {trigger.gate_id!r} pins {trigger.assessment_id}@"
+                    f"{trigger.assessment_version} but assessment_snapshot has "
+                    f"{pin['assessment_id']}@{pin['assessment_version']}"
                 )
 
         _require_external_ref(self.decision_rule_ref, "decision_rule_ref")
