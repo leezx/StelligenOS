@@ -4025,3 +4025,28 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   （609 + 49）/ `git diff --check` clean / 干净 tracked-tree worktree boundary
   passed / `gate_contracts.yaml` 合法 / CI 待绿。connector 写 review 仍 403。
 - Next: 提交、推送、回复同一 ChatGPT 对话请求复审（预期本轮 APPROVE）。
+
+## 2026-08-28T17:20 EDT — Runtime Migration PR B APPROVE + merge
+
+- ChatGPT `AI审核方案` 对 PR #100 @ `51bfadb`（REQUEST_CHANGES 第一轮修订）
+  返回 **APPROVE**：上一轮 3 个 blocker 均关闭，无新 PR-B scope 问题。connector
+  写 review 仍 `403 Resource not accessible by integration`。
+- Merge：`gh pr merge 100 --merge`，merge 提交 `d18974b`。merge 前直接编辑
+  PR #100 body，把首版遗留的 `byte-for-byte mirror / 37 tests / 646` 更新为
+  stricter runtime semantics / 49 new / 658（审核方点名的非 blocker 之一），
+  无新 commit。
+- 审核方两个非 blocker（不再开轮）：(1) PR body 过期（已编辑）；(2) generic
+  `Gate` 无全局 `gate_id → Candidate Level` 强制映射 —— 不在 PR B 扩大，
+  PR D 实例化 `ADC_TARGET_GATESET` 时必须锁死 TGT-01–TGT-08 的 membership /
+  level / 版本。
+- 审核记录补登在独立 docs-only PR `task_20260828_runtime-migration-pr-b-approval-record`
+  （`logs/chatgpt-review-2026-08-28-runtime-migration-pr-b.md` +
+  `manifests/runtime_migration_pr_b_manifest.yaml` status→approved /
+  approved_tip `51bfadb` / review_rounds 2 / test_count_at_approval 658 /
+  defers key 对齐 `crc_adc_target_specialization_of_ADC_TARGET_GATESET`），
+  按 PR #95 / #97 / #99 先例，不落在被批准 branch 上。
+- 进度：Blueprint v1.3 / CURRENT_SYSTEM v5 / Data Layout Spec v1.0 冻结；
+  PR A（core decision objects）已合并 `cbab012`；PR B（canonical Gate /
+  GateSet / EvidenceLadder / Decision）已合并 `d18974b`；`MIGRATION_PENDING`
+  未解除（到 PR E）。下一步：PR C —— Matrix / provenance / reusable
+  EvidencePackage references。
