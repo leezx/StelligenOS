@@ -3809,3 +3809,22 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Next: 冻结提交推送、CI 绿后合并 PR #96；随后按 PR #95 先例用独立 PR 补登
   `logs/chatgpt-review-2026-08-28-data-layout-v1.md` 审核记录。之后 runtime
   migration PR A 需 Owner 单独授权。
+
+## 2026-08-28T16:40 EDT — PR #96 merge + 审核记录补登（独立 docs-only PR）
+
+- PR #96 已合并：merge 提交 `7040f5a`。`STELLIGENOS_DATA_LAYOUT_SPEC v1.0`
+  （`v1.0` / `APPROVED`）+ `src/contracts/data_layout/` 9 schema/yaml +
+  worked example + `scripts/scaffold_data_layout.sh` +
+  `tests/test_scaffold_data_layout.sh` 全部进 main。
+- 新分支 `task_20260828_data-layout-v1-approval-record`（docs-only，基线
+  `7040f5a`），新增 `logs/chatgpt-review-2026-08-28-data-layout-v1.md`：三轮审核
+  历史、第 1 轮 6 点关闭方式、第 2 轮唯一 blocker（§0.4 冻结规则）关闭方式、
+  APPROVE @ `dc8684e`、冻结提交 `b6a4fd0`、`run_manifest` 措辞收口、connector
+  三次 403、边界与冻结状态汇总。
+- 按 PR #95 先例：审核记录不在被批准的 PR #96 branch 上补，改用独立 PR，避免
+  改动已批准/已合并的内容。本 PR 只加审计文件，不改 Data Layout 正文/schema。
+- 冻结状态：Blueprint v1.3 / CURRENT_SYSTEM v5 / Data Layout Spec v1.0 三者
+  均已冻结。下一阶段 Runtime Migration PR A —— **暂不启动**，待 Owner 单独授权。
+- 验证：仅新增 1 个 `logs/*.md`；`git diff --check` clean；boundary 不受影响
+  （`logs/` 为 allowlisted）。
+- Next: 推送并开 PR；CI 绿后合并。
