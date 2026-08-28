@@ -1,0 +1,328 @@
+version: "0.1.0"
+name: stelligenos-gate-contracts
+description: >-
+  Runtime contract registry for the Blueprint v1.3 two-rule-layer Gate system:
+  Gate@0.1.0 (assessment_rule over an evidence_ladder -> Direction + Strength),
+  GateSet@0.1.0 (decision_rule / fatal_gate_policy / required_gate_policy /
+  unknown_policy over a Candidate's assessments -> Decision), EvidenceLadder@0.1.0
+  (the DIRECT/INDIRECT_STRONG/WEAK rung shape and the type-ceiling rule), and
+  Decision@0.1.0 (the sixth decision-layer object, deferred from PR A).
+  Architecture contracts only: no data, no persistence, no runtime business
+  logic, no decision engine. Policy bodies and ladder bodies are referenced as
+  external: refs, exactly as the frozen disk schema
+  src/contracts/data_layout/gate_binding.schema.yaml already does.
+migration:
+  pr: runtime_migration_pr_b
+  scope: canonical_gate_gateset_evidence_ladder_and_decision_contracts
+  spec_refs:
+    - docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md (section 6.1-6.4; section 16 B group question 19)
+    - docs/architecture/contract.zh-CN.md (section 3.4.1)
+    - docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md (section 6, section 17)
+  parity:
+    Decision:
+      kind: exact
+      against: src/contracts/data_layout/decision.schema.json
+      note: >-
+        Decision is the same object as the disk DEC-*.json. Field set, enums,
+        assessment_snapshot oneOf shape, triggered_by shape, review closure and
+        the not/anyOf ban on forward superseded_by must match exactly.
+    Gate:
+      kind: consistency
+      against: src/contracts/data_layout/gate_binding.schema.yaml (gate_binding)
+      note: >-
+        The disk gate_binding.yaml is a per-instantiation BINDING record, not the
+        Gate contract itself. Where they overlap -- the *_ref names,
+        dominant_evidence_regime enum, MOD- id pattern, _GATESET id pattern,
+        candidate_level enum -- they must agree.
+    GateSet:
+      kind: consistency
+      against: src/contracts/data_layout/gate_binding.schema.yaml (gateset_binding)
+      note: >-
+        The disk gateset_binding.yaml requires three policy refs
+        (decision_rule / fatal_gate_policy / required_gate_policy). The GateSet
+        contract additionally carries unknown_policy_ref, per CURRENT_SYSTEM v5
+        section 6.1, which lists four GateSet rule fields. The three disk-required
+        policy refs must be a subset of the GateSet contract's required fields.
+  legacy:
+    frozen: >-
+      gate_system@0.1.0 / topology@0.2.0 / the 45 legacy gates
+      (src/capabilities/gates.py, src/contracts/gate_system.yaml) stay
+      FROZEN_LEGACY. PR B does not rewrite them, re-open the frozen count, or
+      convert them in place. GateModelOutput.score / status stays FROZEN_LEGACY
+      and is not referenced by the canonical lineage; the Gate's Direction +
+      Strength output is PR A's CandidateGateAssessment.
+  deferred:
+    concrete_evidence_ladders: PR D (per-GateSet scientific content, e.g. TGT-01..TGT-08 rungs)
+    concrete_gateset_CRC_ADC_TARGET_GATESET_v1: PR D
+    matrix_and_reusable_evidence_references: PR C
+    per_gate_primary_modules: "PR E+"
+    decision_engine: >-
+      No evaluate_decision() in this repo. Computing a Decision from Assessments
+      is Module/runtime work; PR B freezes only the object and policy shapes.
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  database: forbidden
+  cache: forbidden
+  result_files: forbidden
+  decision_engine_in_repository: forbidden
+
+two_rule_layers:
+  Gate:
+    field: assessment_rule
+    transform: evidence_packages_plus_context_plus_evidence_ladder -> direction_and_strength
+    output: CandidateGateAssessment (defined in PR A / decision_objects.yaml)
+    note: >-
+      Gate.fatal_conditions only declares what on THIS gate is a *potential*
+      fatal signal. Whether it eliminates the Candidate is decided by the owning
+      GateSet's fatal_gate_policy, never by the Gate.
+  GateSet:
+    fields: [decision_rule, fatal_gate_policy, required_gate_policy, unknown_policy]
+    transform: many_gate_assessments_for_one_candidate -> candidate_level_decision
+    output: Decision
+
+vocabularies:
+  decision_values: [GO, CONDITIONAL_GO, HOLD, MORE_EVIDENCE, KILL, NOMINATE, COMMIT]
+  dominant_evidence_regimes: [PUBLIC_PRIMARY, PUBLIC_HYBRID, EXPERIMENT_PRIMARY, DEVELOPMENT_PRIMARY]
+  ladder_grades: [DIRECT, INDIRECT_STRONG, WEAK]
+  assessment_snapshot_cell_regex: "^((POSITIVE|NEGATIVE|CONFLICTING|INCONCLUSIVE)/(DIRECT|INDIRECT_STRONG|WEAK)|UNKNOWN|NOT_APPLICABLE)$"
+  canonical_gateset_ids:
+    L00: INDICATION_GATESET
+    L01: PATIENT_TERRITORY_GATESET
+    L02: ENDPOINT_GATESET
+    L03: MODALITY_GATESET
+    L04: ADC_TARGET_GATESET
+    L05: ADC_EPITOPE_GATESET
+    L06: ANTIBODY_BINDER_GATESET
+    L07: LINKER_GATESET
+    L08: PAYLOAD_GATESET
+    L09: ADC_DESIGN_GATESET
+    L10: ADC_HIT_GATESET
+    L11: ADC_LEAD_GATESET
+    L12: BIOMARKER_GATESET
+    L13: DEVELOPMENT_CANDIDATE_GATESET
+    L14: REGIMEN_GATESET
+
+contracts:
+  EvidenceLadder:
+    contract_id: EvidenceLadder@0.1.0
+    role: >-
+      The shape of one Gate's Evidence Ladder: how admissible evidence classes
+      map to DIRECT / INDIRECT_STRONG / WEAK, and the ceiling this Gate's
+      evidence can reach. Rung *bodies* for real gates are per-GateSet content
+      and land in PR D.
+    required_fields:
+      - gate_id
+      - gate_version
+      - rungs
+      - evidence_ceiling
+    field_kinds:
+      gate_id: controlled_text
+      gate_version: controlled_text
+      rungs: ladder_rung_list
+      evidence_ceiling: controlled_text
+    rung_fields:
+      - grade
+      - admissible_evidence_classes
+      - ceiling_rule
+    allowed_values:
+      grade: [DIRECT, INDIRECT_STRONG, WEAK]
+    invariants:
+      - ladder_instances_must_be_external
+      - rungs_cover_exactly_direct_indirect_strong_weak_once_each_in_that_order
+      - rungs_are_defined_by_evidence_class_not_by_evidence_count
+      - evidence_type_ceiling_outranks_evidence_quantity
+      - ladder_does_not_carry_a_numeric_score
+
+  Gate:
+    contract_id: Gate@0.1.0
+    role: >-
+      One scientific question with its own assessment_rule and evidence_ladder,
+      producing that Gate's Direction + Strength. Context-independent: the
+      Context is supplied by the Instantiation / Assessment, not by the Gate.
+    required_fields:
+      - gate_id
+      - gate_version
+      - gateset_id
+      - candidate_level
+      - gate_question
+      - dominant_evidence_regime
+      - evidence_required
+      - evidence_ladder_ref
+      - assessment_rule_ref
+      - primary_module_id
+      - primary_module_version
+    optional_fields:
+      - fatal_conditions
+    field_kinds:
+      gate_id: controlled_text
+      gate_version: controlled_text
+      gateset_id: identifier
+      candidate_level: controlled_text
+      gate_question: controlled_text
+      dominant_evidence_regime: controlled_text
+      evidence_required: string_list
+      evidence_ladder_ref: external_reference
+      assessment_rule_ref: external_reference
+      primary_module_id: identifier
+      primary_module_version: controlled_text
+      fatal_conditions: string_list
+    allowed_values:
+      candidate_level: [L00, L01, L02, L03, L04, L05, L06, L07, L08, L09, L10, L11, L12, L13, L14]
+      dominant_evidence_regime: [PUBLIC_PRIMARY, PUBLIC_HYBRID, EXPERIMENT_PRIMARY, DEVELOPMENT_PRIMARY]
+    id_patterns:
+      gateset_id: "^[A-Z0-9_]+_GATESET$"
+      primary_module_id: "^MOD-[A-Z0-9]+$"
+    invariants:
+      - gate_instances_must_be_external
+      - gate_is_context_independent
+      - gate_produces_direction_and_strength_never_a_candidate_level_decision
+      - gate_fatal_conditions_are_potential_signals_only_the_gateset_decides
+      - one_gate_has_one_primary_evidence_production_module
+      - gate_carries_no_numeric_score
+
+  GateSet:
+    contract_id: GateSet@0.1.0
+    role: >-
+      A versioned set of Gates for one Candidate Level, plus the four rule refs
+      that turn a Candidate's Gate assessments into a Candidate-level Decision.
+    required_fields:
+      - gateset_id
+      - gateset_version
+      - candidate_level
+      - gates
+      - decision_rule_ref
+      - fatal_gate_policy_ref
+      - required_gate_policy_ref
+      - unknown_policy_ref
+    field_kinds:
+      gateset_id: identifier
+      gateset_version: controlled_text
+      candidate_level: controlled_text
+      gates: gateset_member_list
+      decision_rule_ref: external_reference
+      fatal_gate_policy_ref: external_reference
+      required_gate_policy_ref: external_reference
+      unknown_policy_ref: external_reference
+    member_fields:
+      - gate_id
+      - gate_version
+    allowed_values:
+      candidate_level: [L00, L01, L02, L03, L04, L05, L06, L07, L08, L09, L10, L11, L12, L13, L14]
+    id_patterns:
+      gateset_id: "^[A-Z0-9_]+_GATESET$"
+    disk_binding_required_policy_refs:
+      - decision_rule_ref
+      - fatal_gate_policy_ref
+      - required_gate_policy_ref
+    invariants:
+      - gateset_instances_must_be_external
+      - gateset_has_at_least_one_gate
+      - only_the_gateset_maps_assessments_to_a_candidate_level_decision
+      - module_must_not_modify_the_gateset_decision_policy
+      - new_canonical_gatesets_have_their_own_version_lineage_separate_from_legacy_45
+
+  Decision:
+    contract_id: Decision@0.1.0
+    role: >-
+      GateSet-level Decision over one Candidate's assessments. Produced by the
+      GateSet policy refs, NEVER by a single Gate. Canonical DEC-*.json is
+      HUMAN_APPROVED only; assessment_snapshot pins {assessment_id,
+      assessment_version, cell} per gate so a historical Decision is
+      reproducible. Immutable once written.
+    parity: exact against src/contracts/data_layout/decision.schema.json
+    required_fields:
+      - decision_id
+      - instantiation_id
+      - candidate_id
+      - gateset_id
+      - gateset_version
+      - decision
+      - triggered_by
+      - assessment_snapshot
+      - decision_rule_ref
+      - review
+    optional_fields:
+      - supersedes_decision_id
+    field_kinds:
+      decision_id: identifier
+      instantiation_id: identifier
+      candidate_id: identifier
+      gateset_id: identifier
+      gateset_version: controlled_text
+      decision: controlled_text
+      triggered_by: triggered_by_list
+      assessment_snapshot: assessment_snapshot_map
+      decision_rule_ref: external_reference
+      review: structured_block
+      supersedes_decision_id: identifier
+    triggered_by_fields:
+      - gate_id
+      - assessment_id
+      - assessment_version
+      - reason
+    allowed_values:
+      decision: [GO, CONDITIONAL_GO, HOLD, MORE_EVIDENCE, KILL, NOMINATE, COMMIT]
+      review_status: [HUMAN_APPROVED]
+    id_patterns:
+      decision_id: "^DEC-[0-9]{4}$"
+      instantiation_id: "^INST-[A-Z0-9-]+-v[0-9]+$"
+      candidate_id: "^CAND-L[0-9]{2}-[0-9]{6}$"
+      gateset_id: "^[A-Z0-9_]+_GATESET$"
+      assessment_id: "^ASMT-[0-9]{6}$"
+      supersedes_decision_id: "^DEC-[0-9]{4}$"
+    forbidden_fields:
+      - superseded_by
+    invariants:
+      - decision_instances_must_be_external
+      - decision_is_produced_by_the_gateset_not_by_a_gate
+      - canonical_decision_review_status_is_human_approved
+      - assessment_snapshot_pins_assessment_id_version_and_cell_per_gate
+      - not_evaluated_gates_use_the_literal_string_NOT_EVALUATED
+      - immutable_once_written_no_forward_superseded_by
+
+legacy_gatechain_crosswalk:
+  note: >-
+    Semantic reference only, for migration mapping. From CURRENT_SYSTEM v5
+    section 6.3. The 45 legacy gates are NOT renamed, merged, split or re-counted;
+    each legacy chain's meaning is carried into one or more canonical GateSets
+    that have their own fresh version lineage.
+  entries:
+    target_opportunity:
+      legacy_gate_count: 13
+      canonical_gatesets:
+        - INDICATION_GATESET
+        - PATIENT_TERRITORY_GATESET
+        - ENDPOINT_GATESET
+        - ADC_TARGET_GATESET
+        - ADC_EPITOPE_GATESET
+    product_realization:
+      legacy_gate_count: 16
+      canonical_gatesets:
+        - ADC_EPITOPE_GATESET
+        - ANTIBODY_BINDER_GATESET
+        - LINKER_GATESET
+        - PAYLOAD_GATESET
+        - ADC_DESIGN_GATESET
+        - ADC_HIT_GATESET
+    commercial_executability:
+      legacy_gate_count: 16
+      canonical_gatesets:
+        - DEVELOPMENT_CANDIDATE_GATESET
+      also: >-
+        Early IP-whitespace signals are distributed across per-layer gates;
+        formal FTO / regulatory / transaction concerns map to
+        DEVELOPMENT_CANDIDATE_GATESET plus the sponsor axis (CURRENT_SYSTEM v5
+        section 7), which is not a canonical scientific Gate.
+
+legacy_gate_system:
+  contract_id: gate_system
+  contract_version: "0.1.0"
+  topology_version: "0.2.0"
+  gate_count: 45
+  groups:
+    target_opportunity: 13
+    product_realization: 16
+    commercial_executability: 16
+  status: FROZEN_LEGACY
+  source: src/contracts/gate_system.yaml + src/capabilities/gates.py

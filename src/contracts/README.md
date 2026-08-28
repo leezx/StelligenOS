@@ -56,8 +56,18 @@ decision-layer objects `Candidate@0.1.0`, `Context@0.1.0`,
 `EvidencePackage@0.1.0`, `CandidateGateAssessment@0.1.0` and the
 `Instantiation@0.1.0` binding object. Field sets, enums and the
 direction x strength matrix are kept in step with the frozen disk schemas under
-`data_layout/` by `tests/test_decision_model.py`. The sixth object, `Decision`,
-lands in PR B. The legacy `core_objects@1.1` registry is unchanged;
-`src/objects/legacy_adapters.py` maps its eight types onto the new model
-(one-to-one for `TargetHypothesis`/`BinderCandidate`/`DevelopmentCandidate`,
+`data_layout/` by `tests/test_decision_model.py`. The legacy `core_objects@1.1`
+registry is unchanged; `src/objects/legacy_adapters.py` maps its eight types
+onto the new model (one-to-one for
+`TargetHypothesis`/`BinderCandidate`/`DevelopmentCandidate`,
 `NotImplementedError` with a crosswalk pointer for the composites).
+
+Runtime Migration PR B adds `gate_contracts.yaml` (registry) and
+`src/objects/gate_model.py` for the two-rule-layer Gate system: `Gate@0.1.0`,
+`GateSet@0.1.0`, `EvidenceLadder@0.1.0` and `Decision@0.1.0` (the sixth
+decision-layer object, in exact parity with `data_layout/decision.schema.json`).
+Policy and ladder bodies are `external:` refs — there is no decision engine in
+the repo. The legacy `gate_system@0.1.0` / 45-gate topology stays
+`FROZEN_LEGACY`; `src/objects/legacy_gate_map.py` holds the migration reference
+and asserts at import time that it still agrees with the kernel's live
+topology.

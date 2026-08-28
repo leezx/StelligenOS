@@ -3,7 +3,9 @@
 ``core`` is the legacy ``core_objects@1.1`` registry (eight object types),
 retained during the runtime migration. ``decision_model`` is the Blueprint v1.3
 decision-layer object set introduced by Runtime Migration PR A;
-``legacy_adapters`` maps the former to the latter.
+``legacy_adapters`` maps the former to the latter. ``gate_model`` (PR B) adds the
+two-rule-layer Gate system contracts (``Gate`` / ``GateSet`` / ``EvidenceLadder``
+/ ``Decision``); ``legacy_gate_map`` is the frozen-45-gate migration reference.
 """
 
 from .core import CORE_OBJECT_TYPES, CoreObject
@@ -31,6 +33,25 @@ from .legacy_adapters import (
     LegacyCrosswalkEntry,
     adapt_core_object_to_candidate,
 )
+from .gate_model import (
+    CANONICAL_GATESET_IDS,
+    DECISION_VALUES,
+    DOMINANT_EVIDENCE_REGIMES,
+    LADDER_GRADES,
+    Decision,
+    EvidenceLadder,
+    Gate,
+    GateSet,
+    GateSetMember,
+    LadderRung,
+    TriggeredBy,
+)
+from .legacy_gate_map import (
+    LEGACY_GATE_SYSTEM,
+    LEGACY_GATECHAIN_CROSSWALK,
+    LegacyGatechainCrosswalk,
+    LegacyGateSystem,
+)
 
 __all__ = [
     "CORE_OBJECT_TYPES",
@@ -55,4 +76,19 @@ __all__ = [
     "ONE_TO_ONE_LEGACY_TYPES",
     "LegacyCrosswalkEntry",
     "adapt_core_object_to_candidate",
+    "CANONICAL_GATESET_IDS",
+    "DECISION_VALUES",
+    "DOMINANT_EVIDENCE_REGIMES",
+    "LADDER_GRADES",
+    "Decision",
+    "EvidenceLadder",
+    "Gate",
+    "GateSet",
+    "GateSetMember",
+    "LadderRung",
+    "TriggeredBy",
+    "LEGACY_GATE_SYSTEM",
+    "LEGACY_GATECHAIN_CROSSWALK",
+    "LegacyGatechainCrosswalk",
+    "LegacyGateSystem",
 ]
