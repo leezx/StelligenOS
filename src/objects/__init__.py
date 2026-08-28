@@ -66,9 +66,15 @@ from .evidence_reference_model import (
     MatrixView,
     SourceIndex,
     SourceIndexEntry,
+    check_assessment_evidence_refs_against_packages,
     check_evidence_library_against_sources,
+    check_gate_index_against_assessments,
     check_gate_index_against_library,
+    check_matrix_against_assessments,
     check_matrix_cells_are_backed,
+    check_packages_against_sources,
+    check_supersession_consistency,
+    serialized_matrix_cell,
 )
 
 __all__ = [
@@ -119,7 +125,13 @@ __all__ = [
     "MatrixView",
     "SourceIndex",
     "SourceIndexEntry",
+    "check_assessment_evidence_refs_against_packages",
     "check_evidence_library_against_sources",
+    "check_gate_index_against_assessments",
     "check_gate_index_against_library",
+    "check_matrix_against_assessments",
     "check_matrix_cells_are_backed",
+    "check_packages_against_sources",
+    "check_supersession_consistency",
+    "serialized_matrix_cell",
 ]

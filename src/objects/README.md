@@ -29,12 +29,18 @@ modify `gate_system.yaml` or `src/capabilities/gates.py`.
 
 `evidence_reference_model.py` (Runtime Migration PR C) holds `MatrixView` /
 `MatrixRow` — the Candidate × Gate Matrix as a derived, rebuildable projection
-with no id — and the reusable-evidence reference layer: `EvidenceIndexEntry` /
-`EvidenceLibraryIndex` (the global evidence index, the only home of the forward
-`status` / `superseded_by`), `SourceIndexEntry` / `SourceIndex` (one source →
-many EvidencePackages), and `GateEvidenceIndexEntry` / `GateEvidenceIndex` (a
-per-gate reference, never a copy). The `check_*` functions walk the reference
-layer for referential integrity; they compute no direction, strength or
-decision. No JSON Schema is added under `data_layout/`.
+with no id (every row Candidate is at the Matrix's Candidate Level) — and the
+reusable-evidence reference layer: `EvidenceIndexEntry` / `EvidenceLibraryIndex`
+(the global evidence index, the only home of the EvidencePackage lifecycle
+`status` and forward `superseded_by`; `ACTIVE` → no pointer, `SUPERSEDED` →
+pointer, `RETRACTED` → optional pointer), `SourceIndexEntry` / `SourceIndex`
+(one source → many EvidencePackages), and `GateEvidenceIndexEntry` /
+`GateEvidenceIndex` (a per-gate reference, never a copy). The `check_*`
+functions walk the reference layer for referential integrity in two layers —
+across the derived index rows, and *through* the canonical PR A
+`CandidateGateAssessment` and `EvidencePackage` (a Matrix cell must equal its
+serialized assessment; an EvidencePackage's `provenance.source_id` must be in
+the source index). They compute no direction, strength or decision. No JSON
+Schema is added under `data_layout/`.
 
 Object implementations must not become implicit data storage.

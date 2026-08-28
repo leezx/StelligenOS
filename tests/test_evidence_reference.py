@@ -20,7 +20,12 @@ from pathlib import Path
 
 import yaml
 
-from src.objects.decision_model import EVIDENCE_PACKAGE_FORBIDDEN_FIELDS
+from src.objects.decision_model import (
+    EVIDENCE_PACKAGE_FORBIDDEN_FIELDS,
+    CandidateGateAssessment,
+    EvidencePackage,
+    EvidenceRef,
+)
 from src.objects import evidence_reference_model as erm
 from src.objects.evidence_reference_model import (
     DECISIONS_VIEW_COLUMNS,
@@ -35,10 +40,16 @@ from src.objects.evidence_reference_model import (
     MatrixView,
     SourceIndex,
     SourceIndexEntry,
+    check_assessment_evidence_refs_against_packages,
     check_evidence_library_against_sources,
+    check_gate_index_against_assessments,
     check_gate_index_against_library,
+    check_matrix_against_assessments,
     check_matrix_cells_are_backed,
+    check_packages_against_sources,
+    check_supersession_consistency,
     field_names,
+    serialized_matrix_cell,
 )
 from src.objects.gate_model import DECISION_VALUES
 
@@ -129,6 +140,73 @@ def make_gate_entry(**overrides) -> GateEvidenceIndexEntry:
     return GateEvidenceIndexEntry(**base)
 
 
+_ASSESSMENT_REVIEW = {
+    "status": "HUMAN_APPROVED",
+    "reviewer": "h",
+    "reviewed_at": "2026-08-27",
+}
+
+
+def make_assessment(**overrides) -> CandidateGateAssessment:
+    base = dict(
+        assessment_id="ASMT-000001",
+        assessment_version=1,
+        instantiation_id="INST-CRC-REFRACTORY-ADC-TARGET-v1",
+        candidate_id="CAND-L04-000001",
+        context_id="CTX-CRC-REFRACTORY",
+        context_version=1,
+        gateset_id="ADC_TARGET_GATESET",
+        gateset_version="1.0",
+        gate_id="TGT-04",
+        gate_version="1.0",
+        direction="POSITIVE",
+        strength="INDIRECT_STRONG",
+        evidence_refs=(EvidenceRef("EP-00000123", "SUPPORTING"),),
+        aggregation_rationale="surface plausibility from membranous IHC",
+        critical_unknowns=(),
+        evidence_ceiling="quantitative antigen density",
+        review=dict(_ASSESSMENT_REVIEW),
+    )
+    base.update(overrides)
+    return CandidateGateAssessment(**base)
+
+
+def make_package(**overrides) -> EvidencePackage:
+    base = dict(
+        evidence_id="EP-00000123",
+        schema_version=1,
+        claim="CEACAM5 membranous IHC positive in CRC",
+        measurement={
+            "type": "IHC",
+            "analyte": "CEACAM5",
+            "readout": "membranous",
+            "result": "positive",
+        },
+        candidate_refs=("CAND-L04-000001",),
+        study_context={
+            "indication": "CRC",
+            "treatment_state": "refractory",
+            "sample_type": "FFPE",
+        },
+        provenance={
+            "source_id": "SRC-00000001",
+            "source_type": "PMID",
+            "source_identifier": "12345678",
+            "locator": "",
+            "retrieved_at": "2026-08-01",
+        },
+        interpretation_boundary={
+            "directly_supports": (),
+            "does_not_support": (),
+            "limitations": (),
+            "evidence_ceiling": "surface plausibility",
+        },
+        derivation={"module_run_id": "", "code_commit": ""},
+    )
+    base.update(overrides)
+    return EvidencePackage(**base)
+
+
 # --- 1. contract YAML shape -----------------------------------------
 
 class ContractRegistryTests(unittest.TestCase):
@@ -170,10 +248,24 @@ class ContractRegistryTests(unittest.TestCase):
 
     def test_immutable_record_boundary_declared(self):
         block = self.doc["migration"]["immutable_record_boundary"]
-        self.assertIn("forward", block["rule"].lower())
-        self.assertEqual(
-            block["forward_pointer_home"],
-            "EvidenceIndexEntry.status + EvidenceIndexEntry.superseded_by",
+        rule = block["rule"].lower()
+        self.assertIn("superseded_by", rule)
+        # the boundary is scoped to the evidence layer; it does not claim that a
+        # generic status field lives only on the index (PR A's Context does have
+        # an intrinsic status).
+        self.assertIn("other canonical objects", rule)
+        self.assertIn("evidence layer only", block["forward_pointer_home"])
+
+    def test_provenance_walk_declares_a_canonical_record_layer(self):
+        checks = self.doc["migration"]["provenance_walk"]["checks"]
+        self.assertIn("layer_1_derived_index_integrity", checks)
+        self.assertIn("layer_2_canonical_record_integrity", checks)
+        joined = " ".join(checks["layer_2_canonical_record_integrity"])
+        self.assertIn("CandidateGateAssessment", joined)
+        self.assertIn("EvidencePackage", joined)
+        self.assertIn(
+            "not merely because the derived",
+            self.doc["migration"]["provenance_walk"]["acceptance"],
         )
 
     def test_matrix_view_declared_as_derived_no_id(self):
@@ -292,8 +384,23 @@ class MatrixViewTests(unittest.TestCase):
         ok = make_matrix(
             candidate_level="L05",
             gateset_id="ADC_EPITOPE_GATESET",
+            rows=(make_row(candidate_id="CAND-L05-000001"),),
         )
         self.assertEqual(ok.gateset_id, "ADC_EPITOPE_GATESET")
+
+    def test_row_candidate_level_must_match_the_matrix_level(self):
+        with self.assertRaises(ValueError):  # L04 matrix, L05 row candidate
+            make_matrix(rows=(make_row(candidate_id="CAND-L05-000001"),))
+        with self.assertRaises(ValueError):
+            make_matrix(
+                rows=(make_row(), make_row(candidate_id="CAND-L07-000002")),
+            )
+        ok = make_matrix(
+            candidate_level="L05",
+            gateset_id="ADC_EPITOPE_GATESET",
+            rows=(make_row(candidate_id="CAND-L05-000001"),),
+        )
+        self.assertEqual(ok.rows[0].candidate_id, "CAND-L05-000001")
 
     def test_rejects_bad_ids(self):
         with self.assertRaises(ValueError):
@@ -368,6 +475,12 @@ class EvidenceIndexEntryTests(unittest.TestCase):
     def test_retracted_may_have_no_pointer(self):
         entry = make_evidence_entry(status="RETRACTED")
         self.assertEqual(entry.superseded_by, "")
+
+    def test_retracted_may_carry_a_pointer(self):
+        # Data Layout Spec section 10.1 allows RETRACTED + a replacement EP; the
+        # runtime must not narrow the frozen spec here.
+        entry = make_evidence_entry(status="RETRACTED", superseded_by="EP-00000200")
+        self.assertEqual(entry.superseded_by, "EP-00000200")
 
     def test_rejects_bad_refs(self):
         with self.assertRaises(ValueError):
@@ -495,6 +608,116 @@ class ProvenanceWalkTests(unittest.TestCase):
         }
         with self.assertRaises(ValueError):
             check_matrix_cells_are_backed(view, wrong_candidate)
+
+
+# --- 8b. provenance walk layer 2: through canonical Assessment + EP ----
+
+class CanonicalRecordProvenanceTests(unittest.TestCase):
+    def _matrix_with_cell(self, gate_id, state):
+        cells = {g: "NOT_EVALUATED" for g in _ADC_TARGET_GATES}
+        cells[gate_id] = state
+        return make_matrix(rows=(make_row(cells=cells),))
+
+    def test_serialized_matrix_cell(self):
+        self.assertEqual(
+            serialized_matrix_cell(make_assessment()), "POSITIVE/INDIRECT_STRONG"
+        )
+        self.assertEqual(
+            serialized_matrix_cell(
+                make_assessment(direction="INCONCLUSIVE", strength="UNKNOWN", evidence_refs=())
+            ),
+            "UNKNOWN",
+        )
+        self.assertEqual(
+            serialized_matrix_cell(
+                make_assessment(direction="NOT_APPLICABLE", strength="UNKNOWN", evidence_refs=())
+            ),
+            "NOT_APPLICABLE",
+        )
+
+    def test_matrix_against_assessments_passes_and_catches_drift(self):
+        view = self._matrix_with_cell("TGT-04", "POSITIVE/INDIRECT_STRONG")
+        good = {("CAND-L04-000001", "TGT-04"): make_assessment()}
+        check_matrix_against_assessments(view, good)  # no raise
+
+        with self.assertRaises(ValueError):  # cell != serialised assessment
+            check_matrix_against_assessments(
+                view, {("CAND-L04-000001", "TGT-04"): make_assessment(strength="DIRECT")}
+            )
+        with self.assertRaises(ValueError):  # graded cell, no current assessment
+            check_matrix_against_assessments(view, {})
+        with self.assertRaises(ValueError):  # NOT_EVALUATED cell but assessment exists
+            check_matrix_against_assessments(
+                make_matrix(),
+                {("CAND-L04-000001", "TGT-01"): make_assessment(gate_id="TGT-01")},
+            )
+        with self.assertRaises(ValueError):  # ids disagree with the Matrix
+            check_matrix_against_assessments(
+                view,
+                {("CAND-L04-000001", "TGT-04"): make_assessment(
+                    instantiation_id="INST-OTHER-PROGRAM-v1"
+                )},
+            )
+
+    def test_gate_index_against_assessments(self):
+        assessments = {("CAND-L04-000001", "TGT-04"): make_assessment()}
+        gi = GateEvidenceIndex("TGT-04", (make_gate_entry(),))
+        check_gate_index_against_assessments(gi, assessments)  # no raise
+
+        stale = GateEvidenceIndex(
+            "TGT-04", (make_gate_entry(assessment_id="ASMT-000009"),)
+        )
+        with self.assertRaises(ValueError):  # index pins a different assessment
+            check_gate_index_against_assessments(stale, assessments)
+
+        wrong_role = GateEvidenceIndex(
+            "TGT-04", (make_gate_entry(role="CONTRADICTING"),)
+        )
+        with self.assertRaises(ValueError):  # role not an evidence_ref of the assessment
+            check_gate_index_against_assessments(wrong_role, assessments)
+
+        two_ref = make_assessment(
+            evidence_refs=(
+                EvidenceRef("EP-00000123", "SUPPORTING"),
+                EvidenceRef("EP-00000124", "SUPPORTING"),
+            )
+        )
+        with self.assertRaises(ValueError):  # assessment has a ref the index misses
+            check_gate_index_against_assessments(
+                gi, {("CAND-L04-000001", "TGT-04"): two_ref}
+            )
+
+    def test_assessment_evidence_refs_against_packages(self):
+        assessments = {("CAND-L04-000001", "TGT-04"): make_assessment()}
+        check_assessment_evidence_refs_against_packages(
+            assessments, {"EP-00000123": make_package()}
+        )
+        with self.assertRaises(ValueError):
+            check_assessment_evidence_refs_against_packages(assessments, {})
+
+    def test_packages_against_sources(self):
+        packages = {"EP-00000123": make_package()}
+        check_packages_against_sources(packages, SourceIndex((make_source_entry(),)))
+        with self.assertRaises(ValueError):
+            check_packages_against_sources(packages, SourceIndex(()))
+
+    def test_supersession_consistency(self):
+        old = make_evidence_entry(status="SUPERSEDED", superseded_by="EP-00000200")
+        new_row = make_evidence_entry(evidence_id="EP-00000200")
+        library = EvidenceLibraryIndex((old, new_row))
+        agree = {
+            "EP-00000200": make_package(
+                evidence_id="EP-00000200", supersedes_evidence_id="EP-00000123"
+            )
+        }
+        check_supersession_consistency(library, agree)  # no raise
+        disagree = {
+            "EP-00000200": make_package(
+                evidence_id="EP-00000200", supersedes_evidence_id="EP-00000999"
+            )
+        }
+        with self.assertRaises(ValueError):
+            check_supersession_consistency(library, disagree)
 
 
 # --- 9. immutable-record boundary + PR A untouched -------------

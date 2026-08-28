@@ -78,8 +78,13 @@ Runtime Migration PR C adds `evidence_reference.yaml` (registry) and
 reusable-evidence reference layer: `MatrixView@0.1.0` (a derived, rebuildable
 projection with no id — Data Layout Spec Appendix B gives the Matrix no JSON
 Schema and PR C adds none), `EvidenceIndexEntry@0.1.0` (the global evidence
-index, the only home of the forward `status` / `superseded_by`),
+index, the only home of the EvidencePackage lifecycle `status` and forward
+`superseded_by` — other canonical objects keep their own intrinsic status),
 `SourceIndexEntry@0.1.0` and `GateEvidenceIndexEntry@0.1.0`. The view and index
 rows serialise to the frozen `data_layout/csv_headers.yaml` headers verbatim.
+The `check_*` functions verify referential integrity both across the derived
+index rows and *through* the canonical `CandidateGateAssessment` /
+`EvidencePackage` — a provenance chain is valid only when it passes through the
+canonical records, not merely because the indexes are mutually self-consistent.
 PR A's `evidence_refs` mechanism is the reusable-reference primitive and is not
 changed. There is no matrix-rebuild engine in the repo.

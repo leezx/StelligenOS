@@ -219,6 +219,14 @@ class MatrixView:
             if row.candidate_id in seen_candidates:
                 raise ValueError(f"duplicate row for {row.candidate_id}")
             seen_candidates.add(row.candidate_id)
+            # the row Candidate must be at this Matrix's Candidate Level
+            # (CAND-Lnn-nnnnnn -> Lnn); a wrong-level Candidate is an intrinsic
+            # Matrix contract violation, not a downstream concern.
+            if row.candidate_id.split("-")[1] != self.candidate_level:
+                raise ValueError(
+                    f"row {row.candidate_id} is not at the Matrix candidate_level "
+                    f"{self.candidate_level}"
+                )
             if set(row.cells) != member_set:
                 raise ValueError(
                     f"row {row.candidate_id} must have exactly one cell per member "
@@ -290,13 +298,20 @@ class EvidenceIndexEntry:
 
         _require_choice(self.status, EVIDENCE_INDEX_STATUS_VALUES, "status")
 
+        # Lifecycle <-> pointer coupling, per frozen Data Layout Spec section
+        # 10.1 (an old EP row may move to SUPERSEDED *or* RETRACTED with
+        # superseded_by = the replacing EP) and section 14 (the usual correction
+        # path is SUPERSEDED + superseded_by):
+        #   ACTIVE     -> superseded_by must be empty
+        #   SUPERSEDED -> superseded_by must be set
+        #   RETRACTED  -> superseded_by optional (set => a replacement EP exists)
         if self.superseded_by:
             _require_pattern(self.superseded_by, _EVIDENCE_ID, "superseded_by")
             if self.superseded_by == self.evidence_id:
                 raise ValueError("superseded_by must not point at the entry itself")
-            if self.status != "SUPERSEDED":
+            if self.status not in ("SUPERSEDED", "RETRACTED"):
                 raise ValueError(
-                    "superseded_by is set, so status must be SUPERSEDED"
+                    "superseded_by is set, so status must be SUPERSEDED or RETRACTED"
                 )
         elif self.status == "SUPERSEDED":
             raise ValueError("status SUPERSEDED requires a superseded_by pointer")
@@ -426,7 +441,7 @@ class GateEvidenceIndex:
         return frozenset(entry.candidate_id for entry in self.entries)
 
 
-# --- Provenance walk: referential integrity across the reference layer -----
+# --- Provenance walk, layer 1: integrity across the derived reference rows --
 
 def check_evidence_library_against_sources(
     library: EvidenceLibraryIndex, sources: SourceIndex
@@ -472,6 +487,189 @@ def check_matrix_cells_are_backed(
             raise ValueError(
                 f"Matrix cell ({candidate_id}, {gate_id})={state} has no backing "
                 "evidence reference"
+            )
+
+
+# --- Provenance walk, layer 2: the chain actually passes through the PR A
+#     canonical CandidateGateAssessment and EvidencePackage, not only through
+#     the derived indexes (Data Layout Spec section 4.2 / sections 11-14). The
+#     Assessment JSON -- not any index -- is the source of truth for a Matrix
+#     cell; the EvidencePackage carries its own canonical provenance.source_id.
+#     These are referential-integrity checks: they read ids and roles and
+#     compare, and compute no direction, strength or decision. -----------------
+
+def serialized_matrix_cell(assessment: object) -> str:
+    """The frozen wide-view Matrix cell string a canonical
+    CandidateGateAssessment serialises to (Data Layout Spec section 4.1)."""
+
+    direction = assessment.direction
+    strength = assessment.strength
+    if direction == "NOT_APPLICABLE":
+        return "NOT_APPLICABLE"
+    if direction == "INCONCLUSIVE" and strength == "UNKNOWN":
+        return "UNKNOWN"
+    return f"{direction}/{strength}"
+
+
+def check_matrix_against_assessments(
+    matrix_view: MatrixView, assessments: Mapping[tuple[str, str], object]
+) -> None:
+    """``assessments`` maps ``(candidate_id, gate_id)`` to the current canonical
+    CandidateGateAssessment. Every Matrix cell must agree with it: a
+    ``NOT_EVALUATED`` cell has no current assessment; any other cell has one
+    whose candidate / gate / instantiation / gateset ids match the Matrix and
+    whose serialised direction/strength equals the cell. Raises ``ValueError``
+    on the first disagreement."""
+
+    for row in matrix_view.rows:
+        for gate_id in matrix_view.member_gate_ids:
+            state = row.cells[gate_id]
+            current = assessments.get((row.candidate_id, gate_id))
+            if state == "NOT_EVALUATED":
+                if current is not None:
+                    raise ValueError(
+                        f"Matrix cell ({row.candidate_id}, {gate_id}) is NOT_EVALUATED "
+                        "but a current assessment exists"
+                    )
+                continue
+            if current is None:
+                raise ValueError(
+                    f"Matrix cell ({row.candidate_id}, {gate_id})={state} has no "
+                    "current assessment"
+                )
+            if (
+                current.candidate_id != row.candidate_id
+                or current.gate_id != gate_id
+                or current.instantiation_id != matrix_view.instantiation_id
+                or current.gateset_id != matrix_view.gateset_id
+            ):
+                raise ValueError(
+                    f"assessment for ({row.candidate_id}, {gate_id}) disagrees with the "
+                    "Matrix on candidate / gate / instantiation / gateset id"
+                )
+            if serialized_matrix_cell(current) != state:
+                raise ValueError(
+                    f"Matrix cell ({row.candidate_id}, {gate_id})={state} but the "
+                    f"assessment serialises to {serialized_matrix_cell(current)}"
+                )
+
+
+def check_gate_index_against_assessments(
+    gate_index: GateEvidenceIndex, assessments: Mapping[tuple[str, str], object]
+) -> None:
+    """Every per-gate evidence-index row must match the current canonical
+    assessment it names -- same ``assessment_id``, and an ``evidence_ref`` with
+    the same ``evidence_id`` and ``role`` -- and every ``evidence_ref`` of that
+    assessment must appear as an index row. Raises ``ValueError`` on the first
+    mismatch."""
+
+    covered: set[tuple[str, str, str, str]] = set()
+    named: set[tuple[str, str]] = set()
+    for entry in gate_index.entries:
+        current = assessments.get((entry.candidate_id, gate_index.gate_id))
+        if current is None:
+            raise ValueError(
+                f"gate {gate_index.gate_id}: index row for {entry.candidate_id} has no "
+                "current assessment"
+            )
+        if current.assessment_id != entry.assessment_id:
+            raise ValueError(
+                f"gate {gate_index.gate_id}: index row pins {entry.assessment_id} but "
+                f"the current assessment is {current.assessment_id}"
+            )
+        if not any(
+            ref.evidence_id == entry.evidence_id and ref.role == entry.role
+            for ref in current.evidence_refs
+        ):
+            raise ValueError(
+                f"gate {gate_index.gate_id}: index row {entry.evidence_id}/{entry.role} "
+                f"is not an evidence_ref of assessment {entry.assessment_id}"
+            )
+        covered.add(
+            (entry.candidate_id, entry.assessment_id, entry.evidence_id, entry.role)
+        )
+        named.add((entry.candidate_id, entry.assessment_id))
+
+    for (candidate_id, gate_id), current in assessments.items():
+        if gate_id != gate_index.gate_id:
+            continue
+        if (candidate_id, current.assessment_id) not in named:
+            continue
+        for ref in current.evidence_refs:
+            key = (candidate_id, current.assessment_id, ref.evidence_id, ref.role)
+            if key not in covered:
+                raise ValueError(
+                    f"gate {gate_index.gate_id}: assessment {current.assessment_id} "
+                    f"evidence_ref {ref.evidence_id}/{ref.role} is missing from the "
+                    "per-gate evidence index"
+                )
+
+
+def check_assessment_evidence_refs_against_packages(
+    assessments: Mapping[tuple[str, str], object], packages: Mapping[str, object]
+) -> None:
+    """Every ``evidence_ref`` of every canonical assessment must resolve to a
+    canonical EvidencePackage. ``packages`` maps ``evidence_id`` to the
+    EvidencePackage. Raises ``ValueError`` on the first dangling reference."""
+
+    for assessment in assessments.values():
+        for ref in assessment.evidence_refs:
+            if ref.evidence_id not in packages:
+                raise ValueError(
+                    f"assessment {assessment.assessment_id} evidence_ref "
+                    f"{ref.evidence_id} has no canonical EvidencePackage"
+                )
+
+
+def check_packages_against_sources(
+    packages: Mapping[str, object], sources: SourceIndex
+) -> None:
+    """Every canonical EvidencePackage's ``provenance.source_id`` must exist in
+    the source index. Raises ``ValueError`` on the first dangling source."""
+
+    known = {entry.source_id for entry in sources.entries}
+    for evidence_id, package in packages.items():
+        source_id = package.provenance["source_id"]
+        if source_id not in known:
+            raise ValueError(
+                f"EvidencePackage {evidence_id} provenance.source_id {source_id} is "
+                "not in the source index"
+            )
+
+
+def check_supersession_consistency(
+    library: EvidenceLibraryIndex, packages: Mapping[str, object]
+) -> None:
+    """When a forward pointer on the evidence index and a backward pointer on a
+    canonical EvidencePackage both exist for the same pair, they must agree:
+    ``old EvidenceIndexEntry.superseded_by == EP-new`` and
+    ``new EvidencePackage.supersedes_evidence_id == EP-old``. Raises
+    ``ValueError`` on the first disagreement."""
+
+    for entry in library.entries:
+        if not entry.superseded_by:
+            continue
+        new_package = packages.get(entry.superseded_by)
+        if new_package is None:
+            continue
+        back = new_package.supersedes_evidence_id
+        if back and back != entry.evidence_id:
+            raise ValueError(
+                f"evidence index says {entry.evidence_id} superseded_by "
+                f"{entry.superseded_by}, but {entry.superseded_by}."
+                f"supersedes_evidence_id is {back}"
+            )
+    for evidence_id, package in packages.items():
+        back = package.supersedes_evidence_id
+        if not back:
+            continue
+        old_entry = library.by_evidence_id(back)
+        if old_entry is None:
+            continue
+        if old_entry.superseded_by and old_entry.superseded_by != evidence_id:
+            raise ValueError(
+                f"{evidence_id}.supersedes_evidence_id is {back}, but the evidence "
+                f"index row for {back} is superseded_by {old_entry.superseded_by}"
             )
 
 

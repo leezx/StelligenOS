@@ -4080,3 +4080,36 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   worktree boundary passed / `evidence_reference.yaml` 结构合法。connector 写
   review 仍 403。
 - Next：提交、推送、开 PR、CI 绿后提交同一 ChatGPT 对话（`AI审核方案`）请求审核。
+
+## 2026-08-28T19:40 EDT — Runtime Migration PR C REQUEST_CHANGES 第一轮修订（同一 PR #102）
+
+- Review input：ChatGPT `AI审核方案` 对 PR #102 @ `bd60748` 返回
+  `REQUEST_CHANGES`（经浏览器提交，GitHub connector 写 review 仍 403）：三个设计
+  决策与 scope 控制均认可；3 个 PR-C-local blocker，最小改关闭，不碰冻结文档 /
+  PR A / PR B / PR D。
+- fix 1（主 blocker：声明的 provenance chain ≠ 实际 checker）：原三个 checker 只
+  在三张 derived index 之间查对应 ID，从不读 canonical Assessment /
+  EvidencePackage，存在 false-pass。→ 保留 layer 1，新增 layer 2 canonical-record
+  integrity：`serialized_matrix_cell` + `check_matrix_against_assessments` /
+  `check_gate_index_against_assessments` /
+  `check_assessment_evidence_refs_against_packages` /
+  `check_packages_against_sources` / `check_supersession_consistency`（纯引用
+  比对，不算 direction/strength/decision）。`evidence_reference.yaml`
+  `provenance_walk` 加 `checks`（layer_1/layer_2）+ `acceptance`。
+- fix 2（MatrixView 未锁 row candidate level）：`__post_init__` 加
+  `row.candidate_id` 的 `Lnn` == `candidate_level` 校验；registry 加 invariant。
+- fix 3（EvidenceIndex lifecycle 比冻结 spec 窄 + boundary wording 对 status 过宽）：
+  `EvidenceIndexEntry` 改为 `ACTIVE→空 / SUPERSEDED→有 pointer / RETRACTED→可选`
+  （冻结 §10.1 允许 RETRACTED replacement）；`immutable_record_boundary.rule`
+  收窄为"EvidencePackage lifecycle status + forward superseded_by 只住
+  EvidenceIndexEntry；其它 canonical 对象保留自身 intrinsic status"（PR A 的
+  Context 本就有 status）。registry 加 `lifecycle_rule`、改 invariants。
+- 改动文件：`src/contracts/evidence_reference.yaml`、
+  `src/objects/evidence_reference_model.py`、`src/objects/__init__.py`、
+  `tests/test_evidence_reference.py`（48 → 56 tests，+8）、两个 README、handoff、
+  worklog。未改 `data_layout/*` / PR A / PR B / 冻结文档 / `gate_system.yaml` /
+  `src/capabilities/*` / 既有测试。仍无 engine、无新依赖。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 714 OK
+  （658 baseline + 56 new）/ `git diff --check` clean / 干净 tracked-tree
+  worktree boundary passed / `evidence_reference.yaml` 结构合法。
+- Next：提交、推送、CI 绿后回同一 ChatGPT 对话请求复审（目标 APPROVE PR #102）。
