@@ -254,6 +254,40 @@ Assessment 有 `evidence_refs` 但 `GateEvidenceIndex` 零行 → raise。
   `evidence_reference.yaml` layer_2 清单 + `__init__.py` 导出 + 两个测试 + 本
   handoff + worklog。
 
+## 六之四、REQUEST_CHANGES 第三轮修订（2026-08-28，同一 PR #102）
+
+Review input：ChatGPT `AI审核方案` 对 PR #102 @ `d611598` 返回 `REQUEST_CHANGES`：
+前两轮修点确认关闭（`primary_source_id` 真正与 canonical
+`EvidencePackage.provenance.source_id` 比较 + 顺带镜像；`check_gate_index_against_assessments`
+的 zero-row 漏检已修）。只剩 `EvidenceIndexEntry → canonical EvidencePackage`
+的存在性 + identity equality。`check_supersession_consistency` 维持"两边 pointer
+都存在时才要求一致"，审核方明确认可（frozen backward `supersedes_evidence_id`
+是 optional，不强制对称）。
+
+### fix 6 —— check_evidence_index_against_packages 的两处 identity gap
+
+问题：函数体是 `package = packages.get(entry.evidence_id); if package is None:
+continue`，因此 (a) 一个 `EvidenceIndexEntry` 若没有对应 canonical
+`EvidencePackage` 直接跳过（应 reject —— 第二轮验收条件已写"entry.evidence_id
+exists as canonical EvidencePackage"）；(b) 从不检查 `package.evidence_id ==
+entry.evidence_id`（key 与 package 自身 id 可能不一致）。
+
+→ `if package is None:` 改为 `raise`；新增
+`if package.evidence_id != entry.evidence_id: raise`。`provenance_walk.checks.layer_2`
+该行补"every EvidenceIndexEntry has a canonical EvidencePackage carrying the
+same evidence_id"。`test_evidence_index_against_packages` 扩展 +2 断言：
+索引行无 canonical package → raise；key 映射到 `evidence_id` 不同的 package → raise。
+
+### 结果
+
+- 全量：`Ran 716 tests ... OK`（58 new，`test_evidence_index_against_packages`
+  内 +2 断言）。`git diff --check` clean。干净 tracked-tree worktree boundary
+  passed。`evidence_reference.yaml` 结构合法。
+- 本轮仅动 `evidence_reference_model.py`（1 个函数）+ `evidence_reference.yaml`
+  （layer_2 该行）+ `tests/test_evidence_reference.py`（+2 断言）+ handoff +
+  worklog。未碰 `data_layout/*` / PR A / PR B / 冻结文档 / `gate_system.yaml` /
+  `src/capabilities/*` / 既有测试。仍无 engine、无新依赖。
+
 ## 七、审核
 
 - 提交至 ChatGPT 网页版 `Biotech ideas` → `AI审核方案` 对话（GitHub connector 写

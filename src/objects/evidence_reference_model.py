@@ -639,16 +639,26 @@ def check_packages_against_sources(
 def check_evidence_index_against_packages(
     library: EvidenceLibraryIndex, packages: Mapping[str, object]
 ) -> None:
-    """Each EvidenceIndexEntry that has a canonical EvidencePackage must mirror
-    it on the fields the index merely summarises: ``primary_source_id`` (the
-    blocker -- it must equal ``provenance.source_id``), plus ``schema_version``
-    and ``candidate_refs``. The derived index must not disagree with the
-    canonical record. Raises ``ValueError`` on the first disagreement."""
+    """Every EvidenceIndexEntry must have a canonical EvidencePackage
+    (``packages`` is the complete canonical set), that package must carry the
+    same ``evidence_id``, and the index must mirror it on the fields it merely
+    summarises: ``primary_source_id`` (the blocker -- it must equal
+    ``provenance.source_id``), plus ``schema_version`` and ``candidate_refs``.
+    The derived index must not drift from or dangle past the canonical record.
+    Raises ``ValueError`` on the first problem."""
 
     for entry in library.entries:
         package = packages.get(entry.evidence_id)
         if package is None:
-            continue
+            raise ValueError(
+                f"{entry.evidence_id}: evidence index row has no canonical "
+                "EvidencePackage"
+            )
+        if package.evidence_id != entry.evidence_id:
+            raise ValueError(
+                f"{entry.evidence_id}: canonical EvidencePackage under this key "
+                f"carries evidence_id {package.evidence_id}"
+            )
         if entry.primary_source_id != package.provenance["source_id"]:
             raise ValueError(
                 f"{entry.evidence_id}: evidence index primary_source_id "

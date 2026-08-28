@@ -86,7 +86,7 @@ migration:
         - check_matrix_against_assessments (cell == serialised CandidateGateAssessment; ids agree)
         - check_gate_index_against_assessments (row assessment_id / evidence_id / role == the current assessment's evidence_refs; and EVERY ref of EVERY current assessment for this gate is an index row, including an assessment with zero index rows)
         - check_assessment_evidence_refs_against_packages (every evidence_ref resolves to a canonical EvidencePackage)
-        - check_evidence_index_against_packages (EvidenceIndexEntry.primary_source_id == the canonical EvidencePackage.provenance.source_id; schema_version and candidate_refs also mirror the canonical record)
+        - check_evidence_index_against_packages (every EvidenceIndexEntry has a canonical EvidencePackage carrying the same evidence_id; EvidenceIndexEntry.primary_source_id == the canonical EvidencePackage.provenance.source_id; schema_version and candidate_refs also mirror the canonical record)
         - check_packages_against_sources (every EvidencePackage.provenance.source_id is in SourceIndex)
         - check_supersession_consistency (when both exist, forward superseded_by on the index and backward supersedes_evidence_id on the new EP agree)
     acceptance: >-

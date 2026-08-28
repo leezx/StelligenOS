@@ -4142,3 +4142,26 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   （658 baseline + 58 new）/ `git diff --check` clean / 干净 tracked-tree
   worktree boundary passed / `evidence_reference.yaml` 结构合法。
 - Next：提交、推送、CI 绿后回同一 ChatGPT 对话请求复审（目标本轮 APPROVE PR #102）。
+
+## 2026-08-28T21:10 EDT — Runtime Migration PR C REQUEST_CHANGES 第三轮修订（同一 PR #102）
+
+- Review input：ChatGPT `AI审核方案` 对 PR #102 @ `d611598` 返回
+  `REQUEST_CHANGES`：前两轮修点确认关闭；只剩 `check_evidence_index_against_packages`
+  的两处 identity gap。`check_supersession_consistency` 的"两边 pointer 都存在时
+  才要求一致"审核方明确认可。
+- fix 6：`check_evidence_index_against_packages` 原为 `package = packages.get(
+  entry.evidence_id); if package is None: continue` —— (a) 索引行无 canonical
+  EvidencePackage 直接跳过（应 reject）；(b) 从不比 `package.evidence_id ==
+  entry.evidence_id`。→ `if package is None:` 改 `raise`；加
+  `if package.evidence_id != entry.evidence_id: raise`。YAML layer_2 该行补
+  "every EvidenceIndexEntry has a canonical EvidencePackage carrying the same
+  evidence_id"。测试 `test_evidence_index_against_packages` +2 断言。
+- 改动文件：`src/objects/evidence_reference_model.py`（1 函数）、
+  `src/contracts/evidence_reference.yaml`（1 行）、`tests/test_evidence_reference.py`
+  （+2 断言）、handoff、worklog。未碰 `data_layout/*` / PR A / PR B / 冻结文档 /
+  `gate_system.yaml` / `src/capabilities/*` / 既有测试。仍无 engine、无新依赖。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 716 OK /
+  `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
+  `evidence_reference.yaml` 结构合法。
+- Next：提交、推送、CI 绿后回同一 ChatGPT 对话请求复审（审核方预告：这两处补完即
+  APPROVE PR #102）。

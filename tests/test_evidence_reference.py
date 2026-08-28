@@ -673,6 +673,14 @@ class CanonicalRecordProvenanceTests(unittest.TestCase):
         packages = {"EP-00000123": make_package()}
         check_evidence_index_against_packages(library, packages)  # no raise
 
+        # index row with no canonical EvidencePackage at all
+        with self.assertRaises(ValueError):
+            check_evidence_index_against_packages(library, {})
+        # the package under this key carries a different evidence_id
+        with self.assertRaises(ValueError):
+            check_evidence_index_against_packages(
+                library, {"EP-00000123": make_package(evidence_id="EP-00000200")}
+            )
         # index primary_source_id disagrees with the canonical provenance
         bad_source = EvidenceLibraryIndex(
             (make_evidence_entry(primary_source_id="SRC-00000099"),)
