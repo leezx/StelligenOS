@@ -30,7 +30,18 @@
     "provenance_ref": { "type": "string", "pattern": "^external:.+" }
   },
   "not": {
-    "required": ["context_id"]
+    "anyOf": [
+      { "required": ["context_id"] },
+      { "required": ["context_version"] },
+      { "required": ["direction"] },
+      { "required": ["strength"] },
+      { "required": ["decision"] },
+      { "required": ["score"] },
+      { "required": ["assessment_id"] },
+      { "required": ["evidence_refs"] },
+      { "required": ["gate_id"] },
+      { "required": ["gateset_id"] }
+    ]
   },
   "additionalProperties": true
 }

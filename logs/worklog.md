@@ -3679,3 +3679,51 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Next: 显式暂存本任务文件，创建非 draft PR，提交网页版 ChatGPT `Biotech ideas`
   → `AI 审核方案` 审核；`APPROVE` 后 `v1.0-draft` → `v1.0`，再用 scaffold 脚本
   在外部生成真实骨架。
+
+## 2026-08-28T13:20 EDT — Data Layout Spec v1.0 REQUEST_CHANGES 第一轮修订（同一 PR #96）
+
+- Review input: ChatGPT 在 `Biotech ideas → AI审核方案` 对话对 PR #96 `fad39ac`
+  返回 `REQUEST_CHANGES`：方向正确、目录主体不动，只修 6 点
+  contract/provenance/state-safety 问题；下一轮全部关闭即 APPROVE v1.0。
+- Fixes（仍 docs+schema+脚本，未启动 runtime migration）：
+  1. Context canonical 落点：新增 `15_CONTEXTS/`（`context_index.csv` +
+     `CTX-*/vNNN.yaml` canonical + `latest.yaml`）+ §2b + `context.schema.yaml`；
+     Instantiation/Assessment 加 `context_version`；"5 类 canonical" → "5 类
+     primary product outputs"（Context/Instantiation/gate_binding/gateset_binding/
+     run_manifest 也是 canonical record）。
+  2. 版本引用链闭合：EvidencePackage immutable-by-ID（纠错→新 EP + `superseded_by`），
+     `version` → `schema_version`；Decision `assessment_snapshot` →
+     `{assessment_id, assessment_version, cell}` | `"NOT_EVALUATED"`；`triggered_by`
+     加 `assessment_version`。列为冻结项。
+  3. Assessment schema enforce 状态铁律：direction×strength 组合表（POSITIVE/
+     NEGATIVE 禁 UNKNOWN + 需 ≥1 ref；CONFLICTING `contains` 两侧 + `key_*` 非空；
+     INCONCLUSIVE 有证据带 strength、无证据固定 `UNKNOWN` serialization；
+     NOT_APPLICABLE 单列）；canonical Assessment/Decision `review.status`
+     固定 `HUMAN_APPROVED`（`const`）。
+  4. Candidate schema `not.anyOf` 机器禁止 `context_id`/`context_version`/
+     `direction`/`strength`/`decision`/`score`/`assessment_id`/`evidence_refs`/
+     `gate_id`/`gateset_id`；`csv_headers.yaml` 加 `gate_current_assessments`
+     （列同 `assessments_long`）。
+  5. scaffold 脚本 boundary 检查顺序修复：先 python `realpath`（跟随 symlink）
+     解析目标（走到最近存在祖先）→ 判断是否在 repo 内 → 通过后才 `mkdir`；
+     新增 `tests/test_scaffold_data_layout.sh`（A–F），接入 `.github/workflows/ci.yml`。
+  6. worked example 修两处科学语义：删除"无密度数据"的 CONTRADICTING EP
+     （`EP-00000131`/`SRC-00000902`），该缺口只进 `critical_unknowns:
+     EXPERIMENT_REQUIRED`（新增 §10.2）；Matrix + Decision snapshot 一致用显式
+     `NOT_EVALUATED`，不用 em dash。
+- 治理措辞：PR body `NO_ARCHITECTURE_CHANGE` → `NO_CORE_ARCHITECTURE_CHANGE /
+  NEW_DATA_LAYOUT_CONTRACT`。
+- 改动文件（本轮）：`docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md`、
+  `docs/protocols/examples/STELLIGENOS_DATA_LAYOUT_v1_worked_example.md`、
+  `src/contracts/data_layout/`（+`context.schema.yaml`）、
+  `scripts/scaffold_data_layout.sh`、`tests/test_scaffold_data_layout.sh`（新）、
+  handoff、worklog（`ci.yml` 未改，token 限制）。
+- 明确未改：`src/` 代码（`data_layout/` 以外）、`core_objects.yaml`、
+  `gate_system.yaml`、CURRENT_SYSTEM v5、任何测试（`test_scaffold_data_layout`
+  为本任务新增）；未在 repo 内建 `.csv` 或 `DATA/`；未启动 runtime migration；
+  未解除 EVGAP；用户自有 untracked 文件未暂存。
+- 验证：unittest 555 OK / test_git_sync A-D / test_scaffold_data_layout A-F /
+  git diff --check clean / 干净 tracked-tree worktree 上 boundary passed +
+  scaffold + unittest 全过 / 8 schema + csv_headers 结构合法 / worked example
+  + csv_headers 手写不变量检查全过。GitHub connector 写 review 仍 403。
+- Next: 追加提交到 PR #96，更新 PR body 措辞，回复同一 ChatGPT 对话请求复审。

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "stelligenos/data_layout/assessment.schema.json",
   "title": "CandidateGateAssessment (canonical JSON)",
-  "description": "TGT-NN/ASSESSMENTS/<candidate_id>/vNNN.json. The single source of truth for one Candidate x Gate matrix cell. Direction and Strength are orthogonal; the assessment never produces a Candidate-level Decision. See STELLIGENOS_DATA_LAYOUT_SPEC.v1.0 sec.8.",
+  "description": "TGT-NN/ASSESSMENTS/<candidate_id>/vNNN.json. The single source of truth for one Candidate x Gate matrix cell. Canonical files are HUMAN_APPROVED only; proposals stay in RUNS/assessment_proposals.csv. Direction and Strength are orthogonal and machine-constrained (sec.8.2); the assessment never produces a Candidate-level Decision. See STELLIGENOS_DATA_LAYOUT_SPEC.v1.0 sec.8.",
   "type": "object",
   "required": [
     "assessment_id",
@@ -10,6 +10,7 @@
     "instantiation_id",
     "candidate_id",
     "context_id",
+    "context_version",
     "gateset_id",
     "gateset_version",
     "gate_id",
@@ -28,6 +29,7 @@
     "instantiation_id": { "type": "string", "pattern": "^INST-[A-Z0-9-]+-v[0-9]+$" },
     "candidate_id": { "type": "string", "pattern": "^CAND-L[0-9]{2}-[0-9]{6}$" },
     "context_id": { "type": "string", "pattern": "^CTX-[A-Z0-9-]+$" },
+    "context_version": { "type": "integer", "minimum": 1 },
     "gateset_id": { "type": "string", "pattern": "^[A-Z0-9_]+_GATESET$" },
     "gateset_version": { "type": "string" },
     "gate_id": { "type": "string", "minLength": 1 },
@@ -66,7 +68,7 @@
       "type": "object",
       "required": ["status", "reviewer", "reviewed_at"],
       "properties": {
-        "status": { "type": "string", "enum": ["MACHINE_PROPOSED", "MACHINE_QC_PASSED", "HUMAN_APPROVED", "HUMAN_REJECTED"] },
+        "status": { "const": "HUMAN_APPROVED" },
         "reviewer": { "type": "string", "minLength": 1 },
         "reviewed_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}" }
       },
@@ -76,14 +78,62 @@
   },
   "allOf": [
     {
-      "description": "CONFLICTING requires both sides recorded separately (no auto downgrade of Strength).",
-      "if": { "properties": { "direction": { "const": "CONFLICTING" } } },
-      "then": { "required": ["key_supporting_evidence", "key_contradicting_evidence"] }
+      "description": "POSITIVE / NEGATIVE must not be UNKNOWN strength and need >=1 evidence_ref.",
+      "if": { "properties": { "direction": { "enum": ["POSITIVE", "NEGATIVE"] } } },
+      "then": {
+        "properties": {
+          "strength": { "enum": ["DIRECT", "INDIRECT_STRONG", "WEAK"] },
+          "evidence_refs": { "minItems": 1 }
+        }
+      }
     },
     {
-      "description": "A non-empty evidence_refs is required unless strength is UNKNOWN.",
-      "if": { "properties": { "strength": { "not": { "const": "UNKNOWN" } } } },
-      "then": { "properties": { "evidence_refs": { "minItems": 1 } } }
+      "description": "CONFLICTING: strength not UNKNOWN; evidence_refs must contain >=1 SUPPORTING and >=1 CONTRADICTING; both key_* arrays non-empty.",
+      "if": { "properties": { "direction": { "const": "CONFLICTING" } } },
+      "then": {
+        "required": ["key_supporting_evidence", "key_contradicting_evidence"],
+        "properties": {
+          "strength": { "enum": ["DIRECT", "INDIRECT_STRONG", "WEAK"] },
+          "key_supporting_evidence": { "minItems": 1 },
+          "key_contradicting_evidence": { "minItems": 1 },
+          "evidence_refs": {
+            "allOf": [
+              { "contains": { "properties": { "role": { "const": "SUPPORTING" } }, "required": ["role"] }, "minContains": 1 },
+              { "contains": { "properties": { "role": { "const": "CONTRADICTING" } }, "required": ["role"] }, "minContains": 1 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "description": "INCONCLUSIVE: either has qualified evidence (strength != UNKNOWN, >=1 ref) OR is the UNKNOWN state (strength UNKNOWN, empty refs).",
+      "if": { "properties": { "direction": { "const": "INCONCLUSIVE" } } },
+      "then": {
+        "oneOf": [
+          {
+            "properties": {
+              "strength": { "enum": ["DIRECT", "INDIRECT_STRONG", "WEAK"] },
+              "evidence_refs": { "minItems": 1 }
+            }
+          },
+          {
+            "properties": {
+              "strength": { "const": "UNKNOWN" },
+              "evidence_refs": { "maxItems": 0 }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "description": "NOT_APPLICABLE serialization convention: strength UNKNOWN, empty evidence_refs.",
+      "if": { "properties": { "direction": { "const": "NOT_APPLICABLE" } } },
+      "then": {
+        "properties": {
+          "strength": { "const": "UNKNOWN" },
+          "evidence_refs": { "maxItems": 0 }
+        }
+      }
     }
   ],
   "not": {

@@ -2,11 +2,11 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "stelligenos/data_layout/evidence_package.schema.json",
   "title": "EvidencePackage evidence.json (neutral empirical observation)",
-  "description": "30_EVIDENCE_LIBRARY/PACKAGES/EP-*/evidence.json. Canonical machine-readable truth for one atomic, globally reusable evidence asset. MUST NOT carry direction/strength/DIRECT/POSITIVE etc. -- grading happens only in the Assessment. See STELLIGENOS_DATA_LAYOUT_SPEC.v1.0 sec.9-14.",
+  "description": "30_EVIDENCE_LIBRARY/PACKAGES/EP-*/evidence.json. Canonical machine-readable truth for one atomic, globally reusable evidence asset. immutable-by-ID: once referenced by any Assessment the content is never edited in place; corrections create a new EP with superseded_by. MUST NOT carry direction/strength/grade/DIRECT/POSITIVE etc. -- grading happens only in the Assessment. See STELLIGENOS_DATA_LAYOUT_SPEC.v1.0 sec.9-14.",
   "type": "object",
   "required": [
     "evidence_id",
-    "version",
+    "schema_version",
     "claim",
     "measurement",
     "candidate_refs",
@@ -17,7 +17,7 @@
   ],
   "properties": {
     "evidence_id": { "type": "string", "pattern": "^EP-[0-9]{8}$" },
-    "version": { "type": "integer", "minimum": 1 },
+    "schema_version": { "type": "integer", "minimum": 1, "description": "structural schema version only; content is not revised in place (immutable-by-ID)" },
     "claim": { "type": "string", "minLength": 1 },
     "measurement": {
       "type": "object",

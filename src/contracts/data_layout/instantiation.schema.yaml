@@ -11,6 +11,7 @@ required:
   - candidate_type
   - candidate_level
   - context_id
+  - context_version
   - modality
   - gateset_id
   - gateset_version
@@ -31,6 +32,9 @@ properties:
   context_id:
     type: string
     pattern: "^CTX-[A-Z0-9-]+$"
+  context_version:
+    type: integer
+    minimum: 1
   modality:
     type: string
     minLength: 1

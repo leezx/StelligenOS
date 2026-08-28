@@ -12,13 +12,14 @@
 #
 # The script creates directories and CSV header rows only (headers come from
 # src/contracts/data_layout/csv_headers.yaml -- this repo stores no .csv files).
-# It never writes data rows, never touches this repository, and refuses to run
-# if the target is inside the repo working tree. Requires python3 + PyYAML
-# (the repo's only runtime dependency).
+# It never writes data rows. The repo-boundary check runs on the RESOLVED
+# (symlink-followed) path BEFORE anything is created: a repo-internal target is
+# rejected without touching the filesystem. Requires python3 + PyYAML (the
+# repo's only runtime dependency).
 
 set -euo pipefail
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 headers_yaml="${repo_root}/src/contracts/data_layout/csv_headers.yaml"
 
 target_root="${1:-}"
@@ -36,12 +37,29 @@ if [[ ! -f "$headers_yaml" ]]; then
   printf 'missing %s\n' "$headers_yaml" >&2; exit 4
 fi
 
-mkdir -p "$target_root"
-abs_target="$(cd "$target_root" && pwd)"
+# Resolve the target (following symlinks) WITHOUT creating anything, walking up
+# to the nearest existing ancestor, then check containment against the resolved
+# repo root. Only after this passes do we create directories.
+abs_target="$(python3 - "$target_root" <<'PY'
+import os, sys
+p = os.path.abspath(sys.argv[1])
+tail = []
+while not os.path.exists(p):
+    p, t = os.path.split(p)
+    tail.append(t)
+    if not t:
+        break
+resolved = os.path.realpath(p)
+for t in reversed(tail):
+    resolved = os.path.join(resolved, t)
+print(resolved)
+PY
+)"
+
 case "$abs_target/" in
-  "$repo_root"/*)
-    printf 'Refusing: target %s is inside the repository %s.\n' "$abs_target" "$repo_root" >&2
-    printf 'Runtime data must live outside the implementation repository.\n' >&2
+  "$repo_root"/* | "$repo_root")
+    printf 'Refusing: resolved target %s is inside the repository %s.\n' "$abs_target" "$repo_root" >&2
+    printf 'Runtime data must live outside the implementation repository. Nothing was created.\n' >&2
     exit 3
     ;;
 esac
@@ -66,6 +84,7 @@ printf 'Scaffolding StelligenOS data layout v1.0 at: %s\n' "$abs_target"
 mkdir -p \
   "$abs_target/00_REGISTRY" \
   "$abs_target/10_CANDIDATES" \
+  "$abs_target/15_CONTEXTS" \
   "$abs_target/20_INSTANTIATIONS" \
   "$abs_target/30_EVIDENCE_LIBRARY/PACKAGES" \
   "$abs_target/90_ARCHIVE"
@@ -84,6 +103,7 @@ do
   hdr candidate "$abs_target/10_CANDIDATES/${lvl}.csv"
 done
 
+hdr context_index          "$abs_target/15_CONTEXTS/context_index.csv"
 hdr library_evidence_index "$abs_target/30_EVIDENCE_LIBRARY/evidence_index.csv"
 hdr library_source_index   "$abs_target/30_EVIDENCE_LIBRARY/source_index.csv"
 

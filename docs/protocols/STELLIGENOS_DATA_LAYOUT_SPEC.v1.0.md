@@ -13,10 +13,12 @@
     （`v5`，`STELLIGENOS-ARCH-2026.08.27-v5`，PR #94 `APPROVE`）
   - `docs/architecture/contract.zh-CN.md` §3.4（决策层模型 + Candidate Level
     Registry）
-- 机器可读 schema：`src/contracts/data_layout/`
+- 机器可读 schema：`src/contracts/data_layout/`（含 `csv_headers.yaml` 与
+  `context.schema.yaml`）
 - worked example（单文档，`TGT-04 × CEACAM5`）：`docs/protocols/examples/STELLIGENOS_DATA_LAYOUT_v1_worked_example.md`
-- CSV 规范表头：`src/contracts/data_layout/csv_headers.yaml`
-- 外部骨架生成脚本：`scripts/scaffold_data_layout.sh`
+- 外部骨架生成脚本：`scripts/scaffold_data_layout.sh`（回归测试
+  `tests/test_scaffold_data_layout.sh`，本地 `bash tests/test_scaffold_data_layout.sh`
+  运行；接入 `.github/workflows/ci.yml` 需 `workflow` scope，留待负责人加一行）
 
 ### 0.1 本文件是什么，不是什么
 
@@ -37,15 +39,24 @@ migration PR 的**物理层依据**。本仓库**不**保存本布局下的任�
 3. **Evidence Package 是独立、全局复用的资产，不复制进每个 Gate。**
 4. **Gate 文件夹是施工 workspace；一个 Gate 一个包工头，所有 run 都在这里。**
 
-### 0.3 五类 canonical 文件（§19，冻结；以后不得随意新增核心输出格式）
+### 0.3 五类 primary product outputs（§19，冻结；以后不得随意新增核心输出格式）
+
+这五类是**每天面向决策的产品输出**。注意：`Context` / `Instantiation` /
+`gate_binding` / `gateset_binding` / `run_manifest` 也各有自己的 canonical
+record（见对应章节），只是它们是**绑定/配置/施工记录**，不是产品输出层。
+因此不再称"只有 5 类 canonical 文件"。
 
 | # | 对象 | 格式 | 示例文件 |
 |---|---|---|---|
 | 1 | Candidate | CSV | `10_CANDIDATES/L04_ADC_TARGET.csv` |
 | 2 | Candidate × Gate Matrix | CSV（derived view） | `MATRICES/L04_ADC_TARGET.matrix.csv` |
-| 3 | CandidateGateAssessment | JSON | `ASSESSMENTS/CAND-L04-000001/v001.json` |
-| 4 | EvidencePackage | folder（`evidence.json` + `summary.md` + `artifacts/`） | `30_EVIDENCE_LIBRARY/PACKAGES/EP-00000123/` |
-| 5 | Decision | JSON + `decisions.csv` view | `DECISIONS/DEC-0001.json` |
+| 3 | CandidateGateAssessment | JSON（`vNNN.json` canonical + `latest.json` 副本） | `ASSESSMENTS/CAND-L04-000001/v001.json` |
+| 4 | EvidencePackage | folder（`evidence.json` + `summary.md` + `artifacts/`），**immutable-by-ID** | `30_EVIDENCE_LIBRARY/PACKAGES/EP-00000123/` |
+| 5 | Decision | JSON（`DEC-*.json` canonical）+ `decisions.csv` view | `DECISIONS/DEC-0001.json` |
+
+其它 canonical records（配置/绑定/施工层）：`15_CONTEXTS/CTX-*/vNNN.yaml`、
+`20_INSTANTIATIONS/<inst>/instantiation.yaml`、`GATESETS/<gs>/gateset_binding.yaml`、
+`GATESETS/<gs>/TGT-NN/gate_binding.yaml`、`TGT-NN/RUNS/RUN-*/run_manifest.json`。
 
 ---
 
@@ -87,6 +98,12 @@ $STELLIGENOS_DATA/
 │   ├── L12_BIOMARKER.csv
 │   ├── L13_DEVELOPMENT_CANDIDATE.csv
 │   └── L14_REGIMEN.csv
+│
+├── 15_CONTEXTS/                         # Context 身份，与 Candidate 一样可复用、可审计、版本化
+│   ├── context_index.csv               # 所有 Context 的索引
+│   └── CTX-CRC-REFRACTORY-MSSPMMR/
+│       ├── v001.yaml                    # canonical，append-only（vNNN）
+│       └── latest.yaml                  # derived pointer/copy（byte-identical of 最新 vNNN）
 │
 ├── 20_INSTANTIATIONS/                   # "这一次到底在干什么"
 │   └── INST-CRC-REFRACTORY-ADC-TARGET-v1/
@@ -179,6 +196,51 @@ CAND-L04-000002,ADC_TARGET,L04,TWEAKR,,ACTIVE,1,2026-08-27,external:ADCdb/target
 
 ---
 
+## 2b. Context：canonical、可复用、版本化（`15_CONTEXTS/`）
+
+Context 与 Candidate 一样是可复用、可审计的资产——同一个 `CTX-*` 可被多个
+Instantiation 与多次评估引用——因此它有自己的 canonical 物理落点，**不再是
+悬空引用**。
+
+```text
+15_CONTEXTS/
+├── context_index.csv
+└── CTX-CRC-REFRACTORY-MSSPMMR/
+    ├── v001.yaml        # canonical，append-only（内容修订 → 新建 vNNN，旧版本不改）
+    └── latest.yaml      # derived：最新 vNNN 的 byte-identical 副本（含 context_version 标注哪一版）
+```
+
+`CTX-*/vNNN.yaml`：
+
+```yaml
+context_id: CTX-CRC-REFRACTORY-MSSPMMR
+context_version: 1
+canonical_name: "Refractory MSS/pMMR metastatic colorectal cancer, >=3L"
+dimensions:
+  indication: colorectal cancer
+  disease_stage: metastatic
+  line_of_therapy: ">=3L"
+  molecular_subtype: MSS/pMMR
+  patient_territory: refractory
+  treatment_history: "prior fluoropyrimidine, oxaliplatin, irinotecan; +/- anti-EGFR, +/- anti-VEGF"
+  anatomical_site: null
+  model_or_system: human patient tissue
+status: ACTIVE          # ACTIVE | HOLD | RETIRED
+created_at: 2026-08-28
+provenance_ref: external:...
+```
+
+`15_CONTEXTS/context_index.csv`：
+
+| context_id | context_version | canonical_name | indication | status | created_at |
+|---|---|---|---|---|---|
+
+> Context 本身是范围声明，不是结论——不含 `direction` / `strength` / `decision`
+> / `candidate_id`。跨 context 的证据可被引用，但 transfer assumption 记录在
+> 引用它的 Assessment，不在 Context。
+
+---
+
 ## 3. Instantiation：定义"这一次到底在干什么"
 
 `20_INSTANTIATIONS/<instantiation_id>/instantiation.yaml`：
@@ -190,6 +252,7 @@ candidate_type: ADC_TARGET
 candidate_level: L04
 
 context_id: CTX-CRC-REFRACTORY-MSSPMMR
+context_version: 1            # pin 到 15_CONTEXTS/CTX-.../v001.yaml
 modality: ADC
 
 gateset_id: ADC_TARGET_GATESET
@@ -203,8 +266,8 @@ created_at: 2026-08-28
 ```
 
 字段语义对齐 Blueprint v1.3 §M08：Instantiation 只做 configuration/binding，
-**不产生科学结论、不持有 Evidence、不产生 Assessment**。`context_id` 指向外部
-Context 定义（本布局不定义 Context 内容，只引用其 id）。
+**不产生科学结论、不持有 Evidence、不产生 Assessment**。`context_id` +
+`context_version` pin 到 `15_CONTEXTS/CTX-<id>/v<NNN>.yaml`。
 
 以后 `INST-CRC-EPITOPE-…` / `INST-BREAST-ADC-TARGET-…` / `INST-CRC-ADC-HIT-…`
 全部使用**同一目录结构**（`MATRICES/` + `DECISIONS/` + `GATESETS/`），只是绑定
@@ -213,8 +276,8 @@ Context 定义（本布局不定义 Context 内容，只引用其 id）。
 `00_REGISTRY/instantiation_registry.csv` 汇总所有 Instantiation：
 
 ```csv
-instantiation_id,candidate_type,candidate_level,context_id,modality,gateset_id,gateset_version,evidence_regime,status,created_at
-INST-CRC-REFRACTORY-ADC-TARGET-v1,ADC_TARGET,L04,CTX-CRC-REFRACTORY-MSSPMMR,ADC,ADC_TARGET_GATESET,1.0,PUBLIC_ONLY,ACTIVE,2026-08-28
+instantiation_id,candidate_type,candidate_level,context_id,context_version,modality,gateset_id,gateset_version,evidence_regime,status,created_at
+INST-CRC-REFRACTORY-ADC-TARGET-v1,ADC_TARGET,L04,CTX-CRC-REFRACTORY-MSSPMMR,1,ADC,ADC_TARGET_GATESET,1.0,PUBLIC_ONLY,ACTIVE,2026-08-28
 ```
 
 ---
@@ -225,26 +288,32 @@ INST-CRC-REFRACTORY-ADC-TARGET-v1,ADC_TARGET,L04,CTX-CRC-REFRACTORY-MSSPMMR,ADC,
 
 | candidate_id | name | TGT-01 | TGT-02 | TGT-03 | TGT-04 | TGT-05 | TGT-06 | TGT-07 | TGT-08 | decision |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CAND-L04-000001 | CEACAM5 | POSITIVE/DIRECT | POSITIVE/DIRECT | POSITIVE/INDIRECT_STRONG | POSITIVE/DIRECT | CONFLICTING/DIRECT | POSITIVE/DIRECT | POSITIVE/WEAK | HOLD | HOLD |
-| CAND-L04-000002 | X | POSITIVE/DIRECT | NEGATIVE/DIRECT | — | — | — | — | — | — | KILL |
+| CAND-L04-000001 | CEACAM5 | POSITIVE/DIRECT | POSITIVE/DIRECT | POSITIVE/INDIRECT_STRONG | POSITIVE/INDIRECT_STRONG | CONFLICTING/DIRECT | POSITIVE/DIRECT | POSITIVE/WEAK | UNKNOWN | HOLD |
+| CAND-L04-000002 | X | POSITIVE/DIRECT | NEGATIVE/DIRECT | NOT_EVALUATED | NOT_EVALUATED | NOT_EVALUATED | NOT_EVALUATED | NOT_EVALUATED | NOT_EVALUATED | KILL |
 
-### 4.1 cell 取值（冻结，不得发明数字）
+### 4.1 cell 取值（冻结，不得发明数字；全部是显式机器字符串，无 em dash）
+
+`<DIRECTION>/<STRENGTH>` 组合（`Direction ⊥ Strength`，任何 direction 只要有
+合格证据就带 strength，避免 CSV view 丢信息）：
 
 ```text
-POSITIVE/DIRECT
-POSITIVE/INDIRECT_STRONG
-POSITIVE/WEAK
-NEGATIVE/DIRECT
-NEGATIVE/INDIRECT_STRONG
-NEGATIVE/WEAK
-CONFLICTING/DIRECT
-CONFLICTING/INDIRECT_STRONG
-CONFLICTING/WEAK
-INCONCLUSIVE
-NOT_APPLICABLE
-UNKNOWN            # 无合格证据；不是 negative，不是 0
-—                 # 该 Gate 尚未评估（em dash，与 UNKNOWN 区分：UNKNOWN 表示评过但无证据）
+POSITIVE/DIRECT           POSITIVE/INDIRECT_STRONG        POSITIVE/WEAK
+NEGATIVE/DIRECT           NEGATIVE/INDIRECT_STRONG        NEGATIVE/WEAK
+CONFLICTING/DIRECT        CONFLICTING/INDIRECT_STRONG     CONFLICTING/WEAK
+INCONCLUSIVE/DIRECT       INCONCLUSIVE/INDIRECT_STRONG    INCONCLUSIVE/WEAK
 ```
+
+单值状态（无 strength 后缀）：
+
+```text
+UNKNOWN         # 已评估，但无合格证据。serialization 固定 direction=INCONCLUSIVE, strength=UNKNOWN, evidence_refs=[]
+NOT_APPLICABLE  # 本 Gate 对该 Candidate 结构性不适用（serialization convention: strength=UNKNOWN）
+NOT_EVALUATED   # 根本没有 HUMAN_APPROVED Assessment（不是一条 Assessment 状态，而是"该文件不存在"的 CSV 表示）
+```
+
+**`NOT_EVALUATED` vs `UNKNOWN` 是两回事**：前者 = 没跑过 / 没批过，后者 = 跑过
+批过但没证据。Matrix、`assessments.csv`、Decision 的 `assessment_snapshot`、
+worked example 必须一致使用 `NOT_EVALUATED`，**不得用 em dash 或空串作为机器值**。
 
 **禁止** `+3 / +2 / +1 / 0 / -1 / -2 / -3` 或任何单一数值分数。
 
@@ -264,13 +333,20 @@ Matrix 由该 Instantiation 下所有 Gate 的 `ASSESSMENTS/<cand>/latest.json`
 | candidate_id | gate_id | direction | strength | assessment_id | assessment_version | evidence_count | review_status | last_updated_at |
 |---|---|---|---|---|---|---:|---|---|
 | CAND-L04-000001 | TGT-01 | POSITIVE | DIRECT | ASMT-000001 | 1 | 7 | HUMAN_APPROVED | 2026-08-27 |
-| CAND-L04-000001 | TGT-02 | POSITIVE | DIRECT | ASMT-000002 | 1 | 12 | HUMAN_APPROVED | 2026-08-27 |
-| CAND-L04-000001 | TGT-03 | POSITIVE | INDIRECT_STRONG | ASMT-000003 | 1 | 4 | MACHINE_PROPOSED | 2026-08-27 |
+| CAND-L04-000001 | TGT-04 | POSITIVE | INDIRECT_STRONG | ASMT-000004 | 1 | 3 | HUMAN_APPROVED | 2026-08-27 |
+| CAND-L04-000001 | TGT-08 | INCONCLUSIVE | UNKNOWN | ASMT-000008 | 1 | 0 | HUMAN_APPROVED | 2026-08-27 |
 
-`direction` ∈ `POSITIVE|NEGATIVE|CONFLICTING|INCONCLUSIVE|NOT_APPLICABLE`
-（`UNKNOWN` 写在 `strength` 且 `direction` 留 `INCONCLUSIVE` 或空——见 §8.2）。
-`review_status` ∈ `MACHINE_PROPOSED|MACHINE_QC_PASSED|HUMAN_APPROVED|HUMAN_REJECTED`。
-适合 pandas / R / SQL / dashboard / candidate filtering / QC。
+- `direction` ∈ `POSITIVE|NEGATIVE|CONFLICTING|INCONCLUSIVE|NOT_APPLICABLE`；
+  `strength` ∈ `DIRECT|INDIRECT_STRONG|WEAK|UNKNOWN`；组合约束见 §8.2。
+- `UNKNOWN` 状态：`direction=INCONCLUSIVE, strength=UNKNOWN, evidence_count=0`。
+- 只列有 HUMAN_APPROVED Assessment 的 (candidate, gate) 行。没有 Assessment 的
+  Gate **不出现在这张表**（Matrix 里对应 `NOT_EVALUATED`），因此 `review_status`
+  在本表恒为 `HUMAN_APPROVED`（proposal / machine 状态只在 `RUNS/` 内）。
+- 适合 pandas / R / SQL / dashboard / candidate filtering / QC。
+
+`TGT-NN/CURRENT/assessments.csv`（§7）与本表**列完全相同**（同一 `assessments_long`
+表头），区别只是作用域：本表跨整个 GateSet，`CURRENT/assessments.csv` 只含
+该一个 Gate。
 
 ---
 
@@ -401,7 +477,10 @@ primary_module_version: "0.1.0"
 ## 8. CandidateGateAssessment：必须是 JSON
 
 不要用 MD 当主文件，也不要只存在 CSV。Canonical：
-`TGT-04/ASSESSMENTS/CAND-L04-000001/v001.json`。
+`TGT-04/ASSESSMENTS/CAND-L04-000001/v001.json`。**canonical Assessment JSON 只
+可能是 `review.status = HUMAN_APPROVED`**——proposal 与 machine-QC 结果留在
+`RUNS/assessment_proposals.csv`（§16），Human Review 通过后才写成这里的
+`vNNN.json`。被打回的提议不进 canonical，只在 RUN 里留痕。
 
 ```json
 {
@@ -412,6 +491,7 @@ primary_module_version: "0.1.0"
 
   "candidate_id": "CAND-L04-000001",
   "context_id": "CTX-CRC-REFRACTORY-MSSPMMR",
+  "context_version": 1,
 
   "gateset_id": "ADC_TARGET_GATESET",
   "gateset_version": "1.0",
@@ -423,11 +503,10 @@ primary_module_version: "0.1.0"
   "strength": "INDIRECT_STRONG",
 
   "evidence_refs": [
-    { "evidence_id": "EP-00000123", "role": "SUPPORTING" },
-    { "evidence_id": "EP-00000131", "role": "CONTRADICTING" }
+    { "evidence_id": "EP-00000123", "role": "SUPPORTING" }
   ],
 
-  "aggregation_rationale": "Multiple protein-level datasets support surface availability, but no direct quantitative antigen-density measurement exists in refractory mCRC.",
+  "aggregation_rationale": "Concordant tumor IHC and surface-proteomics datasets support membrane-localized target availability; no direct quantitative antigen-density measurement exists in refractory mCRC.",
 
   "critical_unknowns": [
     { "unknown": "Quantitative surface antigen density in refractory mCRC", "resolution": "EXPERIMENT_REQUIRED" }
@@ -450,26 +529,37 @@ primary_module_version: "0.1.0"
 | 字段 | 必填 | 说明 |
 |---|---|---|
 | `assessment_id` | 是 | `ASMT-nnnnnn`，全 Instantiation 唯一 |
-| `assessment_version` | 是 | int，从 `1` 起；evidence 更新时 +1 并新建 `vNNN.json` |
-| `instantiation_id` / `candidate_id` / `context_id` / `gateset_id` / `gateset_version` / `gate_id` / `gate_version` | 是 | 定位坐标；`candidate_id` 与 `context_id` 在此**首次关联** |
+| `assessment_version` | 是 | int，从 `1` 起；evidence state 变化时 +1 并新建 `vNNN.json`（旧版本不改） |
+| `instantiation_id` / `candidate_id` / `context_id` / `context_version` / `gateset_id` / `gateset_version` / `gate_id` / `gate_version` | 是 | 定位坐标；`candidate_id` 与 `context_id` 在此**首次关联**；`context_version` pin 到 `15_CONTEXTS/CTX-.../vNNN.yaml` |
 | `direction` | 是 | `POSITIVE` / `NEGATIVE` / `CONFLICTING` / `INCONCLUSIVE` / `NOT_APPLICABLE` |
-| `strength` | 是 | `DIRECT` / `INDIRECT_STRONG` / `WEAK` / `UNKNOWN` |
-| `evidence_refs[]` | 是（可空数组仅当 `strength=UNKNOWN`） | 每项 `{evidence_id, role}`，`role` ∈ `SUPPORTING` / `CONTRADICTING` / `CONTEXTUAL`；引用 `30_EVIDENCE_LIBRARY` 的 EP，**不复制** |
+| `strength` | 是 | `DIRECT` / `INDIRECT_STRONG` / `WEAK` / `UNKNOWN`（组合约束见 §8.2） |
+| `evidence_refs[]` | 是 | 每项 `{evidence_id, role}`，`role` ∈ `SUPPORTING` / `CONTRADICTING` / `CONTEXTUAL`；引用 `30_EVIDENCE_LIBRARY` 的 **immutable-by-ID** EP，只需 `evidence_id`（无 `evidence_version`，见 §10）。仅当 `strength = UNKNOWN` 时可为空数组 |
 | `aggregation_rationale` | 是 | 聚合说明（自由文本） |
-| `critical_unknowns[]` | 是（可空数组） | 每项 `{unknown, resolution}`，`resolution` ∈ `PUBLIC_RESOLVABLE` / `EXPERIMENT_REQUIRED` / `CURRENTLY_UNRESOLVABLE` |
+| `critical_unknowns[]` | 是（可空数组） | 每项 `{unknown, resolution}`，`resolution` ∈ `PUBLIC_RESOLVABLE` / `EXPERIMENT_REQUIRED` / `CURRENTLY_UNRESOLVABLE`。**absence of evidence（缺某类数据）只能进这里，不能变成 `CONTRADICTING` EP**（§10.2） |
 | `evidence_ceiling` | 是 | 本 Assessment 证据能到的天花板（自由文本） |
-| `review` | 是 | `{status, reviewer, reviewed_at}`；`status` ∈ `MACHINE_PROPOSED` / `MACHINE_QC_PASSED` / `HUMAN_APPROVED` / `HUMAN_REJECTED` |
+| `review` | 是 | `{status, reviewer, reviewed_at}`；canonical `vNNN.json` **固定 `status = HUMAN_APPROVED`** |
 | `superseded_by` | 否 | 若被更高版本取代，写新版本文件名 |
-| `key_supporting_evidence` / `key_contradicting_evidence` | `CONFLICTING` 时必填 | 分别记录冲突双方各自的 evidence 等级与来源（不因冲突自动降级 Strength） |
+| `key_supporting_evidence` / `key_contradicting_evidence` | `CONFLICTING` 时必填、非空 | 分别记录冲突双方各自的 evidence 等级与来源（不因冲突自动降级 Strength） |
 
-### 8.2 正交性与聚合铁律（对齐 Blueprint v1.3 §M05）
+### 8.2 direction × strength 组合约束（machine-enforced）
+
+| direction | 允许的 strength | evidence_refs | 备注 |
+|---|---|---|---|
+| `POSITIVE` / `NEGATIVE` | `DIRECT` / `INDIRECT_STRONG` / `WEAK` | ≥1（对应方向的 role） | **不允许 `UNKNOWN`** |
+| `CONFLICTING` | `DIRECT` / `INDIRECT_STRONG` / `WEAK` | 至少 1 个 `SUPPORTING` **且** 至少 1 个 `CONTRADICTING`（schema `contains`/`minContains` 强制） | strength = 冲突双方中最强的可信等级；`key_supporting_evidence` / `key_contradicting_evidence` 必填非空 |
+| `INCONCLUSIVE` + 有合格证据 | `DIRECT` / `INDIRECT_STRONG` / `WEAK` | ≥1 | Matrix 保留 strength（`INCONCLUSIVE/DIRECT` 等），不丢信息 |
+| `INCONCLUSIVE` + 无合格证据（即 `UNKNOWN` 状态） | `UNKNOWN` | `[]` | Matrix 写 `UNKNOWN`；`direction=INCONCLUSIVE, strength=UNKNOWN, evidence_refs=[]` 是固定 serialization |
+| `NOT_APPLICABLE` | `UNKNOWN`（serialization convention） | `[]` | Matrix 写 `NOT_APPLICABLE`；结构性不适用，与"没证据"不同 |
+
+### 8.3 聚合铁律（对齐 Blueprint v1.3 §M05）
 
 - `direction` ⊥ `strength`，且在 `CONFLICTING` 下同样成立：`strength` = 冲突
   双方中**最强**的可信证据等级，不自动降级。
 - `evidence type ceiling > evidence quantity`：数量不能跨 measurement boundary
   把多个 weak evidence 累积成 `DIRECT`。
-- `UNKNOWN` 是"无合格证据"导致的状态，不是 `direction`；此时 `direction` 写
-  `INCONCLUSIVE`、`strength` 写 `UNKNOWN`、`evidence_refs` 可为空。
+- **absence of evidence ≠ negative/contradicting evidence**：缺某类测量只写进
+  `critical_unknowns`（通常 `EXPERIMENT_REQUIRED`），绝不构造一条 `CONTRADICTING`
+  的 EP（§10.2）。
 - Assessment **不产生** Candidate-level Decision（`KILL` / `NOMINATE` /
   `COMMIT`）——那是 GateSet 层（§17）。
 
@@ -509,7 +599,7 @@ Modality Precedent` 可能是强证据，对 `TGT-04 quantitative surface densit
 ```json
 {
   "evidence_id": "EP-00000123",
-  "version": 1,
+  "schema_version": 1,
 
   "claim": "Target X protein was detected on malignant epithelial cell membranes in cohort Y.",
 
@@ -551,12 +641,30 @@ Modality Precedent` 可能是强证据，对 `TGT-04 quantitative surface densit
 }
 ```
 
-### 10.1 `evidence.json` 字段规范
+### 10.1 EvidencePackage 是 immutable-by-ID
+
+> **一个 `EP-*` 一旦被任何 Assessment 引用，其 `evidence.json` 内容永不原地
+> 修改。** 纠错、新增 interpretation、或换来源 → 建**新的** `EP-*`，旧 EP 写
+> `superseded_by: EP-<新id>` 并把 `30_EVIDENCE_LIBRARY/evidence_index.csv` 的
+> `status` 改为 `SUPERSEDED`（或 `RETRACTED`）。
+
+这样 Assessment 的 `evidence_refs[]` 只需 `evidence_id`，**不需要
+`evidence_version`**，版本引用链自然闭合：历史 Assessment 引用的 `EP-00000123`
+永远是当初那份内容。
+
+### 10.2 absence of evidence ≠ contradicting evidence
+
+"没有某类测量数据"（如"refractory mCRC 中没有定量抗原密度数据"）**不是一条
+EP**，更不是 `CONTRADICTING` 证据。它只进入引用它的 Assessment 的
+`critical_unknowns`，通常 `resolution = EXPERIMENT_REQUIRED`。构造一条
+"没有数据" 的 negative EP 是 StelligenOS 明确禁止的推理谬误。
+
+### 10.3 `evidence.json` 字段规范
 
 | 字段 | 必填 | 说明 |
 |---|---|---|
 | `evidence_id` | 是 | `EP-nnnnnnnn`，全局唯一 |
-| `version` | 是 | int，从 `1`；EP 内容修订时 +1（provenance / claim 不变则不必新版） |
+| `schema_version` | 是 | int，从 `1`；仅当 `evidence.json` 的 **schema 结构**升级时变化，**不是**内容修订版本（内容不可原地修订，见 §10.1） |
 | `claim` | 是 | 一句中性 empirical 陈述，**不含** direction/strength 词 |
 | `measurement` | 是 | `{type, analyte, readout, result, unit?}`；`type` 声明 measurement class（RNA / protein / surface density / …），**不得跨 class 使用** |
 | `candidate_refs[]` | 是 | 相关 candidate_id（仅召回提示，不是定级） |
@@ -564,9 +672,9 @@ Modality Precedent` 可能是强证据，对 `TGT-04 quantitative surface densit
 | `provenance` | 是 | `{source_id, source_type, source_identifier, locator, retrieved_at}`；`source_id` 指向 `30_EVIDENCE_LIBRARY/source_index.csv`（§14） |
 | `interpretation_boundary` | 是 | `{directly_supports[], does_not_support[], limitations[], evidence_ceiling}` |
 | `derivation` | 是 | `{module_run_id, code_commit}` |
-| `superseded_by` | 否 | 若被新 EP 取代 |
+| `superseded_by` | 否 | `EP-nnnnnnnn`；本 EP 被纠错/更新的新 EP 取代时填 |
 
-> **`evidence.json` 里不允许出现 `direction` / `strength` / `DIRECT` /
+> **`evidence.json` 里不允许出现 `direction` / `strength` / `grade` / `DIRECT` /
 > `POSITIVE` 等定级字段。** 真正的 `POSITIVE / INDIRECT_STRONG` 发生在 Assessment。
 
 ---
@@ -636,10 +744,11 @@ citation metadata。
 
 `30_EVIDENCE_LIBRARY/evidence_index.csv` 汇总所有 EP：
 
-| evidence_id | version | claim_short | measurement_type | primary_source_id | candidate_refs | created_at | status |
-|---|---|---|---|---|---|---|---|
+| evidence_id | schema_version | claim_short | measurement_type | primary_source_id | candidate_refs | created_at | status | superseded_by |
+|---|---|---|---|---|---|---|---|---|
 
-`status` ∈ `ACTIVE` / `SUPERSEDED` / `RETRACTED`。
+`status` ∈ `ACTIVE` / `SUPERSEDED` / `RETRACTED`。EP 内容不可原地修订（§10.1）；
+纠错走"新 EP + `superseded_by`"。
 
 ---
 
@@ -702,7 +811,9 @@ Decision**，放在：
 **不是** `TGT-05/decision.json`。Gate 不能自己杀 Candidate——它只产生 fatal
 signal，GateSet 的 `fatal_gate_policy` 才 `KILL`。
 
-`DEC-0001.json`：
+`DEC-0001.json` —— **每个 Gate 的 snapshot 必须 pin `{assessment_id,
+assessment_version, cell}`**，这样历史 Decision 永远知道当时用的确切 evidence
+state（版本引用链闭合）：
 
 ```json
 {
@@ -713,20 +824,31 @@ signal，GateSet 的 `fatal_gate_policy` 才 `KILL`。
   "gateset_version": "1.0",
   "decision": "HOLD",
   "triggered_by": [
-    { "gate_id": "TGT-07", "assessment_id": "ASMT-000007", "reason": "shedding/sink liability unresolved" }
+    { "gate_id": "TGT-07", "assessment_id": "ASMT-000007", "assessment_version": 1, "reason": "shedding/sink liability unresolved" }
   ],
   "assessment_snapshot": {
-    "TGT-01": "POSITIVE/DIRECT", "TGT-02": "POSITIVE/DIRECT", "TGT-03": "POSITIVE/INDIRECT_STRONG",
-    "TGT-04": "POSITIVE/DIRECT", "TGT-05": "CONFLICTING/DIRECT", "TGT-06": "POSITIVE/DIRECT",
-    "TGT-07": "POSITIVE/WEAK", "TGT-08": "UNKNOWN"
+    "TGT-01": { "assessment_id": "ASMT-000001", "assessment_version": 1, "cell": "POSITIVE/DIRECT" },
+    "TGT-02": { "assessment_id": "ASMT-000002", "assessment_version": 1, "cell": "POSITIVE/DIRECT" },
+    "TGT-03": { "assessment_id": "ASMT-000003", "assessment_version": 2, "cell": "POSITIVE/INDIRECT_STRONG" },
+    "TGT-04": { "assessment_id": "ASMT-000004", "assessment_version": 1, "cell": "POSITIVE/INDIRECT_STRONG" },
+    "TGT-05": { "assessment_id": "ASMT-000005", "assessment_version": 1, "cell": "CONFLICTING/DIRECT" },
+    "TGT-06": { "assessment_id": "ASMT-000006", "assessment_version": 1, "cell": "POSITIVE/DIRECT" },
+    "TGT-07": { "assessment_id": "ASMT-000007", "assessment_version": 1, "cell": "POSITIVE/WEAK" },
+    "TGT-08": "NOT_EVALUATED"
   },
   "decision_rule_ref": "external:gateset/ADC_TARGET_GATESET/decision_rule@v1",
   "review": { "status": "HUMAN_APPROVED", "reviewer": "human", "reviewed_at": "2026-08-27" }
 }
 ```
 
+`assessment_snapshot` 的每个 gate_id 值：要么是对象 `{assessment_id,
+assessment_version, cell}`，要么是字符串 `"NOT_EVALUATED"`（该 Gate 没有
+HUMAN_APPROVED Assessment）。`cell` 取值同 §4.1（含 `UNKNOWN` / `NOT_APPLICABLE`，
+**不含 `NOT_EVALUATED` 作为 cell**——那用字符串形式表示）。
+
 `decision` ∈ `GO` / `CONDITIONAL_GO` / `HOLD` / `MORE_EVIDENCE` / `KILL` /
-`NOMINATE` / `COMMIT`（对齐 Blueprint v1.3 §M06）。
+`NOMINATE` / `COMMIT`（对齐 Blueprint v1.3 §M06）。canonical `DEC-*.json`
+**固定 `review.status = HUMAN_APPROVED`**（proposal 不进 canonical）。
 
 ---
 
@@ -747,9 +869,13 @@ Candidate list + Gate Contract + Context
 
 ---
 
-## 19. 五类 canonical 文件（冻结，见 §0.3）
+## 19. 五类 primary product outputs（冻结，见 §0.3）
 
-以后不得再随意增加新的核心输出格式。新增须走本 spec 版本修订。
+Candidate CSV · Matrix CSV · CandidateGateAssessment JSON · EvidencePackage
+folder · Decision JSON。以后不得再随意增加新的 primary output 格式；新增须走
+本 spec 版本修订。`Context` / `Instantiation` / `gate_binding` /
+`gateset_binding` / `run_manifest` 是配置/绑定/施工层的 canonical record，
+不计入这五类，但同样受本 spec 的字段与 schema 约束。
 
 ---
 
@@ -806,7 +932,7 @@ Next Candidate Level
 | 对象 | 格式 | 例 |
 |---|---|---|
 | Candidate | `CAND-Lnn-nnnnnn`（`nn` = level 两位，`nnnnnn` = 6 位零填充序号） | `CAND-L04-000001` |
-| Context | `CTX-<UPPER-KEBAB>` | `CTX-CRC-REFRACTORY-MSSPMMR` |
+| Context | `CTX-<UPPER-KEBAB>`；目录内 `vNNN.yaml`（`context_version` int） | `CTX-CRC-REFRACTORY-MSSPMMR` / `v001.yaml` |
 | Instantiation | `INST-<UPPER-KEBAB>-v<N>` | `INST-CRC-REFRACTORY-ADC-TARGET-v1` |
 | GateSet | `<UPPER_SNAKE>_GATESET`；目录带版本 `<...>-v<N>` | `ADC_TARGET_GATESET` / `ADC_TARGET_GATESET-v1` |
 | Gate | 由 canonical GateSet 文档定义（如 `TGT-01`…`TGT-08`） | `TGT-04` |
@@ -828,13 +954,14 @@ per-Instantiation。
 | 对象 | schema |
 |---|---|
 | Candidate CSV 一行（identity 字段） | `candidate.schema.json` |
+| Context `15_CONTEXTS/CTX-*/vNNN.yaml` | `context.schema.yaml` |
 | CandidateGateAssessment | `assessment.schema.json` |
 | EvidencePackage `evidence.json` | `evidence_package.schema.json` |
 | Instantiation `instantiation.yaml` | `instantiation.schema.yaml` |
 | `gate_binding.yaml` / `gateset_binding.yaml` | `gate_binding.schema.yaml`（`oneOf` 两分支） |
 | `run_manifest.json` | `run_manifest.schema.json` |
 | Decision `DEC-*.json` | `decision.schema.json` |
-| 所有 CSV 的规范表头（Matrix / assessments-long / registry / index / run …） | `csv_headers.yaml`（logical name → 有序列名） |
+| 所有 CSV 的规范表头（Matrix / assessments-long / context_index / registry / index / run …） | `csv_headers.yaml`（logical name → 有序列名） |
 
 > **本仓库不存放任何 `.csv` 文件**（`scripts/verify_repository_boundary.sh`
 > 禁止 data-like 文件）。CSV 的规范定义在 `csv_headers.yaml`；`scaffold_data_layout.sh`
@@ -859,7 +986,9 @@ per-Instantiation。
 
 - 本 spec 走 `docs/protocols/` 的版本后缀约定（`.v1.0.md` / `.v1.1.md` /
   `.v2.0.md`），与 `ADCdb_Atlas_ADC_AIDD_design.v0.2.md` 一致。
-- §1 顶层目录形状、§0.2 四原则、§0.3 五类文件、附录 A ID 规范为**冻结项**，
+- §1 顶层目录形状、§0.2 四原则、§0.3 五类 primary product outputs、附录 A ID
+  规范、以及 EvidencePackage immutable-by-ID（§10.1）与版本引用链闭合（Decision
+  pin `assessment_version`，§17）为**冻结项**，
   修改须 `v2.0` + 专家审核。
 - 字段增删（不破坏既有）可在 `v1.x` 内进行，须同步更新 `src/contracts/
   data_layout/` 与本附录。

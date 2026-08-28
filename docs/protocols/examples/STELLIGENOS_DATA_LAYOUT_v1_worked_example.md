@@ -23,6 +23,11 @@ $STELLIGENOS_DATA/
 │   └── instantiation_registry.csv
 ├── 10_CANDIDATES/
 │   └── L04_ADC_TARGET.csv
+├── 15_CONTEXTS/
+│   ├── context_index.csv
+│   └── CTX-CRC-REFRACTORY-MSSPMMR/
+│       ├── v001.yaml
+│       └── latest.yaml            (byte-identical copy of v001.yaml)
 ├── 20_INSTANTIATIONS/
 │   └── INST-CRC-REFRACTORY-ADC-TARGET-v1/
 │       ├── instantiation.yaml
@@ -90,8 +95,8 @@ TGT-04,ADC_TARGET_GATESET,L04,Tumor Surface Availability / Density Plausibility,
 ## `00_REGISTRY/instantiation_registry.csv`
 
 ```csv
-instantiation_id,candidate_type,candidate_level,context_id,modality,gateset_id,gateset_version,evidence_regime,status,created_at
-INST-CRC-REFRACTORY-ADC-TARGET-v1,ADC_TARGET,L04,CTX-CRC-REFRACTORY-MSSPMMR,ADC,ADC_TARGET_GATESET,1.0,PUBLIC_ONLY,ACTIVE,2026-08-28
+instantiation_id,candidate_type,candidate_level,context_id,context_version,modality,gateset_id,gateset_version,evidence_regime,status,created_at
+INST-CRC-REFRACTORY-ADC-TARGET-v1,ADC_TARGET,L04,CTX-CRC-REFRACTORY-MSSPMMR,1,ADC,ADC_TARGET_GATESET,1.0,PUBLIC_ONLY,ACTIVE,2026-08-28
 ```
 
 ---
@@ -105,6 +110,35 @@ CAND-L04-000001,ADC_TARGET,L04,CEACAM5,,ACTIVE,1,2026-08-28,external:ADCdb/targe
 
 ---
 
+## `15_CONTEXTS/context_index.csv`
+
+```csv
+context_id,context_version,canonical_name,indication,status,created_at
+CTX-CRC-REFRACTORY-MSSPMMR,1,Refractory MSS/pMMR metastatic colorectal cancer >=3L,colorectal cancer,ACTIVE,2026-08-28
+```
+
+## `15_CONTEXTS/CTX-CRC-REFRACTORY-MSSPMMR/v001.yaml`  (and `latest.yaml`, byte-identical)
+
+```yaml
+context_id: CTX-CRC-REFRACTORY-MSSPMMR
+context_version: 1
+canonical_name: "Refractory MSS/pMMR metastatic colorectal cancer, >=3L"
+dimensions:
+  indication: colorectal cancer
+  disease_stage: metastatic
+  line_of_therapy: ">=3L"
+  molecular_subtype: MSS/pMMR
+  patient_territory: refractory
+  treatment_history: "prior fluoropyrimidine, oxaliplatin, irinotecan; +/- anti-EGFR; +/- anti-VEGF"
+  anatomical_site: null
+  model_or_system: human patient tissue
+status: ACTIVE
+created_at: 2026-08-28
+provenance_ref: external:guidelines/nccn-crc@2026
+```
+
+---
+
 ## `20_INSTANTIATIONS/INST-CRC-REFRACTORY-ADC-TARGET-v1/instantiation.yaml`
 
 ```yaml
@@ -112,6 +146,7 @@ instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v1
 candidate_type: ADC_TARGET
 candidate_level: L04
 context_id: CTX-CRC-REFRACTORY-MSSPMMR
+context_version: 1
 modality: ADC
 gateset_id: ADC_TARGET_GATESET
 gateset_version: "1.0"
@@ -132,15 +167,18 @@ CAND-L04-000001,CEACAM5,2026-08-28,reference example
 
 ```csv
 candidate_id,name,TGT-01,TGT-02,TGT-03,TGT-04,TGT-05,TGT-06,TGT-07,TGT-08,decision
-CAND-L04-000001,CEACAM5,—,—,—,POSITIVE/INDIRECT_STRONG,—,—,—,—,MORE_EVIDENCE
+CAND-L04-000001,CEACAM5,NOT_EVALUATED,NOT_EVALUATED,NOT_EVALUATED,POSITIVE/INDIRECT_STRONG,NOT_EVALUATED,NOT_EVALUATED,NOT_EVALUATED,NOT_EVALUATED,MORE_EVIDENCE
 ```
 
 ## `.../MATRICES/L04_ADC_TARGET.assessments.csv`
 
 ```csv
 candidate_id,gate_id,direction,strength,assessment_id,assessment_version,evidence_count,review_status,last_updated_at
-CAND-L04-000001,TGT-04,POSITIVE,INDIRECT_STRONG,ASMT-000001,1,2,HUMAN_APPROVED,2026-08-28
+CAND-L04-000001,TGT-04,POSITIVE,INDIRECT_STRONG,ASMT-000001,1,1,HUMAN_APPROVED,2026-08-28
 ```
+
+> Only `TGT-04` has a `HUMAN_APPROVED` Assessment, so it is the only row. The
+> other seven gates are `NOT_EVALUATED` in the Matrix and simply absent here.
 
 ## `.../DECISIONS/decisions.csv`
 
@@ -163,13 +201,19 @@ DEC-0001,CAND-L04-000001,ADC_TARGET_GATESET,1.0,MORE_EVIDENCE,TGT-04,HUMAN_APPRO
     {
       "gate_id": "TGT-04",
       "assessment_id": "ASMT-000001",
+      "assessment_version": 1,
       "reason": "surface availability supported but quantitative antigen density is EXPERIMENT_REQUIRED"
     }
   ],
   "assessment_snapshot": {
-    "TGT-01": "UNKNOWN", "TGT-02": "UNKNOWN", "TGT-03": "UNKNOWN",
-    "TGT-04": "POSITIVE/INDIRECT_STRONG", "TGT-05": "UNKNOWN", "TGT-06": "UNKNOWN",
-    "TGT-07": "UNKNOWN", "TGT-08": "UNKNOWN"
+    "TGT-01": "NOT_EVALUATED",
+    "TGT-02": "NOT_EVALUATED",
+    "TGT-03": "NOT_EVALUATED",
+    "TGT-04": { "assessment_id": "ASMT-000001", "assessment_version": 1, "cell": "POSITIVE/INDIRECT_STRONG" },
+    "TGT-05": "NOT_EVALUATED",
+    "TGT-06": "NOT_EVALUATED",
+    "TGT-07": "NOT_EVALUATED",
+    "TGT-08": "NOT_EVALUATED"
   },
   "decision_rule_ref": "external:gateset/ADC_TARGET_GATESET/decision_rule@v1",
   "review": { "status": "HUMAN_APPROVED", "reviewer": "human", "reviewed_at": "2026-08-28" }
@@ -219,7 +263,7 @@ primary_module_version: "0.1.0"
 
 ```csv
 candidate_id,gate_id,direction,strength,assessment_id,assessment_version,evidence_count,review_status,last_updated_at
-CAND-L04-000001,TGT-04,POSITIVE,INDIRECT_STRONG,ASMT-000001,1,2,HUMAN_APPROVED,2026-08-28
+CAND-L04-000001,TGT-04,POSITIVE,INDIRECT_STRONG,ASMT-000001,1,1,HUMAN_APPROVED,2026-08-28
 ```
 
 ## `.../TGT-04/CURRENT/evidence_index.csv`
@@ -227,7 +271,6 @@ CAND-L04-000001,TGT-04,POSITIVE,INDIRECT_STRONG,ASMT-000001,1,2,HUMAN_APPROVED,2
 ```csv
 evidence_id,candidate_id,role,assessment_id
 EP-00000123,CAND-L04-000001,SUPPORTING,ASMT-000001
-EP-00000131,CAND-L04-000001,CONTRADICTING,ASMT-000001
 ```
 
 ## `.../TGT-04/CURRENT/unknowns.csv`
@@ -246,6 +289,7 @@ CAND-L04-000001,TGT-04,ASMT-000001,Quantitative surface antigen density in refra
   "instantiation_id": "INST-CRC-REFRACTORY-ADC-TARGET-v1",
   "candidate_id": "CAND-L04-000001",
   "context_id": "CTX-CRC-REFRACTORY-MSSPMMR",
+  "context_version": 1,
   "gateset_id": "ADC_TARGET_GATESET",
   "gateset_version": "1.0",
   "gate_id": "TGT-04",
@@ -253,17 +297,21 @@ CAND-L04-000001,TGT-04,ASMT-000001,Quantitative surface antigen density in refra
   "direction": "POSITIVE",
   "strength": "INDIRECT_STRONG",
   "evidence_refs": [
-    { "evidence_id": "EP-00000123", "role": "SUPPORTING" },
-    { "evidence_id": "EP-00000131", "role": "CONTRADICTING" }
+    { "evidence_id": "EP-00000123", "role": "SUPPORTING" }
   ],
-  "aggregation_rationale": "Multiple protein-level datasets support surface availability, but no direct quantitative antigen-density measurement exists in refractory mCRC.",
+  "aggregation_rationale": "Concordant tumor IHC and surface-proteomics datasets support membrane-localized CEACAM5 availability in CRC; no direct quantitative antigen-density measurement exists in refractory mCRC.",
   "critical_unknowns": [
     { "unknown": "Quantitative surface antigen density in refractory mCRC", "resolution": "EXPERIMENT_REQUIRED" }
   ],
   "evidence_ceiling": "Current evidence supports surface availability but not quantitative antigen density.",
-  "review": { "status": "HUMAN_APPROVED", "reviewer": "human", "reviewed_at": "2026-08-28" }
+  "review": { "status": "HUMAN_APPROVED", "reviewer": "human", "reviewed_at": "2026-08-27" }
 }
 ```
+
+> `critical_unknowns` carries "no quantitative density data" as
+> `EXPERIMENT_REQUIRED`. It is **not** modelled as a `CONTRADICTING`
+> EvidencePackage — absence of evidence is not negative evidence
+> (spec sec.8.3 / sec.10.2).
 
 ## `.../TGT-04/RUNS/RUN-TGT04-20260827-001/run_manifest.json`
 
@@ -295,14 +343,13 @@ CAND-L04-000001,CEACAM5
 ```csv
 evidence_id,candidate_id,source_id,claim_short,created_at
 EP-00000123,CAND-L04-000001,SRC-00000881,membranous IHC staining in CRC tumors,2026-08-27
-EP-00000131,CAND-L04-000001,SRC-00000902,no quantitative antigen density in refractory mCRC,2026-08-27
 ```
 
 ## `.../RUN-TGT04-20260827-001/assessment_proposals.csv`
 
 ```csv
 candidate_id,gate_id,proposed_direction,proposed_strength,evidence_count,proposal_rationale,qc_status
-CAND-L04-000001,TGT-04,POSITIVE,INDIRECT_STRONG,2,"protein-level surface support; density unknown",QC_PASSED
+CAND-L04-000001,TGT-04,POSITIVE,INDIRECT_STRONG,1,"protein-level surface support; density unknown -> EXPERIMENT_REQUIRED",QC_PASSED
 ```
 
 ## `.../RUN-TGT04-20260827-001/qc_report.json`
@@ -313,7 +360,7 @@ CAND-L04-000001,TGT-04,POSITIVE,INDIRECT_STRONG,2,"protein-level surface support
   "checks": [
     { "check": "evidence_measurement_class_within_boundary", "status": "PASS" },
     { "check": "no_grade_on_evidence_package", "status": "PASS" },
-    { "check": "conflict_direction_flagged", "status": "PASS" }
+    { "check": "absence_of_evidence_not_modelled_as_contradicting", "status": "PASS" }
   ],
   "overall": "PASS"
 }
@@ -331,9 +378,8 @@ CAND-L04-000001,TGT-04,POSITIVE,INDIRECT_STRONG,2,"protein-level surface support
 ## `30_EVIDENCE_LIBRARY/evidence_index.csv`
 
 ```csv
-evidence_id,version,claim_short,measurement_type,primary_source_id,candidate_refs,created_at,status
-EP-00000123,1,"CEACAM5 protein on malignant epithelial membranes",IHC,SRC-00000881,CAND-L04-000001,2026-08-27,ACTIVE
-EP-00000131,1,"no quantitative CEACAM5 antigen density in refractory mCRC",review,SRC-00000902,CAND-L04-000001,2026-08-27,ACTIVE
+evidence_id,schema_version,claim_short,measurement_type,primary_source_id,candidate_refs,created_at,status,superseded_by
+EP-00000123,1,"CEACAM5 protein on malignant epithelial membranes",IHC,SRC-00000881,CAND-L04-000001,2026-08-27,ACTIVE,
 ```
 
 ## `30_EVIDENCE_LIBRARY/source_index.csv`
@@ -341,7 +387,6 @@ EP-00000131,1,"no quantitative CEACAM5 antigen density in refractory mCRC",revie
 ```csv
 source_id,source_type,external_id,title,year,external_ref
 SRC-00000881,PMID,12345678,"Example CEACAM5 IHC cohort study",2025,external:pmid/12345678
-SRC-00000902,PMID,23456789,"Example review of ADC target antigen density",2024,external:pmid/23456789
 ```
 
 ## `30_EVIDENCE_LIBRARY/PACKAGES/EP-00000123/evidence.json`
@@ -349,7 +394,7 @@ SRC-00000902,PMID,23456789,"Example review of ADC target antigen density",2024,e
 ```json
 {
   "evidence_id": "EP-00000123",
-  "version": 1,
+  "schema_version": 1,
   "claim": "CEACAM5 protein was detected on malignant epithelial cell membranes in a colorectal cancer cohort.",
   "measurement": {
     "type": "IHC",
@@ -384,11 +429,13 @@ SRC-00000902,PMID,23456789,"Example review of ADC target antigen density",2024,e
 }
 ```
 
-> Note: `evidence.json` carries **no** `direction` / `strength` / `grade`. The
-> `POSITIVE / INDIRECT_STRONG` verdict is produced only in the Assessment above,
-> where `EP-00000123` has role `SUPPORTING` and `EP-00000131` has role
-> `CONTRADICTING`. The same `EP-00000123` could carry a different role in a
-> `TGT-01` assessment.
+> `evidence.json` carries **no** `direction` / `strength` / `grade`. It is
+> **immutable-by-ID**: a correction would create `EP-00000124` and set
+> `EP-00000123.superseded_by = "EP-00000124"`, not edit this file. `schema_version`
+> tracks only the JSON structure, not content revisions. The `POSITIVE /
+> INDIRECT_STRONG` verdict is produced only in the Assessment above, where
+> `EP-00000123` has role `SUPPORTING`; the same EP could carry a different role
+> in a `TGT-01` assessment.
 
 ## `30_EVIDENCE_LIBRARY/PACKAGES/EP-00000123/summary.md`
 

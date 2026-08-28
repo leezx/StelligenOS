@@ -94,7 +94,79 @@ Decision / Module run 在**仓库外部工作区**的固定磁盘布局。
 3. runtime migration PR A–E（CURRENT_SYSTEM v5 §16 B 组问题 23）以本 spec 为
    物理层依据推进——需 Owner 单独授权。
 
-## 七、数据边界声明
+## 七、REQUEST_CHANGES 第一轮修订（2026-08-28，同一 PR #96）
+
+ChatGPT 在 `Biotech ideas → AI审核方案` 对话对 `fad39ac` 返回
+`REQUEST_CHANGES`（方向正确、目录主体不动，只修 contract/provenance/state-safety
+问题）。已按 6 点修改，仍 docs+schema+脚本、未启动 runtime migration：
+
+1. **Context 有了 canonical 物理落点。** 新增顶层 `15_CONTEXTS/`（`context_index.csv`
+   + `CTX-*/vNNN.yaml` canonical + `latest.yaml` 副本），新增 §2b。Instantiation
+   与 Assessment 增加 `context_version`（pin 到具体 `vNNN.yaml`）。新增
+   `src/contracts/data_layout/context.schema.yaml`。`csv_headers.yaml` 增
+   `context_index`，`registry_instantiation` 增 `context_version`。"5 类
+   canonical 文件" 改称 "5 类 primary product outputs"，并列出 Context /
+   Instantiation / gate_binding / gateset_binding / run_manifest 也是 canonical
+   record（配置/绑定/施工层）。
+2. **版本引用链闭合。** EvidencePackage 定为 **immutable-by-ID**（被引用后
+   内容永不原地改，纠错→新 EP + `superseded_by`），`evidence.json` 的 `version`
+   → `schema_version`（仅结构版本）。Decision 的 `assessment_snapshot` 从
+   `{gate: "cell"}` 改为 `{gate: {assessment_id, assessment_version, cell}}`
+   或字符串 `"NOT_EVALUATED"`；`triggered_by` 增 `assessment_version`。新增
+   §10.1 / §17 规则，列为冻结项。
+3. **Assessment schema 真正 enforce 状态铁律。** §8.2 新增 direction×strength
+   组合表：`POSITIVE`/`NEGATIVE` 禁 `UNKNOWN` 且需 ≥1 evidence_ref；
+   `CONFLICTING` 用 `contains`/`minContains` 强制 ≥1 `SUPPORTING` + ≥1
+   `CONTRADICTING`，两个 `key_*` 数组非空；`INCONCLUSIVE` 有证据则带 strength
+   （`INCONCLUSIVE/DIRECT` 等，不丢信息），无证据 = `UNKNOWN` 固定
+   serialization；`NOT_APPLICABLE` 单列。canonical Assessment / Decision JSON
+   的 `review.status` 固定 `HUMAN_APPROVED`（`const`），proposal 只在 `RUNS/`。
+4. **Candidate schema 机器禁止评估字段。** `candidate.schema.json` 的 `not.anyOf`
+   现禁止 `context_id` / `context_version` / `direction` / `strength` /
+   `decision` / `score` / `assessment_id` / `evidence_refs` / `gate_id` /
+   `gateset_id`（Level-specific 生物字段仍允许）。`csv_headers.yaml` 增
+   `gate_current_assessments`（列同 `assessments_long`，作用域为单 Gate），
+   §5/§7 注明二者列相同。
+5. **scaffold 脚本 boundary 检查顺序修复。** 现先用 python 走到最近存在的祖先
+   并 `realpath`（跟随 symlink）解析目标 → 判断是否在 repo 内 → **通过后才
+   `mkdir`**。repo 内目标（含不存在的路径、含 external symlink 指回 repo）一律
+   拒绝且不创建任何目录。新增回归测试 `tests/test_scaffold_data_layout.sh`
+   （A 拒绝 repo 内不存在路径且不创建 / B 拒绝 symlink 逃逸 / C 外部只写表头行
+   / D 拒绝坏 instantiation_id / E 幂等 / F 只写到外部）。**未能接入
+   `.github/workflows/ci.yml`**：本会话的 gh OAuth token 缺 `workflow` scope，
+   push 含 workflow 改动的 commit 被 GitHub 拒绝。已回退 `ci.yml`；负责人（有
+   `workflow` scope）加一行 `bash tests/test_scaffold_data_layout.sh` 即可。
+   本地与本轮验证均已运行该测试。
+6. **worked example 修正两处科学语义。** (a) 删除 "没有定量密度数据" 的
+   `CONTRADICTING` EP（`EP-00000131` / `SRC-00000902`），该缺口只进
+   `critical_unknowns: EXPERIMENT_REQUIRED`；TGT-04 assessment 现只有 1 条
+   `SUPPORTING` EP，`evidence_count=1`；新增 §10.2 "absence of evidence ≠
+   contradicting evidence"。(b) Matrix 未评估 Gate 与 Decision `assessment_snapshot`
+   一致使用显式机器值 `NOT_EVALUATED`，不再用 em dash。
+
+治理措辞：PR body 的 `NO_ARCHITECTURE_CHANGE` → `NO_CORE_ARCHITECTURE_CHANGE /
+NEW_DATA_LAYOUT_CONTRACT`（v5 决策架构未变，但新增并冻结一套 physical data
+architecture）。
+
+**改动文件（本轮）：** `docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md`、
+`docs/protocols/examples/STELLIGENOS_DATA_LAYOUT_v1_worked_example.md`、
+`src/contracts/data_layout/`（+`context.schema.yaml`）、
+`scripts/scaffold_data_layout.sh`、`tests/test_scaffold_data_layout.sh`（新）、
+本 handoff、worklog。（`ci.yml` 因 token 缺 `workflow` scope 未改，见上。）
+
+**验证（本轮）：** unittest 555 OK；`test_git_sync` A-D；
+`test_scaffold_data_layout` A-F；`git diff --check` clean；干净 tracked-tree
+worktree 上 `verify_repository_boundary` passed + scaffold test + unittest 全过；
+7 schema + `context.schema.yaml` + `csv_headers.yaml` 结构合法；worked example
++ csv_headers 手写不变量检查全过（em dash 不在 csv/json block、snapshot pin
+`assessment_version`、EP 用 `schema_version` 且无 grade、canonical `HUMAN_APPROVED`、
+candidate header 无评估列、matrix 非数字且 decision=MORE_EVIDENCE、7 个
+`NOT_EVALUATED`）。
+
+**GitHub connector：** 审核方再次尝试写 PR #96 的 `APPROVE` review，仍
+`403 Resource not accessible by integration`，未写回 GitHub。
+
+## 八、数据边界声明
 
 本仓库只保存本 spec、`src/contracts/data_layout/` 下的 schema 与 `csv_headers.yaml`、
 单文档 worked example、以及 scaffold 脚本，均为治理文本 / 参考文档 / 脚本。

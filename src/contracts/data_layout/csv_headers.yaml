@@ -19,6 +19,10 @@ headers:
     [candidate_id, candidate_type, level, canonical_name, parent_candidate_id,
      status, version, created_at, provenance_ref]
 
+  # --- 15_CONTEXTS/context_index.csv ---
+  context_index:
+    [context_id, context_version, canonical_name, indication, status, created_at]
+
   # --- 20_INSTANTIATIONS/<inst>/candidates.csv ---
   instantiation_candidates:
     [candidate_id, canonical_name, admitted_at, admission_note]
@@ -32,6 +36,12 @@ headers:
 
   # --- 20_INSTANTIATIONS/<inst>/MATRICES/Lnn_*.assessments.csv (long, machine-friendly) ---
   assessments_long:
+    [candidate_id, gate_id, direction, strength, assessment_id,
+     assessment_version, evidence_count, review_status, last_updated_at]
+
+  # --- TGT-NN/CURRENT/assessments.csv (same columns as assessments_long,
+  #     scoped to one Gate instead of the whole GateSet; spec sec.5 / sec.7) ---
+  gate_current_assessments:
     [candidate_id, gate_id, direction, strength, assessment_id,
      assessment_version, evidence_count, review_status, last_updated_at]
 
@@ -80,13 +90,14 @@ headers:
 
   # --- 00_REGISTRY/instantiation_registry.csv ---
   registry_instantiation:
-    [instantiation_id, candidate_type, candidate_level, context_id, modality,
-     gateset_id, gateset_version, evidence_regime, status, created_at]
+    [instantiation_id, candidate_type, candidate_level, context_id,
+     context_version, modality, gateset_id, gateset_version, evidence_regime,
+     status, created_at]
 
   # --- 30_EVIDENCE_LIBRARY/evidence_index.csv ---
   library_evidence_index:
-    [evidence_id, version, claim_short, measurement_type, primary_source_id,
-     candidate_refs, created_at, status]
+    [evidence_id, schema_version, claim_short, measurement_type,
+     primary_source_id, candidate_refs, created_at, status, superseded_by]
 
   # --- 30_EVIDENCE_LIBRARY/source_index.csv ---
   library_source_index:
