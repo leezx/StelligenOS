@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_b
-status: pending_review
+status: approved
 scope: canonical_gate_gateset_evidence_ladder_and_decision_contracts
 repository_boundary: software_only_external_data
 data_added: false
@@ -22,12 +22,15 @@ delivers:
   - legacy 45-gate -> canonical GateSet migration reference
 defers:
   concrete_evidence_ladders: PR D
-  concrete_gateset_CRC_ADC_TARGET_GATESET_v1: PR D
+  crc_adc_target_specialization_of_ADC_TARGET_GATESET: PR D
   matrix_and_reusable_evidence_references: PR C
   per_gate_primary_modules: "PR E+"
   decision_engine: not_in_this_repo
-chatgpt_review: PENDING
-approved_tip: null
+chatgpt_review: APPROVE
+approved_tip: 51bfadb
+review_record: logs/chatgpt-review-2026-08-28-runtime-migration-pr-b.md
+review_rounds: 2
+test_count_at_approval: 658
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_gate_model.py' -v
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_phase3_gate_contracts.py' -v
