@@ -1,0 +1,45 @@
+phase: runtime_migration_pr_b
+status: pending_review
+scope: canonical_gate_gateset_evidence_ladder_and_decision_contracts
+repository_boundary: software_only_external_data
+data_added: false
+persistence_added: false
+runtime_business_logic_added: false
+decision_engine_added: false
+new_dependency_added: false
+touches_gate_system_yaml: false
+touches_capabilities_gates_py: false
+touches_pr_a_contracts: false
+spec_refs:
+  - docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md (section 6.1-6.4; section 16 B group question 19)
+  - docs/architecture/contract.zh-CN.md (section 3.4.1)
+  - docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md (section 6, section 17)
+delivers:
+  - Gate@0.1.0
+  - GateSet@0.1.0
+  - EvidenceLadder@0.1.0
+  - Decision@0.1.0
+  - legacy 45-gate -> canonical GateSet migration reference
+defers:
+  concrete_evidence_ladders: PR D
+  concrete_gateset_CRC_ADC_TARGET_GATESET_v1: PR D
+  matrix_and_reusable_evidence_references: PR C
+  per_gate_primary_modules: "PR E+"
+  decision_engine: not_in_this_repo
+chatgpt_review: PENDING
+approved_tip: null
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_gate_model.py' -v
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_phase3_gate_contracts.py' -v
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py'
+  - bash scripts/verify_repository_boundary.sh
+  - git diff --check
+artifacts:
+  - src/contracts/gate_contracts.yaml
+  - src/objects/gate_model.py
+  - src/objects/legacy_gate_map.py
+  - src/objects/__init__.py
+  - src/objects/README.md
+  - src/contracts/README.md
+  - tests/test_gate_model.py
+  - manifests/runtime_migration_pr_b_manifest.yaml

@@ -3944,3 +3944,84 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   boundary 不受影响（`logs/` `docs/` `manifests/` 均 allowlisted）。
 - Next: 推送、开 PR、CI 绿后合并；随后开始 PR B（用户已在授权 PR A–D 时一并
   授权逐一推进）。
+
+## 2026-08-28T22:00 EDT — Runtime Migration PR B：canonical Gate / GateSet / EvidenceLadder / Decision
+
+- 分支 `task_20260828_runtime-migration-pr-b`，基线 `7555f8e`。3 个决策均取
+  推荐项：Decision policy 只定义对象与声明形状（无 engine）；Evidence Ladder
+  只定义形状（无具体 ladder，属 PR D）；不新增 Gate 输出 envelope（复用 PR A
+  的 `CandidateGateAssessment`）。
+- 交付：
+  - `src/contracts/gate_contracts.yaml` —— `Gate@0.1.0` / `GateSet@0.1.0` /
+    `EvidenceLadder@0.1.0` / `Decision@0.1.0` 声明式 registry；`two_rule_layers`；
+    `vocabularies`（`DECISION_VALUES` 7 / `DOMINANT_EVIDENCE_REGIMES` 4 /
+    `LADDER_GRADES` 3 / cell 正则 / 15 个 `canonical_gateset_ids`）；
+    `legacy_gatechain_crosswalk`（v5 §6.3，3 chain）；`legacy_gate_system`
+    `FROZEN_LEGACY`；`migration.parity`（Decision=exact，Gate/GateSet=consistency）
+    + `migration.deferred`（concrete ladders / CRC-ADC-TARGET-GATESET-v1 → PR D，
+    Matrix → PR C，逐 Gate Module → PR E+，decision engine = not in repo）。
+  - `src/objects/gate_model.py` —— frozen dataclasses，**复用 PR A
+    `decision_model.py` 的 `_deep_freeze` / `_check_block` / `_require_*` / ID
+    正则**（不分叉校验方式）。`LadderRung` / `EvidenceLadder`（rung 恰好
+    DIRECT/INDIRECT_STRONG/WEAK 且顺序强制）、`Gate`（`_GATESET`/`MOD-` pattern、
+    regime enum、无 `score` 字段）、`GateSetMember` / `GateSet`（≥1 gate、4 个
+    `*_ref` 均 `external:`、无 inline policy body）、`TriggeredBy` / `Decision`
+    （与 `decision.schema.json` exact parity；`assessment_snapshot` 值 =
+    `"NOT_EVALUATED"` | closed `{assessment_id, assessment_version, cell}`；
+    `review` closed + `HUMAN_APPROVED`；forbid forward `superseded_by`；
+    deep-frozen）。`CANONICAL_GATESET_IDS`（`MappingProxyType`，import 期自检
+    覆盖 L00–L14）。
+  - `src/objects/legacy_gate_map.py` —— `LEGACY_GATE_SYSTEM`（45 /
+    `FROZEN_LEGACY`）+ `LEGACY_GATECHAIN_CROSSWALK`（`MappingProxyType`）；
+    import 期自检与 `src.capabilities.gates` 的 `GATE_GROUPS` / `GATE_IDS` /
+    `GATE_CATALOG` 分组计数（13/16/16）一致。不 import/不改 `gate_system.yaml`
+    或 `gates.py`。
+  - `tests/test_gate_model.py`（37 tests）：contract shape / registry↔Python
+    parity / **Decision exact parity vs decision.schema.json** / Gate·GateSet
+    consistency vs gate_binding.schema.yaml / 逐对象 accept-reject / deep
+    immutability / **legacy 45-Gate 拓扑 + `GateModelOutput` 未动** /
+    canonical gateset ids。
+  - `manifests/runtime_migration_pr_b_manifest.yaml`、`src/objects/README.md`、
+    `src/contracts/README.md`、handoff、worklog。
+- 明确未改：`gate_system.yaml` / `src/capabilities/gates.py`（`FROZEN_LEGACY`）、
+  PR A 的 `decision_objects.yaml` / `decision_model.py` / `legacy_adapters.py`
+  （只 import，不改）、`data_layout/*.schema.*`、`docs/architecture/*`、既有测试。
+  无 decision engine、无具体 GateSet/ladder（PR D）、无 Matrix（PR C）、无新依赖。
+  `MIGRATION_PENDING` 未解除。用户自有 untracked 文件未暂存。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 646 OK
+  （609 + 37）/ `git diff --check` clean / 干净 tracked-tree worktree
+  `verify_repository_boundary` passed / `gate_contracts.yaml` 结构合法 / CI 待绿。
+- Next: 提交、推送、开 PR #100，走 ChatGPT `AI审核方案` 审核。
+
+## 2026-08-28T23:20 EDT — Runtime Migration PR B REQUEST_CHANGES 第一轮修订（同一 PR #100）
+
+- Review input: ChatGPT `AI审核方案` 对 PR #100 @ `6ff2420` 返回
+  `REQUEST_CHANGES`：架构方向 / scope 正确；3 个 runtime-contract blocker 一轮
+  关闭，不碰冻结文档、不做 engine、不提前进 PR C/D。
+- fix 1（canonical GateSet identity + member 唯一 + CRC specialization 表述）：
+  新增 `_require_canonical_gateset()`，在 `Gate` / `GateSet` / `Decision` 三处
+  强制 `gateset_id == CANONICAL_GATESET_IDS[level]`（Decision 从 `candidate_id`
+  解析 level）；`GateSet` 增 member `gate_id` 唯一性；`gate_contracts.yaml`
+  `concrete_gateset_CRC_ADC_TARGET_GATESET_v1` →
+  `crc_adc_target_specialization_of_ADC_TARGET_GATESET`（明确不是新 gateset_id），
+  新增 `gateset_identity` 块 + invariants。
+- fix 2（Decision `triggered_by` ↔ `assessment_snapshot` 一致性）：
+  `Decision.__post_init__` 要求每个 `TriggeredBy` 的 gate 在 snapshot 中被
+  pin、非 `NOT_EVALUATED`、`assessment_id` / `assessment_version` 一致；不要求
+  snapshot 每个 gate 都在 triggered_by。
+- fix 3（"exact parity" 措辞不真实 → 真实关系）：改为
+  `schema_shape_exact_runtime_semantics_stricter` /「runtime-valid ⊂
+  schema-valid」，规则明确「runtime 不得接受 frozen schema 因 intrinsic
+  shape/type/enum 拒绝的东西，但可额外施加 cross-field/domain invariant」。
+  改 `gate_contracts.yaml` `migration.parity.Decision` + `Decision.parity`、
+  `gate_model.py` docstring/注释。
+- 非 blocker 顺手：handoff "不 import gates.py" → "只读 import，不修改"；
+  `LadderRung.admissible_evidence_classes` 每个 class 非空。
+- 改动文件：`src/contracts/gate_contracts.yaml`、`src/objects/gate_model.py`、
+  `tests/test_gate_model.py`（49 tests，+12）、handoff、worklog。未改
+  `legacy_gate_map.py` / manifest / PR A / 冻结文档 / `gate_system.yaml` /
+  `gates.py`。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 658 OK
+  （609 + 49）/ `git diff --check` clean / 干净 tracked-tree worktree boundary
+  passed / `gate_contracts.yaml` 合法 / CI 待绿。connector 写 review 仍 403。
+- Next: 提交、推送、回复同一 ChatGPT 对话请求复审（预期本轮 APPROVE）。
