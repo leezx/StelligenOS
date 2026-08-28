@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_a
-status: pending_review
+status: approved
 scope: core_decision_objects_and_legacy_core_object_adapters
 repository_boundary: software_only_external_data
 data_added: false
@@ -25,8 +25,11 @@ defers:
   matrix_and_reusable_evidence_references: PR C
   crc_adc_target_gateset_v1: PR D
   per_gate_primary_modules: "PR E+"
-chatgpt_review: PENDING
-approved_tip: null
+chatgpt_review: APPROVE
+approved_tip: f225e9f
+review_record: logs/chatgpt-review-2026-08-28-runtime-migration-pr-a.md
+review_rounds: 2
+test_count_at_approval: 609
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_decision_model.py' -v
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_phase2_contracts.py' -v
