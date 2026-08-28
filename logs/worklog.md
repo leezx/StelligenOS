@@ -3912,3 +3912,35 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   passed / 9 schema + `decision_objects.yaml` 合法 / CI 待绿。connector 写 review
   仍 403。
 - Next: 提交、推送、回复同一 ChatGPT 对话请求复审（预期本轮 APPROVE）。
+
+## 2026-08-28T21:00 EDT — PR #98 APPROVE + merge；PR A 审核记录补登（独立 docs-only PR）
+
+- Review input: ChatGPT `AI审核方案` 对 PR #98 @ `f225e9f` 返回 **APPROVE**
+  （"可以 merge"）。3 个 blocker 实质关闭且未引入新 runtime/architecture
+  blocker。审核方确认：deep immutability（fresh-copy + MappingProxyType，
+  validation 前 freeze）；nested schema parity（closed block allowed-key ==
+  schema properties + reject 路径，"executable mirror 而非第二套 spec"）；
+  missing candidate types（12 个补全，与 L04/L06/L13 合并覆盖 L00–L14）。
+- PR #98 已合并：merge 提交 `cbab012`。`decision_objects.yaml` +
+  `decision_model.py` + `legacy_adapters.py` + `tests/test_decision_model.py`
+  （54 tests）+ manifest 全部进 main。
+- 新分支 `task_20260828_runtime-migration-pr-a-approval-record`（docs-only，
+  基线 `cbab012`）：
+  - 新增 `logs/chatgpt-review-2026-08-28-runtime-migration-pr-a.md`（两轮历史、
+    3 点关闭方式、APPROVE @ `f225e9f`、connector 两次 403、边界与进度状态）。
+  - 修 `docs/handoff/2026-08-28-runtime-migration-pr-a.zh-CN.md` 首版遗留的
+    `38 tests / 593` → `54 / 609`（审核方点名的唯一非 blocker），§三补 8/9/10
+    三组测试说明。
+  - `manifests/runtime_migration_pr_a_manifest.yaml`：`status: pending_review`
+    → `approved`；`chatgpt_review: APPROVE`；`approved_tip: f225e9f`；加
+    `review_record` / `review_rounds` / `test_count_at_approval`。
+- 按 PR #95/#97 先例：审核记录 + 收尾文字修正走独立 PR，不落在被批准的 PR
+  branch 上。本 PR 不改 PR A 的 runtime 合同或测试逻辑。
+- 进度：Blueprint v1.3 / CURRENT_SYSTEM v5 / Data Layout Spec v1.0 冻结；
+  Runtime Migration **PR A 已合并**。下一步 **PR B**（canonical Gate / GateSet
+  + Evidence Ladder + 第六个对象 Decision + assessment_rule / decision policy；
+  旧 45-Gate 保持 FROZEN_LEGACY）。`MIGRATION_PENDING` 到 PR E 前不解除。
+- 验证：仅新增 1 `logs/*.md` + 改 2 个 doc/manifest；`git diff --check` clean；
+  boundary 不受影响（`logs/` `docs/` `manifests/` 均 allowlisted）。
+- Next: 推送、开 PR、CI 绿后合并；随后开始 PR B（用户已在授权 PR A–D 时一并
+  授权逐一推进）。

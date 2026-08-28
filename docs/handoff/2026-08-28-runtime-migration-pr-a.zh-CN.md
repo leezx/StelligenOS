@@ -33,11 +33,11 @@
 | `src/objects/decision_model.py`（新） | frozen `@dataclass` + `__post_init__` 校验，遵循 repo 既有 `src/contracts/*.py` 风格（`Final` 词表元组、`external:` ref 校验、无 persistence / 无执行）。词表：`DIRECTION_VALUES` / `STRENGTH_VALUES` / `GRADED_STRENGTHS` / `EVIDENCE_ROLE_VALUES` / `CANDIDATE_LEVELS` / `CANDIDATE_STATUS_VALUES` / `CONTEXT_STATUS_VALUES` / `INSTANTIATION_STATUS_VALUES` / `EVIDENCE_REGIME_VALUES` / `CRITICAL_UNKNOWN_RESOLUTIONS` / `SOURCE_TYPE_VALUES` / `CANONICAL_REVIEW_STATUS`。ID 正则与 data_layout schema 逐字一致。`CANDIDATE_/CONTEXT_/EVIDENCE_PACKAGE_/ASSESSMENT_/INSTANTIATION_FORBIDDEN_FIELDS` 对应各 schema `not.anyOf`。 |
 | `src/objects/legacy_adapters.py`（新） | `LegacyCrosswalkEntry` + `LEGACY_CROSSWALK`（覆盖全部 8 `CORE_OBJECT_TYPES`，import 期自检一致性）。`adapt_core_object_to_candidate(core_object, *, candidate_id, canonical_name, created_at, provenance_ref, ...)`：3 个 1:1 类型返回 `Candidate`；composite / wrapper / non_candidate raise `NotImplementedError` 并附 crosswalk target 与 §3.4.3 指引。 |
 | `src/objects/__init__.py`（改） | 追加 export 新符号；legacy `CORE_OBJECT_TYPES` / `CoreObject` export 不变。 |
-| `tests/test_decision_model.py`（新，38 tests） | 见 §三。 |
+| `tests/test_decision_model.py`（新，54 tests；首版 38 + REQUEST_CHANGES 第一轮 +16） | 见 §三。 |
 | `manifests/runtime_migration_pr_a_manifest.yaml`（新） | 按 `phase_2_manifest.yaml` 格式：scope、boundary 声明、`chatgpt_review: PENDING`、`approved_tip: null`、test 命令、artifact 清单。 |
 | `src/objects/README.md` / `src/contracts/README.md`（改） | 说明 `core.py` = legacy registry、`decision_model.py` = PR A 六对象、`Decision` → PR B、`legacy_adapters.py` 的映射。 |
 
-## 三、测试（`tests/test_decision_model.py`，38 tests）
+## 三、测试（`tests/test_decision_model.py`，54 tests）
 
 1. **contract YAML shape** —— version、合同集合、`migration.deferred`、"不触碰
    legacy `core_objects.yaml`"。
@@ -64,6 +64,19 @@
    `level` 正确；`adapt_core_object_to_candidate` 对 3 个 1:1 返回 `Candidate`、
    对 5 个 composite/wrapper raise `NotImplementedError`；disposition 与 contract
    prose 一致。
+8. **deep immutability**（REQUEST_CHANGES 第一轮）—— 外部原 dict 构造后
+   mutation 不污染对象；穿过对象改 `review` / `critical_unknowns[0]` /
+   `dimensions` / EP 各 nested block raise `TypeError`；nested list → tuple；
+   `LEGACY_CROSSWALK` / `MISSING_CANDIDATE_TYPES` 不可写不可删。
+9. **nested schema parity**（REQUEST_CHANGES 第一轮）—— closed block
+   （`measurement` / `provenance` / `interpretation_boundary` / `derivation` /
+   `review` / `critical_unknowns[i]`）的 Python allowed-key 常量 == schema
+   `properties` key 集；extra key / 错误 scalar 型别（`source_identifier=123`、
+   `locator=["x"]`、`n=[1]`）/ 空必填 string / 坏日期 raise；`study_context`
+   允许 extra key 但必填字段查型别；`key_*_evidence` = tuple of mapping。
+10. **missing_candidate_types 完整性**（REQUEST_CHANGES 第一轮）—— YAML ↔
+    Python `MISSING_CANDIDATE_TYPES` 一致；`missing ∪ one-to-one levels` ==
+    `CANDIDATE_LEVELS` 且互斥；L09/L10 存在且 `ADCConstruct` 非 1:1。
 
 ## 四、明确未改 / 未做
 
@@ -86,10 +99,10 @@
 
 ```
 PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'
-→ Ran 593 tests ... OK   (555 baseline + 38 new)
+→ Ran 609 tests ... OK   (555 baseline + 54 new)
 
 PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest tests.test_decision_model -v
-→ Ran 38 tests ... OK
+→ Ran 54 tests ... OK
 
 git diff --check
 → clean
