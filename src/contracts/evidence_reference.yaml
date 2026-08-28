@@ -84,10 +84,11 @@ migration:
         - check_matrix_cells_are_backed
       layer_2_canonical_record_integrity:
         - check_matrix_against_assessments (cell == serialised CandidateGateAssessment; ids agree)
-        - check_gate_index_against_assessments (row assessment_id / evidence_id / role == the current assessment's evidence_refs; and every ref is covered)
+        - check_gate_index_against_assessments (row assessment_id / evidence_id / role == the current assessment's evidence_refs; and EVERY ref of EVERY current assessment for this gate is an index row, including an assessment with zero index rows)
         - check_assessment_evidence_refs_against_packages (every evidence_ref resolves to a canonical EvidencePackage)
+        - check_evidence_index_against_packages (EvidenceIndexEntry.primary_source_id == the canonical EvidencePackage.provenance.source_id; schema_version and candidate_refs also mirror the canonical record)
         - check_packages_against_sources (every EvidencePackage.provenance.source_id is in SourceIndex)
-        - check_supersession_consistency (forward superseded_by on the index and backward supersedes_evidence_id on the new EP agree)
+        - check_supersession_consistency (when both exist, forward superseded_by on the index and backward supersedes_evidence_id on the new EP agree)
     acceptance: >-
       A provenance chain is valid only when it passes THROUGH the canonical
       CandidateGateAssessment and EvidencePackage, not merely because the derived

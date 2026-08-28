@@ -41,6 +41,7 @@ from src.objects.evidence_reference_model import (
     SourceIndex,
     SourceIndexEntry,
     check_assessment_evidence_refs_against_packages,
+    check_evidence_index_against_packages,
     check_evidence_library_against_sources,
     check_gate_index_against_assessments,
     check_gate_index_against_library,
@@ -658,6 +659,34 @@ class CanonicalRecordProvenanceTests(unittest.TestCase):
                     instantiation_id="INST-OTHER-PROGRAM-v1"
                 )},
             )
+
+    def test_gate_index_zero_row_coverage_is_caught(self):
+        # a current assessment with non-empty evidence_refs but NO rows in this
+        # gate's index at all must still be rejected.
+        assessments = {("CAND-L04-000001", "TGT-04"): make_assessment()}
+        empty = GateEvidenceIndex("TGT-04", ())
+        with self.assertRaises(ValueError):
+            check_gate_index_against_assessments(empty, assessments)
+
+    def test_evidence_index_against_packages(self):
+        library = EvidenceLibraryIndex((make_evidence_entry(),))
+        packages = {"EP-00000123": make_package()}
+        check_evidence_index_against_packages(library, packages)  # no raise
+
+        # index primary_source_id disagrees with the canonical provenance
+        bad_source = EvidenceLibraryIndex(
+            (make_evidence_entry(primary_source_id="SRC-00000099"),)
+        )
+        with self.assertRaises(ValueError):
+            check_evidence_index_against_packages(bad_source, packages)
+        # index schema_version disagrees with the canonical record
+        bad_ver = EvidenceLibraryIndex((make_evidence_entry(schema_version=2),))
+        with self.assertRaises(ValueError):
+            check_evidence_index_against_packages(bad_ver, packages)
+        # index candidate_refs disagree
+        bad_refs = EvidenceLibraryIndex((make_evidence_entry(candidate_refs=()),))
+        with self.assertRaises(ValueError):
+            check_evidence_index_against_packages(bad_refs, packages)
 
     def test_gate_index_against_assessments(self):
         assessments = {("CAND-L04-000001", "TGT-04"): make_assessment()}

@@ -4113,3 +4113,32 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   （658 baseline + 56 new）/ `git diff --check` clean / 干净 tracked-tree
   worktree boundary passed / `evidence_reference.yaml` 结构合法。
 - Next：提交、推送、CI 绿后回同一 ChatGPT 对话请求复审（目标 APPROVE PR #102）。
+
+## 2026-08-28T20:30 EDT — Runtime Migration PR C REQUEST_CHANGES 第二轮修订（同一 PR #102）
+
+- Review input：ChatGPT `AI审核方案` 对 PR #102 @ `98d1f9d` 返回
+  `REQUEST_CHANGES`：上一轮 blocker 2 / 3 确认关闭；只剩 1 个 provenance blocker，
+  两个最小修点，均在新增的 layer-2 checker 自身。
+- fix 4（EvidenceIndex ↔ canonical EP source identity parity）：第一轮说明
+  over-claim —— `check_packages_against_sources` 只查 EP.provenance.source_id 在
+  SourceIndex，不比 `EvidenceIndexEntry.primary_source_id ==
+  EvidencePackage.provenance.source_id`。→ 新增
+  `check_evidence_index_against_packages(library, packages)`：primary_source_id
+  必须相等（blocker），顺带镜像 schema_version + candidate_refs。加入
+  `provenance_walk.checks.layer_2` + `__init__` 导出。
+- fix 5（check_gate_index_against_assessments zero-row 漏检）：反向检查先由
+  index 行构造 `named`，再 `if (candidate_id, assessment_id) not in named:
+  continue` —— `evidence_refs` 非空但该 gate index 零行的 current Assessment 被
+  跳过。→ 删 `named` guard，反向检查遍历该 gate 的每个 current Assessment，要求
+  每个 evidence_ref 都在 `covered`。
+- 改动文件：`src/objects/evidence_reference_model.py`（两个函数）、
+  `src/contracts/evidence_reference.yaml`（layer_2 清单 + acceptance）、
+  `src/objects/__init__.py`（导出）、`tests/test_evidence_reference.py`
+  （56 → 58：+`test_gate_index_zero_row_coverage_is_caught` +
+  `test_evidence_index_against_packages`）、handoff、worklog。未碰 `data_layout/*`
+  / PR A / PR B / 冻结文档 / `gate_system.yaml` / `src/capabilities/*` / 既有测试。
+  仍无 engine、无新依赖。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 716 OK
+  （658 baseline + 58 new）/ `git diff --check` clean / 干净 tracked-tree
+  worktree boundary passed / `evidence_reference.yaml` 结构合法。
+- Next：提交、推送、CI 绿后回同一 ChatGPT 对话请求复审（目标本轮 APPROVE PR #102）。

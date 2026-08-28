@@ -564,7 +564,6 @@ def check_gate_index_against_assessments(
     mismatch."""
 
     covered: set[tuple[str, str, str, str]] = set()
-    named: set[tuple[str, str]] = set()
     for entry in gate_index.entries:
         current = assessments.get((entry.candidate_id, gate_index.gate_id))
         if current is None:
@@ -588,12 +587,12 @@ def check_gate_index_against_assessments(
         covered.add(
             (entry.candidate_id, entry.assessment_id, entry.evidence_id, entry.role)
         )
-        named.add((entry.candidate_id, entry.assessment_id))
 
+    # Reverse: EVERY current assessment for this gate must have all of its
+    # evidence_refs present as index rows -- including an assessment that has
+    # evidence_refs but zero rows in this index at all.
     for (candidate_id, gate_id), current in assessments.items():
         if gate_id != gate_index.gate_id:
-            continue
-        if (candidate_id, current.assessment_id) not in named:
             continue
         for ref in current.evidence_refs:
             key = (candidate_id, current.assessment_id, ref.evidence_id, ref.role)
@@ -634,6 +633,37 @@ def check_packages_against_sources(
             raise ValueError(
                 f"EvidencePackage {evidence_id} provenance.source_id {source_id} is "
                 "not in the source index"
+            )
+
+
+def check_evidence_index_against_packages(
+    library: EvidenceLibraryIndex, packages: Mapping[str, object]
+) -> None:
+    """Each EvidenceIndexEntry that has a canonical EvidencePackage must mirror
+    it on the fields the index merely summarises: ``primary_source_id`` (the
+    blocker -- it must equal ``provenance.source_id``), plus ``schema_version``
+    and ``candidate_refs``. The derived index must not disagree with the
+    canonical record. Raises ``ValueError`` on the first disagreement."""
+
+    for entry in library.entries:
+        package = packages.get(entry.evidence_id)
+        if package is None:
+            continue
+        if entry.primary_source_id != package.provenance["source_id"]:
+            raise ValueError(
+                f"{entry.evidence_id}: evidence index primary_source_id "
+                f"{entry.primary_source_id} != canonical provenance.source_id "
+                f"{package.provenance['source_id']}"
+            )
+        if entry.schema_version != package.schema_version:
+            raise ValueError(
+                f"{entry.evidence_id}: evidence index schema_version "
+                f"{entry.schema_version} != canonical {package.schema_version}"
+            )
+        if tuple(entry.candidate_refs) != tuple(package.candidate_refs):
+            raise ValueError(
+                f"{entry.evidence_id}: evidence index candidate_refs disagree with "
+                "the canonical EvidencePackage"
             )
 
 

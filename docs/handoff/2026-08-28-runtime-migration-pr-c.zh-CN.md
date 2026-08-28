@@ -56,11 +56,11 @@
 | `src/contracts/evidence_reference.yaml`（新） | 声明式 registry：`MatrixView@0.1.0` / `EvidenceIndexEntry@0.1.0` / `SourceIndexEntry@0.1.0` / `GateEvidenceIndexEntry@0.1.0` 的 required/optional 字段、`field_kinds`、`allowed_values`、`id_patterns`、`invariants`、容器说明；`vocabularies`（`evidence_index_status` 3 值、`evidence_ref_roles` 3 值、`source_type_values` 10 值、`matrix_cell_regex`、宽表固定列/尾列、`matrix_long_columns`、`decisions_view_columns`）；`migration.parity`（4 个合同 = header parity vs `csv_headers.yaml`，MatrixView 说明"rebuildable projection, no id, no JSON Schema"）；`migration.reusable_evidence_reference`（`mechanism: evidence_refs`、`pr_a_contract_untouched: true`、正文点名 `evidence_package_ids`）；`migration.provenance_walk`（chain + supersession lineage + 不变量）；`migration.immutable_record_boundary`（forward pointer 只住 `EvidenceIndexEntry`）；`migration.deferred`（CRC → PR D、逐 Gate Module → PR E+、decision engine / matrix rebuild engine = not in repo）；`migration.open_questions`（evidence independence 定义 → 科学审核，不阻塞结构）。 |
 | `src/objects/evidence_reference_model.py`（新） | frozen `@dataclass` + `__post_init__`，**复用 PR A `decision_model.py` 的 `_deep_freeze` / `_freeze_attr` / `_require_*` / ID 正则**，并复用 PR B `gate_model.py` 的 `_require_canonical_gateset` / `DECISION_VALUES`（三层合同校验不分叉）。对象：`MatrixRow` / `MatrixView`（`gateset_id` 必须是该 level 的 canonical GateSet、`member_gate_ids` 唯一非空、每行每 member gate 恰一 cell、cell ∈ 冻结宽表词表、`decision` ∈ `DECISION_VALUES` ∪ `{"NOT_EVALUATED"}`、`traced_cells()` 列出需追溯的 cell、`wide_columns()` 重建宽表 header）；`EvidenceIndexEntry` / `EvidenceLibraryIndex`（字段顺序 == 冻结 `library_evidence_index` header；`status`/`superseded_by` 一致性：`SUPERSEDED` ⇔ 有 pointer、`ACTIVE` 要求空 pointer、禁自指；容器强制 `evidence_id` 唯一、`superseded_by` 在索引内可解析且无环）；`SourceIndexEntry` / `SourceIndex`（`source_id` 唯一；`year` = 4 位 int 或 4 位串或空；`external_ref` 走 `external:`）；`GateEvidenceIndexEntry` / `GateEvidenceIndex`（行 4 字段 == 冻结 `gate_evidence_index` header；容器带 folder-implicit `gate_id`）。函数：`check_evidence_library_against_sources` / `check_gate_index_against_library` / `check_matrix_cells_are_backed` —— 纯引用完整性，不算 direction/strength/decision。 |
 | `src/objects/__init__.py`（改） | 追加 PR C export；PR A / PR B / legacy 符号不变。 |
-| `tests/test_evidence_reference.py`（新，56 tests（首版 48 + REQUEST_CHANGES 第一轮 +8）） | 见 §四。 |
+| `tests/test_evidence_reference.py`（新，58 tests（首版 48 + 复审第一轮 +8 + 第二轮 +2）） | 见 §四。 |
 | `manifests/runtime_migration_pr_c_manifest.yaml`（新） | `chatgpt_review: PENDING`、boundary 声明、`open_questions`、test 命令、artifact 清单。 |
 | `src/objects/README.md` / `src/contracts/README.md`（改） | 追加 PR C 段落；顺带把 PR B 段落里遗留的"exact parity"表述改为"persistence shape mirrors … runtime stricter（runtime-valid ⊂ schema-valid）"，与已合并的 PR B 合同一致。 |
 
-## 四、测试（`tests/test_evidence_reference.py`，56 tests）
+## 四、测试（`tests/test_evidence_reference.py`，58 tests）
 
 - `ContractRegistryTests`：version / 合同集 / `migration.pr == runtime_migration_pr_c` /
   deferred 含 engine + CRC / `open_questions` 含 evidence independence /
@@ -132,6 +132,7 @@ find . -name __pycache__ -not -path './.git/*' -exec rm -rf {} +
 PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'
 # 首版 -> Ran 705 tests ... OK   (658 baseline + 47 new)
 # 复审第一轮后 -> Ran 714 tests ... OK   (658 baseline + 56 new)
+# 复审第二轮后 -> Ran 716 tests ... OK   (658 baseline + 58 new)
 git diff --check                       # clean
 bash scripts/verify_repository_boundary.sh   # 干净 tracked-tree worktree 上 pass
 python3 -c "import yaml,sys; yaml.safe_load(open('src/contracts/evidence_reference.yaml'))"  # 结构合法
@@ -210,6 +211,48 @@ accept；`ACTIVE + pointer` / `SUPERSEDED` 无 pointer 仍 raise。
   干净 tracked-tree worktree boundary passed。`evidence_reference.yaml` 结构合法。
 - 未新增改动范围：仍未碰 `data_layout/*`、PR A / PR B 文件、冻结文档、
   `gate_system.yaml`、`src/capabilities/*`、既有测试；仍无 engine、无新依赖。
+
+## 六之三、REQUEST_CHANGES 第二轮修订（2026-08-28，同一 PR #102）
+
+Review input：ChatGPT `AI审核方案` 对 PR #102 @ `98d1f9d` 返回 `REQUEST_CHANGES`：
+上一轮 blocker 2 / 3 确认实质关闭；只剩 1 个 provenance blocker，含两个最小修点，
+均在新增的 layer-2 checker 自身。不碰冻结文档 / PR A / PR B / 不加 engine。
+
+### fix 4 —— EvidenceIndex ↔ canonical EvidencePackage source identity parity
+
+问题：第一轮说明里声称新增 `check_packages_against_sources` 关掉了
+"`primary_source_id` 与 canonical provenance 不一致"的 false-pass，但该函数实际
+只查 `package.provenance["source_id"] in SourceIndex`，从不比较
+`EvidenceIndexEntry.primary_source_id == EvidencePackage.provenance.source_id`。
+
+→ 新增 `check_evidence_index_against_packages(library, packages)`：对每个有
+canonical `EvidencePackage` 的 `EvidenceIndexEntry`，要求
+`entry.primary_source_id == package.provenance["source_id"]`（blocker），并顺带
+镜像 `schema_version` 与 `candidate_refs`。加入 `provenance_walk.checks.layer_2`
+与 `__init__` 导出。测试：matched pair pass；`primary_source_id` / `schema_version`
+/ `candidate_refs` 任一不符 → raise。
+
+### fix 5 —— check_gate_index_against_assessments 的 zero-row 漏检
+
+问题：contract 说"每个 current Assessment 的每个 `evidence_ref` 都必须是 index
+行"，但反向检查先由 index 行构造 `named = {(candidate_id, assessment_id)}`，再
+`if (candidate_id, current.assessment_id) not in named: continue` —— 因此一个
+`evidence_refs` 非空但在该 gate index 里**一行都没有**的 current Assessment 被
+跳过。
+
+→ 删掉 `named` guard：反向检查现在遍历 `assessments` 中该 gate 的每个 current
+Assessment，要求其每个 `evidence_ref` 都在 `covered` 里。测试：current
+Assessment 有 `evidence_refs` 但 `GateEvidenceIndex` 零行 → raise。
+
+### 结果
+
+- `tests/test_evidence_reference.py`：56 → 58 tests（+`test_gate_index_zero_row_coverage_is_caught`、
+  +`test_evidence_index_against_packages`）。
+- 全量：`Ran 716 tests ... OK`（658 baseline + 58 new）。`git diff --check` clean。
+  干净 tracked-tree worktree boundary passed。`evidence_reference.yaml` 结构合法。
+- 未新增改动范围：同上；本轮仅动 `evidence_reference_model.py` 两个函数 +
+  `evidence_reference.yaml` layer_2 清单 + `__init__.py` 导出 + 两个测试 + 本
+  handoff + worklog。
 
 ## 七、审核
 
