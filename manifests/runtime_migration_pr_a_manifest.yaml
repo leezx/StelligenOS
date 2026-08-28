@@ -1,0 +1,44 @@
+phase: runtime_migration_pr_a
+status: pending_review
+scope: core_decision_objects_and_legacy_core_object_adapters
+repository_boundary: software_only_external_data
+data_added: false
+persistence_added: false
+runtime_business_logic_added: false
+new_dependency_added: false
+touches_legacy_core_objects_yaml: false
+touches_gate_system_yaml: false
+spec_refs:
+  - docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md (section 16, B group, question 23; PR A)
+  - docs/architecture/contract.zh-CN.md (section 3.4)
+  - docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md
+delivers:
+  - Candidate@0.1.0
+  - Context@0.1.0
+  - EvidencePackage@0.1.0
+  - CandidateGateAssessment@0.1.0
+  - Instantiation@0.1.0
+  - legacy core_objects@1.1 -> decision-layer crosswalk + one-to-one adapters
+defers:
+  Decision: PR B (sixth object + GO/KILL/... vocabulary + decision policy)
+  canonical_gateset_contracts: PR B
+  matrix_and_reusable_evidence_references: PR C
+  crc_adc_target_gateset_v1: PR D
+  per_gate_primary_modules: "PR E+"
+chatgpt_review: PENDING
+approved_tip: null
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_decision_model.py' -v
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_phase2_contracts.py' -v
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py'
+  - bash scripts/verify_repository_boundary.sh
+  - git diff --check
+artifacts:
+  - src/contracts/decision_objects.yaml
+  - src/objects/decision_model.py
+  - src/objects/legacy_adapters.py
+  - src/objects/__init__.py
+  - src/objects/README.md
+  - src/contracts/README.md
+  - tests/test_decision_model.py
+  - manifests/runtime_migration_pr_a_manifest.yaml

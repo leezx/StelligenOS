@@ -1,0 +1,413 @@
+version: "0.1.0"
+name: stelligenos-decision-objects-contracts
+description: >-
+  Runtime contract registry for the Blueprint v1.3 decision-layer objects
+  (Candidate, Context, EvidencePackage, CandidateGateAssessment) and the
+  Instantiation binding object. Architecture contracts only: instances live in
+  the external runtime workspace described by
+  docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md. This file adds no data,
+  no persistence and no runtime business logic, and it does not modify the
+  legacy core_objects@1.1 registry (src/contracts/core_objects.yaml), which
+  keeps its eight object types until the migration completes.
+migration:
+  pr: runtime_migration_pr_a
+  scope: core_decision_objects_and_legacy_core_object_adapters
+  spec_refs:
+    - docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md#16 (B group, question 23; PR A)
+    - docs/architecture/contract.zh-CN.md#3.4
+    - docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md
+  data_layout_parity:
+    Candidate: src/contracts/data_layout/candidate.schema.json
+    Context: src/contracts/data_layout/context.schema.yaml
+    EvidencePackage: src/contracts/data_layout/evidence_package.schema.json
+    CandidateGateAssessment: src/contracts/data_layout/assessment.schema.json
+    Instantiation: src/contracts/data_layout/instantiation.schema.yaml
+  deferred:
+    Decision: >-
+      The sixth decision-layer object and its GO/CONDITIONAL_GO/HOLD/
+      MORE_EVIDENCE/KILL/NOMINATE/COMMIT vocabulary land in PR B alongside the
+      GateSet decision policy (decision_rule / fatal_gate_policy /
+      required_gate_policy). PR A does not define it.
+    canonical_gateset_contracts: PR B
+    matrix_and_reusable_evidence_references: PR C
+    crc_adc_target_gateset_v1: PR D
+    per_gate_primary_modules: "PR E+"
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  database: forbidden
+  cache: forbidden
+  result_files: forbidden
+
+orthogonality_iron_laws:
+  - direction_is_orthogonal_to_strength_including_under_conflicting
+  - conflicting_does_not_auto_downgrade_strength
+  - evidence_type_ceiling_outranks_evidence_quantity
+  - no_universal_numeric_score
+  - unknown_and_conflicting_are_first_class_states
+  - strength_grade_exists_only_on_the_assessment_never_on_the_evidence_package
+
+candidate_levels:
+  - {level: L00, name: Indication}
+  - {level: L01, name: Patient Territory}
+  - {level: L02, name: Endpoint}
+  - {level: L03, name: Modality}
+  - {level: L04, name: ADC Target}
+  - {level: L05, name: ADC Epitope}
+  - {level: L06, name: Antibody / Binder}
+  - {level: L07, name: Linker}
+  - {level: L08, name: Payload}
+  - {level: L09, name: ADC Design}
+  - {level: L10, name: ADC Hit}
+  - {level: L11, name: ADC Lead}
+  - {level: L12, name: Biomarker}
+  - {level: L13, name: Development Candidate}
+  - {level: L14, name: Clinical Regimen}
+
+contracts:
+  Candidate:
+    contract_id: Candidate@0.1.0
+    role: >-
+      A context-independent search-space member at one Candidate Level. Carries
+      identity only; never holds a context binding or any assessment/decision
+      field.
+    required_fields:
+      - candidate_id
+      - candidate_type
+      - level
+      - canonical_name
+      - status
+      - version
+      - created_at
+      - provenance_ref
+    optional_fields:
+      - parent_candidate_id
+    field_kinds:
+      candidate_id: identifier
+      candidate_type: controlled_text
+      level: controlled_text
+      canonical_name: controlled_text
+      parent_candidate_id: identifier_or_empty
+      status: controlled_text
+      version: positive_integer
+      created_at: iso_date
+      provenance_ref: external_reference
+    allowed_values:
+      level: [L00, L01, L02, L03, L04, L05, L06, L07, L08, L09, L10, L11, L12, L13, L14]
+      status: [ACTIVE, HOLD, RETIRED]
+    forbidden_fields:
+      - context_id
+      - context_version
+      - direction
+      - strength
+      - decision
+      - score
+      - assessment_id
+      - evidence_refs
+      - gate_id
+      - gateset_id
+    invariants:
+      - candidate_instances_must_be_external
+      - candidate_is_context_independent_and_has_no_context_id
+      - candidate_holds_no_assessment_or_decision_field
+      - provenance_ref_must_use_external_scheme
+
+  Context:
+    contract_id: Context@0.1.0
+    role: >-
+      A reusable, versioned scope declaration. Carries no verdict: no direction,
+      strength, decision or candidate binding.
+    required_fields:
+      - context_id
+      - context_version
+      - canonical_name
+      - dimensions
+      - status
+      - created_at
+    optional_fields:
+      - provenance_ref
+      - supersedes_version
+    field_kinds:
+      context_id: identifier
+      context_version: positive_integer
+      canonical_name: controlled_text
+      dimensions: string_or_null_map
+      status: controlled_text
+      created_at: iso_date
+      provenance_ref: external_reference
+      supersedes_version: positive_integer
+    allowed_values:
+      status: [ACTIVE, HOLD, RETIRED]
+    forbidden_fields:
+      - direction
+      - strength
+      - decision
+      - candidate_id
+      - score
+      - superseded_by
+    invariants:
+      - context_instances_must_be_external
+      - context_is_a_scope_declaration_not_a_verdict
+      - context_version_is_append_only_old_versions_are_never_edited
+      - supersedes_version_is_a_backward_pointer_only
+
+  EvidencePackage:
+    contract_id: EvidencePackage@0.1.0
+    role: >-
+      One atomic, globally reusable, neutral empirical observation with full
+      provenance. Immutable by id. Carries no direction, strength or grade.
+    required_fields:
+      - evidence_id
+      - schema_version
+      - claim
+      - measurement
+      - candidate_refs
+      - study_context
+      - provenance
+      - interpretation_boundary
+      - derivation
+    optional_fields:
+      - supersedes_evidence_id
+    field_kinds:
+      evidence_id: identifier
+      schema_version: positive_integer
+      claim: controlled_text
+      measurement: structured_block
+      candidate_refs: identifier_list
+      study_context: structured_block
+      provenance: structured_block
+      interpretation_boundary: structured_block
+      derivation: structured_block
+      supersedes_evidence_id: identifier_or_empty
+    nested_required_keys:
+      measurement: [type, analyte, readout, result]
+      study_context: [indication, treatment_state, sample_type]
+      provenance: [source_id, source_type, source_identifier, locator, retrieved_at]
+      interpretation_boundary: [directly_supports, does_not_support, limitations, evidence_ceiling]
+      derivation: [module_run_id, code_commit]
+    forbidden_fields:
+      - direction
+      - strength
+      - grade
+      - superseded_by
+      - status
+    invariants:
+      - evidence_package_instances_must_be_external
+      - evidence_package_is_immutable_by_id
+      - evidence_package_carries_no_direction_strength_or_grade
+      - grading_happens_only_in_the_assessment
+      - supersedes_evidence_id_is_a_backward_pointer_only
+
+  CandidateGateAssessment:
+    contract_id: CandidateGateAssessment@0.1.0
+    role: >-
+      The single source of truth for one Candidate x Gate matrix cell, and the
+      first place a Candidate and a Context are associated. Produces Direction +
+      Strength; never a Candidate-level Decision.
+    required_fields:
+      - assessment_id
+      - assessment_version
+      - instantiation_id
+      - candidate_id
+      - context_id
+      - context_version
+      - gateset_id
+      - gateset_version
+      - gate_id
+      - gate_version
+      - direction
+      - strength
+      - evidence_refs
+      - aggregation_rationale
+      - critical_unknowns
+      - evidence_ceiling
+      - review
+    optional_fields:
+      - key_supporting_evidence
+      - key_contradicting_evidence
+    field_kinds:
+      assessment_id: identifier
+      assessment_version: positive_integer
+      instantiation_id: identifier
+      candidate_id: identifier
+      context_id: identifier
+      context_version: positive_integer
+      gateset_id: identifier
+      gateset_version: controlled_text
+      gate_id: controlled_text
+      gate_version: controlled_text
+      direction: controlled_text
+      strength: controlled_text
+      evidence_refs: evidence_ref_list
+      aggregation_rationale: controlled_text
+      critical_unknowns: structured_block_list
+      evidence_ceiling: controlled_text
+      review: structured_block
+      key_supporting_evidence: structured_block_list
+      key_contradicting_evidence: structured_block_list
+    allowed_values:
+      direction: [POSITIVE, NEGATIVE, CONFLICTING, INCONCLUSIVE, NOT_APPLICABLE]
+      strength: [DIRECT, INDIRECT_STRONG, WEAK, UNKNOWN]
+      evidence_ref_role: [SUPPORTING, CONTRADICTING, CONTEXTUAL]
+      critical_unknown_resolution: [PUBLIC_RESOLVABLE, EXPERIMENT_REQUIRED, CURRENTLY_UNRESOLVABLE]
+      review_status: [HUMAN_APPROVED]
+    direction_strength_matrix:
+      POSITIVE_or_NEGATIVE:
+        strength: [DIRECT, INDIRECT_STRONG, WEAK]
+        evidence_refs: at_least_one
+      CONFLICTING:
+        strength: [DIRECT, INDIRECT_STRONG, WEAK]
+        evidence_refs: at_least_one_supporting_and_at_least_one_contradicting
+        key_supporting_evidence: non_empty
+        key_contradicting_evidence: non_empty
+      INCONCLUSIVE_with_qualified_evidence:
+        strength: [DIRECT, INDIRECT_STRONG, WEAK]
+        evidence_refs: at_least_one
+      INCONCLUSIVE_unknown_state:
+        strength: [UNKNOWN]
+        evidence_refs: empty
+      NOT_APPLICABLE:
+        strength: [UNKNOWN]
+        evidence_refs: empty
+    forbidden_fields:
+      - decision
+      - score
+      - superseded_by
+    invariants:
+      - assessment_instances_must_be_external
+      - canonical_assessment_review_status_is_human_approved
+      - direction_is_orthogonal_to_strength_including_under_conflicting
+      - conflicting_requires_at_least_one_supporting_and_one_contradicting_reference
+      - assessment_produces_no_candidate_level_decision
+      - assessment_version_is_append_only_old_versions_are_never_edited
+
+  Instantiation:
+    contract_id: Instantiation@0.1.0
+    role: >-
+      Configuration/binding object. Binds candidate_type + candidate_level +
+      context (id and version) + modality to a versioned gateset_id. Produces no
+      scientific conclusion, holds no Evidence, produces no Assessment. It is
+      NOT a seventh core object.
+    required_fields:
+      - instantiation_id
+      - candidate_type
+      - candidate_level
+      - context_id
+      - context_version
+      - modality
+      - gateset_id
+      - gateset_version
+      - evidence_regime
+      - status
+      - version
+      - created_at
+    field_kinds:
+      instantiation_id: identifier
+      candidate_type: controlled_text
+      candidate_level: controlled_text
+      context_id: identifier
+      context_version: positive_integer
+      modality: controlled_text
+      gateset_id: identifier
+      gateset_version: controlled_text
+      evidence_regime: controlled_text
+      status: controlled_text
+      version: positive_integer
+      created_at: iso_date
+    allowed_values:
+      candidate_level: [L00, L01, L02, L03, L04, L05, L06, L07, L08, L09, L10, L11, L12, L13, L14]
+      evidence_regime: [PUBLIC_ONLY, PUBLIC_PLUS_EXPERIMENTAL, DEVELOPMENT]
+      status: [ACTIVE, HOLD, FROZEN, RETIRED]
+    forbidden_fields:
+      - candidate_id
+      - assessments
+      - evidence_refs
+    invariants:
+      - instantiation_instances_must_be_external
+      - instantiation_is_binding_only_not_a_seventh_core_object
+      - instantiation_produces_no_scientific_conclusion
+      - instantiation_holds_no_evidence_and_no_assessment
+
+legacy_crosswalk:
+  note: >-
+    Migration mapping from core_objects@1.1's eight legacy object types to the
+    Blueprint v1.3 target ontology. This is a migration split, NOT a one-to-one
+    equivalence. Verbatim from
+    docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md#4.5
+    and docs/architecture/contract.zh-CN.md#3.4.3. Legacy support is retained:
+    src/objects/core.py and src/contracts/core_objects.yaml are unchanged.
+  entries:
+    Opportunity:
+      disposition: wrapper
+      one_to_one: false
+      target_summary: >-
+        Instantiation intent + Context seed + candidate-generation request; not
+        any Candidate Level.
+    ClinicalHypothesis:
+      disposition: composite
+      one_to_one: false
+      target_summary: >-
+        clinical/patient/endpoint dimensions -> Context; target identity ->
+        Candidate/reference; biomarker hypothesis -> Biomarker candidate/
+        reference; product hypothesis -> downstream candidate/context reference;
+        lock state -> Context maturity (see CURRENT_SYSTEM v5 #4.6).
+    TargetHypothesis:
+      disposition: candidate
+      one_to_one: true
+      candidate_type: ADC_TARGET
+      level: L04
+      target_summary: "Candidate, candidate_type = ADC Target, level = L04."
+    BinderCandidate:
+      disposition: candidate
+      one_to_one: true
+      candidate_type: ANTIBODY_BINDER
+      level: L06
+      target_summary: "Candidate, candidate_type = Antibody / Binder, level = L06."
+    ADCConstruct:
+      disposition: composite
+      one_to_one: false
+      target_summary: >-
+        Composite spanning L09 ADC Design / L10 ADC Hit; needs a stage/type
+        discriminator or distinct Candidate objects before it can be adapted.
+    LeadSeries:
+      disposition: composite
+      one_to_one: false
+      target_summary: >-
+        Series/container around L11 ADC Lead candidates; exact decomposition
+        pending migration.
+    DevelopmentCandidate:
+      disposition: candidate
+      one_to_one: true
+      candidate_type: DEVELOPMENT_CANDIDATE
+      level: L13
+      target_summary: "Candidate, candidate_type = Development Candidate, level = L13."
+    Asset:
+      disposition: non_candidate
+      one_to_one: false
+      target_summary: >-
+        Outward commercial/transaction representation of an L11-L13 candidate
+        after a NOMINATE / COMMIT Decision; not a new Candidate Level.
+
+missing_candidate_types:
+  note: >-
+    Complete set of Candidate Types that core_objects@1.1 lacks and the
+    migration must add. This is NOT a crosswalk of the eight legacy objects: it
+    is exactly the twelve Candidate Levels that have no clean one-to-one legacy
+    mapping. Together with the three one-to-one levels (L04 ADC_TARGET, L06
+    ANTIBODY_BINDER, L13 DEVELOPMENT_CANDIDATE) it is the full L00-L14 ontology;
+    tests/test_decision_model.py locks that completeness against
+    CANDIDATE_LEVELS. PR A only records them; each is created in a later
+    migration PR with its GateSet.
+  entries:
+    - {candidate_type: INDICATION, level: L00}
+    - {candidate_type: PATIENT_TERRITORY, level: L01}
+    - {candidate_type: ENDPOINT, level: L02}
+    - {candidate_type: MODALITY, level: L03}
+    - {candidate_type: ADC_EPITOPE, level: L05}
+    - {candidate_type: LINKER, level: L07}
+    - {candidate_type: PAYLOAD, level: L08}
+    - {candidate_type: ADC_DESIGN, level: L09}
+    - {candidate_type: ADC_HIT, level: L10}
+    - {candidate_type: ADC_LEAD, level: L11}
+    - {candidate_type: BIOMARKER, level: L12}
+    - {candidate_type: CLINICAL_REGIMEN, level: L14}

@@ -3828,3 +3828,87 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 验证：仅新增 1 个 `logs/*.md`；`git diff --check` clean；boundary 不受影响
   （`logs/` 为 allowlisted）。
 - Next: 推送并开 PR；CI 绿后合并。
+
+## 2026-08-28T18:30 EDT — Runtime Migration PR A：Core decision objects（授权启动）
+
+- 用户明确授权："先做第一件：Runtime Migration PR A–D，逐一来做"。分支
+  `task_20260828_runtime-migration-pr-a`，基线 `6b8ef70`。
+- 依据（不修改这些冻结文档，只按其顺序施工）：CURRENT_SYSTEM v5 §16 B 组问题
+  23 对 PR A 的定义、contract.zh-CN.md §3.4、Data Layout Spec v1.0。
+- 交付（六对象模型的前 5 个 + Instantiation 绑定对象 + legacy adapter）：
+  - `src/contracts/decision_objects.yaml` —— 声明式 registry：`Candidate@0.1.0`
+    / `Context@0.1.0` / `EvidencePackage@0.1.0` /
+    `CandidateGateAssessment@0.1.0` / `Instantiation@0.1.0` 的 required/optional/
+    forbidden 字段、enum、Candidate Level L00–L14、direction×strength 矩阵、
+    legacy 8 对象 crosswalk、migration 时须新增的 Candidate Type 清单、
+    deferred（Decision + GateSet 合同 → PR B，Matrix → PR C，
+    CRC-ADC-TARGET-GATESET-v1 → PR D，逐 Gate Module → PR E+）。
+  - `src/objects/decision_model.py` —— frozen `@dataclass` + `__post_init__`
+    校验；`Final` 词表元组（`DIRECTION_VALUES` / `STRENGTH_VALUES` /
+    `GRADED_STRENGTHS` / `EVIDENCE_ROLE_VALUES` / `CANDIDATE_LEVELS` /
+    `EVIDENCE_REGIME_VALUES` / 各 status / `CRITICAL_UNKNOWN_RESOLUTIONS` /
+    `SOURCE_TYPE_VALUES` / `CANONICAL_REVIEW_STATUS`）；ID 正则与 data_layout
+    schema 逐字一致；`*_FORBIDDEN_FIELDS` 元组对应各 schema 的 `not.anyOf`。
+    铁律 enforce：Candidate 无 `context_id`；EvidencePackage 无 grade/status；
+    Assessment 强制 direction×strength 矩阵（POSITIVE/NEGATIVE 禁 UNKNOWN 且需
+    证据；CONFLICTING 需 ≥1 SUPPORTING + ≥1 CONTRADICTING + 非空 key 数组；
+    INCONCLUSIVE 两形态；NOT_APPLICABLE 严格）+ `review.status` 固定
+    `HUMAN_APPROVED`；Instantiation 无 `candidate_id`/`assessments`/
+    `evidence_refs`（"不是第七个核心对象"守卫）。
+  - `src/objects/legacy_adapters.py` —— `LEGACY_CROSSWALK`（覆盖全部 8 个
+    `CORE_OBJECT_TYPES`，逐字对齐 CURRENT_SYSTEM v5 §4.5 / contract §3.4.3）；
+    `adapt_core_object_to_candidate()` 对 3 个 1:1 类型
+    （`TargetHypothesis`→L04 `ADC_TARGET`、`BinderCandidate`→L06
+    `ANTIBODY_BINDER`、`DevelopmentCandidate`→L13）返回 `Candidate`，对
+    `Opportunity`/`ClinicalHypothesis`/`ADCConstruct`/`LeadSeries`/`Asset`
+    raise `NotImplementedError` 并指向 crosswalk target。
+  - `tests/test_decision_model.py`（38 tests）—— registry↔Python parity；
+    **Python↔data_layout schema parity**（required 数组、enum、`not.anyOf`、
+    嵌套 required key、ID pattern 全部逐一对齐，运行时合同不能与冻结的
+    Data Layout Spec v1.0 漂移）；逐对象 accept/reject；矩阵；守卫；
+    legacy 路径不变（`CORE_OBJECT_TYPES` 仍为 8 元组，`CoreObject` 照旧）。
+  - `manifests/runtime_migration_pr_a_manifest.yaml`、`src/objects/README.md`、
+    `src/contracts/README.md`、handoff、worklog。
+- 明确未改：`src/contracts/core_objects.yaml` / `src/objects/core.py` /
+  `CoreObject` / `CORE_OBJECT_TYPES`（legacy 8 对象支持保留）、
+  `src/contracts/gate_system.yaml` / `src/capabilities/*`（45-Gate 拓扑 +
+  `GateModelOutput.score` = PR B）、`src/contracts/data_layout/*.schema.*`、
+  `docs/architecture/*`（migration PR 不改冻结文档）、任何既有测试。
+  未加新依赖（无 `jsonschema`，词表在 Python 内重述 + parity 测试）。
+  `MIGRATION_PENDING` 到 PR E 前不解除。用户自有 untracked 文件未暂存。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 593 OK
+  （555 + 38 new）/ `git diff --check` clean / 干净 tracked-tree worktree 上
+  `verify_repository_boundary` passed / 9 data_layout schema + `decision_objects.yaml`
+  结构合法。
+- Next: 提交、推送、开 PR，走 ChatGPT `AI审核方案` 审核。
+
+## 2026-08-28T20:15 EDT — Runtime Migration PR A REQUEST_CHANGES 第一轮修订（同一 PR #98）
+
+- Review input: ChatGPT `AI审核方案` 对 PR #98 @ `323641d` 返回
+  `REQUEST_CHANGES`：方向/scope 正确、无架构越界；3 个 runtime-contract
+  correctness 问题一轮关闭，不碰冻结文档、不提前做 PR B。
+- Fix 1（deep immutability，blocker）：`decision_model.py` 新增 `_deep_freeze()`
+  （mapping→`MappingProxyType` over fresh copy，sequence→tuple，递归）；每个
+  dataclass `__post_init__` 先 `_freeze_attr` 再 validate。`legacy_adapters.py`
+  的 `LEGACY_CROSSWALK` / 新增 `MISSING_CANDIDATE_TYPES` 改 `MappingProxyType`。
+- Fix 2（nested schema parity，blocker）：新增 `_check_block(closed=)`
+  （`additionalProperties:false` → 精确 key 集）+ 逐 block scalar/型别/pattern
+  校验（`measurement` / `provenance` / `interpretation_boundary` / `derivation`
+  closed 且逐字段；`study_context` open 但查必填型别；`review` /
+  `critical_unknowns[i]` closed；`key_*` = tuple of mapping）。meta-parity 测试：
+  Python closed-block key 常量 == schema `properties` key 集。未引入 `jsonschema`。
+- Fix 3（`missing_candidate_types` 完整性，小 blocker）：`decision_objects.yaml`
+  补成完整 12 个非 clean-1:1 Candidate Type（加 L00/L01/L03/L09/L10），note
+  改为"完整集合"；`legacy_adapters.py` 加 `MISSING_CANDIDATE_TYPES` + import 期
+  完整性/互斥自检 + 测试。
+- 未改：`core_objects.yaml` / `gate_system.yaml` / data_layout schemas / 冻结
+  架构文档 / 既有测试 / manifest artifact 清单。5 个 composite 仍
+  `NotImplementedError`（审核方明确接受）。
+- 改动文件：`src/objects/decision_model.py`、`src/objects/legacy_adapters.py`、
+  `src/objects/__init__.py`、`src/contracts/decision_objects.yaml`、
+  `tests/test_decision_model.py`（54 tests，+16）、handoff、worklog。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 609 OK
+  （555 + 54）/ `git diff --check` clean / 干净 tracked-tree worktree boundary
+  passed / 9 schema + `decision_objects.yaml` 合法 / CI 待绿。connector 写 review
+  仍 403。
+- Next: 提交、推送、回复同一 ChatGPT 对话请求复审（预期本轮 APPROVE）。
