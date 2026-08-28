@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "stelligenos/data_layout/evidence_package.schema.json",
   "title": "EvidencePackage evidence.json (neutral empirical observation)",
-  "description": "30_EVIDENCE_LIBRARY/PACKAGES/EP-*/evidence.json. Canonical machine-readable truth for one atomic, globally reusable evidence asset. immutable-by-ID: once referenced by any Assessment the content is never edited in place; corrections create a new EP with superseded_by. MUST NOT carry direction/strength/grade/DIRECT/POSITIVE etc. -- grading happens only in the Assessment. See STELLIGENOS_DATA_LAYOUT_SPEC.v1.0 sec.9-14.",
+  "description": "30_EVIDENCE_LIBRARY/PACKAGES/EP-*/evidence.json. Canonical machine-readable truth for one atomic, globally reusable evidence asset. immutable-by-ID: content is never edited in place; corrections create a new EP that may carry backward supersedes_evidence_id. No forward superseded_by/status here -- that lives only in evidence_index.csv (spec sec.0.4 / sec.14). MUST NOT carry direction/strength/grade/DIRECT/POSITIVE etc. -- grading happens only in the Assessment. See STELLIGENOS_DATA_LAYOUT_SPEC.v1.0 sec.9-14.",
   "type": "object",
   "required": [
     "evidence_id",
@@ -80,13 +80,15 @@
       },
       "additionalProperties": false
     },
-    "superseded_by": { "type": "string", "pattern": "^EP-[0-9]{8}$" }
+    "supersedes_evidence_id": { "type": "string", "pattern": "^EP-[0-9]{8}$", "description": "backward pointer only: set when this EP replaces an older one. The forward superseded_by lives in evidence_index.csv, never here (spec sec.0.4)." }
   },
   "not": {
     "anyOf": [
       { "required": ["direction"] },
       { "required": ["strength"] },
-      { "required": ["grade"] }
+      { "required": ["grade"] },
+      { "required": ["superseded_by"] },
+      { "required": ["status"] }
     ]
   },
   "additionalProperties": false

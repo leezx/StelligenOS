@@ -429,13 +429,15 @@ SRC-00000881,PMID,12345678,"Example CEACAM5 IHC cohort study",2025,external:pmid
 }
 ```
 
-> `evidence.json` carries **no** `direction` / `strength` / `grade`. It is
-> **immutable-by-ID**: a correction would create `EP-00000124` and set
-> `EP-00000123.superseded_by = "EP-00000124"`, not edit this file. `schema_version`
-> tracks only the JSON structure, not content revisions. The `POSITIVE /
-> INDIRECT_STRONG` verdict is produced only in the Assessment above, where
-> `EP-00000123` has role `SUPPORTING`; the same EP could carry a different role
-> in a `TGT-01` assessment.
+> `evidence.json` carries **no** `direction` / `strength` / `grade`, and **no
+> forward `superseded_by` / `status`**. It is **immutable-by-ID**: a correction
+> creates `EP-00000124` (which may carry backward `supersedes_evidence_id:
+> "EP-00000123"`), and `evidence_index.csv` marks the `EP-00000123` row
+> `status=SUPERSEDED, superseded_by=EP-00000124`. This file itself is never
+> edited (spec sec.0.4 / sec.10.1). `schema_version` tracks only the JSON
+> structure, not content revisions. The `POSITIVE / INDIRECT_STRONG` verdict is
+> produced only in the Assessment above, where `EP-00000123` has role
+> `SUPPORTING`; the same EP could carry a different role in a `TGT-01` assessment.
 
 ## `30_EVIDENCE_LIBRARY/PACKAGES/EP-00000123/summary.md`
 

@@ -3727,3 +3727,49 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   scaffold + unittest 全过 / 8 schema + csv_headers 结构合法 / worked example
   + csv_headers 手写不变量检查全过。GitHub connector 写 review 仍 403。
 - Next: 追加提交到 PR #96，更新 PR body 措辞，回复同一 ChatGPT 对话请求复审。
+
+## 2026-08-28T15:05 EDT — Data Layout Spec v1.0 REQUEST_CHANGES 第二轮修订（同一 PR #96）
+
+- Review input: ChatGPT 在 `Biotech ideas → AI审核方案` 对话对 PR #96 `4a640b2`
+  返回 `REQUEST_CHANGES`，但确认第 1 轮 6 点**全部关闭**，仅剩 1 个 blocker：
+  immutable / append-only canonical record 与 forward `superseded_by` 自相矛盾
+  （record 声明写入后不改，却要旧 record 自己写指向未来的 `superseded_by`）。
+  修完这一类即直接 APPROVE v1.0，不再扩展 Data Layout。
+- Fix（统一冻结，仍 docs+schema，无核心对象 / `core_objects.yaml` /
+  `gate_system.yaml` / v5 变更，未启动 runtime migration，repo 内不放数据/`.csv`）：
+  - 新增 spec §0.4：**Immutable canonical records never contain forward pointers
+    that become known only in the future.** 旧 record 不改；新 record 可带
+    backward `supersedes_*`；forward `superseded_by` / `status` / latest 只在
+    mutable/derived index（`evidence_index.csv`）或 `latest.*` / `(id,version)`
+    推导。
+  - `evidence_package.schema.json`：`superseded_by` → backward
+    `supersedes_evidence_id`；`not.anyOf` 增禁 `superseded_by` / `status`。
+  - `assessment.schema.json`：删除 `superseded_by`（`v001→v002→v003` +
+    `latest.json` 表达）；`not.anyOf` 增禁 `superseded_by`。
+  - `decision.schema.json`：`superseded_by` → backward `supersedes_decision_id`；
+    新增 `not.anyOf` 禁 forward `superseded_by`。
+  - `context.schema.yaml`：forward `superseded_by` → backward
+    `supersedes_version`；`not.anyOf` 增禁 `superseded_by`。
+  - spec §8.1 / §10.1 / §10.3 / §14 / §17 措辞全部对齐；`csv_headers.yaml`
+    `library_evidence_index` 加注释（forward pointer 的唯一存放处）。
+  - worked example EP 说明段：纠错 = 新 `EP-00000124`（可带 backward
+    `supersedes_evidence_id`）+ `evidence_index.csv` 标 `status=SUPERSEDED,
+    superseded_by=...`；本文件永不编辑。
+- `evidence_index.csv`（`library_evidence_index` header）的 `status` +
+  `superseded_by` 列保留不变——mutable/derived index，是唯一允许 forward pointer
+  的地方（审核方明确同意）。
+- 改动文件（本轮）：`docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md`、
+  `docs/protocols/examples/STELLIGENOS_DATA_LAYOUT_v1_worked_example.md`、
+  `src/contracts/data_layout/{evidence_package,assessment,decision}.schema.json`、
+  `src/contracts/data_layout/context.schema.yaml`、
+  `src/contracts/data_layout/csv_headers.yaml`、handoff、worklog。
+- 明确未改：`ci.yml`（token 缺 `workflow` scope，非 blocker，负责人补一行）、
+  `src/` 其它代码、`core_objects.yaml`、`gate_system.yaml`、CURRENT_SYSTEM v5、
+  scaffold 脚本、目录树形状、状态机、Context 设计；未在 repo 内建 `.csv`；
+  未启动 runtime migration；用户自有 untracked 文件未暂存。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest` 555 OK（CI 设该 env；
+  本地不设时残留 `__pycache__` 误报 1 项，与本改动无关）/ `test_git_sync` A-D /
+  `test_scaffold_data_layout` A-F / `git diff --check` clean / 干净 tracked-tree
+  worktree boundary passed / 9 schema/yaml 结构合法 / worked example + schema
+  supersession 手写不变量检查全过。GitHub connector 写 review 仍 403。
+- Next: 追加提交到 PR #96，回复同一 ChatGPT 对话请求复审（预期本轮 APPROVE）。

@@ -95,6 +95,10 @@ headers:
      status, created_at]
 
   # --- 30_EVIDENCE_LIBRARY/evidence_index.csv ---
+  # Mutable/derived index: this is the ONLY place the forward superseded_by /
+  # status lives. evidence.json itself is immutable and carries neither
+  # (spec sec.0.4 / sec.10.1). A replacing EP may carry backward
+  # supersedes_evidence_id in its own evidence.json.
   library_evidence_index:
     [evidence_id, schema_version, claim_short, measurement_type,
      primary_source_id, candidate_refs, created_at, status, superseded_by]

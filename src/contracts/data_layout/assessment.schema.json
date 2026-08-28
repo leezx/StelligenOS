@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "stelligenos/data_layout/assessment.schema.json",
   "title": "CandidateGateAssessment (canonical JSON)",
-  "description": "TGT-NN/ASSESSMENTS/<candidate_id>/vNNN.json. The single source of truth for one Candidate x Gate matrix cell. Canonical files are HUMAN_APPROVED only; proposals stay in RUNS/assessment_proposals.csv. Direction and Strength are orthogonal and machine-constrained (sec.8.2); the assessment never produces a Candidate-level Decision. See STELLIGENOS_DATA_LAYOUT_SPEC.v1.0 sec.8.",
+  "description": "TGT-NN/ASSESSMENTS/<candidate_id>/vNNN.json. The single source of truth for one Candidate x Gate matrix cell. Canonical files are HUMAN_APPROVED only; proposals stay in RUNS/assessment_proposals.csv. Direction and Strength are orthogonal and machine-constrained (sec.8.2); the assessment never produces a Candidate-level Decision. Immutable per version: no superseded_by -- the v001->v002->v003 sequence plus latest.json expresses supersession (spec sec.0.4). See STELLIGENOS_DATA_LAYOUT_SPEC.v1.0 sec.8.",
   "type": "object",
   "required": [
     "assessment_id",
@@ -73,8 +73,7 @@
         "reviewed_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}" }
       },
       "additionalProperties": false
-    },
-    "superseded_by": { "type": "string" }
+    }
   },
   "allOf": [
     {
@@ -139,7 +138,8 @@
   "not": {
     "anyOf": [
       { "required": ["decision"] },
-      { "required": ["score"] }
+      { "required": ["score"] },
+      { "required": ["superseded_by"] }
     ]
   },
   "additionalProperties": false

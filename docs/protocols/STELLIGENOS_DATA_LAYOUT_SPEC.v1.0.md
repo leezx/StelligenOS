@@ -58,6 +58,37 @@ record（见对应章节），只是它们是**绑定/配置/施工记录**，�
 `20_INSTANTIATIONS/<inst>/instantiation.yaml`、`GATESETS/<gs>/gateset_binding.yaml`、
 `GATESETS/<gs>/TGT-NN/gate_binding.yaml`、`TGT-NN/RUNS/RUN-*/run_manifest.json`。
 
+### 0.4 冻结规则：immutable / append-only record 不含 forward pointer
+
+> **Immutable canonical records never contain forward pointers that become
+> known only in the future.**
+
+所有 immutable / append-only canonical record（EvidencePackage `evidence.json`、
+Context `CTX-*/vNNN.yaml`、Assessment `ASSESSMENTS/<cand>/vNNN.json`、Decision
+`DEC-*.json`、`run_manifest.json`、`gate_binding.yaml` / `gateset_binding.yaml`）
+一经写入就**永不原地修改**，因此它们**不得**携带只有未来才知道的
+forward pointer（`superseded_by` / `latest` / `status=SUPERSEDED`）。统一语义：
+
+| 关系 | 存放位置 |
+|---|---|
+| 旧 record 永不修改 | immutable record 本体 |
+| 新 record → 旧 record 的 **backward pointer**（`supersedes_*`，可选） | 新 record 本体 |
+| **forward** `superseded_by` / `status` | **mutable/derived index**（`evidence_index.csv` 等） |
+| "哪一版是最新" | `latest.yaml` / `latest.json`（derived 副本）或 `(id, version)` 推导 |
+
+- **Assessment** 天然是 `v001 → v002 → v003`，`latest.json` 指向最新版——
+  **不需要任何 supersession pointer**，schema 也不含。
+- **Context** 同理，由 `(context_id, context_version)` + `latest.yaml` 推导；
+  `vNNN.yaml` 仅可选携带 backward `supersedes_version`。
+- **EvidencePackage** 内容不可原地修订，纠错 = 建新 `EP-*`，新 EP 可选携带
+  backward `supersedes_evidence_id`；forward 关系写在 `evidence_index.csv`
+  （`status` + `superseded_by`，§14）。
+- **Decision** 如需 lineage，新 `DEC-*.json` 可选携带 backward
+  `supersedes_decision_id`；不写 forward `superseded_by`。
+
+这不是新架构，只是把已选择的 append-only / immutable 语义闭合，避免每种对象
+各搞一套 lifecycle。
+
 ---
 
 ## 1. 顶层目录
@@ -538,8 +569,10 @@ primary_module_version: "0.1.0"
 | `critical_unknowns[]` | 是（可空数组） | 每项 `{unknown, resolution}`，`resolution` ∈ `PUBLIC_RESOLVABLE` / `EXPERIMENT_REQUIRED` / `CURRENTLY_UNRESOLVABLE`。**absence of evidence（缺某类数据）只能进这里，不能变成 `CONTRADICTING` EP**（§10.2） |
 | `evidence_ceiling` | 是 | 本 Assessment 证据能到的天花板（自由文本） |
 | `review` | 是 | `{status, reviewer, reviewed_at}`；canonical `vNNN.json` **固定 `status = HUMAN_APPROVED`** |
-| `superseded_by` | 否 | 若被更高版本取代，写新版本文件名 |
 | `key_supporting_evidence` / `key_contradicting_evidence` | `CONFLICTING` 时必填、非空 | 分别记录冲突双方各自的 evidence 等级与来源（不因冲突自动降级 Strength） |
+
+> Assessment **不含 `superseded_by`**（§0.4）。版本关系由 `v001 → v002 → v003`
+> 序列 + `latest.json` 表达，`assessment_version` 单调递增，旧版本永不改。
 
 ### 8.2 direction × strength 组合约束（machine-enforced）
 
@@ -643,14 +676,18 @@ Modality Precedent` 可能是强证据，对 `TGT-04 quantitative surface densit
 
 ### 10.1 EvidencePackage 是 immutable-by-ID
 
-> **一个 `EP-*` 一旦被任何 Assessment 引用，其 `evidence.json` 内容永不原地
-> 修改。** 纠错、新增 interpretation、或换来源 → 建**新的** `EP-*`，旧 EP 写
-> `superseded_by: EP-<新id>` 并把 `30_EVIDENCE_LIBRARY/evidence_index.csv` 的
-> `status` 改为 `SUPERSEDED`（或 `RETRACTED`）。
+> **一个 `EP-*` 一旦写入，其 `evidence.json` 内容永不原地修改。** 纠错、新增
+> interpretation、或换来源 → 建**新的** `EP-*`。旧 EP 文件**不动**（§0.4：
+> immutable record 不含 forward pointer）：
+>
+> - 新 EP 可选携带 backward `supersedes_evidence_id: EP-<旧id>`；
+> - forward 关系写在 `30_EVIDENCE_LIBRARY/evidence_index.csv`——把旧 EP 行的
+>   `status` 改为 `SUPERSEDED`（或 `RETRACTED`）、`superseded_by` 填新 `EP-*`。
+>   `evidence_index.csv` 是 mutable/derived index，可以改。
 
 这样 Assessment 的 `evidence_refs[]` 只需 `evidence_id`，**不需要
 `evidence_version`**，版本引用链自然闭合：历史 Assessment 引用的 `EP-00000123`
-永远是当初那份内容。
+永远是当初那份内容（bytes 不变）。
 
 ### 10.2 absence of evidence ≠ contradicting evidence
 
@@ -672,10 +709,12 @@ EP**，更不是 `CONTRADICTING` 证据。它只进入引用它的 Assessment �
 | `provenance` | 是 | `{source_id, source_type, source_identifier, locator, retrieved_at}`；`source_id` 指向 `30_EVIDENCE_LIBRARY/source_index.csv`（§14） |
 | `interpretation_boundary` | 是 | `{directly_supports[], does_not_support[], limitations[], evidence_ceiling}` |
 | `derivation` | 是 | `{module_run_id, code_commit}` |
-| `superseded_by` | 否 | `EP-nnnnnnnn`；本 EP 被纠错/更新的新 EP 取代时填 |
+| `supersedes_evidence_id` | 否 | `EP-nnnnnnnn`；**仅当本 EP 取代某个更旧 EP 时填**（backward pointer）。**没有** forward `superseded_by`——那只在 `evidence_index.csv`（§0.4 / §14） |
 
 > **`evidence.json` 里不允许出现 `direction` / `strength` / `grade` / `DIRECT` /
-> `POSITIVE` 等定级字段。** 真正的 `POSITIVE / INDIRECT_STRONG` 发生在 Assessment。
+> `POSITIVE` 等定级字段，也不允许出现 forward `superseded_by` / `status`。**
+> 真正的 `POSITIVE / INDIRECT_STRONG` 发生在 Assessment；forward supersession
+> 发生在 `evidence_index.csv`。
 
 ---
 
@@ -747,8 +786,10 @@ citation metadata。
 | evidence_id | schema_version | claim_short | measurement_type | primary_source_id | candidate_refs | created_at | status | superseded_by |
 |---|---|---|---|---|---|---|---|---|
 
-`status` ∈ `ACTIVE` / `SUPERSEDED` / `RETRACTED`。EP 内容不可原地修订（§10.1）；
-纠错走"新 EP + `superseded_by`"。
+`status` ∈ `ACTIVE` / `SUPERSEDED` / `RETRACTED`。EP 正文（`evidence.json`）不可
+原地修订（§10.1）；纠错 = 新建 `EP-*`（可选带 backward `supersedes_evidence_id`）
+**并在本索引**把旧行改为 `status = SUPERSEDED`、`superseded_by = EP-<新id>`。
+本索引是 mutable/derived，forward pointer 只住在这里（§0.4）。
 
 ---
 
@@ -849,6 +890,11 @@ HUMAN_APPROVED Assessment）。`cell` 取值同 §4.1（含 `UNKNOWN` / `NOT_APP
 `decision` ∈ `GO` / `CONDITIONAL_GO` / `HOLD` / `MORE_EVIDENCE` / `KILL` /
 `NOMINATE` / `COMMIT`（对齐 Blueprint v1.3 §M06）。canonical `DEC-*.json`
 **固定 `review.status = HUMAN_APPROVED`**（proposal 不进 canonical）。
+
+`DEC-*.json` 是 immutable record：写入后不改，**不含 forward `superseded_by`**
+（§0.4）。若某 Decision 被后续 Decision 取代，新 `DEC-*.json` 可选携带 backward
+`supersedes_decision_id: DEC-<旧id>`；`decisions.csv`（mutable view）可反映最新
+状态。
 
 ---
 

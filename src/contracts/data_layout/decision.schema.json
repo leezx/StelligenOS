@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "stelligenos/data_layout/decision.schema.json",
   "title": "GateSet-level Decision (canonical JSON)",
-  "description": "20_INSTANTIATIONS/<inst>/DECISIONS/DEC-*.json. Produced by GateSet decision_rule / fatal_gate_policy / required_gate_policy over a Candidate's assessments -- NEVER by a single Gate. Canonical files are HUMAN_APPROVED only. assessment_snapshot pins {assessment_id, assessment_version, cell} per gate so historical decisions are reproducible. See STELLIGENOS_DATA_LAYOUT_SPEC.v1.0 sec.17.",
+  "description": "20_INSTANTIATIONS/<inst>/DECISIONS/DEC-*.json. Produced by GateSet decision_rule / fatal_gate_policy / required_gate_policy over a Candidate's assessments -- NEVER by a single Gate. Canonical files are HUMAN_APPROVED only. assessment_snapshot pins {assessment_id, assessment_version, cell} per gate so historical decisions are reproducible. Immutable once written: no forward superseded_by -- a replacing Decision may carry backward supersedes_decision_id (spec sec.0.4). See STELLIGENOS_DATA_LAYOUT_SPEC.v1.0 sec.17.",
   "type": "object",
   "required": [
     "decision_id",
@@ -70,7 +70,12 @@
       },
       "additionalProperties": false
     },
-    "superseded_by": { "type": "string", "pattern": "^DEC-[0-9]{4}$" }
+    "supersedes_decision_id": { "type": "string", "pattern": "^DEC-[0-9]{4}$", "description": "backward pointer only: the older Decision this one replaces. No forward superseded_by (spec sec.0.4); decisions.csv reflects current state." }
+  },
+  "not": {
+    "anyOf": [
+      { "required": ["superseded_by"] }
+    ]
   },
   "additionalProperties": false
 }

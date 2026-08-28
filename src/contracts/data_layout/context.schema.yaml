@@ -38,9 +38,13 @@ properties:
   provenance_ref:
     type: string
     pattern: "^external:.+"
-  superseded_by:
+  supersedes_version:
     type: integer
     minimum: 1
+    description: >-
+      backward pointer only: the older context_version this file replaces.
+      No forward superseded_by -- "which version is latest" is derived from
+      (context_id, context_version) + latest.yaml (spec sec.0.4).
 not:
   anyOf:
     - required: [direction]
@@ -48,4 +52,5 @@ not:
     - required: [decision]
     - required: [candidate_id]
     - required: [score]
+    - required: [superseded_by]
 additionalProperties: false

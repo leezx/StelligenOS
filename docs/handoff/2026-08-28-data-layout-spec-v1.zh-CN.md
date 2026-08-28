@@ -172,3 +172,63 @@ candidate header 无评估列、matrix 非数字且 decision=MORE_EVIDENCE、7 �
 单文档 worked example、以及 scaffold 脚本，均为治理文本 / 参考文档 / 脚本。
 没有新增任何数据、缓存、结果文件或 `.csv` 文件。所有真实数据在 `$STELLIGENOS_DATA`
 （仓库外部）。
+
+## 九、PR #96 REQUEST_CHANGES 第 2 轮（仅 immutable-record supersession）
+
+审核结论：**REQUEST_CHANGES，仅剩 1 个 blocker。** 第 1 轮 6 点全部确认关闭，
+目录主体 / Candidate/Gate 结构 / 状态机 / Context 设计 / scaffold 设计均无需再动。
+唯一问题：**immutable / append-only canonical record 与 forward `superseded_by`
+自相矛盾**——record 声明"写入后永不原地改"，却又要求旧 record 自己写指向未来
+新 record 的 `superseded_by`。
+
+本轮统一冻结规则（新增 spec §0.4）：
+
+> **Immutable canonical records never contain forward pointers that become
+> known only in the future.**
+
+- 旧 record 永不修改；
+- 新 record 可选携带 **backward** pointer `supersedes_*`；
+- **forward** `superseded_by` / `status` / "哪版最新" 只住在 mutable/derived
+  index（`evidence_index.csv`）或 `latest.*` 副本 / `(id, version)` 推导；
+- **Assessment** 天然 `v001 → v002 → v003` + `latest.json`，不需要任何
+  supersession pointer，schema 已删除 `superseded_by`；
+- **Context** 由 `(context_id, context_version)` + `latest.yaml` 推导，
+  `vNNN.yaml` 仅可选 `supersedes_version`；
+- **EvidencePackage** `evidence.json` 不含 forward `superseded_by`/`status`，
+  可选 backward `supersedes_evidence_id`；forward 关系写 `evidence_index.csv`；
+- **Decision** `DEC-*.json` 不含 forward `superseded_by`，可选 backward
+  `supersedes_decision_id`；`decisions.csv` 反映最新状态。
+
+**改动文件（本轮）：**
+
+| 文件 | 改动 |
+|---|---|
+| `STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md` | 新增 §0.4 冻结规则表；§8.1 删除 Assessment `superseded_by` 行并加不含说明；§10.1 重写（旧 EP 文件不动，forward 关系入 `evidence_index.csv`）；§10.3 `superseded_by` → backward `supersedes_evidence_id` 并禁 forward；§14 措辞对齐；§17 Decision 加 backward `supersedes_decision_id`、禁 forward |
+| `evidence_package.schema.json` | `superseded_by` 属性 → `supersedes_evidence_id`；`not.anyOf` 增禁 `superseded_by` / `status`；description 对齐 |
+| `assessment.schema.json` | 删除 `superseded_by` 属性；`not.anyOf` 增禁 `superseded_by`；description 对齐 |
+| `decision.schema.json` | `superseded_by` 属性 → `supersedes_decision_id`；新增 `not.anyOf` 禁 forward `superseded_by`；description 对齐 |
+| `context.schema.yaml` | forward `superseded_by` → backward `supersedes_version`；`not.anyOf` 增禁 `superseded_by` |
+| `csv_headers.yaml` | `library_evidence_index` 加注释：这是 forward `superseded_by`/`status` 的**唯一**存放处 |
+| worked example | EP 说明段：纠错 = 新建 `EP-00000124`（可带 backward `supersedes_evidence_id`）+ `evidence_index.csv` 标 `status=SUPERSEDED, superseded_by=...`；本文件永不编辑 |
+
+`evidence_index.csv`（`library_evidence_index` header）保留现有 `status` +
+`superseded_by` 列不变——它是 mutable/derived index，是唯一允许放 forward
+pointer 的地方。
+
+**非 blocker（未处理，需负责人）：** `tests/test_scaffold_data_layout.sh` 仍未
+接入 `.github/workflows/ci.yml`（本会话 gh token 缺 `workflow` scope）。GitHub
+上显示的 CI success 不含 A–F 这组新测试。负责人在 `git_sync` 步骤后加一行
+`bash tests/test_scaffold_data_layout.sh` 即可。
+
+**验证（本轮）：** `PYTHONDONTWRITEBYTECODE=1 python -B -m unittest` 555 OK
+（无 `-B`/env 时本地会因残留 `__pycache__` 误报 1 项，与本改动无关，CI 设该 env）；
+`test_git_sync` A-D；`test_scaffold_data_layout` A-F；`git diff --check` clean；
+干净 tracked-tree worktree 上 `verify_repository_boundary` passed；9 schema/yaml
+结构合法；worked example + schema supersession 手写不变量检查全过（三类 immutable
+record 无 forward `superseded_by`；EP 无 `status`/grade；`supersedes_evidence_id`
+/ `supersedes_decision_id` / `supersedes_version` 就位；spec 含 §0.4 冻结句；
+snapshot 仍 pin `assessment_version`；7 个 `NOT_EVALUATED`；em dash 不在 csv/json
+block）。
+
+**GitHub connector：** 审核方再次尝试写 PR #96 `REQUEST_CHANGES` review，仍
+`403 Resource not accessible by integration`，未写回 GitHub。
