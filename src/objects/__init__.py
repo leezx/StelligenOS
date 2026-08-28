@@ -6,6 +6,9 @@ decision-layer object set introduced by Runtime Migration PR A;
 ``legacy_adapters`` maps the former to the latter. ``gate_model`` (PR B) adds the
 two-rule-layer Gate system contracts (``Gate`` / ``GateSet`` / ``EvidenceLadder``
 / ``Decision``); ``legacy_gate_map`` is the frozen-45-gate migration reference.
+``evidence_reference_model`` (PR C) adds the derived ``MatrixView`` and the
+reusable-evidence reference layer (evidence / source / per-gate index) with the
+provenance-walk integrity checks.
 """
 
 from .core import CORE_OBJECT_TYPES, CoreObject
@@ -52,6 +55,21 @@ from .legacy_gate_map import (
     LegacyGatechainCrosswalk,
     LegacyGateSystem,
 )
+from .evidence_reference_model import (
+    EVIDENCE_INDEX_STATUS_VALUES,
+    MATRIX_CELL_STATES,
+    EvidenceIndexEntry,
+    EvidenceLibraryIndex,
+    GateEvidenceIndex,
+    GateEvidenceIndexEntry,
+    MatrixRow,
+    MatrixView,
+    SourceIndex,
+    SourceIndexEntry,
+    check_evidence_library_against_sources,
+    check_gate_index_against_library,
+    check_matrix_cells_are_backed,
+)
 
 __all__ = [
     "CORE_OBJECT_TYPES",
@@ -91,4 +109,17 @@ __all__ = [
     "LEGACY_GATECHAIN_CROSSWALK",
     "LegacyGatechainCrosswalk",
     "LegacyGateSystem",
+    "EVIDENCE_INDEX_STATUS_VALUES",
+    "MATRIX_CELL_STATES",
+    "EvidenceIndexEntry",
+    "EvidenceLibraryIndex",
+    "GateEvidenceIndex",
+    "GateEvidenceIndexEntry",
+    "MatrixRow",
+    "MatrixView",
+    "SourceIndex",
+    "SourceIndexEntry",
+    "check_evidence_library_against_sources",
+    "check_gate_index_against_library",
+    "check_matrix_cells_are_backed",
 ]

@@ -65,9 +65,21 @@ onto the new model (one-to-one for
 Runtime Migration PR B adds `gate_contracts.yaml` (registry) and
 `src/objects/gate_model.py` for the two-rule-layer Gate system: `Gate@0.1.0`,
 `GateSet@0.1.0`, `EvidenceLadder@0.1.0` and `Decision@0.1.0` (the sixth
-decision-layer object, in exact parity with `data_layout/decision.schema.json`).
-Policy and ladder bodies are `external:` refs — there is no decision engine in
-the repo. The legacy `gate_system@0.1.0` / 45-gate topology stays
-`FROZEN_LEGACY`; `src/objects/legacy_gate_map.py` holds the migration reference
-and asserts at import time that it still agrees with the kernel's live
-topology.
+decision-layer object; its persistence shape mirrors
+`data_layout/decision.schema.json` and its runtime validation is strictly
+stricter — runtime-valid ⊂ schema-valid). Policy and ladder bodies are
+`external:` refs — there is no decision engine in the repo. The legacy
+`gate_system@0.1.0` / 45-gate topology stays `FROZEN_LEGACY`;
+`src/objects/legacy_gate_map.py` holds the migration reference and asserts at
+import time that it still agrees with the kernel's live topology.
+
+Runtime Migration PR C adds `evidence_reference.yaml` (registry) and
+`src/objects/evidence_reference_model.py` for the Matrix view and the
+reusable-evidence reference layer: `MatrixView@0.1.0` (a derived, rebuildable
+projection with no id — Data Layout Spec Appendix B gives the Matrix no JSON
+Schema and PR C adds none), `EvidenceIndexEntry@0.1.0` (the global evidence
+index, the only home of the forward `status` / `superseded_by`),
+`SourceIndexEntry@0.1.0` and `GateEvidenceIndexEntry@0.1.0`. The view and index
+rows serialise to the frozen `data_layout/csv_headers.yaml` headers verbatim.
+PR A's `evidence_refs` mechanism is the reusable-reference primitive and is not
+changed. There is no matrix-rebuild engine in the repo.

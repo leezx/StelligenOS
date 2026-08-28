@@ -1,0 +1,49 @@
+phase: runtime_migration_pr_c
+status: pending_review
+scope: matrix_view_and_reusable_evidence_reference_registry_and_provenance_walk
+repository_boundary: software_only_external_data
+data_added: false
+persistence_added: false
+runtime_business_logic_added: false
+decision_engine_added: false
+matrix_rebuild_engine_added: false
+new_dependency_added: false
+new_data_layout_schema_added: false
+touches_data_layout_schemas: false
+touches_pr_a_contracts: false
+touches_pr_b_contracts: false
+spec_refs:
+  - docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md (section 2.1 matrix; section 9 reusable EP library; section 13 runtime flow; section 16 B group question 23 -> PR C)
+  - docs/architecture/contract.zh-CN.md (section 3.4)
+  - docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md (section 4; sections 11-14; section 0.4; Appendix B)
+delivers:
+  - MatrixView@0.1.0
+  - EvidenceIndexEntry@0.1.0
+  - SourceIndexEntry@0.1.0
+  - GateEvidenceIndexEntry@0.1.0
+  - provenance-walk referential-integrity checks (check_evidence_library_against_sources / check_gate_index_against_library / check_matrix_cells_are_backed)
+defers:
+  crc_adc_target_gateset_v1: PR D
+  per_gate_primary_modules: "PR E+"
+  decision_engine: not_in_this_repo
+  matrix_rebuild_engine: not_in_this_repo
+open_questions:
+  evidence_independence_definition: >-
+    CURRENT_SYSTEM v5 section 16 B group question 6 (primary source vs dataset
+    lineage vs experiment batch). Deferred to science review; does not block the
+    PR C structure.
+chatgpt_review: PENDING
+approved_tip: null
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_evidence_reference.py' -v
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py'
+  - bash scripts/verify_repository_boundary.sh
+  - git diff --check
+artifacts:
+  - src/contracts/evidence_reference.yaml
+  - src/objects/evidence_reference_model.py
+  - src/objects/__init__.py
+  - src/objects/README.md
+  - src/contracts/README.md
+  - tests/test_evidence_reference.py
+  - manifests/runtime_migration_pr_c_manifest.yaml

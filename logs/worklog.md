@@ -4050,3 +4050,33 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   GateSet / EvidenceLadder / Decision）已合并 `d18974b`；`MIGRATION_PENDING`
   未解除（到 PR E）。下一步：PR C —— Matrix / provenance / reusable
   EvidencePackage references。
+
+## 2026-08-28T18:05 EDT — Runtime Migration PR C 首版（Matrix view / reusable EP references / provenance walk）
+
+- 授权：用户"Runtime Migration PR A–D，逐一来做"+"继续直到完成所有 PR A-D"；
+  PR B APPROVE 后审核方"Merge 后可以进入 PR C"。基线 `origin/main` @ `9aafc57`。
+- 三个决策（用户 AskUserQuestion 拍板，审核方在 `AI审核方案` 已独立同意同款）：
+  1. Matrix = 只做 view contract，不加 JSON Schema（`data_layout/` 不新增文件；
+     附录 B 明确 Matrix 无 schema）。
+  2. 可复用证据引用层 = 加性交付 evidence_index / source_index / per-gate
+     evidence_index 三种 index（各带容器），PR A 的 `evidence_refs` 不动、
+     `evidence_package_ids` 不落实为字段。
+  3. Provenance = index dataclasses + 声明式 walk 不变量 + 跨记录引用完整性
+     校验函数；不引入被持久化的图对象。
+- 交付：`src/contracts/evidence_reference.yaml`（registry）、
+  `src/objects/evidence_reference_model.py`（`MatrixRow`/`MatrixView`、
+  `EvidenceIndexEntry`/`EvidenceLibraryIndex`、`SourceIndexEntry`/`SourceIndex`、
+  `GateEvidenceIndexEntry`/`GateEvidenceIndex`、3 个 `check_*` 函数；复用 PR A
+  `_deep_freeze`/`_require_*`/ID 正则 + PR B `_require_canonical_gateset`/
+  `DECISION_VALUES`）、`tests/test_evidence_reference.py`（48 tests）、
+  `manifests/runtime_migration_pr_c_manifest.yaml`、`__init__.py` + 两个 README
+  追加 PR C 段（顺带把 README 里 PR B 遗留的"exact parity"改成"persistence
+  shape mirrors … runtime stricter"，与已合并 PR B 合同一致）。
+- 未改：`data_layout/*`（未新增 schema）、PR A 三文件、PR B 三文件、冻结文档、
+  `gate_system.yaml`、`src/capabilities/*`、既有测试。无 engine、无新依赖。
+  `MIGRATION_PENDING` 未解除。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 705 OK
+  （658 baseline + 47 new）/ `git diff --check` clean / 干净 tracked-tree
+  worktree boundary passed / `evidence_reference.yaml` 结构合法。connector 写
+  review 仍 403。
+- Next：提交、推送、开 PR、CI 绿后提交同一 ChatGPT 对话（`AI审核方案`）请求审核。
