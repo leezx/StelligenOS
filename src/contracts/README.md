@@ -49,3 +49,15 @@ it, and deliberately stores no route state of its own - the route lives in
 `SearchSpaceAdmission@0.1.0` and nowhere else, so nothing here can drift from
 it. The schema holds no disease-specific content; territory instances live in an
 external workspace.
+
+Runtime Migration PR A adds `decision_objects.yaml` (registry) and
+`src/objects/decision_model.py` (frozen dataclasses) for the Blueprint v1.3
+decision-layer objects `Candidate@0.1.0`, `Context@0.1.0`,
+`EvidencePackage@0.1.0`, `CandidateGateAssessment@0.1.0` and the
+`Instantiation@0.1.0` binding object. Field sets, enums and the
+direction x strength matrix are kept in step with the frozen disk schemas under
+`data_layout/` by `tests/test_decision_model.py`. The sixth object, `Decision`,
+lands in PR B. The legacy `core_objects@1.1` registry is unchanged;
+`src/objects/legacy_adapters.py` maps its eight types onto the new model
+(one-to-one for `TargetHypothesis`/`BinderCandidate`/`DevelopmentCandidate`,
+`NotImplementedError` with a crosswalk pointer for the composites).
