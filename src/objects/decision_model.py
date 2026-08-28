@@ -3,9 +3,14 @@
 These frozen dataclasses validate contract-shaped instances in memory. They do
 not persist records, hold data, or execute anything. Disk instances live in the
 external runtime workspace defined by
-``docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md``; the field sets and
-vocabularies here are kept byte-for-byte in step with
+``docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md``; the field sets, enums,
+nested shapes and the direction x strength matrix here are kept in step with
 ``src/contracts/data_layout/*.schema.*`` by ``tests/test_decision_model.py``.
+
+Immutability is deep: every nested mapping is snapshotted and wrapped in a
+``MappingProxyType`` and every nested sequence becomes a ``tuple`` in
+``__post_init__`` *before* validation, so a caller cannot mutate the dict it
+passed in and thereby move a validated instance into an invalid state.
 
 Scope is Runtime Migration PR A: ``Candidate``, ``Context``,
 ``EvidencePackage``, ``CandidateGateAssessment`` and the ``Instantiation``
@@ -20,6 +25,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field, fields
+from types import MappingProxyType
 from typing import Final, Mapping, Sequence
 
 
@@ -143,11 +149,44 @@ INSTANTIATION_FORBIDDEN_FIELDS: Final[tuple[str, ...]] = (
 )
 
 
+# --- Deep freeze -----------------------------------------------------------
+
+def _deep_freeze(value):
+    """Return a deeply-immutable snapshot: mappings -> MappingProxyType over a
+    fresh copy, sequences -> tuple, recursively. Strings/bytes are scalars."""
+
+    if isinstance(value, Mapping):
+        return MappingProxyType({key: _deep_freeze(item) for key, item in value.items()})
+    if isinstance(value, (list, tuple)) and not isinstance(value, (str, bytes)):
+        return tuple(_deep_freeze(item) for item in value)
+    return value
+
+
+def _freeze_attr(instance, name: str) -> None:
+    object.__setattr__(instance, name, _deep_freeze(getattr(instance, name)))
+
+
 # --- Shared validators --------------------------------------------------------
+
+def _is_int(value) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
 
 def _require_text(value: str, field_name: str) -> None:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{field_name} must be a non-empty string")
+
+
+def _require_str(value, field_name: str, *, allow_empty: bool = False) -> None:
+    if not isinstance(value, str):
+        raise ValueError(f"{field_name} must be a string")
+    if not allow_empty and not value:
+        raise ValueError(f"{field_name} must not be empty")
+
+
+def _require_str_tuple(value, field_name: str) -> None:
+    if not isinstance(value, tuple) or not all(isinstance(item, str) for item in value):
+        raise ValueError(f"{field_name} must be a sequence of strings")
 
 
 def _require_pattern(value: str, pattern: re.Pattern[str], field_name: str) -> None:
@@ -172,7 +211,7 @@ def _require_external_ref(value: str, field_name: str) -> None:
 
 
 def _require_positive_int(value: int, field_name: str) -> None:
-    if not isinstance(value, int) or isinstance(value, bool) or value < 1:
+    if not _is_int(value) or value < 1:
         raise ValueError(f"{field_name} must be an integer >= 1")
 
 
@@ -181,21 +220,33 @@ def _require_choice(value: str, allowed: Sequence[str], field_name: str) -> None
         raise ValueError(f"{field_name} must be one of {tuple(allowed)}")
 
 
-def _require_mapping_keys(
-    value: Mapping[str, object], required: Sequence[str], field_name: str
+def _check_block(
+    block,
+    *,
+    name: str,
+    required: Sequence[str],
+    allowed: Sequence[str] | None = None,
+    closed: bool = True,
 ) -> None:
-    if not isinstance(value, Mapping):
-        raise ValueError(f"{field_name} must be a mapping")
-    missing = [key for key in required if key not in value]
+    """Enforce a nested object's key set the way the frozen schema does.
+
+    ``closed`` mirrors ``additionalProperties: false`` (exact key set); when
+    ``False`` extra keys are permitted (``additionalProperties: true``).
+    """
+
+    if not isinstance(block, Mapping):
+        raise ValueError(f"{name} must be a mapping")
+    keys = set(block)
+    missing = [key for key in required if key not in keys]
     if missing:
-        raise ValueError(f"{field_name} is missing required keys: {missing}")
-
-
-def _require_str_tuple(value: tuple[str, ...], field_name: str) -> None:
-    if not isinstance(value, tuple) or not all(
-        isinstance(item, str) and item.strip() for item in value
-    ):
-        raise ValueError(f"{field_name} must be a tuple of non-empty strings")
+        raise ValueError(f"{name} is missing required keys: {missing}")
+    if closed:
+        permitted = set(allowed) if allowed is not None else set(required)
+        extra = keys - permitted
+        if extra:
+            raise ValueError(
+                f"{name} has keys the frozen schema forbids: {sorted(extra)}"
+            )
 
 
 # --- Candidate --------------------------------------------------------------
@@ -244,6 +295,8 @@ class Context:
     supersedes_version: int | None = None
 
     def __post_init__(self) -> None:
+        _freeze_attr(self, "dimensions")
+
         _require_pattern(self.context_id, _CONTEXT_ID, "context_id")
         _require_positive_int(self.context_version, "context_version")
         _require_text(self.canonical_name, "canonical_name")
@@ -264,6 +317,28 @@ class Context:
 
 # --- EvidencePackage ------------------------------------------------------
 
+_MEASUREMENT_KEYS: Final[tuple[str, ...]] = ("type", "analyte", "readout", "result", "unit")
+_STUDY_CONTEXT_REQUIRED: Final[tuple[str, ...]] = (
+    "indication",
+    "treatment_state",
+    "sample_type",
+)
+_PROVENANCE_KEYS: Final[tuple[str, ...]] = (
+    "source_id",
+    "source_type",
+    "source_identifier",
+    "locator",
+    "retrieved_at",
+)
+_INTERPRETATION_KEYS: Final[tuple[str, ...]] = (
+    "directly_supports",
+    "does_not_support",
+    "limitations",
+    "evidence_ceiling",
+)
+_DERIVATION_KEYS: Final[tuple[str, ...]] = ("module_run_id", "code_commit")
+
+
 @dataclass(frozen=True)
 class EvidencePackage:
     """One atomic, neutral empirical observation. Immutable by id, no grade."""
@@ -280,45 +355,94 @@ class EvidencePackage:
     supersedes_evidence_id: str = ""
 
     def __post_init__(self) -> None:
+        for name in (
+            "measurement",
+            "candidate_refs",
+            "study_context",
+            "provenance",
+            "interpretation_boundary",
+            "derivation",
+        ):
+            _freeze_attr(self, name)
+
         _require_pattern(self.evidence_id, _EVIDENCE_ID, "evidence_id")
         _require_positive_int(self.schema_version, "schema_version")
         _require_text(self.claim, "claim")
-        _require_mapping_keys(
-            self.measurement, ("type", "analyte", "readout", "result"), "measurement"
+
+        # measurement (additionalProperties: false; scalars minLength 1, unit str)
+        _check_block(
+            self.measurement,
+            name="measurement",
+            required=_MEASUREMENT_KEYS[:4],
+            allowed=_MEASUREMENT_KEYS,
         )
+        for key in _MEASUREMENT_KEYS[:4]:
+            _require_str(self.measurement[key], f"measurement.{key}")
+        if "unit" in self.measurement:
+            _require_str(self.measurement["unit"], "measurement.unit", allow_empty=True)
+
+        # candidate_refs (array of CAND ids; may be empty)
         if not isinstance(self.candidate_refs, tuple) or not all(
             isinstance(ref, str) and _CANDIDATE_ID.match(ref)
             for ref in self.candidate_refs
         ):
-            raise ValueError("candidate_refs must be a tuple of CAND-Lnn-nnnnnn ids")
-        _require_mapping_keys(
+            raise ValueError("candidate_refs must be a sequence of CAND-Lnn-nnnnnn ids")
+
+        # study_context (additionalProperties: true)
+        _check_block(
             self.study_context,
-            ("indication", "treatment_state", "sample_type"),
-            "study_context",
+            name="study_context",
+            required=_STUDY_CONTEXT_REQUIRED,
+            closed=False,
         )
-        _require_mapping_keys(
-            self.provenance,
-            ("source_id", "source_type", "source_identifier", "locator", "retrieved_at"),
-            "provenance",
-        )
+        for key in _STUDY_CONTEXT_REQUIRED:
+            _require_str(self.study_context[key], f"study_context.{key}", allow_empty=True)
+        if "n" in self.study_context and not (
+            _is_int(self.study_context["n"]) or isinstance(self.study_context["n"], str)
+        ):
+            raise ValueError("study_context.n must be an integer or a string")
+        for key in ("model", "assay"):
+            if key in self.study_context:
+                _require_str(
+                    self.study_context[key], f"study_context.{key}", allow_empty=True
+                )
+
+        # provenance (additionalProperties: false)
+        _check_block(self.provenance, name="provenance", required=_PROVENANCE_KEYS)
         _require_pattern(
-            str(self.provenance["source_id"]), _SOURCE_ID, "provenance.source_id"
+            self.provenance["source_id"], _SOURCE_ID, "provenance.source_id"
         )
         _require_choice(
-            str(self.provenance["source_type"]),
-            SOURCE_TYPE_VALUES,
-            "provenance.source_type",
+            self.provenance["source_type"], SOURCE_TYPE_VALUES, "provenance.source_type"
         )
-        if not _ISO_DATE_PREFIX.match(str(self.provenance["retrieved_at"])):
+        _require_str(
+            self.provenance["source_identifier"], "provenance.source_identifier"
+        )
+        _require_str(self.provenance["locator"], "provenance.locator", allow_empty=True)
+        _require_str(self.provenance["retrieved_at"], "provenance.retrieved_at")
+        if not _ISO_DATE_PREFIX.match(self.provenance["retrieved_at"]):
             raise ValueError("provenance.retrieved_at must start with an ISO date")
-        _require_mapping_keys(
+
+        # interpretation_boundary (additionalProperties: false)
+        _check_block(
             self.interpretation_boundary,
-            ("directly_supports", "does_not_support", "limitations", "evidence_ceiling"),
-            "interpretation_boundary",
+            name="interpretation_boundary",
+            required=_INTERPRETATION_KEYS,
         )
-        _require_mapping_keys(
-            self.derivation, ("module_run_id", "code_commit"), "derivation"
+        for key in _INTERPRETATION_KEYS[:3]:
+            _require_str_tuple(
+                self.interpretation_boundary[key], f"interpretation_boundary.{key}"
+            )
+        _require_str(
+            self.interpretation_boundary["evidence_ceiling"],
+            "interpretation_boundary.evidence_ceiling",
         )
+
+        # derivation (additionalProperties: false)
+        _check_block(self.derivation, name="derivation", required=_DERIVATION_KEYS)
+        for key in _DERIVATION_KEYS:
+            _require_str(self.derivation[key], f"derivation.{key}", allow_empty=True)
+
         if self.supersedes_evidence_id:
             _require_pattern(
                 self.supersedes_evidence_id, _EVIDENCE_ID, "supersedes_evidence_id"
@@ -326,6 +450,10 @@ class EvidencePackage:
 
 
 # --- CandidateGateAssessment -------------------------------------------------
+
+_REVIEW_KEYS: Final[tuple[str, ...]] = ("status", "reviewer", "reviewed_at")
+_CRITICAL_UNKNOWN_KEYS: Final[tuple[str, ...]] = ("unknown", "resolution")
+
 
 @dataclass(frozen=True)
 class EvidenceRef:
@@ -364,6 +492,15 @@ class CandidateGateAssessment:
     key_contradicting_evidence: tuple[Mapping[str, object], ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
+        for name in (
+            "evidence_refs",
+            "critical_unknowns",
+            "review",
+            "key_supporting_evidence",
+            "key_contradicting_evidence",
+        ):
+            _freeze_attr(self, name)
+
         _require_pattern(self.assessment_id, _ASSESSMENT_ID, "assessment_id")
         _require_positive_int(self.assessment_version, "assessment_version")
         _require_pattern(self.instantiation_id, _INSTANTIATION_ID, "instantiation_id")
@@ -376,30 +513,48 @@ class CandidateGateAssessment:
         _require_text(self.gate_version, "gate_version")
         _require_choice(self.direction, DIRECTION_VALUES, "direction")
         _require_choice(self.strength, STRENGTH_VALUES, "strength")
+
         if not isinstance(self.evidence_refs, tuple) or not all(
             isinstance(ref, EvidenceRef) for ref in self.evidence_refs
         ):
-            raise ValueError("evidence_refs must be a tuple of EvidenceRef")
+            raise ValueError("evidence_refs must be a sequence of EvidenceRef")
+
         _require_text(self.aggregation_rationale, "aggregation_rationale")
+
         if not isinstance(self.critical_unknowns, tuple):
-            raise ValueError("critical_unknowns must be a tuple")
+            raise ValueError("critical_unknowns must be a sequence")
         for index, unknown in enumerate(self.critical_unknowns):
-            _require_mapping_keys(
-                unknown, ("unknown", "resolution"), f"critical_unknowns[{index}]"
+            _check_block(
+                unknown,
+                name=f"critical_unknowns[{index}]",
+                required=_CRITICAL_UNKNOWN_KEYS,
             )
+            _require_str(unknown["unknown"], f"critical_unknowns[{index}].unknown")
             _require_choice(
-                str(unknown["resolution"]),
+                unknown["resolution"],
                 CRITICAL_UNKNOWN_RESOLUTIONS,
                 f"critical_unknowns[{index}].resolution",
             )
-        _require_text(self.evidence_ceiling, "evidence_ceiling")
-        _require_mapping_keys(
-            self.review, ("status", "reviewer", "reviewed_at"), "review"
-        )
+
+        _require_str(self.evidence_ceiling, "evidence_ceiling")
+
+        _check_block(self.review, name="review", required=_REVIEW_KEYS)
         if self.review["status"] != CANONICAL_REVIEW_STATUS:
             raise ValueError(
                 f"canonical assessment review.status must be {CANONICAL_REVIEW_STATUS!r}"
             )
+        _require_str(self.review["reviewer"], "review.reviewer")
+        _require_str(self.review["reviewed_at"], "review.reviewed_at")
+        if not _ISO_DATE_PREFIX.match(self.review["reviewed_at"]):
+            raise ValueError("review.reviewed_at must start with an ISO date")
+
+        for name in ("key_supporting_evidence", "key_contradicting_evidence"):
+            value = getattr(self, name)
+            if not isinstance(value, tuple) or not all(
+                isinstance(item, Mapping) for item in value
+            ):
+                raise ValueError(f"{name} must be a sequence of mappings")
+
         self._check_direction_strength_matrix()
 
     def _check_direction_strength_matrix(self) -> None:

@@ -3881,3 +3881,34 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   `verify_repository_boundary` passed / 9 data_layout schema + `decision_objects.yaml`
   结构合法。
 - Next: 提交、推送、开 PR，走 ChatGPT `AI审核方案` 审核。
+
+## 2026-08-28T20:15 EDT — Runtime Migration PR A REQUEST_CHANGES 第一轮修订（同一 PR #98）
+
+- Review input: ChatGPT `AI审核方案` 对 PR #98 @ `323641d` 返回
+  `REQUEST_CHANGES`：方向/scope 正确、无架构越界；3 个 runtime-contract
+  correctness 问题一轮关闭，不碰冻结文档、不提前做 PR B。
+- Fix 1（deep immutability，blocker）：`decision_model.py` 新增 `_deep_freeze()`
+  （mapping→`MappingProxyType` over fresh copy，sequence→tuple，递归）；每个
+  dataclass `__post_init__` 先 `_freeze_attr` 再 validate。`legacy_adapters.py`
+  的 `LEGACY_CROSSWALK` / 新增 `MISSING_CANDIDATE_TYPES` 改 `MappingProxyType`。
+- Fix 2（nested schema parity，blocker）：新增 `_check_block(closed=)`
+  （`additionalProperties:false` → 精确 key 集）+ 逐 block scalar/型别/pattern
+  校验（`measurement` / `provenance` / `interpretation_boundary` / `derivation`
+  closed 且逐字段；`study_context` open 但查必填型别；`review` /
+  `critical_unknowns[i]` closed；`key_*` = tuple of mapping）。meta-parity 测试：
+  Python closed-block key 常量 == schema `properties` key 集。未引入 `jsonschema`。
+- Fix 3（`missing_candidate_types` 完整性，小 blocker）：`decision_objects.yaml`
+  补成完整 12 个非 clean-1:1 Candidate Type（加 L00/L01/L03/L09/L10），note
+  改为"完整集合"；`legacy_adapters.py` 加 `MISSING_CANDIDATE_TYPES` + import 期
+  完整性/互斥自检 + 测试。
+- 未改：`core_objects.yaml` / `gate_system.yaml` / data_layout schemas / 冻结
+  架构文档 / 既有测试 / manifest artifact 清单。5 个 composite 仍
+  `NotImplementedError`（审核方明确接受）。
+- 改动文件：`src/objects/decision_model.py`、`src/objects/legacy_adapters.py`、
+  `src/objects/__init__.py`、`src/contracts/decision_objects.yaml`、
+  `tests/test_decision_model.py`（54 tests，+16）、handoff、worklog。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 609 OK
+  （555 + 54）/ `git diff --check` clean / 干净 tracked-tree worktree boundary
+  passed / 9 schema + `decision_objects.yaml` 合法 / CI 待绿。connector 写 review
+  仍 403。
+- Next: 提交、推送、回复同一 ChatGPT 对话请求复审（预期本轮 APPROVE）。

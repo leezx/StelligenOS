@@ -18,10 +18,11 @@ section 4.5 and ``docs/architecture/contract.zh-CN.md`` section 3.4.3.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
+from types import MappingProxyType
+from typing import Final, Mapping
 
 from src.objects.core import CORE_OBJECT_TYPES, CoreObject
-from src.objects.decision_model import Candidate
+from src.objects.decision_model import CANDIDATE_LEVELS, Candidate
 
 
 @dataclass(frozen=True)
@@ -41,7 +42,7 @@ _DISPOSITIONS: Final[frozenset[str]] = frozenset(
 )
 
 
-LEGACY_CROSSWALK: Final[dict[str, LegacyCrosswalkEntry]] = {
+_LEGACY_CROSSWALK: Final[dict[str, LegacyCrosswalkEntry]] = {
     "Opportunity": LegacyCrosswalkEntry(
         legacy_type="Opportunity",
         disposition="wrapper",
@@ -118,11 +119,11 @@ LEGACY_CROSSWALK: Final[dict[str, LegacyCrosswalkEntry]] = {
 
 
 def _check_crosswalk_covers_legacy_registry() -> None:
-    if set(LEGACY_CROSSWALK) != set(CORE_OBJECT_TYPES):
+    if set(_LEGACY_CROSSWALK) != set(CORE_OBJECT_TYPES):
         raise RuntimeError(
             "LEGACY_CROSSWALK must cover exactly the legacy CORE_OBJECT_TYPES"
         )
-    for entry in LEGACY_CROSSWALK.values():
+    for entry in _LEGACY_CROSSWALK.values():
         if entry.disposition not in _DISPOSITIONS:
             raise RuntimeError(f"unknown disposition: {entry.disposition}")
         if entry.one_to_one != (entry.disposition == "candidate"):
@@ -138,9 +139,58 @@ def _check_crosswalk_covers_legacy_registry() -> None:
 _check_crosswalk_covers_legacy_registry()
 
 
+#: Read-only view. ``LegacyCrosswalkEntry`` is already a frozen dataclass, so the
+#: whole structure is immutable at runtime, not just to a type checker.
+LEGACY_CROSSWALK: Final[Mapping[str, LegacyCrosswalkEntry]] = MappingProxyType(
+    _LEGACY_CROSSWALK
+)
+
+
 ONE_TO_ONE_LEGACY_TYPES: Final[tuple[str, ...]] = tuple(
     name for name, entry in LEGACY_CROSSWALK.items() if entry.one_to_one
 )
+
+
+#: Candidate Types that ``core_objects@1.1`` lacks and the migration must add.
+#: This is exactly the set of Candidate Levels NOT covered by a clean one-to-one
+#: legacy mapping (L04 / L06 / L13); together with those three it is the full
+#: L00-L14 ontology. ``tests/test_decision_model.py`` locks that completeness.
+_ONE_TO_ONE_LEVELS: Final[frozenset[str]] = frozenset(
+    entry.level for entry in _LEGACY_CROSSWALK.values() if entry.level is not None
+)
+
+MISSING_CANDIDATE_TYPES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "L00": "INDICATION",
+        "L01": "PATIENT_TERRITORY",
+        "L02": "ENDPOINT",
+        "L03": "MODALITY",
+        "L05": "ADC_EPITOPE",
+        "L07": "LINKER",
+        "L08": "PAYLOAD",
+        "L09": "ADC_DESIGN",
+        "L10": "ADC_HIT",
+        "L11": "ADC_LEAD",
+        "L12": "BIOMARKER",
+        "L14": "CLINICAL_REGIMEN",
+    }
+)
+
+
+def _check_missing_candidate_types_are_complete() -> None:
+    covered = set(MISSING_CANDIDATE_TYPES) | set(_ONE_TO_ONE_LEVELS)
+    if covered != set(CANDIDATE_LEVELS):
+        raise RuntimeError(
+            "MISSING_CANDIDATE_TYPES plus the one-to-one levels must be exactly "
+            f"L00-L14; got {sorted(covered)}"
+        )
+    if set(MISSING_CANDIDATE_TYPES) & set(_ONE_TO_ONE_LEVELS):
+        raise RuntimeError(
+            "MISSING_CANDIDATE_TYPES must not overlap the one-to-one legacy levels"
+        )
+
+
+_check_missing_candidate_types_are_complete()
 
 
 def adapt_core_object_to_candidate(

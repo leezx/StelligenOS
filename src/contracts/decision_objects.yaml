@@ -390,14 +390,24 @@ legacy_crosswalk:
 
 missing_candidate_types:
   note: >-
-    Candidate Types that core_objects@1.1 lacks and migration must add. These
-    are NOT a crosswalk of the eight legacy objects. PR A only records them;
-    they are created in later migration PRs with their GateSets.
+    Complete set of Candidate Types that core_objects@1.1 lacks and the
+    migration must add. This is NOT a crosswalk of the eight legacy objects: it
+    is exactly the twelve Candidate Levels that have no clean one-to-one legacy
+    mapping. Together with the three one-to-one levels (L04 ADC_TARGET, L06
+    ANTIBODY_BINDER, L13 DEVELOPMENT_CANDIDATE) it is the full L00-L14 ontology;
+    tests/test_decision_model.py locks that completeness against
+    CANDIDATE_LEVELS. PR A only records them; each is created in a later
+    migration PR with its GateSet.
   entries:
-    - {candidate_type: BIOMARKER, level: L12}
+    - {candidate_type: INDICATION, level: L00}
+    - {candidate_type: PATIENT_TERRITORY, level: L01}
     - {candidate_type: ENDPOINT, level: L02}
+    - {candidate_type: MODALITY, level: L03}
     - {candidate_type: ADC_EPITOPE, level: L05}
     - {candidate_type: LINKER, level: L07}
     - {candidate_type: PAYLOAD, level: L08}
+    - {candidate_type: ADC_DESIGN, level: L09}
+    - {candidate_type: ADC_HIT, level: L10}
     - {candidate_type: ADC_LEAD, level: L11}
+    - {candidate_type: BIOMARKER, level: L12}
     - {candidate_type: CLINICAL_REGIMEN, level: L14}

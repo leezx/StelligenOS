@@ -26,6 +26,7 @@ from .decision_model import (
 )
 from .legacy_adapters import (
     LEGACY_CROSSWALK,
+    MISSING_CANDIDATE_TYPES,
     ONE_TO_ONE_LEGACY_TYPES,
     LegacyCrosswalkEntry,
     adapt_core_object_to_candidate,
@@ -50,6 +51,7 @@ __all__ = [
     "Instantiation",
     "field_names",
     "LEGACY_CROSSWALK",
+    "MISSING_CANDIDATE_TYPES",
     "ONE_TO_ONE_LEGACY_TYPES",
     "LegacyCrosswalkEntry",
     "adapt_core_object_to_candidate",

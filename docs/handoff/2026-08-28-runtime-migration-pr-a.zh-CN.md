@@ -108,6 +108,86 @@ python3 -c 'json/yaml load 全部 src/contracts/data_layout/*.schema.* + decisio
 leezx 在对话中转述，落 `logs/chatgpt-review-2026-08-28-runtime-migration-pr-a.md`
 （按 PR #95 / #97 先例，APPROVE 记录可用独立 docs-only PR 补登）。
 
+## 六之二、REQUEST_CHANGES 第一轮修订（2026-08-28，同一 PR #98）
+
+审核结论：方向与 scope 正确、无架构越界；3 个 runtime-contract correctness
+问题，同一 PR 一轮关闭，不碰冻结文档、不提前做 PR B。
+
+1. **deep immutability（blocker）。** `@dataclass(frozen=True)` 只浅冻结；
+   `Context.dimensions` / EvidencePackage 的 5 个 nested block / Assessment 的
+   `review` / `critical_unknowns` / `key_*` 接受普通 `Mapping`，构造后调用方仍可
+   通过原 dict 改值绕过 `__post_init__`。`LEGACY_CROSSWALK: Final[dict]` 的
+   `Final` 只是 type hint，runtime 可改。
+   → `decision_model.py` 新增 `_deep_freeze()`：mapping → `MappingProxyType`
+   over fresh copy，sequence → `tuple`，递归；每个 dataclass 在
+   `__post_init__` **先 freeze 再 validate**（`_freeze_attr`），validate 跑在
+   不可变快照上。`legacy_adapters.py`：`_LEGACY_CROSSWALK`（内部 dict）→
+   `LEGACY_CROSSWALK = MappingProxyType(...)`（`LegacyCrosswalkEntry` 本就是
+   frozen dataclass）；`MISSING_CANDIDATE_TYPES` 同样 `MappingProxyType`。
+   新增测试组：外部 dict 构造后 mutation 不影响对象；穿过对象改 nested 抛
+   `TypeError`；`critical_unknowns` / `review` / EP 各 block / `dimensions`
+   不可改；nested list → tuple；`LEGACY_CROSSWALK` / `MISSING_CANDIDATE_TYPES`
+   不可写/不可删。
+2. **nested schema parity 不完整（blocker）。** 之前只校验 required keys /
+   顶层 enum / forbidden fields；runtime 会接受 frozen schema 明确拒绝的
+   nested 数据（`additionalProperties: false` 下的 extra key、nested scalar
+   类型、`minLength`、array-item 类型、日期 pattern）。
+   → `decision_model.py` 新增 `_check_block(required, allowed, closed=)`
+   （`closed` 对应 `additionalProperties: false` → 精确 key 集）+ 逐 block
+   scalar/型别/pattern 校验：
+   - `measurement`：精确 key ⊆ {type,analyte,readout,result,unit}；前 4 个
+     非空 string；`unit` string。
+   - `provenance`：精确 5 key；`source_id` 匹配 `^SRC-[0-9]{8}$`；`source_type`
+     ∈ 10 值；`source_identifier` 非空 string；`locator` string；
+     `retrieved_at` 日期前缀。
+   - `interpretation_boundary`：精确 4 key；前 3 个是 string tuple；
+     `evidence_ceiling` 非空 string。
+   - `derivation`：精确 2 key，均 string。
+   - `study_context`：`additionalProperties: true` → 允许 extra key；3 个必填
+     为 string；`n` ∈ int|str；`model`/`assay` string。
+   - `review`：精确 3 key；`status == HUMAN_APPROVED`；`reviewer` 非空 string；
+     `reviewed_at` 日期前缀。
+   - `critical_unknowns[i]`：精确 {unknown,resolution}；`unknown` 非空 string；
+     `resolution` ∈ 3 值。
+   - `key_supporting/contradicting_evidence`：tuple of mapping。
+   新增 meta-parity 测试：Python 侧 closed-block allowed-key 常量
+   （`_MEASUREMENT_KEYS` / `_PROVENANCE_KEYS` / `_INTERPRETATION_KEYS` /
+   `_DERIVATION_KEYS` / `_REVIEW_KEYS` / `_CRITICAL_UNKNOWN_KEYS`）== schema
+   `properties` key 集；`context` / `instantiation` schema `additionalProperties`
+   == false。加代表性 reject 测试若干。
+   验收（写进 `decision_model.py` docstring 精神）：PR A runtime object 表示的
+   每个字段，Python 构造 **不得** 接受 nested value —— 若该 value 仅因其
+   intrinsic shape/type/enum 约束会被对应 frozen Data Layout schema 拒绝。
+   （仍是 "Python executable mirror + parity test"，未引入 `jsonschema`。）
+3. **`missing_candidate_types` 清单不完整（小 blocker）。** 原来只列 7 个，漏
+   `INDICATION L00` / `PATIENT_TERRITORY L01` / `MODALITY L03` /
+   `ADC_DESIGN L09` / `ADC_HIT L10`（后两个正是 `ADCConstruct` composite 明确
+   spanning 的 L09/L10）。
+   → `decision_objects.yaml` `missing_candidate_types` 补成完整 **12 个**非
+   clean-1:1 Candidate Type；note 改为明确"完整集合 = 无 clean 1:1 legacy
+   映射的 12 个 Level，加上 L04/L06/L13 即完整 L00–L14 ontology"。
+   `legacy_adapters.py` 新增 `MISSING_CANDIDATE_TYPES`（level→type，
+   `MappingProxyType`）+ import 期 `_check_missing_candidate_types_are_complete()`
+   （与 one-to-one levels 并集 == `CANDIDATE_LEVELS` 且不相交）。新增测试：
+   YAML↔Python 一致；并集完整且互斥；L09/L10 存在且 `ADCConstruct` 非 1:1。
+
+审核方明确不要求改：5 个 composite 继续 `NotImplementedError`（已明确拒绝
+推测性 decomposition + 指向 crosswalk，足够）；不得借这轮碰 `core_objects.yaml`
+/ `gate_system.yaml` / Data Layout schemas / 冻结架构文档。
+
+**改动文件（本轮）：** `src/objects/decision_model.py`、
+`src/objects/legacy_adapters.py`、`src/objects/__init__.py`、
+`src/contracts/decision_objects.yaml`、`tests/test_decision_model.py`（54 tests，
++16）、本 handoff、worklog。**未改** manifest（artifact 清单不变）。
+
+**验证（本轮）：** `PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover`
+609 OK（555 + 54）/ `git diff --check` clean / 干净 tracked-tree worktree
+`verify_repository_boundary` passed / 9 data_layout schema + `decision_objects.yaml`
+结构合法 / CI 待绿。
+
+**GitHub connector：** 审核方尝试写 PR #98 `REQUEST_CHANGES` review，仍
+`403 Resource not accessible by integration`。
+
 ## 七、后续（PR B–D，未启动）
 
 - **PR B** —— canonical Gate / GateSet 合同、Evidence Ladder、

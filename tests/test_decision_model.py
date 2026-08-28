@@ -30,6 +30,7 @@ from src.objects.decision_model import (
 )
 from src.objects.legacy_adapters import (
     LEGACY_CROSSWALK,
+    MISSING_CANDIDATE_TYPES,
     ONE_TO_ONE_LEGACY_TYPES,
     adapt_core_object_to_candidate,
 )
@@ -646,6 +647,254 @@ class LegacyRetainedTests(unittest.TestCase):
         }
         got = {k: v.disposition for k, v in LEGACY_CROSSWALK.items()}
         self.assertEqual(got, expected)
+
+
+# --- 7. deep immutability --------------------------------------------------
+
+class DeepImmutabilityTests(unittest.TestCase):
+    def test_external_dict_mutation_does_not_reach_the_object(self):
+        review = {"status": "HUMAN_APPROVED", "reviewer": "human", "reviewed_at": "2026-08-27"}
+        a = make_assessment(review=review)
+        review["status"] = "MACHINE_PROPOSED"
+        self.assertEqual(a.review["status"], "HUMAN_APPROVED")
+
+        dims = {"indication": "colorectal cancer"}
+        c = make_context(dimensions=dims)
+        dims["indication"] = "gastric cancer"
+        self.assertEqual(c.dimensions["indication"], "colorectal cancer")
+
+        prov = {
+            "source_id": "SRC-00000881",
+            "source_type": "PMID",
+            "source_identifier": "12345678",
+            "locator": "Fig 2",
+            "retrieved_at": "2026-08-27",
+        }
+        ep = make_evidence_package(provenance=prov)
+        prov["source_type"] = "OTHER"
+        self.assertEqual(ep.provenance["source_type"], "PMID")
+
+    def test_nested_values_cannot_be_mutated_through_the_object(self):
+        a = make_assessment()
+        with self.assertRaises(TypeError):
+            a.review["status"] = "MACHINE_PROPOSED"
+        with self.assertRaises(TypeError):
+            a.critical_unknowns[0]["resolution"] = "PUBLIC_RESOLVABLE"
+        c = make_context()
+        with self.assertRaises(TypeError):
+            c.dimensions["indication"] = "x"
+        ep = make_evidence_package()
+        for block in ("measurement", "study_context", "provenance", "interpretation_boundary", "derivation"):
+            with self.assertRaises(TypeError):
+                getattr(ep, block)["injected"] = 1
+
+    def test_nested_lists_become_tuples(self):
+        ep = make_evidence_package(
+            interpretation_boundary={
+                "directly_supports": ["a", "b"],
+                "does_not_support": [],
+                "limitations": ["c"],
+                "evidence_ceiling": "x",
+            }
+        )
+        self.assertIsInstance(ep.interpretation_boundary["directly_supports"], tuple)
+        self.assertIsInstance(ep.candidate_refs, tuple)
+
+    def test_legacy_crosswalk_is_read_only(self):
+        with self.assertRaises(TypeError):
+            LEGACY_CROSSWALK["Opportunity"] = None
+        with self.assertRaises(TypeError):
+            del LEGACY_CROSSWALK["Asset"]
+        with self.assertRaises(TypeError):
+            MISSING_CANDIDATE_TYPES["L00"] = "X"
+
+
+# --- 8. nested schema parity (runtime must reject what the schema rejects) ---
+
+class NestedSchemaParityTests(unittest.TestCase):
+    def _ep_schema_props(self, block: str) -> set[str]:
+        schema = _load(DATA_LAYOUT / "evidence_package.schema.json")
+        return set(schema["properties"][block]["properties"])
+
+    def test_closed_block_allowed_keys_match_schema_properties(self):
+        ep = _load(DATA_LAYOUT / "evidence_package.schema.json")["properties"]
+        python_allowed = {
+            "measurement": set(dm._MEASUREMENT_KEYS),
+            "provenance": set(dm._PROVENANCE_KEYS),
+            "interpretation_boundary": set(dm._INTERPRETATION_KEYS),
+            "derivation": set(dm._DERIVATION_KEYS),
+        }
+        for block, allowed in python_allowed.items():
+            with self.subTest(block=block):
+                self.assertFalse(ep[block]["additionalProperties"])
+                self.assertEqual(set(ep[block]["properties"]), allowed)
+
+        asmt = _load(DATA_LAYOUT / "assessment.schema.json")["properties"]
+        self.assertFalse(asmt["review"]["additionalProperties"])
+        self.assertEqual(set(asmt["review"]["properties"]), set(dm._REVIEW_KEYS))
+        self.assertFalse(asmt["critical_unknowns"]["items"]["additionalProperties"])
+        self.assertEqual(
+            set(asmt["critical_unknowns"]["items"]["properties"]),
+            set(dm._CRITICAL_UNKNOWN_KEYS),
+        )
+
+        ctx = _load(DATA_LAYOUT / "context.schema.yaml")
+        self.assertFalse(ctx["additionalProperties"])
+        inst = _load(DATA_LAYOUT / "instantiation.schema.yaml")
+        self.assertFalse(inst["additionalProperties"])
+
+    def test_measurement_rejects_extra_key_and_empty_scalar(self):
+        with self.assertRaises(ValueError):
+            make_evidence_package(
+                measurement={
+                    "type": "IHC", "analyte": "X", "readout": "y", "result": "z",
+                    "illegal_extra": 123,
+                }
+            )
+        with self.assertRaises(ValueError):
+            make_evidence_package(
+                measurement={"type": "", "analyte": "X", "readout": "y", "result": "z"}
+            )
+
+    def test_provenance_rejects_extra_key_and_wrong_scalar_types(self):
+        good = {
+            "source_id": "SRC-00000881",
+            "source_type": "PMID",
+            "source_identifier": "12345678",
+            "locator": "Fig 2",
+            "retrieved_at": "2026-08-27",
+        }
+        with self.assertRaises(ValueError):
+            make_evidence_package(provenance={**good, "extra": "x"})
+        with self.assertRaises(ValueError):
+            make_evidence_package(provenance={**good, "source_identifier": 123})
+        with self.assertRaises(ValueError):
+            make_evidence_package(provenance={**good, "locator": ["Fig 2"]})
+        with self.assertRaises(ValueError):
+            make_evidence_package(provenance={**good, "source_identifier": ""})
+
+    def test_interpretation_boundary_rejects_extra_key_and_non_string_items(self):
+        good = {
+            "directly_supports": ["a"],
+            "does_not_support": ["b"],
+            "limitations": ["c"],
+            "evidence_ceiling": "x",
+        }
+        with self.assertRaises(ValueError):
+            make_evidence_package(interpretation_boundary={**good, "extra": []})
+        with self.assertRaises(ValueError):
+            make_evidence_package(
+                interpretation_boundary={**good, "directly_supports": ["a", 5]}
+            )
+        with self.assertRaises(ValueError):
+            make_evidence_package(interpretation_boundary={**good, "evidence_ceiling": ""})
+
+    def test_derivation_rejects_extra_key(self):
+        with self.assertRaises(ValueError):
+            make_evidence_package(
+                derivation={"module_run_id": "R", "code_commit": "c", "extra": 1}
+            )
+
+    def test_study_context_allows_extra_key_but_checks_required_types(self):
+        ep = make_evidence_package(
+            study_context={
+                "indication": "colorectal cancer",
+                "treatment_state": "mixed",
+                "sample_type": "primary tumor",
+                "n": 124,
+                "custom_annotation": "kept",
+            }
+        )
+        self.assertEqual(ep.study_context["custom_annotation"], "kept")
+        with self.assertRaises(ValueError):
+            make_evidence_package(
+                study_context={
+                    "indication": 5,
+                    "treatment_state": "mixed",
+                    "sample_type": "primary tumor",
+                }
+            )
+        with self.assertRaises(ValueError):
+            make_evidence_package(
+                study_context={
+                    "indication": "crc",
+                    "treatment_state": "mixed",
+                    "sample_type": "primary tumor",
+                    "n": [1],
+                }
+            )
+
+    def test_review_rejects_extra_key_and_bad_scalars(self):
+        with self.assertRaises(ValueError):
+            make_assessment(
+                review={
+                    "status": "HUMAN_APPROVED",
+                    "reviewer": "human",
+                    "reviewed_at": "2026-08-27",
+                    "extra": "x",
+                }
+            )
+        with self.assertRaises(ValueError):
+            make_assessment(
+                review={"status": "HUMAN_APPROVED", "reviewer": "", "reviewed_at": "2026-08-27"}
+            )
+        with self.assertRaises(ValueError):
+            make_assessment(
+                review={"status": "HUMAN_APPROVED", "reviewer": "human", "reviewed_at": "27-08-2026"}
+            )
+
+    def test_critical_unknown_item_rejects_extra_key_and_empty_unknown(self):
+        with self.assertRaises(ValueError):
+            make_assessment(
+                critical_unknowns=(
+                    {"unknown": "x", "resolution": "EXPERIMENT_REQUIRED", "extra": 1},
+                )
+            )
+        with self.assertRaises(ValueError):
+            make_assessment(
+                critical_unknowns=({"unknown": "", "resolution": "EXPERIMENT_REQUIRED"},)
+            )
+
+    def test_key_evidence_arrays_must_be_mappings(self):
+        with self.assertRaises(ValueError):
+            make_assessment(
+                direction="CONFLICTING",
+                strength="DIRECT",
+                evidence_refs=(
+                    EvidenceRef("EP-00000123", "SUPPORTING"),
+                    EvidenceRef("EP-00000140", "CONTRADICTING"),
+                ),
+                key_supporting_evidence=("EP-00000123",),
+                key_contradicting_evidence=({"ref": "EP-00000140"},),
+            )
+
+
+# --- 9. missing_candidate_types completeness -----------------------------
+
+class MissingCandidateTypesTests(unittest.TestCase):
+    def setUp(self):
+        self.doc = _load(CONTRACT_PATH)
+
+    def test_yaml_and_python_agree(self):
+        yaml_map = {
+            row["level"]: row["candidate_type"]
+            for row in self.doc["missing_candidate_types"]["entries"]
+        }
+        self.assertEqual(yaml_map, dict(MISSING_CANDIDATE_TYPES))
+
+    def test_missing_plus_one_to_one_is_the_full_ontology(self):
+        one_to_one_levels = {
+            e.level for e in LEGACY_CROSSWALK.values() if e.level is not None
+        }
+        self.assertEqual(one_to_one_levels, {"L04", "L06", "L13"})
+        covered = set(MISSING_CANDIDATE_TYPES) | one_to_one_levels
+        self.assertEqual(covered, set(dm.CANDIDATE_LEVELS))
+        self.assertEqual(set(MISSING_CANDIDATE_TYPES) & one_to_one_levels, set())
+
+    def test_l09_l10_are_present_because_adcconstruct_spans_them(self):
+        self.assertEqual(MISSING_CANDIDATE_TYPES["L09"], "ADC_DESIGN")
+        self.assertEqual(MISSING_CANDIDATE_TYPES["L10"], "ADC_HIT")
+        self.assertFalse(LEGACY_CROSSWALK["ADCConstruct"].one_to_one)
 
 
 if __name__ == "__main__":
