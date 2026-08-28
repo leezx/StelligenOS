@@ -1,0 +1,93 @@
+# Canonical CSV headers for StelligenOS Data Layout Spec v1.0.
+# The header row IS the spec for each CSV. Machine-readable so
+# scripts/scaffold_data_layout.sh can write real .csv files at the EXTERNAL
+# data root without this repository ever containing a .csv file (repo boundary
+# forbids data-like files, verify_repository_boundary.sh).
+#
+# key   = logical template name (also the stem used by the scaffold script)
+# value = ordered list of column names for the header row
+#
+# See docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md and
+#     docs/protocols/examples/STELLIGENOS_DATA_LAYOUT_v1_worked_example.md
+
+spec_version: "1.0-draft"
+
+headers:
+
+  # --- 10_CANDIDATES/Lnn_*.csv (identity fields; Level-specific columns may follow) ---
+  candidate:
+    [candidate_id, candidate_type, level, canonical_name, parent_candidate_id,
+     status, version, created_at, provenance_ref]
+
+  # --- 20_INSTANTIATIONS/<inst>/candidates.csv ---
+  instantiation_candidates:
+    [candidate_id, canonical_name, admitted_at, admission_note]
+
+  # --- 20_INSTANTIATIONS/<inst>/MATRICES/Lnn_*.matrix.csv (wide, derived view) ---
+  # NOTE: TGT-01..TGT-08 shown for ADC_TARGET_GATESET; other GateSets substitute
+  # their own member gate ids (see 00_REGISTRY/gateset_registry.csv).
+  matrix_adc_target:
+    [candidate_id, name, TGT-01, TGT-02, TGT-03, TGT-04, TGT-05, TGT-06, TGT-07,
+     TGT-08, decision]
+
+  # --- 20_INSTANTIATIONS/<inst>/MATRICES/Lnn_*.assessments.csv (long, machine-friendly) ---
+  assessments_long:
+    [candidate_id, gate_id, direction, strength, assessment_id,
+     assessment_version, evidence_count, review_status, last_updated_at]
+
+  # --- 20_INSTANTIATIONS/<inst>/DECISIONS/decisions.csv (view over DEC-*.json) ---
+  decisions:
+    [decision_id, candidate_id, gateset_id, gateset_version, decision,
+     triggered_by_gates, review_status, decided_at]
+
+  # --- TGT-NN/CURRENT/evidence_index.csv (reference to EP, never a copy) ---
+  gate_evidence_index:
+    [evidence_id, candidate_id, role, assessment_id]
+
+  # --- TGT-NN/CURRENT/unknowns.csv ---
+  gate_unknowns:
+    [candidate_id, gate_id, assessment_id, unknown, resolution]
+
+  # --- TGT-NN/RUNS/RUN-*/candidates_input.csv ---
+  run_candidates_input:
+    [candidate_id, canonical_name]
+
+  # --- TGT-NN/RUNS/RUN-*/evidence_created.csv ---
+  run_evidence_created:
+    [evidence_id, candidate_id, source_id, claim_short, created_at]
+
+  # --- TGT-NN/RUNS/RUN-*/assessment_proposals.csv (proposal, NOT canonical) ---
+  assessment_proposals:
+    [candidate_id, gate_id, proposed_direction, proposed_strength,
+     evidence_count, proposal_rationale, qc_status]
+
+  # --- 00_REGISTRY/candidate_levels.csv ---
+  registry_candidate_levels:
+    [level, candidate_type, canonical_gateset, role]
+
+  # --- 00_REGISTRY/candidate_type_registry.csv ---
+  registry_candidate_type:
+    [candidate_type, level, canonical_gateset, description, status]
+
+  # --- 00_REGISTRY/gateset_registry.csv ---
+  registry_gateset:
+    [gateset_id, gateset_version, candidate_level, member_gate_ids, status]
+
+  # --- 00_REGISTRY/gate_registry.csv ---
+  registry_gate:
+    [gate_id, gateset_id, candidate_level, gate_name, dominant_evidence_regime,
+     gate_version]
+
+  # --- 00_REGISTRY/instantiation_registry.csv ---
+  registry_instantiation:
+    [instantiation_id, candidate_type, candidate_level, context_id, modality,
+     gateset_id, gateset_version, evidence_regime, status, created_at]
+
+  # --- 30_EVIDENCE_LIBRARY/evidence_index.csv ---
+  library_evidence_index:
+    [evidence_id, version, claim_short, measurement_type, primary_source_id,
+     candidate_refs, created_at, status]
+
+  # --- 30_EVIDENCE_LIBRARY/source_index.csv ---
+  library_source_index:
+    [source_id, source_type, external_id, title, year, external_ref]

@@ -1,0 +1,72 @@
+# JSON Schema (draft 2020-12) for TGT-NN/gate_binding.yaml and for the shared
+# core of GATESETS/<gateset>-vN/gateset_binding.yaml.
+# See docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md sec.6 and sec.7.3
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "stelligenos/data_layout/gate_binding.schema.yaml"
+title: "StelligenOS Gate binding / GateSet binding"
+type: object
+oneOf:
+  - $ref: "#/$defs/gate_binding"
+  - $ref: "#/$defs/gateset_binding"
+$defs:
+  gate_binding:
+    type: object
+    required:
+      - gate_id
+      - gate_version
+      - gateset_id
+      - gateset_version
+      - instantiation_id
+      - candidate_level
+      - dominant_evidence_regime
+      - gate_contract_ref
+      - evidence_ladder_ref
+      - assessment_rule_ref
+      - primary_module_id
+      - primary_module_version
+    properties:
+      gate_id: { type: string, minLength: 1 }
+      gate_version: { type: string }
+      gateset_id: { type: string, pattern: "^[A-Z0-9_]+_GATESET$" }
+      gateset_version: { type: string }
+      instantiation_id: { type: string, pattern: "^INST-[A-Z0-9-]+-v[0-9]+$" }
+      candidate_level:
+        type: string
+        enum: [L00, L01, L02, L03, L04, L05, L06, L07, L08, L09, L10, L11, L12, L13, L14]
+      dominant_evidence_regime:
+        type: string
+        enum: [PUBLIC_PRIMARY, PUBLIC_HYBRID, EXPERIMENT_PRIMARY, DEVELOPMENT_PRIMARY]
+      gate_contract_ref: { type: string, pattern: "^external:.+" }
+      evidence_ladder_ref: { type: string, pattern: "^external:.+" }
+      assessment_rule_ref: { type: string, pattern: "^external:.+" }
+      primary_module_id: { type: string, pattern: "^MOD-[A-Z0-9]+$" }
+      primary_module_version: { type: string }
+    additionalProperties: false
+  gateset_binding:
+    type: object
+    required:
+      - gateset_id
+      - gateset_version
+      - instantiation_id
+      - gates
+      - decision_rule_ref
+      - fatal_gate_policy_ref
+      - required_gate_policy_ref
+    properties:
+      gateset_id: { type: string, pattern: "^[A-Z0-9_]+_GATESET$" }
+      gateset_version: { type: string }
+      instantiation_id: { type: string, pattern: "^INST-[A-Z0-9-]+-v[0-9]+$" }
+      gates:
+        type: array
+        minItems: 1
+        items:
+          type: object
+          required: [gate_id, gate_version]
+          properties:
+            gate_id: { type: string, minLength: 1 }
+            gate_version: { type: string }
+          additionalProperties: false
+      decision_rule_ref: { type: string, pattern: "^external:.+" }
+      fatal_gate_policy_ref: { type: string, pattern: "^external:.+" }
+      required_gate_policy_ref: { type: string, pattern: "^external:.+" }
+    additionalProperties: false

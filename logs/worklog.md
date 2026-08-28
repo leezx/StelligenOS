@@ -3627,3 +3627,55 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   IDENTICAL / boundary 仅报 pre-existing untracked。
 - Next: 本收尾 PR 审核合并后，`v5` 即正式治理基线；runtime migration PR A
   需 Owner 单独授权后启动。
+
+## 2026-08-28T10:30 EDT — StelligenOS Data Layout Spec v1.0（目录层次 + 规范）
+
+- 用户指令：读取 KB `2.Biotech/StelligenOS/StelligenOS工作目录设计.md`，把这套
+  目录层次和规范做出来，提交 PR 审核。设计文档是把"产品数据层"与"施工运行层"
+  分开的物理布局提案（ChatGPT 输出），其自身结论即"写成正式 SPEC + 所有
+  CSV/JSON/YAML schema + 一个 TGT-04 × CEACAM5 完整样例"。
+- 分支：从 `origin/main@95e2ad1` 新建 `task_20260828_data-layout-spec-v1`。
+- 交付物类型：纯新增（规范文档 + schema + worked example + 外部骨架脚本）。
+  `NO_ARCHITECTURE_CHANGE`：不改核心对象 / `core_objects.yaml` /
+  `gate_system.yaml` / CURRENT_SYSTEM v5 / 任何现有合同；不启动 runtime
+  migration PR A–E。
+- 新增文件：
+  - `docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md`（`v1.0-draft`）——
+    §1 顶层 `00_REGISTRY…90_ARCHIVE` · §2 Candidate 分 Level CSV + 统一
+    identity（无 `context_id`）· §3 Instantiation · §4 Matrix 宽表（cell =
+    `DIRECTION/STRENGTH`，禁数字）· §5 assessments long-format · §6 GateSet→Gate
+    folder · §7 Gate folder 三层（gate_binding / CURRENT / ASSESSMENTS
+    vNNN+latest / RUNS immutable）· §8 Assessment JSON 字段规范 + 正交/聚合
+    铁律 · §9–14 EvidencePackage folder / 全局存储 / Gate 内只放 evidence_index
+    引用 / source_index · §10 EP 中性无 grade · §15 run_manifest immutable ·
+    §16 proposal↔human-approved 分离 · §17 Decision 在 GateSet 层 · §18 数据流
+    · §19 五类 canonical 文件 · §20 建筑图 · 附录 A ID 命名规范 · B schema 索引
+    · C 仓库边界 · D 版本维护。
+  - `src/contracts/data_layout/`：`README.md` + 5 个 `*.schema.json`
+    （candidate / assessment / evidence_package / run_manifest / decision）
+    + 2 个 `*.schema.yaml`（instantiation / gate_binding，后者 `oneOf` 两分支）
+    + `csv_headers.yaml`（17 项 CSV 规范表头，logical name → 有序列名）。
+  - `docs/protocols/examples/STELLIGENOS_DATA_LAYOUT_v1_worked_example.md`——
+    单文档 worked example，完整 `TGT-04 × CEACAM5` 树，每文件 fenced block，
+    顶部 `REFERENCE EXAMPLE — NOT REAL DATA`。
+  - `scripts/scaffold_data_layout.sh`——在外部绝对路径生成空骨架 + 15 个 Level
+    CSV 表头 + 可选 Instantiation 骨架；拒绝在 repo 内运行（exit 3）；表头从
+    `csv_headers.yaml` 生成。
+  - `docs/handoff/2026-08-28-data-layout-spec-v1.zh-CN.md`。
+- 与设计文档的有意差异：`verify_repository_boundary.sh` 禁止任何 `.csv` 文件，
+  因此 CSV 规范表头改由 `csv_headers.yaml` 承载，worked example 改为单文档
+  （CSV 在 fenced block 内），不落地为文件。语义一致。
+- 明确未改：`src/` 代码、`core_objects.yaml`、`gate_system.yaml`、CURRENT_SYSTEM
+  v5、任何测试或合同；未在 repo 内创建 `DATA/` 目录或真实数据或 `.csv`；未启动
+  runtime migration；未解除 EVGAP；未动 CRC pool；用户自有 untracked 文件未暂存。
+- 验证：unittest 555 OK；test_git_sync A-D；git diff --check clean；
+  verify_repository_boundary 在干净 tracked 树的临时 worktree 上 `passed`
+  （本地工作树因 pre-existing 用户 untracked 仍报违规，CI 不受影响，与 PR
+  #94/#95 相同）；7 schema + csv_headers.yaml 结构合法；worked example 内嵌
+  JSON/YAML 手写不变量检查全过（id pattern / EP 无 grade / assessment 无
+  decision·score / CONFLICTING 需两侧 / matrix cell 非数字 / candidate 无
+  context_id）；scaffold 脚本拒绝 repo 内路径、外部 dry-run 生成 24 个无数据行
+  文件。
+- Next: 显式暂存本任务文件，创建非 draft PR，提交网页版 ChatGPT `Biotech ideas`
+  → `AI 审核方案` 审核；`APPROVE` 后 `v1.0-draft` → `v1.0`，再用 scaffold 脚本
+  在外部生成真实骨架。
