@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "stelligenos/data_layout/evidence_package.schema.json",
+  "title": "EvidencePackage evidence.json (neutral empirical observation)",
+  "description": "30_EVIDENCE_LIBRARY/PACKAGES/EP-*/evidence.json. Canonical machine-readable truth for one atomic, globally reusable evidence asset. immutable-by-ID: content is never edited in place; corrections create a new EP that may carry backward supersedes_evidence_id. No forward superseded_by/status here -- that lives only in evidence_index.csv (spec sec.0.4 / sec.14). MUST NOT carry direction/strength/grade/DIRECT/POSITIVE etc. -- grading happens only in the Assessment. See STELLIGENOS_DATA_LAYOUT_SPEC.v1.0 sec.9-14.",
+  "type": "object",
+  "required": [
+    "evidence_id",
+    "schema_version",
+    "claim",
+    "measurement",
+    "candidate_refs",
+    "study_context",
+    "provenance",
+    "interpretation_boundary",
+    "derivation"
+  ],
+  "properties": {
+    "evidence_id": { "type": "string", "pattern": "^EP-[0-9]{8}$" },
+    "schema_version": { "type": "integer", "minimum": 1, "description": "structural schema version only; content is not revised in place (immutable-by-ID)" },
+    "claim": { "type": "string", "minLength": 1 },
+    "measurement": {
+      "type": "object",
+      "required": ["type", "analyte", "readout", "result"],
+      "properties": {
+        "type": { "type": "string", "minLength": 1, "description": "measurement class, e.g. IHC / RNA-seq / flow / mass-spec surface density -- MUST NOT be used across measurement boundaries" },
+        "analyte": { "type": "string", "minLength": 1 },
+        "readout": { "type": "string", "minLength": 1 },
+        "result": { "type": "string", "minLength": 1 },
+        "unit": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "candidate_refs": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^CAND-L[0-9]{2}-[0-9]{6}$" }
+    },
+    "study_context": {
+      "type": "object",
+      "required": ["indication", "treatment_state", "sample_type"],
+      "properties": {
+        "indication": { "type": "string" },
+        "treatment_state": { "type": "string" },
+        "sample_type": { "type": "string" },
+        "n": { "type": ["integer", "string"] },
+        "model": { "type": "string" },
+        "assay": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["source_id", "source_type", "source_identifier", "locator", "retrieved_at"],
+      "properties": {
+        "source_id": { "type": "string", "pattern": "^SRC-[0-9]{8}$" },
+        "source_type": { "type": "string", "enum": ["PMID", "PMC", "DOI", "NCT", "GEO", "PATENT", "REGULATORY", "COMPANY_DISCLOSURE", "DATASET", "OTHER"] },
+        "source_identifier": { "type": "string", "minLength": 1 },
+        "locator": { "type": "string" },
+        "retrieved_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}" }
+      },
+      "additionalProperties": false
+    },
+    "interpretation_boundary": {
+      "type": "object",
+      "required": ["directly_supports", "does_not_support", "limitations", "evidence_ceiling"],
+      "properties": {
+        "directly_supports": { "type": "array", "items": { "type": "string" } },
+        "does_not_support": { "type": "array", "items": { "type": "string" } },
+        "limitations": { "type": "array", "items": { "type": "string" } },
+        "evidence_ceiling": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "derivation": {
+      "type": "object",
+      "required": ["module_run_id", "code_commit"],
+      "properties": {
+        "module_run_id": { "type": "string" },
+        "code_commit": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "supersedes_evidence_id": { "type": "string", "pattern": "^EP-[0-9]{8}$", "description": "backward pointer only: set when this EP replaces an older one. The forward superseded_by lives in evidence_index.csv, never here (spec sec.0.4)." }
+  },
+  "not": {
+    "anyOf": [
+      { "required": ["direction"] },
+      { "required": ["strength"] },
+      { "required": ["grade"] },
+      { "required": ["superseded_by"] },
+      { "required": ["status"] }
+    ]
+  },
+  "additionalProperties": false
+}

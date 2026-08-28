@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "stelligenos/data_layout/run_manifest.schema.json",
+  "title": "Gate Module run_manifest.json",
+  "description": "TGT-NN/RUNS/RUN-*/run_manifest.json. A run directory is IMMUTABLE once status is terminal. Bug fixes = a new run id, never an edit. See STELLIGENOS_DATA_LAYOUT_SPEC.v1.0 sec.15.",
+  "type": "object",
+  "required": [
+    "run_id",
+    "gate_id",
+    "gate_version",
+    "instantiation_id",
+    "module_id",
+    "module_version",
+    "code_commit",
+    "started_at",
+    "candidate_count",
+    "status"
+  ],
+  "properties": {
+    "run_id": { "type": "string", "pattern": "^RUN-[A-Z0-9]+-[0-9]{8}-[0-9]{3}$" },
+    "gate_id": { "type": "string", "minLength": 1 },
+    "gate_version": { "type": "string" },
+    "instantiation_id": { "type": "string", "pattern": "^INST-[A-Z0-9-]+-v[0-9]+$" },
+    "module_id": { "type": "string", "pattern": "^MOD-[A-Z0-9]+$" },
+    "module_version": { "type": "string" },
+    "code_commit": { "type": "string", "minLength": 1 },
+    "started_at": { "type": "string" },
+    "completed_at": { "type": "string" },
+    "candidate_count": { "type": "integer", "minimum": 0 },
+    "status": { "type": "string", "enum": ["RUNNING", "COMPLETED", "FAILED", "ABORTED"] }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "enum": ["COMPLETED", "FAILED", "ABORTED"] } } },
+      "then": { "required": ["completed_at"] }
+    }
+  ],
+  "additionalProperties": false
+}

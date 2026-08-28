@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "stelligenos/data_layout/decision.schema.json",
+  "title": "GateSet-level Decision (canonical JSON)",
+  "description": "20_INSTANTIATIONS/<inst>/DECISIONS/DEC-*.json. Produced by GateSet decision_rule / fatal_gate_policy / required_gate_policy over a Candidate's assessments -- NEVER by a single Gate. Canonical files are HUMAN_APPROVED only. assessment_snapshot pins {assessment_id, assessment_version, cell} per gate so historical decisions are reproducible. Immutable once written: no forward superseded_by -- a replacing Decision may carry backward supersedes_decision_id (spec sec.0.4). See STELLIGENOS_DATA_LAYOUT_SPEC.v1.0 sec.17.",
+  "type": "object",
+  "required": [
+    "decision_id",
+    "instantiation_id",
+    "candidate_id",
+    "gateset_id",
+    "gateset_version",
+    "decision",
+    "triggered_by",
+    "assessment_snapshot",
+    "decision_rule_ref",
+    "review"
+  ],
+  "properties": {
+    "decision_id": { "type": "string", "pattern": "^DEC-[0-9]{4}$" },
+    "instantiation_id": { "type": "string", "pattern": "^INST-[A-Z0-9-]+-v[0-9]+$" },
+    "candidate_id": { "type": "string", "pattern": "^CAND-L[0-9]{2}-[0-9]{6}$" },
+    "gateset_id": { "type": "string", "pattern": "^[A-Z0-9_]+_GATESET$" },
+    "gateset_version": { "type": "string" },
+    "decision": { "type": "string", "enum": ["GO", "CONDITIONAL_GO", "HOLD", "MORE_EVIDENCE", "KILL", "NOMINATE", "COMMIT"] },
+    "triggered_by": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["gate_id", "assessment_id", "assessment_version", "reason"],
+        "properties": {
+          "gate_id": { "type": "string" },
+          "assessment_id": { "type": "string", "pattern": "^ASMT-[0-9]{6}$" },
+          "assessment_version": { "type": "integer", "minimum": 1 },
+          "reason": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "assessment_snapshot": {
+      "type": "object",
+      "description": "map gate_id -> pinned assessment ref, or the literal string NOT_EVALUATED",
+      "additionalProperties": {
+        "oneOf": [
+          { "const": "NOT_EVALUATED" },
+          {
+            "type": "object",
+            "required": ["assessment_id", "assessment_version", "cell"],
+            "properties": {
+              "assessment_id": { "type": "string", "pattern": "^ASMT-[0-9]{6}$" },
+              "assessment_version": { "type": "integer", "minimum": 1 },
+              "cell": {
+                "type": "string",
+                "pattern": "^((POSITIVE|NEGATIVE|CONFLICTING|INCONCLUSIVE)/(DIRECT|INDIRECT_STRONG|WEAK)|UNKNOWN|NOT_APPLICABLE)$"
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "decision_rule_ref": { "type": "string", "pattern": "^external:.+" },
+    "review": {
+      "type": "object",
+      "required": ["status", "reviewer", "reviewed_at"],
+      "properties": {
+        "status": { "const": "HUMAN_APPROVED" },
+        "reviewer": { "type": "string", "minLength": 1 },
+        "reviewed_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}" }
+      },
+      "additionalProperties": false
+    },
+    "supersedes_decision_id": { "type": "string", "pattern": "^DEC-[0-9]{4}$", "description": "backward pointer only: the older Decision this one replaces. No forward superseded_by (spec sec.0.4); decisions.csv reflects current state." }
+  },
+  "not": {
+    "anyOf": [
+      { "required": ["superseded_by"] }
+    ]
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,63 @@
+# JSON Schema (draft 2020-12) for 20_INSTANTIATIONS/<inst>/instantiation.yaml
+# See docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md sec.3
+# Instantiation is configuration/binding only: it produces no scientific
+# conclusion, holds no Evidence, produces no Assessment (Blueprint v1.3 M08).
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "stelligenos/data_layout/instantiation.schema.yaml"
+title: "StelligenOS Instantiation binding"
+type: object
+required:
+  - instantiation_id
+  - candidate_type
+  - candidate_level
+  - context_id
+  - context_version
+  - modality
+  - gateset_id
+  - gateset_version
+  - evidence_regime
+  - status
+  - version
+  - created_at
+properties:
+  instantiation_id:
+    type: string
+    pattern: "^INST-[A-Z0-9-]+-v[0-9]+$"
+  candidate_type:
+    type: string
+    pattern: "^[A-Z0-9_]+$"
+  candidate_level:
+    type: string
+    enum: [L00, L01, L02, L03, L04, L05, L06, L07, L08, L09, L10, L11, L12, L13, L14]
+  context_id:
+    type: string
+    pattern: "^CTX-[A-Z0-9-]+$"
+  context_version:
+    type: integer
+    minimum: 1
+  modality:
+    type: string
+    minLength: 1
+  gateset_id:
+    type: string
+    pattern: "^[A-Z0-9_]+_GATESET$"
+  gateset_version:
+    type: string
+  evidence_regime:
+    type: string
+    enum: [PUBLIC_ONLY, PUBLIC_PLUS_EXPERIMENTAL, DEVELOPMENT]
+  status:
+    type: string
+    enum: [ACTIVE, HOLD, FROZEN, RETIRED]
+  version:
+    type: integer
+    minimum: 1
+  created_at:
+    type: string
+    pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+not:
+  anyOf:
+    - required: [candidate_id]
+    - required: [assessments]
+    - required: [evidence_refs]
+additionalProperties: false

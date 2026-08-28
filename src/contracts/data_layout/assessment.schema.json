@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "stelligenos/data_layout/assessment.schema.json",
+  "title": "CandidateGateAssessment (canonical JSON)",
+  "description": "TGT-NN/ASSESSMENTS/<candidate_id>/vNNN.json. The single source of truth for one Candidate x Gate matrix cell. Canonical files are HUMAN_APPROVED only; proposals stay in RUNS/assessment_proposals.csv. Direction and Strength are orthogonal and machine-constrained (sec.8.2); the assessment never produces a Candidate-level Decision. Immutable per version: no superseded_by -- the v001->v002->v003 sequence plus latest.json expresses supersession (spec sec.0.4). See STELLIGENOS_DATA_LAYOUT_SPEC.v1.0 sec.8.",
+  "type": "object",
+  "required": [
+    "assessment_id",
+    "assessment_version",
+    "instantiation_id",
+    "candidate_id",
+    "context_id",
+    "context_version",
+    "gateset_id",
+    "gateset_version",
+    "gate_id",
+    "gate_version",
+    "direction",
+    "strength",
+    "evidence_refs",
+    "aggregation_rationale",
+    "critical_unknowns",
+    "evidence_ceiling",
+    "review"
+  ],
+  "properties": {
+    "assessment_id": { "type": "string", "pattern": "^ASMT-[0-9]{6}$" },
+    "assessment_version": { "type": "integer", "minimum": 1 },
+    "instantiation_id": { "type": "string", "pattern": "^INST-[A-Z0-9-]+-v[0-9]+$" },
+    "candidate_id": { "type": "string", "pattern": "^CAND-L[0-9]{2}-[0-9]{6}$" },
+    "context_id": { "type": "string", "pattern": "^CTX-[A-Z0-9-]+$" },
+    "context_version": { "type": "integer", "minimum": 1 },
+    "gateset_id": { "type": "string", "pattern": "^[A-Z0-9_]+_GATESET$" },
+    "gateset_version": { "type": "string" },
+    "gate_id": { "type": "string", "minLength": 1 },
+    "gate_version": { "type": "string" },
+    "direction": { "type": "string", "enum": ["POSITIVE", "NEGATIVE", "CONFLICTING", "INCONCLUSIVE", "NOT_APPLICABLE"] },
+    "strength": { "type": "string", "enum": ["DIRECT", "INDIRECT_STRONG", "WEAK", "UNKNOWN"] },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["evidence_id", "role"],
+        "properties": {
+          "evidence_id": { "type": "string", "pattern": "^EP-[0-9]{8}$" },
+          "role": { "type": "string", "enum": ["SUPPORTING", "CONTRADICTING", "CONTEXTUAL"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "aggregation_rationale": { "type": "string", "minLength": 1 },
+    "critical_unknowns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["unknown", "resolution"],
+        "properties": {
+          "unknown": { "type": "string", "minLength": 1 },
+          "resolution": { "type": "string", "enum": ["PUBLIC_RESOLVABLE", "EXPERIMENT_REQUIRED", "CURRENTLY_UNRESOLVABLE"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "evidence_ceiling": { "type": "string", "minLength": 1 },
+    "key_supporting_evidence": { "type": "array", "items": { "type": "object" } },
+    "key_contradicting_evidence": { "type": "array", "items": { "type": "object" } },
+    "review": {
+      "type": "object",
+      "required": ["status", "reviewer", "reviewed_at"],
+      "properties": {
+        "status": { "const": "HUMAN_APPROVED" },
+        "reviewer": { "type": "string", "minLength": 1 },
+        "reviewed_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "description": "POSITIVE / NEGATIVE must not be UNKNOWN strength and need >=1 evidence_ref.",
+      "if": { "properties": { "direction": { "enum": ["POSITIVE", "NEGATIVE"] } } },
+      "then": {
+        "properties": {
+          "strength": { "enum": ["DIRECT", "INDIRECT_STRONG", "WEAK"] },
+          "evidence_refs": { "minItems": 1 }
+        }
+      }
+    },
+    {
+      "description": "CONFLICTING: strength not UNKNOWN; evidence_refs must contain >=1 SUPPORTING and >=1 CONTRADICTING; both key_* arrays non-empty.",
+      "if": { "properties": { "direction": { "const": "CONFLICTING" } } },
+      "then": {
+        "required": ["key_supporting_evidence", "key_contradicting_evidence"],
+        "properties": {
+          "strength": { "enum": ["DIRECT", "INDIRECT_STRONG", "WEAK"] },
+          "key_supporting_evidence": { "minItems": 1 },
+          "key_contradicting_evidence": { "minItems": 1 },
+          "evidence_refs": {
+            "allOf": [
+              { "contains": { "properties": { "role": { "const": "SUPPORTING" } }, "required": ["role"] }, "minContains": 1 },
+              { "contains": { "properties": { "role": { "const": "CONTRADICTING" } }, "required": ["role"] }, "minContains": 1 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "description": "INCONCLUSIVE: either has qualified evidence (strength != UNKNOWN, >=1 ref) OR is the UNKNOWN state (strength UNKNOWN, empty refs).",
+      "if": { "properties": { "direction": { "const": "INCONCLUSIVE" } } },
+      "then": {
+        "oneOf": [
+          {
+            "properties": {
+              "strength": { "enum": ["DIRECT", "INDIRECT_STRONG", "WEAK"] },
+              "evidence_refs": { "minItems": 1 }
+            }
+          },
+          {
+            "properties": {
+              "strength": { "const": "UNKNOWN" },
+              "evidence_refs": { "maxItems": 0 }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "description": "NOT_APPLICABLE serialization convention: strength UNKNOWN, empty evidence_refs.",
+      "if": { "properties": { "direction": { "const": "NOT_APPLICABLE" } } },
+      "then": {
+        "properties": {
+          "strength": { "const": "UNKNOWN" },
+          "evidence_refs": { "maxItems": 0 }
+        }
+      }
+    }
+  ],
+  "not": {
+    "anyOf": [
+      { "required": ["decision"] },
+      { "required": ["score"] },
+      { "required": ["superseded_by"] }
+    ]
+  },
+  "additionalProperties": false
+}

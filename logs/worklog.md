@@ -3627,3 +3627,185 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   IDENTICAL / boundary 仅报 pre-existing untracked。
 - Next: 本收尾 PR 审核合并后，`v5` 即正式治理基线；runtime migration PR A
   需 Owner 单独授权后启动。
+
+## 2026-08-28T10:30 EDT — StelligenOS Data Layout Spec v1.0（目录层次 + 规范）
+
+- 用户指令：读取 KB `2.Biotech/StelligenOS/StelligenOS工作目录设计.md`，把这套
+  目录层次和规范做出来，提交 PR 审核。设计文档是把"产品数据层"与"施工运行层"
+  分开的物理布局提案（ChatGPT 输出），其自身结论即"写成正式 SPEC + 所有
+  CSV/JSON/YAML schema + 一个 TGT-04 × CEACAM5 完整样例"。
+- 分支：从 `origin/main@95e2ad1` 新建 `task_20260828_data-layout-spec-v1`。
+- 交付物类型：纯新增（规范文档 + schema + worked example + 外部骨架脚本）。
+  `NO_ARCHITECTURE_CHANGE`：不改核心对象 / `core_objects.yaml` /
+  `gate_system.yaml` / CURRENT_SYSTEM v5 / 任何现有合同；不启动 runtime
+  migration PR A–E。
+- 新增文件：
+  - `docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md`（`v1.0-draft`）——
+    §1 顶层 `00_REGISTRY…90_ARCHIVE` · §2 Candidate 分 Level CSV + 统一
+    identity（无 `context_id`）· §3 Instantiation · §4 Matrix 宽表（cell =
+    `DIRECTION/STRENGTH`，禁数字）· §5 assessments long-format · §6 GateSet→Gate
+    folder · §7 Gate folder 三层（gate_binding / CURRENT / ASSESSMENTS
+    vNNN+latest / RUNS immutable）· §8 Assessment JSON 字段规范 + 正交/聚合
+    铁律 · §9–14 EvidencePackage folder / 全局存储 / Gate 内只放 evidence_index
+    引用 / source_index · §10 EP 中性无 grade · §15 run_manifest immutable ·
+    §16 proposal↔human-approved 分离 · §17 Decision 在 GateSet 层 · §18 数据流
+    · §19 五类 canonical 文件 · §20 建筑图 · 附录 A ID 命名规范 · B schema 索引
+    · C 仓库边界 · D 版本维护。
+  - `src/contracts/data_layout/`：`README.md` + 5 个 `*.schema.json`
+    （candidate / assessment / evidence_package / run_manifest / decision）
+    + 2 个 `*.schema.yaml`（instantiation / gate_binding，后者 `oneOf` 两分支）
+    + `csv_headers.yaml`（17 项 CSV 规范表头，logical name → 有序列名）。
+  - `docs/protocols/examples/STELLIGENOS_DATA_LAYOUT_v1_worked_example.md`——
+    单文档 worked example，完整 `TGT-04 × CEACAM5` 树，每文件 fenced block，
+    顶部 `REFERENCE EXAMPLE — NOT REAL DATA`。
+  - `scripts/scaffold_data_layout.sh`——在外部绝对路径生成空骨架 + 15 个 Level
+    CSV 表头 + 可选 Instantiation 骨架；拒绝在 repo 内运行（exit 3）；表头从
+    `csv_headers.yaml` 生成。
+  - `docs/handoff/2026-08-28-data-layout-spec-v1.zh-CN.md`。
+- 与设计文档的有意差异：`verify_repository_boundary.sh` 禁止任何 `.csv` 文件，
+  因此 CSV 规范表头改由 `csv_headers.yaml` 承载，worked example 改为单文档
+  （CSV 在 fenced block 内），不落地为文件。语义一致。
+- 明确未改：`src/` 代码、`core_objects.yaml`、`gate_system.yaml`、CURRENT_SYSTEM
+  v5、任何测试或合同；未在 repo 内创建 `DATA/` 目录或真实数据或 `.csv`；未启动
+  runtime migration；未解除 EVGAP；未动 CRC pool；用户自有 untracked 文件未暂存。
+- 验证：unittest 555 OK；test_git_sync A-D；git diff --check clean；
+  verify_repository_boundary 在干净 tracked 树的临时 worktree 上 `passed`
+  （本地工作树因 pre-existing 用户 untracked 仍报违规，CI 不受影响，与 PR
+  #94/#95 相同）；7 schema + csv_headers.yaml 结构合法；worked example 内嵌
+  JSON/YAML 手写不变量检查全过（id pattern / EP 无 grade / assessment 无
+  decision·score / CONFLICTING 需两侧 / matrix cell 非数字 / candidate 无
+  context_id）；scaffold 脚本拒绝 repo 内路径、外部 dry-run 生成 24 个无数据行
+  文件。
+- Next: 显式暂存本任务文件，创建非 draft PR，提交网页版 ChatGPT `Biotech ideas`
+  → `AI 审核方案` 审核；`APPROVE` 后 `v1.0-draft` → `v1.0`，再用 scaffold 脚本
+  在外部生成真实骨架。
+
+## 2026-08-28T13:20 EDT — Data Layout Spec v1.0 REQUEST_CHANGES 第一轮修订（同一 PR #96）
+
+- Review input: ChatGPT 在 `Biotech ideas → AI审核方案` 对话对 PR #96 `fad39ac`
+  返回 `REQUEST_CHANGES`：方向正确、目录主体不动，只修 6 点
+  contract/provenance/state-safety 问题；下一轮全部关闭即 APPROVE v1.0。
+- Fixes（仍 docs+schema+脚本，未启动 runtime migration）：
+  1. Context canonical 落点：新增 `15_CONTEXTS/`（`context_index.csv` +
+     `CTX-*/vNNN.yaml` canonical + `latest.yaml`）+ §2b + `context.schema.yaml`；
+     Instantiation/Assessment 加 `context_version`；"5 类 canonical" → "5 类
+     primary product outputs"（Context/Instantiation/gate_binding/gateset_binding/
+     run_manifest 也是 canonical record）。
+  2. 版本引用链闭合：EvidencePackage immutable-by-ID（纠错→新 EP + `superseded_by`），
+     `version` → `schema_version`；Decision `assessment_snapshot` →
+     `{assessment_id, assessment_version, cell}` | `"NOT_EVALUATED"`；`triggered_by`
+     加 `assessment_version`。列为冻结项。
+  3. Assessment schema enforce 状态铁律：direction×strength 组合表（POSITIVE/
+     NEGATIVE 禁 UNKNOWN + 需 ≥1 ref；CONFLICTING `contains` 两侧 + `key_*` 非空；
+     INCONCLUSIVE 有证据带 strength、无证据固定 `UNKNOWN` serialization；
+     NOT_APPLICABLE 单列）；canonical Assessment/Decision `review.status`
+     固定 `HUMAN_APPROVED`（`const`）。
+  4. Candidate schema `not.anyOf` 机器禁止 `context_id`/`context_version`/
+     `direction`/`strength`/`decision`/`score`/`assessment_id`/`evidence_refs`/
+     `gate_id`/`gateset_id`；`csv_headers.yaml` 加 `gate_current_assessments`
+     （列同 `assessments_long`）。
+  5. scaffold 脚本 boundary 检查顺序修复：先 python `realpath`（跟随 symlink）
+     解析目标（走到最近存在祖先）→ 判断是否在 repo 内 → 通过后才 `mkdir`；
+     新增 `tests/test_scaffold_data_layout.sh`（A–F），接入 `.github/workflows/ci.yml`。
+  6. worked example 修两处科学语义：删除"无密度数据"的 CONTRADICTING EP
+     （`EP-00000131`/`SRC-00000902`），该缺口只进 `critical_unknowns:
+     EXPERIMENT_REQUIRED`（新增 §10.2）；Matrix + Decision snapshot 一致用显式
+     `NOT_EVALUATED`，不用 em dash。
+- 治理措辞：PR body `NO_ARCHITECTURE_CHANGE` → `NO_CORE_ARCHITECTURE_CHANGE /
+  NEW_DATA_LAYOUT_CONTRACT`。
+- 改动文件（本轮）：`docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md`、
+  `docs/protocols/examples/STELLIGENOS_DATA_LAYOUT_v1_worked_example.md`、
+  `src/contracts/data_layout/`（+`context.schema.yaml`）、
+  `scripts/scaffold_data_layout.sh`、`tests/test_scaffold_data_layout.sh`（新）、
+  handoff、worklog（`ci.yml` 未改，token 限制）。
+- 明确未改：`src/` 代码（`data_layout/` 以外）、`core_objects.yaml`、
+  `gate_system.yaml`、CURRENT_SYSTEM v5、任何测试（`test_scaffold_data_layout`
+  为本任务新增）；未在 repo 内建 `.csv` 或 `DATA/`；未启动 runtime migration；
+  未解除 EVGAP；用户自有 untracked 文件未暂存。
+- 验证：unittest 555 OK / test_git_sync A-D / test_scaffold_data_layout A-F /
+  git diff --check clean / 干净 tracked-tree worktree 上 boundary passed +
+  scaffold + unittest 全过 / 8 schema + csv_headers 结构合法 / worked example
+  + csv_headers 手写不变量检查全过。GitHub connector 写 review 仍 403。
+- Next: 追加提交到 PR #96，更新 PR body 措辞，回复同一 ChatGPT 对话请求复审。
+
+## 2026-08-28T15:05 EDT — Data Layout Spec v1.0 REQUEST_CHANGES 第二轮修订（同一 PR #96）
+
+- Review input: ChatGPT 在 `Biotech ideas → AI审核方案` 对话对 PR #96 `4a640b2`
+  返回 `REQUEST_CHANGES`，但确认第 1 轮 6 点**全部关闭**，仅剩 1 个 blocker：
+  immutable / append-only canonical record 与 forward `superseded_by` 自相矛盾
+  （record 声明写入后不改，却要旧 record 自己写指向未来的 `superseded_by`）。
+  修完这一类即直接 APPROVE v1.0，不再扩展 Data Layout。
+- Fix（统一冻结，仍 docs+schema，无核心对象 / `core_objects.yaml` /
+  `gate_system.yaml` / v5 变更，未启动 runtime migration，repo 内不放数据/`.csv`）：
+  - 新增 spec §0.4：**Immutable canonical records never contain forward pointers
+    that become known only in the future.** 旧 record 不改；新 record 可带
+    backward `supersedes_*`；forward `superseded_by` / `status` / latest 只在
+    mutable/derived index（`evidence_index.csv`）或 `latest.*` / `(id,version)`
+    推导。
+  - `evidence_package.schema.json`：`superseded_by` → backward
+    `supersedes_evidence_id`；`not.anyOf` 增禁 `superseded_by` / `status`。
+  - `assessment.schema.json`：删除 `superseded_by`（`v001→v002→v003` +
+    `latest.json` 表达）；`not.anyOf` 增禁 `superseded_by`。
+  - `decision.schema.json`：`superseded_by` → backward `supersedes_decision_id`；
+    新增 `not.anyOf` 禁 forward `superseded_by`。
+  - `context.schema.yaml`：forward `superseded_by` → backward
+    `supersedes_version`；`not.anyOf` 增禁 `superseded_by`。
+  - spec §8.1 / §10.1 / §10.3 / §14 / §17 措辞全部对齐；`csv_headers.yaml`
+    `library_evidence_index` 加注释（forward pointer 的唯一存放处）。
+  - worked example EP 说明段：纠错 = 新 `EP-00000124`（可带 backward
+    `supersedes_evidence_id`）+ `evidence_index.csv` 标 `status=SUPERSEDED,
+    superseded_by=...`；本文件永不编辑。
+- `evidence_index.csv`（`library_evidence_index` header）的 `status` +
+  `superseded_by` 列保留不变——mutable/derived index，是唯一允许 forward pointer
+  的地方（审核方明确同意）。
+- 改动文件（本轮）：`docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md`、
+  `docs/protocols/examples/STELLIGENOS_DATA_LAYOUT_v1_worked_example.md`、
+  `src/contracts/data_layout/{evidence_package,assessment,decision}.schema.json`、
+  `src/contracts/data_layout/context.schema.yaml`、
+  `src/contracts/data_layout/csv_headers.yaml`、handoff、worklog。
+- 明确未改：`ci.yml`（token 缺 `workflow` scope，非 blocker，负责人补一行）、
+  `src/` 其它代码、`core_objects.yaml`、`gate_system.yaml`、CURRENT_SYSTEM v5、
+  scaffold 脚本、目录树形状、状态机、Context 设计；未在 repo 内建 `.csv`；
+  未启动 runtime migration；用户自有 untracked 文件未暂存。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest` 555 OK（CI 设该 env；
+  本地不设时残留 `__pycache__` 误报 1 项，与本改动无关）/ `test_git_sync` A-D /
+  `test_scaffold_data_layout` A-F / `git diff --check` clean / 干净 tracked-tree
+  worktree boundary passed / 9 schema/yaml 结构合法 / worked example + schema
+  supersession 手写不变量检查全过。GitHub connector 写 review 仍 403。
+- Next: 追加提交到 PR #96，回复同一 ChatGPT 对话请求复审（预期本轮 APPROVE）。
+
+## 2026-08-28T16:10 EDT — PR #96 APPROVE + STELLIGENOS_DATA_LAYOUT_SPEC v1.0 冻结（同一 PR #96）
+
+- Review input: ChatGPT `Biotech ideas → AI审核方案` 对 PR #96 @ `dc8684e` 返回
+  **APPROVE**。上一轮唯一 blocker（immutable record 不得含 forward
+  `superseded_by`）关闭；EP/Context/Assessment/Decision supersession 已统一。
+  审核方确认 Decision 历史复现链闭合（每 Gate pin
+  `assessment_id + assessment_version + cell`，未评估用 `NOT_EVALUATED`），
+  满足其 provenance requirement。
+- 随冻结的收口文字修正（审核方点名，非 blocker，不需第 4 轮）：§0.4 原把
+  `run_manifest.json` 说成"一经写入永不修改"；实为状态机
+  `RUNNING → COMPLETED/FAILED/ABORTED`，terminal 后才 immutable（schema 已表达）。
+  §0.4 该句已改。
+- 冻结动作：
+  - `docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md` §0：`v1.0-draft` /
+    `PENDING_EXPERT_REVIEW` → `v1.0` / `APPROVED`（附三轮审核 + connector 403
+    说明）；附录 D 补三轮审核记录 + "正式进入 PR A" 指示。
+  - `src/contracts/data_layout/csv_headers.yaml`：`spec_version` `"1.0-draft"`
+    → `"1.0"`。
+  - spec 主体（目录树 / schema / 状态机 / worked example）不动。
+- 改动文件（本轮）：`docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md`、
+  `src/contracts/data_layout/csv_headers.yaml`、
+  `docs/handoff/2026-08-28-data-layout-spec-v1.zh-CN.md`（§十）、worklog。
+- 明确未改：`ci.yml`（token 缺 `workflow` scope；`test_scaffold_data_layout.sh`
+  接入 CI 仍待负责人）、schema 逻辑、目录树、worked example、`src/` 其它代码、
+  `core_objects.yaml`、`gate_system.yaml`、CURRENT_SYSTEM v5；未启动 runtime
+  migration；用户自有 untracked 文件未暂存。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest` 555 OK / `test_git_sync`
+  A-D / `test_scaffold_data_layout` A-F / `git diff --check` clean / 干净
+  tracked-tree worktree boundary passed / 9 schema/yaml 结构合法 / supersession
+  + worked-example 手写不变量检查全过 / CI（`dc8684e` 及冻结提交）待绿。
+- GitHub connector：审核方向 PR #96 写 `APPROVE` review 仍 `403 Resource not
+  accessible by integration`；APPROVE 全文由 leezx 转述。
+- Next: 冻结提交推送、CI 绿后合并 PR #96；随后按 PR #95 先例用独立 PR 补登
+  `logs/chatgpt-review-2026-08-28-data-layout-v1.md` 审核记录。之后 runtime
+  migration PR A 需 Owner 单独授权。
