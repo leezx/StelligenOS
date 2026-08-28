@@ -10,7 +10,7 @@
 # See docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md and
 #     docs/protocols/examples/STELLIGENOS_DATA_LAYOUT_v1_worked_example.md
 
-spec_version: "1.0-draft"
+spec_version: "1.0"
 
 headers:
 

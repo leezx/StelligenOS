@@ -3773,3 +3773,39 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   worktree boundary passed / 9 schema/yaml 结构合法 / worked example + schema
   supersession 手写不变量检查全过。GitHub connector 写 review 仍 403。
 - Next: 追加提交到 PR #96，回复同一 ChatGPT 对话请求复审（预期本轮 APPROVE）。
+
+## 2026-08-28T16:10 EDT — PR #96 APPROVE + STELLIGENOS_DATA_LAYOUT_SPEC v1.0 冻结（同一 PR #96）
+
+- Review input: ChatGPT `Biotech ideas → AI审核方案` 对 PR #96 @ `dc8684e` 返回
+  **APPROVE**。上一轮唯一 blocker（immutable record 不得含 forward
+  `superseded_by`）关闭；EP/Context/Assessment/Decision supersession 已统一。
+  审核方确认 Decision 历史复现链闭合（每 Gate pin
+  `assessment_id + assessment_version + cell`，未评估用 `NOT_EVALUATED`），
+  满足其 provenance requirement。
+- 随冻结的收口文字修正（审核方点名，非 blocker，不需第 4 轮）：§0.4 原把
+  `run_manifest.json` 说成"一经写入永不修改"；实为状态机
+  `RUNNING → COMPLETED/FAILED/ABORTED`，terminal 后才 immutable（schema 已表达）。
+  §0.4 该句已改。
+- 冻结动作：
+  - `docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md` §0：`v1.0-draft` /
+    `PENDING_EXPERT_REVIEW` → `v1.0` / `APPROVED`（附三轮审核 + connector 403
+    说明）；附录 D 补三轮审核记录 + "正式进入 PR A" 指示。
+  - `src/contracts/data_layout/csv_headers.yaml`：`spec_version` `"1.0-draft"`
+    → `"1.0"`。
+  - spec 主体（目录树 / schema / 状态机 / worked example）不动。
+- 改动文件（本轮）：`docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md`、
+  `src/contracts/data_layout/csv_headers.yaml`、
+  `docs/handoff/2026-08-28-data-layout-spec-v1.zh-CN.md`（§十）、worklog。
+- 明确未改：`ci.yml`（token 缺 `workflow` scope；`test_scaffold_data_layout.sh`
+  接入 CI 仍待负责人）、schema 逻辑、目录树、worked example、`src/` 其它代码、
+  `core_objects.yaml`、`gate_system.yaml`、CURRENT_SYSTEM v5；未启动 runtime
+  migration；用户自有 untracked 文件未暂存。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest` 555 OK / `test_git_sync`
+  A-D / `test_scaffold_data_layout` A-F / `git diff --check` clean / 干净
+  tracked-tree worktree boundary passed / 9 schema/yaml 结构合法 / supersession
+  + worked-example 手写不变量检查全过 / CI（`dc8684e` 及冻结提交）待绿。
+- GitHub connector：审核方向 PR #96 写 `APPROVE` review 仍 `403 Resource not
+  accessible by integration`；APPROVE 全文由 leezx 转述。
+- Next: 冻结提交推送、CI 绿后合并 PR #96；随后按 PR #95 先例用独立 PR 补登
+  `logs/chatgpt-review-2026-08-28-data-layout-v1.md` 审核记录。之后 runtime
+  migration PR A 需 Owner 单独授权。

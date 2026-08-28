@@ -88,11 +88,16 @@ Decision / Module run 在**仓库外部工作区**的固定磁盘布局。
 
 ## 六、下一步
 
-1. 本 PR `APPROVE` 并合并 → `v1.0-draft` → `v1.0`。
+1. ~~本 PR `APPROVE` 并合并 → `v1.0-draft` → `v1.0`。~~ **已完成**：PR #96 @
+   `dc8684e` 获 ChatGPT `APPROVE`（见 §十），随冻结提交把 §0 版本区块与
+   `csv_headers.yaml` `spec_version` 改为 `v1.0` / `APPROVED`。
 2. 用 `scripts/scaffold_data_layout.sh` 在 `/Volumes/Stelligen_SSD/Stelligen/DATA/StelligenOS/`
    （或操作者选定路径）生成真实外部骨架（外部运行，产物不入仓）。
-3. runtime migration PR A–E（CURRENT_SYSTEM v5 §16 B 组问题 23）以本 spec 为
-   物理层依据推进——需 Owner 单独授权。
+3. runtime migration **PR A**（CURRENT_SYSTEM v5 §16 B 组问题 23）以本 spec 为
+   物理层依据推进——需 Owner 单独授权。审核方指示"不再继续优化目录结构，
+   正式进入 PR A"。
+4. 负责人（有 `workflow` scope）把 `bash tests/test_scaffold_data_layout.sh`
+   加进 `.github/workflows/ci.yml`（`git_sync` 步骤后一行）。
 
 ## 七、REQUEST_CHANGES 第一轮修订（2026-08-28，同一 PR #96）
 
@@ -232,3 +237,30 @@ block）。
 
 **GitHub connector：** 审核方再次尝试写 PR #96 `REQUEST_CHANGES` review，仍
 `403 Resource not accessible by integration`，未写回 GitHub。
+
+## 十、PR #96 `APPROVE` 与 `v1.0` 冻结（2026-08-28，同一 PR #96）
+
+- **Review input：** ChatGPT 在 `Biotech ideas → AI审核方案` 对话对 PR #96 @
+  `dc8684e` 返回 **`APPROVE`**。上一轮唯一剩余 blocker（immutable record 不得含
+  forward `superseded_by`）已关闭；`EvidencePackage / Context / Assessment /
+  Decision` 的 supersession 现在统一遵循"immutable record 不存未来才知道的
+  forward pointer；新 record 可存 backward `supersedes_*`；forward lifecycle
+  状态只在 mutable/derived index"。审核方确认 Decision 历史复现链已闭合
+  （每 Gate pin `assessment_id + assessment_version + cell`，未评估用
+  `NOT_EVALUATED`），满足其 provenance requirement。
+- **随本次冻结的收口文字修正（审核方点名，非 blocker，不需第 4 轮）：**
+  §0.4 原文把 `run_manifest.json` 一并说成"一经写入永不修改"；实际其状态机是
+  `RUNNING → COMPLETED / FAILED / ABORTED`，到 terminal 后才 immutable
+  （`run_manifest.schema.json` 已正确表达）。§0.4 该句已改。
+- **冻结动作：** `docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md` §0 版本
+  区块 `v1.0-draft` / `PENDING_EXPERT_REVIEW` → `v1.0` / `APPROVED`（附三轮审核
+  与 403 说明）；附录 D 补三轮审核记录；`src/contracts/data_layout/csv_headers.yaml`
+  `spec_version: "1.0-draft"` → `"1.0"`。spec 主体（目录树、schema、状态机、
+  worked example）不再改动。
+- **遗留（非 blocker）：** `tests/test_scaffold_data_layout.sh` 仍未接入
+  `.github/workflows/ci.yml`（本会话 gh token 缺 `workflow` scope）。负责人补一行。
+- **GitHub connector：** 审核方尝试向 PR #96 写 `APPROVE` review，仍
+  `403 Resource not accessible by integration`，正式 review 状态未写回 GitHub；
+  APPROVE 全文由 leezx 在对话中转述。
+- **审核方结论：** 冻结 `STELLIGENOS_DATA_LAYOUT_SPEC v1.0`，生成外部真实
+  workspace，**不再继续优化目录结构，正式进入 runtime migration PR A**。

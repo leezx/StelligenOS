@@ -3,8 +3,10 @@
 ## 0. 版本与来源
 
 - 文档 ID：`STELLIGENOS_DATA_LAYOUT_SPEC`
-- 版本：`v1.0-draft`
-- 状态：`PENDING_EXPERT_REVIEW`
+- 版本：`v1.0`
+- 状态：`APPROVED`（ChatGPT `Biotech ideas → AI审核方案`，PR #96 @ `dc8684e`，
+  2026-08-28；三轮：初审 → REQUEST_CHANGES ×2 → APPROVE。GitHub connector 写
+  review 全程 `403`，审核意见经 leezx 转述，见 §附录 D）
 - 日期：`2026-08-28`
 - 规范来源（上游架构，本文件不得与之冲突）：
   - `StelligenOS-产品形态-Blueprint v1.3`（六对象决策模型 + Instantiation +
@@ -65,9 +67,11 @@ record（见对应章节），只是它们是**绑定/配置/施工记录**，�
 
 所有 immutable / append-only canonical record（EvidencePackage `evidence.json`、
 Context `CTX-*/vNNN.yaml`、Assessment `ASSESSMENTS/<cand>/vNNN.json`、Decision
-`DEC-*.json`、`run_manifest.json`、`gate_binding.yaml` / `gateset_binding.yaml`）
-一经写入就**永不原地修改**，因此它们**不得**携带只有未来才知道的
-forward pointer（`superseded_by` / `latest` / `status=SUPERSEDED`）。统一语义：
+`DEC-*.json`、`gate_binding.yaml` / `gateset_binding.yaml`）一经写入就**永不
+原地修改**；`run_manifest.json` 有自己的状态机
+（`RUNNING → COMPLETED / FAILED / ABORTED`），**到 terminal 状态后即 immutable**
+（schema 已表达）。这些 record **不得**携带只有未来才知道的 forward pointer
+（`superseded_by` / `latest` / `status=SUPERSEDED`）。统一语义：
 
 | 关系 | 存放位置 |
 |---|---|
@@ -1038,5 +1042,18 @@ per-Instantiation。
   修改须 `v2.0` + 专家审核。
 - 字段增删（不破坏既有）可在 `v1.x` 内进行，须同步更新 `src/contracts/
   data_layout/` 与本附录。
-- 获 ChatGPT `APPROVE` 后，`v1.0-draft` → `v1.0`；后续 runtime migration
-  PR A–E（见 CURRENT_SYSTEM v5 §16 B 组问题 23）须以本 spec 为物理层依据。
+- `v1.0-draft` → `v1.0` 已于 2026-08-28 冻结（PR #96 @ `dc8684e` ChatGPT
+  `APPROVE`）。审核三轮：
+  - 初审：方向正确，目录主体不动，REQUEST_CHANGES（6 点 contract/provenance/
+    state-safety）。
+  - 第 2 轮（`4a640b2`）：6 点全部关闭，仅剩 1 blocker——immutable record 不得
+    含 forward `superseded_by`。
+  - 第 3 轮（`dc8684e`）：新增 §0.4 冻结规则，四类 record supersession 统一为
+    "backward pointer + mutable/derived index"，**APPROVE**。
+  - 收口文字修正（随本次冻结）：§0.4 将 `run_manifest.json` 从"一经写入永不
+    修改"改为"到 terminal 状态后 immutable"（`RUNNING → COMPLETED/FAILED/
+    ABORTED`，schema 已表达）。审核方声明此项非 blocker、不需第 4 轮。
+  - 遗留（非 blocker，需 `workflow` scope）：`tests/test_scaffold_data_layout.sh`
+    尚未接入 `.github/workflows/ci.yml`。
+- 后续 runtime migration PR A–E（见 CURRENT_SYSTEM v5 §16 B 组问题 23）须以本
+  spec 为物理层依据；审核方指示"不再继续优化目录结构，正式进入 PR A"。
