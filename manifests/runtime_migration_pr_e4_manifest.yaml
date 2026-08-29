@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_e4
-status: proposed
+status: approved
 scope: mod_tgt05_deterministic_scientific_core_implementation_plus_narrow_binding_reconciliation
 repository_boundary: software_only_external_data
 
@@ -77,14 +77,14 @@ deferred:
   external_workspace_calibration_run: "after E4 merge -- a real atlas + primary-source resolution smoke run in the external workspace"
   other_six_tgt_modules: "PR E-series+ (TGT-08 -> TGT-02 -> TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)"
 
-chatgpt_review: REQUEST_CHANGES   # round 1; revision pushed, re-review pending
-approved_tip: null
-merge_commit: null
-review_rounds: 1
-test_count_before_e4: 862      # at PR E3 approval
-test_count_at_submission: 906  # local full suite; the single local FAIL is a pre-existing __pycache__ scan in test_assetgenos_modules (clean on a fresh CI checkout)
-test_count_after_round_1: 918
-approval_record_pr: null
+chatgpt_review: APPROVE
+approved_tip: bbc630f
+merge_commit: b8518d8
+review_rounds: 2   # initial submission + 1 revision round
+test_count_before_e4: 862       # at PR E3 approval
+test_count_at_submission: 906   # local full suite; the single local FAIL is a pre-existing __pycache__ scan in test_assetgenos_modules (clean on a fresh CI checkout)
+test_count_at_approval: 918     # local full suite after round 1 (test_tgt05_module.py 50)
+approval_record_pr: task_20260829_runtime-migration-pr-e4-approval-record
 next_authorized_step: null     # real provider / external calibration, or the next TGT construction drawing -- each needs its own go-ahead
 
 review_round_1:

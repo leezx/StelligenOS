@@ -4897,3 +4897,22 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 验证：`tests/test_tgt05_module.py` **50 OK**；全量 **918**（1 个既有本机
   __pycache__ 噪音 FAIL，CI 干净 checkout 绿）；`git diff --check` clean。
 - Next：提交、推送、CI 绿后回 `AI审核方案` 贴第一轮复审（4 个 blocker 摘要）。
+
+## 2026-08-29T23:30 EDT — Runtime Migration PR E4 APPROVE + merge（PR #112 @ bbc630f）
+
+- 审核方逐 blocker 复核 bbc630f（读 classifier / contracts / evidence / aggregate /
+  acceptance / module 与测试，不只看摘要）：4 个 blocker 均 **CLOSED**，无新 blocking
+  issue。**APPROVE PR #112 @ bbc630f** —— 「MOD-TGT05@1.0.0 可以视为 frozen E3
+  construction contract 的合格 deterministic implementation。本轮聊天结论为
+  authoritative approval」。GitHub connector 仍 403，review state 未写回。
+- Merge：`b8518d8`（`Merge pull request #112 from
+  leezx/task_20260829_runtime-migration-pr-e4`）。
+- 补登：独立 docs-only PR `task_20260829_runtime-migration-pr-e4-approval-record` ——
+  `logs/chatgpt-review-2026-08-29-runtime-migration-pr-e4.md`（8 scoping 决策 /
+  两轮历史 / 4 个 blocker / APPROVE）+ `manifests/runtime_migration_pr_e4_manifest.yaml`
+  → `status: approved`、`chatgpt_review: APPROVE`、`approved_tip: bbc630f`、
+  `merge_commit: b8518d8`、`review_rounds: 2`、`test_count_at_approval: 918`。
+- 状态：8 个 TGT primary Module 已建 2 个（TGT-01@1.0.0、TGT-05@1.0.0）。
+  `MIGRATION_PENDING` 保持。下一步（真实 provider / adapter + 外部 workspace
+  calibration，或按 TGT-08 → 02 → 03 → 04 → 06 → 07 顺序的下一个施工图）各自需
+  用户 go-ahead。
