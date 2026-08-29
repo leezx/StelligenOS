@@ -262,6 +262,20 @@ repository boundary 都保持关闭。
 `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
 `module.yaml` 结构合法。
 
+## 四之五、第四轮修订（PR #108 @ `a7a91f7` REQUEST_CHANGES）
+
+审核方复审 `a7a91f7`：classification-parity 主体与三条 drift regression 都正确。
+只剩 1 个边界条件：`_reused_package_is_compatible` 用
+`if key in existing.study_context and ... != ...`，会让**缺失**某 classification-
+driving key 的 canonical EP 被静默复用（parity 无法验证）。**修**：改成
+presence + equality —— key 不在 canonical `study_context` → 返回 "missing the
+classification-driving field ..." → HARD integrity failure → run rejected。
+regression：canonical EP 缺 `clinical_activity_disclosed` → run rejected。其它
+全部不动。审核方声明修掉后预计直接 **APPROVE PR #108 / MOD-TGT01@1.0.0**。
+
+验证：全量 `unittest discover` **821 OK**（774 baseline + 47 E2）/
+`git diff --check` clean / 干净 tracked-tree worktree boundary passed。
+
 ## 五、审核
 
 - 提交至 ChatGPT 网页版 `Biotech ideas` → `AI审核方案` 对话（Claude 通过浏览器

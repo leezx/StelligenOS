@@ -159,6 +159,21 @@ review_round_3:
       TARGET_MEDIATED_TOXICITY -> HARD reject (never an adverse pattern).
   tests_at_round_3: 46
   full_suite_at_round_3: 820
+review_round_4:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "a7a91f7"
+  round_3_status: the classification-parity body and the three drift regressions confirmed correct
+  scope: 1 boundary condition -- a canonical EP MISSING a classification-driving field must also reject (presence + equality, not just equality-when-present)
+  fix:
+    require_presence_of_every_classification_driving_field: >-
+      _reused_package_is_compatible now returns a "missing the
+      classification-driving field" reason (HARD integrity failure) when a
+      reused canonical package's study_context lacks any of the seven
+      classification-driving keys -- parity cannot be verified, so the run is
+      machine-rejected. Regression: a canonical EP missing
+      clinical_activity_disclosed rejects the run.
+  tests_at_round_4: 47
+  full_suite_at_round_4: 821
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_tgt01_module.py' -v
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_gate_modules_boundary.py' -v

@@ -103,6 +103,7 @@ def _canonical_ep(
     claim: str | None = None,
     source_id: str = "SRC-00000001",
     candidate_id: str = "CAND-L04-000123",
+    drop_ctx_keys: tuple[str, ...] = (),
     **ctx_overrides: object,
 ) -> EvidencePackage:
     """A minimal valid PR A EvidencePackage standing in for a library entry.
@@ -124,6 +125,8 @@ def _canonical_ep(
         "failure_attribution": r.failure_attribution if r else "",
     }
     ctx.update(ctx_overrides)
+    for k in drop_ctx_keys:
+        ctx.pop(k, None)
     return EvidencePackage(
         evidence_id=evidence_id,
         schema_version=1,
@@ -473,6 +476,20 @@ class GateNeutralEvidenceTests(unittest.TestCase):
         self.assertIsNone(res.proposal_envelope)
         self.assertTrue(
             any("incompatible canonical" in why for _, why in res.hard_integrity_failures)
+        )
+
+    def test_a_canonical_ep_missing_a_classification_driving_field_rejects_the_run(self) -> None:
+        # a canonical EP predating the full study_context cannot be parity-checked
+        rec = _record(observation_id="OBS-MISS")
+        canonical = _canonical_ep(
+            "EP-00007777", record=rec, drop_ctx_keys=("clinical_activity_disclosed",)
+        )
+        res = _run([rec], library=FakeEvidenceLibrary({"OBS-MISS": canonical}))
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertIsNone(res.proposal_envelope)
+        self.assertTrue(
+            any("missing the classification-driving field" in why
+                for _, why in res.hard_integrity_failures)
         )
 
     def test_a_classification_driving_drift_from_the_canonical_ep_rejects_the_run(self) -> None:

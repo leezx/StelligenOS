@@ -144,7 +144,12 @@ def _reused_package_is_compatible(
         "failure_attribution": r.failure_attribution,
     }
     for key in _CLASSIFICATION_DRIVING_CONTEXT_KEYS:
-        if key in existing.study_context and existing.study_context[key] != current[key]:
+        if key not in existing.study_context:
+            return (
+                f"canonical EvidencePackage is missing the classification-driving "
+                f"field {key!r}, so classification parity cannot be verified"
+            )
+        if existing.study_context[key] != current[key]:
             return (
                 f"canonical EvidencePackage {key} = "
                 f"{existing.study_context[key]!r} but the current normalized "
