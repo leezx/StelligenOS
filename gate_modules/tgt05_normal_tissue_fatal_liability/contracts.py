@@ -233,10 +233,16 @@ class NormalizedLiabilityRecord:
         )
         _bool(self.translational_relevance, "translational_relevance")
 
-        # cross-field shape by observation kind
+        # cross-field shape by observation kind. A clinical toxicity record needs
+        # a program_id, an affected_tissue and an attribution stance to be placed
+        # against the ladder at all; construct_fingerprint and
+        # toxicity_phenotype_key are fatal-pattern-convergence eligibility fields
+        # (fatal_review.detect requires them), NOT a prerequisite for the frozen
+        # DIRECT / INDIRECT_STRONG clinical evidence class -- a record without
+        # them is still an admissible liability rung, it just cannot be a
+        # fatal_review candidate.
         if self.observation_kind in ("ADC_CLINICAL_TOXICITY", "NON_ADC_CLINICAL_TOXICITY"):
-            for req in ("program_id", "construct_fingerprint", "affected_tissue",
-                        "toxicity_phenotype_key"):
+            for req in ("program_id", "affected_tissue"):
                 if not getattr(self, req).strip():
                     raise ValueError(
                         f"{self.observation_kind} record needs a non-empty {req}"

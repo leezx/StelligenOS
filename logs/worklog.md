@@ -4848,3 +4848,52 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   YAML 结构合法。
 - Next：提交、推送、开 PR、CI 绿后回 `AI审核方案` 请求审核（E4-1…E4-8 逐条
   落实摘要）。
+
+## 2026-08-29T20:45 EDT — Runtime Migration PR E4 第一轮修订（PR #112 @ 1110fe95 REQUEST_CHANGES）
+
+- 审核方复审 1110fe95：**E4 architecture PASS**（standalone core / injected ports
+  only / one-way liability detector / frozen truth table 主体 / negative atlas =
+  coverage context / fatal_review 仅 POTENTIAL_FATAL_PATTERN trigger / exact
+  tissue+phenotype key convergence / Path A/B/C / Gate-neutral EP + exact reuse /
+  TGT-05 binding 1.0.0、TGT-01 未动、MIGRATION_PENDING 保持）。4 个 deterministic
+  evidence-integrity / scientific-equivalence blocker。
+- Blocker 1 — admissibility boundary 未严格等价 frozen ladder。NHP 过松
+  （只查 translational_relevance 就升 INDIRECT_STRONG）→ 现要求
+  SUPPORTS_TARGET_ATTRIBUTION + 非空 target_attribution_basis（对齐 PR D
+  "same-target on-target NHP toxicity"）。clinical (ADC/non-ADC) toxicity 过严
+  （record 层强制 construct_fingerprint + toxicity_phenotype_key 非空）→ 那是
+  fatal-pattern convergence eligibility 字段，NormalizedLiabilityRecord 现只强制
+  program_id + affected_tissue + attribution stance；fatal_review.detect 另外要求
+  非空 construct_fingerprint + toxicity_phenotype_key —— 缺这两项仍是 admissible
+  liability rung，只是不能当 fatal candidate。ATTRIBUTION_ADJUDICATION 限定到
+  ADC_CLINICAL_TOXICITY / NON_ADC_CLINICAL_TOXICITY observation kind。
+- Blocker 2 — canonical EP reuse parity 漏 classification-driving 字段。
+  `_reused_package_is_compatible` 改用 `_parity_keys(record)` = always 集
+  (target_identity, observation_kind, evidence_function, liability_event_id)
+  + kind-specific + evidence_function-specific（ATTRIBUTION_ADJUDICATION 无论
+  原 kind 都加 target_attribution_stance + target_attribution_basis；
+  COVERAGE_CONTEXT 加 vital_organ_class + finding + atlas_validated）。canonical
+  EVT-A 复用给 current EVT-B、或 canonical SUPPORTS 复用给 current REFUTES → HARD。
+- Blocker 3 — CONFLICTING 的 EvidenceRole 会污染别的 event。CONFLICTING branch：
+  attribution record 只有 `liability_event_id in disputed_set` 才记
+  SUPPORTING/CONTRADICTING，无关 refutation + undisputed WEAK rung → CONTEXTUAL。
+  POSITIVE-because-independent-liability branch：整个 disputed event（rung +
+  adjudication）→ CONTEXTUAL + critical_unknown，POSITIVE 里没有 CONTRADICTING。
+  EvidenceRole 始终相对最终 assessment。
+- Blocker 4 — coverage completion 可脱离 EP provenance 独立宣称。`_coverage_map`
+  现按器官收录全部 admissible validated-human-PROTEIN observation（DETECTED
+  INDIRECT_STRONG liability EP + NOT_DETECTED COVERAGE_CONTEXT EP）。
+  `acceptance.evaluate` 新增 `coverage_state_is_backed_by_evidence_packages`：
+  search_complete 器官 ADMISSIBLE_PROTEIN_DATA_FOUND 必须 ≥1 backing protein EP，
+  PUBLIC_SEARCH_EXHAUSTED_NO_ADMISSIBLE_PROTEIN_DATA 必须 0。六器官全宣称
+  admissible 而无 protein EP → machine reject。
+- 测试：`tests/test_tgt05_module.py` 38 → 50（新增 AdmissibilityBoundaryTests
+  5、CONFLICTING 无污染 1、reuse EVT/stance drift 2、CoverageBackingTests 4）；
+  test factory `_coverage()` 默认改为六器官 exhausted，`_run` 自动按 emitted
+  protein 观测派生一致的 coverage map。
+- 未动：E3 contract、E4-1…E4-8 scope、Gate question/ladder/inference/fatal
+  semantics、module version 1.0.0、repository boundary、MIGRATION_PENDING、
+  MOD-TGT01。
+- 验证：`tests/test_tgt05_module.py` **50 OK**；全量 **918**（1 个既有本机
+  __pycache__ 噪音 FAIL，CI 干净 checkout 绿）；`git diff --check` clean。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第一轮复审（4 个 blocker 摘要）。

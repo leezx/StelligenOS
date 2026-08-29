@@ -31,6 +31,8 @@ def detect(emitted: list[EmittedEvidence]) -> FatalReviewRecord:
         and e.classified.record.attribution_supported
         and e.classified.record.construct_fingerprint.strip()
         and e.classified.record.target_attribution_basis.strip()
+        and e.classified.record.affected_tissue.strip()
+        and e.classified.record.toxicity_phenotype_key.strip()
     ]
     if len(candidates) < 2:
         return FatalReviewRecord.none()

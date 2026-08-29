@@ -193,4 +193,44 @@ def evaluate(
             "six vital-organ protein coverage searches to be complete before a stop",
         )
 
+    # a per-organ coverage_result must be backed by an EvidencePackage a human
+    # can click through -- the machine cannot assert ADMISSIBLE_PROTEIN_DATA_FOUND
+    # (or its opposite) without a corresponding provenance-bearing observation.
+    organs_with_protein_ep = {
+        e.classified.record.vital_organ_class
+        for e in emitted
+        if e.classified.record.observation_kind == "HUMAN_NORMAL_EXPRESSION"
+        and e.classified.record.molecular_layer == "PROTEIN"
+        and e.classified.record.atlas_validated
+        and e.classified.record.finding in ("DETECTED", "NOT_DETECTED")
+        and e.classified.record.vital_organ_class
+    }
+    coverage_backing_ok = True
+    coverage_backing_why: list[str] = []
+    for organ, state in sorted(sweep.vital_organ_protein_coverage.items()):
+        if not state.search_complete:
+            continue
+        has_ep = organ in organs_with_protein_ep
+        if state.coverage_result == "ADMISSIBLE_PROTEIN_DATA_FOUND" and not has_ep:
+            coverage_backing_ok = False
+            coverage_backing_why.append(
+                f"{organ}: ADMISSIBLE_PROTEIN_DATA_FOUND with no admissible "
+                "human-protein EvidencePackage to back it"
+            )
+        if (
+            state.coverage_result
+            == "PUBLIC_SEARCH_EXHAUSTED_NO_ADMISSIBLE_PROTEIN_DATA"
+            and has_ep
+        ):
+            coverage_backing_ok = False
+            coverage_backing_why.append(
+                f"{organ}: PUBLIC_SEARCH_EXHAUSTED_NO_ADMISSIBLE_PROTEIN_DATA but "
+                "an admissible human-protein EvidencePackage exists for it"
+            )
+    record(
+        "coverage_state_is_backed_by_evidence_packages",
+        coverage_backing_ok,
+        "; ".join(coverage_backing_why),
+    )
+
     return checks, reasons

@@ -77,14 +77,65 @@ deferred:
   external_workspace_calibration_run: "after E4 merge -- a real atlas + primary-source resolution smoke run in the external workspace"
   other_six_tgt_modules: "PR E-series+ (TGT-08 -> TGT-02 -> TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)"
 
-chatgpt_review: PENDING
+chatgpt_review: REQUEST_CHANGES   # round 1; revision pushed, re-review pending
 approved_tip: null
 merge_commit: null
-review_rounds: 0
+review_rounds: 1
 test_count_before_e4: 862      # at PR E3 approval
 test_count_at_submission: 906  # local full suite; the single local FAIL is a pre-existing __pycache__ scan in test_assetgenos_modules (clean on a fresh CI checkout)
+test_count_after_round_1: 918
 approval_record_pr: null
 next_authorized_step: null     # real provider / external calibration, or the next TGT construction drawing -- each needs its own go-ahead
+
+review_round_1:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "1110fe95"
+  architecture: PASS   # standalone core / injected ports / one-way liability detector / frozen truth table / negative atlas = coverage / fatal_review = POTENTIAL_FATAL_PATTERN trigger only / exact-key convergence / Path A-B-C / Gate-neutral EP + exact reuse / binding TGT-05 1.0.0 + TGT-01 untouched + MIGRATION_PENDING -- all accepted
+  scope: 4 deterministic evidence-integrity / scientific-equivalence blockers; no architecture redesign; E3 contract, E4-1..E4-8 scope, Gate question / ladder / inference / fatal semantics, module version 1.0.0, repository boundary, MIGRATION_PENDING, MOD-TGT01 all unchanged
+  fixes:
+    blocker_1_admissibility_boundary_equals_frozen_ladder: >-
+      NHP was too loose (translational_relevance alone -> INDIRECT_STRONG); it
+      now also requires SUPPORTS_TARGET_ATTRIBUTION + a disclosed
+      target_attribution_basis, matching the frozen "same-target on-target NHP
+      toxicity" class. Clinical (ADC / non-ADC) toxicity was too strict
+      (construct_fingerprint + toxicity_phenotype_key forced non-empty at the
+      record level); those are fatal-pattern-convergence eligibility fields, so
+      NormalizedLiabilityRecord now requires only program_id + affected_tissue +
+      an attribution stance, and fatal_review.detect additionally requires a
+      non-empty construct_fingerprint + toxicity_phenotype_key -- a clinical
+      liability rung without them is still admissible, just not a fatal_review
+      candidate. ATTRIBUTION_ADJUDICATION is now restricted to
+      ADC_CLINICAL_TOXICITY / NON_ADC_CLINICAL_TOXICITY observation kinds so an
+      atlas / expression / rodent record cannot enter the attribution-conflict
+      machinery via a shared liability_event_id.
+    blocker_2_reused_ep_parity_covers_all_classification_driving_fields: >-
+      _reused_package_is_compatible now checks _parity_keys(record) = an always
+      set (target_identity, observation_kind, evidence_function,
+      liability_event_id) + kind-specific keys + evidence_function-specific keys
+      (ATTRIBUTION_ADJUDICATION adds target_attribution_stance +
+      target_attribution_basis regardless of kind; COVERAGE_CONTEXT adds
+      vital_organ_class + finding + atlas_validated). A canonical EP recorded
+      under EVT-A reused for a current EVT-B record, or a SUPPORTS canonical
+      reused for a current REFUTES record, is now a HARD integrity failure.
+    blocker_3_conflicting_role_never_pollutes_another_event: >-
+      In the CONFLICTING branch an attribution record is scored SUPPORTING /
+      CONTRADICTING only when its liability_event_id is in disputed_set; an
+      unrelated refutation, and an undisputed WEAK rung, are CONTEXTUAL. In the
+      POSITIVE-because-independent-liability branch the whole disputed event
+      (rung + adjudication) is CONTEXTUAL + a critical_unknown -- nothing in a
+      POSITIVE assessment is CONTRADICTING. EvidenceRole is now always relative
+      to the final assessment, not to a local event.
+    blocker_4_coverage_state_is_backed_by_evidence_packages: >-
+      _coverage_map now lists, per organ, every admissible validated-human-PROTEIN
+      observation (the DETECTED INDIRECT_STRONG liability EP as well as the
+      NOT_DETECTED COVERAGE_CONTEXT EP). acceptance.evaluate adds
+      coverage_state_is_backed_by_evidence_packages: for a search_complete organ,
+      ADMISSIBLE_PROTEIN_DATA_FOUND must have >= 1 backing human-protein EP and
+      PUBLIC_SEARCH_EXHAUSTED_NO_ADMISSIBLE_PROTEIN_DATA must have none. A sweep
+      claiming admissible data for all six organs with no protein EPs is now a
+      machine reject.
+  tests_at_round_1: 50   # test_tgt05_module.py (was 38)
+  full_suite_at_round_1: 918
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_tgt05_module.py' -v

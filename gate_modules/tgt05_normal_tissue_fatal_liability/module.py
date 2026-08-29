@@ -37,6 +37,19 @@ from .ports import (
 )
 
 
+def _is_human_protein_observation(record) -> bool:
+    """A validated human normal-tissue PROTEIN atlas observation -- DETECTED
+    (an INDIRECT_STRONG liability EP) or NOT_DETECTED (a COVERAGE_CONTEXT EP).
+    Both are admissible protein data a human can click through to a source."""
+
+    return (
+        record.observation_kind == "HUMAN_NORMAL_EXPRESSION"
+        and record.molecular_layer == "PROTEIN"
+        and record.atlas_validated
+        and record.finding in ("DETECTED", "NOT_DETECTED")
+    )
+
+
 def _coverage_map(emitted, sweep: Tgt05SweepCompletionRecord) -> CoverageMapRecord:
     by_organ = tuple(
         (
@@ -46,11 +59,14 @@ def _coverage_map(emitted, sweep: Tgt05SweepCompletionRecord) -> CoverageMapReco
         )
         for organ in VITAL_ORGAN_CLASSES
     )
+    # every admissible human-protein observation for the organ backs its coverage
+    # state -- the DETECTED liability EP as much as the NOT_DETECTED coverage EP.
     supporting: dict[str, list[str]] = {organ: [] for organ in VITAL_ORGAN_CLASSES}
     for e in emitted:
-        if e.classified.evidence_function != "COVERAGE_CONTEXT":
+        record = e.classified.record
+        if not _is_human_protein_observation(record):
             continue
-        organ = e.classified.covered_vital_organ
+        organ = record.vital_organ_class
         if organ in supporting:
             supporting[organ].append(e.evidence_id)
     supporting_evidence_ids = tuple(

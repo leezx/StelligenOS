@@ -94,9 +94,22 @@ def classify_record(
             ),
         )
 
-    # 4. ATTRIBUTION_ADJUDICATION -- supports / refutes a clinical toxicity's
-    #    target attribution. Never a NEGATIVE safety rung.
+    # 4. ATTRIBUTION_ADJUDICATION -- supports / refutes a *clinical toxicity's*
+    #    target attribution. Never a NEGATIVE safety rung. Only a clinical
+    #    toxicity observation can adjudicate a clinical toxicity's attribution --
+    #    an atlas / expression / rodent observation cannot enter the
+    #    attribution-conflict machinery via a shared liability_event_id.
     if fn == "ATTRIBUTION_ADJUDICATION":
+        if record.observation_kind not in (
+            "ADC_CLINICAL_TOXICITY",
+            "NON_ADC_CLINICAL_TOXICITY",
+        ):
+            return _reject(
+                record,
+                "an ATTRIBUTION_ADJUDICATION record adjudicates a clinical "
+                "toxicity's target attribution; its observation_kind must be "
+                "ADC_CLINICAL_TOXICITY or NON_ADC_CLINICAL_TOXICITY",
+            )
         if record.target_attribution_stance not in (
             "SUPPORTS_TARGET_ATTRIBUTION",
             "REFUTES_TARGET_ATTRIBUTION",
@@ -165,10 +178,27 @@ def classify_record(
             ),
         )
     if record.is_nhp_translational_toxicity:
+        # frozen INDIRECT_STRONG class = same-target *on-target* NHP toxicity
+        # with translational relevance. Translational relevance alone does not
+        # make it on-target: it needs a primary-source-supported target
+        # attribution, exactly like a clinical toxicity rung.
+        if not (
+            record.attribution_supported
+            and record.target_attribution_basis.strip()
+        ):
+            return _reject(
+                record,
+                "a translationally relevant NHP toxicity establishes an "
+                "INDIRECT_STRONG rung only with SUPPORTS_TARGET_ATTRIBUTION and a "
+                "disclosed target_attribution_basis; otherwise it may be "
+                "off-target / construct-specific and is not the frozen on-target "
+                "NHP evidence class",
+            )
         return _admit(
             record,
             evidence_function="LIABILITY_RUNG_EVIDENCE",
             ladder_rung="INDIRECT_STRONG",
+            attribution_stance="SUPPORTS_TARGET_ATTRIBUTION",
             evidence_class=(
                 "same-target on-target toxicity in non-human primates with "
                 "translational relevance"

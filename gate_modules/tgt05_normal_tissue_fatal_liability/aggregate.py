@@ -112,6 +112,11 @@ def aggregate(
     )
 
     if has_direct or has_indirect:
+        # An independent undisputed liability class exists, so the overall
+        # assessment is POSITIVE. EvidenceRole is relative to THIS assessment,
+        # not to a local event: a disputed event -- its rung AND its
+        # support / refute adjudication -- is CONTEXTUAL here, plus a
+        # critical_unknown. Nothing in a POSITIVE assessment is CONTRADICTING.
         direction = "POSITIVE"
         strength = "DIRECT" if has_direct else "INDIRECT_STRONG"
         for e in undisputed_rungs:
@@ -119,17 +124,7 @@ def aggregate(
         for e in disputed_rungs:
             refs.append((e.evidence_id, "CONTEXTUAL"))
         for e in attr_ev:
-            # a REFUTES only counts against the assessment when it actually
-            # collides with an admissible liability rung for the SAME event; an
-            # unrelated "no toxicity here" datapoint is context, never a
-            # CONTRADICTING ref (E4-4).
-            refutes_a_rung = (
-                e.classified.attribution_stance == "REFUTES_TARGET_ATTRIBUTION"
-                and e.classified.record.liability_event_id in disputed_set
-            )
-            refs.append(
-                (e.evidence_id, "CONTRADICTING" if refutes_a_rung else "CONTEXTUAL")
-            )
+            refs.append((e.evidence_id, "CONTEXTUAL"))
         for e in cov_ev:
             refs.append((e.evidence_id, "CONTEXTUAL"))
         for event_id in disputed:
@@ -143,24 +138,31 @@ def aggregate(
             f"establish a {strength} normal-tissue on-target liability class. "
             + (
                 f"{len(disputed)} liability event(s) have a disputed target "
-                "attribution -> critical_unknowns, not a downgrade. "
+                "attribution -> critical_unknowns / contextual, not a downgrade. "
                 if disputed else ""
             )
             + "Coverage gaps in other vital organs, if any, go to "
             "critical_unknowns; the direction stays POSITIVE."
         )
     elif disputed_rungs:
+        # No independent undisputed strong liability. The direction is
+        # CONFLICTING, but only refs tied to a DISPUTED event carry
+        # SUPPORTING / CONTRADICTING -- an unrelated attribution record, or an
+        # undisputed WEAK rung, is CONTEXTUAL (E4-4: CONFLICTING is per
+        # liability_event_id and never pollutes another event).
         direction = "CONFLICTING"
         strength = _strongest([e.classified.ladder_rung for e in disputed_rungs])
         for e in disputed_rungs:
             refs.append((e.evidence_id, "SUPPORTING"))
+        for e in undisputed_rungs:
+            refs.append((e.evidence_id, "CONTEXTUAL"))
         for e in attr_ev:
-            role = (
-                "CONTRADICTING"
-                if e.classified.attribution_stance == "REFUTES_TARGET_ATTRIBUTION"
-                else "SUPPORTING"
-            )
-            refs.append((e.evidence_id, role))
+            if e.classified.record.liability_event_id not in disputed_set:
+                refs.append((e.evidence_id, "CONTEXTUAL"))
+            elif e.classified.attribution_stance == "REFUTES_TARGET_ATTRIBUTION":
+                refs.append((e.evidence_id, "CONTRADICTING"))
+            else:
+                refs.append((e.evidence_id, "SUPPORTING"))
         for e in cov_ev:
             refs.append((e.evidence_id, "CONTEXTUAL"))
         rationale = (

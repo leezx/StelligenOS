@@ -117,12 +117,26 @@ class _Provider:
 # --- factories -----------------------------------------------------------
 
 def _coverage(**over) -> dict:
+    # default: every vital-organ protein search is complete and found nothing
+    # admissible -- consistent with a run that emits no human-protein
+    # EvidencePackage, and enough to satisfy Path C completion.
     base = {
-        o: VitalOrganCoverageState(True, "ADMISSIBLE_PROTEIN_DATA_FOUND")
+        o: VitalOrganCoverageState(True, "PUBLIC_SEARCH_EXHAUSTED_NO_ADMISSIBLE_PROTEIN_DATA")
         for o in VITAL_ORGAN_CLASSES
     }
     base.update(over)
     return base
+
+
+_FOUND = VitalOrganCoverageState(True, "ADMISSIBLE_PROTEIN_DATA_FOUND")
+_NOT_YET = VitalOrganCoverageState(False, "NOT_YET_COMPLETE")
+
+
+def _covered(*organs: str) -> dict:
+    """Coverage map where the named organs have admissible protein data (backed
+    by an emitted human-protein EP) and the rest are exhausted."""
+
+    return _coverage(**{o: _FOUND for o in organs})
 
 
 def _sweep(**over) -> Tgt05SweepCompletionRecord:
@@ -190,10 +204,25 @@ def _adc(**over) -> NormalizedLiabilityRecord:
     return NormalizedLiabilityRecord(**base)  # type: ignore[arg-type]
 
 
+def _non_adc(**over) -> NormalizedLiabilityRecord:
+    return _adc(
+        observation_kind="NON_ADC_CLINICAL_TOXICITY",
+        modality="CAR-T",
+        claim=over.pop(
+            "claim",
+            "a same-target CAR-T reported on-target hepatotoxicity attributed to "
+            "the antigen",
+        ),
+        **over,
+    )
+
+
 def _attr(**over) -> NormalizedLiabilityRecord:
     return _adc(
         evidence_function="ATTRIBUTION_ADJUDICATION",
-        target_attribution_stance="REFUTES_TARGET_ATTRIBUTION",
+        target_attribution_stance=over.pop(
+            "target_attribution_stance", "REFUTES_TARGET_ATTRIBUTION"
+        ),
         claim=over.pop(
             "claim", "a re-analysis attributes the event to the payload, not the target"
         ),
@@ -258,6 +287,9 @@ def _nhp(**over) -> NormalizedLiabilityRecord:
         affected_tissue="LIVER",
         toxicity_phenotype_key="PHENO_X",
         translational_relevance=True,
+        target_attribution_stance="SUPPORTS_TARGET_ATTRIBUTION",
+        target_attribution_basis="NHP histopathology localises the injury to "
+        "target-expressing hepatocytes",
     )
     base.update(over)
     return NormalizedLiabilityRecord(**base)  # type: ignore[arg-type]
@@ -340,12 +372,30 @@ def _canonical_ep(evidence_id: str, record: NormalizedLiabilityRecord,
     )
 
 
+def _default_sweep_for(records) -> Tgt05SweepCompletionRecord:
+    """A fully-complete sweep whose per-organ coverage_result is consistent with
+    the human-protein observations in ``records`` (organs with a validated
+    protein observation report ADMISSIBLE_PROTEIN_DATA_FOUND, the rest exhausted).
+    """
+
+    covered = sorted(
+        r.vital_organ_class
+        for r in records
+        if r.observation_kind == "HUMAN_NORMAL_EXPRESSION"
+        and r.molecular_layer == "PROTEIN"
+        and r.atlas_validated
+        and r.finding in ("DETECTED", "NOT_DETECTED")
+        and r.vital_organ_class
+    )
+    return _sweep(vital_organ_protein_coverage=_covered(*covered))
+
+
 def _run_parts(records, sweep=None, *, unresolved=None, mismatch=None,
                library=None, module_input=None, allocator=None):
     alloc = allocator or FakeAllocator()
     result = run(
         module_input or _input(),
-        provider=_Provider(records, sweep or _sweep()),
+        provider=_Provider(records, sweep or _default_sweep_for(records)),
         evidence_id_allocator=alloc,
         source_resolver=FakeSourceResolver(records, unresolved=unresolved, mismatch=mismatch),
         evidence_library=library or FakeEvidenceLibrary(),
@@ -423,6 +473,61 @@ class TruthTableTests(unittest.TestCase):
             )
 
 
+# --- admissibility boundary == frozen ladder (review round 1, blocker 1) ----
+
+class AdmissibilityBoundaryTests(unittest.TestCase):
+    def test_nhp_translational_without_supported_target_attribution_is_not_a_rung(self):
+        rec = _nhp(translational_relevance=True,
+                   target_attribution_stance="UNRESOLVED",
+                   target_attribution_basis="")
+        res = _run([rec])
+        self.assertEqual(res.proposal_envelope.proposed_strength, "UNKNOWN")
+        self.assertTrue(
+            any("NHP" in why or "on-target" in why for _, why in res.rejected_records)
+        )
+        self.assertTrue(res.machine_acceptance.accepted)
+
+    def test_nhp_translational_with_supported_on_target_attribution_is_indirect_strong(self):
+        res = _run([_nhp(translational_relevance=True)])  # default carries SUPPORTS + basis
+        env = res.proposal_envelope
+        self.assertEqual((env.proposed_direction, env.proposed_strength),
+                         ("POSITIVE", "INDIRECT_STRONG"))
+
+    def test_non_adc_clinical_without_construct_fingerprint_is_still_indirect_strong(self):
+        rec = _non_adc(construct_fingerprint="", toxicity_phenotype_key="")
+        res = _run([rec])
+        env = res.proposal_envelope
+        self.assertEqual((env.proposed_direction, env.proposed_strength),
+                         ("POSITIVE", "INDIRECT_STRONG"))
+        self.assertFalse(res.fatal_review.required)
+
+    def test_adc_direct_without_phenotype_key_is_still_direct_but_not_a_fatal_candidate(self):
+        a = _adc(program_id="PROGRAM_A", source_id="SRC-00000001",
+                 construct_fingerprint="FP-A", toxicity_phenotype_key="")
+        b = _adc(program_id="PROGRAM_B", source_id="SRC-00000002",
+                 source_identifier="NCT-0002", construct_fingerprint="FP-B",
+                 toxicity_phenotype_key="", claim="PROGRAM_B on-target hepatotox")
+        res = _run([a, b])
+        self.assertEqual(res.proposal_envelope.proposed_strength, "DIRECT")
+        # no normalized phenotype key -> the machine cannot assert convergence
+        self.assertFalse(res.fatal_review.required)
+
+    def test_attribution_adjudication_from_a_non_clinical_observation_is_rejected(self):
+        rec = _expr(evidence_function="ATTRIBUTION_ADJUDICATION",
+                    target_attribution_stance="REFUTES_TARGET_ATTRIBUTION",
+                    liability_event_id="EVT-1")
+        # the atlas record is SOFT-dropped, so it never becomes a protein EP;
+        # the sweep must not claim admissible protein data for HEPATIC.
+        res = _run([_adc(liability_event_id="EVT-1"), rec], sweep=_sweep())
+        # the atlas record cannot enter the attribution machinery; the ADC
+        # liability stands undisputed.
+        self.assertEqual(res.proposal_envelope.proposed_direction, "POSITIVE")
+        self.assertTrue(
+            any("adjudicates a clinical toxicity" in why
+                for _, why in res.rejected_records)
+        )
+
+
 # --- positive precedence over coverage gaps --------------------------------
 
 class PositivePrecedenceTests(unittest.TestCase):
@@ -478,6 +583,26 @@ class ConflictingTests(unittest.TestCase):
         self.assertEqual((env.proposed_direction, env.proposed_strength),
                          ("POSITIVE", "INDIRECT_STRONG"))
         self.assertTrue(any("EVT-1" in u for u, _ in env.critical_unknowns))
+        # role is relative to the POSITIVE assessment: the disputed event's
+        # refutation is CONTEXTUAL here, never CONTRADICTING.
+        self.assertNotIn("CONTRADICTING", {r for _, r in env.evidence_refs})
+
+    def test_conflicting_does_not_taint_an_unrelated_attribution_record(self):
+        # EVT-1 is a legitimate conflict; EVT-2's refutation is unrelated (no
+        # rung on EVT-2) and must be CONTEXTUAL, not CONTRADICTING (E4-4).
+        a = _adc(liability_event_id="EVT-1", source_id="SRC-00000001")
+        refute1 = _attr(liability_event_id="EVT-1", source_id="SRC-00000009",
+                        source_identifier="PMID-9")
+        refute2 = _attr(liability_event_id="EVT-2", source_id="SRC-00000010",
+                        source_identifier="PMID-10",
+                        claim="an unrelated re-analysis of a different program")
+        res = _run([a, refute1, refute2])
+        env = res.proposal_envelope
+        self.assertEqual(env.proposed_direction, "CONFLICTING")
+        by_id = {e: r for e, r in env.evidence_refs}
+        contradicting = [e for e, r in env.evidence_refs if r == "CONTRADICTING"]
+        # exactly one CONTRADICTING ref -- the EVT-1 refutation
+        self.assertEqual(len(contradicting), 1)
 
     def test_adc_b_reports_no_toxicity_is_never_a_conflict_or_contradicting(self):
         res = _run([
@@ -621,6 +746,36 @@ class EvidenceReuseAndIntegrityTests(unittest.TestCase):
                 for _, why in res.hard_integrity_failures)
         )
 
+    def test_liability_event_id_drift_in_the_canonical_package_rejects_the_run(self):
+        # same observation_id / source / claim / candidate, but the canonical EP
+        # body was recorded under EVT-A and the current record is EVT-B -- the
+        # immutable body would drive a different CONFLICTING grouping.
+        rec = _adc(observation_id="OBS-EVT", liability_event_id="EVT-B",
+                   claim="the canonical observation claim")
+        canonical = _canonical_ep("EP-00007777", rec, liability_event_id="EVT-A")
+        res = _run([rec], library=FakeEvidenceLibrary({"OBS-EVT": canonical}))
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertIsNone(res.proposal_envelope)
+        self.assertTrue(
+            any("classification-driving drift" in why
+                for _, why in res.hard_integrity_failures)
+        )
+
+    def test_attribution_stance_drift_in_the_canonical_package_rejects_the_run(self):
+        rec = _attr(observation_id="OBS-ATTR", liability_event_id="EVT-1",
+                    target_attribution_stance="REFUTES_TARGET_ATTRIBUTION",
+                    claim="the canonical adjudication claim")
+        canonical = _canonical_ep(
+            "EP-00007777", rec, target_attribution_stance="SUPPORTS_TARGET_ATTRIBUTION"
+        )
+        res = _run([_adc(liability_event_id="EVT-1"), rec],
+                   library=FakeEvidenceLibrary({"OBS-ATTR": canonical}))
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertTrue(
+            any("classification-driving drift" in why
+                for _, why in res.hard_integrity_failures)
+        )
+
     def test_source_missing_from_the_index_rejects_the_run(self):
         res = _run([_adc(source_id="SRC-00000001")], unresolved={"SRC-00000001"})
         self.assertFalse(res.machine_acceptance.accepted)
@@ -700,6 +855,44 @@ class BoundaryTests(unittest.TestCase):
         self.assertNotIsInstance(res.proposal_envelope, CandidateGateAssessment)
         for attr in ("decision", "assessment", "candidate_gate_assessment", "kill"):
             self.assertFalse(hasattr(res, attr))
+
+
+# --- coverage state must be backed by evidence (review round 1, blocker 4) ---
+
+class CoverageBackingTests(unittest.TestCase):
+    def test_admissible_protein_claim_without_a_protein_ep_is_rejected(self):
+        sweep = _sweep(vital_organ_protein_coverage=_covered(*VITAL_ORGAN_CLASSES))
+        res = _run([], sweep=sweep)  # no EvidencePackages at all
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertIsNone(res.proposal_envelope)
+        self.assertTrue(
+            any("no admissible human-protein EvidencePackage" in r
+                for r in res.machine_acceptance.reasons)
+        )
+
+    def test_exhausted_claim_contradicted_by_a_protein_ep_is_rejected(self):
+        # HEPATIC has a validated protein DETECTED EP, but the sweep says the
+        # HEPATIC public search was exhausted with nothing admissible.
+        sweep = _sweep(vital_organ_protein_coverage=_coverage())  # all exhausted
+        res = _run([_expr()], sweep=sweep)
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertTrue(
+            any("an admissible human-protein EvidencePackage exists" in r
+                for r in res.machine_acceptance.reasons)
+        )
+
+    def test_validated_not_detected_ep_backs_an_admissible_protein_claim(self):
+        sweep = _sweep(vital_organ_protein_coverage=_covered("HEPATIC"))
+        res = _run([_coverage_rec(vital_organ_class="HEPATIC")], sweep=sweep)
+        self.assertTrue(res.machine_acceptance.accepted)
+        organ_ids = dict(res.coverage_map.supporting_evidence_ids)
+        self.assertEqual(len(organ_ids["HEPATIC"]), 1)
+
+    def test_detected_protein_liability_ep_also_backs_the_coverage_map(self):
+        res = _run([_expr(vital_organ_class="HEPATIC")])  # auto sweep covers HEPATIC
+        self.assertTrue(res.machine_acceptance.accepted)
+        organ_ids = dict(res.coverage_map.supporting_evidence_ids)
+        self.assertEqual(len(organ_ids["HEPATIC"]), 1)
 
 
 # --- binding reconciliation + MIGRATION_PENDING ---------------------------

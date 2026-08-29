@@ -42,34 +42,62 @@ _NEUTRAL_CEILING = {
     "": "an observation-level fact for the named target",
 }
 
-# Classification-driving fields to re-verify on reuse, per observation kind.
+# Classification-driving fields to re-verify on reuse. The reused canonical
+# EvidencePackage body is immutable, so every field that would change the rung,
+# the direction, or the CONFLICTING grouping must be present AND equal, or the
+# canonical body no longer backs what the module would now compute (E2 gene).
+#
+# Parity is the union of (a) the fields that drive classification for this
+# observation KIND and (b) the fields that drive it for this evidence FUNCTION --
+# ``liability_event_id`` (aggregate groups rungs and refutations by it) applies
+# to every kind, and the attribution stance / basis apply whenever the record
+# flows through ATTRIBUTION_ADJUDICATION regardless of its kind.
+_KEYS_ALWAYS: tuple[str, ...] = (
+    "target_identity", "observation_kind", "evidence_function", "liability_event_id",
+)
 _KEYS_BY_KIND: dict[str, tuple[str, ...]] = {
     "ADC_CLINICAL_TOXICITY": (
-        "target_identity", "observation_kind", "modality", "program_id",
-        "construct_fingerprint", "affected_tissue", "toxicity_phenotype_key",
-        "observed_severity", "target_attribution_stance", "target_attribution_basis",
-        "evidence_function",
+        "modality", "program_id", "construct_fingerprint", "affected_tissue",
+        "toxicity_phenotype_key", "observed_severity", "target_attribution_stance",
+        "target_attribution_basis",
     ),
     "NON_ADC_CLINICAL_TOXICITY": (
-        "target_identity", "observation_kind", "modality", "program_id",
-        "construct_fingerprint", "affected_tissue", "toxicity_phenotype_key",
-        "observed_severity", "target_attribution_stance", "target_attribution_basis",
-        "evidence_function",
+        "modality", "program_id", "construct_fingerprint", "affected_tissue",
+        "toxicity_phenotype_key", "observed_severity", "target_attribution_stance",
+        "target_attribution_basis",
     ),
     "HUMAN_NORMAL_EXPRESSION": (
-        "target_identity", "observation_kind", "species", "molecular_layer",
-        "finding", "atlas_validated", "vital_organ_class", "affected_tissue",
-        "cell_compartment", "evidence_function",
+        "species", "molecular_layer", "finding", "atlas_validated",
+        "vital_organ_class", "affected_tissue", "cell_compartment",
     ),
     "NHP_TOXICITY": (
-        "target_identity", "observation_kind", "species", "affected_tissue",
-        "toxicity_phenotype_key", "translational_relevance", "evidence_function",
+        "species", "affected_tissue", "toxicity_phenotype_key",
+        "translational_relevance", "target_attribution_stance",
+        "target_attribution_basis",
     ),
     "RODENT_NORMAL_OR_TOXICITY": (
-        "target_identity", "observation_kind", "species", "molecular_layer",
-        "finding", "affected_tissue", "evidence_function",
+        "species", "molecular_layer", "finding", "affected_tissue",
     ),
 }
+_KEYS_BY_FUNCTION: dict[str, tuple[str, ...]] = {
+    "LIABILITY_RUNG_EVIDENCE": (),
+    "ATTRIBUTION_ADJUDICATION": (
+        "target_attribution_stance", "target_attribution_basis",
+    ),
+    "COVERAGE_CONTEXT": ("vital_organ_class", "finding", "atlas_validated"),
+}
+
+
+def _parity_keys(record) -> tuple[str, ...]:
+    seen: list[str] = []
+    for key in (
+        *_KEYS_ALWAYS,
+        *_KEYS_BY_KIND[record.observation_kind],
+        *_KEYS_BY_FUNCTION[record.evidence_function],
+    ):
+        if key not in seen:
+            seen.append(key)
+    return tuple(seen)
 
 
 def _directly_supports(item: ClassifiedLiability) -> tuple[str, ...]:
@@ -145,7 +173,7 @@ def _reused_package_is_compatible(
         return "canonical EvidencePackage claim differs from the observation"
     if candidate_id not in tuple(existing.candidate_refs):
         return "canonical EvidencePackage candidate_refs do not include this candidate"
-    keys = _KEYS_BY_KIND[r.observation_kind]
+    keys = _parity_keys(r)
     current = {k: getattr(r, k) for k in keys}
     for key in keys:
         if key not in existing.study_context:
