@@ -4165,3 +4165,25 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   `evidence_reference.yaml` 结构合法。
 - Next：提交、推送、CI 绿后回同一 ChatGPT 对话请求复审（审核方预告：这两处补完即
   APPROVE PR #102）。
+
+## 2026-08-28T21:40 EDT — Runtime Migration PR C APPROVE + merge
+
+- ChatGPT `AI审核方案` 对 PR #102 @ `d16b634`（REQUEST_CHANGES 第三轮修订）返回
+  **APPROVE**：四轮（初版 REQUEST_CHANGES + 三轮修订）后收口，最后一个 provenance
+  identity gap 关闭，前几轮修复未被破坏。connector 写 review 仍 403。
+- Merge：`gh pr merge 102 --merge`，merge 提交 `91a8e5b`。merge 前直接编辑 PR
+  #102 body，把首版遗留的 `48 tests / 705 OK` 与旧 `status SUPERSEDED ⇔
+  superseded_by set` 描述更新为最终语义（58 new / 716 total）——审核方点名的
+  唯一非 blocker，无新 commit。
+- 审核记录补登在独立 docs-only PR
+  `task_20260828_runtime-migration-pr-c-approval-record`
+  （`logs/chatgpt-review-2026-08-28-runtime-migration-pr-c.md` +
+  `manifests/runtime_migration_pr_c_manifest.yaml` status→approved /
+  approved_tip `d16b634` / review_rounds 4 / test_count_at_approval 716 /
+  delivers 的 provenance-walk checks 更新为两层），按 PR #95 / #97 / #99 / #101
+  先例，不落在被批准 branch 上。
+- 进度：Blueprint v1.3 / CURRENT_SYSTEM v5 / Data Layout Spec v1.0 冻结；
+  PR A `cbab012` / PR B `d18974b` / PR C `91a8e5b` 均已合并；`MIGRATION_PENDING`
+  未解除（到 PR E）。下一步：PR D —— CRC-ADC-TARGET-GATESET-v1（`ADC_TARGET_GATESET`
+  的 context-specific binding + TGT-01…TGT-08 Evidence Ladders / Gate contracts；
+  需科学审核）。

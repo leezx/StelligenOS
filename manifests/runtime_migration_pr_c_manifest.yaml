@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_c
-status: pending_review
+status: approved
 scope: matrix_view_and_reusable_evidence_reference_registry_and_provenance_walk
 repository_boundary: software_only_external_data
 data_added: false
@@ -21,7 +21,7 @@ delivers:
   - EvidenceIndexEntry@0.1.0
   - SourceIndexEntry@0.1.0
   - GateEvidenceIndexEntry@0.1.0
-  - provenance-walk referential-integrity checks (check_evidence_library_against_sources / check_gate_index_against_library / check_matrix_cells_are_backed)
+  - provenance-walk referential-integrity checks, two layers -- derived-index integrity (check_evidence_library_against_sources / check_gate_index_against_library / check_matrix_cells_are_backed) and canonical-record integrity (check_matrix_against_assessments / check_gate_index_against_assessments / check_assessment_evidence_refs_against_packages / check_evidence_index_against_packages / check_packages_against_sources / check_supersession_consistency)
 defers:
   crc_adc_target_gateset_v1: PR D
   per_gate_primary_modules: "PR E+"
@@ -32,8 +32,11 @@ open_questions:
     CURRENT_SYSTEM v5 section 16 B group question 6 (primary source vs dataset
     lineage vs experiment batch). Deferred to science review; does not block the
     PR C structure.
-chatgpt_review: PENDING
-approved_tip: null
+chatgpt_review: APPROVE
+approved_tip: d16b634
+review_record: logs/chatgpt-review-2026-08-28-runtime-migration-pr-c.md
+review_rounds: 4
+test_count_at_approval: 716
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_evidence_reference.py' -v
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py'
