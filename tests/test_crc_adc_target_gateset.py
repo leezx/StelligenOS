@@ -391,6 +391,81 @@ class CrcAdcTargetGateSetV1Tests(unittest.TestCase):
             )
 
 
+# --- 5b. scientific-review revisions (REQUEST_CHANGES round 1) ----
+
+class LadderScienceRevisionTests(unittest.TestCase):
+    """Locks the six ladder semantics fixes from the PR #104 scientific review."""
+
+    def setUp(self):
+        self.contracts = _load(CONTRACT_PATH)["gate_contracts"]
+
+    def _all_text(self, gate_id):
+        c = self.contracts[gate_id]
+        parts = [c["gate_question"], c["evidence_ceiling"], c["unknown_behavior"]]
+        parts += list(c["evidence_required"])
+        parts += list(c["allowed_inference"]) + list(c["forbidden_inference"])
+        parts += list(c["fatal_conditions"])
+        for grade in ("DIRECT", "INDIRECT_STRONG", "WEAK"):
+            rung = c["evidence_ladder"][grade]
+            parts += list(rung["admissible_evidence_classes"]) + [rung["ceiling_rule"]]
+        return " ".join(parts)
+
+    def test_no_numeric_thresholds_anywhere(self):
+        # no invented quantitative cutoff like ">100000", "< 10 000", "20%"
+        import re as _re
+        pat = _re.compile(r"[<>]\s*\d|\b\d[\d,\s]*\s*(molecules|ng/ml|%|per cell)", _re.I)
+        for gid in TGT_GATE_IDS:
+            self.assertIsNone(pat.search(self._all_text(gid)), f"{gid} has a numeric cutoff")
+
+    def test_tgt01_adjacent_target_not_indirect_strong_and_fatal_is_pattern(self):
+        c = self.contracts["TGT-01"]
+        istrong = " ".join(c["evidence_ladder"]["INDIRECT_STRONG"]["admissible_evidence_classes"])
+        self.assertNotIn("adjacent target", istrong.lower())
+        fatal = " ".join(c["fatal_conditions"]).lower()
+        self.assertIn("two or more independent", fatal)
+
+    def test_tgt03_04_fatal_have_no_universal_density_range(self):
+        for gid in ("TGT-03", "TGT-04"):
+            fatal = " ".join(self.contracts[gid]["fatal_conditions"]).lower()
+            self.assertNotIn("range of clinically validated adc targets", fatal)
+
+    def test_tgt05_target_level_not_product_window(self):
+        c = self.contracts["TGT-05"]
+        self.assertNotIn("unmanageable", c["gate_question"].lower())
+        allowed = " ".join(c["allowed_inference"]).lower()
+        self.assertNotIn("or absence of a normal-tissue", allowed)
+        forbidden = " ".join(c["forbidden_inference"]).lower()
+        self.assertIn("negative rna", forbidden)
+        self.assertIn("do not transfer one-to-one", " ".join(
+            c["evidence_ladder"]["INDIRECT_STRONG"]["admissible_evidence_classes"]
+        ).lower())
+
+    def test_tgt06_internalization_is_configuration_dependent(self):
+        c = self.contracts["TGT-06"]
+        allowed = " ".join(c["allowed_inference"]).lower()
+        self.assertIn("not a target-intrinsic constant", allowed)
+        istrong = " ".join(c["evidence_ladder"]["INDIRECT_STRONG"]["admissible_evidence_classes"]).lower()
+        self.assertIn("functional adc delivery precedent", istrong)
+        fatal = " ".join(c["fatal_conditions"]).lower()
+        self.assertIn("multiple independent antibody / epitope configurations", fatal)
+
+    def test_tgt07_measured_soluble_antigen_is_not_direct_sink(self):
+        c = self.contracts["TGT-07"]
+        direct = " ".join(c["evidence_ladder"]["DIRECT"]["admissible_evidence_classes"]).lower()
+        self.assertNotIn("quantified circulating soluble target in crc patients\n", direct + "\n")
+        # the bare measurement is now INDIRECT_STRONG, not DIRECT
+        istrong = " ".join(c["evidence_ladder"]["INDIRECT_STRONG"]["admissible_evidence_classes"]).lower()
+        self.assertIn("without an exposure", istrong)
+        forbidden = " ".join(c["forbidden_inference"]).lower()
+        self.assertIn("by itself, establishes a material antigen sink", forbidden)
+
+    def test_tgt08_no_fto_equivalent_fatal(self):
+        fatal = " ".join(self.contracts["TGT-08"]["fatal_conditions"]).lower()
+        self.assertNotIn("design-around", fatal)
+        self.assertNotIn("composition-of-matter ip", fatal)
+        self.assertEqual(len(self.contracts["TGT-08"]["fatal_conditions"]), 1)
+
+
 # --- 6. deep immutability + PR A/B/C untouched -------------------
 
 class ImmutabilityAndBoundaryTests(unittest.TestCase):

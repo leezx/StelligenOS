@@ -169,13 +169,13 @@ gate_contracts:
       INDIRECT_STRONG:
         admissible_evidence_classes:
           - early-clinical (phase 1) ADC against the same target antigen
-          - approved or late-clinical ADC against a biologically adjacent target in the same lineage
         ceiling_rule: supports precedent; does not by itself establish a de-risked target
       WEAK:
         admissible_evidence_classes:
+          - approved or clinical-stage ADC against a biologically adjacent target in the same lineage (a class-level signal only; the success of an adjacent-target ADC does not de-risk this target)
           - preclinical-only ADC constructs against the target
           - patents or company disclosures naming the target with no clinical data
-        ceiling_rule: hypothesis-generating only; no precedent claim
+        ceiling_rule: hypothesis-generating only; no precedent claim for this target
     evidence_ceiling: clinical-stage ADC precedent against the same target antigen
     allowed_inference:
       - ADC-modality feasibility for this target or its immediate lineage
@@ -187,7 +187,7 @@ gate_contracts:
       No ADC program identified against the target or an adjacent target -> UNKNOWN,
       not KILL. A novel target is not disqualified by absence of precedent.
     fatal_conditions:
-      - a same-target ADC reached late clinical development and was discontinued specifically for target-mediated toxicity or an unachievable therapeutic window
+      - a target-attributable pattern of failure -- two or more independent same-target ADC programs discontinued for a consistent on-target / target-mediated toxicity or an intrinsically unachievable therapeutic window (a single product's failure, which may be driven by linker / payload / format, is not sufficient)
 
   TGT-02:
     gate_question: >-
@@ -262,7 +262,7 @@ gate_contracts:
     unknown_behavior: >-
       Only treatment-naive primary CRC data -> UNKNOWN.
     fatal_conditions:
-      - protein-level evidence of target down-regulation or loss under treatment or in metastatic CRC
+      - reproducible protein-level near-loss or marked loss of the target under treatment or in metastatic CRC, resulting in loss of meaningful target availability in the intended refractory / metastatic context (transient or minor down-regulation is not sufficient)
     inference_guard: >-
       Generic EVGAP-02 CRC linkage does NOT support TGT-03 (v5 section 11.2).
       TGT-03 requires independent treatment/metastasis-context evidence
@@ -307,7 +307,7 @@ gate_contracts:
       Only localization or RNA evidence available -> strength stays UNKNOWN on
       the density question; it is not upgraded.
     fatal_conditions:
-      - quantitative evidence that surface antigen density on CRC malignant cells is far below the range of clinically validated ADC targets (a measured class, not an invented cutoff)
+      - reproducible quantitative evidence of negligible or undetectable cell-surface antigen on CRC malignant cells -- the absence of a targetable surface antigen. This is NOT a comparison against a putative universal "clinically effective antigen-density range" (no such reliable cross-target range exists; adequacy depends on payload potency, bystander effect, internalization, epitope and DAR).
     inference_guard: >-
       The EVGAP-01 surface-localization lock (v5 section 11.2) contributes
       surface-localization evidence to TGT-04 but CANNOT alone discharge the
@@ -316,39 +316,47 @@ gate_contracts:
 
   TGT-05:
     gate_question: >-
-      Does target expression in normal human tissues create an unmanageable
-      on-target / off-tumor toxicity liability? (fatal-first gate)
+      Is there evidence of accessible normal-human-tissue expression, or observed
+      target-mediated toxicity, that creates a potentially material
+      on-target / off-tumor liability for ADC development? (fatal-first gate --
+      a target-level public-evidence gate, not a product-specific
+      therapeutic-window judgement)
     evidence_required:
       - human normal-tissue protein expression atlases (immunohistochemistry atlases / mass-spec proteomics) with vital-organ coverage
       - normal-tissue single-cell expression
-      - clinical on-target / off-tumor toxicity for the same target from any targeted modality (ADC / CAR-T / T-cell engager / naked antibody)
+      - clinical on-target / off-tumor toxicity for the same target from an ADC
+      - clinical on-target / off-tumor toxicity for the same target from a non-ADC targeted modality (CAR-T / T-cell engager / naked antibody)
       - vital-organ expression (central nervous system, cardiac, hepatic, pulmonary, hematopoietic, gastrointestinal)
     evidence_ladder:
       DIRECT:
         admissible_evidence_classes:
-          - clinical on-target / off-tumor toxicity data for the same target from any targeted modality in humans
-        ceiling_rule: establishes the normal-tissue liability class directly, including observed severity
+          - clinical on-target / off-tumor toxicity attributable to this target from an ADC against the same target
+        ceiling_rule: establishes an ADC-relevant normal-tissue liability class, including observed severity for that ADC
       INDIRECT_STRONG:
         admissible_evidence_classes:
+          - clinical on-target / off-tumor toxicity for the same target from a non-ADC targeted modality (CAR-T / T-cell engager / naked antibody) -- shows the target is biologically accessible in normal tissue; the toxicity mechanism, exposure and severity do not transfer one-to-one to an ADC therapeutic window
           - protein-level normal-tissue expression in vital organs from validated human atlases
           - same-target on-target toxicity in non-human primates with translational relevance
-        ceiling_rule: strong liability signal; clinical data define the severity
+        ceiling_rule: strong liability signal; the ADC-specific severity is not established by non-ADC modality data or atlases alone
       WEAK:
         admissible_evidence_classes:
           - normal-tissue liability inferred only from RNA atlases without protein confirmation
           - rodent-only normal-tissue or toxicity data
         ceiling_rule: liability cannot be graded; hypothesis only
-    evidence_ceiling: clinical or protein-level human normal-tissue expression in vital organs; RNA-only atlases do not reach it
+    evidence_ceiling: clinical (ADC-specific for DIRECT) or protein-level human normal-tissue expression in vital organs; RNA-only atlases do not reach it
     allowed_inference:
-      - presence or absence of a normal-tissue on-target liability class
+      - the presence, and plausibility / severity signals, of a normal-tissue on-target liability class
     forbidden_inference:
-      - absence of RNA implies safety (protein and atlas gaps are common)
+      - negative RNA / IHC / atlas evidence alone implies the absence of a normal-tissue liability, or safety (protein and atlas gaps are common; a negative atlas is not proof of safety)
       - tumor selectivity at the coverage level (TGT-02) implies normal-tissue safety
+      - non-ADC modality toxicity severity transfers directly to an ADC therapeutic window
+      - a product-specific therapeutic-window conclusion (this is a target-level gate)
     unknown_behavior: >-
       Incomplete normal-tissue coverage -> UNKNOWN, never auto-PASS (v5 section
       6.4: an unmeasured gate must not be turned into PASS / HOLD / KILL).
     fatal_conditions:
-      - protein-level or clinical evidence of target expression in a vital organ at a level associated with dose-limiting on-target toxicity for a targeted modality
+      - clinical evidence of target-mediated on-target / off-tumor toxicity in a vital organ from an ADC against the same target that is severe enough to preclude an ADC therapeutic window
+      - protein-level human evidence of target expression in a vital organ combined with clinical on-target toxicity for the same target from any targeted modality, together indicating a normal-tissue liability incompatible with ADC development
 
   TGT-06:
     gate_question: >-
@@ -362,28 +370,30 @@ gate_contracts:
     evidence_ladder:
       DIRECT:
         admissible_evidence_classes:
-          - antibody-induced internalization with demonstrated lysosomal delivery for the target, ideally in a CRC-relevant model
-        ceiling_rule: establishes trafficking addressability for an internalizing-payload ADC
+          - existence proof that at least one tested antibody / epitope configuration against the target achieves antibody-induced internalization with lysosomal delivery in a disease-relevant context
+        ceiling_rule: establishes that the target is addressable by an internalizing-payload ADC via at least one antibody / epitope configuration; internalization efficiency is configuration-specific, not target-intrinsic
       INDIRECT_STRONG:
         admissible_evidence_classes:
           - constitutive endocytosis or established internalizing-receptor biology for the target
-          - antibody-induced internalization shown for the target in a non-CRC context
-        ceiling_rule: strong support; antibody-induced internalization in a disease-relevant model is required for DIRECT
+          - antibody-induced internalization shown for the target with some antibody / epitope configuration in a non-CRC context
+          - functional ADC delivery precedent (a successful same-target ADC) -- supports addressability but does not, by itself, prove the trafficking mechanism
+        ceiling_rule: strong support; a demonstrated antibody-induced internalizing configuration in a disease-relevant model is required for DIRECT
       WEAK:
         admissible_evidence_classes:
           - internalization assumed from receptor-family membership
           - internalization inferred from surface localization alone
         ceiling_rule: no trafficking claim; hypothesis only
-    evidence_ceiling: antibody-induced internalization with lysosomal delivery for the target
+    evidence_ceiling: antibody-induced internalization with lysosomal delivery for the target via at least one antibody / epitope configuration
     allowed_inference:
-      - the target-antibody complex can be internalized (payload-class dependent)
+      - at least one antibody / epitope configuration can internalize the target-antibody complex (payload-class dependent). Internalization is antibody x epitope x affinity x conjugation x context dependent and is not a target-intrinsic constant
     forbidden_inference:
       - surface expression implies internalization
       - internalization implies efficacy or adequate payload release for a given linker / payload
+      - a single non-internalizing antibody / epitope configuration implies the target is non-internalizing
     unknown_behavior: >-
-      No internalization data -> UNKNOWN.
+      No internalization data for any configuration -> UNKNOWN.
     fatal_conditions:
-      - evidence that the target is non-internalizing or surface-static under antibody binding (a potential fatal for internalizing-payload ADCs; non-internalizing-payload strategies are outside this gate's fatal call)
+      - evidence across multiple independent antibody / epitope configurations that the target-antibody complex fails productive internalization or trafficking, i.e. surface-static receptor biology (a potential fatal for internalizing-payload ADCs; a single configuration's failure is not sufficient, and non-internalizing-payload strategies are outside this gate's fatal call)
 
   TGT-07:
     gate_question: >-
@@ -397,29 +407,31 @@ gate_contracts:
     evidence_ladder:
       DIRECT:
         admissible_evidence_classes:
-          - quantified circulating soluble target in CRC patients
-          - a documented antigen-sink effect on the pharmacokinetics of a targeted therapeutic against the same target
-        ceiling_rule: establishes the soluble-antigen sink-liability class directly
+          - a documented antigen-sink effect on a target-directed therapeutic's pharmacokinetics or pharmacodynamics attributable to soluble antigen
+          - quantitative circulating soluble-target data combined with an exposure / affinity / turnover (target-mediated drug disposition) analysis demonstrating a material sink
+        ceiling_rule: establishes the soluble-antigen sink-liability class
       INDIRECT_STRONG:
         admissible_evidence_classes:
-          - documented sheddase-substrate status for the target without patient serum quantitation
+          - quantified circulating soluble target in CRC patients without an exposure / target-mediated-disposition analysis -- shows a soluble form exists at measurable levels; whether it is a material sink depends on concentration, turnover, ADC dose / exposure, binding affinity and complex clearance
+          - documented sheddase-substrate status for the target
           - a validated secreted isoform of the target
-        ceiling_rule: strong support; patient-level soluble-antigen data are required for DIRECT
+        ceiling_rule: strong support; a documented PK/PD sink effect or a target-mediated-disposition analysis is required for DIRECT
       WEAK:
         admissible_evidence_classes:
           - shedding inferred only from a predicted cleavage site
           - shedding inferred only from family analogy
         ceiling_rule: no sink-liability claim; hypothesis only
-    evidence_ceiling: quantified circulating soluble target in CRC patients, or a documented antigen-sink PK effect for the same target
+    evidence_ceiling: a documented antigen-sink PK/PD effect, or quantitative soluble-target data plus a target-mediated-disposition analysis, for the same target
     allowed_inference:
-      - presence or absence of a soluble-antigen sink-liability class
+      - the presence, and materiality signals, of a soluble-antigen sink-liability class
     forbidden_inference:
+      - a measured circulating soluble-antigen concentration, by itself, establishes a material antigen sink
       - absence of a predicted cleavage site implies no shedding
       - membrane expression implies no soluble form
     unknown_behavior: >-
       No soluble-antigen data -> UNKNOWN.
     fatal_conditions:
-      - patient-level evidence of circulating soluble antigen sufficient to neutralize therapeutic-antibody dosing for the same target
+      - circulating soluble antigen demonstrated, or quantitatively modelled from an exposure / affinity / turnover analysis, to materially compromise the clinically achievable exposure of a target-directed antibody
 
   TGT-08:
     gate_question: >-
@@ -447,15 +459,14 @@ gate_contracts:
     evidence_ceiling: primary-source competitive and regulatory landscape for the target in mCRC plus a composition-level patent-landscape review
     allowed_inference:
       - the relative attractiveness and crowding of the target opportunity
-      - IP whitespace signals for the target and ADC compositions
+      - IP whitespace signals for the target and ADC compositions (dense claim coverage or apparent congestion feeds a NEGATIVE target-opportunity assessment, not a KILL)
     forbidden_inference:
       - scientific de-risking (TGT-01 through TGT-07) from a favorable commercial picture
-      - a freedom-to-operate opinion (this gate surfaces IP whitespace signals; it does not render an FTO clearance)
+      - a freedom-to-operate opinion or a "no viable design-around" conclusion (this gate surfaces IP whitespace signals only; a composition-level FTO judgement is not possible at the L04 target stage, before any epitope / antibody / linker / payload / DAR is chosen)
     unknown_behavior: >-
       Incomplete landscape -> UNKNOWN.
     fatal_conditions:
-      - a dominant, well-protected competitor ADC already approved or in registrational trials for the same target in mCRC with no differentiation path
-      - blocking composition-of-matter IP for ADCs against the target with no viable design-around (a commercial / strategic potential fatal decided on the sponsor axis per v5 section 7, not a canonical scientific KILL)
+      - a dominant, well-protected competitor ADC already approved or in registrational trials for the same target in mCRC with no differentiation path (a commercial / strategic potential fatal signal decided on the sponsor axis per v5 section 7, not a canonical scientific KILL)
 
 # One context-specific binding record per gate, plus the gateset binding. Shape
 # is parity-checked against the frozen gate_binding.schema.yaml (oneOf

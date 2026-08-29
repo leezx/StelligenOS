@@ -57,11 +57,11 @@
 | `src/contracts/crc_adc_target_gateset.yaml`（新） | 声明式 registry：`program_label`（never a gateset_id）；`normative_basis` / `gate_version_provenance` / `scientific_review` / `boundary`；`roster`（8 行：gate_id + name + dominant_evidence_regime）+ `roster_constants`（level L04 / gateset_id ADC_TARGET_GATESET / gate_version "1.0"）+ `roster_invariants`；`gateset`（ADC_TARGET_GATESET@1.0，8-gate members，4 policy refs）；`instantiation`（INST-CRC-REFRACTORY-ADC-TARGET-v1，PUBLIC_ONLY）；`gate_contracts`（每 gate：`gate_question` / `evidence_required` / `evidence_ladder`（DIRECT / INDIRECT_STRONG / WEAK 各 `admissible_evidence_classes` + `ceiling_rule`）/ `evidence_ceiling` / `allowed_inference` / `forbidden_inference` / `unknown_behavior` / `fatal_conditions`；TGT-02/03/04 带 `inference_guard` 引用 v5 §11.2 的 EVGAP 映射）；`context_specific_bindings`（1 个 gateset_binding + 8 个 gate_binding，parity vs 冻结 gate_binding.schema.yaml；`primary_module_id = MOD-TGT0n`、`primary_module_version = "0.0.0"`）；`primary_module_binding`（slot 规则）；`migration.deferred`（primary Modules / quantitative calibration → PR E+；evaluators = not in repo）。 |
 | `src/objects/crc_adc_target_gateset.py`（新） | frozen `@dataclass`：`TgtGateSpec`（gate_id ∈ TGT-01..08、name == `TGT_GATE_NAMES[gate_id]`、level L04、gateset_id ADC_TARGET_GATESET、gate_version "1.0"、regime == `TGT_GATE_REGIMES[gate_id]`）；`TgtGateContract`（compose PR B `EvidenceLadder`；`allowed/forbidden_inference` / `fatal_conditions` 非空 tuple；`primary_module_id == MOD-<gate 无连字符>`、`primary_module_version == "0.0.0"`；**共享字段校验 delegate 给 PR B `Gate.__post_init__`**——构造一个 `Gate` 触发 canonical-gateset / regime / external-ref / MOD-id-pattern 校验）；`CrcAdcTargetGateSetV1`（roster / gateset / instantiation / gate_contracts 必须 == 恰好 TGT-01..08 且顺序一致、全部 L04、全部 "1.0"、gateset_id 永远 ADC_TARGET_GATESET、每 contract.gate_spec == roster 行）。import 期：`PROGRAM_LABEL` 不匹配 `_GATESET_ID`；`CANONICAL_GATESET_IDS["L04"] == ADC_TARGET_GATESET`；name / regime map 覆盖恰好 8 个。**只从 PR A/B/C import，不修改。** |
 | `src/objects/__init__.py`（改） | 追加 PR D export；PR A/B/C / legacy 符号不变。 |
-| `tests/test_crc_adc_target_gateset.py`（新，27 tests） | 见 §四。 |
+| `tests/test_crc_adc_target_gateset.py`（新，34 tests：首版 27 + 科学审核第一轮 +7） | 见 §四。 |
 | `manifests/runtime_migration_pr_d_manifest.yaml`（新） | `chatgpt_review: PENDING`、`scientific_review` 说明、boundary 声明、test 命令、artifact 清单。 |
 | `src/objects/README.md` / `src/contracts/README.md`（改） | 追加 PR D 段落。 |
 
-## 四、测试（`tests/test_crc_adc_target_gateset.py`，27 tests）
+## 四、测试（`tests/test_crc_adc_target_gateset.py`，34 tests）
 
 - `ContractBuildsTests`：YAML → runtime 对象（`_build()`）成功；`migration.pr ==
   runtime_migration_pr_d`、`deferred` 含 primary Modules、有 `scientific_review`
@@ -113,11 +113,65 @@
 ```
 find . -name __pycache__ -not -path './.git/*' -exec rm -rf {} +
 PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'
-# -> Ran 743 tests ... OK   (716 baseline + 27 new)
+# 首版 -> Ran 743 tests ... OK   (716 baseline + 27 new)
+# 科学审核第一轮后 -> Ran 750 tests ... OK   (716 baseline + 34 new)
 git diff --check                       # clean
 bash scripts/verify_repository_boundary.sh   # 干净 tracked-tree worktree 上 pass
 python3 -c "import yaml; yaml.safe_load(open('src/contracts/crc_adc_target_gateset.yaml'))"  # 结构合法
 ```
+
+## 六之二、REQUEST_CHANGES 第一轮修订（2026-08-28，同一 PR #104）
+
+Review input：ChatGPT `AI审核方案` 对 PR #104 @ `29d3def` 返回 `REQUEST_CHANGES`：
+**结构层 PASS**（A2′+B1 落实、`CRC-ADC-TARGET-GATESET-v1` 只是 label、canonical id
+始终 `ADC_TARGET_GATESET`、roster 锁死 TGT-01..08 / L04 / `1.0`、`0.0.0` Module
+slot、只复用 PR A/B/C）。**科学 ladder 层 6 组最小修改**，不加 numeric cutoff、
+不改冻结文档、不进 PR E。均在 `crc_adc_target_gateset.yaml` `gate_contracts`：
+
+1. **TGT-01**：INDIRECT_STRONG 移除 "adjacent-target ADC 成功"（不能强力 de-risk
+   本 target）→ 降到 WEAK（class-level signal only）；`fatal` 从"单个 same-target
+   ADC 因 target-mediated toxicity 终止"改为"**≥2 个独立 same-target ADC program**
+   因一致的 on-target toxicity / 内在不可达治疗窗终止 —— single-product failure
+   不足"。
+2. **TGT-03 / TGT-04 fatal 收窄，去掉偷偷的 universal threshold**：TGT-03
+   "down-regulation or loss" → "reproducible protein-level near-loss / marked
+   loss 导致 intended refractory/metastatic context 中 meaningful target
+   availability 丧失（短暂/轻微下调不算）"；TGT-04 删掉 "far below the range of
+   clinically validated ADC targets"（ADC field 无可靠统一 antigen-density
+   range）→ "reproducible 定量证据显示 CRC 恶性细胞表面抗原可忽略/检测不到 ——
+   absence of a targetable surface antigen"。
+3. **TGT-05（最大）**：target-level liability ≠ product therapeutic window。
+   gate_question 去 "unmanageable"；DIRECT 收为 **ADC-specific**（same-target ADC
+   的 on-target/off-tumor 临床毒性）；cross-modality（CAR-T/TCE/naked-Ab）毒性
+   下移 INDIRECT_STRONG 且注明"机制/暴露/severity 不 1:1 迁移到 ADC 治疗窗"；
+   `allowed_inference` 去 "or absence"（与冻结 "HPA negative ≠ safe" 一致）；
+   `forbidden_inference` 显式加 "negative RNA/IHC/atlas alone ⇏ absence of
+   liability / safety" + "不做 product-specific therapeutic-window 结论"。
+4. **TGT-06**：internalization = antibody × epitope × affinity × conjugation ×
+   context dependent，非 target-intrinsic。DIRECT → "≥1 tested antibody/epitope
+   configuration 实现 antibody-induced internalization + lysosomal delivery"；
+   `successful same-target ADC` 明确置于 INDIRECT_STRONG（functional ADC
+   delivery precedent，不证明 trafficking mechanism）；`forbidden` 加 "单个
+   non-internalizing config ⇏ target 非内化"；`fatal` 要求"**多个独立
+   antibody/epitope configuration** 均 fail productive internalization"。
+5. **TGT-07**：quantified soluble antigen ≠ demonstrated sink。"quantified
+   circulating soluble target in CRC patients（无 exposure/TMDD 分析）" 从 DIRECT
+   下移 INDIRECT_STRONG；DIRECT = "documented antigen-sink PK/PD effect
+   attributable to soluble antigen" 或 "定量 soluble-target 数据 + exposure /
+   affinity / turnover（TMDD）分析显示 material sink"；`forbidden` 加 "measured
+   concentration by itself establishes a material sink"；`fatal` → "demonstrated
+   or quantitatively modelled to materially compromise clinically achievable
+   exposure"。
+6. **TGT-08**：删除等价于 FTO/legal 结论的 fatal "blocking composition-of-matter
+   IP … no viable design-around"（L04 target stage 尚无 epitope/antibody/linker/
+   payload/DAR，不可能做 composition-level FTO 判定）；`forbidden` 加 "no viable
+   design-around 结论不可能"；保留唯一 fatal "dominant well-protected competitor
+   ADC approved/registrational in same target × mCRC with no differentiation
+   path"（sponsor 轴 potential fatal，非 canonical 科学 KILL）。
+
+新增 `tests/test_crc_adc_target_gateset.py` `LadderScienceRevisionTests`（+7）：
+全 8 gate 无 numeric cutoff；逐条锁死上述 6 组修改。全量 `Ran 750 tests ... OK`
+（743 → 750）。结构 / roster / binding parity 测试不变，均通过。
 
 ## 七、审核
 

@@ -4222,3 +4222,35 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   worktree boundary passed / `crc_adc_target_gateset.yaml` 结构合法。
 - Next：提交、推送、开 PR #104、CI 绿后回 `AI审核方案` 请求审核（含 8 个 ladder
   的科学审核）。
+
+## 2026-08-28T23:20 EDT — Runtime Migration PR D 科学审核第一轮修订（同一 PR #104）
+
+- Review input：ChatGPT `AI审核方案` 对 PR #104 @ `29d3def` 返回
+  `REQUEST_CHANGES`：**结构层 PASS**（A2′+B1、label 非 gateset_id、roster 锁死、
+  `0.0.0` Module slot、只复用 PR A/B/C）；**科学 ladder 层 6 组最小修改**，不加
+  numeric cutoff、不改冻结文档、不进 PR E。全在 `gate_contracts`：
+  1. TGT-01：adjacent-target ADC 从 INDIRECT_STRONG 降 WEAK；`fatal` 改为
+     "≥2 个独立 same-target ADC program 因一致 on-target toxicity 终止"
+     （single-product failure ≠ target-fatal）。
+  2. TGT-03/04 fatal 收窄，去掉偷偷的 universal density-range threshold。
+  3. TGT-05：target liability ≠ product therapeutic window；DIRECT 收为
+     ADC-specific，cross-modality 毒性下移 INDIRECT_STRONG；`allowed` 去
+     "or absence"（HPA negative ≠ safe）；`forbidden` 加 "negative atlas alone
+     ⇏ safety"。
+  4. TGT-06：internalization = antibody×epitope×context dependent；DIRECT →
+     "≥1 tested configuration"；`successful same-target ADC` 明确 INDIRECT_STRONG；
+     `fatal` 要求多个独立 configuration 均 fail。
+  5. TGT-07：quantified soluble antigen ≠ demonstrated sink；bare measurement
+     下移 INDIRECT_STRONG；DIRECT = documented PK/PD sink 或 TMDD 分析。
+  6. TGT-08：删除等价 FTO 的 "no viable design-around" fatal；保留唯一
+     "dominant well-protected competitor ADC" fatal。
+- 改动文件：`src/contracts/crc_adc_target_gateset.yaml`（6 gate_contracts）、
+  `tests/test_crc_adc_target_gateset.py`（+`LadderScienceRevisionTests` 7 tests：
+  全 8 gate 无 numeric cutoff + 逐条锁死 6 组修改）、handoff、worklog。未改
+  `src/objects/crc_adc_target_gateset.py`（shape 不变）、`data_layout/*`、
+  PR A/B/C、冻结文档。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 750 OK
+  （716 baseline + 34 new）/ `git diff --check` clean / 干净 tracked-tree
+  worktree boundary passed / YAML 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 请求复审（审核方预告：下一轮只复审
+  这 6 组，通过即 APPROVE PR #104 = v1.0 frozen ladders）。
