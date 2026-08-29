@@ -103,10 +103,27 @@ def _canonical_ep(
     claim: str | None = None,
     source_id: str = "SRC-00000001",
     candidate_id: str = "CAND-L04-000123",
+    **ctx_overrides: object,
 ) -> EvidencePackage:
-    """A minimal valid PR A EvidencePackage standing in for a library entry."""
+    """A minimal valid PR A EvidencePackage standing in for a library entry.
+
+    When ``record`` is given the classification-driving study_context is taken
+    from it; ``ctx_overrides`` then simulate a drift between the canonical EP and
+    a later provider record for the same observation_id.
+    """
 
     r = record
+    ctx: dict[str, object] = {
+        "indication": "na", "treatment_state": "na", "sample_type": "na",
+        "program_target_identity": r.program_target_identity if r else "TARGET_A",
+        "target_relation": r.target_relation if r else "SAME_TARGET",
+        "adjacency_basis": r.adjacency_basis if r else "",
+        "program_stage": r.program_stage if r else "APPROVED",
+        "program_status": r.program_status if r else "ACTIVE",
+        "clinical_activity_disclosed": r.clinical_activity_disclosed if r else True,
+        "failure_attribution": r.failure_attribution if r else "",
+    }
+    ctx.update(ctx_overrides)
     return EvidencePackage(
         evidence_id=evidence_id,
         schema_version=1,
@@ -114,7 +131,7 @@ def _canonical_ep(
         measurement={"type": "adc_program_fact_observation", "analyte": "TARGET_A",
                      "readout": "APPROVED/ACTIVE", "result": "fact", "unit": ""},
         candidate_refs=(candidate_id,),
-        study_context={"indication": "na", "treatment_state": "na", "sample_type": "na"},
+        study_context=ctx,
         provenance={
             "source_id": r.source_id if r else source_id,
             "source_type": "REGULATORY",
@@ -457,6 +474,46 @@ class GateNeutralEvidenceTests(unittest.TestCase):
         self.assertTrue(
             any("incompatible canonical" in why for _, why in res.hard_integrity_failures)
         )
+
+    def test_a_classification_driving_drift_from_the_canonical_ep_rejects_the_run(self) -> None:
+        # same observation_id / source_id / claim / candidate, but the current
+        # provider record drifted on a field that drives TGT-01 classification.
+        for rec, drift, never in (
+            # PHASE_1 canonical, APPROVED now -> must not become DIRECT
+            (_record(observation_id="OBS-D1", program_stage="PHASE_1",
+                     clinical_activity_disclosed=False),
+             _record(observation_id="OBS-D1", program_stage="APPROVED",
+                     clinical_activity_disclosed=True),
+             "DIRECT"),
+            # SAME_TARGET/TARGET_A canonical, ADJACENT/TARGET_B now
+            (_record(observation_id="OBS-D2"),
+             _record(observation_id="OBS-D2", target_relation="ADJACENT_TARGET",
+                     program_target_identity="TARGET_B",
+                     adjacency_basis="paralogue"),
+             None),
+            # non-target/construct-specific canonical, TARGET_MEDIATED_TOXICITY now
+            (_record(observation_id="OBS-D3", program_status="DISCONTINUED",
+                     clinical_activity_disclosed=False, source_type="NCT",
+                     source_identifier="NCT-0001", claim="the discontinuation was disclosed",
+                     failure_reason="linker", failure_attribution="CONSTRUCT_SPECIFIC"),
+             _record(observation_id="OBS-D3", program_status="DISCONTINUED",
+                     clinical_activity_disclosed=False, source_type="NCT",
+                     source_identifier="NCT-0001", claim="the discontinuation was disclosed",
+                     failure_reason="on-target tox",
+                     failure_attribution="TARGET_MEDIATED_TOXICITY",
+                     failure_attribution_from_primary_source=True),
+             "NEGATIVE"),
+        ):
+            with self.subTest(drift=drift.observation_id):
+                canonical = _canonical_ep("EP-00007777", record=rec)
+                res = _run([drift],
+                           library=FakeEvidenceLibrary({drift.observation_id: canonical}))
+                self.assertFalse(res.machine_acceptance.accepted)
+                self.assertIsNone(res.proposal_envelope)
+                self.assertTrue(
+                    any("classification-driving drift" in why
+                        for _, why in res.hard_integrity_failures)
+                )
 
     def test_canonical_source_metadata_mismatch_rejects_the_run(self) -> None:
         res = _run([_record(source_id="SRC-00000009")], mismatch={"SRC-00000009"})

@@ -4604,3 +4604,29 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
   `module.yaml` 结构合法。
 - Next：提交、推送、CI 绿后回 `AI审核方案` 贴第二轮复审（3a / 3b 摘要）。
+
+## 2026-08-29T16:15 EDT — Runtime Migration PR E2 第三轮修订（PR #108 @ 1be6bb2 REQUEST_CHANGES）
+
+- 审核方复审 1be6bb2：3b（hard integrity → machine reject）与 exact canonical
+  EP reuse 主体都已关闭。只剩 **1 个非常窄的 canonical-reuse semantic identity
+  blocker**：`_reused_package_is_compatible()` 只比 source_id / claim /
+  candidate_refs，但 TGT-01 classification 仍取自当前 provider record 的
+  program_target_identity / target_relation / adjacency_basis / program_stage /
+  program_status / clinical_activity_disclosed / failure_attribution。真实
+  corruption：canonical EP 是 PHASE_1 observation，当前 record 同 observation_id
+  / source_id / claim / candidate 但 program_stage=APPROVED → 旧 compatibility
+  通过，Module 按当前 record 判 DIRECT，可 proposal 引用的 canonical EP 本体仍
+  是 PHASE_1。
+- 修：`_reused_package_is_compatible` 增补对全部 classification-driving
+  observation 字段的比对（对 canonical EP 的 `study_context`），任一 drift →
+  HARD integrity failure；新建 EP 的 `study_context` 补 `clinical_activity_disclosed`
+  使后续 reuse 可完整比对。regression：canonical PHASE_1 + 当前 APPROVED → HARD
+  reject（永不 DIRECT）；canonical SAME_TARGET/TARGET_A + 当前 ADJACENT/TARGET_B
+  → HARD reject；canonical construct-specific failure + 当前
+  TARGET_MEDIATED_TOXICITY → HARD reject（永不 adverse pattern）。
+- 审核方明确：#1/#2/#4、hard-failure machinery、E2-1…E2-8、Gate science、
+  repository boundary 都保持关闭。
+- 验证：全量 `unittest discover` **820 OK**（774 baseline + 46 E2）/
+  `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
+  `module.yaml` 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第三轮复审。

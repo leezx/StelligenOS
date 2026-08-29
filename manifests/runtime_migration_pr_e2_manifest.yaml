@@ -138,6 +138,27 @@ review_round_2:
       canonical EP each reject the run; an unresolved ADCdb-only lead does not.
   tests_at_round_2: 45
   full_suite_at_round_2: 819
+review_round_3:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "1be6bb2"
+  round_2_status: 3b (hard integrity -> machine reject) and the exact-canonical-EP-reuse body both confirmed closed
+  scope: 1 narrow blocker -- reused canonical EP <-> current normalized observation classification-driving semantic parity; nothing else changed
+  fix:
+    reused_ep_classification_parity: >-
+      _reused_package_is_compatible now also verifies every observation field
+      that drives TGT-01 classification -- program_target_identity,
+      target_relation, adjacency_basis, program_stage, program_status,
+      clinical_activity_disclosed, failure_attribution -- against the canonical
+      package's study_context; a drift on any of them is a HARD integrity
+      failure (the immutable canonical EP no longer backs the Strength /
+      Direction the module would compute). A newly-created EP's study_context
+      now also carries clinical_activity_disclosed so a later reuse can compare
+      it. Regressions: canonical PHASE_1 + current APPROVED -> HARD reject (never
+      DIRECT); canonical SAME_TARGET/TARGET_A + current ADJACENT/TARGET_B -> HARD
+      reject; canonical construct-specific failure + current
+      TARGET_MEDIATED_TOXICITY -> HARD reject (never an adverse pattern).
+  tests_at_round_3: 46
+  full_suite_at_round_3: 820
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_tgt01_module.py' -v
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_gate_modules_boundary.py' -v

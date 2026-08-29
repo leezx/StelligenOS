@@ -106,6 +106,22 @@ def _as_rejected(
     )
 
 
+# Every field the reused canonical package must still agree with on the current
+# normalized record. The first three are provenance / attribution identity; the
+# rest are exactly the fields that drive TGT-01 classification (ladder rung,
+# direction role, adverse class). A drift on any of them means the referenced
+# immutable EP no longer backs the Strength / Direction the module would compute.
+_CLASSIFICATION_DRIVING_CONTEXT_KEYS: tuple[str, ...] = (
+    "program_target_identity",
+    "target_relation",
+    "adjacency_basis",
+    "program_stage",
+    "program_status",
+    "clinical_activity_disclosed",
+    "failure_attribution",
+)
+
+
 def _reused_package_is_compatible(
     existing: EvidencePackage, item: ClassifiedPrecedent, candidate_id: str
 ) -> str:
@@ -118,6 +134,22 @@ def _reused_package_is_compatible(
         return "canonical EvidencePackage claim differs from the observation"
     if candidate_id not in tuple(existing.candidate_refs):
         return "canonical EvidencePackage candidate_refs do not include this candidate"
+    current = {
+        "program_target_identity": r.program_target_identity,
+        "target_relation": r.target_relation,
+        "adjacency_basis": r.adjacency_basis,
+        "program_stage": r.program_stage,
+        "program_status": r.program_status,
+        "clinical_activity_disclosed": r.clinical_activity_disclosed,
+        "failure_attribution": r.failure_attribution,
+    }
+    for key in _CLASSIFICATION_DRIVING_CONTEXT_KEYS:
+        if key in existing.study_context and existing.study_context[key] != current[key]:
+            return (
+                f"canonical EvidencePackage {key} = "
+                f"{existing.study_context[key]!r} but the current normalized "
+                f"observation has {current[key]!r} (classification-driving drift)"
+            )
     return ""
 
 
@@ -237,6 +269,7 @@ def build_evidence_packages(
                 "adjacency_basis": record.adjacency_basis,
                 "program_stage": record.program_stage,
                 "program_status": record.program_status,
+                "clinical_activity_disclosed": record.clinical_activity_disclosed,
                 "failure_attribution": record.failure_attribution,
             },
             provenance={

@@ -232,6 +232,36 @@ no-live-provider / no-persistence / no-score / no-canonical-Assessment /
 `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
 `module.yaml` 结构合法。
 
+## 四之四、第三轮修订（PR #108 @ `1be6bb2` REQUEST_CHANGES）
+
+审核方复审 `1be6bb2`：3b（hard integrity → machine reject）与 exact canonical
+EP reuse 主体**都已关闭**。只剩 **1 个非常窄的 canonical-reuse semantic
+identity blocker**：
+
+`_reused_package_is_compatible()` 之前只比 `provenance.source_id` / `claim` /
+`candidate_refs`。但 TGT-01 的 classification/rung/adverse role 仍取自**当前
+provider record** 的 `program_target_identity` / `target_relation` /
+`adjacency_basis` / `program_stage` / `program_status` /
+`clinical_activity_disclosed` / `failure_attribution`。真实 corruption：canonical
+EP 是 `PHASE_1` observation，当前 record 同 `observation_id` / `source_id` /
+`claim` / candidate 但 `program_stage = APPROVED` → 旧 compatibility 通过，Module
+按当前 record 判成 `DIRECT`，可 proposal 引用的 canonical EP 本体仍是 `PHASE_1`。
+
+**修**：`_reused_package_is_compatible` 增补对全部 classification-driving
+observation 字段的比对（对 canonical EP 的 `study_context`），任一 drift →
+HARD integrity failure；新建 EP 的 `study_context` 补 `clinical_activity_disclosed`
+使后续 reuse 可完整比对。regression：canonical `PHASE_1` + 当前 `APPROVED` →
+HARD reject（永不 `DIRECT`）；canonical `SAME_TARGET`/`TARGET_A` + 当前
+`ADJACENT`/`TARGET_B` → HARD reject；canonical construct-specific failure + 当前
+`TARGET_MEDIATED_TOXICITY` → HARD reject（永不 adverse pattern）。
+
+审核方明确：#1/#2/#4、hard-failure machinery、E2-1…E2-8、Gate science、
+repository boundary 都保持关闭。
+
+验证：全量 `unittest discover` **820 OK**（774 baseline + 46 E2）/
+`git diff --check` clean / 干净 tracked-tree worktree boundary passed /
+`module.yaml` 结构合法。
+
 ## 五、审核
 
 - 提交至 ChatGPT 网页版 `Biotech ideas` → `AI审核方案` 对话（Claude 通过浏览器
