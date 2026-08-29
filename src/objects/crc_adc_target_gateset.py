@@ -14,15 +14,17 @@ the concrete ladders and the binding invariants.
 * ``TgtGateContract`` -- one gate's concrete contract: gate_question, the
   three-rung Evidence Ladder (evidence-class semantics only -- no invented
   numeric thresholds), evidence ceiling, allowed / forbidden inference,
-  unknown behavior, fatal conditions, and the primary-Module binding SLOT
-  (MOD-TGT0n at version "0.0.0" -- declared, not built). Validation of the
+  unknown behavior, fatal conditions, and the primary-Module binding
+  (MOD-TGT0n; version "0.0.0" == a declared slot, "1.0.0" for TGT-01 whose
+  Module was built in PR E2 -- see ``BUILT_MODULE_VERSIONS``). Validation of the
   fields shared with PR B's ``Gate`` is delegated to ``Gate.__post_init__``.
 * ``CrcAdcTargetGateSetV1`` -- the whole specialization: roster + GateSet +
   Instantiation + eight gate contracts, with the "exactly TGT-01..TGT-08, in
   order, all L04, all v1.0" invariants.
 
 ``CRC-ADC-TARGET-GATESET-v1`` is a program label only; it is never a
-``gateset_id`` (import-time check). PR D creates no Evidence Production Module.
+``gateset_id`` (import-time check). PR D created no Evidence Production Module;
+PR E2 built MOD-TGT01 in ``gate_modules/`` and raised its binding to "1.0.0".
 """
 
 from __future__ import annotations
@@ -69,8 +71,20 @@ ADC_TARGET_GATESET_ID: Final[str] = "ADC_TARGET_GATESET"
 TGT_CANDIDATE_LEVEL: Final[str] = "L04"
 TGT_GATE_VERSION: Final[str] = "1.0"
 TGT_GATESET_VERSION: Final[str] = "1.0"
-#: primary_module_version on every PR D gate binding: declared, not built.
+#: primary_module_version for a gate whose primary Module is a declared slot,
+#: not built. PR D created every gate at this version.
 UNBUILT_MODULE_VERSION: Final[str] = "0.0.0"
+
+#: gate_id -> primary_module_version once the Module is built. Runtime Migration
+#: PR E2 built MOD-TGT01 (gate_modules/tgt01_adc_modality_precedent/). The other
+#: seven TGT gates stay at UNBUILT_MODULE_VERSION until their own PR E3+.
+BUILT_MODULE_VERSIONS: Final[Mapping[str, str]] = MappingProxyType({"TGT-01": "1.0.0"})
+
+
+def expected_primary_module_version(gate_id: str) -> str:
+    """The one accepted ``primary_module_version`` for a gate's binding."""
+
+    return BUILT_MODULE_VERSIONS.get(gate_id, UNBUILT_MODULE_VERSION)
 
 #: "CRC-ADC-TARGET-GATESET-v1" is a program / specialization label, never a
 #: gateset_id (v5 section 6.4 / PR B identity rule).
@@ -206,10 +220,16 @@ class TgtGateContract:
                 f"{gate_id} primary_module_id must be the deterministic "
                 f"{expected_module!r}"
             )
-        if self.primary_module_version != UNBUILT_MODULE_VERSION:
+        expected_version = expected_primary_module_version(gate_id)
+        if self.primary_module_version != expected_version:
+            built = gate_id in BUILT_MODULE_VERSIONS
             raise ValueError(
-                'primary_module_version must be "0.0.0" in PR D (the Module is a '
-                "declared slot, not built)"
+                f"{gate_id} primary_module_version must be {expected_version!r} "
+                + (
+                    "(the Module is built)"
+                    if built
+                    else "(the Module is a declared slot, not built)"
+                )
             )
 
         # delegate validation of every field shared with PR B's Gate to Gate

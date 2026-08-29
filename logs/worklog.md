@@ -4469,3 +4469,179 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   干净 tracked-tree worktree boundary passed / YAML 结构合法。
 - Next：提交、推送、CI 绿后回 `AI审核方案` 贴第三轮复审。审核方声明这两处
   同步后下一轮直接 APPROVE PR #106 → 进入 PR E2 implementation。
+
+## 2026-08-29T14:10 EDT — Runtime Migration PR E2 首版（MOD-TGT01 implementation）
+
+- 授权：用户在 PR E1 APPROVE（PR #106 merge `b20c021` + approval record PR #107
+  `c03fa88`）后追加 "go ahead"。开工前审核方（ChatGPT `AI审核方案`）拍了 8 个
+  scoping 决策 E2-1…E2-8。基线 `origin/main`（E1 收口后）。
+- 8 个 scoping 决策：E2-1 真正的确定性实现（非 skeleton），`module_version
+  1.0.0`；E2-2 Module 内不实现任何 source-specific live provider，只定义
+  normalized `Tgt01PrecedentProviderPort`，`failure_attribution = TARGET_MEDIATED`
+  只能来自明确 primary-source disclosure；E2-3 ADCdb 仍是 discovery / index 层，
+  未解析行是 retrieval lead 永不确立 rung；E2-4 输出全 in-memory
+  `Tgt01ModuleRunResult`，零 persistence，`evidence_id` 由 injected allocator
+  给；E2-5 Direction × Strength 确定性、严格 E1 语义、无 score、无第四套 ladder，
+  adverse pattern 只有满足冻结 item 08（≥2 独立同靶点、一致 target-mediated）
+  才成立，单个 failed ADC 永不 NEGATIVE / fatal；E2-6 stop rule 是
+  machine-enforced prerequisite（两个 sweep completion flag 都为真才可产可接受
+  proposal，positive ceiling 不能提前停）；E2-7 一次极窄 repository-policy
+  reconciliation（允许顶层 `gate_modules/` 源码，live retrieval / execution /
+  persistence 仍 forbidden，TGT-01 `primary_module_version` `0.0.0 → 1.0.0`，
+  E1 施工合同正文与 TGT-01…08 Gate science 一字不动）；E2-8 CI 只跑 synthetic
+  in-memory 用例，synthetic `TARGET_A` / `PROGRAM_A`。
+- 边界一句话：PR E2 owns「normalized evidence → Gate-specific interpretation →
+  EvidencePackages → proposal envelope」；不 own「web retrieval → database /
+  cache → source registry persistence → human approval → canonical persistence」。
+- 交付：`gate_modules/README.md`（五条 kernel invariant，镜像
+  `extensions/README.md`）；`gate_modules/tgt01_adc_modality_precedent/`
+  （`module.yaml` + `__init__` + `contracts` + `ports` + `classify` +
+  `evidence` + `aggregate` + `acceptance` + `module`）；
+  `scripts/verify_repository_boundary.sh`（`allowed_top_level` 增
+  `gate_modules`）；`src/contracts/crc_adc_target_gateset.yaml`（TGT-01
+  `primary_module_version 1.0.0`、`primary_module_binding.built_module_versions`、
+  `repository_policy` `gate_module_*` 措辞）；`src/objects/crc_adc_target_gateset.py`
+  （`BUILT_MODULE_VERSIONS` + `expected_primary_module_version()`，per-gate
+  version 校验）；`tests/test_tgt01_module.py`（E2-8 验收场景，synthetic）；
+  `tests/test_gate_modules_boundary.py`（`src/` 永不 import `gate_modules`、
+  Module 不 import network / DB / subprocess、data-free、三方 parity）；
+  `tests/test_crc_adc_target_gateset.py`（`NoModuleInPrDTests` →
+  `ModuleBindingSlotTests`，per-gate expected version）；
+  `tests/test_tgt01_module_construction_contract.py`（E1「没有
+  `gate_modules/`」guard 改成「若存在，必须是 `built_in: runtime_migration_pr_e2`」）。
+- 冻结 TGT-01 ladder / `evidence_ceiling` / allowed·forbidden inference /
+  `fatal_conditions` / `unknown_behavior` 逐字复现（`classify.py` /
+  `evidence.py` / `aggregate.py`）。
+- 未改：PR A / B / C 合同与对象；PR D 的 Gate science（只动
+  `primary_module_version` slot + `repository_policy` 措辞）；E1 施工合同正文
+  （`src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml` 未动）。
+  未构造 canonical `CandidateGateAssessment`、未产 `Decision` / `KILL`、
+  未写 `MatrixView`。无实现内联网络 / subprocess / DB / 落盘 / 自增 ID /
+  numeric score / 新 ladder semantics / 新依赖。`MIGRATION_PENDING` 未解除
+  （8 个 primary Module 只做完 1 个）。
+- 验证：全量 `unittest discover` **807 OK**（774 baseline + 33 new）/
+  `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
+  `module.yaml` 结构合法。
+- Next：提交、推送、开 PR、CI 绿后回 `AI审核方案` 请求审核。
+
+## 2026-08-29T15:00 EDT — Runtime Migration PR E2 第一轮修订（PR #108 @ 57d0c99 REQUEST_CHANGES）
+
+- 审核方复审 57d0c99：**外层 architecture PASS**（scope / no-live-provider /
+  no-persistence / gate_modules 单向依赖 / 窄 policy reconciliation 全部认可）。
+  只剩 **4 个 E2 deterministic-core correctness blocker**，不重新设计架构；
+  E2-1…E2-8、Gate id/question、冻结 ladder、allowed/forbidden inference、
+  UNKNOWN 语义、repository layout、MIGRATION_PENDING、1.0.0 治理方向都不动。
+- Blocker 1 — Candidate ↔ target identity 未锁死。`run()` 收独立可漂移的
+  `target_identity` 直接给 provider，未与 candidate canonical target 校验；
+  record/EP 只存 `target_relation` 布尔，无实际 targeting 抗原、无 adjacent
+  basis。修：`target_identity` 移到 `Tgt01ModuleInput`（唯一权威），`run()`
+  去掉该参数；`NormalizedPrecedentRecord` 加 `program_target_identity` +
+  （ADJACENT 必填）`adjacency_basis`；`classify_record` 拒 misbinding 与错标
+  adjacency；EP `study_context` 保留三者。
+- Blocker 2 — 冻结 item-08 fatal 只实现一半（frozen 有 target-mediated
+  toxicity **与 intrinsically unachievable therapeutic window** 两条 branch，
+  代码只查 TARGET_MEDIATED；"consistent" 被约化成"都是 TARGET_MEDIATED"）。
+  修：`FAILURE_ATTRIBUTION_VALUES` 显式两条 branch
+  （`TARGET_MEDIATED_TOXICITY` / `INTRINSIC_THERAPEUTIC_WINDOW`）+
+  `CONSTRUCT_SPECIFIC` / `NON_TARGET` / `UNDISCLOSED`，仍要求 primary-source
+  attribution；`aggregate()` 只有「同一 frozen class 且 ≥2 独立同靶点 program」
+  才成 pattern；不同 class 混合不算 consistent；单个永不 fatal。
+- Blocker 3 — PR C reusable EvidencePackage 语义没实现（架构层最重要）。
+  `existing_evidence_ids` 定义没用；EP 每条新建 → 破坏全局 Evidence Library；
+  EP 写成 TGT-01-specific（`directly_supports = "ADC-modality feasibility"` /
+  `TGT01_EVIDENCE_CEILING`）且 adverse EP 自相矛盾；`SourceRegistryPort` 只返
+  bool。修：新增 `ExistingEvidenceLibraryPort`（按 `observation_id` 命中即复用
+  `evidence_id`）；`SourceRegistryPort` → `SourceResolverPort.resolve() ->
+  CanonicalSourceRecord | None`，EP provenance 用 canonical metadata、不符则
+  reject；EP 改成 **Gate-NEUTRAL**（observation-level directly_supports /
+  does_not_support / limitations + 中性 observation-level evidence_ceiling），
+  TGT-01 ceiling / inference / Direction×Strength 只留 proposal 层。
+- Blocker 4 — `program_id → evidence_id` 数据模型错误，会静默串错 EvidenceRef
+  （一 program 两 observation → 第二条覆盖 map，两 ref 都指向第二个 EP）。
+  修：`build_evidence_packages` 返回 `list[EmittedEvidence]`（一条 admissible
+  observation → 一个 EP），不再 program-keyed；`program_id` 只用于 fatal
+  pattern 的 independent-programs 去重；同 program 重复 `(source_id, claim)`
+  干净 drop。
+- 同步：`ports.py`（4 个 port）、`__init__.py`、`module.yaml`（ports + owns
+  改词）、`tests/test_tgt01_module.py`（fakes 重写 + 新增 misbinding / adjacent
+  EP 事实恢复 / 两条 INTRINSIC_THERAPEUTIC_WINDOW → NEGATIVE / 单条 intrinsic
+  不 fatal / 混合 class 不成 pattern / 同 program 两 observation → 两 EP 两
+  ref / library 复用 / canonical source 解析 / Gate-neutral EP）。
+- 验证：全量 `unittest discover` **818 OK**（774 baseline + 44 E2）/
+  `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
+  `module.yaml` 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第一轮复审（4 处 fix 摘要）。
+
+## 2026-08-29T15:40 EDT — Runtime Migration PR E2 第二轮修订（PR #108 @ decaec7 REQUEST_CHANGES）
+
+- 审核方复审 decaec7：上一轮 4 个 blocker 中 **#1 / #2 / #4 已关闭**，**#3 只
+  关闭一半**。不重开 E2-1…E2-8、不改 Gate science。剩 2 个 deterministic-core
+  问题，都在 blocker 3 下。
+- 3a — 仍是「复用 EP ID」不是「复用 canonical EvidencePackage」。port 只返回
+  `evidence_id`，`evidence.py` 仍无条件 `EvidencePackage(...)` 重建 body（same
+  id、不同 immutable body = Evidence Library identity corruption）。修：
+  `ExistingEvidenceLibraryPort.resolve() -> EvidencePackage | None`，命中即原样
+  复用（不调 allocator、不建新 body），run result 只按 id 引用
+  （`evidence_packages` 只放新建 body，`reused_evidence_ids` 列被引用的）；返回
+  package 的 `provenance.source_id` / `claim` / `candidate_refs` 与 observation
+  不符 → HARD integrity failure。
+- 3b — hard identity/provenance failure 被错误降级成「accepted UNKNOWN」。之前
+  identity/provenance 错误 → rejected_records → emitted=[] → aggregate([]) →
+  UNKNOWN → acceptance 看不到 hard failure → sweep complete 就 accepted=True。
+  违反 E1 item 13 `on_failure: run rejected`。修：区分 A（合法「无证据」→
+  UNKNOWN 可成立）与 B（数据完整性错误：candidate↔program antigen misbinding /
+  声称 resolved 但 SourceResolver 找不到 / canonical source metadata 冲突 /
+  canonical EP identity 冲突 → MACHINE REJECT，proposal_envelope=None）。
+  `ClassifiedPrecedent` 加 `rejection_severity`（HARD/SOFT）；
+  `Tgt01ModuleRunResult` 加 `hard_integrity_failures`；`acceptance.evaluate`
+  强制 `len(hard)==0`。未解析 ADCdb-only lead 仍是 SOFT drop、不失败整个 run。
+- 审核方明确接受上一轮：canonical target_identity 唯一 query identity；
+  program_target_identity + adjacency_basis 进 audit trail；两条 frozen fatal
+  branch；adverse pattern 按 same class + independent program_id 聚合；one
+  observation → one EmittedEvidence；Gate-neutral EP 方向正确；no-live-provider /
+  no-persistence / no-score / no-canonical / MIGRATION_PENDING 不动。
+- 验证：全量 `unittest discover` **819 OK**（774 baseline + 45 E2）/
+  `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
+  `module.yaml` 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第二轮复审（3a / 3b 摘要）。
+
+## 2026-08-29T16:15 EDT — Runtime Migration PR E2 第三轮修订（PR #108 @ 1be6bb2 REQUEST_CHANGES）
+
+- 审核方复审 1be6bb2：3b（hard integrity → machine reject）与 exact canonical
+  EP reuse 主体都已关闭。只剩 **1 个非常窄的 canonical-reuse semantic identity
+  blocker**：`_reused_package_is_compatible()` 只比 source_id / claim /
+  candidate_refs，但 TGT-01 classification 仍取自当前 provider record 的
+  program_target_identity / target_relation / adjacency_basis / program_stage /
+  program_status / clinical_activity_disclosed / failure_attribution。真实
+  corruption：canonical EP 是 PHASE_1 observation，当前 record 同 observation_id
+  / source_id / claim / candidate 但 program_stage=APPROVED → 旧 compatibility
+  通过，Module 按当前 record 判 DIRECT，可 proposal 引用的 canonical EP 本体仍
+  是 PHASE_1。
+- 修：`_reused_package_is_compatible` 增补对全部 classification-driving
+  observation 字段的比对（对 canonical EP 的 `study_context`），任一 drift →
+  HARD integrity failure；新建 EP 的 `study_context` 补 `clinical_activity_disclosed`
+  使后续 reuse 可完整比对。regression：canonical PHASE_1 + 当前 APPROVED → HARD
+  reject（永不 DIRECT）；canonical SAME_TARGET/TARGET_A + 当前 ADJACENT/TARGET_B
+  → HARD reject；canonical construct-specific failure + 当前
+  TARGET_MEDIATED_TOXICITY → HARD reject（永不 adverse pattern）。
+- 审核方明确：#1/#2/#4、hard-failure machinery、E2-1…E2-8、Gate science、
+  repository boundary 都保持关闭。
+- 验证：全量 `unittest discover` **820 OK**（774 baseline + 46 E2）/
+  `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
+  `module.yaml` 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第三轮复审。
+
+## 2026-08-29T16:35 EDT — Runtime Migration PR E2 第四轮修订（PR #108 @ a7a91f7 REQUEST_CHANGES）
+
+- 审核方复审 a7a91f7：classification-parity 主体与三条 drift regression 都正确。
+  只剩 1 个边界条件：`_reused_package_is_compatible` 的
+  `if key in existing.study_context and ... != ...` 会让**缺失**某 classification-
+  driving key 的 canonical EP 被静默复用。修：改成 presence + equality ——
+  key 不在 canonical `study_context` → 返回 "missing the classification-driving
+  field ..." → HARD integrity failure → run rejected。regression：canonical EP
+  缺 `clinical_activity_disclosed` → run rejected。其它全部不动。审核方声明修掉
+  后预计直接 APPROVE PR #108 / MOD-TGT01@1.0.0。
+- 验证：全量 `unittest discover` **821 OK**（774 baseline + 47 E2）/
+  `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
+  `module.yaml` 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第四轮复审。

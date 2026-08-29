@@ -1,0 +1,201 @@
+phase: runtime_migration_pr_e2
+status: pending_review
+scope: mod_tgt01_deterministic_scientific_core_implementation_plus_narrow_repository_policy_reconciliation
+repository_boundary: software_only_external_data
+
+# what E2 IS
+implementation_code_added: true            # gate_modules/tgt01_adc_modality_precedent/
+module_version_built: "1.0.0"              # MOD-TGT01 (was 0.0.0 declared slot)
+new_top_level_directory: gate_modules
+repository_policy_reconciled: true         # gate_modules/ source code allowed; live retrieval/execution/persistence still forbidden
+
+# what E2 IS NOT
+live_provider_or_adapter_added: false      # only a normalized Tgt01PrecedentProviderPort Protocol
+network_or_subprocess_io_added: false
+database_or_cache_added: false
+persistence_in_repository_added: false     # all output is in-memory Tgt01ModuleRunResult
+ids_allocated_from_filesystem: false       # injected EvidenceIdAllocatorPort
+numeric_scoring_added: false
+new_scientific_ladder_semantics_added: false   # frozen TGT-01 ladder / fatal / inference reproduced verbatim
+constructs_canonical_assessment_or_decision: false
+touches_pr_a_contracts: false
+touches_pr_b_contracts: false
+touches_pr_c_contracts: false
+touches_pr_d_gate_science: false          # only the primary_module_version slot + repository_policy wording
+touches_e1_construction_contract_body: false
+new_dependency_added: false
+migration_pending_lifted: false           # one of eight primary Modules
+
+spec_refs:
+  - src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml (frozen E1 construction contract, 17-item acceptance checklist)
+  - docs/gate_modules/TGT-01_ADC_Modality_Precedent.md (E1 construction drawing)
+  - src/contracts/crc_adc_target_gateset.yaml gate_contracts.TGT-01 (frozen ladder / evidence_ceiling / allowed+forbidden inference / fatal_conditions / unknown_behavior -- reproduced verbatim)
+  - src/objects/decision_model.py (PR A EvidencePackage shape + DIRECTION/STRENGTH/ROLE enums)
+  - extensions/README.md + genmodules/README.md (one-way dependency governance precedent)
+  - CURRENT_SYSTEM v5 section 6.4 (one Gate -> one primary Module; Module 权责边界) / section 6.5 (shared infrastructure not per Gate)
+
+scoping_decisions:  # ChatGPT AI审核方案, before code, 8 decisions
+  E2-1: real deterministic MOD-TGT01 implementation (not a skeleton); module_version 1.0.0; no CLI / crawler / DB / background job / review UI
+  E2-2: no source-specific live provider inside the module; one normalized Tgt01PrecedentProviderPort; failure_attribution=TARGET_MEDIATED only from an explicit primary-source disclosure, never NLP-inferred
+  E2-3: ADCdb stays a discovery / entity-resolution / index layer behind the port; an unresolved database-only row is a retrieval lead, never rung-establishing
+  E2-4: all output is an in-memory Tgt01ModuleRunResult; zero repository persistence; ids from an injected allocator, never derived from the filesystem
+  E2-5: deterministic Direction x Strength, strict E1 semantics, no score, no fourth ladder; adverse pattern only when frozen item 08 is met (>= 2 independent same-target programs, consistent target-mediated failure); a single failed ADC is never NEGATIVE / fatal
+  E2-6: the stop rule is a machine-enforced prerequisite -- same_target_program_inventory_complete AND failure_reason_sweep_complete must both be true before any acceptable proposal, even when a DIRECT positive precedent has already been found
+  E2-7: one narrow repository-policy reconciliation -- allow top-level gate_modules/ source code; keep live retrieval / execution / persistence forbidden; raise TGT-01 primary_module_version 0.0.0 -> 1.0.0; the E1 construction-contract body and all TGT-01..08 Gate science stay untouched
+  E2-8: CI runs synthetic / in-memory acceptance cases only -- no internet, no real ADC data, synthetic TARGET_A / PROGRAM_A
+
+owns_boundary_one_liner:
+  pr_e2_owns: normalized evidence -> Gate-specific scientific interpretation -> EvidencePackages -> assessment proposal envelope
+  pr_e2_does_not_own: web retrieval -> database / cache -> source registry persistence -> human approval -> canonical persistence
+
+delivers:
+  - gate_modules/README.md -- Gate Modules directory + five kernel invariants (mirrors extensions/README.md)
+  - gate_modules/tgt01_adc_modality_precedent/ -- module.yaml + __init__ + contracts + ports + classify + evidence + aggregate + acceptance + module
+  - scripts/verify_repository_boundary.sh -- gate_modules added to allowed_top_level
+  - src/contracts/crc_adc_target_gateset.yaml -- TGT-01 primary_module_version 1.0.0; primary_module_binding.built_module_versions; repository_policy gate_module_* wording
+  - src/objects/crc_adc_target_gateset.py -- BUILT_MODULE_VERSIONS registry + expected_primary_module_version(); per-gate version validation
+  - tests/test_tgt01_module.py -- the E2-8 acceptance scenarios (synthetic)
+  - tests/test_gate_modules_boundary.py -- src/ never imports gate_modules/; no network/DB/subprocess imports; data-free; manifest <-> package <-> gateset binding parity
+  - tests/test_crc_adc_target_gateset.py -- module-binding-slot tests updated for the built MOD-TGT01
+  - tests/test_tgt01_module_construction_contract.py -- E1 "no implementation yet" guard retargeted to "any gate_modules/ build is the separately-approved PR E2"
+
+deferred:
+  live_providers_and_adapters: "PR E3+ (PubMed / ClinicalTrials.gov / FDA / patent / ADCdb resolution live behind the port)"
+  external_workspace_calibration_run: "after E2 merge -- a real ADCdb + primary-source resolution smoke run in the external workspace"
+  other_seven_tgt_modules: "PR E3+ (TGT-05 -> TGT-08 -> TGT-02 -> TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)"
+
+chatgpt_review: PENDING
+approved_tip: null
+review_round_1:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "57d0c99"
+  outer_architecture: PASS  # scope / no-live-provider / no-persistence / gate_modules one-way dependency / narrow policy reconciliation all accepted
+  scope: 4 E2 deterministic-core correctness blockers; no architecture redesign; E2-1..E2-8 scope, Gate id/question, frozen ladder, allowed/forbidden inference, UNKNOWN semantics, repository layout, MIGRATION_PENDING and the 1.0.0 governance direction all unchanged
+  fixes:
+    blocker_1_candidate_target_identity_binding: >-
+      Tgt01ModuleInput now carries the candidate's canonical target_identity as
+      the single authoritative source; run() no longer takes a separate
+      target_identity argument. NormalizedPrecedentRecord carries the ADC
+      program's actual program_target_identity plus, for ADJACENT_TARGET, a
+      mandatory auditable adjacency_basis. classify_record rejects a SAME_TARGET
+      record whose program targets a different antigen (evidence misbinding) and
+      a mislabelled adjacency. The EvidencePackage study_context retains
+      program_target_identity / target_relation / adjacency_basis so a human can
+      re-do the same/adjacent call (E1 item 14).
+    blocker_2_frozen_item_08_both_branches: >-
+      FAILURE_ATTRIBUTION_VALUES now expresses both frozen branches
+      (TARGET_MEDIATED_TOXICITY, INTRINSIC_THERAPEUTIC_WINDOW) alongside
+      CONSTRUCT_SPECIFIC / NON_TARGET / UNDISCLOSED, still primary-source only.
+      aggregate() forms an adverse pattern only when >= 2 independent same-target
+      programs failed for the SAME frozen class; a mix of different classes is
+      not a consistent pattern; a single failure is never fatal.
+    blocker_3_reusable_gate_neutral_evidence: >-
+      New ExistingEvidenceLibraryPort -- an observation already in the PR C
+      Evidence Library is reused by evidence_id, never re-created; a new id is
+      allocated only for a novel observation. New SourceResolverPort resolves a
+      source_id to its canonical SourceIndex record and the EvidencePackage
+      provenance carries that canonical metadata; a provider record whose
+      metadata disagrees is rejected. The EvidencePackage is Gate-NEUTRAL --
+      observation-level directly_supports / does_not_support / limitations and a
+      neutral observation-level evidence_ceiling; the TGT-01 ceiling, allowed /
+      forbidden inference and Direction x Strength live only on the proposal.
+    blocker_4_one_package_per_observation: >-
+      build_evidence_packages returns a list of EmittedEvidence (one admissible
+      observation -> one EvidencePackage), never a program_id-keyed dict. A
+      program with two distinct primary-source observations gets two packages
+      and two correct evidence_refs; program_id is used only to count
+      independent programs for the fatal-pattern threshold. A same-program
+      duplicate (source_id, claim) is cleanly dropped.
+  tests_at_round_1: 44
+  full_suite_at_round_1: 818
+review_round_2:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "decaec7"
+  round_1_status: blockers 1 / 2 / 4 confirmed closed; blocker 3 half closed
+  scope: 2 remaining deterministic-core issues, both under blocker 3; E2-1..E2-8, Gate science, repository layout, MIGRATION_PENDING and the 1.0.0 direction all unchanged
+  fixes:
+    blocker_3a_true_canonical_ep_reuse: >-
+      ExistingEvidenceLibraryPort.resolve now returns the EXACT canonical
+      EvidencePackage (not just an id). When it resolves, the module reuses that
+      package unchanged -- no allocator call, no new EvidencePackage body -- and
+      the run result references it by id only (evidence_packages holds
+      newly-created bodies only; reused_evidence_ids names the referenced ones).
+      A returned package whose provenance.source_id / claim / candidate_refs are
+      incompatible with the current observation is a HARD integrity failure, not
+      a silent reuse. Regressions: allocator not called on reuse; no re-created
+      body; incompatible canonical EP rejects the run.
+    blocker_3b_hard_integrity_failure_rejects_the_run: >-
+      A candidate<->program antigen misbinding, a source the provider claimed
+      resolved but missing from the canonical SourceIndex, a canonical-source
+      metadata conflict, or an incompatible canonical EvidencePackage is now a
+      HARD failure carried on Tgt01ModuleRunResult.hard_integrity_failures;
+      acceptance.evaluate enforces len(hard) == 0, so the run is machine
+      REJECTED (proposal_envelope = None) -- E1 item 13 on_failure -- never
+      washed into an accepted UNKNOWN. A legitimate "no evidence" outcome
+      (no precedent, an unresolved ADCdb-only retrieval lead, an exhausted
+      source space) stays a SOFT drop and can still produce an accepted UNKNOWN.
+      Regressions: misbinding / missing source / metadata mismatch / incompatible
+      canonical EP each reject the run; an unresolved ADCdb-only lead does not.
+  tests_at_round_2: 45
+  full_suite_at_round_2: 819
+review_round_3:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "1be6bb2"
+  round_2_status: 3b (hard integrity -> machine reject) and the exact-canonical-EP-reuse body both confirmed closed
+  scope: 1 narrow blocker -- reused canonical EP <-> current normalized observation classification-driving semantic parity; nothing else changed
+  fix:
+    reused_ep_classification_parity: >-
+      _reused_package_is_compatible now also verifies every observation field
+      that drives TGT-01 classification -- program_target_identity,
+      target_relation, adjacency_basis, program_stage, program_status,
+      clinical_activity_disclosed, failure_attribution -- against the canonical
+      package's study_context; a drift on any of them is a HARD integrity
+      failure (the immutable canonical EP no longer backs the Strength /
+      Direction the module would compute). A newly-created EP's study_context
+      now also carries clinical_activity_disclosed so a later reuse can compare
+      it. Regressions: canonical PHASE_1 + current APPROVED -> HARD reject (never
+      DIRECT); canonical SAME_TARGET/TARGET_A + current ADJACENT/TARGET_B -> HARD
+      reject; canonical construct-specific failure + current
+      TARGET_MEDIATED_TOXICITY -> HARD reject (never an adverse pattern).
+  tests_at_round_3: 46
+  full_suite_at_round_3: 820
+review_round_4:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "a7a91f7"
+  round_3_status: the classification-parity body and the three drift regressions confirmed correct
+  scope: 1 boundary condition -- a canonical EP MISSING a classification-driving field must also reject (presence + equality, not just equality-when-present)
+  fix:
+    require_presence_of_every_classification_driving_field: >-
+      _reused_package_is_compatible now returns a "missing the
+      classification-driving field" reason (HARD integrity failure) when a
+      reused canonical package's study_context lacks any of the seven
+      classification-driving keys -- parity cannot be verified, so the run is
+      machine-rejected. Regression: a canonical EP missing
+      clinical_activity_disclosed rejects the run.
+  tests_at_round_4: 47
+  full_suite_at_round_4: 821
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_tgt01_module.py' -v
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_gate_modules_boundary.py' -v
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py'
+  - bash scripts/verify_repository_boundary.sh
+  - git diff --check
+artifacts:
+  - gate_modules/README.md
+  - gate_modules/tgt01_adc_modality_precedent/module.yaml
+  - gate_modules/tgt01_adc_modality_precedent/__init__.py
+  - gate_modules/tgt01_adc_modality_precedent/contracts.py
+  - gate_modules/tgt01_adc_modality_precedent/ports.py
+  - gate_modules/tgt01_adc_modality_precedent/classify.py
+  - gate_modules/tgt01_adc_modality_precedent/evidence.py
+  - gate_modules/tgt01_adc_modality_precedent/aggregate.py
+  - gate_modules/tgt01_adc_modality_precedent/acceptance.py
+  - gate_modules/tgt01_adc_modality_precedent/module.py
+  - scripts/verify_repository_boundary.sh
+  - src/contracts/crc_adc_target_gateset.yaml
+  - src/objects/crc_adc_target_gateset.py
+  - tests/test_tgt01_module.py
+  - tests/test_gate_modules_boundary.py
+  - tests/test_crc_adc_target_gateset.py
+  - tests/test_tgt01_module_construction_contract.py
+  - manifests/runtime_migration_pr_e2_manifest.yaml
