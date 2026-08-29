@@ -1,0 +1,803 @@
+"""Runtime Migration PR C: the Matrix view + reusable-evidence reference layer.
+
+Asserts:
+* the ``src/contracts/evidence_reference.yaml`` registry and the
+  ``src/objects/evidence_reference_model.py`` dataclasses agree;
+* ``MatrixView`` / the index rows serialise to the frozen ``csv_headers.yaml``
+  headers verbatim (no new JSON Schema is added under data_layout/);
+* per-object accept / reject, including the mutable-index forward-pointer rule
+  and the global container integrity checks;
+* the provenance walk (referential integrity across the reference rows) holds;
+* PR A's ``EvidencePackage`` still forbids a forward ``superseded_by`` / ``status``
+  (the forward pointer lives only on ``EvidenceIndexEntry``);
+* deep immutability holds, exactly as in PR A / PR B.
+"""
+
+import dataclasses
+import json
+import unittest
+from pathlib import Path
+
+import yaml
+
+from src.objects.decision_model import (
+    EVIDENCE_PACKAGE_FORBIDDEN_FIELDS,
+    CandidateGateAssessment,
+    EvidencePackage,
+    EvidenceRef,
+)
+from src.objects import evidence_reference_model as erm
+from src.objects.evidence_reference_model import (
+    DECISIONS_VIEW_COLUMNS,
+    EVIDENCE_INDEX_STATUS_VALUES,
+    MATRIX_CELL_STATES,
+    MATRIX_LONG_COLUMNS,
+    EvidenceIndexEntry,
+    EvidenceLibraryIndex,
+    GateEvidenceIndex,
+    GateEvidenceIndexEntry,
+    MatrixRow,
+    MatrixView,
+    SourceIndex,
+    SourceIndexEntry,
+    check_assessment_evidence_refs_against_packages,
+    check_evidence_index_against_packages,
+    check_evidence_library_against_sources,
+    check_gate_index_against_assessments,
+    check_gate_index_against_library,
+    check_matrix_against_assessments,
+    check_matrix_cells_are_backed,
+    check_packages_against_sources,
+    check_supersession_consistency,
+    field_names,
+    serialized_matrix_cell,
+)
+from src.objects.gate_model import DECISION_VALUES
+
+
+ROOT = Path(__file__).resolve().parents[1]
+CONTRACT_PATH = ROOT / "src" / "contracts" / "evidence_reference.yaml"
+CSV_HEADERS = ROOT / "src" / "contracts" / "data_layout" / "csv_headers.yaml"
+DECISION_OBJECTS_YAML = ROOT / "src" / "contracts" / "decision_objects.yaml"
+
+
+def _load(path: Path):
+    text = path.read_text()
+    return json.loads(text) if path.suffix == ".json" else yaml.safe_load(text)
+
+
+def _required_dataclass_fields(cls) -> set[str]:
+    return {
+        f.name
+        for f in dataclasses.fields(cls)
+        if f.default is dataclasses.MISSING and f.default_factory is dataclasses.MISSING
+    }
+
+
+# --- valid instance factories -----------------------------------------
+
+_ADC_TARGET_GATES = tuple(f"TGT-0{n}" for n in range(1, 9))
+
+
+def make_row(**overrides) -> MatrixRow:
+    base = dict(
+        candidate_id="CAND-L04-000001",
+        name="CEACAM5",
+        cells={g: "NOT_EVALUATED" for g in _ADC_TARGET_GATES},
+        decision="HOLD",
+    )
+    base.update(overrides)
+    return MatrixRow(**base)
+
+
+def make_matrix(**overrides) -> MatrixView:
+    base = dict(
+        instantiation_id="INST-CRC-REFRACTORY-ADC-TARGET-v1",
+        gateset_id="ADC_TARGET_GATESET",
+        candidate_level="L04",
+        member_gate_ids=_ADC_TARGET_GATES,
+        rows=(make_row(),),
+    )
+    base.update(overrides)
+    return MatrixView(**base)
+
+
+def make_evidence_entry(**overrides) -> EvidenceIndexEntry:
+    base = dict(
+        evidence_id="EP-00000123",
+        schema_version=1,
+        claim_short="CEACAM5 surface density ~1.2e5/cell in CRC",
+        measurement_type="quantitative_surface_density",
+        primary_source_id="SRC-00000001",
+        candidate_refs=("CAND-L04-000001",),
+        created_at="2026-08-27",
+        status="ACTIVE",
+    )
+    base.update(overrides)
+    return EvidenceIndexEntry(**base)
+
+
+def make_source_entry(**overrides) -> SourceIndexEntry:
+    base = dict(
+        source_id="SRC-00000001",
+        source_type="PMID",
+        external_id="12345678",
+        title="Surface proteomics of colorectal carcinoma",
+        year="2025",
+        external_ref="external:pmid/12345678",
+    )
+    base.update(overrides)
+    return SourceIndexEntry(**base)
+
+
+def make_gate_entry(**overrides) -> GateEvidenceIndexEntry:
+    base = dict(
+        evidence_id="EP-00000123",
+        candidate_id="CAND-L04-000001",
+        role="SUPPORTING",
+        assessment_id="ASMT-000001",
+    )
+    base.update(overrides)
+    return GateEvidenceIndexEntry(**base)
+
+
+_ASSESSMENT_REVIEW = {
+    "status": "HUMAN_APPROVED",
+    "reviewer": "h",
+    "reviewed_at": "2026-08-27",
+}
+
+
+def make_assessment(**overrides) -> CandidateGateAssessment:
+    base = dict(
+        assessment_id="ASMT-000001",
+        assessment_version=1,
+        instantiation_id="INST-CRC-REFRACTORY-ADC-TARGET-v1",
+        candidate_id="CAND-L04-000001",
+        context_id="CTX-CRC-REFRACTORY",
+        context_version=1,
+        gateset_id="ADC_TARGET_GATESET",
+        gateset_version="1.0",
+        gate_id="TGT-04",
+        gate_version="1.0",
+        direction="POSITIVE",
+        strength="INDIRECT_STRONG",
+        evidence_refs=(EvidenceRef("EP-00000123", "SUPPORTING"),),
+        aggregation_rationale="surface plausibility from membranous IHC",
+        critical_unknowns=(),
+        evidence_ceiling="quantitative antigen density",
+        review=dict(_ASSESSMENT_REVIEW),
+    )
+    base.update(overrides)
+    return CandidateGateAssessment(**base)
+
+
+def make_package(**overrides) -> EvidencePackage:
+    base = dict(
+        evidence_id="EP-00000123",
+        schema_version=1,
+        claim="CEACAM5 membranous IHC positive in CRC",
+        measurement={
+            "type": "IHC",
+            "analyte": "CEACAM5",
+            "readout": "membranous",
+            "result": "positive",
+        },
+        candidate_refs=("CAND-L04-000001",),
+        study_context={
+            "indication": "CRC",
+            "treatment_state": "refractory",
+            "sample_type": "FFPE",
+        },
+        provenance={
+            "source_id": "SRC-00000001",
+            "source_type": "PMID",
+            "source_identifier": "12345678",
+            "locator": "",
+            "retrieved_at": "2026-08-01",
+        },
+        interpretation_boundary={
+            "directly_supports": (),
+            "does_not_support": (),
+            "limitations": (),
+            "evidence_ceiling": "surface plausibility",
+        },
+        derivation={"module_run_id": "", "code_commit": ""},
+    )
+    base.update(overrides)
+    return EvidencePackage(**base)
+
+
+# --- 1. contract YAML shape -----------------------------------------
+
+class ContractRegistryTests(unittest.TestCase):
+    def setUp(self):
+        self.doc = _load(CONTRACT_PATH)
+
+    def test_version_and_contract_set(self):
+        self.assertEqual(self.doc["version"], "0.1.0")
+        self.assertEqual(
+            set(self.doc["contracts"]),
+            {
+                "MatrixView",
+                "EvidenceIndexEntry",
+                "SourceIndexEntry",
+                "GateEvidenceIndexEntry",
+            },
+        )
+        for name, body in self.doc["contracts"].items():
+            self.assertEqual(body["contract_id"], f"{name}@0.1.0")
+
+    def test_migration_block(self):
+        migration = self.doc["migration"]
+        self.assertEqual(migration["pr"], "runtime_migration_pr_c")
+        self.assertIn("decision_engine", migration["deferred"])
+        self.assertIn("crc_adc_target_gateset_v1", migration["deferred"])
+        self.assertIn("evidence_independence_definition", migration["open_questions"])
+
+    def test_repository_policy_forbids_persistence_and_engine(self):
+        policy = self.doc["repository_policy"]
+        self.assertTrue(policy["instances_external_only"])
+        self.assertEqual(policy["persistence_in_repository"], "forbidden")
+        self.assertEqual(policy["decision_engine_in_repository"], "forbidden")
+
+    def test_reusable_reference_mechanism_is_evidence_refs(self):
+        block = self.doc["migration"]["reusable_evidence_reference"]
+        self.assertEqual(block["mechanism"], "evidence_refs")
+        self.assertIn("evidence_package_ids", block["note"])
+        self.assertTrue(block["pr_a_contract_untouched"])
+
+    def test_immutable_record_boundary_declared(self):
+        block = self.doc["migration"]["immutable_record_boundary"]
+        rule = block["rule"].lower()
+        self.assertIn("superseded_by", rule)
+        # the boundary is scoped to the evidence layer; it does not claim that a
+        # generic status field lives only on the index (PR A's Context does have
+        # an intrinsic status).
+        self.assertIn("other canonical objects", rule)
+        self.assertIn("evidence layer only", block["forward_pointer_home"])
+
+    def test_provenance_walk_declares_a_canonical_record_layer(self):
+        checks = self.doc["migration"]["provenance_walk"]["checks"]
+        self.assertIn("layer_1_derived_index_integrity", checks)
+        self.assertIn("layer_2_canonical_record_integrity", checks)
+        joined = " ".join(checks["layer_2_canonical_record_integrity"])
+        self.assertIn("CandidateGateAssessment", joined)
+        self.assertIn("EvidencePackage", joined)
+        self.assertIn(
+            "not merely because the derived",
+            self.doc["migration"]["provenance_walk"]["acceptance"],
+        )
+
+    def test_matrix_view_declared_as_derived_no_id(self):
+        note = self.doc["migration"]["parity"]["MatrixView"]["note"]
+        self.assertIn("rebuildable projection", note)
+        self.assertIn("no id", note.lower())
+
+
+# --- 2. registry <-> Python parity --------------------------------
+
+_CONTRACT_TO_CLASS = {
+    "MatrixView": MatrixView,
+    "EvidenceIndexEntry": EvidenceIndexEntry,
+    "SourceIndexEntry": SourceIndexEntry,
+    "GateEvidenceIndexEntry": GateEvidenceIndexEntry,
+}
+
+
+class RegistryPythonParityTests(unittest.TestCase):
+    def setUp(self):
+        self.doc = _load(CONTRACT_PATH)
+
+    def test_required_fields_match(self):
+        for name, cls in _CONTRACT_TO_CLASS.items():
+            with self.subTest(contract=name):
+                self.assertEqual(
+                    set(self.doc["contracts"][name]["required_fields"]),
+                    _required_dataclass_fields(cls),
+                )
+
+    def test_vocabularies_match(self):
+        v = self.doc["vocabularies"]
+        self.assertEqual(
+            tuple(v["evidence_index_status"]), EVIDENCE_INDEX_STATUS_VALUES
+        )
+        self.assertEqual(v["matrix_cell_regex"], erm._MATRIX_CELL.pattern)
+        self.assertEqual(tuple(v["matrix_long_columns"]), MATRIX_LONG_COLUMNS)
+        self.assertEqual(tuple(v["decisions_view_columns"]), DECISIONS_VIEW_COLUMNS)
+        self.assertEqual(
+            tuple(v["matrix_wide_fixed_columns"]), erm.MATRIX_WIDE_FIXED_COLUMNS
+        )
+        self.assertEqual(
+            v["matrix_wide_trailing_column"], erm.MATRIX_WIDE_TRAILING_COLUMN
+        )
+
+    def test_matrix_cell_states_cover_the_regex(self):
+        for state in MATRIX_CELL_STATES:
+            self.assertRegex(state, erm._MATRIX_CELL.pattern)
+        # 4 directions x 3 strengths + 3 single-value states
+        self.assertEqual(len(MATRIX_CELL_STATES), 4 * 3 + 3)
+
+
+# --- 3. frozen csv_headers.yaml parity (no new JSON Schema) ---------
+
+class CsvHeaderParityTests(unittest.TestCase):
+    def setUp(self):
+        self.headers = _load(CSV_HEADERS)["headers"]
+
+    def test_no_new_schema_files_under_data_layout(self):
+        names = {p.name for p in (ROOT / "src" / "contracts" / "data_layout").iterdir()}
+        self.assertNotIn("matrix.schema.json", names)
+        self.assertNotIn("evidence_index.schema.json", names)
+        self.assertNotIn("source_index.schema.json", names)
+
+    def test_library_evidence_index_header_matches_entry_fields(self):
+        self.assertEqual(
+            tuple(self.headers["library_evidence_index"]),
+            field_names(EvidenceIndexEntry),
+        )
+        # the YAML mirrors the same ordered column list
+        doc = _load(CONTRACT_PATH)["contracts"]["EvidenceIndexEntry"]
+        self.assertEqual(
+            tuple(doc["csv_columns"]), tuple(self.headers["library_evidence_index"])
+        )
+        self.assertEqual(
+            set(doc["required_fields"]) | set(doc["optional_fields"]),
+            set(field_names(EvidenceIndexEntry)),
+        )
+
+    def test_library_source_index_header_matches_entry_fields(self):
+        self.assertEqual(
+            tuple(self.headers["library_source_index"]),
+            field_names(SourceIndexEntry),
+        )
+
+    def test_gate_evidence_index_header_matches_entry_fields(self):
+        self.assertEqual(
+            tuple(self.headers["gate_evidence_index"]),
+            field_names(GateEvidenceIndexEntry),
+        )
+
+    def test_wide_matrix_header_rebuilds_the_frozen_adc_target_header(self):
+        view = make_matrix()
+        self.assertEqual(
+            list(view.wide_columns()), self.headers["matrix_adc_target"]
+        )
+
+    def test_long_and_decisions_headers_match_module_constants(self):
+        self.assertEqual(
+            tuple(self.headers["assessments_long"]), MATRIX_LONG_COLUMNS
+        )
+        self.assertEqual(tuple(self.headers["decisions"]), DECISIONS_VIEW_COLUMNS)
+
+
+# --- 4. MatrixView / MatrixRow accept / reject --------------------
+
+class MatrixViewTests(unittest.TestCase):
+    def test_valid(self):
+        view = make_matrix()
+        self.assertEqual(len(view.rows), 1)
+        self.assertEqual(view.candidate_level, "L04")
+
+    def test_rejects_non_canonical_gateset_for_level(self):
+        with self.assertRaises(ValueError):
+            make_matrix(candidate_level="L05")  # id is ADC_TARGET_GATESET (L04)
+        ok = make_matrix(
+            candidate_level="L05",
+            gateset_id="ADC_EPITOPE_GATESET",
+            rows=(make_row(candidate_id="CAND-L05-000001"),),
+        )
+        self.assertEqual(ok.gateset_id, "ADC_EPITOPE_GATESET")
+
+    def test_row_candidate_level_must_match_the_matrix_level(self):
+        with self.assertRaises(ValueError):  # L04 matrix, L05 row candidate
+            make_matrix(rows=(make_row(candidate_id="CAND-L05-000001"),))
+        with self.assertRaises(ValueError):
+            make_matrix(
+                rows=(make_row(), make_row(candidate_id="CAND-L07-000002")),
+            )
+        ok = make_matrix(
+            candidate_level="L05",
+            gateset_id="ADC_EPITOPE_GATESET",
+            rows=(make_row(candidate_id="CAND-L05-000001"),),
+        )
+        self.assertEqual(ok.rows[0].candidate_id, "CAND-L05-000001")
+
+    def test_rejects_bad_ids(self):
+        with self.assertRaises(ValueError):
+            make_matrix(instantiation_id="CRC-ADC-TARGET")
+        with self.assertRaises(ValueError):
+            make_matrix(gateset_id="adc_target_gateset")
+
+    def test_member_gate_ids_must_be_unique_and_non_empty(self):
+        with self.assertRaises(ValueError):
+            make_matrix(member_gate_ids=())
+        with self.assertRaises(ValueError):
+            make_matrix(member_gate_ids=("TGT-01", "TGT-01"))
+
+    def test_every_row_has_one_cell_per_member_gate(self):
+        with self.assertRaises(ValueError):  # missing a member gate
+            make_matrix(rows=(make_row(cells={"TGT-01": "UNKNOWN"}),))
+        with self.assertRaises(ValueError):  # cell for a non-member gate
+            cells = {g: "NOT_EVALUATED" for g in _ADC_TARGET_GATES}
+            cells["TGT-99"] = "UNKNOWN"
+            make_matrix(rows=(make_row(cells=cells),))
+
+    def test_duplicate_candidate_row_rejected(self):
+        with self.assertRaises(ValueError):
+            make_matrix(rows=(make_row(), make_row()))
+
+    def test_row_cell_state_and_decision_validation(self):
+        with self.assertRaises(ValueError):
+            make_row(cells={g: "POSITIVE" for g in _ADC_TARGET_GATES})
+        with self.assertRaises(ValueError):
+            make_row(cells={g: "+3" for g in _ADC_TARGET_GATES})
+        with self.assertRaises(ValueError):
+            make_row(decision="PROCEED")
+        ok = make_row(decision="NOT_EVALUATED")
+        self.assertEqual(ok.decision, "NOT_EVALUATED")
+        for value in DECISION_VALUES:
+            self.assertEqual(make_row(decision=value).decision, value)
+
+    def test_traced_cells_skips_unbacked_states(self):
+        cells = {g: "NOT_EVALUATED" for g in _ADC_TARGET_GATES}
+        cells["TGT-01"] = "POSITIVE/DIRECT"
+        cells["TGT-02"] = "UNKNOWN"
+        cells["TGT-03"] = "NOT_APPLICABLE"
+        view = make_matrix(rows=(make_row(cells=cells),))
+        self.assertEqual(
+            view.traced_cells(),
+            (("CAND-L04-000001", "TGT-01", "POSITIVE/DIRECT"),),
+        )
+
+
+# --- 5. EvidenceIndexEntry / EvidenceLibraryIndex ----------------
+
+class EvidenceIndexEntryTests(unittest.TestCase):
+    def test_valid_active(self):
+        entry = make_evidence_entry()
+        self.assertEqual(entry.status, "ACTIVE")
+        self.assertEqual(entry.superseded_by, "")
+
+    def test_superseded_requires_pointer_and_vice_versa(self):
+        with self.assertRaises(ValueError):  # SUPERSEDED without pointer
+            make_evidence_entry(status="SUPERSEDED")
+        with self.assertRaises(ValueError):  # pointer without SUPERSEDED status
+            make_evidence_entry(superseded_by="EP-00000200")
+        with self.assertRaises(ValueError):  # ACTIVE + pointer
+            make_evidence_entry(status="ACTIVE", superseded_by="EP-00000200")
+        ok = make_evidence_entry(status="SUPERSEDED", superseded_by="EP-00000200")
+        self.assertEqual(ok.superseded_by, "EP-00000200")
+
+    def test_no_self_supersession(self):
+        with self.assertRaises(ValueError):
+            make_evidence_entry(status="SUPERSEDED", superseded_by="EP-00000123")
+
+    def test_retracted_may_have_no_pointer(self):
+        entry = make_evidence_entry(status="RETRACTED")
+        self.assertEqual(entry.superseded_by, "")
+
+    def test_retracted_may_carry_a_pointer(self):
+        # Data Layout Spec section 10.1 allows RETRACTED + a replacement EP; the
+        # runtime must not narrow the frozen spec here.
+        entry = make_evidence_entry(status="RETRACTED", superseded_by="EP-00000200")
+        self.assertEqual(entry.superseded_by, "EP-00000200")
+
+    def test_rejects_bad_refs(self):
+        with self.assertRaises(ValueError):
+            make_evidence_entry(primary_source_id="SRC-1")
+        with self.assertRaises(ValueError):
+            make_evidence_entry(candidate_refs=("CAND-1",))
+        with self.assertRaises(ValueError):
+            make_evidence_entry(created_at="27-08-2026")
+
+    def test_candidate_refs_may_be_empty(self):
+        self.assertEqual(make_evidence_entry(candidate_refs=()).candidate_refs, ())
+
+
+class EvidenceLibraryIndexTests(unittest.TestCase):
+    def test_unique_evidence_id(self):
+        with self.assertRaises(ValueError):
+            EvidenceLibraryIndex((make_evidence_entry(), make_evidence_entry()))
+
+    def test_superseded_by_must_resolve_within_index(self):
+        old = make_evidence_entry(status="SUPERSEDED", superseded_by="EP-00000200")
+        with self.assertRaises(ValueError):
+            EvidenceLibraryIndex((old,))
+        new = make_evidence_entry(evidence_id="EP-00000200")
+        idx = EvidenceLibraryIndex((old, new))
+        self.assertEqual(idx.by_evidence_id("EP-00000200"), new)
+
+    def test_supersession_cycle_rejected(self):
+        a = make_evidence_entry(
+            evidence_id="EP-00000001", status="SUPERSEDED", superseded_by="EP-00000002"
+        )
+        b = make_evidence_entry(
+            evidence_id="EP-00000002", status="SUPERSEDED", superseded_by="EP-00000001"
+        )
+        with self.assertRaises(ValueError):
+            EvidenceLibraryIndex((a, b))
+
+
+# --- 6. SourceIndexEntry / SourceIndex --------------------------
+
+class SourceIndexTests(unittest.TestCase):
+    def test_valid(self):
+        self.assertEqual(make_source_entry().source_type, "PMID")
+
+    def test_rejects(self):
+        with self.assertRaises(ValueError):
+            make_source_entry(source_id="SRC-1")
+        with self.assertRaises(ValueError):
+            make_source_entry(source_type="PREPRINT")
+        with self.assertRaises(ValueError):
+            make_source_entry(external_ref="pmid/12345678")
+        with self.assertRaises(ValueError):
+            make_source_entry(year="20xy")
+
+    def test_year_accepts_int_or_empty(self):
+        self.assertEqual(make_source_entry(year=2025).year, 2025)
+        self.assertEqual(make_source_entry(year="").year, "")
+
+    def test_unique_source_id(self):
+        with self.assertRaises(ValueError):
+            SourceIndex((make_source_entry(), make_source_entry()))
+        idx = SourceIndex(
+            (make_source_entry(), make_source_entry(source_id="SRC-00000002"))
+        )
+        self.assertEqual(idx.by_source_id("SRC-00000002").source_id, "SRC-00000002")
+
+
+# --- 7. GateEvidenceIndex --------------------------------------
+
+class GateEvidenceIndexTests(unittest.TestCase):
+    def test_valid(self):
+        gi = GateEvidenceIndex("TGT-04", (make_gate_entry(),))
+        self.assertEqual(gi.candidate_ids(), frozenset({"CAND-L04-000001"}))
+
+    def test_row_rejects(self):
+        with self.assertRaises(ValueError):
+            make_gate_entry(evidence_id="EP-1")
+        with self.assertRaises(ValueError):
+            make_gate_entry(candidate_id="CAND-1")
+        with self.assertRaises(ValueError):
+            make_gate_entry(role="PRIMARY")
+        with self.assertRaises(ValueError):
+            make_gate_entry(assessment_id="ASMT-1")
+
+    def test_container_rejects_empty_gate_id(self):
+        with self.assertRaises(ValueError):
+            GateEvidenceIndex("", (make_gate_entry(),))
+
+
+# --- 8. provenance walk (referential integrity) ----------------
+
+class ProvenanceWalkTests(unittest.TestCase):
+    def test_library_against_sources(self):
+        library = EvidenceLibraryIndex((make_evidence_entry(),))
+        good_sources = SourceIndex((make_source_entry(),))
+        check_evidence_library_against_sources(library, good_sources)  # no raise
+        empty_sources = SourceIndex(())
+        with self.assertRaises(ValueError):
+            check_evidence_library_against_sources(library, empty_sources)
+
+    def test_gate_index_against_library(self):
+        library = EvidenceLibraryIndex((make_evidence_entry(),))
+        gi = GateEvidenceIndex("TGT-04", (make_gate_entry(),))
+        check_gate_index_against_library(gi, library)  # no raise
+        dangling = GateEvidenceIndex(
+            "TGT-04", (make_gate_entry(evidence_id="EP-00009999"),)
+        )
+        with self.assertRaises(ValueError):
+            check_gate_index_against_library(dangling, library)
+
+    def test_matrix_cells_are_backed(self):
+        cells = {g: "NOT_EVALUATED" for g in _ADC_TARGET_GATES}
+        cells["TGT-04"] = "POSITIVE/DIRECT"
+        cells["TGT-02"] = "UNKNOWN"  # unbacked state -> no evidence needed
+        view = make_matrix(rows=(make_row(cells=cells),))
+
+        backed = {"TGT-04": GateEvidenceIndex("TGT-04", (make_gate_entry(),))}
+        check_matrix_cells_are_backed(view, backed)  # no raise
+
+        with self.assertRaises(ValueError):
+            check_matrix_cells_are_backed(view, {})
+        wrong_candidate = {
+            "TGT-04": GateEvidenceIndex(
+                "TGT-04", (make_gate_entry(candidate_id="CAND-L04-000009"),)
+            )
+        }
+        with self.assertRaises(ValueError):
+            check_matrix_cells_are_backed(view, wrong_candidate)
+
+
+# --- 8b. provenance walk layer 2: through canonical Assessment + EP ----
+
+class CanonicalRecordProvenanceTests(unittest.TestCase):
+    def _matrix_with_cell(self, gate_id, state):
+        cells = {g: "NOT_EVALUATED" for g in _ADC_TARGET_GATES}
+        cells[gate_id] = state
+        return make_matrix(rows=(make_row(cells=cells),))
+
+    def test_serialized_matrix_cell(self):
+        self.assertEqual(
+            serialized_matrix_cell(make_assessment()), "POSITIVE/INDIRECT_STRONG"
+        )
+        self.assertEqual(
+            serialized_matrix_cell(
+                make_assessment(direction="INCONCLUSIVE", strength="UNKNOWN", evidence_refs=())
+            ),
+            "UNKNOWN",
+        )
+        self.assertEqual(
+            serialized_matrix_cell(
+                make_assessment(direction="NOT_APPLICABLE", strength="UNKNOWN", evidence_refs=())
+            ),
+            "NOT_APPLICABLE",
+        )
+
+    def test_matrix_against_assessments_passes_and_catches_drift(self):
+        view = self._matrix_with_cell("TGT-04", "POSITIVE/INDIRECT_STRONG")
+        good = {("CAND-L04-000001", "TGT-04"): make_assessment()}
+        check_matrix_against_assessments(view, good)  # no raise
+
+        with self.assertRaises(ValueError):  # cell != serialised assessment
+            check_matrix_against_assessments(
+                view, {("CAND-L04-000001", "TGT-04"): make_assessment(strength="DIRECT")}
+            )
+        with self.assertRaises(ValueError):  # graded cell, no current assessment
+            check_matrix_against_assessments(view, {})
+        with self.assertRaises(ValueError):  # NOT_EVALUATED cell but assessment exists
+            check_matrix_against_assessments(
+                make_matrix(),
+                {("CAND-L04-000001", "TGT-01"): make_assessment(gate_id="TGT-01")},
+            )
+        with self.assertRaises(ValueError):  # ids disagree with the Matrix
+            check_matrix_against_assessments(
+                view,
+                {("CAND-L04-000001", "TGT-04"): make_assessment(
+                    instantiation_id="INST-OTHER-PROGRAM-v1"
+                )},
+            )
+
+    def test_gate_index_zero_row_coverage_is_caught(self):
+        # a current assessment with non-empty evidence_refs but NO rows in this
+        # gate's index at all must still be rejected.
+        assessments = {("CAND-L04-000001", "TGT-04"): make_assessment()}
+        empty = GateEvidenceIndex("TGT-04", ())
+        with self.assertRaises(ValueError):
+            check_gate_index_against_assessments(empty, assessments)
+
+    def test_evidence_index_against_packages(self):
+        library = EvidenceLibraryIndex((make_evidence_entry(),))
+        packages = {"EP-00000123": make_package()}
+        check_evidence_index_against_packages(library, packages)  # no raise
+
+        # index row with no canonical EvidencePackage at all
+        with self.assertRaises(ValueError):
+            check_evidence_index_against_packages(library, {})
+        # the package under this key carries a different evidence_id
+        with self.assertRaises(ValueError):
+            check_evidence_index_against_packages(
+                library, {"EP-00000123": make_package(evidence_id="EP-00000200")}
+            )
+        # index primary_source_id disagrees with the canonical provenance
+        bad_source = EvidenceLibraryIndex(
+            (make_evidence_entry(primary_source_id="SRC-00000099"),)
+        )
+        with self.assertRaises(ValueError):
+            check_evidence_index_against_packages(bad_source, packages)
+        # index schema_version disagrees with the canonical record
+        bad_ver = EvidenceLibraryIndex((make_evidence_entry(schema_version=2),))
+        with self.assertRaises(ValueError):
+            check_evidence_index_against_packages(bad_ver, packages)
+        # index candidate_refs disagree
+        bad_refs = EvidenceLibraryIndex((make_evidence_entry(candidate_refs=()),))
+        with self.assertRaises(ValueError):
+            check_evidence_index_against_packages(bad_refs, packages)
+
+    def test_gate_index_against_assessments(self):
+        assessments = {("CAND-L04-000001", "TGT-04"): make_assessment()}
+        gi = GateEvidenceIndex("TGT-04", (make_gate_entry(),))
+        check_gate_index_against_assessments(gi, assessments)  # no raise
+
+        stale = GateEvidenceIndex(
+            "TGT-04", (make_gate_entry(assessment_id="ASMT-000009"),)
+        )
+        with self.assertRaises(ValueError):  # index pins a different assessment
+            check_gate_index_against_assessments(stale, assessments)
+
+        wrong_role = GateEvidenceIndex(
+            "TGT-04", (make_gate_entry(role="CONTRADICTING"),)
+        )
+        with self.assertRaises(ValueError):  # role not an evidence_ref of the assessment
+            check_gate_index_against_assessments(wrong_role, assessments)
+
+        two_ref = make_assessment(
+            evidence_refs=(
+                EvidenceRef("EP-00000123", "SUPPORTING"),
+                EvidenceRef("EP-00000124", "SUPPORTING"),
+            )
+        )
+        with self.assertRaises(ValueError):  # assessment has a ref the index misses
+            check_gate_index_against_assessments(
+                gi, {("CAND-L04-000001", "TGT-04"): two_ref}
+            )
+
+    def test_assessment_evidence_refs_against_packages(self):
+        assessments = {("CAND-L04-000001", "TGT-04"): make_assessment()}
+        check_assessment_evidence_refs_against_packages(
+            assessments, {"EP-00000123": make_package()}
+        )
+        with self.assertRaises(ValueError):
+            check_assessment_evidence_refs_against_packages(assessments, {})
+
+    def test_packages_against_sources(self):
+        packages = {"EP-00000123": make_package()}
+        check_packages_against_sources(packages, SourceIndex((make_source_entry(),)))
+        with self.assertRaises(ValueError):
+            check_packages_against_sources(packages, SourceIndex(()))
+
+    def test_supersession_consistency(self):
+        old = make_evidence_entry(status="SUPERSEDED", superseded_by="EP-00000200")
+        new_row = make_evidence_entry(evidence_id="EP-00000200")
+        library = EvidenceLibraryIndex((old, new_row))
+        agree = {
+            "EP-00000200": make_package(
+                evidence_id="EP-00000200", supersedes_evidence_id="EP-00000123"
+            )
+        }
+        check_supersession_consistency(library, agree)  # no raise
+        disagree = {
+            "EP-00000200": make_package(
+                evidence_id="EP-00000200", supersedes_evidence_id="EP-00000999"
+            )
+        }
+        with self.assertRaises(ValueError):
+            check_supersession_consistency(library, disagree)
+
+
+# --- 9. immutable-record boundary + PR A untouched -------------
+
+class ImmutableBoundaryTests(unittest.TestCase):
+    def test_forward_pointer_is_forbidden_on_the_canonical_evidence_package(self):
+        # PR A already bans status / superseded_by on EvidencePackage; PR C's
+        # index is the only place they may appear.
+        self.assertIn("superseded_by", EVIDENCE_PACKAGE_FORBIDDEN_FIELDS)
+        self.assertIn("status", EVIDENCE_PACKAGE_FORBIDDEN_FIELDS)
+        self.assertIn("superseded_by", field_names(EvidenceIndexEntry))
+        self.assertIn("status", field_names(EvidenceIndexEntry))
+
+    def test_decision_objects_yaml_still_defers_pr_c(self):
+        deferred = _load(DECISION_OBJECTS_YAML)["migration"]["deferred"]
+        self.assertEqual(
+            deferred["matrix_and_reusable_evidence_references"], "PR C"
+        )
+
+
+# --- 10. deep immutability -----------------------------------
+
+class DeepImmutabilityTests(unittest.TestCase):
+    def test_external_dict_mutation_does_not_reach_matrix_row(self):
+        cells = {g: "NOT_EVALUATED" for g in _ADC_TARGET_GATES}
+        row = make_row(cells=cells)
+        cells["TGT-01"] = "POSITIVE/DIRECT"
+        self.assertEqual(row.cells["TGT-01"], "NOT_EVALUATED")
+
+    def test_external_list_mutation_does_not_reach_evidence_entry(self):
+        refs = ["CAND-L04-000001"]
+        entry = make_evidence_entry(candidate_refs=tuple(refs))
+        refs.append("CAND-L04-000002")
+        self.assertEqual(entry.candidate_refs, ("CAND-L04-000001",))
+
+    def test_nested_values_cannot_be_mutated_through_the_object(self):
+        row = make_row()
+        with self.assertRaises(TypeError):
+            row.cells["TGT-01"] = "x"
+        view = make_matrix()
+        with self.assertRaises(AttributeError):
+            view.member_gate_ids = ()
+
+
+if __name__ == "__main__":
+    unittest.main()

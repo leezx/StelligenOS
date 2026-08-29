@@ -4050,3 +4050,118 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   GateSet / EvidenceLadder / Decision）已合并 `d18974b`；`MIGRATION_PENDING`
   未解除（到 PR E）。下一步：PR C —— Matrix / provenance / reusable
   EvidencePackage references。
+
+## 2026-08-28T18:05 EDT — Runtime Migration PR C 首版（Matrix view / reusable EP references / provenance walk）
+
+- 授权：用户"Runtime Migration PR A–D，逐一来做"+"继续直到完成所有 PR A-D"；
+  PR B APPROVE 后审核方"Merge 后可以进入 PR C"。基线 `origin/main` @ `9aafc57`。
+- 三个决策（用户 AskUserQuestion 拍板，审核方在 `AI审核方案` 已独立同意同款）：
+  1. Matrix = 只做 view contract，不加 JSON Schema（`data_layout/` 不新增文件；
+     附录 B 明确 Matrix 无 schema）。
+  2. 可复用证据引用层 = 加性交付 evidence_index / source_index / per-gate
+     evidence_index 三种 index（各带容器），PR A 的 `evidence_refs` 不动、
+     `evidence_package_ids` 不落实为字段。
+  3. Provenance = index dataclasses + 声明式 walk 不变量 + 跨记录引用完整性
+     校验函数；不引入被持久化的图对象。
+- 交付：`src/contracts/evidence_reference.yaml`（registry）、
+  `src/objects/evidence_reference_model.py`（`MatrixRow`/`MatrixView`、
+  `EvidenceIndexEntry`/`EvidenceLibraryIndex`、`SourceIndexEntry`/`SourceIndex`、
+  `GateEvidenceIndexEntry`/`GateEvidenceIndex`、3 个 `check_*` 函数；复用 PR A
+  `_deep_freeze`/`_require_*`/ID 正则 + PR B `_require_canonical_gateset`/
+  `DECISION_VALUES`）、`tests/test_evidence_reference.py`（48 tests）、
+  `manifests/runtime_migration_pr_c_manifest.yaml`、`__init__.py` + 两个 README
+  追加 PR C 段（顺带把 README 里 PR B 遗留的"exact parity"改成"persistence
+  shape mirrors … runtime stricter"，与已合并 PR B 合同一致）。
+- 未改：`data_layout/*`（未新增 schema）、PR A 三文件、PR B 三文件、冻结文档、
+  `gate_system.yaml`、`src/capabilities/*`、既有测试。无 engine、无新依赖。
+  `MIGRATION_PENDING` 未解除。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 705 OK
+  （658 baseline + 47 new）/ `git diff --check` clean / 干净 tracked-tree
+  worktree boundary passed / `evidence_reference.yaml` 结构合法。connector 写
+  review 仍 403。
+- Next：提交、推送、开 PR、CI 绿后提交同一 ChatGPT 对话（`AI审核方案`）请求审核。
+
+## 2026-08-28T19:40 EDT — Runtime Migration PR C REQUEST_CHANGES 第一轮修订（同一 PR #102）
+
+- Review input：ChatGPT `AI审核方案` 对 PR #102 @ `bd60748` 返回
+  `REQUEST_CHANGES`（经浏览器提交，GitHub connector 写 review 仍 403）：三个设计
+  决策与 scope 控制均认可；3 个 PR-C-local blocker，最小改关闭，不碰冻结文档 /
+  PR A / PR B / PR D。
+- fix 1（主 blocker：声明的 provenance chain ≠ 实际 checker）：原三个 checker 只
+  在三张 derived index 之间查对应 ID，从不读 canonical Assessment /
+  EvidencePackage，存在 false-pass。→ 保留 layer 1，新增 layer 2 canonical-record
+  integrity：`serialized_matrix_cell` + `check_matrix_against_assessments` /
+  `check_gate_index_against_assessments` /
+  `check_assessment_evidence_refs_against_packages` /
+  `check_packages_against_sources` / `check_supersession_consistency`（纯引用
+  比对，不算 direction/strength/decision）。`evidence_reference.yaml`
+  `provenance_walk` 加 `checks`（layer_1/layer_2）+ `acceptance`。
+- fix 2（MatrixView 未锁 row candidate level）：`__post_init__` 加
+  `row.candidate_id` 的 `Lnn` == `candidate_level` 校验；registry 加 invariant。
+- fix 3（EvidenceIndex lifecycle 比冻结 spec 窄 + boundary wording 对 status 过宽）：
+  `EvidenceIndexEntry` 改为 `ACTIVE→空 / SUPERSEDED→有 pointer / RETRACTED→可选`
+  （冻结 §10.1 允许 RETRACTED replacement）；`immutable_record_boundary.rule`
+  收窄为"EvidencePackage lifecycle status + forward superseded_by 只住
+  EvidenceIndexEntry；其它 canonical 对象保留自身 intrinsic status"（PR A 的
+  Context 本就有 status）。registry 加 `lifecycle_rule`、改 invariants。
+- 改动文件：`src/contracts/evidence_reference.yaml`、
+  `src/objects/evidence_reference_model.py`、`src/objects/__init__.py`、
+  `tests/test_evidence_reference.py`（48 → 56 tests，+8）、两个 README、handoff、
+  worklog。未改 `data_layout/*` / PR A / PR B / 冻结文档 / `gate_system.yaml` /
+  `src/capabilities/*` / 既有测试。仍无 engine、无新依赖。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 714 OK
+  （658 baseline + 56 new）/ `git diff --check` clean / 干净 tracked-tree
+  worktree boundary passed / `evidence_reference.yaml` 结构合法。
+- Next：提交、推送、CI 绿后回同一 ChatGPT 对话请求复审（目标 APPROVE PR #102）。
+
+## 2026-08-28T20:30 EDT — Runtime Migration PR C REQUEST_CHANGES 第二轮修订（同一 PR #102）
+
+- Review input：ChatGPT `AI审核方案` 对 PR #102 @ `98d1f9d` 返回
+  `REQUEST_CHANGES`：上一轮 blocker 2 / 3 确认关闭；只剩 1 个 provenance blocker，
+  两个最小修点，均在新增的 layer-2 checker 自身。
+- fix 4（EvidenceIndex ↔ canonical EP source identity parity）：第一轮说明
+  over-claim —— `check_packages_against_sources` 只查 EP.provenance.source_id 在
+  SourceIndex，不比 `EvidenceIndexEntry.primary_source_id ==
+  EvidencePackage.provenance.source_id`。→ 新增
+  `check_evidence_index_against_packages(library, packages)`：primary_source_id
+  必须相等（blocker），顺带镜像 schema_version + candidate_refs。加入
+  `provenance_walk.checks.layer_2` + `__init__` 导出。
+- fix 5（check_gate_index_against_assessments zero-row 漏检）：反向检查先由
+  index 行构造 `named`，再 `if (candidate_id, assessment_id) not in named:
+  continue` —— `evidence_refs` 非空但该 gate index 零行的 current Assessment 被
+  跳过。→ 删 `named` guard，反向检查遍历该 gate 的每个 current Assessment，要求
+  每个 evidence_ref 都在 `covered`。
+- 改动文件：`src/objects/evidence_reference_model.py`（两个函数）、
+  `src/contracts/evidence_reference.yaml`（layer_2 清单 + acceptance）、
+  `src/objects/__init__.py`（导出）、`tests/test_evidence_reference.py`
+  （56 → 58：+`test_gate_index_zero_row_coverage_is_caught` +
+  `test_evidence_index_against_packages`）、handoff、worklog。未碰 `data_layout/*`
+  / PR A / PR B / 冻结文档 / `gate_system.yaml` / `src/capabilities/*` / 既有测试。
+  仍无 engine、无新依赖。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 716 OK
+  （658 baseline + 58 new）/ `git diff --check` clean / 干净 tracked-tree
+  worktree boundary passed / `evidence_reference.yaml` 结构合法。
+- Next：提交、推送、CI 绿后回同一 ChatGPT 对话请求复审（目标本轮 APPROVE PR #102）。
+
+## 2026-08-28T21:10 EDT — Runtime Migration PR C REQUEST_CHANGES 第三轮修订（同一 PR #102）
+
+- Review input：ChatGPT `AI审核方案` 对 PR #102 @ `d611598` 返回
+  `REQUEST_CHANGES`：前两轮修点确认关闭；只剩 `check_evidence_index_against_packages`
+  的两处 identity gap。`check_supersession_consistency` 的"两边 pointer 都存在时
+  才要求一致"审核方明确认可。
+- fix 6：`check_evidence_index_against_packages` 原为 `package = packages.get(
+  entry.evidence_id); if package is None: continue` —— (a) 索引行无 canonical
+  EvidencePackage 直接跳过（应 reject）；(b) 从不比 `package.evidence_id ==
+  entry.evidence_id`。→ `if package is None:` 改 `raise`；加
+  `if package.evidence_id != entry.evidence_id: raise`。YAML layer_2 该行补
+  "every EvidenceIndexEntry has a canonical EvidencePackage carrying the same
+  evidence_id"。测试 `test_evidence_index_against_packages` +2 断言。
+- 改动文件：`src/objects/evidence_reference_model.py`（1 函数）、
+  `src/contracts/evidence_reference.yaml`（1 行）、`tests/test_evidence_reference.py`
+  （+2 断言）、handoff、worklog。未碰 `data_layout/*` / PR A / PR B / 冻结文档 /
+  `gate_system.yaml` / `src/capabilities/*` / 既有测试。仍无 engine、无新依赖。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 716 OK /
+  `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
+  `evidence_reference.yaml` 结构合法。
+- Next：提交、推送、CI 绿后回同一 ChatGPT 对话请求复审（审核方预告：这两处补完即
+  APPROVE PR #102）。
