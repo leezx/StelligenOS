@@ -35,7 +35,7 @@ _CHECKLIST_KEYS = (
     "09_evidence_source_plan",
     "10_input_contract",
     "11_evidencepackage_output_contract",
-    "12_proposed_candidategateassessment_contract",
+    "12_assessment_proposal_envelope_contract",
     "13_machine_acceptance_criteria",
     "14_human_acceptance_and_review_surface",
     "15_failure_unknown_and_conflict_behavior",
@@ -146,6 +146,57 @@ class VerbatimFromPrDTests(unittest.TestCase):
         i = self.item["15_failure_unknown_and_conflict_behavior"]
         self.assertIn("not KILL", i["no_admissible_evidence_at_all"])
         self.assertIn("never silently converted", i["absolute_rule"].lower())
+
+    def test_item12_is_a_non_canonical_proposal_envelope(self):
+        # review round 1: the Module must not emit a CandidateGateAssessment
+        # (PR A: that object is HUMAN_APPROVED-only).
+        i = self.item["12_assessment_proposal_envelope_contract"]
+        self.assertIn("not a candidategateassessment", i["the_module_emits"].lower())
+        self.assertIn("human_approved", i["the_module_emits"].lower())
+        rules = " ".join(i["rules"]).lower()
+        self.assertIn("carries no review block", rules)
+        self.assertIn("only after human approval", rules)
+        self.assertIn("canonicalisation", i["shape_ref"].lower())
+        # downstream items no longer claim the Module builds the canonical object
+        self.assertIn(
+            "the review surface constructs the canonical candidategateassessment",
+            self.item["14_human_acceptance_and_review_surface"]["human_only_judgements"][-1].lower(),
+        )
+        self.assertIn(
+            "construct a candidategateassessment",
+            " ".join(self.item["17_downstream_consumer_and_handoff"]["this_module_does_not"]).lower(),
+        )
+
+    def test_item16_has_a_mandatory_adverse_sweep_before_any_stop(self):
+        # review round 1: fatal-first -- a positive ceiling must not stop the
+        # search before the discontinued-programme / failure-reason sweep.
+        i = self.item["16_stop_rule"]
+        self.assertIn("mandatory_completion_before_any_stop", i)
+        mand = " ".join(i["mandatory_completion_before_any_stop"]).lower()
+        self.assertIn("discontinued", mand)
+        self.assertIn("failure / discontinuation-reason sweep", mand)
+        self.assertIn("then_stop_searching_public_evidence_when_any_of", i)
+        self.assertIn("contradicts fatal-first", i["rationale_for_the_mandatory_sweep"].lower())
+        self.assertIn(
+            "item-16 mandatory completion conditions",
+            " ".join(
+                self.item["13_machine_acceptance_criteria"][
+                    "a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"
+                ]
+            ),
+        )
+
+    def test_item09_adcdb_is_a_discovery_index_not_an_evidence_authority(self):
+        # review round 1: no secondary-index evidence laundering.
+        i = self.item["09_evidence_source_plan"]
+        strong = " ".join(i["source_classes"]["strong"]).lower()
+        self.assertNotIn("adcdb", strong)
+        self.assertNotIn("adc-target database", strong)
+        self.assertIn("discovery_and_index_layer", i)
+        rule = i["discovery_index_authority_rule"].lower()
+        self.assertIn("does not independently establish an evidence ladder rung", rule)
+        self.assertIn("underlying primary disclosure", rule)
+        self.assertIn("retrieval lead, not rung-establishing evidence", rule)
 
 
 class NoImplementationInPrE1Tests(unittest.TestCase):

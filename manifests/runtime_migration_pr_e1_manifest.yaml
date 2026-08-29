@@ -31,7 +31,17 @@ scoping_decisions:
 delivers:
   - src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml -- the frozen MOD-TGT01 construction contract with the 17-item acceptance checklist
   - docs/gate_modules/TGT-01_ADC_Modality_Precedent.md -- the human-readable construction drawing
-  - tests/test_tgt01_module_construction_contract.py -- 18 tests (checklist completeness; verbatim parity with the PR D TGT-01 contract; RECONSTRUCTED provenance; no implementation)
+  - tests/test_tgt01_module_construction_contract.py -- 21 tests (checklist completeness; verbatim parity with the PR D TGT-01 contract; RECONSTRUCTED provenance; no implementation; round-1 proposal-envelope / stop-rule / ADCdb-authority guards)
+review_round_1:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "6543174"
+  scope: 3 E1 construction-contract blockers only; no implementation; scoping E-1..E-4 unchanged
+  fixes:
+    item_12_proposal_canonical_boundary: renamed 12_assessment_proposal_envelope_contract -- the Module emits a non-canonical module-local proposal envelope, NOT a CandidateGateAssessment (PR A CANONICAL_REVIEW_STATUS = HUMAN_APPROVED); the review surface constructs the canonical object after human approval; items 13/14/15/17 reworded
+    item_16_fatal_safe_stop_rule: added mandatory_completion_before_any_stop (same-target ADC inventory incl. discontinued/failed + failure-reason sweep) + rationale_for_the_mandatory_sweep; original stop conditions demoted to then_stop_searching_public_evidence_when_any_of; item 13 gains the item-16 completion criterion
+    item_09_adcdb_source_authority: ADCdb-class database moved out of strong source classes into discovery_and_index_layer + discovery_index_authority_rule -- discovery/entity-resolution only, never establishes an Evidence Ladder rung; authority is the underlying primary disclosure; PR D ladder unchanged
+  tests_at_round_1: 21
+  full_suite_at_round_1: 772
 deferred:
   mod_tgt01_implementation: "PR E2 (new top-level gate_modules/tgt01_adc_modality_precedent/; only after this contract is APPROVED)"
   retrieval_providers_and_datasets: "PR E2+"

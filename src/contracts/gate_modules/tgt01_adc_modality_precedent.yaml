@@ -173,7 +173,6 @@ acceptance_checklist:
       strong:
         - regulatory approvals and labels for a same-target ADC
         - registrational / late-phase trial registries and results for a same-target ADC
-        - an ADC-target database (e.g. an ADCdb-class asset) resolved to its primary disclosures
       supporting:
         - early-phase trial registries for a same-target ADC
         - peer-reviewed clinical publications for a same-target ADC
@@ -182,7 +181,19 @@ acceptance_checklist:
         - patents and patent applications naming the target
         - preclinical-only publications
         - adjacent-target ADC programs (class-level signal only)
+    discovery_and_index_layer:
+      - an ADCdb-class database (discovery / entity-resolution / program inventory infrastructure)
     source_authority_rule: a weak_only source class can never lift an assessment above the WEAK rung
+    discovery_index_authority_rule: >-
+      An ADCdb-class database may discover, normalise and link a program, but it
+      does NOT independently establish an Evidence Ladder rung. Once a row is
+      resolved, the EvidencePackage's provenance and evidence authority come from
+      the underlying primary disclosure (regulatory / trial / publication /
+      company), which is the canonical scientific source. An unresolved
+      database-only row is a retrieval lead, not rung-establishing evidence.
+      (This does not modify the PR D Evidence Ladder; it freezes the source
+      authority vs evidence class boundary that an E1 construction drawing must
+      resolve.)
     connect_provider_in_this_pr: false
     shared_infrastructure_note: >-
       literature / trial / patent retrieval, entity resolution, the provenance
@@ -214,39 +225,54 @@ acceptance_checklist:
       - forward status / superseded_by never appear on evidence.json (PR C: they live only on the EvidenceIndexEntry)
     shape_ref: src/contracts/data_layout/evidence_package.schema.json + src/objects/decision_model.py EvidencePackage (PR A)
 
-  "12_proposed_candidategateassessment_contract":
-    the_module_proposes_only:
-      - a CandidateGateAssessment with direction + strength (never a Decision, never a score)
+  "12_assessment_proposal_envelope_contract":
+    the_module_emits: >-
+      a non-canonical, module-local assessment PROPOSAL ENVELOPE. It is NOT a
+      CandidateGateAssessment. Per PR A, a CandidateGateAssessment is the
+      canonical matrix cell and CANONICAL_REVIEW_STATUS is HUMAN_APPROVED --
+      constructing that object with review.status != HUMAN_APPROVED is rejected.
+      The Module therefore cannot and must not produce a CandidateGateAssessment;
+      it produces a proposal that a human turns into one.
+    the_proposal_envelope_carries:
+      - proposed_direction + proposed_strength (never a Decision, never a numeric score)
       - evidence_refs [{evidence_id, role}] referencing the EvidencePackages above (role in SUPPORTING / CONTRADICTING / CONTEXTUAL)
       - aggregation_rationale, critical_unknowns, evidence_ceiling
+      - the machine acceptance record (item 13)
     rules:
-      - review.status is left for the human; the Module never emits a HUMAN_APPROVED assessment
-      - the direction x strength combination obeys the PR A matrix (e.g. CONFLICTING needs >= 1 SUPPORTING and >= 1 CONTRADICTING ref)
-    shape_ref: src/contracts/data_layout/assessment.schema.json + src/objects/decision_model.py CandidateGateAssessment (PR A)
+      - the proposal envelope MIRRORS the field shape of assessment.schema.json so a human review can lift it into a canonical CandidateGateAssessment, but it is not that object and carries no review block
+      - a canonical CandidateGateAssessment (review.status = HUMAN_APPROVED) is constructed only after human approval (item 14), by the review surface, never by the Module
+      - the proposed_direction x proposed_strength combination is checked against the PR A direction x strength matrix (e.g. CONFLICTING needs >= 1 SUPPORTING and >= 1 CONTRADICTING ref)
+      - PR E1 only DEFINES this envelope's field list; it adds no new core object and no runtime implementation
+    shape_ref: >-
+      src/contracts/data_layout/assessment.schema.json is the canonicalisation
+      TARGET (the shape the human-approved record must take), not a
+      machine-proposal schema. The Module's proposal envelope mirrors its field
+      list only.
 
   "13_machine_acceptance_criteria":
-    a_proposed_assessment_and_its_packages_are_machine_acceptable_iff:
+    a_proposal_envelope_and_its_packages_are_machine_acceptable_iff:
       - every EvidencePackage validates against evidence_package.schema.json (shape / ids / nested blocks / date patterns)
       - every provenance.source_id resolves to a SourceIndexEntry, and every evidence_ref.evidence_id resolves to a canonical EvidencePackage (PR C check_* functions)
       - every admissible evidence class used is in item 04's admissible list, and no item-04 not_admissible class is present
-      - the proposed strength does not exceed the ceiling of the highest ladder rung actually met (item 05)
+      - the proposed_strength does not exceed the ceiling of the highest ladder rung actually met (item 05)
+      - the item-16 mandatory completion conditions are satisfied (the same-target programme inventory and the failure-reason sweep are complete)
       - dedup -- one SRC -> many EP is allowed; the same (source, claim) is not duplicated across packages
       - all required fields present; no numeric score anywhere
     on_failure: the run is rejected with a machine reason and nothing enters the canonical record
 
   "14_human_acceptance_and_review_surface":
     the_human_sees:
-      - the proposed direction + strength and the aggregation_rationale
+      - the proposed_direction + proposed_strength and the aggregation_rationale
       - each EvidencePackage's claim, source and interpretation_boundary (drill-down)
       - the ladder rung each package maps to, and any critical_unknowns
       - the machine acceptance record (item 13 pass / fail detail)
     human_only_judgements:
       - whether the aggregated direction / strength is scientifically correct for TGT-01
       - whether a claimed "same target" / "adjacent target" call is right
-      - final approval -- review.status = HUMAN_APPROVED -> the assessment enters ASSESSMENTS/<cand>/vNNN.json and the MatrixView rebuilds (PR C)
+      - final approval -- on HUMAN_APPROVED the review surface constructs the canonical CandidateGateAssessment (review.status = HUMAN_APPROVED) from the proposal envelope; it enters ASSESSMENTS/<cand>/vNNN.json and the MatrixView rebuilds (PR C). The Module never constructs that object.
 
   "15_failure_unknown_and_conflict_behavior":
-    retrieval_failure: report a machine failure reason; do not emit a partial assessment as if complete
+    retrieval_failure: report a machine failure reason; do not emit a partial proposal envelope as if complete
     insufficient_evidence: propose INCONCLUSIVE or UNKNOWN per item 06; never PASS
     no_admissible_evidence_at_all: >-
       propose UNKNOWN. Verbatim from the frozen contract: "No ADC program
@@ -259,7 +285,17 @@ acceptance_checklist:
     absolute_rule: UNKNOWN is never silently converted to PASS / HOLD / KILL (CURRENT_SYSTEM v5 section 6.4)
 
   "16_stop_rule":
-    stop_searching_public_evidence_when_any_of:
+    mandatory_completion_before_any_stop:
+      - the same-target ADC program inventory for this target is complete -- active, approved AND discontinued / failed programs
+      - the disclosed failure / discontinuation-reason sweep for those programs is complete
+    rationale_for_the_mandatory_sweep: >-
+      a positive ceiling (a DIRECT same-target precedent) does NOT license
+      stopping: item 08's target-attributable adverse pattern (two or more
+      independent same-target ADC programs discontinued for a consistent
+      target-mediated toxicity) can only be seen by finishing the discontinued /
+      failed-programme sweep. Stopping on the first strong positive precedent
+      contradicts fatal-first.
+    then_stop_searching_public_evidence_when_any_of:
       - the TGT-01 evidence_ceiling has been reached (clinical-stage ADC precedent against the same target antigen)
       - marginal additional search can no longer change the proposed direction or strength
       - the critical unknown has been marked EXPERIMENT_REQUIRED
@@ -267,12 +303,15 @@ acceptance_checklist:
     rationale: bounds the "infinite evidence gathering" failure mode; a Module that cannot stop cannot be accepted
 
   "17_downstream_consumer_and_handoff":
-    consumed_by:
+    the_module_hands_off:
+      - a set of EvidencePackages and one assessment proposal envelope, to the human review surface (item 14)
+    once_human_approved_the_resulting_canonical_CandidateGateAssessment_is_consumed_by:
       - the MatrixView cell for (this candidate_id, TGT-01) (PR C)
       - the ADC_TARGET_GATESET decision layer (decision_rule / fatal_gate_policy / required_gate_policy / unknown_policy) which turns the eight TGT assessments into a Candidate-level Decision (PR B)
       - the next Gate in the fatal-first order (TGT-05) as context only -- never as a substitute for its own measurement
       - experimental validation, when a critical_unknown is EXPERIMENT_REQUIRED
     this_module_does_not:
+      - construct a CandidateGateAssessment or emit a HUMAN_APPROVED record
       - produce a Candidate-level Decision or KILL
       - write to any other Gate's evidence index or assessment
       - modify the Matrix (a rebuildable projection; PR C)

@@ -4345,3 +4345,49 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   （751 baseline + 18 new）/ `git diff --check` clean / 干净 tracked-tree
   worktree boundary passed / YAML 结构合法。
 - Next：提交、推送、开 PR、CI 绿后回 `AI审核方案` 请求审核。
+
+## 2026-08-29T12:40 EDT — Runtime Migration PR E1 第一轮修订（PR #106 @ 6543174 REQUEST_CHANGES）
+
+- 审核方（ChatGPT `AI审核方案`）在 PR #106 首版给 REQUEST_CHANGES，只列 3 个
+  E1 construction-contract blocker，声明修完这 3 点下一轮直接 APPROVE E1、开
+  PR E2 implementation，不重开 E-1～E-4 scoping。3 处修订都在同一 PR 内做最小
+  改动，不写任何实现。
+- Fix 1 — item 12 proposal/canonical 边界。首版写"proposed CandidateGateAssessment"，
+  与 PR A 冲突（`CandidateGateAssessment` 是 canonical matrix cell，
+  `CANONICAL_REVIEW_STATUS = HUMAN_APPROVED`，`review.status != HUMAN_APPROVED`
+  构造即被拒）。改为 `12_assessment_proposal_envelope_contract`：Module 产出
+  **non-canonical、module-local proposal envelope**，不是 `CandidateGateAssessment`；
+  envelope 只 MIRROR `assessment.schema.json` 的 field 形状、不带 review block；
+  canonical 对象由 review surface 在 HUMAN_APPROVED 后构造，Module 永不构造。
+  item 13/14/15/17 同步改词（"proposal envelope"、"the review surface
+  constructs the canonical CandidateGateAssessment"、`this_module_does_not`
+  增 "construct a CandidateGateAssessment or emit a HUMAN_APPROVED record"）。
+- Fix 2 — item 16 fatal-safe stop rule。首版 stop 条件在命中 positive ceiling
+  时就允许停，会跳过 item 08 的 discontinued/failed 同靶点 ADC 项目扫查。新增
+  `mandatory_completion_before_any_stop`（同靶点 ADC 项目清单含 active/approved
+  **及** discontinued/failed + 已披露停止/失败原因扫查都必须完成）+
+  `rationale_for_the_mandatory_sweep`（positive ceiling 不 license 停；
+  违反 fatal-first）+ 原 4 条 stop 条件降为
+  `then_stop_searching_public_evidence_when_any_of`。item 13 machine 验收增一条
+  "item-16 mandatory completion conditions are satisfied"。
+- Fix 3 — item 09 ADCdb source-authority 边界。首版把 "an ADCdb-class database
+  resolved to its primary disclosures" 放进 `strong` source class，等于让
+  secondary index 直接确立 ladder rung。移出 `strong`，新增
+  `discovery_and_index_layer` + `discovery_index_authority_rule`：ADCdb-class
+  库只做 discovery / entity-resolution / program inventory，**不独立确立
+  Evidence Ladder rung**；行解析后 EvidencePackage 的 provenance 与 evidence
+  authority 归底层 primary disclosure；未解析的 database-only 行是 retrieval
+  lead。明确不改 PR D Evidence Ladder。
+- 三处修订同步落到 `docs/gate_modules/TGT-01_ADC_Modality_Precedent.md`
+  的第 9/12/16 行表格与 `tests/test_tgt01_module_construction_contract.py`
+  （item 12 键名改 `12_assessment_proposal_envelope_contract`；新增
+  `test_item12_is_a_non_canonical_proposal_envelope`、
+  `test_item16_has_a_mandatory_adverse_sweep_before_any_stop`、
+  `test_item09_adcdb_is_a_discovery_index_not_an_evidence_authority`）。
+- 未改：仍无实现、无 provider、无 runner、无 numeric scoring、无新依赖、
+  未动 PR A/B/C/D 合同与冻结文档、`MIGRATION_PENDING` 未解除。scoping 决策
+  E-1～E-4 不变。
+- 验证：`test_tgt01_module_construction_contract` 21 OK / 全量
+  `unittest discover` 772 OK（751 baseline + 21 E1）/ `git diff --check` clean
+  / 干净 tracked-tree worktree boundary passed / YAML 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第一轮复审（3 处 fix 摘要）。
