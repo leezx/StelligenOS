@@ -3,15 +3,19 @@
 The module orchestration in ``module.py`` may call *only* these. It never opens
 a network connection, spawns a subprocess, touches the filesystem, or derives an
 id from existing files. Shared retrieval / entity-resolution / source-registry /
-persistence infrastructure lives outside the repository (v5 section 6.5) and is
-handed in through these Protocols. Tests supply deterministic fakes.
+evidence-library infrastructure lives outside the repository (v5 section 6.5)
+and is handed in through these Protocols. Tests supply deterministic fakes.
 """
 
 from __future__ import annotations
 
 from typing import Protocol, Sequence, runtime_checkable
 
-from .contracts import NormalizedPrecedentRecord, SweepCompletionRecord
+from .contracts import (
+    CanonicalSourceRecord,
+    NormalizedPrecedentRecord,
+    SweepCompletionRecord,
+)
 
 
 @runtime_checkable
@@ -47,9 +51,23 @@ class EvidenceIdAllocatorPort(Protocol):
 
 
 @runtime_checkable
-class SourceRegistryPort(Protocol):
-    """Resolves whether a ``provenance.source_id`` is a registered primary
-    source. An unresolved id cannot establish a ladder rung."""
+class SourceResolverPort(Protocol):
+    """Resolves a ``provenance.source_id`` to its canonical PR C SourceIndex
+    record. Returns ``None`` for an unregistered id. The module uses the
+    resolved metadata (not the provider's raw fields) and rejects a record
+    whose provider metadata disagrees with the canonical record."""
 
-    def is_registered_primary_source(self, source_id: str) -> bool:
+    def resolve(self, source_id: str) -> CanonicalSourceRecord | None:
+        ...
+
+
+@runtime_checkable
+class ExistingEvidenceLibraryPort(Protocol):
+    """Read-only lookup into the PR C reusable Evidence Library. Given an
+    ``observation_id``, returns the ``EP-nnnnnnnn`` id of the canonical
+    EvidencePackage that already represents this observation, or ``None`` if it
+    has never been recorded. The module reuses an existing id; it never copies
+    or re-creates a canonical package."""
+
+    def resolve(self, observation_id: str) -> str | None:
         ...

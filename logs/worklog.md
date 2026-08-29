@@ -4523,3 +4523,51 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
   `module.yaml` 结构合法。
 - Next：提交、推送、开 PR、CI 绿后回 `AI审核方案` 请求审核。
+
+## 2026-08-29T15:00 EDT — Runtime Migration PR E2 第一轮修订（PR #108 @ 57d0c99 REQUEST_CHANGES）
+
+- 审核方复审 57d0c99：**外层 architecture PASS**（scope / no-live-provider /
+  no-persistence / gate_modules 单向依赖 / 窄 policy reconciliation 全部认可）。
+  只剩 **4 个 E2 deterministic-core correctness blocker**，不重新设计架构；
+  E2-1…E2-8、Gate id/question、冻结 ladder、allowed/forbidden inference、
+  UNKNOWN 语义、repository layout、MIGRATION_PENDING、1.0.0 治理方向都不动。
+- Blocker 1 — Candidate ↔ target identity 未锁死。`run()` 收独立可漂移的
+  `target_identity` 直接给 provider，未与 candidate canonical target 校验；
+  record/EP 只存 `target_relation` 布尔，无实际 targeting 抗原、无 adjacent
+  basis。修：`target_identity` 移到 `Tgt01ModuleInput`（唯一权威），`run()`
+  去掉该参数；`NormalizedPrecedentRecord` 加 `program_target_identity` +
+  （ADJACENT 必填）`adjacency_basis`；`classify_record` 拒 misbinding 与错标
+  adjacency；EP `study_context` 保留三者。
+- Blocker 2 — 冻结 item-08 fatal 只实现一半（frozen 有 target-mediated
+  toxicity **与 intrinsically unachievable therapeutic window** 两条 branch，
+  代码只查 TARGET_MEDIATED；"consistent" 被约化成"都是 TARGET_MEDIATED"）。
+  修：`FAILURE_ATTRIBUTION_VALUES` 显式两条 branch
+  （`TARGET_MEDIATED_TOXICITY` / `INTRINSIC_THERAPEUTIC_WINDOW`）+
+  `CONSTRUCT_SPECIFIC` / `NON_TARGET` / `UNDISCLOSED`，仍要求 primary-source
+  attribution；`aggregate()` 只有「同一 frozen class 且 ≥2 独立同靶点 program」
+  才成 pattern；不同 class 混合不算 consistent；单个永不 fatal。
+- Blocker 3 — PR C reusable EvidencePackage 语义没实现（架构层最重要）。
+  `existing_evidence_ids` 定义没用；EP 每条新建 → 破坏全局 Evidence Library；
+  EP 写成 TGT-01-specific（`directly_supports = "ADC-modality feasibility"` /
+  `TGT01_EVIDENCE_CEILING`）且 adverse EP 自相矛盾；`SourceRegistryPort` 只返
+  bool。修：新增 `ExistingEvidenceLibraryPort`（按 `observation_id` 命中即复用
+  `evidence_id`）；`SourceRegistryPort` → `SourceResolverPort.resolve() ->
+  CanonicalSourceRecord | None`，EP provenance 用 canonical metadata、不符则
+  reject；EP 改成 **Gate-NEUTRAL**（observation-level directly_supports /
+  does_not_support / limitations + 中性 observation-level evidence_ceiling），
+  TGT-01 ceiling / inference / Direction×Strength 只留 proposal 层。
+- Blocker 4 — `program_id → evidence_id` 数据模型错误，会静默串错 EvidenceRef
+  （一 program 两 observation → 第二条覆盖 map，两 ref 都指向第二个 EP）。
+  修：`build_evidence_packages` 返回 `list[EmittedEvidence]`（一条 admissible
+  observation → 一个 EP），不再 program-keyed；`program_id` 只用于 fatal
+  pattern 的 independent-programs 去重；同 program 重复 `(source_id, claim)`
+  干净 drop。
+- 同步：`ports.py`（4 个 port）、`__init__.py`、`module.yaml`（ports + owns
+  改词）、`tests/test_tgt01_module.py`（fakes 重写 + 新增 misbinding / adjacent
+  EP 事实恢复 / 两条 INTRINSIC_THERAPEUTIC_WINDOW → NEGATIVE / 单条 intrinsic
+  不 fatal / 混合 class 不成 pattern / 同 program 两 observation → 两 EP 两
+  ref / library 复用 / canonical source 解析 / Gate-neutral EP）。
+- 验证：全量 `unittest discover` **818 OK**（774 baseline + 44 E2）/
+  `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
+  `module.yaml` 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第一轮复审（4 处 fix 摘要）。

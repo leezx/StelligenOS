@@ -1,30 +1,21 @@
 """Machine acceptance for a MOD-TGT01 run: E1 item 13 (schema / resolvability /
-admissible-class / strength-ceiling / dedup / required fields / no score) plus
-the E1 item-16 stop-rule prerequisite (the same-target program inventory AND the
-disclosed failure-reason sweep must both be complete before any acceptable
-proposal -- a positive ceiling never licenses an early stop).
+admissible-class / strength-ceiling / dedup / one-package-per-observation / no
+score) plus the E1 item-16 stop-rule prerequisite (the same-target program
+inventory AND the disclosed failure-reason sweep must both be complete before
+any acceptable proposal -- a positive ceiling never licenses an early stop).
 """
 
 from __future__ import annotations
 
-from src.objects.decision_model import EvidencePackage
-
 from .aggregate import AggregationOutcome
-from .contracts import (
-    ClassifiedPrecedent,
-    SweepCompletionRecord,
-    Tgt01ModuleInput,
-)
+from .contracts import EmittedEvidence, SweepCompletionRecord
 
 _RANK = {"DIRECT": 3, "INDIRECT_STRONG": 2, "WEAK": 1, "UNKNOWN": 0}
 
 
 def evaluate(
     *,
-    module_input: Tgt01ModuleInput,
-    admissible: list[ClassifiedPrecedent],
-    by_program: dict[str, str],
-    packages: tuple[EvidencePackage, ...],
+    emitted: list[EmittedEvidence],
     outcome: AggregationOutcome,
     sweep: SweepCompletionRecord,
 ) -> tuple[list[tuple[str, bool]], list[str]]:
@@ -38,38 +29,35 @@ def evaluate(
         if not ok:
             reasons.append(why)
 
-    emitted = [c for c in admissible if c.record.program_id in by_program]
-
-    # item 13 -- every EvidencePackage is a valid PR A object. Construction in
-    # evidence.py raises on any shape violation, so reaching here with a full
-    # set means they all validated.
+    # item 13 -- one package per admissible observation (never program-keyed).
+    ep_ids = [e.evidence_id for e in emitted]
     record(
-        "every_evidence_package_validates",
-        len(packages) == len(emitted),
-        "an EvidencePackage failed PR A validation",
+        "one_evidence_package_per_observation",
+        len(ep_ids) == len(set(ep_ids)),
+        "an observation does not map to exactly one EvidencePackage",
     )
 
     # item 13 -- every emitted record resolved to a registered primary source
-    # (unresolved rows were rejected upstream, not emitted).
+    # (unresolved / mismatched rows were rejected upstream, not emitted).
     record(
         "emitted_records_have_a_resolved_primary_source",
-        all(c.record.primary_source_resolved for c in emitted),
+        all(e.classified.record.primary_source_resolved for e in emitted),
         "an emitted record lacks a resolved primary source",
     )
 
     # item 13 -- every emitted record maps to a frozen admissible class.
     record(
         "only_frozen_admissible_classes_emitted",
-        all(c.evidence_class for c in emitted),
+        all(e.classified.evidence_class for e in emitted),
         "an emitted record carries no frozen admissible class",
     )
 
     # item 13 -- proposed strength never exceeds the strongest rung actually met.
     if outcome.proposed_strength == "UNKNOWN":
-        strength_ok = not emitted  # UNKNOWN state only when nothing was emitted
+        strength_ok = not emitted
     else:
         strength_ok = bool(emitted) and _RANK[outcome.proposed_strength] <= max(
-            _RANK[c.ladder_rung] for c in emitted
+            _RANK[e.classified.ladder_rung] for e in emitted
         )
     record(
         "proposed_strength_within_the_strongest_rung_met",
@@ -78,23 +66,28 @@ def evaluate(
     )
 
     # item 13 -- dedup: one (source_id, claim) per emitted package.
-    keys = [(c.record.source_id, c.record.claim.strip()) for c in emitted]
+    keys = [
+        (e.classified.record.source_id, e.classified.record.claim.strip())
+        for e in emitted
+    ]
     record(
         "no_duplicate_source_claim_among_emitted",
         len(keys) == len(set(keys)),
         "a duplicate (source_id, claim) reached an emitted package",
     )
 
-    # item 13 -- every evidence_ref points at an emitted package.
-    emitted_ids = set(by_program.values())
+    # item 13 -- every evidence_ref points at exactly one emitted package.
+    emitted_ids = set(ep_ids)
+    ref_ids = [evidence_id for evidence_id, _ in outcome.evidence_refs]
     record(
-        "every_evidence_ref_points_at_an_emitted_package",
-        all(evidence_id in emitted_ids for evidence_id, _ in outcome.evidence_refs),
-        "an evidence_ref does not resolve to an emitted EvidencePackage",
+        "every_evidence_ref_points_at_one_emitted_package",
+        all(evidence_id in emitted_ids for evidence_id in ref_ids)
+        and len(ref_ids) == len(set(ref_ids)),
+        "an evidence_ref is dangling or repeated",
     )
 
-    # item 16 -- the mandatory completion prerequisite. This is checked even
-    # when a DIRECT positive precedent has already been found.
+    # item 16 -- the mandatory completion prerequisite, checked even when a
+    # DIRECT positive precedent has already been found.
     record(
         "same_target_program_inventory_complete",
         sweep.same_target_program_inventory_complete,

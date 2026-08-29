@@ -30,13 +30,14 @@ module:
     envelope for the human review surface.
 
   owns:
-    - input contract validation (no implicit default scientific context)
+    - input contract validation (no implicit default scientific context; the candidate's target_identity is the single authoritative target)
+    - candidate <-> program target-identity binding (a SAME_TARGET record whose program targets a different antigen is evidence misbinding and is rejected; an ADJACENT_TARGET record carries an auditable adjacency_basis)
     - normalized precedent record admissibility + frozen ladder-rung classification
-    - EvidencePackage construction (PR A evidence_package shape) via an injected id allocator
-    - "target-attributable failure-pattern detection (frozen item 08 -- two or more independent same-target programs, consistent target-mediated attribution)"
+    - Gate-NEUTRAL EvidencePackage construction (PR A evidence_package shape); one package per observation; an existing canonical package is reused by id via the Evidence Library port; provenance comes from the resolved canonical SourceIndex record
+    - "target-attributable failure-pattern detection (frozen item 08, BOTH branches -- target-mediated toxicity AND intrinsically unachievable therapeutic window; a pattern needs >= 2 independent same-target programs failing for the SAME frozen class)"
     - deterministic Direction x Strength aggregation (E1 semantics; Strength orthogonal to Direction; no fourth ladder)
     - machine acceptance record (E1 item 13) + stop-rule completion prerequisites (E1 item 16)
-    - non-canonical assessment proposal envelope (E1 item 12)
+    - non-canonical assessment proposal envelope (E1 item 12); the TGT-01 ceiling / inference / direction live here, never on the Gate-neutral package
 
   does_not_own:
     - web / literature / trial / patent retrieval
@@ -48,11 +49,13 @@ module:
 
   ports:
     - name: Tgt01PrecedentProviderPort
-      role: supplies already-normalized precedent observations plus the two completion flags (same_target_program_inventory_complete, failure_reason_sweep_complete)
+      role: supplies already-normalized, primary-source-resolved precedent observations (each with observation_id, program_target_identity, adjacency_basis) plus the two completion flags (same_target_program_inventory_complete, failure_reason_sweep_complete)
     - name: EvidenceIdAllocatorPort
-      role: allocates EP-nnnnnnnn ids; the Module never derives ids from the filesystem
-    - name: SourceRegistryPort
-      role: resolves whether a provenance.source_id is a registered primary source; an unresolved id (incl. an ADCdb-only lead) cannot establish a ladder rung
+      role: allocates EP-nnnnnnnn ids for observations not already in the Evidence Library; the Module never derives ids from the filesystem
+    - name: SourceResolverPort
+      role: resolves a provenance.source_id to its canonical SourceIndex record; an unresolved id (incl. an ADCdb-only lead) cannot establish a ladder rung, and a provider record whose metadata disagrees with the canonical record is rejected
+    - name: ExistingEvidenceLibraryPort
+      role: read-only lookup by observation_id into the PR C reusable Evidence Library; an existing canonical EvidencePackage is reused by id, never copied or re-created
 
   boundary_flags:
     performs_network_io: false

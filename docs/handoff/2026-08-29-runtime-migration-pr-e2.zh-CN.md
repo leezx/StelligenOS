@@ -125,6 +125,71 @@ bash scripts/verify_repository_boundary.sh   # 干净 tracked-tree worktree 上 
 python3 -c "import yaml; yaml.safe_load(open('gate_modules/tgt01_adc_modality_precedent/module.yaml'))"  # 结构合法
 ```
 
+## 四之二、第一轮修订（PR #108 @ `57d0c99` REQUEST_CHANGES）
+
+审核方（ChatGPT `AI审核方案`）复审 `57d0c99`：**外层 architecture PASS**（scope /
+no-live-provider / no-persistence / `gate_modules/` 单向依赖 / 窄 policy
+reconciliation 全部认可）。只剩 **4 个 E2 deterministic-core correctness
+blocker**，不需要重新设计架构；E2-1…E2-8、Gate id/question、冻结 ladder、
+allowed/forbidden inference、UNKNOWN 语义、repository layout、`MIGRATION_PENDING`、
+`1.0.0` 治理方向都不动。
+
+1. **Candidate ↔ target identity 没锁死。** `run()` 收一个独立可漂移的
+   `target_identity` 字符串直接交给 provider，未与 candidate 的 canonical target
+   校验（HER2 candidate + TROP2 target_identity → 生成 HER2 candidate 的 EP）。
+   `NormalizedPrecedentRecord` / EP 只存 `target_relation` 布尔，不存 ADC 项目
+   实际 targeting 的抗原，也没有 adjacent 的 basis —— E1 item 14 的 human
+   same/adjacent 复核没有事实依据。
+   **修**：`target_identity` 移到 `Tgt01ModuleInput`（唯一权威），`run()` 不再
+   收该参数；`NormalizedPrecedentRecord` 加 `program_target_identity` +
+   （ADJACENT 必填）`adjacency_basis`；`classify_record` 拒绝
+   `SAME_TARGET` 但抗原不符（misbinding）与错标的 adjacency；EP `study_context`
+   保留 `program_target_identity` / `target_relation` / `adjacency_basis`。
+2. **冻结 item-08 fatal 只实现一半。** frozen 是「≥2 independent same-target
+   programs discontinued for a consistent on-target/target-mediated toxicity
+   **OR an intrinsically unachievable therapeutic window**」，代码只查
+   `TARGET_MEDIATED`；且「consistent」被约化成「都是 TARGET_MEDIATED」。
+   **修**：`FAILURE_ATTRIBUTION_VALUES` 显式两条 frozen branch
+   （`TARGET_MEDIATED_TOXICITY`、`INTRINSIC_THERAPEUTIC_WINDOW`）+
+   `CONSTRUCT_SPECIFIC` / `NON_TARGET` / `UNDISCLOSED`，仍要求 primary-source
+   attribution；`aggregate()` 只有「同一 frozen class 且 ≥2 个独立同靶点
+   program」才成 pattern；不同 class 混合不算 consistent；单个永不 fatal。
+3. **PR C reusable EvidencePackage 语义没实现（架构层最重要）。**
+   `existing_evidence_ids` 定义了没用，`evidence.py` 每条 observation 都新建
+   EP → 破坏 PR C 全局 Evidence Library；EP 被写成 TGT-01-specific
+   （`directly_supports = "ADC-modality feasibility..."` / `TGT01_EVIDENCE_CEILING`），
+   adverse EP 也说「supports ADC-modality feasibility」却被标 CONTRADICTING，
+   自相矛盾；`SourceRegistryPort` 只返回 bool。
+   **修**：新增 `ExistingEvidenceLibraryPort`（按 `observation_id` 命中即复用
+   `evidence_id`，novel 才 allocate）；`SourceRegistryPort` →
+   `SourceResolverPort.resolve(source_id) -> CanonicalSourceRecord | None`，EP
+   provenance 用 canonical metadata，provider metadata 不符则 reject；EP 改成
+   **Gate-NEUTRAL**（observation-level `directly_supports` / `does_not_support` /
+   `limitations` + 中性 observation-level `evidence_ceiling`），TGT-01 ceiling /
+   inference / Direction×Strength 只留在 proposal 层。
+4. **`program_id → evidence_id` 数据模型错误，会静默串错 EvidenceRef。**
+   一个 program 两条 observation → 第二条覆盖 map，两个 ref 都指向第二个 EP，
+   第一个 EP 无人引用。
+   **修**：`build_evidence_packages` 返回 `list[EmittedEvidence]`（一条
+   admissible observation → 一个 EP），不再 program-keyed；`program_id` 只用于
+   fatal pattern 的「independent programs」去重；同 program 的重复
+   `(source_id, claim)` 干净 drop。
+
+同步：`ports.py`（4 个 port）、`__init__.py`（导出）、`module.yaml`
+（ports + owns 改词）、`tests/test_tgt01_module.py`（fakes 重写 + 新增
+misbinding / adjacent EP 事实恢复 / 两条 INTRINSIC_THERAPEUTIC_WINDOW → NEGATIVE /
+单条 intrinsic 不 fatal / 混合 class 不成 pattern / 同 program 两 observation →
+两 EP 两 ref / library 复用 / canonical source 解析 / Gate-neutral EP）。
+
+**仍未改：** E2-1…E2-8 scope、Gate id/question、冻结 DIRECT/INDIRECT_STRONG/WEAK
+ladder、allowed/forbidden inference、UNKNOWN 语义、repository layout、
+no-live-provider 边界、no persistence、`MIGRATION_PENDING`、TGT-01
+`primary_module_version = 1.0.0` 治理方向。
+
+验证：全量 `unittest discover` **818 OK**（774 baseline + 44 E2）/
+`git diff --check` clean / 干净 tracked-tree worktree boundary passed /
+`module.yaml` 结构合法。
+
 ## 五、审核
 
 - 提交至 ChatGPT 网页版 `Biotech ideas` → `AI审核方案` 对话（Claude 通过浏览器

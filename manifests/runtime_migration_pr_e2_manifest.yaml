@@ -66,6 +66,48 @@ deferred:
 
 chatgpt_review: PENDING
 approved_tip: null
+review_round_1:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "57d0c99"
+  outer_architecture: PASS  # scope / no-live-provider / no-persistence / gate_modules one-way dependency / narrow policy reconciliation all accepted
+  scope: 4 E2 deterministic-core correctness blockers; no architecture redesign; E2-1..E2-8 scope, Gate id/question, frozen ladder, allowed/forbidden inference, UNKNOWN semantics, repository layout, MIGRATION_PENDING and the 1.0.0 governance direction all unchanged
+  fixes:
+    blocker_1_candidate_target_identity_binding: >-
+      Tgt01ModuleInput now carries the candidate's canonical target_identity as
+      the single authoritative source; run() no longer takes a separate
+      target_identity argument. NormalizedPrecedentRecord carries the ADC
+      program's actual program_target_identity plus, for ADJACENT_TARGET, a
+      mandatory auditable adjacency_basis. classify_record rejects a SAME_TARGET
+      record whose program targets a different antigen (evidence misbinding) and
+      a mislabelled adjacency. The EvidencePackage study_context retains
+      program_target_identity / target_relation / adjacency_basis so a human can
+      re-do the same/adjacent call (E1 item 14).
+    blocker_2_frozen_item_08_both_branches: >-
+      FAILURE_ATTRIBUTION_VALUES now expresses both frozen branches
+      (TARGET_MEDIATED_TOXICITY, INTRINSIC_THERAPEUTIC_WINDOW) alongside
+      CONSTRUCT_SPECIFIC / NON_TARGET / UNDISCLOSED, still primary-source only.
+      aggregate() forms an adverse pattern only when >= 2 independent same-target
+      programs failed for the SAME frozen class; a mix of different classes is
+      not a consistent pattern; a single failure is never fatal.
+    blocker_3_reusable_gate_neutral_evidence: >-
+      New ExistingEvidenceLibraryPort -- an observation already in the PR C
+      Evidence Library is reused by evidence_id, never re-created; a new id is
+      allocated only for a novel observation. New SourceResolverPort resolves a
+      source_id to its canonical SourceIndex record and the EvidencePackage
+      provenance carries that canonical metadata; a provider record whose
+      metadata disagrees is rejected. The EvidencePackage is Gate-NEUTRAL --
+      observation-level directly_supports / does_not_support / limitations and a
+      neutral observation-level evidence_ceiling; the TGT-01 ceiling, allowed /
+      forbidden inference and Direction x Strength live only on the proposal.
+    blocker_4_one_package_per_observation: >-
+      build_evidence_packages returns a list of EmittedEvidence (one admissible
+      observation -> one EvidencePackage), never a program_id-keyed dict. A
+      program with two distinct primary-source observations gets two packages
+      and two correct evidence_refs; program_id is used only to count
+      independent programs for the fatal-pattern threshold. A same-program
+      duplicate (source_id, claim) is cleanly dropped.
+  tests_at_round_1: 44
+  full_suite_at_round_1: 818
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_tgt01_module.py' -v
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_gate_modules_boundary.py' -v

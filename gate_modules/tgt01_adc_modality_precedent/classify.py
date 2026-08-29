@@ -12,9 +12,10 @@ Frozen ladder (src/contracts/crc_adc_target_gateset.yaml gate_contracts.TGT-01):
                    patents / company disclosures naming the target, no clinical data
 
 Directness of an ADVERSE observation (a discontinued same-target program with a
-disclosed target-mediated failure) inherits the same directness scale -- it does
-NOT get a fourth ladder (E2-5): late-clinical human -> DIRECT, phase 1 ->
-INDIRECT_STRONG, preclinical -> WEAK.
+disclosed target-ATTRIBUTABLE failure -- frozen item 08 has two branches:
+target-mediated toxicity OR an intrinsically unachievable therapeutic window)
+inherits the same directness scale, it does NOT get a fourth ladder (E2-5):
+late-clinical human -> DIRECT, phase 1 -> INDIRECT_STRONG, preclinical -> WEAK.
 """
 
 from __future__ import annotations
@@ -24,7 +25,6 @@ from .contracts import (
     ClassifiedPrecedent,
     NormalizedPrecedentRecord,
 )
-from .ports import SourceRegistryPort
 
 _CLINICAL_STAGES = frozenset({"APPROVED", "PHASE_3", "PHASE_2", "PHASE_1"})
 
@@ -46,16 +46,24 @@ def _reject(record: NormalizedPrecedentRecord, reason: str) -> ClassifiedPrecede
         evidence_class="",
         direction_role="CONTEXTUAL",
         contributes_adverse_signal=False,
+        adverse_class="",
     )
 
 
 def classify_record(
-    record: NormalizedPrecedentRecord, *, source_registry: SourceRegistryPort
+    record: NormalizedPrecedentRecord,
+    *,
+    canonical_target_identity: str,
 ) -> ClassifiedPrecedent:
-    """One record -> one ClassifiedPrecedent. Deterministic and single-valued."""
+    """One record -> one ClassifiedPrecedent. Deterministic and single-valued.
 
-    # 1. An ADCdb-class / database-only lead that the provider has not resolved
-    #    to a primary disclosure is a retrieval lead, never rung-establishing.
+    ``canonical_target_identity`` is the candidate's authoritative target
+    antigen: a SAME_TARGET record whose program actually targets a different
+    antigen is evidence misbinding and is rejected.
+    """
+
+    # 1. An ADCdb-class / database-only lead the provider has not resolved to a
+    #    primary disclosure is a retrieval lead, never rung-establishing.
     if not record.primary_source_resolved:
         return _reject(
             record,
@@ -63,54 +71,68 @@ def classify_record(
             "does not establish an Evidence Ladder rung",
         )
 
-    # 2. The provenance source id must resolve in the upstream source registry.
-    if not source_registry.is_registered_primary_source(record.source_id):
-        return _reject(
-            record,
-            f"provenance.source_id {record.source_id} is not a registered "
-            "primary source",
-        )
+    # 2. Candidate <-> program target identity must be consistent with the
+    #    record's relation label (no misbinding, no mislabelled adjacency).
+    program_target = record.program_target_identity.strip()
+    if record.target_relation == "SAME_TARGET":
+        if program_target != canonical_target_identity.strip():
+            return _reject(
+                record,
+                "SAME_TARGET record targets antigen "
+                f"{record.program_target_identity!r}, not the candidate's "
+                f"canonical target {canonical_target_identity!r} (evidence "
+                "misbinding)",
+            )
+    else:  # ADJACENT_TARGET
+        if program_target == canonical_target_identity.strip():
+            return _reject(
+                record,
+                "ADJACENT_TARGET record targets the candidate's own canonical "
+                "target antigen; the adjacency label is wrong",
+            )
 
-    same_target = record.is_same_target
-    stage = record.program_stage
-    discontinued_target_mediated = record.is_target_mediated_failure
+    is_adverse_candidate = record.is_target_attributable_failure
 
-    # 3. Discontinued same-target program with a disclosed TARGET-MEDIATED failure
-    #    -> adverse candidate (the aggregate decides if the >= 2-program pattern
-    #    is met; a single one is never sufficient -- frozen item 08).
-    if same_target and discontinued_target_mediated:
+    # 3. Discontinued same-target program with a disclosed TARGET-ATTRIBUTABLE
+    #    failure -> adverse candidate for its specific frozen class (the
+    #    aggregate decides if the >= 2 independent-program pattern is met for a
+    #    CONSISTENT class; a single one is never sufficient -- frozen item 08).
+    if record.is_same_target and is_adverse_candidate:
         return ClassifiedPrecedent(
             record=record,
             admissible=True,
             rejection_reason="",
-            ladder_rung=_directness_rung(stage),
+            ladder_rung=_directness_rung(record.program_stage),
             evidence_class=(
                 "discontinued same-target ADC program with a disclosed "
-                "target-mediated / on-target failure"
+                f"{record.failure_attribution.lower().replace('_', ' ')} failure"
             ),
             direction_role="ADVERSE_CANDIDATE",
             contributes_adverse_signal=True,
+            adverse_class=record.failure_attribution,
         )
 
-    # 4. Discontinued (same or adjacent) without target attribution -> context
-    #    only. A single product's failure driven by linker / payload / format is
-    #    explicitly NOT sufficient to be an adverse signal (frozen item 08).
+    # 4. Discontinued (same or adjacent) without a target-attributable class ->
+    #    context only. A single product's failure driven by linker / payload /
+    #    format is explicitly NOT sufficient to be an adverse signal (item 08).
     if record.program_status == "DISCONTINUED":
         return ClassifiedPrecedent(
             record=record,
             admissible=True,
             rejection_reason="",
-            ladder_rung=_directness_rung(stage),
+            ladder_rung=_directness_rung(record.program_stage),
             evidence_class=(
                 "discontinued ADC program; failure not attributed to the target "
                 "(construct-specific / non-target / undisclosed)"
             ),
             direction_role="CONTEXTUAL",
             contributes_adverse_signal=False,
+            adverse_class="",
         )
 
     # 5. Supporting precedent -- same target.
-    if same_target:
+    if record.is_same_target:
+        stage = record.program_stage
         if stage in LATE_CLINICAL_STAGES:
             if not record.clinical_activity_disclosed:
                 return _reject(
@@ -130,6 +152,7 @@ def classify_record(
                 ),
                 direction_role="SUPPORTING",
                 contributes_adverse_signal=False,
+                adverse_class="",
             )
         if stage == "PHASE_1":
             return ClassifiedPrecedent(
@@ -140,6 +163,7 @@ def classify_record(
                 evidence_class="early-clinical (phase 1) ADC against the same target antigen",
                 direction_role="SUPPORTING",
                 contributes_adverse_signal=False,
+                adverse_class="",
             )
         if stage == "PRECLINICAL":
             return ClassifiedPrecedent(
@@ -150,8 +174,8 @@ def classify_record(
                 evidence_class="preclinical-only ADC constructs against the target",
                 direction_role="SUPPORTING",
                 contributes_adverse_signal=False,
+                adverse_class="",
             )
-        # PATENT_OR_DISCLOSURE
         return ClassifiedPrecedent(
             record=record,
             admissible=True,
@@ -162,12 +186,13 @@ def classify_record(
             ),
             direction_role="SUPPORTING",
             contributes_adverse_signal=False,
+            adverse_class="",
         )
 
     # 6. Adjacent target -- only a clinical-stage adjacent ADC is a frozen WEAK
     #    class ("a class-level signal only"). Below clinical stage it matches no
     #    frozen admissible class.
-    if stage in _CLINICAL_STAGES:
+    if record.program_stage in _CLINICAL_STAGES:
         return ClassifiedPrecedent(
             record=record,
             admissible=True,
@@ -180,6 +205,7 @@ def classify_record(
             ),
             direction_role="SUPPORTING",
             contributes_adverse_signal=False,
+            adverse_class="",
         )
     return _reject(
         record,

@@ -3,8 +3,10 @@
 ``run(...)`` is pure Python. It calls the injected ports only -- it never opens a
 network connection, spawns a subprocess, writes the repository, or derives an id
 from the filesystem. It never constructs a canonical ``CandidateGateAssessment``
-or a ``Decision``; its output is a set of ``EvidencePackage`` objects plus one
-non-canonical ``AssessmentProposalEnvelope`` for the human review surface.
+or a ``Decision``; its output is a set of Gate-neutral ``EvidencePackage``
+objects plus one non-canonical ``AssessmentProposalEnvelope`` for the human
+review surface. The candidate's ``target_identity`` (on the input) is the single
+authoritative target -- ``run`` takes no separate, driftable target argument.
 """
 
 from __future__ import annotations
@@ -25,7 +27,8 @@ from .contracts import (
 from .evidence import build_evidence_packages
 from .ports import (
     EvidenceIdAllocatorPort,
-    SourceRegistryPort,
+    ExistingEvidenceLibraryPort,
+    SourceResolverPort,
     Tgt01PrecedentProviderPort,
 )
 
@@ -35,18 +38,17 @@ def run(
     *,
     provider: Tgt01PrecedentProviderPort,
     evidence_id_allocator: EvidenceIdAllocatorPort,
-    source_registry: SourceRegistryPort,
-    target_identity: str,
+    source_resolver: SourceResolverPort,
+    evidence_library: ExistingEvidenceLibraryPort,
 ) -> Tgt01ModuleRunResult:
-    """Produce EvidencePackages + one assessment proposal envelope for
-    (``module_input.candidate_id``, TGT-01). Nothing is persisted."""
+    """Produce Gate-neutral EvidencePackages + one assessment proposal envelope
+    for (``module_input.candidate_id``, TGT-01). Nothing is persisted."""
 
     if not isinstance(module_input, Tgt01ModuleInput):
         raise TypeError("module_input must be a Tgt01ModuleInput")
-    if not target_identity or not target_identity.strip():
-        raise ValueError("target_identity must be a non-empty string")
 
     run_id = module_input.run_id
+    target_identity = module_input.target_identity
 
     records = list(
         provider.fetch_precedents(
@@ -64,29 +66,31 @@ def run(
         raise TypeError("provider.sweep_completion must return a SweepCompletionRecord")
 
     classified = [
-        classify_record(record, source_registry=source_registry) for record in records
+        classify_record(record, canonical_target_identity=target_identity)
+        for record in records
     ]
-    admissible = [c for c in classified if c.admissible]
 
-    packages, by_program, dropped = build_evidence_packages(
-        admissible, module_input=module_input, allocator=evidence_id_allocator
+    emitted, extra_rejections, dropped = build_evidence_packages(
+        classified,
+        module_input=module_input,
+        allocator=evidence_id_allocator,
+        source_resolver=source_resolver,
+        evidence_library=evidence_library,
     )
-    outcome = _aggregate.aggregate(admissible, by_program)
+    outcome = _aggregate.aggregate(emitted)
 
     rejected_records: list[tuple[str, str]] = [
         (c.record.program_id, c.rejection_reason)
         for c in classified
         if not c.admissible
     ]
+    rejected_records.extend(
+        (c.record.program_id, c.rejection_reason) for c in extra_rejections
+    )
     rejected_records.extend(dropped)
 
     checks, reasons = acceptance.evaluate(
-        module_input=module_input,
-        admissible=admissible,
-        by_program=by_program,
-        packages=packages,
-        outcome=outcome,
-        sweep=sweep,
+        emitted=emitted, outcome=outcome, sweep=sweep
     )
 
     proposal_envelope: AssessmentProposalEnvelope | None = None
@@ -129,7 +133,8 @@ def run(
         module_version=MODULE_VERSION,
         gate_id=GATE_ID,
         run_id=run_id,
-        evidence_packages=packages,
+        evidence_packages=tuple(e.package for e in emitted),
+        reused_evidence_ids=tuple(e.evidence_id for e in emitted if e.reused),
         proposal_envelope=proposal_envelope,
         machine_acceptance=machine_acceptance,
         sweep_completion=sweep,
