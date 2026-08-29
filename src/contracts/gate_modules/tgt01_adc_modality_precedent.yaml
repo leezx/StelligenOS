@@ -234,20 +234,49 @@ acceptance_checklist:
       The Module therefore cannot and must not produce a CandidateGateAssessment;
       it produces a proposal that a human turns into one.
     the_proposal_envelope_carries:
-      - proposed_direction + proposed_strength (never a Decision, never a numeric score)
-      - evidence_refs [{evidence_id, role}] referencing the EvidencePackages above (role in SUPPORTING / CONTRADICTING / CONTEXTUAL)
-      - aggregation_rationale, critical_unknowns, evidence_ceiling
-      - the machine acceptance record (item 13)
+      identity_pins_for_deterministic_canonicalisation:
+        - candidate_id (CAND-L04-nnnnnn)
+        - instantiation_id (INST-CRC-REFRACTORY-ADC-TARGET-v1)
+        - context_id
+        - context_version
+        - gateset_id (ADC_TARGET_GATESET)
+        - gateset_version
+        - gate_id (TGT-01)
+        - gate_version
+      scientific_fields:
+        - proposed_direction + proposed_strength (never a Decision, never a numeric score)
+        - evidence_refs [{evidence_id, role}] referencing the EvidencePackages above (role in SUPPORTING / CONTRADICTING / CONTEXTUAL)
+        - aggregation_rationale, critical_unknowns, evidence_ceiling
+      machine_record:
+        - the machine acceptance record (item 13)
+    the_proposal_envelope_never_carries:
+      - assessment_id (human canonicalisation assigns it)
+      - assessment_version (human canonicalisation assigns it)
+      - review.status / review.reviewer / review.reviewed_at (human canonicalisation only; PR A CANONICAL_REVIEW_STATUS = HUMAN_APPROVED)
     rules:
-      - the proposal envelope MIRRORS the field shape of assessment.schema.json so a human review can lift it into a canonical CandidateGateAssessment, but it is not that object and carries no review block
+      - >-
+        the proposal envelope carries the canonical assessment identity pins
+        (candidate / instantiation / context / gateset / gate, with versions) and
+        the scientific fields needed for deterministic canonicalisation, while
+        using proposal-specific proposed_direction / proposed_strength and
+        OMITTING the canonical assessment identity/version (assessment_id,
+        assessment_version) and the review block
+      - >-
+        canonicalisation is a deterministic field map -- proposal candidate_id ->
+        canonical candidate_id, proposal gate_id -> canonical gate_id, proposal
+        proposed_direction -> canonical direction, proposal proposed_strength ->
+        canonical strength; the human review additionally assigns assessment_id,
+        assessment_version and the review block
       - a canonical CandidateGateAssessment (review.status = HUMAN_APPROVED) is constructed only after human approval (item 14), by the review surface, never by the Module
       - the proposed_direction x proposed_strength combination is checked against the PR A direction x strength matrix (e.g. CONFLICTING needs >= 1 SUPPORTING and >= 1 CONTRADICTING ref)
       - PR E1 only DEFINES this envelope's field list; it adds no new core object and no runtime implementation
     shape_ref: >-
       src/contracts/data_layout/assessment.schema.json is the canonicalisation
       TARGET (the shape the human-approved record must take), not a
-      machine-proposal schema. The Module's proposal envelope mirrors its field
-      list only.
+      machine-proposal schema. The proposal envelope is NOT validated against
+      that schema; it carries the schema's identity pins and scientific fields so
+      a human review can deterministically canonicalise it, and it omits
+      assessment_id / assessment_version / review.
 
   "13_machine_acceptance_criteria":
     a_proposal_envelope_and_its_packages_are_machine_acceptable_iff:

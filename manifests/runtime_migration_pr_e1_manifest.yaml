@@ -42,6 +42,25 @@ review_round_1:
     item_09_adcdb_source_authority: ADCdb-class database moved out of strong source classes into discovery_and_index_layer + discovery_index_authority_rule -- discovery/entity-resolution only, never establishes an Evidence Ladder rung; authority is the underlying primary disclosure; PR D ladder unchanged
   tests_at_round_1: 21
   full_suite_at_round_1: 772
+review_round_2:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "84de608"
+  round_1_blockers: all 3 confirmed closed and locked by regression tests
+  scope: 1 narrow contract blocker -- item 12 proposal-envelope identity completeness; no implementation; scoping / items 03-08 / source plan / stop rule / repository boundary unchanged
+  fix:
+    item_12_proposal_envelope_identity_pins: >-
+      the_proposal_envelope_carries split into
+      identity_pins_for_deterministic_canonicalisation (candidate_id,
+      instantiation_id, context_id, context_version, gateset_id,
+      gateset_version, gate_id, gate_version), scientific_fields and
+      machine_record; added the_proposal_envelope_never_carries (assessment_id,
+      assessment_version, review.status/reviewer/reviewed_at -- human
+      canonicalisation only); rules and shape_ref reworded so the envelope
+      carries the canonical assessment identity pins + scientific fields for a
+      deterministic field-map canonicalisation and is NOT validated against
+      assessment.schema.json. pin names aligned to the schema required fields.
+  tests_at_round_2: 22
+  full_suite_at_round_2: 773
 deferred:
   mod_tgt01_implementation: "PR E2 (new top-level gate_modules/tgt01_adc_modality_precedent/; only after this contract is APPROVED)"
   retrieval_providers_and_datasets: "PR E2+"

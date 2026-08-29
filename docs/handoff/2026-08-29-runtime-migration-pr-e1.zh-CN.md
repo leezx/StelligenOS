@@ -170,6 +170,54 @@ E-1～E-4 不变。
 discover` **772 OK**（751 baseline + 21 E1）/ `git diff --check` clean / 干净
 tracked-tree worktree boundary passed / YAML 结构合法。
 
+## 六之三、第二轮修订（PR #106 @ `84de608` REQUEST_CHANGES，唯一窄口）
+
+审核方复审 `84de608`：第一轮 3 个 blocker 全部关闭且被 regression test 锁住。
+只剩 **1 个新的、很窄的 contract blocker**（应在 E1 施工图阶段修掉）：
+
+**item 12 —— proposal-envelope identity completeness。** 首版
+`the_proposal_envelope_carries` 只有 scientific fields + machine record，不带
+canonical `CandidateGateAssessment` 的 identity pins。proposal artifact 因此
+无法被独立审计地回答"这是哪个 candidate / instantiation / context / gate 的
+proposal"，只能靠 review surface 从 item 10 外部 input 补回来 —— 对一个要落成
+E2 runtime handoff artifact 的施工合同不够稳。
+
+修订（**只动 item 12**）：
+
+- `the_proposal_envelope_carries` 拆成三段：
+  `identity_pins_for_deterministic_canonicalisation`（`candidate_id` /
+  `instantiation_id` / `context_id` / `context_version` / `gateset_id` /
+  `gateset_version` / `gate_id` / `gate_version`）、`scientific_fields`
+  （`proposed_direction` / `proposed_strength`、`evidence_refs`、
+  `aggregation_rationale`、`critical_unknowns`、`evidence_ceiling`）、
+  `machine_record`。
+- 新增 `the_proposal_envelope_never_carries`：`assessment_id`、
+  `assessment_version`、`review.status` / `reviewer` / `reviewed_at`
+  （属 human canonicalisation）。
+- `rules` 改词："carries the canonical assessment identity pins ... while ...
+  OMITTING the canonical assessment identity/version ... and the review block"；
+  写明 canonicalisation 是 deterministic field map（`proposal candidate_id ->
+  canonical candidate_id`、`proposed_direction -> direction`、…），human review
+  额外分配 `assessment_id` / `assessment_version` / review block。
+- `shape_ref` 改为"proposal 不对 `assessment.schema.json` 做校验；只承载它的
+  identity + scientific fields，省略 `assessment_id` / `assessment_version` /
+  `review`"。
+
+pin 名对齐 `src/contracts/data_layout/assessment.schema.json` 的 `required`
+字段。同步：`docs/gate_modules/TGT-01_ADC_Modality_Precedent.md` 第 12 行改写；
+`tests` 新增 `test_item12_proposal_envelope_carries_all_identity_pins`，旧
+`test_item12_is_a_non_canonical_proposal_envelope` 的 `rules` 断言随改词更新
+（共 22 tests）。
+
+**未动：** E-1～E-4、items 03/05/07/08、source plan、stop rule、repository
+boundary、item 09/16 第一轮修订。仍无实现 / provider / runner / numeric
+scoring / 新依赖 / 新 core object；`MIGRATION_PENDING` 未解除。
+
+验证：`test_tgt01_module_construction_contract` 22 OK / 全量 `unittest
+discover` **773 OK**（751 baseline + 22 E1）/ `git diff --check` clean / 干净
+tracked-tree worktree boundary passed / YAML 结构合法。审核方声明下一轮目标
+直接 **APPROVE PR #106 → 进入 PR E2 implementation**。
+
 ## 七、审核
 
 - 提交至 ChatGPT 网页版 `Biotech ideas` → `AI审核方案` 对话（Claude 通过浏览器

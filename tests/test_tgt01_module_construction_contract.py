@@ -154,7 +154,8 @@ class VerbatimFromPrDTests(unittest.TestCase):
         self.assertIn("not a candidategateassessment", i["the_module_emits"].lower())
         self.assertIn("human_approved", i["the_module_emits"].lower())
         rules = " ".join(i["rules"]).lower()
-        self.assertIn("carries no review block", rules)
+        self.assertIn("omitting the canonical assessment identity/version", rules)
+        self.assertIn("the review block", rules)
         self.assertIn("only after human approval", rules)
         self.assertIn("canonicalisation", i["shape_ref"].lower())
         # downstream items no longer claim the Module builds the canonical object
@@ -197,6 +198,36 @@ class VerbatimFromPrDTests(unittest.TestCase):
         self.assertIn("does not independently establish an evidence ladder rung", rule)
         self.assertIn("underlying primary disclosure", rule)
         self.assertIn("retrieval lead, not rung-establishing evidence", rule)
+
+    def test_item12_proposal_envelope_carries_all_identity_pins(self):
+        # review round 2: the proposal envelope must be independently auditable --
+        # it carries the canonical assessment identity pins (PR A required fields)
+        # so canonicalisation is a deterministic field map, not a re-derivation
+        # from item-10 external context. It still omits assessment_id /
+        # assessment_version / review (human canonicalisation only).
+        i = self.item["12_assessment_proposal_envelope_contract"]
+        carries = i["the_proposal_envelope_carries"]
+        pins = " ".join(carries["identity_pins_for_deterministic_canonicalisation"]).lower()
+        for pin in (
+            "candidate_id",
+            "instantiation_id",
+            "context_id",
+            "context_version",
+            "gateset_id",
+            "gateset_version",
+            "gate_id",
+            "gate_version",
+        ):
+            self.assertIn(pin, pins, f"item 12 proposal envelope missing identity pin {pin}")
+        never = " ".join(i["the_proposal_envelope_never_carries"]).lower()
+        self.assertIn("assessment_id", never)
+        self.assertIn("assessment_version", never)
+        self.assertIn("review.status", never)
+        # scientific fields stay proposal-specific
+        sci = " ".join(carries["scientific_fields"]).lower()
+        self.assertIn("proposed_direction", sci)
+        self.assertIn("proposed_strength", sci)
+        self.assertIn("evidence_refs", sci)
 
 
 class NoImplementationInPrE1Tests(unittest.TestCase):
