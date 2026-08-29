@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_e3
-status: pending_review
+status: approved
 scope: tgt05_mod_tgt05_construction_contract_drawing_validation_and_acceptance_checklist_only
 repository_boundary: software_only_external_data
 
@@ -57,8 +57,13 @@ deferred:
   retrieval_providers_and_datasets: "PR E4+"
   other_six_tgt_modules: "PR E4+ (TGT-08 -> TGT-02 -> TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)"
 
-chatgpt_review: PENDING
-approved_tip: null
+chatgpt_review: APPROVE
+approved_tip: 359744c
+merge_commit: b0e452a
+review_rounds: 2  # initial submission + 1 revision round
+test_count_at_approval: 862
+approval_record_pr: task_20260829_runtime-migration-pr-e3-approval-record
+next_authorized_step: null  # PR E4 = MOD-TGT05@1.0.0 implementation -- needs its own go-ahead
 review_round_1:
   verdict: REQUEST_CHANGES
   reviewed_tip: "0b8ec4f"
