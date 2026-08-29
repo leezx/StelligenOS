@@ -55,6 +55,16 @@ from .legacy_gate_map import (
     LegacyGatechainCrosswalk,
     LegacyGateSystem,
 )
+from .crc_adc_target_gateset import (
+    ADC_TARGET_GATESET_ID,
+    PROGRAM_LABEL,
+    TGT_GATE_IDS,
+    TGT_GATE_NAMES,
+    TGT_GATE_REGIMES,
+    CrcAdcTargetGateSetV1,
+    TgtGateContract,
+    TgtGateSpec,
+)
 from .evidence_reference_model import (
     EVIDENCE_INDEX_STATUS_VALUES,
     MATRIX_CELL_STATES,
@@ -136,4 +146,12 @@ __all__ = [
     "check_packages_against_sources",
     "check_supersession_consistency",
     "serialized_matrix_cell",
+    "ADC_TARGET_GATESET_ID",
+    "PROGRAM_LABEL",
+    "TGT_GATE_IDS",
+    "TGT_GATE_NAMES",
+    "TGT_GATE_REGIMES",
+    "CrcAdcTargetGateSetV1",
+    "TgtGateContract",
+    "TgtGateSpec",
 ]

@@ -1,0 +1,52 @@
+phase: runtime_migration_pr_d
+status: pending_review
+scope: crc_adc_target_gateset_v1_roster_gate_contracts_evidence_ladders_gateset_and_binding
+repository_boundary: software_only_external_data
+data_added: false
+persistence_added: false
+runtime_business_logic_added: false
+evaluator_added: false
+evidence_production_module_added: false
+new_dependency_added: false
+new_data_layout_schema_added: false
+touches_data_layout_schemas: false
+touches_pr_a_contracts: false
+touches_pr_b_contracts: false
+touches_pr_c_contracts: false
+new_canonical_gateset_id_added: false
+spec_refs:
+  - docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md (section 6.4 first construction instance + TGT-01..TGT-08 names / L04 ownership; section 11.2 EVGAP -> Gate evidence-contribution mapping; section 16 B group questions 21 and 23 -> PR D)
+  - docs/architecture/contract.zh-CN.md (section 3.4)
+  - docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md (section 6 gate_binding; section 7.3 gateset_binding; Appendix A Module = MOD-<GATE>)
+  - src/contracts/data_layout/gate_binding.schema.yaml (v1.0 / APPROVED)
+delivers:
+  - the frozen TGT-01..TGT-08 gate roster (first machine-readable realization; gate_version initialized at "1.0")
+  - eight concrete Evidence Ladders (evidence-class semantics / ceilings / inference boundaries; no invented numeric thresholds)
+  - ADC_TARGET_GATESET@1.0 GateSet over the eight-gate roster
+  - INST-CRC-REFRACTORY-ADC-TARGET-v1 Instantiation + its context-specific gateset_binding and eight gate_binding records
+  - primary-Module binding slots only (MOD-TGT0n at "0.0.0" -- declared, not built)
+scientific_review: >-
+  The eight Evidence Ladders are a concrete proposal; the scientific review is
+  performed on this PR (#104) in the AI审核方案 conversation. REQUEST_CHANGES
+  until scientifically acceptable, then APPROVE, then merge == v1.0 frozen
+  ladders.
+defers:
+  per_gate_primary_modules: "PR E+"
+  quantitative_ladder_calibration: "PR E+"
+  epitope_layer_and_beyond: "PR E+"
+  assessment_and_decision_evaluators: not_in_this_repo
+chatgpt_review: PENDING
+approved_tip: null
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_crc_adc_target_gateset.py' -v
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py'
+  - bash scripts/verify_repository_boundary.sh
+  - git diff --check
+artifacts:
+  - src/contracts/crc_adc_target_gateset.yaml
+  - src/objects/crc_adc_target_gateset.py
+  - src/objects/__init__.py
+  - src/objects/README.md
+  - src/contracts/README.md
+  - tests/test_crc_adc_target_gateset.py
+  - manifests/runtime_migration_pr_d_manifest.yaml

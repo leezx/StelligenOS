@@ -1,0 +1,600 @@
+version: "0.1.0"
+name: stelligenos-crc-adc-target-gateset
+description: >-
+  Runtime Migration PR D. The first machine-readable, context-specific
+  specialization of the canonical ADC_TARGET_GATESET (L04): the frozen
+  TGT-01..TGT-08 gate roster, eight concrete Evidence Ladders (evidence-class
+  semantics, ceilings and inference boundaries -- no invented numeric
+  thresholds), the ADC_TARGET_GATESET@1.0 GateSet, and the CRC refractory-mCRC
+  Instantiation plus its context-specific gateset_binding / gate_binding records
+  (the physical shape frozen by src/contracts/data_layout/gate_binding.schema.yaml).
+  Architecture + scientific contracts only: no data, no persistence, no
+  evaluator, no Evidence Production Module.
+migration:
+  pr: runtime_migration_pr_d
+  scope: crc_adc_target_gateset_v1_roster_gate_contracts_ladders_gateset_and_binding
+  spec_refs:
+    - docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md (section 6.4 first construction instance + the eight TGT gate names / L04 ownership; section 11.2 EVGAP -> Gate evidence-contribution mapping; section 16 B group question 21; section 16 B group question 23 -> PR D)
+    - docs/architecture/contract.zh-CN.md (section 3.4)
+    - docs/protocols/STELLIGENOS_DATA_LAYOUT_SPEC.v1.0.md (section 6 gate_binding; section 7.3 gateset_binding)
+    - src/contracts/data_layout/gate_binding.schema.yaml (v1.0 / APPROVED -- PR D binding records are parity-checked against it)
+  normative_basis: >-
+    CURRENT_SYSTEM v5 section 6.4 is the frozen normative basis for the
+    TGT-01..TGT-08 ids, scientific names, L04 ownership and the "Module may not
+    rename / merge / split / reassign a Gate" rule. v5 section 6.4 points the
+    full canonical Gate skeleton to the EXTERNAL document
+    StelligenOS_Candidate_Levels_and_GateSets_Blueprint.v0.1 section H2.4, which
+    is not in this repository, and no frozen repository document pins a
+    per-Gate machine gate_version. PR D therefore establishes the first
+    machine-readable runtime realization of this roster.
+  gate_version_provenance: >-
+    PR D initializes the canonical runtime Gate version lineage at "1.0" for all
+    eight TGT gates. This is NOT claimed to be copied from a pre-existing
+    per-Gate version in Blueprint prose; it is the first machine version.
+  scientific_review: >-
+    The eight Evidence Ladders in this file are a concrete PROPOSAL. The
+    scientific review is performed on this PR (#104) in the AI审核方案
+    conversation: REQUEST_CHANGES until the evidence-class semantics, ceilings
+    and inference boundaries are scientifically acceptable, then APPROVE, then
+    merge == v1.0 frozen ladders. This mirrors PR A / B / C: code makes the
+    proposal, the PR review is the freeze mechanism.
+  boundary: >-
+    PR D freezes evidence-class semantics / ceilings / inference boundaries. It
+    does NOT invent quantitative biological thresholds (molecules/cell cutoffs,
+    patient-fraction thresholds, normal-tissue tolerance numbers) -- those need
+    real scientific calibration and belong to the per-Gate Modules and their
+    construction drawings, not to a migration contract.
+  deferred:
+    per_gate_primary_modules: >-
+      PR E+. PR D freezes only the "one Gate -> one primary Evidence Production
+      Module" binding slot: each gate_binding record declares the deterministic
+      primary_module_id (MOD-TGT0n, per Data Layout Spec Appendix A) with
+      primary_module_version "0.0.0" (declared, not built). No Module code and
+      no Module contract is created here. TGT-01..TGT-08 primary Modules are
+      PR E+ (v5 section 16 question 23).
+    quantitative_ladder_calibration: PR E+ (per-Gate Module construction drawings)
+    epitope_layer_and_beyond: "PR E+"
+    assessment_and_decision_evaluators: not_in_this_repo
+
+program_label:
+  label: CRC-ADC-TARGET-GATESET-v1
+  rule: >-
+    "CRC-ADC-TARGET-GATESET-v1" is a program / specialization label ONLY. It is
+    never a gateset_id. The canonical gateset_id is always ADC_TARGET_GATESET
+    (one of the fifteen canonical ids; L04). The CRC specialization is expressed
+    by an Instantiation (INST-CRC-REFRACTORY-ADC-TARGET-v1) plus context-specific
+    gateset_binding / gate_binding records over the SAME canonical
+    ADC_TARGET_GATESET@1.0. This is exactly the physical structure frozen by
+    Data Layout Spec v1.0 and the identity rule frozen by PR B.
+  never_a_gateset_id: true
+
+roster:
+  # v5 section 6.4 scientific names; regimes per the scoping decision recorded in
+  # the AI审核方案 conversation. All eight: candidate_level L04, gateset_id
+  # ADC_TARGET_GATESET, gate_version "1.0".
+  - gate_id: TGT-01
+    name: ADC Modality Precedent
+    dominant_evidence_regime: PUBLIC_PRIMARY
+  - gate_id: TGT-02
+    name: Indication-Specific Malignant-Cell Coverage
+    dominant_evidence_regime: PUBLIC_HYBRID
+  - gate_id: TGT-03
+    name: Treatment / Metastatic Persistence
+    dominant_evidence_regime: PUBLIC_HYBRID
+  - gate_id: TGT-04
+    name: Tumor Surface Availability / Density Plausibility
+    dominant_evidence_regime: PUBLIC_HYBRID
+  - gate_id: TGT-05
+    name: Normal-Tissue Fatal Liability
+    dominant_evidence_regime: PUBLIC_HYBRID
+  - gate_id: TGT-06
+    name: Internalization / Trafficking Addressability
+    dominant_evidence_regime: PUBLIC_HYBRID
+  - gate_id: TGT-07
+    name: Shedding / Soluble-Antigen / Sink Liability
+    dominant_evidence_regime: PUBLIC_HYBRID
+  - gate_id: TGT-08
+    name: Target Opportunity / Competition / IP Whitespace
+    dominant_evidence_regime: PUBLIC_PRIMARY
+
+roster_constants:
+  candidate_level: L04
+  gateset_id: ADC_TARGET_GATESET
+  gate_version: "1.0"
+
+roster_invariants:
+  - gate_ids_are_exactly_TGT_01_through_TGT_08
+  - roster_order_is_TGT_01_through_TGT_08
+  - every_gate_candidate_level_is_L04
+  - every_gate_gateset_id_is_ADC_TARGET_GATESET
+  - every_gate_version_is_1_0
+  - no_duplicate_gate_id
+  - no_unknown_gate_id
+  - no_missing_gate_id
+  - a_module_may_not_rename_merge_split_or_reassign_a_gate
+
+gateset:
+  gateset_id: ADC_TARGET_GATESET
+  gateset_version: "1.0"
+  candidate_level: L04
+  members:
+    - { gate_id: TGT-01, gate_version: "1.0" }
+    - { gate_id: TGT-02, gate_version: "1.0" }
+    - { gate_id: TGT-03, gate_version: "1.0" }
+    - { gate_id: TGT-04, gate_version: "1.0" }
+    - { gate_id: TGT-05, gate_version: "1.0" }
+    - { gate_id: TGT-06, gate_version: "1.0" }
+    - { gate_id: TGT-07, gate_version: "1.0" }
+    - { gate_id: TGT-08, gate_version: "1.0" }
+  decision_rule_ref: external:gateset/ADC_TARGET_GATESET/decision_rule@v1
+  fatal_gate_policy_ref: external:gateset/ADC_TARGET_GATESET/fatal_gate_policy@v1
+  required_gate_policy_ref: external:gateset/ADC_TARGET_GATESET/required_gate_policy@v1
+  unknown_policy_ref: external:gateset/ADC_TARGET_GATESET/unknown_policy@v1
+
+instantiation:
+  instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v1
+  candidate_type: ADC_TARGET
+  candidate_level: L04
+  context_id: CTX-CRC-REFRACTORY-MCRC
+  context_version: 1
+  modality: ADC
+  gateset_id: ADC_TARGET_GATESET
+  gateset_version: "1.0"
+  evidence_regime: PUBLIC_ONLY
+  status: ACTIVE
+  version: 1
+  created_at: "2026-08-28"
+
+# Concrete PROPOSAL for scientific review on this PR. Each ladder: three rungs
+# (DIRECT / INDIRECT_STRONG / WEAK) as evidence classes, per-rung ceiling_rule,
+# an overall evidence_ceiling, explicit allowed / forbidden inference, an
+# unknown_behavior and potential fatal_conditions. No numeric thresholds.
+gate_contracts:
+
+  TGT-01:
+    gate_question: >-
+      Is there prior precedent that this target (or a biologically adjacent
+      target in its lineage) is addressable by the ADC modality?
+    evidence_required:
+      - clinical-stage or approved ADC against the same target antigen
+      - discontinued / failed ADC programs against the same target and the disclosed reason
+      - ADC against a structurally or biologically adjacent target in the same lineage
+      - preclinical ADC constructs, patents or disclosures naming the target
+    evidence_ladder:
+      DIRECT:
+        admissible_evidence_classes:
+          - approved ADC against the same target antigen with disclosed clinical activity
+          - late-clinical (phase 2 or 3) ADC against the same target antigen with disclosed clinical activity
+        ceiling_rule: establishes ADC-modality precedent for this specific target
+      INDIRECT_STRONG:
+        admissible_evidence_classes:
+          - early-clinical (phase 1) ADC against the same target antigen
+          - approved or late-clinical ADC against a biologically adjacent target in the same lineage
+        ceiling_rule: supports precedent; does not by itself establish a de-risked target
+      WEAK:
+        admissible_evidence_classes:
+          - preclinical-only ADC constructs against the target
+          - patents or company disclosures naming the target with no clinical data
+        ceiling_rule: hypothesis-generating only; no precedent claim
+    evidence_ceiling: clinical-stage ADC precedent against the same target antigen
+    allowed_inference:
+      - ADC-modality feasibility for this target or its immediate lineage
+    forbidden_inference:
+      - efficacy in refractory mCRC
+      - normal-tissue safety or a favorable therapeutic index
+      - adequate surface density or internalization for this target
+    unknown_behavior: >-
+      No ADC program identified against the target or an adjacent target -> UNKNOWN,
+      not KILL. A novel target is not disqualified by absence of precedent.
+    fatal_conditions:
+      - a same-target ADC reached late clinical development and was discontinued specifically for target-mediated toxicity or an unachievable therapeutic window
+
+  TGT-02:
+    gate_question: >-
+      In refractory metastatic colorectal cancer, do malignant cells express the
+      target at the protein level with adequate cohort-level consistency?
+    evidence_required:
+      - protein expression (validated IHC / quantitative proteomics / validated multiplex IF) in annotated CRC malignant cells across a powered CRC cohort
+      - single-cell or spatial transcriptomics resolving expression to the CRC malignant compartment
+      - CRC tissue microarray scoring with malignant-cell attribution
+      - matched normal-vs-tumor CRC comparison
+    evidence_ladder:
+      DIRECT:
+        admissible_evidence_classes:
+          - protein-level target expression in annotated CRC malignant cells across an adequately powered CRC cohort with malignant-cell attribution
+        ceiling_rule: establishes indication-specific malignant-cell coverage at the protein level
+      INDIRECT_STRONG:
+        admissible_evidence_classes:
+          - single-cell or spatial transcriptomic expression restricted to the CRC malignant compartment (not stroma or immune)
+          - CRC tissue-microarray transcript-and-protein concordance with malignant-cell attribution
+        ceiling_rule: strong support; protein-level confirmation is still required for a DIRECT call
+      WEAK:
+        admissible_evidence_classes:
+          - bulk CRC RNA expression without malignant-cell deconvolution
+          - pan-cancer datasets not resolved to colorectal cancer
+        ceiling_rule: expression cannot be attributed to malignant cells; hypothesis only
+    evidence_ceiling: protein-level malignant-cell expression across an adequately powered CRC cohort
+    allowed_inference:
+      - the target is present on CRC malignant cells at the population level
+    forbidden_inference:
+      - expression persists after treatment or in metastatic sites (that is TGT-03)
+      - the target is on the cell surface or at adequate density (that is TGT-04)
+      - a favorable therapeutic index (that is TGT-05)
+    unknown_behavior: >-
+      Only bulk RNA available -> UNKNOWN, not a pass.
+    fatal_conditions:
+      - protein-level evidence of absent, or rare and highly heterogeneous, target expression in CRC malignant cells across cohorts
+    inference_guard: >-
+      The EVGAP-02 CRC linkage lock (v5 section 11.2) primarily contributes
+      evidence here. Generic CRC linkage does NOT discharge TGT-03.
+
+  TGT-03:
+    gate_question: >-
+      Does target expression persist in the actual clinical setting: refractory /
+      prior-treated and/or metastatic CRC (including colorectal liver metastases)?
+    evidence_required:
+      - paired pre-/post-treatment CRC biopsies with target scoring
+      - refractory or chemotherapy-exposed CRC cohort expression
+      - metastatic CRC lesion expression (liver / CRLM / lung / peritoneal)
+      - target expression in a validated CRC treatment-resistance model
+    evidence_ladder:
+      DIRECT:
+        admissible_evidence_classes:
+          - protein-level target retention in refractory or prior-treated CRC with malignant-cell attribution
+          - protein-level target expression in metastatic CRC lesions (matched or cohort-level) with malignant-cell attribution
+        ceiling_rule: establishes persistence in the intended treatment / metastatic context
+      INDIRECT_STRONG:
+        admissible_evidence_classes:
+          - transcriptomic persistence in the treated or metastatic CRC malignant compartment
+          - persistence demonstrated in a well-validated CRC treatment-resistance model
+        ceiling_rule: strong support; protein confirmation in the clinical context is required for DIRECT
+      WEAK:
+        admissible_evidence_classes:
+          - persistence inferred only from treatment-naive primary CRC expression
+          - treated / metastatic persistence data from a different tumor type
+        ceiling_rule: no persistence claim; hypothesis only
+    evidence_ceiling: protein-level target retention in refractory / prior-treated and/or metastatic CRC with malignant-cell attribution
+    allowed_inference:
+      - the target remains available in the actual refractory mCRC patient population
+    forbidden_inference:
+      - baseline malignant-cell coverage (TGT-02) substitutes for demonstrated persistence
+      - surface density (TGT-04) from persistence evidence
+    unknown_behavior: >-
+      Only treatment-naive primary CRC data -> UNKNOWN.
+    fatal_conditions:
+      - protein-level evidence of target down-regulation or loss under treatment or in metastatic CRC
+    inference_guard: >-
+      Generic EVGAP-02 CRC linkage does NOT support TGT-03 (v5 section 11.2).
+      TGT-03 requires independent treatment/metastasis-context evidence
+      (refractory / treated / paired pre-post / metastatic / CRLM / resistance
+      context). An EVGAP-02 EvidencePackage contributes here only if its source
+      and context explicitly qualify.
+
+  TGT-04:
+    gate_question: >-
+      Is the target present on the cell surface of CRC malignant cells at a
+      density plausibly adequate for ADC payload delivery?
+    evidence_required:
+      - quantitative cell-surface antigen density on CRC malignant cells or well-matched CRC models (absolute-quantitation flow / QIFIKIT / mass cytometry / quantitative surfaceomics)
+      - validated membranous IHC with membranous-pattern scoring on CRC malignant cells
+      - cell-surface proteomics showing plasma-membrane enrichment (surface biotinylation / plasma-membrane fractionation)
+      - subcellular localization evidence for the target
+    evidence_ladder:
+      DIRECT:
+        admissible_evidence_classes:
+          - quantitative cell-surface antigen density measurement on CRC malignant cells or well-matched CRC models
+        ceiling_rule: establishes surface-density plausibility for an ADC
+      INDIRECT_STRONG:
+        admissible_evidence_classes:
+          - validated membranous IHC with a membranous staining pattern on CRC malignant cells
+          - cell-surface proteomics showing plasma-membrane enrichment of the target on CRC malignant cells
+        ceiling_rule: supports surface LOCALIZATION; does NOT discharge the quantitative antigen-density requirement
+      WEAK:
+        admissible_evidence_classes:
+          - surface localization asserted from sequence topology / signal-peptide / GO-term prediction
+          - surface evidence from non-CRC cell lines only
+          - bulk or RNA-only expression used as a surface proxy
+        ceiling_rule: no surface-availability claim; hypothesis only
+    evidence_ceiling: quantitative cell-surface antigen density on CRC malignant cells; surface localization alone does not reach it
+    allowed_inference:
+      - the antigen is on the cell surface (from INDIRECT_STRONG)
+      - adequate surface-density plausibility (from DIRECT only)
+    forbidden_inference:
+      - surface localization implies adequate antigen density
+      - density plausibility implies ADC efficacy
+      - RNA expression implies surface protein
+    unknown_behavior: >-
+      Only localization or RNA evidence available -> strength stays UNKNOWN on
+      the density question; it is not upgraded.
+    fatal_conditions:
+      - quantitative evidence that surface antigen density on CRC malignant cells is far below the range of clinically validated ADC targets (a measured class, not an invented cutoff)
+    inference_guard: >-
+      The EVGAP-01 surface-localization lock (v5 section 11.2) contributes
+      surface-localization evidence to TGT-04 but CANNOT alone discharge the
+      antigen-density requirement: surface localization is not quantitative
+      antigen density (the typical evidence ceiling for this gate).
+
+  TGT-05:
+    gate_question: >-
+      Does target expression in normal human tissues create an unmanageable
+      on-target / off-tumor toxicity liability? (fatal-first gate)
+    evidence_required:
+      - human normal-tissue protein expression atlases (immunohistochemistry atlases / mass-spec proteomics) with vital-organ coverage
+      - normal-tissue single-cell expression
+      - clinical on-target / off-tumor toxicity for the same target from any targeted modality (ADC / CAR-T / T-cell engager / naked antibody)
+      - vital-organ expression (central nervous system, cardiac, hepatic, pulmonary, hematopoietic, gastrointestinal)
+    evidence_ladder:
+      DIRECT:
+        admissible_evidence_classes:
+          - clinical on-target / off-tumor toxicity data for the same target from any targeted modality in humans
+        ceiling_rule: establishes the normal-tissue liability class directly, including observed severity
+      INDIRECT_STRONG:
+        admissible_evidence_classes:
+          - protein-level normal-tissue expression in vital organs from validated human atlases
+          - same-target on-target toxicity in non-human primates with translational relevance
+        ceiling_rule: strong liability signal; clinical data define the severity
+      WEAK:
+        admissible_evidence_classes:
+          - normal-tissue liability inferred only from RNA atlases without protein confirmation
+          - rodent-only normal-tissue or toxicity data
+        ceiling_rule: liability cannot be graded; hypothesis only
+    evidence_ceiling: clinical or protein-level human normal-tissue expression in vital organs; RNA-only atlases do not reach it
+    allowed_inference:
+      - presence or absence of a normal-tissue on-target liability class
+    forbidden_inference:
+      - absence of RNA implies safety (protein and atlas gaps are common)
+      - tumor selectivity at the coverage level (TGT-02) implies normal-tissue safety
+    unknown_behavior: >-
+      Incomplete normal-tissue coverage -> UNKNOWN, never auto-PASS (v5 section
+      6.4: an unmeasured gate must not be turned into PASS / HOLD / KILL).
+    fatal_conditions:
+      - protein-level or clinical evidence of target expression in a vital organ at a level associated with dose-limiting on-target toxicity for a targeted modality
+
+  TGT-06:
+    gate_question: >-
+      Upon antibody binding, is the target-antibody complex internalized and
+      trafficked to a compartment compatible with payload release?
+    evidence_required:
+      - antibody-induced internalization assays for the target (live-cell imaging / pH-sensitive dye / surface-decay flow)
+      - lysosomal co-localization or trafficking studies for the target
+      - receptor recycling-versus-degradation data
+      - internalization demonstrated by a successful ADC against the same target
+    evidence_ladder:
+      DIRECT:
+        admissible_evidence_classes:
+          - antibody-induced internalization with demonstrated lysosomal delivery for the target, ideally in a CRC-relevant model
+        ceiling_rule: establishes trafficking addressability for an internalizing-payload ADC
+      INDIRECT_STRONG:
+        admissible_evidence_classes:
+          - constitutive endocytosis or established internalizing-receptor biology for the target
+          - antibody-induced internalization shown for the target in a non-CRC context
+        ceiling_rule: strong support; antibody-induced internalization in a disease-relevant model is required for DIRECT
+      WEAK:
+        admissible_evidence_classes:
+          - internalization assumed from receptor-family membership
+          - internalization inferred from surface localization alone
+        ceiling_rule: no trafficking claim; hypothesis only
+    evidence_ceiling: antibody-induced internalization with lysosomal delivery for the target
+    allowed_inference:
+      - the target-antibody complex can be internalized (payload-class dependent)
+    forbidden_inference:
+      - surface expression implies internalization
+      - internalization implies efficacy or adequate payload release for a given linker / payload
+    unknown_behavior: >-
+      No internalization data -> UNKNOWN.
+    fatal_conditions:
+      - evidence that the target is non-internalizing or surface-static under antibody binding (a potential fatal for internalizing-payload ADCs; non-internalizing-payload strategies are outside this gate's fatal call)
+
+  TGT-07:
+    gate_question: >-
+      Is there a circulating soluble form of the target (shed ectodomain or
+      secreted isoform) that acts as an antigen sink or alters PK / biodistribution?
+    evidence_required:
+      - serum or plasma soluble-antigen measurements in CRC patients and in healthy donors
+      - documented sheddase (ADAM / MMP) processing of the target
+      - secreted splice isoforms of the target
+      - clinical PK impact of soluble antigen for a targeted therapeutic against the same target
+    evidence_ladder:
+      DIRECT:
+        admissible_evidence_classes:
+          - quantified circulating soluble target in CRC patients
+          - a documented antigen-sink effect on the pharmacokinetics of a targeted therapeutic against the same target
+        ceiling_rule: establishes the soluble-antigen sink-liability class directly
+      INDIRECT_STRONG:
+        admissible_evidence_classes:
+          - documented sheddase-substrate status for the target without patient serum quantitation
+          - a validated secreted isoform of the target
+        ceiling_rule: strong support; patient-level soluble-antigen data are required for DIRECT
+      WEAK:
+        admissible_evidence_classes:
+          - shedding inferred only from a predicted cleavage site
+          - shedding inferred only from family analogy
+        ceiling_rule: no sink-liability claim; hypothesis only
+    evidence_ceiling: quantified circulating soluble target in CRC patients, or a documented antigen-sink PK effect for the same target
+    allowed_inference:
+      - presence or absence of a soluble-antigen sink-liability class
+    forbidden_inference:
+      - absence of a predicted cleavage site implies no shedding
+      - membrane expression implies no soluble form
+    unknown_behavior: >-
+      No soluble-antigen data -> UNKNOWN.
+    fatal_conditions:
+      - patient-level evidence of circulating soluble antigen sufficient to neutralize therapeutic-antibody dosing for the same target
+
+  TGT-08:
+    gate_question: >-
+      Is there a differentiated opportunity for this target in refractory mCRC:
+      unmet need, competitive landscape, and IP whitespace signals?
+    evidence_required:
+      - refractory mCRC standard-of-care and outcomes
+      - competitor ADC and other targeted programs against the target (trial registries, regulatory filings, company disclosures, pipeline databases)
+      - patent landscape for the target and for ADC compositions against it
+      - approved or failed programs against the target and the disclosed reasons
+    evidence_ladder:
+      DIRECT:
+        admissible_evidence_classes:
+          - current competitive and clinical landscape for the target in mCRC from trial registries / regulatory sources / company disclosures, together with a composition-level patent-landscape review
+        ceiling_rule: establishes the current opportunity / competition / IP-whitespace picture
+      INDIRECT_STRONG:
+        admissible_evidence_classes:
+          - pipeline-database competitor summaries for the target
+          - a target-level (not composition-level) patent search
+        ceiling_rule: strong support; primary-source disclosures plus a composition-level review are required for DIRECT
+      WEAK:
+        admissible_evidence_classes:
+          - opportunity asserted from indication-level unmet need alone, with no target-specific competitive or IP read
+        ceiling_rule: no opportunity / whitespace claim; hypothesis only
+    evidence_ceiling: primary-source competitive and regulatory landscape for the target in mCRC plus a composition-level patent-landscape review
+    allowed_inference:
+      - the relative attractiveness and crowding of the target opportunity
+      - IP whitespace signals for the target and ADC compositions
+    forbidden_inference:
+      - scientific de-risking (TGT-01 through TGT-07) from a favorable commercial picture
+      - a freedom-to-operate opinion (this gate surfaces IP whitespace signals; it does not render an FTO clearance)
+    unknown_behavior: >-
+      Incomplete landscape -> UNKNOWN.
+    fatal_conditions:
+      - a dominant, well-protected competitor ADC already approved or in registrational trials for the same target in mCRC with no differentiation path
+      - blocking composition-of-matter IP for ADCs against the target with no viable design-around (a commercial / strategic potential fatal decided on the sponsor axis per v5 section 7, not a canonical scientific KILL)
+
+# One context-specific binding record per gate, plus the gateset binding. Shape
+# is parity-checked against the frozen gate_binding.schema.yaml (oneOf
+# gate_binding / gateset_binding).
+context_specific_bindings:
+  gateset_binding:
+    gateset_id: ADC_TARGET_GATESET
+    gateset_version: "1.0"
+    instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v1
+    gates:
+      - { gate_id: TGT-01, gate_version: "1.0" }
+      - { gate_id: TGT-02, gate_version: "1.0" }
+      - { gate_id: TGT-03, gate_version: "1.0" }
+      - { gate_id: TGT-04, gate_version: "1.0" }
+      - { gate_id: TGT-05, gate_version: "1.0" }
+      - { gate_id: TGT-06, gate_version: "1.0" }
+      - { gate_id: TGT-07, gate_version: "1.0" }
+      - { gate_id: TGT-08, gate_version: "1.0" }
+    decision_rule_ref: external:instantiation/INST-CRC-REFRACTORY-ADC-TARGET-v1/decision_rule@v1
+    fatal_gate_policy_ref: external:instantiation/INST-CRC-REFRACTORY-ADC-TARGET-v1/fatal_gate_policy@v1
+    required_gate_policy_ref: external:instantiation/INST-CRC-REFRACTORY-ADC-TARGET-v1/required_gate_policy@v1
+  gate_bindings:
+    # primary_module_id is the deterministic future id (Data Layout Spec
+    # Appendix A: Module = MOD-<GATE without hyphen>); primary_module_version
+    # "0.0.0" == declared, not built. PR E+ builds the Module and moves it to
+    # >= 1.0. PR D creates no Module.
+    - gate_id: TGT-01
+      gate_version: "1.0"
+      gateset_id: ADC_TARGET_GATESET
+      gateset_version: "1.0"
+      instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v1
+      candidate_level: L04
+      dominant_evidence_regime: PUBLIC_PRIMARY
+      gate_contract_ref: external:crc_adc_target_gateset/TGT-01/gate_contract@v1
+      evidence_ladder_ref: external:crc_adc_target_gateset/TGT-01/evidence_ladder@v1
+      assessment_rule_ref: external:crc_adc_target_gateset/TGT-01/assessment_rule@v1
+      primary_module_id: MOD-TGT01
+      primary_module_version: "0.0.0"
+    - gate_id: TGT-02
+      gate_version: "1.0"
+      gateset_id: ADC_TARGET_GATESET
+      gateset_version: "1.0"
+      instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v1
+      candidate_level: L04
+      dominant_evidence_regime: PUBLIC_HYBRID
+      gate_contract_ref: external:crc_adc_target_gateset/TGT-02/gate_contract@v1
+      evidence_ladder_ref: external:crc_adc_target_gateset/TGT-02/evidence_ladder@v1
+      assessment_rule_ref: external:crc_adc_target_gateset/TGT-02/assessment_rule@v1
+      primary_module_id: MOD-TGT02
+      primary_module_version: "0.0.0"
+    - gate_id: TGT-03
+      gate_version: "1.0"
+      gateset_id: ADC_TARGET_GATESET
+      gateset_version: "1.0"
+      instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v1
+      candidate_level: L04
+      dominant_evidence_regime: PUBLIC_HYBRID
+      gate_contract_ref: external:crc_adc_target_gateset/TGT-03/gate_contract@v1
+      evidence_ladder_ref: external:crc_adc_target_gateset/TGT-03/evidence_ladder@v1
+      assessment_rule_ref: external:crc_adc_target_gateset/TGT-03/assessment_rule@v1
+      primary_module_id: MOD-TGT03
+      primary_module_version: "0.0.0"
+    - gate_id: TGT-04
+      gate_version: "1.0"
+      gateset_id: ADC_TARGET_GATESET
+      gateset_version: "1.0"
+      instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v1
+      candidate_level: L04
+      dominant_evidence_regime: PUBLIC_HYBRID
+      gate_contract_ref: external:crc_adc_target_gateset/TGT-04/gate_contract@v1
+      evidence_ladder_ref: external:crc_adc_target_gateset/TGT-04/evidence_ladder@v1
+      assessment_rule_ref: external:crc_adc_target_gateset/TGT-04/assessment_rule@v1
+      primary_module_id: MOD-TGT04
+      primary_module_version: "0.0.0"
+    - gate_id: TGT-05
+      gate_version: "1.0"
+      gateset_id: ADC_TARGET_GATESET
+      gateset_version: "1.0"
+      instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v1
+      candidate_level: L04
+      dominant_evidence_regime: PUBLIC_HYBRID
+      gate_contract_ref: external:crc_adc_target_gateset/TGT-05/gate_contract@v1
+      evidence_ladder_ref: external:crc_adc_target_gateset/TGT-05/evidence_ladder@v1
+      assessment_rule_ref: external:crc_adc_target_gateset/TGT-05/assessment_rule@v1
+      primary_module_id: MOD-TGT05
+      primary_module_version: "0.0.0"
+    - gate_id: TGT-06
+      gate_version: "1.0"
+      gateset_id: ADC_TARGET_GATESET
+      gateset_version: "1.0"
+      instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v1
+      candidate_level: L04
+      dominant_evidence_regime: PUBLIC_HYBRID
+      gate_contract_ref: external:crc_adc_target_gateset/TGT-06/gate_contract@v1
+      evidence_ladder_ref: external:crc_adc_target_gateset/TGT-06/evidence_ladder@v1
+      assessment_rule_ref: external:crc_adc_target_gateset/TGT-06/assessment_rule@v1
+      primary_module_id: MOD-TGT06
+      primary_module_version: "0.0.0"
+    - gate_id: TGT-07
+      gate_version: "1.0"
+      gateset_id: ADC_TARGET_GATESET
+      gateset_version: "1.0"
+      instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v1
+      candidate_level: L04
+      dominant_evidence_regime: PUBLIC_HYBRID
+      gate_contract_ref: external:crc_adc_target_gateset/TGT-07/gate_contract@v1
+      evidence_ladder_ref: external:crc_adc_target_gateset/TGT-07/evidence_ladder@v1
+      assessment_rule_ref: external:crc_adc_target_gateset/TGT-07/assessment_rule@v1
+      primary_module_id: MOD-TGT07
+      primary_module_version: "0.0.0"
+    - gate_id: TGT-08
+      gate_version: "1.0"
+      gateset_id: ADC_TARGET_GATESET
+      gateset_version: "1.0"
+      instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v1
+      candidate_level: L04
+      dominant_evidence_regime: PUBLIC_PRIMARY
+      gate_contract_ref: external:crc_adc_target_gateset/TGT-08/gate_contract@v1
+      evidence_ladder_ref: external:crc_adc_target_gateset/TGT-08/evidence_ladder@v1
+      assessment_rule_ref: external:crc_adc_target_gateset/TGT-08/assessment_rule@v1
+      primary_module_id: MOD-TGT08
+      primary_module_version: "0.0.0"
+
+primary_module_binding:
+  rule: >-
+    Each gate declares exactly one primary Evidence Production Module slot, keyed
+    by the deterministic id MOD-TGT0n. In PR D every primary_module_version is
+    "0.0.0" (declared, not built). PR E+ builds the Module and raises its version
+    to >= 1.0. A Module may not choose a different id, and may not modify the
+    Gate id / name / candidate ownership, the gate_question, the Evidence Ladder,
+    the evidence ceiling, or the fatal / unknown / conflict semantics (v5
+    section 6.4).
+  unbuilt_version: "0.0.0"
+
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  database: forbidden
+  cache: forbidden
+  result_files: forbidden
+  evaluator_in_repository: forbidden
+  evidence_production_module_in_repository: forbidden

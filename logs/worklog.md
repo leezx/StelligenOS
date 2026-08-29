@@ -4187,3 +4187,38 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   未解除（到 PR E）。下一步：PR D —— CRC-ADC-TARGET-GATESET-v1（`ADC_TARGET_GATESET`
   的 context-specific binding + TGT-01…TGT-08 Evidence Ladders / Gate contracts；
   需科学审核）。
+
+## 2026-08-28T22:30 EDT — Runtime Migration PR D 首版（CRC-ADC-TARGET-GATESET-v1）
+
+- 授权：用户"Runtime Migration PR A–D，逐一来做" + "继续直到完成所有 PR A-D"。
+  基线 `origin/main`（PR #103 merge 后）。
+- 两个 scoping 决策由审核方（ChatGPT `AI审核方案`）拍板：
+  - Decision A = A2′：PR D 携带 8 个 concrete three-rung Evidence Ladders 作为
+    proposal，科学审核在 PR #104 内完成；只冻结 evidence-class semantics /
+    ceilings / inference boundaries，不发明 numeric biological thresholds。
+    （A1 = 空壳、把科学合同 defer 到 PR E；A3 = 无来源发明——均否。）
+  - Decision B = B1：PR D 建立第一份 machine-readable TGT-01…TGT-08 roster；
+    CURRENT_SYSTEM v5 §6.4 是 ID/name/L04 ownership 的 frozen normative basis，
+    但无冻结文档给 per-Gate machine gate_version，故 PR D 初始化
+    `gate_version = "1.0"`（合同里明确非 copied from Blueprint prose）。
+    顺带锁死：`CRC-ADC-TARGET-GATESET-v1` 只是 program label 绝不进 gateset_id；
+    PR D 不建 primary Module，只冻结 `MOD-TGT0n` slot `primary_module_version
+    "0.0.0"`。
+- 交付：`src/contracts/crc_adc_target_gateset.yaml`（roster + 8 gate contracts +
+  8 Evidence Ladders + ADC_TARGET_GATESET@1.0 GateSet + INST-CRC-REFRACTORY-ADC-
+  TARGET-v1 + gateset_binding + 8 gate_binding；v5 §11.2 EVGAP→Gate inference
+  guard 写进 TGT-02/03/04）、`src/objects/crc_adc_target_gateset.py`
+  （`TgtGateSpec` / `TgtGateContract`（compose PR B `EvidenceLadder`，共享字段
+  校验 delegate 给 PR B `Gate`）/ `CrcAdcTargetGateSetV1`；只 import PR A/B/C）、
+  `tests/test_crc_adc_target_gateset.py`（27 tests：contract builds / roster
+  parity vs 冻结 v5 §6.4 / gate_binding parity vs 冻结 schema / no Module in
+  PR D / 逐对象 accept-reject / immutability + PR A/B/C untouched）、
+  `manifests/runtime_migration_pr_d_manifest.yaml`、`__init__.py` + 两个 README。
+- 未改：`data_layout/*`（未新增 schema）、PR A/B/C 文件、冻结文档、
+  `gate_system.yaml`、`src/capabilities/*`、既有测试。无 evaluator、无 Module、
+  无新 canonical gateset_id、无新依赖。`MIGRATION_PENDING` 未解除。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 743 OK
+  （716 baseline + 27 new）/ `git diff --check` clean / 干净 tracked-tree
+  worktree boundary passed / `crc_adc_target_gateset.yaml` 结构合法。
+- Next：提交、推送、开 PR #104、CI 绿后回 `AI审核方案` 请求审核（含 8 个 ladder
+  的科学审核）。
