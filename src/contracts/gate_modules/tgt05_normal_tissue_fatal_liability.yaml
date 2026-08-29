@@ -172,21 +172,38 @@ acceptance_checklist:
       desirability -- a TGT-05 POSITIVE / DIRECT is a bad candidate signal, but
       the Module does not flip Direction, and HOLD / KILL is the GateSet
       Decision policy's job (PR B), not the Module's.
-    POSITIVE: at least one admissible normal-tissue on-target liability evidence class is present at a graded strength -- a target-level liability class exists
+    frozen_truth_table:
+      note: >-
+        exactly ONE mapping -- E4 has no discretion. A WEAK-only signal is a
+        liability HYPOTHESIS (PR D WEAK ceiling: "liability cannot be graded;
+        hypothesis only"), NOT an established liability class, so it is
+        INCONCLUSIVE, never POSITIVE.
+      DIRECT_liability_evidence: POSITIVE / DIRECT
+      INDIRECT_STRONG_liability_evidence: POSITIVE / INDIRECT_STRONG
+      WEAK_only_liability_hypothesis: INCONCLUSIVE / WEAK
+      no_qualifying_liability_evidence_and_public_coverage_incomplete_or_exhausted: INCONCLUSIVE / UNKNOWN
+      never: absence of risk evidence -> NEGATIVE / safe
+    positive_precedence_over_coverage_gaps: >-
+      once a DIRECT or INDIRECT_STRONG normal-tissue liability is established, an
+      uncovered other vital organ does NOT downgrade the direction back to
+      UNKNOWN -- the proposal stays POSITIVE and the remaining coverage gaps go
+      into critical_unknowns. A fatal-first liability detector must not become
+      UNKNOWN after it has already observed a clear normal-tissue risk.
     NEGATIVE: >-
-      reserved. Public-evidence v1 does NOT permit a safety-negative call from
-      "no risk seen": HPA-negative, RNA-negative, IHC-negative, or one clinical
-      program without reported toxicity do NOT produce NEGATIVE = safe. A
-      NEGATIVE direction is essentially unreachable on the current public path.
-    INCONCLUSIVE: graded evidence that neither establishes a liability class nor is the UNKNOWN state (e.g. only WEAK RNA-level signal with incomplete protein coverage)
-    UNKNOWN: not enough admissible liability evidence, or normal-tissue vital-organ coverage is incomplete (frozen unknown_behavior)
+      reserved and essentially unreachable on the current public path.
+      Public-evidence v1 does NOT permit a safety-negative call from "no risk
+      seen": HPA-negative, RNA-negative, IHC-negative, or one clinical program
+      without reported toxicity do NOT produce NEGATIVE = safe.
     CONFLICTING: >-
       only when genuinely contradictory ADMISSIBLE target-attribution evidence
-      is co-present (e.g. one primary source attributes a normal-tissue toxicity
-      to the target and another equally admissible primary source refutes the
-      target attribution for the same tissue). "one ADC has toxicity, another
-      has no reported toxicity" is NOT contradictory evidence for the safety
-      direction.
+      is co-present ON THE SAME liability observation (e.g. one primary source
+      attributes a normal-tissue toxicity to the target and another equally
+      admissible primary source refutes the target attribution for the same
+      tissue in the same observation). CONTRADICTING evidence is NOT a new
+      safety-negative Evidence Ladder class -- a refutation does NOT earn a
+      NEGATIVE rung; it only downgrades the disputed observation's target
+      attribution. "one ADC has toxicity, another has no reported toxicity" is
+      NOT contradictory evidence for the safety direction.
     absolute_note: Direction is about the evidence, not the candidate; the module never flips Direction on desirability grounds.
 
   "07_allowed_and_forbidden_inference":
@@ -228,6 +245,14 @@ acceptance_checklist:
     human_review_reserved:
       - whether two constructs are "materially distinct"
       - whether an observed toxicity is truly target-mediated
+      - whether an apparent convergence is biologically meaningful
+    machine_output_is_only_a_potential_pattern: >-
+      the Module may emit at most a machine-local POTENTIAL_FATAL_PATTERN /
+      FATAL_REVIEW_REQUIRED (see item 12 fatal_review). It NEVER emits
+      PUBLIC_FATAL_SIGNAL_ESTABLISHED -- PR D itself calls this only "a potential
+      target-intrinsic fatal signal", and the human_review_reserved judgements
+      above gate the real call. Human review + the GateSet fatal_gate_policy
+      (PR B) decide the Candidate-level consequence.
     rule: >-
       the Module only recognises and reports this evidence pattern. It never
       performs a Candidate-level KILL -- that is the GateSet fatal_gate_policy's
@@ -330,14 +355,44 @@ acceptance_checklist:
         - aggregation_rationale, critical_unknowns, evidence_ceiling
       machine_record:
         - the machine acceptance record (item 13)
+    fatal_review:
+      what_it_is: >-
+        a NON-CANONICAL, module-local, machine-generated human-review aid on the
+        run result -- NOT a field of the proposal envelope, NOT a
+        CandidateGateAssessment field, NOT a new core object, NOT a change to the
+        PR A / assessment.schema.json shape. It is where the structured
+        potential-fatal-pattern signal lives so E4 never has to hide it in
+        free-text rationale or expand a canonical contract.
+      fields:
+        - required (bool)
+        - status (POTENTIAL_FATAL_PATTERN when required; otherwise empty)
+        - evidence_ids ([EP-nnnnnnnn] of the contributing same-target ADC toxicity observations)
+        - program_ids ([the >= 2 independent same-target ADC programs])
+        - construct_fingerprints ([the item-08 fingerprint per contributing program])
+        - affected_tissues ([the normal tissue / compartment per observation])
+        - target_attribution_basis_refs ([the disclosed target-attribution basis per observation])
+      machine_may_emit: POTENTIAL_FATAL_PATTERN / FATAL_REVIEW_REQUIRED
+      machine_never_emits: PUBLIC_FATAL_SIGNAL_ESTABLISHED
+      required_is_true_iff: >-
+        the machine has >= 2 same-target ADC toxicity observations, each with an
+        auditable construct fingerprint + a disclosed target-attribution basis,
+        and an apparently convergent normal-tissue phenotype. A single DIRECT
+        liability observation gives required = false.
+      human_review_decides: >-
+        whether the constructs are materially distinct, whether the toxicity is
+        truly target-mediated, and whether the convergence is biologically
+        meaningful. Only then can the GateSet fatal_gate_policy / a human
+        Decision act on the Candidate-level consequence. The module never
+        performs a Candidate-level KILL.
     the_proposal_envelope_never_carries:
       - assessment_id / assessment_version (human canonicalisation assigns them)
       - review.status / review.reviewer / review.reviewed_at (human canonicalisation only)
       - any product-specific therapeutic-window conclusion
+      - a fatal flag (the potential-fatal-pattern signal lives in the module-local fatal_review record, not the proposal envelope)
     rules:
       - a canonical CandidateGateAssessment (review.status = HUMAN_APPROVED) is constructed only after human approval (item 14), by the review surface, never by the Module
-      - the proposed_direction x proposed_strength combination is checked against the PR A direction x strength matrix
-      - PR E3 only DEFINES this envelope's field list; it adds no new core object and no runtime implementation
+      - the proposed_direction x proposed_strength combination is checked against the frozen item-06 truth table and the PR A direction x strength matrix
+      - PR E3 only DEFINES this envelope's field list and the fatal_review record's field list; it adds no new core object and no runtime implementation
     shape_ref: >-
       src/contracts/data_layout/assessment.schema.json is the canonicalisation
       TARGET, not a machine-proposal schema. The proposal envelope carries that
@@ -350,10 +405,12 @@ acceptance_checklist:
       - every provenance.source_id resolves to a canonical SourceIndex record whose metadata matches, and every evidence_ref.evidence_id resolves to a canonical EvidencePackage (PR C check_* functions; PR E2 gene)
       - every admissible evidence class used is in item 04's admissible list, and no item-04 not_admissible class is present
       - the proposed_strength does not exceed the ceiling of the highest ladder rung actually met (item 05)
+      - proposed_direction x proposed_strength is exactly the item-06 frozen truth table result for the evidence actually held (WEAK-only -> INCONCLUSIVE / WEAK; DIRECT / INDIRECT_STRONG liability -> POSITIVE; an established liability is not UNKNOWN just because coverage is incomplete)
       - the item-16 mandatory completion conditions are satisfied for the path taken (Path B / Path C sweeps complete)
+      - if the module-local fatal_review record has required = true, its status is POTENTIAL_FATAL_PATTERN (never PUBLIC_FATAL_SIGNAL_ESTABLISHED) and it carries >= 2 program_ids with construct_fingerprints and target_attribution_basis_refs
       - dedup -- one SRC -> many EP is allowed; the same (source, claim) is not duplicated across packages
       - all required fields present; no numeric score anywhere; no biological threshold
-      - no product-specific therapeutic-window conclusion appears anywhere in the proposal
+      - no product-specific therapeutic-window conclusion and no PUBLIC_FATAL_SIGNAL_ESTABLISHED appears anywhere in the proposal or the fatal_review record
     on_failure: >-
       the run is rejected with a machine reason and nothing enters the canonical
       record. A HARD identity / provenance integrity failure (candidate <->
@@ -369,10 +426,11 @@ acceptance_checklist:
       - each EvidencePackage's claim, source and interpretation_boundary (drill-down), including the item-08 convergence-audit fields for clinical ADC toxicity observations
       - the ladder rung each package maps to, and any critical_unknowns
       - the vital-organ coverage map and which organs are covered / uncovered
+      - the module-local fatal_review record (item 12) -- status POTENTIAL_FATAL_PATTERN, the contributing evidence_ids / program_ids / construct_fingerprints / affected_tissues / target_attribution_basis_refs
       - the machine acceptance record (item 13 pass / fail detail)
     human_only_judgements:
       - whether the aggregated direction / strength is scientifically correct for TGT-05
-      - whether two ADC constructs are "materially distinct" and whether an observed normal-tissue toxicity is truly target-mediated (item 08)
+      - whether two ADC constructs are "materially distinct", whether an observed normal-tissue toxicity is truly target-mediated, and whether an apparent convergence is biologically meaningful (item 08) -- i.e. whether the fatal_review POTENTIAL_FATAL_PATTERN is a real target-intrinsic fatal signal
       - whether a claimed "same target" call is right
       - final approval -- on HUMAN_APPROVED the review surface constructs the canonical CandidateGateAssessment (review.status = HUMAN_APPROVED) from the proposal envelope; it enters ASSESSMENTS/<cand>/vNNN.json and the MatrixView rebuilds (PR C). The Module never constructs that object.
     complexity_note: >-
@@ -382,12 +440,22 @@ acceptance_checklist:
 
   "15_failure_unknown_and_conflict_behavior":
     retrieval_failure: report a machine failure reason; do not emit a partial proposal envelope as if complete
-    insufficient_or_incomplete_coverage: propose INCONCLUSIVE or UNKNOWN per item 06; never PASS, never "safe", never NEGATIVE
+    direction_and_strength_follow_the_item_06_frozen_truth_table: >-
+      WEAK-only liability evidence -> INCONCLUSIVE / WEAK (never POSITIVE); a
+      DIRECT or INDIRECT_STRONG liability -> POSITIVE at that strength, and it is
+      NOT downgraded to UNKNOWN because another vital organ is still uncovered
+      (the coverage gap goes into critical_unknowns).
     no_admissible_liability_evidence_and_incomplete_coverage: >-
-      propose UNKNOWN. Verbatim from the frozen contract: "Incomplete
-      normal-tissue coverage -> UNKNOWN, never auto-PASS." A negative RNA / IHC /
-      atlas is not proof of safety.
-    conflicting_evidence: propose CONFLICTING only with genuinely contradictory admissible target-attribution evidence (item 06), with non-empty key_supporting_evidence and key_contradicting_evidence
+      propose INCONCLUSIVE / UNKNOWN. Verbatim from the frozen contract:
+      "Incomplete normal-tissue coverage -> UNKNOWN, never auto-PASS." A negative
+      RNA / IHC / atlas is not proof of safety; never PASS, never "safe", never
+      NEGATIVE.
+    conflicting_evidence: >-
+      propose CONFLICTING only with genuinely contradictory admissible
+      target-attribution evidence ON THE SAME liability observation (item 06),
+      with non-empty key_supporting_evidence and key_contradicting_evidence. A
+      refutation does NOT earn a NEGATIVE rung; it downgrades the disputed
+      observation's target attribution.
     experiment_required: >-
       if a key vital-organ coverage gap can only be closed by non-public data,
       set the critical_unknown resolution to EXPERIMENT_REQUIRED and stop -- do
@@ -399,15 +467,18 @@ acceptance_checklist:
 
   "16_stop_rule":
     principle: absence of public risk evidence is not a stop condition for safety; the fatal sweep is mandatory; the stop is asymmetric.
-    path_a_potential_fatal_pattern_found:
-      when:
-        - two or more materially distinct same-target ADC constructs
-        - convergent target-mediated normal-tissue toxicity
-        - primary provenance / target-attribution auditable (item 08 fields present)
+    path_a_machine_detects_a_potential_fatal_pattern:
+      machine_detection_criteria:
+        - two or more same-target ADC toxicity observations, each from a distinct program
+        - each with an auditable construct fingerprint (item 08 fields present)
+        - each with a disclosed target-attribution basis
+        - an apparently convergent normal-tissue phenotype
       then:
-        - mark PUBLIC_FATAL_SIGNAL_ESTABLISHED
-        - stop chasing weaker atlas / RNA evidence (a later RNA atlas cannot wash the pattern away)
+        - set the module-local fatal_review record (item 12) required = true, status = POTENTIAL_FATAL_PATTERN / FATAL_REVIEW_REQUIRED
+        - provisionally stop chasing weaker atlas / RNA evidence (a later RNA atlas cannot wash an apparent pattern away)
         - hand off to the human review surface
+      the_machine_does_not:
+        - mark PUBLIC_FATAL_SIGNAL_ESTABLISHED (only the human review + the GateSet fatal_gate_policy can, after judging materially-distinct / truly-target-mediated / meaningful-convergence -- all item-08 human_review_reserved)
     path_b_only_one_direct_adc_toxicity:
       then_must_complete_before_any_stop:
         - the same-target ADC construct inventory (active / approved AND discontinued / failed)
@@ -433,8 +504,10 @@ acceptance_checklist:
     this_module_does_not:
       - construct a CandidateGateAssessment or emit a HUMAN_APPROVED record
       - produce a Candidate-level Decision or KILL
+      - emit PUBLIC_FATAL_SIGNAL_ESTABLISHED -- the machine emits at most a fatal_review POTENTIAL_FATAL_PATTERN
       - make a product-specific therapeutic-window conclusion
       - flip Direction based on candidate desirability
+      - downgrade an already-observed DIRECT / INDIRECT_STRONG liability to UNKNOWN because another vital organ is uncovered (item 06 precedence)
       - write to any other Gate's evidence index or assessment
       - modify the Matrix (a rebuildable projection; PR C)
 

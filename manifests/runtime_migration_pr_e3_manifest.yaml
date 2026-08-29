@@ -59,6 +59,40 @@ deferred:
 
 chatgpt_review: PENDING
 approved_tip: null
+review_round_1:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "0b8ec4f"
+  outer_framework: PASS  # design-only; 17-item complete; 03/05/07/08 parity; MOD-TGT05 still 0.0.0; MOD-TGT01@1.0.0 untouched; no provider/persistence/scoring/threshold/therapeutic-window; MIGRATION_PENDING
+  scope: 2 E3 construction-contract self-consistency blockers; scoping E3-1..E3-8, items 03/05/07/08 parity, the fatal-layer separation, coverage map, asymmetric-stop concept and the PR E2 genes all unchanged
+  fixes:
+    blocker_1_item06_frozen_truth_table: >-
+      item 06 said both "any graded admissible liability evidence -> POSITIVE"
+      and "WEAK RNA-level signal -> INCONCLUSIVE". Replaced with a single frozen
+      truth table (DIRECT -> POSITIVE/DIRECT; INDIRECT_STRONG ->
+      POSITIVE/INDIRECT_STRONG; WEAK-only hypothesis -> INCONCLUSIVE/WEAK;
+      nothing + incomplete/exhausted coverage -> INCONCLUSIVE/UNKNOWN; never
+      absence-of-risk -> NEGATIVE/safe) plus a positive-precedence rule (an
+      established DIRECT/INDIRECT_STRONG liability is NOT downgraded to UNKNOWN
+      for an uncovered organ -- the gap goes into critical_unknowns) and a
+      tightened CONFLICTING (same-observation target-attribution dispute only; a
+      refutation earns no NEGATIVE rung). item 13 and item 15 bind to it; a
+      truth-table regression is added.
+    blocker_2_fatal_pattern_is_human_only: >-
+      item 16 Path A had the machine "mark PUBLIC_FATAL_SIGNAL_ESTABLISHED" from
+      "materially distinct" + "truly target-mediated" -- exactly the item-08
+      human_review_reserved judgements. Path A is now machine detection only
+      (>= 2 same-target ADC toxicity observations from distinct programs, each
+      with an auditable construct fingerprint + a disclosed target-attribution
+      basis, an apparently convergent phenotype) -> set a NON-CANONICAL
+      module-local fatal_review record (required / status POTENTIAL_FATAL_PATTERN
+      / evidence_ids / program_ids / construct_fingerprints / affected_tissues /
+      target_attribution_basis_refs) -> provisional stop -> human review. The
+      machine never emits PUBLIC_FATAL_SIGNAL_ESTABLISHED; the proposal envelope
+      carries no fatal flag; item 14 surfaces the fatal_review record and the
+      human decides materially-distinct / truly-target-mediated / meaningful
+      convergence. No PR A schema change, no 7th core object.
+  tests_at_round_1: 41
+  full_suite_at_round_1: 862
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_tgt05_module_construction_contract.py' -v
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py'

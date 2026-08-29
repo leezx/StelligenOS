@@ -185,7 +185,32 @@ class LiabilityDetectorSemanticsTests(unittest.TestCase):
         self.assertIn("essentially unreachable", i["NEGATIVE"].lower())
         # a "no risk seen" negative is forbidden
         self.assertIn("no risk seen", i["NEGATIVE"].lower())
-        self.assertIn("not contradictory", i["CONFLICTING"].lower())
+
+    def test_item06_frozen_truth_table_is_unambiguous(self):
+        # review round 1: a single mapping, no E4 discretion. A WEAK-only signal
+        # is INCONCLUSIVE (PR D "liability cannot be graded"), never POSITIVE.
+        tt = self.item["06_direction_interpretation"]["frozen_truth_table"]
+        self.assertEqual(tt["DIRECT_liability_evidence"], "POSITIVE / DIRECT")
+        self.assertEqual(tt["INDIRECT_STRONG_liability_evidence"], "POSITIVE / INDIRECT_STRONG")
+        self.assertEqual(tt["WEAK_only_liability_hypothesis"], "INCONCLUSIVE / WEAK")
+        self.assertEqual(
+            tt["no_qualifying_liability_evidence_and_public_coverage_incomplete_or_exhausted"],
+            "INCONCLUSIVE / UNKNOWN",
+        )
+        self.assertIn("NEGATIVE / safe", tt["never"])
+        self.assertIn("hypothesis only", tt["note"].lower())
+
+    def test_item06_established_liability_is_not_downgraded_for_an_uncovered_organ(self):
+        prec = self.item["06_direction_interpretation"]["positive_precedence_over_coverage_gaps"].lower()
+        self.assertIn("does not downgrade the direction back to unknown", prec)
+        self.assertIn("critical_unknowns", prec)
+
+    def test_item06_conflicting_does_not_earn_a_negative_rung(self):
+        c = self.item["06_direction_interpretation"]["CONFLICTING"].lower()
+        self.assertIn("on the same liability observation", c)
+        self.assertIn("not a new safety-negative", c)
+        self.assertIn("does not earn a negative rung", c)
+        self.assertIn("not contradictory evidence for the safety direction", c)
 
     def test_item06_negative_cannot_come_from_negative_atlas(self):
         neg = self.item["06_direction_interpretation"]["NEGATIVE"].lower()
@@ -222,7 +247,11 @@ class LiabilityDetectorSemanticsTests(unittest.TestCase):
     def test_item16_asymmetric_stop_rule_has_all_three_paths(self):
         i = self.item["16_stop_rule"]
         self.assertIn("absence of public risk evidence is not a stop condition", i["principle"].lower())
-        self.assertIn("PUBLIC_FATAL_SIGNAL_ESTABLISHED", " ".join(i["path_a_potential_fatal_pattern_found"]["then"]))
+        pa = i["path_a_machine_detects_a_potential_fatal_pattern"]
+        then = " ".join(pa["then"])
+        self.assertIn("POTENTIAL_FATAL_PATTERN", then)
+        self.assertNotIn("PUBLIC_FATAL_SIGNAL_ESTABLISHED", then)
+        self.assertIn("PUBLIC_FATAL_SIGNAL_ESTABLISHED", " ".join(pa["the_machine_does_not"]))
         b = " ".join(i["path_b_only_one_direct_adc_toxicity"]["then_must_complete_before_any_stop"]).lower()
         self.assertIn("construct inventory", b)
         c = " ".join(i["path_c_no_direct_clinical_liability"]["then_must_complete_before_any_stop"]).lower()
@@ -232,6 +261,17 @@ class LiabilityDetectorSemanticsTests(unittest.TestCase):
             i["path_c_no_direct_clinical_liability"]["if_unresolvable_by_public_sources"],
         )
 
+    def test_item16_path_a_is_machine_detection_only_not_a_human_call(self):
+        crit = self.item["16_stop_rule"][
+            "path_a_machine_detects_a_potential_fatal_pattern"
+        ]["machine_detection_criteria"]
+        joined = " ".join(crit).lower()
+        self.assertIn("distinct program", joined)
+        self.assertIn("auditable construct fingerprint", joined)
+        self.assertIn("disclosed target-attribution basis", joined)
+        # the "materially distinct" call is NOT a machine detection criterion
+        self.assertNotIn("materially distinct", joined)
+
     def test_no_product_specific_therapeutic_window_conclusion_anywhere(self):
         i13 = self.item["13_machine_acceptance_criteria"]
         crit = " ".join(i13["a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"]).lower()
@@ -239,6 +279,77 @@ class LiabilityDetectorSemanticsTests(unittest.TestCase):
         i17 = " ".join(self.item["17_downstream_consumer_and_handoff"]["this_module_does_not"]).lower()
         self.assertIn("product-specific therapeutic-window conclusion", i17)
         self.assertIn("flip direction based on candidate desirability", i17)
+
+
+class FatalReviewIsHumanOnlyTests(unittest.TestCase):
+    """Review round 1: the fatal call is human-only. The machine emits at most a
+    module-local POTENTIAL_FATAL_PATTERN, never PUBLIC_FATAL_SIGNAL_ESTABLISHED,
+    and the structured signal lives in a fatal_review record, not the proposal
+    envelope / a canonical field / a new core object."""
+
+    def setUp(self):
+        self.item = yaml.safe_load(CONTRACT.read_text())["acceptance_checklist"]
+
+    def test_item08_machine_output_is_only_a_potential_pattern(self):
+        m = self.item["08_fatal_conditions"]["machine_output_is_only_a_potential_pattern"]
+        self.assertIn("POTENTIAL_FATAL_PATTERN", m)
+        self.assertIn("NEVER emits", m)
+        self.assertIn("PUBLIC_FATAL_SIGNAL_ESTABLISHED", m)
+        hr = " ".join(self.item["08_fatal_conditions"]["human_review_reserved"]).lower()
+        self.assertIn("biologically meaningful", hr)
+
+    def test_item12_fatal_review_is_module_local_not_canonical(self):
+        fr = self.item["12_assessment_proposal_envelope_contract"]["fatal_review"]
+        self.assertEqual(fr["machine_never_emits"], "PUBLIC_FATAL_SIGNAL_ESTABLISHED")
+        self.assertIn("POTENTIAL_FATAL_PATTERN", fr["machine_may_emit"])
+        what = fr["what_it_is"].lower()
+        self.assertIn("non-canonical", what)
+        self.assertIn("not a field of the proposal envelope", what)
+        self.assertIn("not a new core object", what)
+        self.assertIn("not a change to the pr a", what)
+        fields = " ".join(fr["fields"]).lower()
+        for f in ("required", "status", "evidence_ids", "program_ids",
+                  "construct_fingerprints", "affected_tissues",
+                  "target_attribution_basis_refs"):
+            self.assertIn(f, fields)
+        self.assertIn("single direct liability observation gives required = false",
+                      fr["required_is_true_iff"].lower())
+        never = " ".join(
+            self.item["12_assessment_proposal_envelope_contract"]["the_proposal_envelope_never_carries"]
+        ).lower()
+        self.assertIn("a fatal flag", never)
+
+    def test_item14_human_sees_and_judges_the_fatal_review(self):
+        sees = " ".join(self.item["14_human_acceptance_and_review_surface"]["the_human_sees"]).lower()
+        self.assertIn("fatal_review record", sees)
+        judge = " ".join(
+            self.item["14_human_acceptance_and_review_surface"]["human_only_judgements"]
+        ).lower()
+        self.assertIn("biologically meaningful", judge)
+        self.assertIn("real target-intrinsic fatal signal", judge)
+
+    def test_item13_and_17_forbid_public_fatal_signal_established(self):
+        crit = " ".join(
+            self.item["13_machine_acceptance_criteria"][
+                "a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"
+            ]
+        )
+        self.assertIn("never PUBLIC_FATAL_SIGNAL_ESTABLISHED", crit)
+        not_do = " ".join(self.item["17_downstream_consumer_and_handoff"]["this_module_does_not"])
+        self.assertIn("PUBLIC_FATAL_SIGNAL_ESTABLISHED", not_do)
+        self.assertIn("POTENTIAL_FATAL_PATTERN", not_do)
+
+    def test_public_fatal_signal_established_never_appears_in_a_machine_output_list(self):
+        # structurally: it is never something item 16 Path A "then" does, and
+        # never in the fatal_review machine_may_emit.
+        i16 = self.item["16_stop_rule"]["path_a_machine_detects_a_potential_fatal_pattern"]
+        self.assertNotIn("PUBLIC_FATAL_SIGNAL_ESTABLISHED", " ".join(i16["then"]))
+        fr = self.item["12_assessment_proposal_envelope_contract"]["fatal_review"]
+        self.assertNotIn("PUBLIC_FATAL_SIGNAL_ESTABLISHED", fr["machine_may_emit"])
+        self.assertNotIn(
+            "PUBLIC_FATAL_SIGNAL_ESTABLISHED",
+            " ".join(fr["fields"]) + fr["required_is_true_iff"],
+        )
 
 
 class InheritsPrE2GenesTests(unittest.TestCase):

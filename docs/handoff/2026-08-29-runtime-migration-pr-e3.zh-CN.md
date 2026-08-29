@@ -108,6 +108,55 @@
 - **未解除** `MIGRATION_PENDING`。无新依赖（仍只 PyYAML）。
 - 其余 6 个 TGT primary Module（TGT-08 → 02 → 03 → 04 → 06 → 07）属 PR E4+。
 
+## 四之二、第一轮修订（PR #110 @ `0b8ec4f` REQUEST_CHANGES）
+
+审核方复审 `0b8ec4f`：**E3 大框架 PASS**（design-only、17 项完整、03/05/07/08
+parity、MOD-TGT05 仍 `0.0.0`、MOD-TGT01@1.0.0 未动、无 provider/persistence/
+scoring/threshold/therapeutic-window、`MIGRATION_PENDING` 保持）。只剩 **2 个 E3
+construction-contract 自身确定性 blocker**：
+
+1. **item 06 的 Direction×Strength truth table 自相矛盾。** 同时写「任一 graded
+   admissible liability evidence → POSITIVE」与「只有 WEAK RNA-level signal →
+   INCONCLUSIVE」，而 PR D WEAK ceiling 是「liability cannot be graded;
+   hypothesis only」。修：改成**唯一 frozen truth table**（`DIRECT` →
+   `POSITIVE / DIRECT`；`INDIRECT_STRONG` → `POSITIVE / INDIRECT_STRONG`；
+   `WEAK`-only hypothesis → `INCONCLUSIVE / WEAK`；无 qualifying evidence +
+   coverage incomplete/exhausted → `INCONCLUSIVE / UNKNOWN`；never absence-of-risk
+   → `NEGATIVE / safe`）+ **positive precedence**（已确立的 DIRECT/INDIRECT_STRONG
+   liability 不因某器官未覆盖而降回 UNKNOWN —— gap 进 `critical_unknowns`）+
+   收紧 CONFLICTING（只针对**同一 liability observation** 的 target-attribution
+   dispute；refutation 不产 NEGATIVE rung）。item 13 / 15 绑定该 truth table；新增
+   truth-table regression。
+2. **Fatal Path A 越过了自己冻结的 human-only boundary。** item 16 Path A 让
+   machine 依据「materially distinct」+「truly target-mediated」（正是 item 08
+   `human_review_reserved`）直接 `mark PUBLIC_FATAL_SIGNAL_ESTABLISHED`。修：
+   Path A 改成**纯 machine detection**（≥2 条来自不同 program 的同靶点 ADC
+   toxicity observation，每条有 auditable construct fingerprint + disclosed
+   target-attribution basis，phenotype apparently convergent）→ 置 **non-canonical
+   module-local `fatal_review` record**（`required` / `status`
+   `POTENTIAL_FATAL_PATTERN` / `evidence_ids` / `program_ids` /
+   `construct_fingerprints` / `affected_tissues` / `target_attribution_basis_refs`）
+   → provisional stop → human review。machine 永不 emit
+   `PUBLIC_FATAL_SIGNAL_ESTABLISHED`；proposal envelope 不带 fatal flag；item 14
+   surface `fatal_review` record，human 判 materially-distinct / truly-target-mediated /
+   meaningful convergence。**不改 PR A schema，不建第七个 core object。**
+
+同步：`docs/gate_modules/TGT-05_Normal_Tissue_Fatal_Liability.md` 第 6 / 8 / 12 /
+13 / 14 / 15 / 16 / 17 行；`tests` 新增 `Item06TruthTableTests` 类
+（frozen truth table / positive precedence / conflicting 无 negative rung）+
+`FatalReviewIsHumanOnlyTests` 类（item 08 machine_output_is_only_a_potential_pattern /
+item 12 `fatal_review` module-local / item 14 human sees+judges / item 13·17
+禁止 `PUBLIC_FATAL_SIGNAL_ESTABLISHED`）+ item 16 test 改为断言 Path A 是
+machine-detection、`then` 不含 `PUBLIC_FATAL_SIGNAL_ESTABLISHED`、
+`the_machine_does_not` 含它。
+
+未动：E3-1…E3-8 scope、03/05/07/08 parity、fatal 分层、coverage map、
+asymmetric-stop 概念、PR E2 genes。
+
+验证：全量 `unittest discover` **862 OK**（821 baseline + 41 E3）/
+`git diff --check` clean / 干净 tracked-tree worktree boundary passed /
+YAML 结构合法。
+
 ## 五、验证命令与结果
 
 ```

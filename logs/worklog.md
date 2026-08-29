@@ -4705,3 +4705,44 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
   YAML 结构合法。
 - Next：提交、推送、开 PR、CI 绿后回 `AI审核方案` 请求审核。
+
+## 2026-08-29T18:00 EDT — Runtime Migration PR E3 第一轮修订（PR #110 @ 0b8ec4f REQUEST_CHANGES）
+
+- 审核方复审 0b8ec4f：E3 大框架 PASS（design-only、17 项完整、03/05/07/08
+  parity、MOD-TGT05 仍 0.0.0、MOD-TGT01@1.0.0 未动、无 provider/persistence/
+  scoring/threshold/therapeutic-window、MIGRATION_PENDING 保持）。只剩 2 个 E3
+  construction-contract 自身确定性 blocker。
+- Blocker 1 — item 06 Direction×Strength truth table 自相矛盾（同时写「任一
+  graded admissible liability evidence → POSITIVE」与「WEAK RNA-level signal →
+  INCONCLUSIVE」，而 PR D WEAK ceiling 是「liability cannot be graded;
+  hypothesis only」）。修：唯一 frozen truth table（DIRECT→POSITIVE/DIRECT；
+  INDIRECT_STRONG→POSITIVE/INDIRECT_STRONG；WEAK-only hypothesis→
+  INCONCLUSIVE/WEAK；无 qualifying + coverage incomplete/exhausted→
+  INCONCLUSIVE/UNKNOWN；never absence-of-risk→NEGATIVE/safe）+ positive
+  precedence（已确立 DIRECT/INDIRECT_STRONG liability 不因某器官未覆盖降回
+  UNKNOWN，gap 进 critical_unknowns）+ 收紧 CONFLICTING（只针对同一 liability
+  observation 的 target-attribution dispute；refutation 不产 NEGATIVE rung）。
+  item 13/15 绑定；新增 truth-table regression。
+- Blocker 2 — Fatal Path A 越过自己冻结的 human-only boundary（item 16 Path A
+  让 machine 依据「materially distinct」+「truly target-mediated」直接 mark
+  PUBLIC_FATAL_SIGNAL_ESTABLISHED，正是 item 08 human_review_reserved）。修：
+  Path A 改成纯 machine detection（≥2 条来自不同 program 的同靶点 ADC toxicity
+  observation，每条有 auditable construct fingerprint + disclosed
+  target-attribution basis，phenotype apparently convergent）→ 置 non-canonical
+  module-local fatal_review record（required / status POTENTIAL_FATAL_PATTERN /
+  evidence_ids / program_ids / construct_fingerprints / affected_tissues /
+  target_attribution_basis_refs）→ provisional stop → human review。machine 永不
+  emit PUBLIC_FATAL_SIGNAL_ESTABLISHED；proposal envelope 不带 fatal flag；
+  item 14 surface 该 record，human 判 materially-distinct /
+  truly-target-mediated / meaningful convergence。不改 PR A schema、不建第七个
+  core object。
+- 同步：drawing 第 6/8/12/13/14/15/16/17 行；tests 新增 Item06TruthTableTests +
+  FatalReviewIsHumanOnlyTests 类，item 16 test 改为断言 Path A machine-detection、
+  then 不含 PUBLIC_FATAL_SIGNAL_ESTABLISHED、the_machine_does_not 含它。
+- 未动：E3-1…E3-8 scope、03/05/07/08 parity、fatal 分层、coverage map、
+  asymmetric-stop 概念、PR E2 genes。
+- 验证：全量 `unittest discover` **862 OK**（821 baseline + 41 E3）/
+  `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
+  YAML 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第一轮复审（item 06 truth table +
+  fatal_review 两处摘要）。
