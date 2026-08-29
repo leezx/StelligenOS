@@ -218,6 +218,35 @@ discover` **773 OK**（751 baseline + 22 E1）/ `git diff --check` clean / 干�
 tracked-tree worktree boundary passed / YAML 结构合法。审核方声明下一轮目标
 直接 **APPROVE PR #106 → 进入 PR E2 implementation**。
 
+## 六之四、第三轮修订（PR #106 @ `c6cb838` REQUEST_CHANGES，docs-only 残留）
+
+审核方复审 `c6cb838`：item 12 machine contract 已正确、regression test 锁住。
+只剩 **同一 proposal / canonical boundary blocker 在 human drawing 里的两处旧
+措辞**（docs-only，不动 machine contract）：
+
+1. **Gate ordering 段的链条。** `proposed CandidateGateAssessment` →
+   `assessment proposal envelope`，并补终点
+   `→ human-review surface → HUMAN_APPROVED CandidateGateAssessment`，加一句
+   Module 永不产 canonical `CandidateGateAssessment`（review surface 在 approval
+   时才产）。
+2. **item 17 行。** 重写为：Module 交付 `EvidencePackage`s + assessment
+   proposal envelope 给 human review surface；HUMAN_APPROVED 之后 review
+   surface 才构造 canonical `CandidateGateAssessment`，*那条记录*才被
+   `MatrixView` / GateSet decision layer 消费；Module 自身输出不直接进入
+   `MatrixView` 或 decision layer；不构造 `CandidateGateAssessment`、不发
+   `HUMAN_APPROVED` 记录。
+
+test 新增 `test_drawing_has_no_stale_proposed_candidategateassessment_wording`。
+
+**未动：** E-1～E-4、item 09、item 12 machine contract、item 16、PR D parity、
+repository boundary。仍无实现 / provider / runner / numeric scoring / 新依赖 /
+新 core object；`MIGRATION_PENDING` 未解除。
+
+验证：`test_tgt01_module_construction_contract` 23 OK / 全量 `unittest
+discover` **774 OK**（751 baseline + 23 E1）/ `git diff --check` clean / 干净
+tracked-tree worktree boundary passed / YAML 结构合法。审核方声明这两处同步后
+下一轮直接 **APPROVE PR #106 → 进入 PR E2 implementation**。
+
 ## 七、审核
 
 - 提交至 ChatGPT 网页版 `Biotech ideas` → `AI审核方案` 对话（Claude 通过浏览器

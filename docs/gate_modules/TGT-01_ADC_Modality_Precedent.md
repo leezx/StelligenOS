@@ -49,8 +49,11 @@ Fatal-first + cheap-first: **TGT-01 → TGT-05 → TGT-08 → TGT-02 → TGT-03 
 TGT-04 → TGT-06 → TGT-07**. TGT-01 is first as the *Module-architecture
 calibration case*: `PUBLIC_PRIMARY`, no CRC multi-omics download, no
 experiments, the simplest evidence classes, the fastest way to validate the
-full chain (`admissible raw evidence → atomic EvidencePackages → proposed
-CandidateGateAssessment → machine acceptance record → human-review surface`).
+full chain (`admissible raw evidence → atomic EvidencePackages → assessment
+proposal envelope → machine acceptance record → human-review surface →
+HUMAN_APPROVED CandidateGateAssessment`). The Module never produces the
+canonical `CandidateGateAssessment` — the human review surface does, on
+approval.
 
 ## The 17-item acceptance checklist
 
@@ -72,7 +75,7 @@ CandidateGateAssessment → machine acceptance record → human-review surface`)
 | 14 | **Human acceptance / review surface** | The human sees: proposed direction + strength + rationale; each EP's claim / source / `interpretation_boundary` (drill-down); the ladder rung per EP; `critical_unknowns`; the machine acceptance record. Human-only: whether the aggregate is scientifically right for TGT-01; whether a "same / adjacent target" call is right; final `HUMAN_APPROVED` → the assessment enters `ASSESSMENTS/<cand>/vNNN.json` and the MatrixView rebuilds (PR C). |
 | 15 | **Failure / UNKNOWN / conflict behaviour** | Retrieval failure → a machine reason, not a partial assessment. Insufficient evidence → `INCONCLUSIVE` / `UNKNOWN`, never `PASS`. No admissible evidence at all → `UNKNOWN` (*"...not KILL. A novel target is not disqualified by absence of precedent."*). Conflicting evidence → `CONFLICTING` with non-empty key evidence. Gap closable only by non-public data → `critical_unknown` resolution `EXPERIMENT_REQUIRED`, stop. **`UNKNOWN` is never silently `PASS` / `HOLD` / `KILL`** (§6.4). |
 | 16 | **Stop rule** | **Mandatory before any stop:** the same-target ADC programme inventory (active, approved *and* discontinued / failed) and the disclosed failure / discontinuation-reason sweep are complete — a positive ceiling does **not** license stopping, because item 8's target-attributable adverse pattern can only be seen after the failed-programme sweep (fatal-first). **Then** stop when *any* of: the TGT-01 ceiling is reached; marginal search can no longer change direction / strength; the critical unknown is `EXPERIMENT_REQUIRED`; the enumerated source space is exhausted. Bounds the "infinite evidence gathering" failure mode. |
-| 17 | **Downstream consumer / handoff** | Consumed by: the `MatrixView` cell `(candidate_id, TGT-01)` (PR C); the `ADC_TARGET_GATESET` decision layer that turns the eight TGT assessments into a Candidate-level `Decision` (PR B); the next Gate (`TGT-05`) as context only; experimental validation when `EXPERIMENT_REQUIRED`. This Module does **not** produce a Decision / `KILL`, write to another Gate's index or assessment, or modify the Matrix. |
+| 17 | **Downstream consumer / handoff** | The Module hands off a set of `EvidencePackage`s + one **assessment proposal envelope** to the human review surface (item 14). Only **after** `HUMAN_APPROVED` does the review surface construct the canonical `CandidateGateAssessment`, and *that* record is consumed by: the `MatrixView` cell `(candidate_id, TGT-01)` (PR C); the `ADC_TARGET_GATESET` decision layer that turns the eight TGT assessments into a Candidate-level `Decision` (PR B); the next Gate (`TGT-05`) as context only; experimental validation when `EXPERIMENT_REQUIRED`. The Module's own output never enters the `MatrixView` or the decision layer directly. This Module does **not** construct a `CandidateGateAssessment` or emit a `HUMAN_APPROVED` record, produce a Decision / `KILL`, write to another Gate's index or assessment, or modify the Matrix. |
 
 ## Deferred to PR E2+
 

@@ -273,6 +273,26 @@ class DrawingTests(unittest.TestCase):
         for n in range(1, 18):
             self.assertRegex(text, rf"\|\s*{n}\s*\|", f"drawing missing checklist row {n}")
 
+    def test_drawing_has_no_stale_proposed_candidategateassessment_wording(self):
+        # review round 3: the same proposal/canonical boundary blocker had two
+        # documentation residuals -- the Gate-ordering chain and the item-17 row
+        # must not describe the Module as producing a CandidateGateAssessment.
+        norm = _norm(DRAWING.read_text())
+        self.assertNotIn("proposed CandidateGateAssessment", norm)
+        # the ordering chain now names the proposal envelope and the terminal
+        # HUMAN_APPROVED canonical record
+        self.assertIn(
+            "atomic EvidencePackages -> assessment proposal envelope".replace("->", "→"),
+            norm,
+        )
+        self.assertIn("HUMAN_APPROVED CandidateGateAssessment", norm)
+        # item 17 makes the human-review hop explicit before MatrixView / decisions
+        self.assertIn("Only **after** `HUMAN_APPROVED`", norm)
+        self.assertIn(
+            "Module's own output never enters the `MatrixView` or the decision layer directly",
+            norm,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

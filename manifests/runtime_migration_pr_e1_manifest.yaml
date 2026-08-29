@@ -61,6 +61,17 @@ review_round_2:
       assessment.schema.json. pin names aligned to the schema required fields.
   tests_at_round_2: 22
   full_suite_at_round_2: 773
+review_round_3:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "c6cb838"
+  round_2_blocker: item 12 machine contract confirmed correct and locked by regression tests
+  scope: documentation-only residual of the same proposal/canonical boundary blocker; drawing only; no machine-contract / code / interface change
+  fix:
+    drawing_gate_ordering_chain: proposed CandidateGateAssessment -> assessment proposal envelope; chain terminates at human-review surface -> HUMAN_APPROVED CandidateGateAssessment; the Module never produces the canonical object
+    drawing_item_17_row: rewritten -- Module hands off EvidencePackages + proposal envelope to the human review surface; only after HUMAN_APPROVED does the review surface construct the canonical CandidateGateAssessment, and only that record feeds MatrixView / the decision layer; the Module's own output never enters MatrixView or the decision layer directly
+    drawing_test: added test_drawing_has_no_stale_proposed_candidategateassessment_wording
+  tests_at_round_3: 23
+  full_suite_at_round_3: 774
 deferred:
   mod_tgt01_implementation: "PR E2 (new top-level gate_modules/tgt01_adc_modality_precedent/; only after this contract is APPROVED)"
   retrieval_providers_and_datasets: "PR E2+"

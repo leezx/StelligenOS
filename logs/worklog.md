@@ -4437,3 +4437,35 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   干净 tracked-tree worktree boundary passed / YAML 结构合法。
 - Next：提交、推送、CI 绿后回 `AI审核方案` 贴第二轮复审（item 12 identity
   pins 摘要）。审核方声明下一轮目标直接 APPROVE PR #106 → 进入 PR E2。
+
+## 2026-08-29T13:25 EDT — Runtime Migration PR E1 第三轮修订（PR #106 @ c6cb838 REQUEST_CHANGES，docs-only 残留）
+
+- 审核方复审 c6cb838：item 12 machine contract 已正确（8 个 identity pin 全在、
+  omitted canonical fields 明确、regression test 锁住）。只剩 **同一 proposal /
+  canonical boundary blocker 在 human drawing 里的两处旧措辞**，docs-only，不动
+  machine contract。
+- Fix（只改 `docs/gate_modules/TGT-01_ADC_Modality_Precedent.md`）：
+  - Gate ordering 段的链条把 `proposed CandidateGateAssessment` 改成
+    `assessment proposal envelope`，并补上终点
+    `→ human-review surface → HUMAN_APPROVED CandidateGateAssessment`，
+    加一句"the Module never produces the canonical CandidateGateAssessment —
+    the human review surface does, on approval"。
+  - item 17 行重写：Module 交付 EvidencePackages + assessment proposal
+    envelope 给 human review surface；只有 HUMAN_APPROVED 之后 review surface
+    才构造 canonical CandidateGateAssessment，*那条记录*才被 MatrixView /
+    GateSet decision layer 消费；"the Module's own output never enters the
+    MatrixView or the decision layer directly"；this module does not construct
+    a CandidateGateAssessment or emit a HUMAN_APPROVED record。
+- test：新增 `test_drawing_has_no_stale_proposed_candidategateassessment_wording`
+  （drawing 归一化后不含 "proposed CandidateGateAssessment"；含
+  "atomic EvidencePackages → assessment proposal envelope"、
+  "HUMAN_APPROVED CandidateGateAssessment"、item 17 的
+  "Only after HUMAN_APPROVED" 与 "never enters the MatrixView ... directly"）。
+- 未动：E-1～E-4、item 09、item 12 machine contract、item 16、PR D parity、
+  repository boundary。仍无实现 / provider / runner / numeric scoring / 新依赖 /
+  新 core object；`MIGRATION_PENDING` 未解除。
+- 验证：`test_tgt01_module_construction_contract` 23 OK / 全量 `unittest
+  discover` **774 OK**（751 baseline + 23 E1）/ `git diff --check` clean /
+  干净 tracked-tree worktree boundary passed / YAML 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第三轮复审。审核方声明这两处
+  同步后下一轮直接 APPROVE PR #106 → 进入 PR E2 implementation。
