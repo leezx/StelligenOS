@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_e1
-status: pending_review
+status: approved
 scope: tgt01_mod_tgt01_construction_contract_drawing_validation_and_acceptance_checklist_only
 repository_boundary: software_only_external_data
 data_added: false
@@ -76,8 +76,13 @@ deferred:
   mod_tgt01_implementation: "PR E2 (new top-level gate_modules/tgt01_adc_modality_precedent/; only after this contract is APPROVED)"
   retrieval_providers_and_datasets: "PR E2+"
   other_seven_tgt_modules: "PR E2+ (TGT-05 -> TGT-08 -> TGT-02 -> TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)"
-chatgpt_review: PENDING
-approved_tip: null
+chatgpt_review: APPROVE
+approved_tip: 2596c96
+merge_commit: b20c021
+review_rounds: 4
+test_count_at_approval: 774
+approval_record_pr: task_20260829_runtime-migration-pr-e1-approval-record
+next_authorized_step: null  # PR E2 (MOD-TGT01 implementation) needs its own explicit go-ahead
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_tgt01_module_construction_contract.py' -v
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py'
