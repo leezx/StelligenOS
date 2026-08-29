@@ -4187,3 +4187,92 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   未解除（到 PR E）。下一步：PR D —— CRC-ADC-TARGET-GATESET-v1（`ADC_TARGET_GATESET`
   的 context-specific binding + TGT-01…TGT-08 Evidence Ladders / Gate contracts；
   需科学审核）。
+
+## 2026-08-28T22:30 EDT — Runtime Migration PR D 首版（CRC-ADC-TARGET-GATESET-v1）
+
+- 授权：用户"Runtime Migration PR A–D，逐一来做" + "继续直到完成所有 PR A-D"。
+  基线 `origin/main`（PR #103 merge 后）。
+- 两个 scoping 决策由审核方（ChatGPT `AI审核方案`）拍板：
+  - Decision A = A2′：PR D 携带 8 个 concrete three-rung Evidence Ladders 作为
+    proposal，科学审核在 PR #104 内完成；只冻结 evidence-class semantics /
+    ceilings / inference boundaries，不发明 numeric biological thresholds。
+    （A1 = 空壳、把科学合同 defer 到 PR E；A3 = 无来源发明——均否。）
+  - Decision B = B1：PR D 建立第一份 machine-readable TGT-01…TGT-08 roster；
+    CURRENT_SYSTEM v5 §6.4 是 ID/name/L04 ownership 的 frozen normative basis，
+    但无冻结文档给 per-Gate machine gate_version，故 PR D 初始化
+    `gate_version = "1.0"`（合同里明确非 copied from Blueprint prose）。
+    顺带锁死：`CRC-ADC-TARGET-GATESET-v1` 只是 program label 绝不进 gateset_id；
+    PR D 不建 primary Module，只冻结 `MOD-TGT0n` slot `primary_module_version
+    "0.0.0"`。
+- 交付：`src/contracts/crc_adc_target_gateset.yaml`（roster + 8 gate contracts +
+  8 Evidence Ladders + ADC_TARGET_GATESET@1.0 GateSet + INST-CRC-REFRACTORY-ADC-
+  TARGET-v1 + gateset_binding + 8 gate_binding；v5 §11.2 EVGAP→Gate inference
+  guard 写进 TGT-02/03/04）、`src/objects/crc_adc_target_gateset.py`
+  （`TgtGateSpec` / `TgtGateContract`（compose PR B `EvidenceLadder`，共享字段
+  校验 delegate 给 PR B `Gate`）/ `CrcAdcTargetGateSetV1`；只 import PR A/B/C）、
+  `tests/test_crc_adc_target_gateset.py`（27 tests：contract builds / roster
+  parity vs 冻结 v5 §6.4 / gate_binding parity vs 冻结 schema / no Module in
+  PR D / 逐对象 accept-reject / immutability + PR A/B/C untouched）、
+  `manifests/runtime_migration_pr_d_manifest.yaml`、`__init__.py` + 两个 README。
+- 未改：`data_layout/*`（未新增 schema）、PR A/B/C 文件、冻结文档、
+  `gate_system.yaml`、`src/capabilities/*`、既有测试。无 evaluator、无 Module、
+  无新 canonical gateset_id、无新依赖。`MIGRATION_PENDING` 未解除。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 743 OK
+  （716 baseline + 27 new）/ `git diff --check` clean / 干净 tracked-tree
+  worktree boundary passed / `crc_adc_target_gateset.yaml` 结构合法。
+- Next：提交、推送、开 PR #104、CI 绿后回 `AI审核方案` 请求审核（含 8 个 ladder
+  的科学审核）。
+
+## 2026-08-28T23:20 EDT — Runtime Migration PR D 科学审核第一轮修订（同一 PR #104）
+
+- Review input：ChatGPT `AI审核方案` 对 PR #104 @ `29d3def` 返回
+  `REQUEST_CHANGES`：**结构层 PASS**（A2′+B1、label 非 gateset_id、roster 锁死、
+  `0.0.0` Module slot、只复用 PR A/B/C）；**科学 ladder 层 6 组最小修改**，不加
+  numeric cutoff、不改冻结文档、不进 PR E。全在 `gate_contracts`：
+  1. TGT-01：adjacent-target ADC 从 INDIRECT_STRONG 降 WEAK；`fatal` 改为
+     "≥2 个独立 same-target ADC program 因一致 on-target toxicity 终止"
+     （single-product failure ≠ target-fatal）。
+  2. TGT-03/04 fatal 收窄，去掉偷偷的 universal density-range threshold。
+  3. TGT-05：target liability ≠ product therapeutic window；DIRECT 收为
+     ADC-specific，cross-modality 毒性下移 INDIRECT_STRONG；`allowed` 去
+     "or absence"（HPA negative ≠ safe）；`forbidden` 加 "negative atlas alone
+     ⇏ safety"。
+  4. TGT-06：internalization = antibody×epitope×context dependent；DIRECT →
+     "≥1 tested configuration"；`successful same-target ADC` 明确 INDIRECT_STRONG；
+     `fatal` 要求多个独立 configuration 均 fail。
+  5. TGT-07：quantified soluble antigen ≠ demonstrated sink；bare measurement
+     下移 INDIRECT_STRONG；DIRECT = documented PK/PD sink 或 TMDD 分析。
+  6. TGT-08：删除等价 FTO 的 "no viable design-around" fatal；保留唯一
+     "dominant well-protected competitor ADC" fatal。
+- 改动文件：`src/contracts/crc_adc_target_gateset.yaml`（6 gate_contracts）、
+  `tests/test_crc_adc_target_gateset.py`（+`LadderScienceRevisionTests` 7 tests：
+  全 8 gate 无 numeric cutoff + 逐条锁死 6 组修改）、handoff、worklog。未改
+  `src/objects/crc_adc_target_gateset.py`（shape 不变）、`data_layout/*`、
+  PR A/B/C、冻结文档。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 750 OK
+  （716 baseline + 34 new）/ `git diff --check` clean / 干净 tracked-tree
+  worktree boundary passed / YAML 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 请求复审（审核方预告：下一轮只复审
+  这 6 组，通过即 APPROVE PR #104 = v1.0 frozen ladders）。
+
+## 2026-08-28T23:55 EDT — Runtime Migration PR D 科学审核第二轮修订（同一 PR #104）
+
+- Review input：ChatGPT `AI审核方案` 对 PR #104 @ `10aa934` 返回
+  `REQUEST_CHANGES`：结构层继续 PASS；**TGT-01/03/04/06/07/08 六组全部接受**。
+  只剩 **TGT-05 `fatal_conditions` 一个 blocker**：单个 ADC construct 的
+  target-mediated toxicity 是 DIRECT evidence of ADC-relevant liability，但不是
+  target-wide fatal（可能 linker/payload/format 驱动）；fatal 必须是 convergent
+  target-mediated toxicity across materially distinct ADC constructs。
+- fix：TGT-05 `fatal_conditions` 两条 → 一条 convergent-across-materially-distinct-
+  constructs pattern，明确 "single ADC construct's toxicity ... is NOT
+  target-wide fatal"，去掉 "preclude an ADC therapeutic window"。测试加
+  `test_tgt05_fatal_requires_convergent_pattern_not_single_construct`。
+- 改动文件：`src/contracts/crc_adc_target_gateset.yaml`（仅 TGT-05
+  fatal_conditions）、`tests/test_crc_adc_target_gateset.py`（+1，35 PR D tests）、
+  handoff、worklog。未动其余 5 组 ladder、`src/objects/`、`data_layout/*`、
+  PR A/B/C、冻结文档。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 751 OK
+  （716 baseline + 35 new）/ `git diff --check` clean / 干净 tracked-tree
+  worktree boundary passed / YAML 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 请求复审（审核方预告：这一处修完即
+  APPROVE PR #104 = v1.0 frozen ladders）。

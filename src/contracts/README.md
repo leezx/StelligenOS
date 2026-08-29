@@ -88,3 +88,18 @@ index rows and *through* the canonical `CandidateGateAssessment` /
 canonical records, not merely because the indexes are mutually self-consistent.
 PR A's `evidence_refs` mechanism is the reusable-reference primitive and is not
 changed. There is no matrix-rebuild engine in the repo.
+
+Runtime Migration PR D adds `crc_adc_target_gateset.yaml` (registry) and
+`src/objects/crc_adc_target_gateset.py` for `CRC-ADC-TARGET-GATESET-v1` — the
+first machine-readable specialization of the canonical `ADC_TARGET_GATESET`
+(L04): the frozen TGT-01…TGT-08 roster (`gate_version` initialized at `"1.0"`,
+names from CURRENT_SYSTEM v5 §6.4), eight concrete Evidence Ladders (evidence-class
+semantics, ceilings and inference boundaries — no invented numeric thresholds,
+with the v5 §11.2 EVGAP→Gate inference guards baked into TGT-02/03/04), the
+`ADC_TARGET_GATESET@1.0` GateSet, and the `INST-CRC-REFRACTORY-ADC-TARGET-v1`
+Instantiation with its context-specific `gateset_binding` / `gate_binding`
+records (parity-checked against the frozen `data_layout/gate_binding.schema.yaml`).
+`CRC-ADC-TARGET-GATESET-v1` is a program label, never a `gateset_id`. No Evidence
+Production Module is created; each gate carries a `MOD-TGT0n` slot at `"0.0.0"`
+(declared, not built). The eight ladders are a proposal frozen by this PR's own
+scientific review.

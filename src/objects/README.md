@@ -43,4 +43,17 @@ serialized assessment; an EvidencePackage's `provenance.source_id` must be in
 the source index). They compute no direction, strength or decision. No JSON
 Schema is added under `data_layout/`.
 
+`crc_adc_target_gateset.py` (Runtime Migration PR D) holds
+`CRC-ADC-TARGET-GATESET-v1` — the first context-specific specialization of the
+canonical `ADC_TARGET_GATESET` (L04): `TgtGateSpec` (the frozen TGT-01…TGT-08
+roster, names from CURRENT_SYSTEM v5 §6.4, `gate_version` initialized at `"1.0"`),
+`TgtGateContract` (each gate's concrete three-rung Evidence Ladder plus
+`allowed_inference` / `forbidden_inference` / `unknown_behavior` /
+`fatal_conditions`; validation of the fields shared with PR B's `Gate` is
+delegated to `Gate`), and `CrcAdcTargetGateSetV1` (roster + `GateSet` +
+`Instantiation` + eight contracts, all over the same canonical
+`ADC_TARGET_GATESET`). `CRC-ADC-TARGET-GATESET-v1` is a program label, never a
+`gateset_id`. No Evidence Production Module is created — each gate carries only a
+`MOD-TGT0n` binding slot at version `"0.0.0"` (declared, not built).
+
 Object implementations must not become implicit data storage.
