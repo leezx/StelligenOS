@@ -190,6 +190,48 @@ no-live-provider 边界、no persistence、`MIGRATION_PENDING`、TGT-01
 `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
 `module.yaml` 结构合法。
 
+## 四之三、第二轮修订（PR #108 @ `decaec7` REQUEST_CHANGES）
+
+审核方复审 `decaec7`：上一轮 4 个 blocker 中 **#1 / #2 / #4 已关闭**，**#3 只关闭
+一半**。不重开 E2-1…E2-8，不改 Gate science。剩 2 个 deterministic-core 问题，
+都在 blocker 3 下：
+
+**3a — 仍是「复用 EP ID」而不是「复用 canonical EvidencePackage」。**
+`ExistingEvidenceLibraryPort.resolve(observation_id)` 之前只返回 `evidence_id`，
+`evidence.py` 随后仍无条件 `EvidencePackage(...)` 重建 body（same `evidence_id`、
+不同 immutable body → Evidence Library 最严重的 identity corruption）。
+**修**：port 改为 `resolve() -> EvidencePackage | None`，命中即**原样复用**该
+canonical package（不调 allocator、不建新 body），run result 只按 id 引用
+（`evidence_packages` 只放新建 body，`reused_evidence_ids` 列被引用的）。返回的
+package 若 `provenance.source_id` / `claim` / `candidate_refs` 与当前 observation
+不符 → HARD integrity failure，不静默复用。regression：复用时 allocator 未被调用；
+无重建 body；incompatible canonical EP → run rejected。
+
+**3b — hard identity/provenance failure 被错误降级成「accepted UNKNOWN」。**
+之前 identity/provenance 错误 → `rejected_records` → `emitted=[]` → `aggregate([])`
+→ UNKNOWN → `acceptance.evaluate` 看不到前面的 hard failure → 若 sweep complete
+就 `accepted=True`，产出「合法 UNKNOWN」。违反 E1 item 13 `on_failure: run
+rejected`。**修**：区分 A（合法「无证据」：无 precedent / 未解析 ADCdb discovery
+lead / source space 穷尽 → UNKNOWN 可成立）与 B（数据完整性错误：candidate↔program
+antigen misbinding / 声称 resolved 但 SourceResolver 找不到 / canonical source
+metadata 冲突 / canonical EP identity 冲突 → **MACHINE REJECT**，
+`proposal_envelope = None`）。`ClassifiedPrecedent` 加 `rejection_severity`
+（`HARD` / `SOFT`）；`Tgt01ModuleRunResult` 加 `hard_integrity_failures`；
+`acceptance.evaluate` 强制 `len(hard) == 0`，否则 `accepted = False`。
+regression：misbinding / 缺失 source / metadata 不符 / incompatible canonical EP
+各自 → run rejected；未解析 ADCdb-only lead 仍只是 retrieval lead，不失败整个 run。
+
+审核方明确接受的上一轮修改：canonical `target_identity` 成唯一 query identity；
+`program_target_identity` + `adjacency_basis` 进 audit trail；两条 frozen fatal
+branch 都实现；adverse pattern 按 same class + independent program_id 聚合，mixed
+class 不误杀；one observation → one `EmittedEvidence`；Gate-neutral EP 方向正确；
+no-live-provider / no-persistence / no-score / no-canonical-Assessment /
+`MIGRATION_PENDING` 不动。
+
+验证：全量 `unittest discover` **819 OK**（774 baseline + 45 E2）/
+`git diff --check` clean / 干净 tracked-tree worktree boundary passed /
+`module.yaml` 结构合法。
+
 ## 五、审核
 
 - 提交至 ChatGPT 网页版 `Biotech ideas` → `AI审核方案` 对话（Claude 通过浏览器

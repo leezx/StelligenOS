@@ -2,17 +2,18 @@
 classified records.
 
 * One observation -> one package (mapping keyed by observation, never by
-  program_id -- a program with two distinct primary-source observations gets
-  two packages).
-* An existing canonical package is REUSED by id (PR C reusable Evidence
-  Library); a new id is allocated only when the observation has never been
-  recorded.
+  program_id).
+* An observation already in the PR C Evidence Library is REUSED as its EXACT
+  canonical ``EvidencePackage`` -- no allocator call, no new body. A returned
+  package incompatible with the current observation is a HARD identity
+  integrity failure.
 * Provenance comes from the canonical ``SourceIndex`` record, not the provider's
-  raw fields; a record whose provider metadata disagrees is rejected.
-* The package carries observation-level meaning only. The TGT-01 evidence
-  ceiling, allowed / forbidden inference and Direction x Strength live in the
-  proposal / assessment layer, never on the package.
-* ``(source_id, claim)`` duplicates are dropped.
+  raw fields; an unresolved id or a metadata conflict on a record the provider
+  claimed ``primary_source_resolved=True`` is a HARD provenance integrity
+  failure (E1 item 13 on_failure -> the run is rejected).
+* The package carries observation-level meaning only. The TGT-01 ceiling,
+  inference and Direction x Strength live in the proposal / assessment layer.
+* ``(source_id, claim)`` duplicates are dropped (a SOFT drop).
 """
 
 from __future__ import annotations
@@ -30,8 +31,6 @@ from .ports import (
     SourceResolverPort,
 )
 
-# Neutral, observation-level "what this fact does not touch" -- true of any ADC
-# program fact regardless of which Gate reads it.
 _NEUTRAL_DOES_NOT_SUPPORT: tuple[str, ...] = (
     "antigen expression or malignant-cell coverage in any indication",
     "treatment / metastatic persistence of the antigen",
@@ -46,8 +45,6 @@ _NEUTRAL_LIMITATIONS: tuple[str, ...] = (
     "Gate-relative interpretation (ladder rung, role, ceiling, Direction x "
     "Strength) is applied by the assessment layer, not this package",
 )
-
-# Neutral, observation-level ceiling per directness -- NOT the TGT-01 gate ceiling.
 _NEUTRAL_CEILING = {
     "DIRECT": "a clinical-stage ADC development fact for the named antigen",
     "INDIRECT_STRONG": "an early-clinical ADC development fact for the named antigen",
@@ -70,7 +67,6 @@ def _directly_supports(item: ClassifiedPrecedent) -> tuple[str, ...]:
             f"discontinued; the primary source does not attribute the failure to "
             f"the target",
         )
-    # SUPPORTING -- a neutral development fact
     if r.target_relation == "ADJACENT_TARGET":
         return (
             f"an ADC targeting antigen {antigen!r} (biologically adjacent to the "
@@ -86,6 +82,45 @@ def _directly_supports(item: ClassifiedPrecedent) -> tuple[str, ...]:
     )
 
 
+def _neutral_result(item: ClassifiedPrecedent) -> str:
+    r = item.record
+    return (
+        f"{r.target_relation} ADC program {r.program_id!r} against "
+        f"{r.program_target_identity!r} at {r.program_stage}/{r.program_status}"
+    )
+
+
+def _as_rejected(
+    item: ClassifiedPrecedent, reason: str, *, severity: str
+) -> ClassifiedPrecedent:
+    return ClassifiedPrecedent(
+        record=item.record,
+        admissible=False,
+        rejection_reason=reason,
+        rejection_severity=severity,
+        ladder_rung="",
+        evidence_class="",
+        direction_role="CONTEXTUAL",
+        contributes_adverse_signal=False,
+        adverse_class="",
+    )
+
+
+def _reused_package_is_compatible(
+    existing: EvidencePackage, item: ClassifiedPrecedent, candidate_id: str
+) -> str:
+    """Return "" if the canonical package matches this observation, else why not."""
+
+    r = item.record
+    if existing.provenance.get("source_id") != r.source_id:
+        return "canonical EvidencePackage provenance.source_id differs from the observation"
+    if existing.claim != r.claim:
+        return "canonical EvidencePackage claim differs from the observation"
+    if candidate_id not in tuple(existing.candidate_refs):
+        return "canonical EvidencePackage candidate_refs do not include this candidate"
+    return ""
+
+
 def build_evidence_packages(
     classified: list[ClassifiedPrecedent],
     *,
@@ -93,13 +128,15 @@ def build_evidence_packages(
     allocator: EvidenceIdAllocatorPort,
     source_resolver: SourceResolverPort,
     evidence_library: ExistingEvidenceLibraryPort,
-) -> tuple[list[EmittedEvidence], list[ClassifiedPrecedent], list[tuple[str, str]]]:
+) -> tuple[
+    list[EmittedEvidence],
+    list[ClassifiedPrecedent],
+    list[tuple[str, str]],
+]:
     """Return (emitted, extra_rejections, dropped_duplicates).
 
-    Only admissible records become packages, one per observation. A record
-    whose provenance cannot be resolved (or disagrees with the canonical
-    SourceIndex record) is moved to ``extra_rejections``. A ``(source_id,
-    claim)`` already emitted is dropped.
+    ``extra_rejections`` each carry a ``rejection_severity`` -- a HARD one
+    rejects the whole run.
     """
 
     emitted: list[EmittedEvidence] = []
@@ -117,8 +154,10 @@ def build_evidence_packages(
         if canonical is None:
             extra_rejections.append(
                 _as_rejected(
-                    item, f"provenance.source_id {record.source_id} is not a "
-                    "registered primary source"
+                    item,
+                    f"provenance.source_id {record.source_id} claimed resolved but "
+                    "is not in the canonical SourceIndex",
+                    severity="HARD",
                 )
             )
             continue
@@ -132,6 +171,7 @@ def build_evidence_packages(
                     item,
                     "provider provenance disagrees with the canonical SourceIndex "
                     f"record for {record.source_id}",
+                    severity="HARD",
                 )
             )
             continue
@@ -143,14 +183,37 @@ def build_evidence_packages(
         seen_source_claim.add(key)
 
         existing = evidence_library.resolve(record.observation_id)
-        reused = existing is not None
-        evidence_id = existing if reused else allocator.next_evidence_id()
-        if not reused and evidence_id in prior_ids:
+        if existing is not None:
+            why = _reused_package_is_compatible(
+                existing, item, module_input.candidate_id
+            )
+            if why:
+                extra_rejections.append(
+                    _as_rejected(
+                        item,
+                        f"Evidence Library returned an incompatible canonical "
+                        f"EvidencePackage for observation {record.observation_id}: "
+                        f"{why}",
+                        severity="HARD",
+                    )
+                )
+                continue
+            emitted.append(
+                EmittedEvidence(
+                    classified=item,
+                    evidence_id=existing.evidence_id,
+                    package=existing,  # the EXACT canonical package, unchanged
+                    reused=True,
+                )
+            )
+            continue
+
+        evidence_id = allocator.next_evidence_id()
+        if evidence_id in prior_ids:
             raise ValueError(
                 f"allocator returned {evidence_id}, which is already an "
                 "existing_evidence_id for this (candidate, gate)"
             )
-
         package = EvidencePackage(
             evidence_id=evidence_id,
             schema_version=1,
@@ -196,29 +259,8 @@ def build_evidence_packages(
         )
         emitted.append(
             EmittedEvidence(
-                classified=item, evidence_id=evidence_id, package=package, reused=reused
+                classified=item, evidence_id=evidence_id, package=package, reused=False
             )
         )
 
     return emitted, extra_rejections, dropped
-
-
-def _neutral_result(item: ClassifiedPrecedent) -> str:
-    r = item.record
-    return (
-        f"{r.target_relation} ADC program {r.program_id!r} against "
-        f"{r.program_target_identity!r} at {r.program_stage}/{r.program_status}"
-    )
-
-
-def _as_rejected(item: ClassifiedPrecedent, reason: str) -> ClassifiedPrecedent:
-    return ClassifiedPrecedent(
-        record=item.record,
-        admissible=False,
-        rejection_reason=reason,
-        ladder_rung="",
-        evidence_class="",
-        direction_role="CONTEXTUAL",
-        contributes_adverse_signal=False,
-        adverse_class="",
-    )

@@ -330,6 +330,7 @@ class ClassifiedPrecedent:
     record: NormalizedPrecedentRecord
     admissible: bool
     rejection_reason: str
+    rejection_severity: str  # "" when admissible; else "HARD" | "SOFT"
     ladder_rung: str  # "", DIRECT, INDIRECT_STRONG, WEAK
     evidence_class: str
     direction_role: str  # SUPPORTING, ADVERSE_CANDIDATE, CONTEXTUAL
@@ -349,8 +350,12 @@ class ClassifiedPrecedent:
             if self.ladder_rung not in GRADED_STRENGTHS:
                 raise ValueError("an admissible record has a graded directness rung")
             _text(self.evidence_class, "evidence_class")
-        elif self.ladder_rung != "":
-            raise ValueError("a rejected record has no ladder rung")
+            if self.rejection_severity:
+                raise ValueError("an admissible record has no rejection_severity")
+        else:
+            if self.ladder_rung != "":
+                raise ValueError("a rejected record has no ladder rung")
+            _choice(self.rejection_severity, ("HARD", "SOFT"), "rejection_severity")
         if self.admissible and self.rejection_reason:
             raise ValueError("an admissible record carries no rejection_reason")
         if not self.admissible and not self.rejection_reason:
@@ -380,8 +385,10 @@ class EmittedEvidence:
 
     The mapping is one observation -> one package (never keyed by program_id --
     a program with two distinct primary-source observations gets two packages).
-    ``reused`` is True when the id came from the existing Evidence Library
-    rather than the allocator.
+    When ``reused`` is True the observation was already in the PR C Evidence
+    Library: ``package`` is that EXACT canonical EvidencePackage, unchanged (no
+    body was re-created), the allocator was NOT called, and the run result
+    references it by id only.
     """
 
     classified: ClassifiedPrecedent
@@ -533,12 +540,13 @@ class Tgt01ModuleRunResult:
     module_version: str
     gate_id: str
     run_id: str
-    evidence_packages: tuple[EvidencePackage, ...]
-    reused_evidence_ids: tuple[str, ...]
+    evidence_packages: tuple[EvidencePackage, ...]  # newly created only
+    reused_evidence_ids: tuple[str, ...]  # referenced from the Evidence Library, no body here
     proposal_envelope: AssessmentProposalEnvelope | None
     machine_acceptance: MachineAcceptanceRecord
     sweep_completion: SweepCompletionRecord
     rejected_records: tuple[tuple[str, str], ...]
+    hard_integrity_failures: tuple[tuple[str, str], ...]
 
     def __post_init__(self) -> None:
         if self.module_id != MODULE_ID:
@@ -553,10 +561,19 @@ class Tgt01ModuleRunResult:
         ep_ids = [ep.evidence_id for ep in self.evidence_packages]
         if len(ep_ids) != len(set(ep_ids)):
             raise ValueError("evidence_packages must not repeat an evidence_id")
+        # reused ids are referenced by id only -- their bodies live in the
+        # Evidence Library, NOT in evidence_packages (no copy / re-create).
         for reused in self.reused_evidence_ids:
             _pattern(reused, _EP_ID, "reused_evidence_ids[]")
-            if reused not in ep_ids:
-                raise ValueError("a reused_evidence_id must be in evidence_packages")
+            if reused in ep_ids:
+                raise ValueError(
+                    "a reused_evidence_id must NOT also appear as a re-created body "
+                    "in evidence_packages"
+                )
+        resolvable = set(ep_ids) | set(self.reused_evidence_ids)
+        for program_id, reason in self.hard_integrity_failures:
+            _text(program_id, "hard_integrity_failures.program_id")
+            _text(reason, "hard_integrity_failures.reason")
         if self.proposal_envelope is not None and not isinstance(
             self.proposal_envelope, AssessmentProposalEnvelope
         ):
@@ -572,10 +589,19 @@ class Tgt01ModuleRunResult:
             raise ValueError("a proposal envelope requires an accepted machine record")
         if self.proposal_envelope is None and self.machine_acceptance.accepted:
             raise ValueError("an accepted machine record must carry a proposal envelope")
-        # every proposal evidence_ref points at an emitted package
+        # a hard identity / provenance integrity failure rejects the whole run
+        # (E1 item 13 on_failure) -- it is never washed into an accepted UNKNOWN.
+        if self.hard_integrity_failures and (
+            self.machine_acceptance.accepted or self.proposal_envelope is not None
+        ):
+            raise ValueError(
+                "a hard integrity failure must reject the run (no proposal envelope)"
+            )
+        # every proposal evidence_ref resolves to an emitted OR reused package
         if self.proposal_envelope is not None:
             for evidence_id, _ in self.proposal_envelope.evidence_refs:
-                if evidence_id not in ep_ids:
+                if evidence_id not in resolvable:
                     raise ValueError(
-                        "proposal evidence_ref does not resolve to an emitted package"
+                        "proposal evidence_ref does not resolve to an emitted "
+                        "or reused package"
                     )

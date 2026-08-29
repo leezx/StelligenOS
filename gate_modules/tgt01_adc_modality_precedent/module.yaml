@@ -33,7 +33,8 @@ module:
     - input contract validation (no implicit default scientific context; the candidate's target_identity is the single authoritative target)
     - candidate <-> program target-identity binding (a SAME_TARGET record whose program targets a different antigen is evidence misbinding and is rejected; an ADJACENT_TARGET record carries an auditable adjacency_basis)
     - normalized precedent record admissibility + frozen ladder-rung classification
-    - Gate-NEUTRAL EvidencePackage construction (PR A evidence_package shape); one package per observation; an existing canonical package is reused by id via the Evidence Library port; provenance comes from the resolved canonical SourceIndex record
+    - Gate-NEUTRAL EvidencePackage construction (PR A evidence_package shape); one package per observation; an observation already in the Evidence Library is reused as its EXACT canonical package (no allocator call, no new body); provenance comes from the resolved canonical SourceIndex record
+    - "hard identity / provenance integrity gate: a candidate<->program antigen misbinding, a claimed-resolved source missing from the canonical SourceIndex, a canonical-source metadata conflict, or an incompatible canonical EvidencePackage rejects the WHOLE run (E1 item 13 on_failure) -- it never degrades to an accepted UNKNOWN"
     - "target-attributable failure-pattern detection (frozen item 08, BOTH branches -- target-mediated toxicity AND intrinsically unachievable therapeutic window; a pattern needs >= 2 independent same-target programs failing for the SAME frozen class)"
     - deterministic Direction x Strength aggregation (E1 semantics; Strength orthogonal to Direction; no fourth ladder)
     - machine acceptance record (E1 item 13) + stop-rule completion prerequisites (E1 item 16)
@@ -55,7 +56,7 @@ module:
     - name: SourceResolverPort
       role: resolves a provenance.source_id to its canonical SourceIndex record; an unresolved id (incl. an ADCdb-only lead) cannot establish a ladder rung, and a provider record whose metadata disagrees with the canonical record is rejected
     - name: ExistingEvidenceLibraryPort
-      role: read-only lookup by observation_id into the PR C reusable Evidence Library; an existing canonical EvidencePackage is reused by id, never copied or re-created
+      role: read-only lookup by observation_id into the PR C reusable Evidence Library; returns the EXACT canonical EvidencePackage, which is reused unchanged (no allocator call, no re-created body); an incompatible returned package is a hard integrity failure
 
   boundary_flags:
     performs_network_io: false

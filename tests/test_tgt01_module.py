@@ -39,8 +39,10 @@ from gate_modules.tgt01_adc_modality_precedent.contracts import (
 class FakeAllocator:
     def __init__(self, start: int = 1) -> None:
         self._n = start - 1
+        self.calls = 0
 
     def next_evidence_id(self) -> str:
+        self.calls += 1
         self._n += 1
         return f"EP-{self._n:08d}"
 
@@ -85,11 +87,49 @@ class FakeSourceResolver:
 
 
 class FakeEvidenceLibrary:
-    def __init__(self, known: dict[str, str] | None = None) -> None:
+    """Maps observation_id -> the EXACT canonical EvidencePackage already recorded."""
+
+    def __init__(self, known: dict[str, EvidencePackage] | None = None) -> None:
         self._known = known or {}
 
-    def resolve(self, observation_id: str) -> str | None:
+    def resolve(self, observation_id: str) -> EvidencePackage | None:
         return self._known.get(observation_id)
+
+
+def _canonical_ep(
+    evidence_id: str,
+    *,
+    record: NormalizedPrecedentRecord | None = None,
+    claim: str | None = None,
+    source_id: str = "SRC-00000001",
+    candidate_id: str = "CAND-L04-000123",
+) -> EvidencePackage:
+    """A minimal valid PR A EvidencePackage standing in for a library entry."""
+
+    r = record
+    return EvidencePackage(
+        evidence_id=evidence_id,
+        schema_version=1,
+        claim=claim if claim is not None else (r.claim if r else "canonical claim"),
+        measurement={"type": "adc_program_fact_observation", "analyte": "TARGET_A",
+                     "readout": "APPROVED/ACTIVE", "result": "fact", "unit": ""},
+        candidate_refs=(candidate_id,),
+        study_context={"indication": "na", "treatment_state": "na", "sample_type": "na"},
+        provenance={
+            "source_id": r.source_id if r else source_id,
+            "source_type": "REGULATORY",
+            "source_identifier": "FDA-BLA-0001",
+            "locator": "",
+            "retrieved_at": "2025-06-01",
+        },
+        interpretation_boundary={
+            "directly_supports": ("a prior ADC development fact",),
+            "does_not_support": ("anything Gate-relative",),
+            "limitations": ("observation-level only",),
+            "evidence_ceiling": "an ADC development fact for the named antigen",
+        },
+        derivation={"module_run_id": "RUN-EARLIER", "code_commit": "cafe"},
+    )
 
 
 _SWEEP_OK = SweepCompletionRecord(
@@ -160,17 +200,23 @@ def _adverse(program_id: str, source_id: str, cls: str, **overrides: object):
     return _record(**kwargs)
 
 
-def _run(records, sweep=_SWEEP_OK, *, unresolved=None, mismatch=None,
-         library=None, module_input=None):
-    return run(
+def _run_parts(records, sweep=_SWEEP_OK, *, unresolved=None, mismatch=None,
+               library=None, module_input=None, allocator=None):
+    alloc = allocator or FakeAllocator()
+    result = run(
         module_input or _input(),
         provider=_Provider(records, sweep),
-        evidence_id_allocator=FakeAllocator(),
+        evidence_id_allocator=alloc,
         source_resolver=FakeSourceResolver(
             records, unresolved=unresolved, mismatch=mismatch
         ),
         evidence_library=library or FakeEvidenceLibrary(),
     )
+    return result, alloc
+
+
+def _run(*args, **kwargs):
+    return _run_parts(*args, **kwargs)[0]
 
 
 class _Provider:
@@ -305,15 +351,14 @@ class UnknownAndFatalPatternTests(unittest.TestCase):
 # --- candidate <-> target identity binding (blocker 1) ---------------------
 
 class TargetIdentityBindingTests(unittest.TestCase):
-    def test_same_target_record_for_a_different_antigen_is_rejected(self) -> None:
+    def test_same_target_record_for_a_different_antigen_rejects_the_run(self) -> None:
+        # a candidate <-> program antigen misbinding is a HARD integrity failure:
+        # E1 item 13 on_failure -> the run is rejected, never an accepted UNKNOWN.
         res = _run([_record(target_relation="SAME_TARGET",
                             program_target_identity="TROP2")])
-        self.assertEqual(len(res.evidence_packages), 0)
-        self.assertTrue(
-            any("misbinding" in why for _, why in res.rejected_records)
-        )
-        self.assertEqual(res.proposal_envelope.proposed_direction, "INCONCLUSIVE")
-        self.assertEqual(res.proposal_envelope.proposed_strength, "UNKNOWN")
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertIsNone(res.proposal_envelope)
+        self.assertTrue(any("misbinding" in why for _, why in res.hard_integrity_failures))
 
     def test_adjacent_evidence_package_recovers_the_actual_antigen_and_basis(self) -> None:
         res = _run([_record(target_relation="ADJACENT_TARGET",
@@ -389,32 +434,55 @@ class GateNeutralEvidenceTests(unittest.TestCase):
         env = _run([_record()]).proposal_envelope
         self.assertEqual(env.evidence_ceiling, TGT01_EVIDENCE_CEILING)
 
-    def test_an_existing_library_package_is_reused_by_id_not_reallocated(self) -> None:
-        rec = _record(observation_id="OBS-REUSE")
-        res = _run([rec], library=FakeEvidenceLibrary({"OBS-REUSE": "EP-00007777"}))
-        self.assertEqual(len(res.evidence_packages), 1)
-        self.assertEqual(res.evidence_packages[0].evidence_id, "EP-00007777")
+    def test_an_existing_library_package_is_reused_unchanged_not_reconstructed(self) -> None:
+        rec = _record(observation_id="OBS-REUSE", source_id="SRC-00000001",
+                      claim="the canonical observation claim")
+        canonical = _canonical_ep("EP-00007777", record=rec)
+        res, alloc = _run_parts(
+            [rec], library=FakeEvidenceLibrary({"OBS-REUSE": canonical})
+        )
+        self.assertEqual(alloc.calls, 0)  # allocator NOT called for a reused observation
+        self.assertEqual(res.evidence_packages, ())  # no re-created body
         self.assertEqual(res.reused_evidence_ids, ("EP-00007777",))
+        self.assertIn(
+            "EP-00007777", [e for e, _ in res.proposal_envelope.evidence_refs]
+        )
 
-    def test_provenance_comes_from_the_canonical_source_record(self) -> None:
+    def test_incompatible_canonical_ep_is_a_hard_integrity_failure(self) -> None:
+        rec = _record(observation_id="OBS-BAD", claim="observation claim A")
+        wrong = _canonical_ep("EP-00007777", claim="a completely different claim")
+        res = _run([rec], library=FakeEvidenceLibrary({"OBS-BAD": wrong}))
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertIsNone(res.proposal_envelope)
+        self.assertTrue(
+            any("incompatible canonical" in why for _, why in res.hard_integrity_failures)
+        )
+
+    def test_canonical_source_metadata_mismatch_rejects_the_run(self) -> None:
         res = _run([_record(source_id="SRC-00000009")], mismatch={"SRC-00000009"})
-        self.assertEqual(len(res.evidence_packages), 0)
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertIsNone(res.proposal_envelope)
         self.assertTrue(
-            any("disagrees with the canonical" in why for _, why in res.rejected_records)
+            any("disagrees with the canonical" in why
+                for _, why in res.hard_integrity_failures)
         )
 
-    def test_unresolved_source_id_is_rejected(self) -> None:
+    def test_claimed_resolved_source_missing_from_the_index_rejects_the_run(self) -> None:
         res = _run([_record(source_id="SRC-00000009")], unresolved={"SRC-00000009"})
-        self.assertEqual(len(res.evidence_packages), 0)
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertIsNone(res.proposal_envelope)
         self.assertTrue(
-            any("not a registered" in why for _, why in res.rejected_records)
+            any("not in the canonical SourceIndex" in why
+                for _, why in res.hard_integrity_failures)
         )
 
-    def test_unresolved_adcdb_only_lead_never_establishes_a_rung(self) -> None:
+    def test_unresolved_adcdb_only_lead_is_a_soft_drop_not_a_run_failure(self) -> None:
         lead = _record(primary_source_resolved=False,
                        claim="ADCdb inventory row, not yet resolved to a primary source")
         res = _run([lead])
         self.assertEqual(len(res.evidence_packages), 0)
+        self.assertEqual(res.hard_integrity_failures, ())
+        self.assertTrue(res.machine_acceptance.accepted)
         self.assertEqual(res.proposal_envelope.proposed_strength, "UNKNOWN")
         self.assertTrue(
             any("unresolved primary source" in why for _, why in res.rejected_records)

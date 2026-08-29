@@ -4571,3 +4571,36 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
   `module.yaml` 结构合法。
 - Next：提交、推送、CI 绿后回 `AI审核方案` 贴第一轮复审（4 处 fix 摘要）。
+
+## 2026-08-29T15:40 EDT — Runtime Migration PR E2 第二轮修订（PR #108 @ decaec7 REQUEST_CHANGES）
+
+- 审核方复审 decaec7：上一轮 4 个 blocker 中 **#1 / #2 / #4 已关闭**，**#3 只
+  关闭一半**。不重开 E2-1…E2-8、不改 Gate science。剩 2 个 deterministic-core
+  问题，都在 blocker 3 下。
+- 3a — 仍是「复用 EP ID」不是「复用 canonical EvidencePackage」。port 只返回
+  `evidence_id`，`evidence.py` 仍无条件 `EvidencePackage(...)` 重建 body（same
+  id、不同 immutable body = Evidence Library identity corruption）。修：
+  `ExistingEvidenceLibraryPort.resolve() -> EvidencePackage | None`，命中即原样
+  复用（不调 allocator、不建新 body），run result 只按 id 引用
+  （`evidence_packages` 只放新建 body，`reused_evidence_ids` 列被引用的）；返回
+  package 的 `provenance.source_id` / `claim` / `candidate_refs` 与 observation
+  不符 → HARD integrity failure。
+- 3b — hard identity/provenance failure 被错误降级成「accepted UNKNOWN」。之前
+  identity/provenance 错误 → rejected_records → emitted=[] → aggregate([]) →
+  UNKNOWN → acceptance 看不到 hard failure → sweep complete 就 accepted=True。
+  违反 E1 item 13 `on_failure: run rejected`。修：区分 A（合法「无证据」→
+  UNKNOWN 可成立）与 B（数据完整性错误：candidate↔program antigen misbinding /
+  声称 resolved 但 SourceResolver 找不到 / canonical source metadata 冲突 /
+  canonical EP identity 冲突 → MACHINE REJECT，proposal_envelope=None）。
+  `ClassifiedPrecedent` 加 `rejection_severity`（HARD/SOFT）；
+  `Tgt01ModuleRunResult` 加 `hard_integrity_failures`；`acceptance.evaluate`
+  强制 `len(hard)==0`。未解析 ADCdb-only lead 仍是 SOFT drop、不失败整个 run。
+- 审核方明确接受上一轮：canonical target_identity 唯一 query identity；
+  program_target_identity + adjacency_basis 进 audit trail；两条 frozen fatal
+  branch；adverse pattern 按 same class + independent program_id 聚合；one
+  observation → one EmittedEvidence；Gate-neutral EP 方向正确；no-live-provider /
+  no-persistence / no-score / no-canonical / MIGRATION_PENDING 不动。
+- 验证：全量 `unittest discover` **819 OK**（774 baseline + 45 E2）/
+  `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
+  `module.yaml` 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第二轮复审（3a / 3b 摘要）。

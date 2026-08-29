@@ -37,11 +37,14 @@ def _directness_rung(stage: str) -> str:
     return "WEAK"  # PRECLINICAL / PATENT_OR_DISCLOSURE
 
 
-def _reject(record: NormalizedPrecedentRecord, reason: str) -> ClassifiedPrecedent:
+def _reject(
+    record: NormalizedPrecedentRecord, reason: str, *, severity: str = "SOFT"
+) -> ClassifiedPrecedent:
     return ClassifiedPrecedent(
         record=record,
         admissible=False,
         rejection_reason=reason,
+        rejection_severity=severity,
         ladder_rung="",
         evidence_class="",
         direction_role="CONTEXTUAL",
@@ -82,6 +85,7 @@ def classify_record(
                 f"{record.program_target_identity!r}, not the candidate's "
                 f"canonical target {canonical_target_identity!r} (evidence "
                 "misbinding)",
+                severity="HARD",
             )
     else:  # ADJACENT_TARGET
         if program_target == canonical_target_identity.strip():
@@ -89,6 +93,7 @@ def classify_record(
                 record,
                 "ADJACENT_TARGET record targets the candidate's own canonical "
                 "target antigen; the adjacency label is wrong",
+                severity="HARD",
             )
 
     is_adverse_candidate = record.is_target_attributable_failure
@@ -102,6 +107,7 @@ def classify_record(
             record=record,
             admissible=True,
             rejection_reason="",
+            rejection_severity="",
             ladder_rung=_directness_rung(record.program_stage),
             evidence_class=(
                 "discontinued same-target ADC program with a disclosed "
@@ -120,6 +126,7 @@ def classify_record(
             record=record,
             admissible=True,
             rejection_reason="",
+            rejection_severity="",
             ladder_rung=_directness_rung(record.program_stage),
             evidence_class=(
                 "discontinued ADC program; failure not attributed to the target "
@@ -145,6 +152,7 @@ def classify_record(
                 record=record,
                 admissible=True,
                 rejection_reason="",
+                rejection_severity="",
                 ladder_rung="DIRECT",
                 evidence_class=(
                     "approved / late-clinical (phase 2 or 3) ADC against the "
@@ -159,6 +167,7 @@ def classify_record(
                 record=record,
                 admissible=True,
                 rejection_reason="",
+                rejection_severity="",
                 ladder_rung="INDIRECT_STRONG",
                 evidence_class="early-clinical (phase 1) ADC against the same target antigen",
                 direction_role="SUPPORTING",
@@ -170,6 +179,7 @@ def classify_record(
                 record=record,
                 admissible=True,
                 rejection_reason="",
+                rejection_severity="",
                 ladder_rung="WEAK",
                 evidence_class="preclinical-only ADC constructs against the target",
                 direction_role="SUPPORTING",
@@ -180,6 +190,7 @@ def classify_record(
             record=record,
             admissible=True,
             rejection_reason="",
+            rejection_severity="",
             ladder_rung="WEAK",
             evidence_class=(
                 "patents or company disclosures naming the target with no clinical data"
@@ -197,6 +208,7 @@ def classify_record(
             record=record,
             admissible=True,
             rejection_reason="",
+            rejection_severity="",
             ladder_rung="WEAK",
             evidence_class=(
                 "approved or clinical-stage ADC against a biologically adjacent "

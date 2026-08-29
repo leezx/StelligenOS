@@ -79,18 +79,22 @@ def run(
     )
     outcome = _aggregate.aggregate(emitted)
 
+    all_rejections = [c for c in classified if not c.admissible] + extra_rejections
     rejected_records: list[tuple[str, str]] = [
-        (c.record.program_id, c.rejection_reason)
-        for c in classified
-        if not c.admissible
+        (c.record.program_id, c.rejection_reason) for c in all_rejections
     ]
-    rejected_records.extend(
-        (c.record.program_id, c.rejection_reason) for c in extra_rejections
-    )
     rejected_records.extend(dropped)
+    hard_integrity_failures: list[tuple[str, str]] = [
+        (c.record.program_id, c.rejection_reason)
+        for c in all_rejections
+        if c.rejection_severity == "HARD"
+    ]
 
     checks, reasons = acceptance.evaluate(
-        emitted=emitted, outcome=outcome, sweep=sweep
+        emitted=emitted,
+        outcome=outcome,
+        sweep=sweep,
+        hard_integrity_failures=hard_integrity_failures,
     )
 
     proposal_envelope: AssessmentProposalEnvelope | None = None
@@ -133,10 +137,12 @@ def run(
         module_version=MODULE_VERSION,
         gate_id=GATE_ID,
         run_id=run_id,
-        evidence_packages=tuple(e.package for e in emitted),
+        # newly-created bodies only; a reused observation is referenced by id.
+        evidence_packages=tuple(e.package for e in emitted if not e.reused),
         reused_evidence_ids=tuple(e.evidence_id for e in emitted if e.reused),
         proposal_envelope=proposal_envelope,
         machine_acceptance=machine_acceptance,
         sweep_completion=sweep,
         rejected_records=tuple(rejected_records),
+        hard_integrity_failures=tuple(hard_integrity_failures),
     )

@@ -18,6 +18,7 @@ def evaluate(
     emitted: list[EmittedEvidence],
     outcome: AggregationOutcome,
     sweep: SweepCompletionRecord,
+    hard_integrity_failures: list[tuple[str, str]],
 ) -> tuple[list[tuple[str, bool]], list[str]]:
     """Return (ordered checks, failure reasons). ``accepted`` is ``all(ok)``."""
 
@@ -28,6 +29,15 @@ def evaluate(
         checks.append((name, ok))
         if not ok:
             reasons.append(why)
+
+    # item 13 on_failure -- a hard identity / provenance integrity failure
+    # rejects the WHOLE run; it is never washed into an accepted UNKNOWN.
+    record(
+        "no_hard_identity_or_provenance_integrity_failure",
+        not hard_integrity_failures,
+        "hard identity / provenance integrity failure(s): "
+        + "; ".join(f"{pid}: {why}" for pid, why in hard_integrity_failures),
+    )
 
     # item 13 -- one package per admissible observation (never program-keyed).
     ep_ids = [e.evidence_id for e in emitted]

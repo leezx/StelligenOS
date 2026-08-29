@@ -108,6 +108,36 @@ review_round_1:
       duplicate (source_id, claim) is cleanly dropped.
   tests_at_round_1: 44
   full_suite_at_round_1: 818
+review_round_2:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "decaec7"
+  round_1_status: blockers 1 / 2 / 4 confirmed closed; blocker 3 half closed
+  scope: 2 remaining deterministic-core issues, both under blocker 3; E2-1..E2-8, Gate science, repository layout, MIGRATION_PENDING and the 1.0.0 direction all unchanged
+  fixes:
+    blocker_3a_true_canonical_ep_reuse: >-
+      ExistingEvidenceLibraryPort.resolve now returns the EXACT canonical
+      EvidencePackage (not just an id). When it resolves, the module reuses that
+      package unchanged -- no allocator call, no new EvidencePackage body -- and
+      the run result references it by id only (evidence_packages holds
+      newly-created bodies only; reused_evidence_ids names the referenced ones).
+      A returned package whose provenance.source_id / claim / candidate_refs are
+      incompatible with the current observation is a HARD integrity failure, not
+      a silent reuse. Regressions: allocator not called on reuse; no re-created
+      body; incompatible canonical EP rejects the run.
+    blocker_3b_hard_integrity_failure_rejects_the_run: >-
+      A candidate<->program antigen misbinding, a source the provider claimed
+      resolved but missing from the canonical SourceIndex, a canonical-source
+      metadata conflict, or an incompatible canonical EvidencePackage is now a
+      HARD failure carried on Tgt01ModuleRunResult.hard_integrity_failures;
+      acceptance.evaluate enforces len(hard) == 0, so the run is machine
+      REJECTED (proposal_envelope = None) -- E1 item 13 on_failure -- never
+      washed into an accepted UNKNOWN. A legitimate "no evidence" outcome
+      (no precedent, an unresolved ADCdb-only retrieval lead, an exhausted
+      source space) stays a SOFT drop and can still produce an accepted UNKNOWN.
+      Regressions: misbinding / missing source / metadata mismatch / incompatible
+      canonical EP each reject the run; an unresolved ADCdb-only lead does not.
+  tests_at_round_2: 45
+  full_suite_at_round_2: 819
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_tgt01_module.py' -v
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_gate_modules_boundary.py' -v

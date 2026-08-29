@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from typing import Protocol, Sequence, runtime_checkable
 
+from src.objects.decision_model import EvidencePackage
+
 from .contracts import (
     CanonicalSourceRecord,
     NormalizedPrecedentRecord,
@@ -64,10 +66,17 @@ class SourceResolverPort(Protocol):
 @runtime_checkable
 class ExistingEvidenceLibraryPort(Protocol):
     """Read-only lookup into the PR C reusable Evidence Library. Given an
-    ``observation_id``, returns the ``EP-nnnnnnnn`` id of the canonical
-    EvidencePackage that already represents this observation, or ``None`` if it
-    has never been recorded. The module reuses an existing id; it never copies
-    or re-creates a canonical package."""
+    ``observation_id``, returns the EXACT canonical ``EvidencePackage`` that
+    already represents this observation, or ``None`` if it has never been
+    recorded.
 
-    def resolve(self, observation_id: str) -> str | None:
+    The module reuses that canonical package unchanged -- it does not call the
+    allocator and it does not construct a new ``EvidencePackage`` body for the
+    existing id (E1 item 11 / PR C: an existing package is referenced, never
+    copied or re-created). A returned package whose provenance / claim /
+    candidate_refs are incompatible with the current normalized observation is a
+    hard identity integrity failure, not a silent reuse.
+    """
+
+    def resolve(self, observation_id: str) -> EvidencePackage | None:
         ...
