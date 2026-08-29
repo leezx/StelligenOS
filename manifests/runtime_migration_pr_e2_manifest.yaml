@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_e2
-status: pending_review
+status: approved
 scope: mod_tgt01_deterministic_scientific_core_implementation_plus_narrow_repository_policy_reconciliation
 repository_boundary: software_only_external_data
 
@@ -64,8 +64,13 @@ deferred:
   external_workspace_calibration_run: "after E2 merge -- a real ADCdb + primary-source resolution smoke run in the external workspace"
   other_seven_tgt_modules: "PR E3+ (TGT-05 -> TGT-08 -> TGT-02 -> TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)"
 
-chatgpt_review: PENDING
-approved_tip: null
+chatgpt_review: APPROVE
+approved_tip: 72546a3
+merge_commit: 5b92dee
+review_rounds: 5  # initial submission + 4 revision rounds
+test_count_at_approval: 821
+approval_record_pr: task_20260829_runtime-migration-pr-e2-approval-record
+next_authorized_step: null  # real provider / external calibration, or TGT-05 construction drawing -- each needs its own go-ahead
 review_round_1:
   verdict: REQUEST_CHANGES
   reviewed_tip: "57d0c99"
