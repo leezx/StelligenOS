@@ -1,0 +1,105 @@
+phase: runtime_migration_pr_e3
+status: pending_review
+scope: tgt05_mod_tgt05_construction_contract_drawing_validation_and_acceptance_checklist_only
+repository_boundary: software_only_external_data
+
+# what E3 IS
+construction_contract_added: true
+construction_drawing_added: true
+seventeen_item_acceptance_checklist: true
+parity_tests_added: true  # items 03/05/07/08 normalized-equality vs the frozen PR D TGT-05 contract
+
+# what E3 IS NOT
+implementation_code_added: false
+provider_or_adapter_added: false
+runner_added: false
+network_or_external_data_added: false
+persistence_added: false
+numeric_scoring_added: false
+biological_thresholds_added: false
+product_specific_therapeutic_window_logic_added: false
+new_scientific_ladder_semantics_added: false
+generic_gatemodule_framework_or_base_class_added: false
+mod_tgt01_modified: false
+tgt05_primary_module_version_changed: false  # stays 0.0.0; PR E4 bumps it
+touches_pr_a_contracts: false
+touches_pr_b_contracts: false
+touches_pr_c_contracts: false
+touches_pr_d_tgt05_science: false
+new_dependency_added: false
+migration_pending_lifted: false
+
+spec_refs:
+  - src/contracts/crc_adc_target_gateset.yaml gate_contracts.TGT-05 (frozen ladder / evidence_ceiling / allowed+forbidden inference / fatal_conditions / unknown_behavior -- inherited verbatim, parity-tested)
+  - src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml (PR E1 -- the approved 17-item construction template, reused)
+  - gate_modules/tgt01_adc_modality_precedent/ (PR E2 -- the runtime boundary genes this contract freezes for MOD-TGT05)
+  - CURRENT_SYSTEM v5 section 6.4 (one Gate -> one primary Module; Module 权责边界) / section 6.5 (shared infrastructure)
+
+scoping_decisions:  # ChatGPT AI审核方案, before code, 8 decisions
+  E3-1: next Gate = TGT-05, order unchanged; machine identity TGT-05@1.0 / ADC_TARGET_GATESET@1.0 / L04 / INST-CRC-REFRACTORY-ADC-TARGET-v1 / MOD-TGT05 / module_version 0.0.0; PR D TGT-05 scientific contract unchanged
+  E3-2: strictly design-only -- contract + drawing + 17-item checklist + validation/parity tests + manifest/handoff/worklog; forbidden -- implementation / provider / adapter / runner / network / external data / runtime EvidencePackage or proposal / numeric scoring / new ladder semantics; NO generic GateModule framework, abstract base class, or MOD-TGT01 refactor
+  E3-3: 17-item template reused from the approved E1 template (validated by PR E2); provenance not_claimed_verbatim_from_blueprint; items 03/05/07/08 bound to the frozen PR D TGT-05 contract by a normalized-equality parity test
+  E3-4: TGT-05 frozen as a one-way liability detector, never a safety predictor; Direction describes the evidence relative to the Gate question, not candidate desirability; NEGATIVE is essentially unreachable on the public path (a "no risk seen" negative is forbidden); the module never flips Direction; HOLD/KILL is the GateSet Decision policy's job
+  E3-5: fatal semantics separate single-product toxicity (DIRECT liability, not fatal) from target-intrinsic convergence (>= 2 materially distinct same-target ADC constructs with convergent target-mediated normal-tissue toxicity); every clinical ADC toxicity observation carries an auditable construct fingerprint + observed-severity-for-this-product + target-attribution basis; "materially distinct" and "truly target-mediated" stay human-review calls; no numeric severity score; no Candidate-level KILL
+  E3-6: source plan separates liability evidence from vital-organ coverage completeness; DIRECT/INDIRECT_STRONG/WEAK source classes per PR D with hard locks (RNA-only != protein; whole-tissue protein != cell-surface accessibility; non-ADC severity != ADC; negative atlas != safety); a CNS/cardiac/hepatic/pulmonary/hematopoietic/GI coverage map; NO universal threshold (organ count / TPM / IHC score / severity grade); PUBLIC_ONLY path only
+  E3-7: asymmetric fatal-sweep-mandatory stop rule -- Path A (potential fatal pattern -> PUBLIC_FATAL_SIGNAL_ESTABLISHED, stop chasing weaker evidence, hand off); Path B (one DIRECT ADC toxicity -> complete the same-target ADC construct inventory + toxicity/attribution sweep before any stop); Path C (no DIRECT clinical liability -> complete the vital-organ / non-ADC / NHP / RNA-only sweeps; unresolvable -> EXPERIMENT_REQUIRED); absence of public risk evidence is not a stop condition for safety
+  E3-8: freeze (not re-copy) the PR E2 runtime genes for items 10-17 -- single authoritative canonical target identity, canonical SourceIndex provenance authority, Gate-neutral atomic EvidencePackage, exact canonical EP reuse (never recreate by old id), classification-driving semantic parity on reuse, non-canonical proposal envelope, human approval -> canonical CandidateGateAssessment, hard identity/provenance failure -> machine reject, UNKNOWN != integrity failure, no Decision / KILL / persistence / numeric score
+
+next_after_approval: PR E4 = MOD-TGT05@1.0.0 deterministic implementation
+
+delivers:
+  - src/contracts/gate_modules/tgt05_normal_tissue_fatal_liability.yaml -- the frozen MOD-TGT05 construction contract with the 17-item acceptance checklist
+  - docs/gate_modules/TGT-05_Normal_Tissue_Fatal_Liability.md -- the human-readable construction drawing
+  - tests/test_tgt05_module_construction_contract.py -- 32 tests (checklist completeness + E1-template reuse; items 03/05/07/08 normalized-equality parity with the frozen PR D TGT-05 contract; liability-detector semantics; the asymmetric stop rule; PR E2 gene inheritance; no implementation; MOD-TGT01 untouched; MOD-TGT05 binding still 0.0.0)
+
+deferred:
+  mod_tgt05_implementation: "PR E4 (new top-level gate_modules/tgt05_normal_tissue_fatal_liability/; only after this contract is APPROVED; also bumps primary_module_version to 1.0.0)"
+  retrieval_providers_and_datasets: "PR E4+"
+  other_six_tgt_modules: "PR E4+ (TGT-08 -> TGT-02 -> TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)"
+
+chatgpt_review: PENDING
+approved_tip: null
+review_round_1:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "0b8ec4f"
+  outer_framework: PASS  # design-only; 17-item complete; 03/05/07/08 parity; MOD-TGT05 still 0.0.0; MOD-TGT01@1.0.0 untouched; no provider/persistence/scoring/threshold/therapeutic-window; MIGRATION_PENDING
+  scope: 2 E3 construction-contract self-consistency blockers; scoping E3-1..E3-8, items 03/05/07/08 parity, the fatal-layer separation, coverage map, asymmetric-stop concept and the PR E2 genes all unchanged
+  fixes:
+    blocker_1_item06_frozen_truth_table: >-
+      item 06 said both "any graded admissible liability evidence -> POSITIVE"
+      and "WEAK RNA-level signal -> INCONCLUSIVE". Replaced with a single frozen
+      truth table (DIRECT -> POSITIVE/DIRECT; INDIRECT_STRONG ->
+      POSITIVE/INDIRECT_STRONG; WEAK-only hypothesis -> INCONCLUSIVE/WEAK;
+      nothing + incomplete/exhausted coverage -> INCONCLUSIVE/UNKNOWN; never
+      absence-of-risk -> NEGATIVE/safe) plus a positive-precedence rule (an
+      established DIRECT/INDIRECT_STRONG liability is NOT downgraded to UNKNOWN
+      for an uncovered organ -- the gap goes into critical_unknowns) and a
+      tightened CONFLICTING (same-observation target-attribution dispute only; a
+      refutation earns no NEGATIVE rung). item 13 and item 15 bind to it; a
+      truth-table regression is added.
+    blocker_2_fatal_pattern_is_human_only: >-
+      item 16 Path A had the machine "mark PUBLIC_FATAL_SIGNAL_ESTABLISHED" from
+      "materially distinct" + "truly target-mediated" -- exactly the item-08
+      human_review_reserved judgements. Path A is now machine detection only
+      (>= 2 same-target ADC toxicity observations from distinct programs, each
+      with an auditable construct fingerprint + a disclosed target-attribution
+      basis, an apparently convergent phenotype) -> set a NON-CANONICAL
+      module-local fatal_review record (required / status POTENTIAL_FATAL_PATTERN
+      / evidence_ids / program_ids / construct_fingerprints / affected_tissues /
+      target_attribution_basis_refs) -> provisional stop -> human review. The
+      machine never emits PUBLIC_FATAL_SIGNAL_ESTABLISHED; the proposal envelope
+      carries no fatal flag; item 14 surfaces the fatal_review record and the
+      human decides materially-distinct / truly-target-mediated / meaningful
+      convergence. No PR A schema change, no 7th core object.
+  tests_at_round_1: 41
+  full_suite_at_round_1: 862
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_tgt05_module_construction_contract.py' -v
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py'
+  - bash scripts/verify_repository_boundary.sh
+  - git diff --check
+artifacts:
+  - src/contracts/gate_modules/tgt05_normal_tissue_fatal_liability.yaml
+  - docs/gate_modules/TGT-05_Normal_Tissue_Fatal_Liability.md
+  - tests/test_tgt05_module_construction_contract.py
+  - manifests/runtime_migration_pr_e3_manifest.yaml
