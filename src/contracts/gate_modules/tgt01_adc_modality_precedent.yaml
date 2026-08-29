@@ -1,0 +1,292 @@
+version: "0.1.0"
+name: stelligenos-gate-module-construction-contract-tgt01
+description: >-
+  Runtime Migration PR E1. The frozen construction contract for MOD-TGT01, the
+  single primary Evidence Production Module of Gate TGT-01 (ADC Modality
+  Precedent) under ADC_TARGET_GATESET@1.0 / INST-CRC-REFRACTORY-ADC-TARGET-v1.
+  This PR delivers the contract + a human-readable construction drawing
+  (docs/gate_modules/TGT-01_ADC_Modality_Precedent.md) + validation tests + a
+  17-item acceptance checklist ONLY. It ships no implementation. The Module is
+  built in PR E2, and only after this contract is APPROVED (CURRENT_SYSTEM v5
+  section 6.4: "逐 Gate 绘制 Evidence Production Module 施工图；审核通过后
+  Module 才可开工").
+migration:
+  pr: runtime_migration_pr_e1
+  scope: tgt01_mod_tgt01_construction_contract_drawing_validation_and_acceptance_checklist_only
+  spec_refs:
+    - docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md (section 6.4 one Gate -> one primary Evidence Production Module + Module 权责边界; section 6.5 shared infrastructure; section 16 B group question 23 -> PR E+)
+    - src/contracts/crc_adc_target_gateset.yaml (PR D: the frozen TGT-01 gate contract, Evidence Ladder, allowed/forbidden inference and fatal_conditions -- inherited verbatim)
+    - src/contracts/data_layout/evidence_package.schema.json / assessment.schema.json (PR A shapes the Module must produce)
+    - src/contracts/evidence_reference.yaml (PR C reusable-EvidencePackage reference layer + provenance walk)
+    - src/contracts/gate_contracts.yaml (PR B: assessment_rule / fatal_gate_policy are GateSet-level refs, not Module logic)
+  boundary: >-
+    design-before-execution. PR E1 delivers the contract, the drawing, the
+    validation tests and the acceptance checklist. It adds NO implementation, NO
+    provider / adapter, NO extractor / normalizer / runner / dry-run executor,
+    NO EvidencePackage or Assessment runtime output, NO external data, NO
+    numeric scoring, and NO new scientific ladder semantics. MIGRATION_PENDING
+    remains.
+  next: >-
+    runtime_migration_pr_e2 creates a new top-level gate_modules/ directory with
+    gate_modules/tgt01_adc_modality_precedent/ (the implementation), one-way
+    dependency exactly like extensions/. It may start only after this contract
+    is APPROVED.
+  order: >-
+    fatal-first + cheap-first: TGT-01 -> TGT-05 -> TGT-08 -> TGT-02 -> TGT-03 ->
+    TGT-04 -> TGT-06 -> TGT-07. TGT-01 is first as the Module-architecture
+    calibration case: PUBLIC_PRIMARY, no CRC multi-omics download, no
+    experiments, simplest evidence classes, fastest full-chain validation.
+
+template_provenance:
+  status: RECONSTRUCTED
+  source:
+    - "Blueprint v1.3 section H2.8 (Gate Module Acceptance Template, 17 items) -- referenced by CURRENT_SYSTEM v5 but NOT present in this repository or the File Library"
+    - CURRENT_SYSTEM v5 section 6.4 (one Gate -> one primary Module; the Module 权责边界 list)
+    - ADC_TARGET_GATESET@1.0 / TGT-01 frozen contract (src/contracts/crc_adc_target_gateset.yaml, PR D)
+    - runtime migration PR A-D contracts (objects / Gate system / Matrix + provenance / CRC GateSet)
+  claim:
+    not_claimed_verbatim_from_blueprint: true
+    functionally_complete_and_consistent_with_prior_frozen_decisions: true
+
+kernel_invariant: >-
+  The kernel defines the contract; the Gate Module implements the contract.
+  One-way dependency, exactly like extensions/: a future gate_modules/
+  implementation MAY import kernel objects / Gate identity / contracts; src/
+  MUST NEVER import gate_modules/. The Module may not modify the Gate id / name
+  / candidate ownership, the gate_question, the Evidence Ladder, the evidence
+  ceiling, or the fatal / unknown / conflict / inference semantics
+  (CURRENT_SYSTEM v5 section 6.4). It may not reason across Gates, lower a
+  measurement requirement, or turn UNKNOWN into PASS / HOLD / KILL.
+
+# The 17-item Gate Module Acceptance checklist (RECONSTRUCTED -- see
+# template_provenance). Each item the future MOD-TGT01 implementation must
+# satisfy before it can be accepted.
+acceptance_checklist:
+
+  "01_gate_identity_and_version":
+    gate_id: TGT-01
+    gate_version: "1.0"
+    canonical_gateset_id: ADC_TARGET_GATESET
+    gateset_version: "1.0"
+    candidate_level: L04
+    candidate_ownership: ADC_TARGET (L04)
+    instantiation_binding: INST-CRC-REFRACTORY-ADC-TARGET-v1
+    rule: the Module inherits this identity; it does not own, rename or redefine it
+
+  "02_primary_module_identity_and_version":
+    primary_module_id: MOD-TGT01
+    deterministic_id_rule: "Data Layout Spec Appendix A: Module = MOD-<GATE without hyphen>"
+    construction_contract_version: "0.1.0"
+    module_implementation_version: "0.0.0"
+    rule: >-
+      exactly one primary Evidence Production Module per Gate. "0.0.0" means
+      declared, not built (the PR D gate_binding slot). PR E2 builds it and
+      raises the version to >= 1.0. MOD-TGT01 does not own the Gate identity.
+
+  "03_gate_question":
+    verbatim_from: src/contracts/crc_adc_target_gateset.yaml gate_contracts.TGT-01.gate_question
+    text: >-
+      Is there prior precedent that this target (or a biologically adjacent
+      target in its lineage) is addressable by the ADC modality?
+    rule: the Module quotes this verbatim and may not widen or narrow it
+    tgt01_framing:
+      answers: whether this target has already been reality-tested by the ADC modality
+      does_not_answer:
+        - whether the target is good in CRC (that is TGT-02)
+        - whether our ADC is effective
+        - whether the therapeutic window is safe (that is TGT-05)
+        - whether surface density or internalization is adequate (TGT-04 / TGT-06)
+
+  "04_admissible_evidence_classes":
+    verbatim_from: gate_contracts.TGT-01.evidence_required + evidence_ladder.*.admissible_evidence_classes
+    admissible:
+      - approved ADC against the same target antigen with disclosed clinical activity
+      - late-clinical (phase 2 or 3) ADC against the same target antigen with disclosed clinical activity
+      - early-clinical (phase 1) ADC against the same target antigen
+      - approved or clinical-stage ADC against a biologically adjacent target in the same lineage
+      - preclinical-only ADC constructs against the target
+      - patents or company disclosures naming the target with no clinical data
+      - discontinued / failed ADC programs against the same target and the disclosed reason
+    not_admissible_into_this_gate:
+      - CRC malignant-cell target expression / coverage evidence (that is TGT-02)
+      - treatment / metastatic persistence evidence (TGT-03)
+      - surface availability / antigen density / localization evidence (TGT-04)
+      - normal-tissue on-target liability evidence (TGT-05)
+      - internalization / trafficking evidence (TGT-06)
+      - shedding / soluble-antigen / sink evidence (TGT-07)
+      - competitive landscape / IP-whitespace evidence (TGT-08)
+
+  "05_evidence_ladder_and_evidence_ceiling":
+    verbatim_from: gate_contracts.TGT-01.evidence_ladder + evidence_ceiling
+    DIRECT:
+      admissible_evidence_classes:
+        - approved ADC against the same target antigen with disclosed clinical activity
+        - late-clinical (phase 2 or 3) ADC against the same target antigen with disclosed clinical activity
+      ceiling_rule: establishes ADC-modality precedent for this specific target
+    INDIRECT_STRONG:
+      admissible_evidence_classes:
+        - early-clinical (phase 1) ADC against the same target antigen
+      ceiling_rule: supports precedent; does not by itself establish a de-risked target
+    WEAK:
+      admissible_evidence_classes:
+        - approved or clinical-stage ADC against a biologically adjacent target in the same lineage (a class-level signal only; the success of an adjacent-target ADC does not de-risk this target)
+        - preclinical-only ADC constructs against the target
+        - patents or company disclosures naming the target with no clinical data
+      ceiling_rule: hypothesis-generating only; no precedent claim for this target
+    evidence_ceiling: clinical-stage ADC precedent against the same target antigen
+    rule: the Module reproduces this mapping exactly; it does not redefine the grades, add rungs, or exceed the ceiling
+
+  "06_direction_interpretation":
+    strength_direction_rule: >-
+      Strength is orthogonal to Direction (Blueprint v1.3). The Module proposes
+      both; it never merges them and never emits a numeric score.
+    POSITIVE: at least one admissible ADC-precedent evidence class present at a graded strength -- the target has been, or is being, addressed by the ADC modality
+    NEGATIVE: reserved for a target-attributable adverse precedent pattern (see item 08); "no precedent found" is NOT NEGATIVE -- it is UNKNOWN
+    CONFLICTING: supporting precedent and a target-attributable adverse pattern are co-present -> propose CONFLICTING at a graded strength with non-empty key_supporting_evidence and key_contradicting_evidence
+    INCONCLUSIVE: graded evidence that establishes neither precedent nor an adverse pattern
+    UNKNOWN: no admissible evidence for the target or an adjacent target (see item 15)
+
+  "07_allowed_and_forbidden_inference":
+    verbatim_from: gate_contracts.TGT-01.allowed_inference + forbidden_inference
+    allowed:
+      - ADC-modality feasibility for this target or its immediate lineage
+    forbidden:
+      - efficacy in refractory mCRC
+      - normal-tissue safety or a favorable therapeutic index
+      - adequate surface density or internalization for this target
+    rule: the Module obeys this scientific boundary verbatim and produces no cross-Gate conclusion
+
+  "08_fatal_conditions":
+    verbatim_from: gate_contracts.TGT-01.fatal_conditions
+    potential_fatal_signal:
+      - a target-attributable pattern of failure -- two or more independent same-target ADC programs discontinued for a consistent on-target / target-mediated toxicity or an intrinsically unachievable therapeutic window (a single product's failure, which may be driven by linker / payload / format, is not sufficient)
+    rule: >-
+      the Module only recognises and reports this evidence pattern. It never
+      performs a Candidate-level KILL -- that is the GateSet fatal_gate_policy's
+      decision (PR B). A single same-target ADC discontinuation is admissible
+      evidence, not a fatal signal.
+
+  "09_evidence_source_plan":
+    dominant_evidence_regime: PUBLIC_PRIMARY
+    experimental_sources: none (this Gate is public-evidence only)
+    source_classes:
+      strong:
+        - regulatory approvals and labels for a same-target ADC
+        - registrational / late-phase trial registries and results for a same-target ADC
+        - an ADC-target database (e.g. an ADCdb-class asset) resolved to its primary disclosures
+      supporting:
+        - early-phase trial registries for a same-target ADC
+        - peer-reviewed clinical publications for a same-target ADC
+        - company / investor disclosures with a resolvable primary source
+      weak_only:
+        - patents and patent applications naming the target
+        - preclinical-only publications
+        - adjacent-target ADC programs (class-level signal only)
+    source_authority_rule: a weak_only source class can never lift an assessment above the WEAK rung
+    connect_provider_in_this_pr: false
+    shared_infrastructure_note: >-
+      literature / trial / patent retrieval, entity resolution, the provenance
+      ledger and evidence serialization are shared infrastructure
+      (CURRENT_SYSTEM v5 section 6.5). A future Module reuses them; it does not
+      re-implement PubMed / ClinicalTrials / patent retrieval per Gate.
+
+  "10_input_contract":
+    required_inputs:
+      - candidate_id (CAND-L04-nnnnnn) and the candidate's canonical name / target identity
+      - instantiation_id (INST-CRC-REFRACTORY-ADC-TARGET-v1) plus its context_id / context_version
+      - the frozen TGT-01 gate_contract_ref and evidence_ladder_ref
+      - run context (run_id, retrieval time window, evidence_regime = PUBLIC_ONLY)
+      - existing evidence_refs for this (candidate, gate), if any
+    forbidden: >-
+      any implicit default scientific context. The Module must fail rather than
+      assume an indication, modality or evidence regime not supplied by the
+      Instantiation.
+
+  "11_evidencepackage_output_contract":
+    each_package:
+      - is atomic -- one neutral empirical observation, with no grade and no direction
+      - carries full provenance -- provenance.source_id (SRC-nnnnnnnn), source_type, source_identifier, locator, retrieved_at
+      - carries candidate_refs and a measurement / claim block
+      - carries interpretation_boundary (directly_supports / does_not_support / limitations / evidence_ceiling)
+      - carries derivation (module_run_id, code_commit)
+    rules:
+      - the Module references an existing EvidencePackage by evidence_id; it never copies or re-creates one (PR C reusable-reference layer)
+      - forward status / superseded_by never appear on evidence.json (PR C: they live only on the EvidenceIndexEntry)
+    shape_ref: src/contracts/data_layout/evidence_package.schema.json + src/objects/decision_model.py EvidencePackage (PR A)
+
+  "12_proposed_candidategateassessment_contract":
+    the_module_proposes_only:
+      - a CandidateGateAssessment with direction + strength (never a Decision, never a score)
+      - evidence_refs [{evidence_id, role}] referencing the EvidencePackages above (role in SUPPORTING / CONTRADICTING / CONTEXTUAL)
+      - aggregation_rationale, critical_unknowns, evidence_ceiling
+    rules:
+      - review.status is left for the human; the Module never emits a HUMAN_APPROVED assessment
+      - the direction x strength combination obeys the PR A matrix (e.g. CONFLICTING needs >= 1 SUPPORTING and >= 1 CONTRADICTING ref)
+    shape_ref: src/contracts/data_layout/assessment.schema.json + src/objects/decision_model.py CandidateGateAssessment (PR A)
+
+  "13_machine_acceptance_criteria":
+    a_proposed_assessment_and_its_packages_are_machine_acceptable_iff:
+      - every EvidencePackage validates against evidence_package.schema.json (shape / ids / nested blocks / date patterns)
+      - every provenance.source_id resolves to a SourceIndexEntry, and every evidence_ref.evidence_id resolves to a canonical EvidencePackage (PR C check_* functions)
+      - every admissible evidence class used is in item 04's admissible list, and no item-04 not_admissible class is present
+      - the proposed strength does not exceed the ceiling of the highest ladder rung actually met (item 05)
+      - dedup -- one SRC -> many EP is allowed; the same (source, claim) is not duplicated across packages
+      - all required fields present; no numeric score anywhere
+    on_failure: the run is rejected with a machine reason and nothing enters the canonical record
+
+  "14_human_acceptance_and_review_surface":
+    the_human_sees:
+      - the proposed direction + strength and the aggregation_rationale
+      - each EvidencePackage's claim, source and interpretation_boundary (drill-down)
+      - the ladder rung each package maps to, and any critical_unknowns
+      - the machine acceptance record (item 13 pass / fail detail)
+    human_only_judgements:
+      - whether the aggregated direction / strength is scientifically correct for TGT-01
+      - whether a claimed "same target" / "adjacent target" call is right
+      - final approval -- review.status = HUMAN_APPROVED -> the assessment enters ASSESSMENTS/<cand>/vNNN.json and the MatrixView rebuilds (PR C)
+
+  "15_failure_unknown_and_conflict_behavior":
+    retrieval_failure: report a machine failure reason; do not emit a partial assessment as if complete
+    insufficient_evidence: propose INCONCLUSIVE or UNKNOWN per item 06; never PASS
+    no_admissible_evidence_at_all: >-
+      propose UNKNOWN. Verbatim from the frozen contract: "No ADC program
+      identified against the target or an adjacent target -> UNKNOWN, not KILL.
+      A novel target is not disqualified by absence of precedent."
+    conflicting_evidence: propose CONFLICTING at a graded strength with non-empty key_supporting_evidence and key_contradicting_evidence (PR A matrix)
+    experiment_required: >-
+      if the gap can only be closed by non-public data, set the critical_unknown
+      resolution to EXPERIMENT_REQUIRED and stop searching
+    absolute_rule: UNKNOWN is never silently converted to PASS / HOLD / KILL (CURRENT_SYSTEM v5 section 6.4)
+
+  "16_stop_rule":
+    stop_searching_public_evidence_when_any_of:
+      - the TGT-01 evidence_ceiling has been reached (clinical-stage ADC precedent against the same target antigen)
+      - marginal additional search can no longer change the proposed direction or strength
+      - the critical unknown has been marked EXPERIMENT_REQUIRED
+      - the enumerated source space for this target is exhausted
+    rationale: bounds the "infinite evidence gathering" failure mode; a Module that cannot stop cannot be accepted
+
+  "17_downstream_consumer_and_handoff":
+    consumed_by:
+      - the MatrixView cell for (this candidate_id, TGT-01) (PR C)
+      - the ADC_TARGET_GATESET decision layer (decision_rule / fatal_gate_policy / required_gate_policy / unknown_policy) which turns the eight TGT assessments into a Candidate-level Decision (PR B)
+      - the next Gate in the fatal-first order (TGT-05) as context only -- never as a substitute for its own measurement
+      - experimental validation, when a critical_unknown is EXPERIMENT_REQUIRED
+    this_module_does_not:
+      - produce a Candidate-level Decision or KILL
+      - write to any other Gate's evidence index or assessment
+      - modify the Matrix (a rebuildable projection; PR C)
+
+deferred_to_pr_e2_plus:
+  - the new top-level gate_modules/ directory and gate_modules/tgt01_adc_modality_precedent/ implementation (providers, adapters, extractor, normalizer, runner, dry-run executor, EvidencePackage writer, Assessment proposer)
+  - connecting any retrieval provider or dataset
+  - the other seven TGT primary Modules (TGT-05 -> TGT-08 -> TGT-02 -> TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)
+
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  implementation_code_in_this_pr: forbidden
+  provider_or_adapter_in_this_pr: forbidden
+  numeric_scoring: forbidden
+  new_scientific_ladder_semantics_in_this_pr: forbidden
+  migration_pending: remains

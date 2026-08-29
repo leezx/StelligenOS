@@ -4308,3 +4308,40 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   实现 Blueprint v1.3 conformance）。下一步：PR E+ —— 逐 Gate primary Evidence
   Production Module（TGT-01…TGT-08），按 Blueprint v1.3 §H2.8 Gate Module
   Acceptance Template 逐 Gate 绘施工图。
+
+## 2026-08-29T00:50 EDT — Runtime Migration PR E1 首版（TGT-01 / MOD-TGT01 Construction Contract）
+
+- 授权：用户在 PR A–D 收口后追加"开始 PR E"，并让审核方（ChatGPT `AI审核方案`）
+  拍 4 个 scoping 决策。基线 `origin/main`（PR #105 merge 后）。
+- 4 个 scoping 决策（审核方拍板）：
+  - E-1：起手 Gate = TGT-01（ADC Modality Precedent）—— 最好的 Module
+    architecture calibration case；顺序 TGT-01 → 05 → 08 → 02 → 03 → 04 → 06 → 07。
+  - E-2：选 E2a 并冻结 —— PR E1 只交付 frozen Module construction contract +
+    human-readable drawing + validation/tests + acceptance checklist；不写实现、
+    不接 provider、不出 runner、不产 EP/Assessment。（同一 PR 一边 review 施工图
+    一边出 runner 违反 design-before-execution。）
+  - E-3：Module 代码不放 `genmodules/`（那是 Asset Generation lifecycle）。
+    物理布局：`src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml` +
+    `docs/gate_modules/TGT-01_ADC_Modality_Precedent.md` + `tests/`。未来 PR E2
+    才新建顶层 `gate_modules/`，单向依赖（src/ 不 import gate_modules/）。
+  - E-4：Blueprint v1.3 §H2.8 的 17 项 template 原文不在仓库/File Library；
+    合同标 `template_provenance.status: RECONSTRUCTED` +
+    `not_claimed_verbatim_from_blueprint: true`，17 项由冻结 v5 §6.4 + PR A–D
+    合同重建。
+- TGT-01 专属锁死：MOD-TGT01 回答"这个 target 是否已经被 ADC modality 现实检验
+  过？"，不是 target-在-CRC-好不好 / ADC-有没有效 / 治疗窗-安不安全 / density.
+- 交付：`src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml`（17 项
+  acceptance checklist，item 03/05/07/08 逐字继承 PR D TGT-01；04 排除
+  TGT-02…08；09 source plan `PUBLIC_PRIMARY` + `connect_provider_in_this_pr:
+  false`）、`docs/gate_modules/TGT-01_ADC_Modality_Precedent.md`（人读施工图，
+  17 项表格）、`tests/test_tgt01_module_construction_contract.py`（18 tests：
+  checklist 完整 / 逐字 parity vs PR D / RECONSTRUCTED provenance / 无实现 /
+  顶层 gate_modules/ 不存在 / 正文无 numeric cutoff）、
+  `manifests/runtime_migration_pr_e1_manifest.yaml`、handoff。
+- 未改：PR A/B/C/D 合同、`src/objects/*`、`data_layout/*`、冻结文档、
+  `gate_system.yaml`、`src/capabilities/*`、既有测试。无实现、无 provider、无
+  runner、无 numeric scoring、无新依赖。`MIGRATION_PENDING` 未解除。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 769 OK
+  （751 baseline + 18 new）/ `git diff --check` clean / 干净 tracked-tree
+  worktree boundary passed / YAML 结构合法。
+- Next：提交、推送、开 PR、CI 绿后回 `AI审核方案` 请求审核。

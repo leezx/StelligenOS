@@ -1,0 +1,196 @@
+"""Runtime Migration PR E1: the MOD-TGT01 construction contract.
+
+Asserts:
+* the 17-item acceptance checklist is present and complete;
+* items 3 / 5 / 7 / 8 quote the frozen PR D TGT-01 contract verbatim (the Module
+  may not redefine the gate_question, the Evidence Ladder, the inference
+  boundary or the fatal conditions);
+* the contract carries a RECONSTRUCTED template_provenance;
+* PR E1 ships no implementation -- no gate_modules/ directory, no provider /
+  adapter / runner, no numeric scoring, MIGRATION_PENDING remains;
+* the human-readable drawing exists and covers all 17 items.
+"""
+
+import re
+import unittest
+from pathlib import Path
+
+import yaml
+
+
+ROOT = Path(__file__).resolve().parents[1]
+CONTRACT = ROOT / "src" / "contracts" / "gate_modules" / "tgt01_adc_modality_precedent.yaml"
+DRAWING = ROOT / "docs" / "gate_modules" / "TGT-01_ADC_Modality_Precedent.md"
+CRC_GATESET = ROOT / "src" / "contracts" / "crc_adc_target_gateset.yaml"
+
+_CHECKLIST_KEYS = (
+    "01_gate_identity_and_version",
+    "02_primary_module_identity_and_version",
+    "03_gate_question",
+    "04_admissible_evidence_classes",
+    "05_evidence_ladder_and_evidence_ceiling",
+    "06_direction_interpretation",
+    "07_allowed_and_forbidden_inference",
+    "08_fatal_conditions",
+    "09_evidence_source_plan",
+    "10_input_contract",
+    "11_evidencepackage_output_contract",
+    "12_proposed_candidategateassessment_contract",
+    "13_machine_acceptance_criteria",
+    "14_human_acceptance_and_review_surface",
+    "15_failure_unknown_and_conflict_behavior",
+    "16_stop_rule",
+    "17_downstream_consumer_and_handoff",
+)
+
+
+def _norm(text: str) -> str:
+    return " ".join(str(text).split())
+
+
+class ContractShapeTests(unittest.TestCase):
+    def setUp(self):
+        self.doc = yaml.safe_load(CONTRACT.read_text())
+
+    def test_version_and_migration_block(self):
+        self.assertEqual(self.doc["version"], "0.1.0")
+        m = self.doc["migration"]
+        self.assertEqual(m["pr"], "runtime_migration_pr_e1")
+        self.assertIn("no implementation", m["boundary"].lower())
+        self.assertIn("runtime_migration_pr_e2", m["next"])
+        self.assertIn("TGT-01 -> TGT-05 -> TGT-08", m["order"])
+
+    def test_template_provenance_is_reconstructed(self):
+        tp = self.doc["template_provenance"]
+        self.assertEqual(tp["status"], "RECONSTRUCTED")
+        self.assertTrue(tp["claim"]["not_claimed_verbatim_from_blueprint"])
+        joined = " ".join(tp["source"]).lower()
+        self.assertIn("blueprint v1.3 section h2.8", joined)
+        self.assertIn("not present in this repository", joined)
+
+    def test_kernel_invariant_one_way_dependency(self):
+        inv = self.doc["kernel_invariant"].lower()
+        self.assertIn("src/ must never import gate_modules/", inv)
+        self.assertIn("may not modify the gate id", inv)
+
+    def test_checklist_has_all_seventeen_items_in_order(self):
+        checklist = self.doc["acceptance_checklist"]
+        self.assertEqual(tuple(checklist), _CHECKLIST_KEYS)
+        self.assertEqual(len(checklist), 17)
+
+
+class VerbatimFromPrDTests(unittest.TestCase):
+    def setUp(self):
+        self.item = yaml.safe_load(CONTRACT.read_text())["acceptance_checklist"]
+        self.tgt01 = yaml.safe_load(CRC_GATESET.read_text())["gate_contracts"]["TGT-01"]
+
+    def test_item01_gate_identity(self):
+        i = self.item["01_gate_identity_and_version"]
+        self.assertEqual(i["gate_id"], "TGT-01")
+        self.assertEqual(i["gate_version"], "1.0")
+        self.assertEqual(i["canonical_gateset_id"], "ADC_TARGET_GATESET")
+        self.assertEqual(i["candidate_level"], "L04")
+        self.assertEqual(i["instantiation_binding"], "INST-CRC-REFRACTORY-ADC-TARGET-v1")
+
+    def test_item02_module_identity_declared_not_built(self):
+        i = self.item["02_primary_module_identity_and_version"]
+        self.assertEqual(i["primary_module_id"], "MOD-TGT01")
+        self.assertEqual(i["module_implementation_version"], "0.0.0")
+
+    def test_item03_gate_question_is_verbatim(self):
+        self.assertEqual(
+            _norm(self.item["03_gate_question"]["text"]),
+            _norm(self.tgt01["gate_question"]),
+        )
+        framing = self.item["03_gate_question"]["tgt01_framing"]
+        self.assertIn("already been reality-tested", framing["answers"])
+
+    def test_item04_excludes_the_other_gates(self):
+        na = " ".join(self.item["04_admissible_evidence_classes"]["not_admissible_into_this_gate"])
+        for gid in ("TGT-02", "TGT-03", "TGT-04", "TGT-05", "TGT-06", "TGT-07", "TGT-08"):
+            self.assertIn(gid, na)
+
+    def test_item05_evidence_ladder_is_verbatim(self):
+        i = self.item["05_evidence_ladder_and_evidence_ceiling"]
+        self.assertEqual(_norm(i["evidence_ceiling"]), _norm(self.tgt01["evidence_ceiling"]))
+        for grade in ("DIRECT", "INDIRECT_STRONG", "WEAK"):
+            self.assertEqual(
+                [_norm(x) for x in i[grade]["admissible_evidence_classes"]],
+                [_norm(x) for x in self.tgt01["evidence_ladder"][grade]["admissible_evidence_classes"]],
+            )
+            self.assertEqual(
+                _norm(i[grade]["ceiling_rule"]),
+                _norm(self.tgt01["evidence_ladder"][grade]["ceiling_rule"]),
+            )
+
+    def test_item07_inference_boundary_is_verbatim(self):
+        i = self.item["07_allowed_and_forbidden_inference"]
+        self.assertEqual(
+            [_norm(x) for x in i["allowed"]],
+            [_norm(x) for x in self.tgt01["allowed_inference"]],
+        )
+        self.assertEqual(
+            [_norm(x) for x in i["forbidden"]],
+            [_norm(x) for x in self.tgt01["forbidden_inference"]],
+        )
+
+    def test_item08_fatal_conditions_are_verbatim_and_not_a_kill(self):
+        i = self.item["08_fatal_conditions"]
+        self.assertEqual(
+            [_norm(x) for x in i["potential_fatal_signal"]],
+            [_norm(x) for x in self.tgt01["fatal_conditions"]],
+        )
+        self.assertIn("never performs a candidate-level kill", i["rule"].lower())
+
+    def test_item15_unknown_is_never_pass(self):
+        i = self.item["15_failure_unknown_and_conflict_behavior"]
+        self.assertIn("not KILL", i["no_admissible_evidence_at_all"])
+        self.assertIn("never silently converted", i["absolute_rule"].lower())
+
+
+class NoImplementationInPrE1Tests(unittest.TestCase):
+    def setUp(self):
+        self.doc = yaml.safe_load(CONTRACT.read_text())
+
+    def test_repository_policy_forbids_implementation(self):
+        p = self.doc["repository_policy"]
+        self.assertEqual(p["implementation_code_in_this_pr"], "forbidden")
+        self.assertEqual(p["provider_or_adapter_in_this_pr"], "forbidden")
+        self.assertEqual(p["numeric_scoring"], "forbidden")
+        self.assertEqual(p["migration_pending"], "remains")
+
+    def test_deferred_block_names_the_implementation(self):
+        joined = " ".join(self.doc["deferred_to_pr_e2_plus"]).lower()
+        self.assertIn("gate_modules/", joined)
+        self.assertIn("implementation", joined)
+        self.assertIn("runner", joined)
+
+    def test_no_gate_modules_top_level_directory_yet(self):
+        self.assertFalse((ROOT / "gate_modules").exists())
+
+    def test_source_plan_connects_no_provider(self):
+        self.assertFalse(
+            self.doc["acceptance_checklist"]["09_evidence_source_plan"]["connect_provider_in_this_pr"]
+        )
+
+    def test_no_numeric_threshold_anywhere_in_the_contract(self):
+        text = CONTRACT.read_text()
+        # allow "phase 2 or 3" / "PR A-D" style; forbid ">N" "<N" "N%" "N/cell"
+        self.assertIsNone(
+            re.search(r"[<>]\s*\d|\b\d[\d,]*\s*(molecules|%|per cell|ng/ml)", text, re.I)
+        )
+
+
+class DrawingTests(unittest.TestCase):
+    def test_drawing_exists_and_covers_all_items(self):
+        text = DRAWING.read_text()
+        self.assertIn("Has this target already been reality-tested by the ADC modality", text)
+        self.assertIn("RECONSTRUCTED", text)
+        self.assertIn("construction contract + drawing only", text.lower())
+        # every checklist item number 1..17 appears as a table row
+        for n in range(1, 18):
+            self.assertRegex(text, rf"\|\s*{n}\s*\|", f"drawing missing checklist row {n}")
+
+
+if __name__ == "__main__":
+    unittest.main()
