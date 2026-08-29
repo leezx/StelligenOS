@@ -4308,3 +4308,164 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   实现 Blueprint v1.3 conformance）。下一步：PR E+ —— 逐 Gate primary Evidence
   Production Module（TGT-01…TGT-08），按 Blueprint v1.3 §H2.8 Gate Module
   Acceptance Template 逐 Gate 绘施工图。
+
+## 2026-08-29T00:50 EDT — Runtime Migration PR E1 首版（TGT-01 / MOD-TGT01 Construction Contract）
+
+- 授权：用户在 PR A–D 收口后追加"开始 PR E"，并让审核方（ChatGPT `AI审核方案`）
+  拍 4 个 scoping 决策。基线 `origin/main`（PR #105 merge 后）。
+- 4 个 scoping 决策（审核方拍板）：
+  - E-1：起手 Gate = TGT-01（ADC Modality Precedent）—— 最好的 Module
+    architecture calibration case；顺序 TGT-01 → 05 → 08 → 02 → 03 → 04 → 06 → 07。
+  - E-2：选 E2a 并冻结 —— PR E1 只交付 frozen Module construction contract +
+    human-readable drawing + validation/tests + acceptance checklist；不写实现、
+    不接 provider、不出 runner、不产 EP/Assessment。（同一 PR 一边 review 施工图
+    一边出 runner 违反 design-before-execution。）
+  - E-3：Module 代码不放 `genmodules/`（那是 Asset Generation lifecycle）。
+    物理布局：`src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml` +
+    `docs/gate_modules/TGT-01_ADC_Modality_Precedent.md` + `tests/`。未来 PR E2
+    才新建顶层 `gate_modules/`，单向依赖（src/ 不 import gate_modules/）。
+  - E-4：Blueprint v1.3 §H2.8 的 17 项 template 原文不在仓库/File Library；
+    合同标 `template_provenance.status: RECONSTRUCTED` +
+    `not_claimed_verbatim_from_blueprint: true`，17 项由冻结 v5 §6.4 + PR A–D
+    合同重建。
+- TGT-01 专属锁死：MOD-TGT01 回答"这个 target 是否已经被 ADC modality 现实检验
+  过？"，不是 target-在-CRC-好不好 / ADC-有没有效 / 治疗窗-安不安全 / density.
+- 交付：`src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml`（17 项
+  acceptance checklist，item 03/05/07/08 逐字继承 PR D TGT-01；04 排除
+  TGT-02…08；09 source plan `PUBLIC_PRIMARY` + `connect_provider_in_this_pr:
+  false`）、`docs/gate_modules/TGT-01_ADC_Modality_Precedent.md`（人读施工图，
+  17 项表格）、`tests/test_tgt01_module_construction_contract.py`（18 tests：
+  checklist 完整 / 逐字 parity vs PR D / RECONSTRUCTED provenance / 无实现 /
+  顶层 gate_modules/ 不存在 / 正文无 numeric cutoff）、
+  `manifests/runtime_migration_pr_e1_manifest.yaml`、handoff。
+- 未改：PR A/B/C/D 合同、`src/objects/*`、`data_layout/*`、冻结文档、
+  `gate_system.yaml`、`src/capabilities/*`、既有测试。无实现、无 provider、无
+  runner、无 numeric scoring、无新依赖。`MIGRATION_PENDING` 未解除。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 769 OK
+  （751 baseline + 18 new）/ `git diff --check` clean / 干净 tracked-tree
+  worktree boundary passed / YAML 结构合法。
+- Next：提交、推送、开 PR、CI 绿后回 `AI审核方案` 请求审核。
+
+## 2026-08-29T12:40 EDT — Runtime Migration PR E1 第一轮修订（PR #106 @ 6543174 REQUEST_CHANGES）
+
+- 审核方（ChatGPT `AI审核方案`）在 PR #106 首版给 REQUEST_CHANGES，只列 3 个
+  E1 construction-contract blocker，声明修完这 3 点下一轮直接 APPROVE E1、开
+  PR E2 implementation，不重开 E-1～E-4 scoping。3 处修订都在同一 PR 内做最小
+  改动，不写任何实现。
+- Fix 1 — item 12 proposal/canonical 边界。首版写"proposed CandidateGateAssessment"，
+  与 PR A 冲突（`CandidateGateAssessment` 是 canonical matrix cell，
+  `CANONICAL_REVIEW_STATUS = HUMAN_APPROVED`，`review.status != HUMAN_APPROVED`
+  构造即被拒）。改为 `12_assessment_proposal_envelope_contract`：Module 产出
+  **non-canonical、module-local proposal envelope**，不是 `CandidateGateAssessment`；
+  envelope 只 MIRROR `assessment.schema.json` 的 field 形状、不带 review block；
+  canonical 对象由 review surface 在 HUMAN_APPROVED 后构造，Module 永不构造。
+  item 13/14/15/17 同步改词（"proposal envelope"、"the review surface
+  constructs the canonical CandidateGateAssessment"、`this_module_does_not`
+  增 "construct a CandidateGateAssessment or emit a HUMAN_APPROVED record"）。
+- Fix 2 — item 16 fatal-safe stop rule。首版 stop 条件在命中 positive ceiling
+  时就允许停，会跳过 item 08 的 discontinued/failed 同靶点 ADC 项目扫查。新增
+  `mandatory_completion_before_any_stop`（同靶点 ADC 项目清单含 active/approved
+  **及** discontinued/failed + 已披露停止/失败原因扫查都必须完成）+
+  `rationale_for_the_mandatory_sweep`（positive ceiling 不 license 停；
+  违反 fatal-first）+ 原 4 条 stop 条件降为
+  `then_stop_searching_public_evidence_when_any_of`。item 13 machine 验收增一条
+  "item-16 mandatory completion conditions are satisfied"。
+- Fix 3 — item 09 ADCdb source-authority 边界。首版把 "an ADCdb-class database
+  resolved to its primary disclosures" 放进 `strong` source class，等于让
+  secondary index 直接确立 ladder rung。移出 `strong`，新增
+  `discovery_and_index_layer` + `discovery_index_authority_rule`：ADCdb-class
+  库只做 discovery / entity-resolution / program inventory，**不独立确立
+  Evidence Ladder rung**；行解析后 EvidencePackage 的 provenance 与 evidence
+  authority 归底层 primary disclosure；未解析的 database-only 行是 retrieval
+  lead。明确不改 PR D Evidence Ladder。
+- 三处修订同步落到 `docs/gate_modules/TGT-01_ADC_Modality_Precedent.md`
+  的第 9/12/16 行表格与 `tests/test_tgt01_module_construction_contract.py`
+  （item 12 键名改 `12_assessment_proposal_envelope_contract`；新增
+  `test_item12_is_a_non_canonical_proposal_envelope`、
+  `test_item16_has_a_mandatory_adverse_sweep_before_any_stop`、
+  `test_item09_adcdb_is_a_discovery_index_not_an_evidence_authority`）。
+- 未改：仍无实现、无 provider、无 runner、无 numeric scoring、无新依赖、
+  未动 PR A/B/C/D 合同与冻结文档、`MIGRATION_PENDING` 未解除。scoping 决策
+  E-1～E-4 不变。
+- 验证：`test_tgt01_module_construction_contract` 21 OK / 全量
+  `unittest discover` 772 OK（751 baseline + 21 E1）/ `git diff --check` clean
+  / 干净 tracked-tree worktree boundary passed / YAML 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第一轮复审（3 处 fix 摘要）。
+
+## 2026-08-29T13:05 EDT — Runtime Migration PR E1 第二轮修订（PR #106 @ 84de608 REQUEST_CHANGES，唯一窄口）
+
+- 审核方复审 84de608：确认第一轮 3 个 blocker 全部关闭且被 regression test
+  锁住（proposal/canonical 边界、fatal-safe stop rule、ADCdb source authority）。
+  只剩 **1 个新的、很窄的 contract blocker**，应在 E1 施工图阶段修掉。
+- 唯一 blocker — item 12 proposal-envelope identity completeness。首版
+  `the_proposal_envelope_carries` 只有 proposed_direction/strength、evidence_refs、
+  aggregation_rationale、critical_unknowns、evidence_ceiling、machine record，
+  **不带** canonical `CandidateGateAssessment` 的 identity pins
+  （candidate_id / instantiation_id / context_id / context_version /
+  gateset_id / gateset_version / gate_id / gate_version）。这样 proposal
+  artifact 自身无法被独立审计地回答"这是哪个 candidate / instantiation /
+  context / gate 的 proposal"，只能靠 review surface 从 item 10 外部 input
+  再补回来——对一个要落成 E2 runtime handoff artifact 的施工合同不够稳。
+- 修订（只动 item 12）：`the_proposal_envelope_carries` 拆成
+  `identity_pins_for_deterministic_canonicalisation`（8 个 pin，逐项列
+  candidate/instantiation/context/gateset/gate + version）、`scientific_fields`
+  （proposed_direction/strength、evidence_refs、aggregation_rationale、
+  critical_unknowns、evidence_ceiling）、`machine_record`；新增
+  `the_proposal_envelope_never_carries`（assessment_id、assessment_version、
+  review.status/reviewer/reviewed_at —— 属 human canonicalisation）。`rules`
+  改词："carries the canonical assessment identity pins ... while ... OMITTING
+  the canonical assessment identity/version ... and the review block"，并写明
+  canonicalisation 是 deterministic field map（proposal candidate_id →
+  canonical candidate_id，proposed_direction → direction，…）。`shape_ref`
+  改为"proposal 不对 assessment.schema.json 做校验；只承载它的 identity +
+  scientific fields，省略 assessment_id / assessment_version / review"。
+- pin 名对齐 `src/contracts/data_layout/assessment.schema.json` 的 required
+  字段（assessment_id/version + instantiation_id/candidate_id/context_id/
+  context_version/gateset_id/gateset_version/gate_id/gate_version + direction/
+  strength/evidence_refs/aggregation_rationale/critical_unknowns/
+  evidence_ceiling/review）。
+- 同步：`docs/gate_modules/TGT-01_ADC_Modality_Precedent.md` 第 12 行改写；
+  `tests` 新增 `test_item12_proposal_envelope_carries_all_identity_pins`
+  （8 个 pin 全在、never_carries 含 assessment_id/version/review.status、
+  scientific_fields 仍是 proposed_*），旧
+  `test_item12_is_a_non_canonical_proposal_envelope` 的 rules 断言随改词更新。
+- 未动：E-1～E-4、items 03/05/07/08、source plan、stop rule、repository
+  boundary、item 09/16 第一轮修订。仍无实现 / provider / runner / numeric
+  scoring / 新依赖 / 新 core object；`MIGRATION_PENDING` 未解除。
+- 验证：`test_tgt01_module_construction_contract` 22 OK / 全量 `unittest
+  discover` **773 OK**（751 baseline + 22 E1）/ `git diff --check` clean /
+  干净 tracked-tree worktree boundary passed / YAML 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第二轮复审（item 12 identity
+  pins 摘要）。审核方声明下一轮目标直接 APPROVE PR #106 → 进入 PR E2。
+
+## 2026-08-29T13:25 EDT — Runtime Migration PR E1 第三轮修订（PR #106 @ c6cb838 REQUEST_CHANGES，docs-only 残留）
+
+- 审核方复审 c6cb838：item 12 machine contract 已正确（8 个 identity pin 全在、
+  omitted canonical fields 明确、regression test 锁住）。只剩 **同一 proposal /
+  canonical boundary blocker 在 human drawing 里的两处旧措辞**，docs-only，不动
+  machine contract。
+- Fix（只改 `docs/gate_modules/TGT-01_ADC_Modality_Precedent.md`）：
+  - Gate ordering 段的链条把 `proposed CandidateGateAssessment` 改成
+    `assessment proposal envelope`，并补上终点
+    `→ human-review surface → HUMAN_APPROVED CandidateGateAssessment`，
+    加一句"the Module never produces the canonical CandidateGateAssessment —
+    the human review surface does, on approval"。
+  - item 17 行重写：Module 交付 EvidencePackages + assessment proposal
+    envelope 给 human review surface；只有 HUMAN_APPROVED 之后 review surface
+    才构造 canonical CandidateGateAssessment，*那条记录*才被 MatrixView /
+    GateSet decision layer 消费；"the Module's own output never enters the
+    MatrixView or the decision layer directly"；this module does not construct
+    a CandidateGateAssessment or emit a HUMAN_APPROVED record。
+- test：新增 `test_drawing_has_no_stale_proposed_candidategateassessment_wording`
+  （drawing 归一化后不含 "proposed CandidateGateAssessment"；含
+  "atomic EvidencePackages → assessment proposal envelope"、
+  "HUMAN_APPROVED CandidateGateAssessment"、item 17 的
+  "Only after HUMAN_APPROVED" 与 "never enters the MatrixView ... directly"）。
+- 未动：E-1～E-4、item 09、item 12 machine contract、item 16、PR D parity、
+  repository boundary。仍无实现 / provider / runner / numeric scoring / 新依赖 /
+  新 core object；`MIGRATION_PENDING` 未解除。
+- 验证：`test_tgt01_module_construction_contract` 23 OK / 全量 `unittest
+  discover` **774 OK**（751 baseline + 23 E1）/ `git diff --check` clean /
+  干净 tracked-tree worktree boundary passed / YAML 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第三轮复审。审核方声明这两处
+  同步后下一轮直接 APPROVE PR #106 → 进入 PR E2 implementation。

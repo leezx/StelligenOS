@@ -1,0 +1,90 @@
+phase: runtime_migration_pr_e1
+status: pending_review
+scope: tgt01_mod_tgt01_construction_contract_drawing_validation_and_acceptance_checklist_only
+repository_boundary: software_only_external_data
+data_added: false
+persistence_added: false
+runtime_business_logic_added: false
+implementation_code_added: false
+provider_or_adapter_added: false
+runner_added: false
+numeric_scoring_added: false
+new_scientific_ladder_semantics_added: false
+new_dependency_added: false
+touches_data_layout_schemas: false
+touches_pr_a_contracts: false
+touches_pr_b_contracts: false
+touches_pr_c_contracts: false
+touches_pr_d_contracts: false
+gate_module_directory_created: false
+migration_pending_lifted: false
+spec_refs:
+  - docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md (section 6.4 one Gate -> one primary Evidence Production Module + Module 权责边界; section 6.5 shared infrastructure; section 16 B group question 23 -> PR E+)
+  - src/contracts/crc_adc_target_gateset.yaml (PR D frozen TGT-01 gate contract -- inherited verbatim)
+  - src/contracts/data_layout/evidence_package.schema.json / assessment.schema.json (PR A output shapes)
+  - src/contracts/evidence_reference.yaml (PR C reusable-EP reference layer)
+scoping_decisions:
+  E-1: TGT-01 first (Module-architecture calibration case); order TGT-01 -> 05 -> 08 -> 02 -> 03 -> 04 -> 06 -> 07
+  E-2: E2a -- construction contract + drawing + validation tests + acceptance checklist only; no implementation (design-before-execution, frozen)
+  E-3: src/contracts/gate_modules/ + docs/gate_modules/ + tests/; NOT genmodules/; future gate_modules/ top-level dir is PR E2
+  E-4: 17-item template is RECONSTRUCTED (Blueprint v1.3 section H2.8 not in the repo); template_provenance carries not_claimed_verbatim_from_blueprint
+delivers:
+  - src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml -- the frozen MOD-TGT01 construction contract with the 17-item acceptance checklist
+  - docs/gate_modules/TGT-01_ADC_Modality_Precedent.md -- the human-readable construction drawing
+  - tests/test_tgt01_module_construction_contract.py -- 21 tests (checklist completeness; verbatim parity with the PR D TGT-01 contract; RECONSTRUCTED provenance; no implementation; round-1 proposal-envelope / stop-rule / ADCdb-authority guards)
+review_round_1:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "6543174"
+  scope: 3 E1 construction-contract blockers only; no implementation; scoping E-1..E-4 unchanged
+  fixes:
+    item_12_proposal_canonical_boundary: renamed 12_assessment_proposal_envelope_contract -- the Module emits a non-canonical module-local proposal envelope, NOT a CandidateGateAssessment (PR A CANONICAL_REVIEW_STATUS = HUMAN_APPROVED); the review surface constructs the canonical object after human approval; items 13/14/15/17 reworded
+    item_16_fatal_safe_stop_rule: added mandatory_completion_before_any_stop (same-target ADC inventory incl. discontinued/failed + failure-reason sweep) + rationale_for_the_mandatory_sweep; original stop conditions demoted to then_stop_searching_public_evidence_when_any_of; item 13 gains the item-16 completion criterion
+    item_09_adcdb_source_authority: ADCdb-class database moved out of strong source classes into discovery_and_index_layer + discovery_index_authority_rule -- discovery/entity-resolution only, never establishes an Evidence Ladder rung; authority is the underlying primary disclosure; PR D ladder unchanged
+  tests_at_round_1: 21
+  full_suite_at_round_1: 772
+review_round_2:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "84de608"
+  round_1_blockers: all 3 confirmed closed and locked by regression tests
+  scope: 1 narrow contract blocker -- item 12 proposal-envelope identity completeness; no implementation; scoping / items 03-08 / source plan / stop rule / repository boundary unchanged
+  fix:
+    item_12_proposal_envelope_identity_pins: >-
+      the_proposal_envelope_carries split into
+      identity_pins_for_deterministic_canonicalisation (candidate_id,
+      instantiation_id, context_id, context_version, gateset_id,
+      gateset_version, gate_id, gate_version), scientific_fields and
+      machine_record; added the_proposal_envelope_never_carries (assessment_id,
+      assessment_version, review.status/reviewer/reviewed_at -- human
+      canonicalisation only); rules and shape_ref reworded so the envelope
+      carries the canonical assessment identity pins + scientific fields for a
+      deterministic field-map canonicalisation and is NOT validated against
+      assessment.schema.json. pin names aligned to the schema required fields.
+  tests_at_round_2: 22
+  full_suite_at_round_2: 773
+review_round_3:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "c6cb838"
+  round_2_blocker: item 12 machine contract confirmed correct and locked by regression tests
+  scope: documentation-only residual of the same proposal/canonical boundary blocker; drawing only; no machine-contract / code / interface change
+  fix:
+    drawing_gate_ordering_chain: proposed CandidateGateAssessment -> assessment proposal envelope; chain terminates at human-review surface -> HUMAN_APPROVED CandidateGateAssessment; the Module never produces the canonical object
+    drawing_item_17_row: rewritten -- Module hands off EvidencePackages + proposal envelope to the human review surface; only after HUMAN_APPROVED does the review surface construct the canonical CandidateGateAssessment, and only that record feeds MatrixView / the decision layer; the Module's own output never enters MatrixView or the decision layer directly
+    drawing_test: added test_drawing_has_no_stale_proposed_candidategateassessment_wording
+  tests_at_round_3: 23
+  full_suite_at_round_3: 774
+deferred:
+  mod_tgt01_implementation: "PR E2 (new top-level gate_modules/tgt01_adc_modality_precedent/; only after this contract is APPROVED)"
+  retrieval_providers_and_datasets: "PR E2+"
+  other_seven_tgt_modules: "PR E2+ (TGT-05 -> TGT-08 -> TGT-02 -> TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)"
+chatgpt_review: PENDING
+approved_tip: null
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_tgt01_module_construction_contract.py' -v
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py'
+  - bash scripts/verify_repository_boundary.sh
+  - git diff --check
+artifacts:
+  - src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml
+  - docs/gate_modules/TGT-01_ADC_Modality_Precedent.md
+  - tests/test_tgt01_module_construction_contract.py
+  - manifests/runtime_migration_pr_e1_manifest.yaml
