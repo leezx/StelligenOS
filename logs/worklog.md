@@ -4469,3 +4469,57 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   干净 tracked-tree worktree boundary passed / YAML 结构合法。
 - Next：提交、推送、CI 绿后回 `AI审核方案` 贴第三轮复审。审核方声明这两处
   同步后下一轮直接 APPROVE PR #106 → 进入 PR E2 implementation。
+
+## 2026-08-29T14:10 EDT — Runtime Migration PR E2 首版（MOD-TGT01 implementation）
+
+- 授权：用户在 PR E1 APPROVE（PR #106 merge `b20c021` + approval record PR #107
+  `c03fa88`）后追加 "go ahead"。开工前审核方（ChatGPT `AI审核方案`）拍了 8 个
+  scoping 决策 E2-1…E2-8。基线 `origin/main`（E1 收口后）。
+- 8 个 scoping 决策：E2-1 真正的确定性实现（非 skeleton），`module_version
+  1.0.0`；E2-2 Module 内不实现任何 source-specific live provider，只定义
+  normalized `Tgt01PrecedentProviderPort`，`failure_attribution = TARGET_MEDIATED`
+  只能来自明确 primary-source disclosure；E2-3 ADCdb 仍是 discovery / index 层，
+  未解析行是 retrieval lead 永不确立 rung；E2-4 输出全 in-memory
+  `Tgt01ModuleRunResult`，零 persistence，`evidence_id` 由 injected allocator
+  给；E2-5 Direction × Strength 确定性、严格 E1 语义、无 score、无第四套 ladder，
+  adverse pattern 只有满足冻结 item 08（≥2 独立同靶点、一致 target-mediated）
+  才成立，单个 failed ADC 永不 NEGATIVE / fatal；E2-6 stop rule 是
+  machine-enforced prerequisite（两个 sweep completion flag 都为真才可产可接受
+  proposal，positive ceiling 不能提前停）；E2-7 一次极窄 repository-policy
+  reconciliation（允许顶层 `gate_modules/` 源码，live retrieval / execution /
+  persistence 仍 forbidden，TGT-01 `primary_module_version` `0.0.0 → 1.0.0`，
+  E1 施工合同正文与 TGT-01…08 Gate science 一字不动）；E2-8 CI 只跑 synthetic
+  in-memory 用例，synthetic `TARGET_A` / `PROGRAM_A`。
+- 边界一句话：PR E2 owns「normalized evidence → Gate-specific interpretation →
+  EvidencePackages → proposal envelope」；不 own「web retrieval → database /
+  cache → source registry persistence → human approval → canonical persistence」。
+- 交付：`gate_modules/README.md`（五条 kernel invariant，镜像
+  `extensions/README.md`）；`gate_modules/tgt01_adc_modality_precedent/`
+  （`module.yaml` + `__init__` + `contracts` + `ports` + `classify` +
+  `evidence` + `aggregate` + `acceptance` + `module`）；
+  `scripts/verify_repository_boundary.sh`（`allowed_top_level` 增
+  `gate_modules`）；`src/contracts/crc_adc_target_gateset.yaml`（TGT-01
+  `primary_module_version 1.0.0`、`primary_module_binding.built_module_versions`、
+  `repository_policy` `gate_module_*` 措辞）；`src/objects/crc_adc_target_gateset.py`
+  （`BUILT_MODULE_VERSIONS` + `expected_primary_module_version()`，per-gate
+  version 校验）；`tests/test_tgt01_module.py`（E2-8 验收场景，synthetic）；
+  `tests/test_gate_modules_boundary.py`（`src/` 永不 import `gate_modules`、
+  Module 不 import network / DB / subprocess、data-free、三方 parity）；
+  `tests/test_crc_adc_target_gateset.py`（`NoModuleInPrDTests` →
+  `ModuleBindingSlotTests`，per-gate expected version）；
+  `tests/test_tgt01_module_construction_contract.py`（E1「没有
+  `gate_modules/`」guard 改成「若存在，必须是 `built_in: runtime_migration_pr_e2`」）。
+- 冻结 TGT-01 ladder / `evidence_ceiling` / allowed·forbidden inference /
+  `fatal_conditions` / `unknown_behavior` 逐字复现（`classify.py` /
+  `evidence.py` / `aggregate.py`）。
+- 未改：PR A / B / C 合同与对象；PR D 的 Gate science（只动
+  `primary_module_version` slot + `repository_policy` 措辞）；E1 施工合同正文
+  （`src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml` 未动）。
+  未构造 canonical `CandidateGateAssessment`、未产 `Decision` / `KILL`、
+  未写 `MatrixView`。无实现内联网络 / subprocess / DB / 落盘 / 自增 ID /
+  numeric score / 新 ladder semantics / 新依赖。`MIGRATION_PENDING` 未解除
+  （8 个 primary Module 只做完 1 个）。
+- 验证：全量 `unittest discover` **807 OK**（774 baseline + 33 new）/
+  `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
+  `module.yaml` 结构合法。
+- Next：提交、推送、开 PR、CI 绿后回 `AI审核方案` 请求审核。

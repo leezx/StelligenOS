@@ -15,6 +15,7 @@ allowed_top_level=(
   "src"
   "genmodules"
   "extensions"
+  "gate_modules"
   "code"
   "tests"
   "notebooks"

@@ -8,8 +8,9 @@ Asserts:
 * ``CRC-ADC-TARGET-GATESET-v1`` never appears as a ``gateset_id``;
 * the eight context-specific binding records are parity-consistent with the
   frozen ``data_layout/gate_binding.schema.yaml`` (and the gateset binding);
-* PR D creates no Evidence Production Module (every ``primary_module_version``
-  is "0.0.0", id is the deterministic ``MOD-TGT0n``);
+* the primary Module binding slots are the deterministic ``MOD-TGT0n`` at their
+  expected version (PR D left every gate at "0.0.0"; PR E2 built MOD-TGT01, so
+  TGT-01 is "1.0.0"); PR D itself created no Module ``.py`` under ``src/objects``;
 * per-object accept / reject, and PR A / B / C files are untouched.
 """
 
@@ -241,24 +242,44 @@ class BindingParityTests(unittest.TestCase):
                 self.assertTrue(_re.match(r"^external:.+", b[ref]))
 
 
-# --- 4. no Evidence Production Module in PR D ----------------------
+# --- 4. primary Module binding slots ----------------------------------
 
-class NoModuleInPrDTests(unittest.TestCase):
-    def test_every_module_slot_is_unbuilt_and_deterministic(self):
+#: gate_id -> the primary_module_version once its Module is built. PR D left
+#: every gate at "0.0.0"; Runtime Migration PR E2 built MOD-TGT01.
+_BUILT_MODULE_VERSIONS = {"TGT-01": "1.0.0"}
+
+
+class ModuleBindingSlotTests(unittest.TestCase):
+    def test_every_module_slot_is_deterministic_and_at_its_expected_version(self):
         doc = _load(CONTRACT_PATH)
         for b in doc["context_specific_bindings"]["gate_bindings"]:
-            self.assertEqual(b["primary_module_version"], "0.0.0")
+            expected = _BUILT_MODULE_VERSIONS.get(b["gate_id"], "0.0.0")
+            self.assertEqual(b["primary_module_version"], expected)
             self.assertEqual(
                 b["primary_module_id"], _deterministic_module_id(b["gate_id"])
             )
         self.assertEqual(doc["primary_module_binding"]["unbuilt_version"], "0.0.0")
+        self.assertEqual(
+            doc["primary_module_binding"]["built_module_versions"],
+            _BUILT_MODULE_VERSIONS,
+        )
         self.assertIn("per_gate_primary_modules", doc["migration"]["deferred"])
 
-    def test_no_module_py_created(self):
+    def test_pr_d_created_no_module_py_in_src_objects(self):
         objects_dir = ROOT / "src" / "objects"
         names = {p.name for p in objects_dir.iterdir()}
         for n in range(1, 9):
             self.assertNotIn(f"mod_tgt0{n}.py", names)
+
+    def test_tgt01_module_is_built_in_gate_modules(self):
+        module_yaml = (
+            ROOT / "gate_modules" / "tgt01_adc_modality_precedent" / "module.yaml"
+        )
+        self.assertTrue(module_yaml.is_file())
+        manifest = yaml.safe_load(module_yaml.read_text())["module"]
+        self.assertEqual(manifest["module_id"], "MOD-TGT01")
+        self.assertEqual(manifest["module_version"], "1.0.0")
+        self.assertEqual(manifest["gate_binding"]["gate_id"], "TGT-01")
 
 
 # --- 5. per-object accept / reject -------------------------------

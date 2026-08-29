@@ -503,7 +503,8 @@ context_specific_bindings:
       evidence_ladder_ref: external:crc_adc_target_gateset/TGT-01/evidence_ladder@v1
       assessment_rule_ref: external:crc_adc_target_gateset/TGT-01/assessment_rule@v1
       primary_module_id: MOD-TGT01
-      primary_module_version: "0.0.0"
+      # Built in Runtime Migration PR E2 (gate_modules/tgt01_adc_modality_precedent/).
+      primary_module_version: "1.0.0"
     - gate_id: TGT-02
       gate_version: "1.0"
       gateset_id: ADC_TARGET_GATESET
@@ -592,13 +593,17 @@ context_specific_bindings:
 primary_module_binding:
   rule: >-
     Each gate declares exactly one primary Evidence Production Module slot, keyed
-    by the deterministic id MOD-TGT0n. In PR D every primary_module_version is
-    "0.0.0" (declared, not built). PR E+ builds the Module and raises its version
-    to >= 1.0. A Module may not choose a different id, and may not modify the
-    Gate id / name / candidate ownership, the gate_question, the Evidence Ladder,
-    the evidence ceiling, or the fatal / unknown / conflict semantics (v5
-    section 6.4).
+    by the deterministic id MOD-TGT0n. In PR D every primary_module_version was
+    "0.0.0" (declared, not built). Runtime Migration PR E2 built MOD-TGT01 and
+    raised its version to "1.0.0"; the other seven remain "0.0.0" until their
+    own PR E3+ builds them. A Module may not choose a different id, and may not
+    modify the Gate id / name / candidate ownership, the gate_question, the
+    Evidence Ladder, the evidence ceiling, or the fatal / unknown / conflict
+    semantics (v5 section 6.4).
   unbuilt_version: "0.0.0"
+  built_module_versions:
+    # gate_id -> primary_module_version once the Module is built.
+    TGT-01: "1.0.0"
 
 repository_policy:
   instances_external_only: true
@@ -607,4 +612,8 @@ repository_policy:
   cache: forbidden
   result_files: forbidden
   evaluator_in_repository: forbidden
-  evidence_production_module_in_repository: forbidden
+  # A Gate Module's deterministic Gate-specific scientific core is source code
+  # and lives in gate_modules/<name>/ (PR E2+). Its live retrieval, external
+  # execution and any persistence stay outside the repository.
+  gate_module_source_code_in_repository: allowed
+  gate_module_live_retrieval_execution_or_persistence_in_repository: forbidden

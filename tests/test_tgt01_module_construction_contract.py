@@ -247,8 +247,19 @@ class NoImplementationInPrE1Tests(unittest.TestCase):
         self.assertIn("implementation", joined)
         self.assertIn("runner", joined)
 
-    def test_no_gate_modules_top_level_directory_yet(self):
-        self.assertFalse((ROOT / "gate_modules").exists())
+    def test_e1_shipped_no_implementation_under_gate_modules(self):
+        # PR E1 created no top-level gate_modules/ implementation. If the
+        # directory exists now it is the separately-approved PR E2 build, not
+        # something E1 smuggled in.
+        module_yaml = ROOT / "gate_modules" / "tgt01_adc_modality_precedent" / "module.yaml"
+        if not module_yaml.exists():
+            return
+        manifest = yaml.safe_load(module_yaml.read_text())["module"]
+        self.assertEqual(manifest["built_in"], "runtime_migration_pr_e2")
+        self.assertEqual(
+            manifest["construction_contract"],
+            "src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml",
+        )
 
     def test_source_plan_connects_no_provider(self):
         self.assertFalse(

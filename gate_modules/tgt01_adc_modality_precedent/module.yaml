@@ -1,0 +1,66 @@
+module:
+  module_id: MOD-TGT01
+  module_name: tgt01_adc_modality_precedent
+  module_version: "1.0.0"
+  built_in: runtime_migration_pr_e2
+  construction_contract: src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml
+  construction_drawing: docs/gate_modules/TGT-01_ADC_Modality_Precedent.md
+
+  gate_binding:
+    gate_id: TGT-01
+    gate_version: "1.0"
+    gateset_id: ADC_TARGET_GATESET
+    gateset_version: "1.0"
+    instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v1
+    candidate_level: L04
+    dominant_evidence_regime: PUBLIC_PRIMARY
+
+  the_one_question: >-
+    Has this target already been reality-tested by the ADC modality?
+    (verbatim gate_question inherited from the PR D TGT-01 contract; not widened
+    or narrowed)
+
+  purpose: >-
+    Deterministic Gate-specific scientific core for TGT-01. It turns normalized
+    same-target / adjacent-target ADC precedent records into atomic
+    EvidencePackages, detects the frozen item-08 target-attributable failure
+    pattern, aggregates a proposed Direction x Strength strictly per the frozen
+    TGT-01 Evidence Ladder (no numeric score), enforces the item-16 stop-rule
+    completion prerequisites, and emits a non-canonical assessment proposal
+    envelope for the human review surface.
+
+  owns:
+    - input contract validation (no implicit default scientific context)
+    - normalized precedent record admissibility + frozen ladder-rung classification
+    - EvidencePackage construction (PR A evidence_package shape) via an injected id allocator
+    - "target-attributable failure-pattern detection (frozen item 08 -- two or more independent same-target programs, consistent target-mediated attribution)"
+    - deterministic Direction x Strength aggregation (E1 semantics; Strength orthogonal to Direction; no fourth ladder)
+    - machine acceptance record (E1 item 13) + stop-rule completion prerequisites (E1 item 16)
+    - non-canonical assessment proposal envelope (E1 item 12)
+
+  does_not_own:
+    - web / literature / trial / patent retrieval
+    - entity resolution, source registry, provenance ledger, serialization (shared infra, v5 section 6.5)
+    - any source-specific live provider (PubMed / ClinicalTrials.gov / FDA / patent / ADCdb adapters)
+    - database, cache, RUNS / ASSESSMENTS / EvidenceIndex persistence
+    - human approval and canonical CandidateGateAssessment construction
+    - Candidate-level Decision / KILL, MatrixView writes, cross-Gate reasoning
+
+  ports:
+    - name: Tgt01PrecedentProviderPort
+      role: supplies already-normalized precedent observations plus the two completion flags (same_target_program_inventory_complete, failure_reason_sweep_complete)
+    - name: EvidenceIdAllocatorPort
+      role: allocates EP-nnnnnnnn ids; the Module never derives ids from the filesystem
+    - name: SourceRegistryPort
+      role: resolves whether a provenance.source_id is a registered primary source; an unresolved id (incl. an ADCdb-only lead) cannot establish a ladder rung
+
+  boundary_flags:
+    performs_network_io: false
+    spawns_subprocess: false
+    writes_repository: false
+    allocates_ids_from_filesystem: false
+    constructs_canonical_assessment: false
+    produces_decision_or_kill: false
+    numeric_scoring: false
+    modifies_frozen_gate_science: false
+    lifts_migration_pending: false
