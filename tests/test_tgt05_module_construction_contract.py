@@ -408,17 +408,36 @@ class NoImplementationInPrE3Tests(unittest.TestCase):
         self.assertIn("1.0.0", joined)
         self.assertIn("runner", joined)
 
-    def test_no_tgt05_module_directory_yet(self):
-        self.assertFalse((ROOT / "gate_modules" / "tgt05_normal_tissue_fatal_liability").exists())
+    def test_pr_e3_shipped_no_implementation_under_gate_modules(self):
+        # PR E3 created no gate_modules/tgt05.../ implementation. If the
+        # directory exists now it is the separately-approved PR E4 build, not
+        # something E3 smuggled in.
+        module_yaml = (
+            ROOT / "gate_modules" / "tgt05_normal_tissue_fatal_liability" / "module.yaml"
+        )
+        if not module_yaml.exists():
+            return
+        manifest = yaml.safe_load(module_yaml.read_text())["module"]
+        self.assertEqual(manifest["built_in"], "runtime_migration_pr_e4")
+        self.assertEqual(
+            manifest["construction_contract"],
+            "src/contracts/gate_modules/tgt05_normal_tissue_fatal_liability.yaml",
+        )
 
-    def test_tgt05_binding_still_declares_an_unbuilt_module(self):
+    def test_tgt05_binding_matches_the_module_build_state(self):
         gateset = yaml.safe_load(CRC_GATESET.read_text())
         binding = next(
             b for b in gateset["context_specific_bindings"]["gate_bindings"]
             if b["gate_id"] == "TGT-05"
         )
         self.assertEqual(binding["primary_module_id"], "MOD-TGT05")
-        self.assertEqual(binding["primary_module_version"], "0.0.0")
+        module_yaml = (
+            ROOT / "gate_modules" / "tgt05_normal_tissue_fatal_liability" / "module.yaml"
+        )
+        expected = "0.0.0"
+        if module_yaml.exists():
+            expected = yaml.safe_load(module_yaml.read_text())["module"]["module_version"]
+        self.assertEqual(binding["primary_module_version"], expected)
 
     def test_mod_tgt01_is_untouched(self):
         gateset = yaml.safe_load(CRC_GATESET.read_text())
@@ -431,8 +450,12 @@ class NoImplementationInPrE3Tests(unittest.TestCase):
     def test_no_generic_gate_module_framework_or_base_class_added(self):
         gm = ROOT / "gate_modules"
         py_files = sorted(str(p.relative_to(ROOT)) for p in gm.rglob("*.py"))
-        # only the built MOD-TGT01 package files may exist under gate_modules/
-        self.assertTrue(all("tgt01_adc_modality_precedent" in p for p in py_files), py_files)
+        # only the built per-gate packages may exist under gate_modules/ -- no
+        # shared framework / base-class / registry module at the root.
+        allowed = ("tgt01_adc_modality_precedent", "tgt05_normal_tissue_fatal_liability")
+        self.assertTrue(
+            all(any(pkg in p for pkg in allowed) for p in py_files), py_files
+        )
 
     def test_no_numeric_threshold_anywhere_in_the_contract(self):
         text = CONTRACT.read_text()

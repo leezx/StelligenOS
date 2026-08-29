@@ -245,8 +245,9 @@ class BindingParityTests(unittest.TestCase):
 # --- 4. primary Module binding slots ----------------------------------
 
 #: gate_id -> the primary_module_version once its Module is built. PR D left
-#: every gate at "0.0.0"; Runtime Migration PR E2 built MOD-TGT01.
-_BUILT_MODULE_VERSIONS = {"TGT-01": "1.0.0"}
+#: every gate at "0.0.0"; Runtime Migration PR E2 built MOD-TGT01 and PR E4
+#: built MOD-TGT05.
+_BUILT_MODULE_VERSIONS = {"TGT-01": "1.0.0", "TGT-05": "1.0.0"}
 
 
 class ModuleBindingSlotTests(unittest.TestCase):
@@ -280,6 +281,17 @@ class ModuleBindingSlotTests(unittest.TestCase):
         self.assertEqual(manifest["module_id"], "MOD-TGT01")
         self.assertEqual(manifest["module_version"], "1.0.0")
         self.assertEqual(manifest["gate_binding"]["gate_id"], "TGT-01")
+
+    def test_tgt05_module_is_built_in_gate_modules(self):
+        module_yaml = (
+            ROOT / "gate_modules" / "tgt05_normal_tissue_fatal_liability" / "module.yaml"
+        )
+        self.assertTrue(module_yaml.is_file())
+        manifest = yaml.safe_load(module_yaml.read_text())["module"]
+        self.assertEqual(manifest["module_id"], "MOD-TGT05")
+        self.assertEqual(manifest["module_version"], "1.0.0")
+        self.assertEqual(manifest["built_in"], "runtime_migration_pr_e4")
+        self.assertEqual(manifest["gate_binding"]["gate_id"], "TGT-05")
 
 
 # --- 5. per-object accept / reject -------------------------------

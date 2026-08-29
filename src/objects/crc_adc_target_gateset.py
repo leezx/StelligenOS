@@ -76,9 +76,12 @@ TGT_GATESET_VERSION: Final[str] = "1.0"
 UNBUILT_MODULE_VERSION: Final[str] = "0.0.0"
 
 #: gate_id -> primary_module_version once the Module is built. Runtime Migration
-#: PR E2 built MOD-TGT01 (gate_modules/tgt01_adc_modality_precedent/). The other
-#: seven TGT gates stay at UNBUILT_MODULE_VERSION until their own PR E3+.
-BUILT_MODULE_VERSIONS: Final[Mapping[str, str]] = MappingProxyType({"TGT-01": "1.0.0"})
+#: PR E2 built MOD-TGT01 (gate_modules/tgt01_adc_modality_precedent/); PR E4 built
+#: MOD-TGT05 (gate_modules/tgt05_normal_tissue_fatal_liability/). The other six
+#: TGT gates stay at UNBUILT_MODULE_VERSION until their own PR E-series.
+BUILT_MODULE_VERSIONS: Final[Mapping[str, str]] = MappingProxyType(
+    {"TGT-01": "1.0.0", "TGT-05": "1.0.0"}
+)
 
 
 def expected_primary_module_version(gate_id: str) -> str:

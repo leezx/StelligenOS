@@ -1,0 +1,114 @@
+phase: runtime_migration_pr_e4
+status: proposed
+scope: mod_tgt05_deterministic_scientific_core_implementation_plus_narrow_binding_reconciliation
+repository_boundary: software_only_external_data
+
+# what E4 IS
+implementation_code_added: true            # gate_modules/tgt05_normal_tissue_fatal_liability/
+module_version_built: "1.0.0"              # MOD-TGT05 (was 0.0.0 declared slot)
+standalone_package: true                   # no shared framework / base class; MOD-TGT01 not refactored
+binding_reconciled: true                   # TGT-05 primary_module_version 0.0.0 -> 1.0.0; built_module_versions gains TGT-05
+
+# what E4 IS NOT
+live_provider_or_adapter_added: false      # only a normalized Tgt05LiabilityProviderPort Protocol
+network_or_subprocess_io_added: false
+database_or_cache_added: false
+persistence_in_repository_added: false     # all output is an in-memory Tgt05ModuleRunResult
+ids_allocated_from_filesystem: false       # injected EvidenceIdAllocatorPort
+numeric_scoring_added: false               # no severity score, no organ-count / TPM / IHC threshold
+ontology_or_embedding_inference_added: false  # fatal_review is exact-key comparison only
+new_scientific_ladder_semantics_added: false  # frozen TGT-05 ladder / ceiling / fatal / unknown reproduced verbatim
+proposes_negative_or_safe: false           # a negative atlas is coverage context, never NEGATIVE / safe
+predicts_therapeutic_window: false
+emits_established_fatal_signal: false       # machine emits at most POTENTIAL_FATAL_PATTERN
+constructs_canonical_assessment_or_decision: false
+touches_pr_a_contracts: false
+touches_pr_b_contracts: false
+touches_pr_c_contracts: false
+touches_pr_d_gate_science: false           # only the primary_module_version slot
+touches_e3_construction_contract_body: false
+mod_tgt01_modified: false
+new_dependency_added: false
+migration_pending_lifted: false            # two of eight primary Modules built (TGT-01, TGT-05)
+
+spec_refs:
+  - src/contracts/gate_modules/tgt05_normal_tissue_fatal_liability.yaml (frozen E3 construction contract, 17-item acceptance checklist, item-06 truth table, fatal_review sub-block, asymmetric stop rule)
+  - docs/gate_modules/TGT-05_Normal_Tissue_Fatal_Liability.md (E3 construction drawing)
+  - src/contracts/crc_adc_target_gateset.yaml gate_contracts.TGT-05 (frozen ladder / evidence_ceiling / allowed+forbidden inference / fatal_conditions / unknown_behavior -- reproduced verbatim)
+  - src/objects/decision_model.py (PR A EvidencePackage shape + DIRECTION/STRENGTH/ROLE/CRITICAL_UNKNOWN enums)
+  - gate_modules/tgt01_adc_modality_precedent/ (PR E2 -- the runtime genes E3 froze for MOD-TGT05; the standalone-package shape, reused not imported)
+  - CURRENT_SYSTEM v5 section 6.4 (one Gate -> one primary Module; Module 权责边界) / section 6.5 (shared infrastructure not per Gate)
+
+scoping_decisions:  # ChatGPT AI审核方案, before code, 8 decisions
+  E4-1: real deterministic MOD-TGT05 implementation (like E2, a full Gate-specific scientific core); files __init__ / module.yaml / contracts / ports / classify / evidence / aggregate / fatal_review / acceptance / module; module_version 1.0.0; minimal binding update (TGT-05 primary_module_version 0.0.0 -> 1.0.0, built_module_versions gains TGT-05); frozen E3 contract body untouched; NO generic GateModule framework / abstract base class; NO MOD-TGT01 refactor
+  E4-2: one normalized Tgt05LiabilityProviderPort; every record carries an evidence_function in {LIABILITY_RUNG_EVIDENCE (A), ATTRIBUTION_ADJUDICATION (B), COVERAGE_CONTEXT (C)}; NormalizedLiabilityRecord carries facts only (observation_id, liability_event_id, target_identity, observation_kind, claim, provenance, plus optional species / modality / molecular_layer / finding / atlas_validated / vital_organ_class / affected_tissue / program_id / construct_fingerprint / toxicity_phenotype_key / observed_severity / target_attribution_stance+basis / translational_relevance); the provider never returns a rung or a direction; N/A is an explicit empty value, never omission
+  E4-3: classification implements the frozen E3 item-06 truth table verbatim -- a validated human protein atlas NOT_DETECTED is COVERAGE_CONTEXT (not WEAK, not NEGATIVE); scRNA / RNA-only is WEAK; rodent-only is WEAK; aggregation is undisputed DIRECT -> POSITIVE/DIRECT, else undisputed INDIRECT_STRONG -> POSITIVE/INDIRECT_STRONG, else WEAK-only -> INCONCLUSIVE/WEAK, else INCONCLUSIVE/UNKNOWN; an established DIRECT/INDIRECT_STRONG liability plus a coverage gap stays POSITIVE (gap -> critical_unknowns); never NEGATIVE/safe
+  E4-4: CONFLICTING is per liability_event_id -- a disputed event is one admissible source SUPPORTS + another admissible source REFUTES the SAME event id, and that event is not itself an undisputed established liability; if there is no other independent undisputed DIRECT/INDIRECT_STRONG liability -> CONFLICTING at the strongest rung the disputed observation could reach; if an independent established liability exists -> overall POSITIVE and the dispute -> critical_unknowns; "ADC-A toxicity, ADC-B reports no toxicity" is never a conflict and never a CONTRADICTING ref
+  E4-5: fatal_review is an independent machine-local run output; status has one value POTENTIAL_FATAL_PATTERN (no FATAL_REVIEW_REQUIRED status -- required=true expresses it); required=true iff >= 2 distinct program_id same-target ADC clinical toxicity observations, each with a construct_fingerprint + a disclosed target_attribution_basis + SUPPORTS_TARGET_ATTRIBUTION + an EXACT normalized affected_tissue key match + an EXACT toxicity_phenotype_key match; no embeddings / LLM / ontology / fuzzy matching; same program in two publications = one program; "materially distinct" / "truly target-mediated" / "biologically meaningful convergence" stay human-review calls
+  E4-6: Tgt05SweepCompletionRecord = 5 sweep booleans + a per-vital-organ {search_complete, coverage_result in (ADMISSIBLE_PROTEIN_DATA_FOUND, PUBLIC_SEARCH_EXHAUSTED_NO_ADMISSIBLE_PROTEIN_DATA, NOT_YET_COMPLETE)} map over CNS/CARDIAC/HEPATIC/PULMONARY/HEMATOPOIETIC/GASTROINTESTINAL; Path A (fatal_review.required -> provisional stop; the weaker atlas/RNA sweeps are not a prerequisite, but the same-target ADC construct inventory + attribution sweep still must be complete); Path B (a DIRECT ADC clinical liability exists AND fatal_review.required==false -> require the construct inventory + the attribution sweep); Path C (no DIRECT ADC clinical liability -> require the non-ADC + NHP + RNA-supporting + all six vital-organ protein coverage searches complete; an exhausted organ -> a critical_unknown EXPERIMENT_REQUIRED)
+  E4-7: EvidencePackage is Gate-neutral + exact canonical reuse (an observation already in the Evidence Library is reused as the EXACT object -- no allocator call, no new body); a negative-atlas observation is ALSO an EvidencePackage whose does_not_support explicitly lists "the absence of a normal-tissue on-target liability" / "normal-tissue safety" / "a product-specific therapeutic window"; reuse parity covers the classification-driving fields FOR THAT OBSERVATION KIND (missing OR drifted -> HARD reject); SourceIndex authority is exactly as E2 (unresolved id or provider/canonical metadata conflict -> HARD reject)
+  E4-8: CI runs synthetic / in-memory acceptance scenarios only -- no internet, no real atlas / clinical data, synthetic TARGET_A / PROGRAM_A / PROGRAM_B / LIVER (HEPATIC) / PHENO_X
+
+owns_boundary_one_liner:
+  pr_e4_owns: >-
+    normalized TGT-05 observations -> source / identity QC -> frozen evidence-class mapping ->
+    Gate-neutral EvidencePackages -> per-vital-organ coverage state -> Direction x Strength (frozen
+    truth table) -> machine-local fatal_review review trigger -> path-based stop-rule acceptance ->
+    non-canonical assessment proposal envelope
+  pr_e4_does_not_own: >-
+    web / atlas / clinical retrieval -> RNA/atlas normalisation + phenotype keying + attribution
+    stance assignment -> source registry / provenance ledger -> dataset persistence -> ontology / LLM
+    inference of toxicity convergence -> human target-attribution adjudication -> the human
+    materially-distinct judgement -> the fatal decision -> CandidateGateAssessment approval ->
+    GateSet Decision / KILL -> therapeutic-window prediction
+
+delivers:
+  - gate_modules/tgt05_normal_tissue_fatal_liability/ -- module.yaml + __init__ + contracts + ports + classify + evidence + aggregate + fatal_review + acceptance + module
+  - gate_modules/README.md -- Module registry gains MOD-TGT05@1.0.0 (built, PR E4); "remaining six" wording
+  - src/contracts/crc_adc_target_gateset.yaml -- TGT-05 primary_module_version 0.0.0 -> 1.0.0; primary_module_binding.built_module_versions gains TGT-05; primary_module_binding.rule wording
+  - src/objects/crc_adc_target_gateset.py -- BUILT_MODULE_VERSIONS gains "TGT-05": "1.0.0"
+  - tests/test_tgt05_module.py -- the E4-8 acceptance scenarios (synthetic): frozen truth table, positive precedence over coverage gaps, CONFLICTING per liability_event_id, fatal_review trigger semantics, path-based stop rule, exact canonical EP reuse + HARD integrity gate, no IO / no scoring / no therapeutic-window conclusion, binding reconciliation + MIGRATION_PENDING
+  - tests/test_gate_modules_boundary.py -- Tgt05ModuleManifestTests (manifest <-> package constant <-> gateset binding parity; conservative boundary flags; README registration)
+  - tests/test_crc_adc_target_gateset.py -- _BUILT_MODULE_VERSIONS gains TGT-05; test_tgt05_module_is_built_in_gate_modules
+  - tests/test_tgt05_module_construction_contract.py -- E3 "no implementation yet" guards retargeted to "any gate_modules/tgt05.../ build is the separately-approved PR E4" (built_in runtime_migration_pr_e4; binding version tracks the built manifest; no shared framework)
+
+deferred:
+  live_providers_and_datasets: "PR E-series+ (Human Protein Atlas / GTEx / Tabula Sapiens / PubMed / ClinicalTrials.gov / FDA / ADCdb resolution live behind the port)"
+  external_workspace_calibration_run: "after E4 merge -- a real atlas + primary-source resolution smoke run in the external workspace"
+  other_six_tgt_modules: "PR E-series+ (TGT-08 -> TGT-02 -> TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)"
+
+chatgpt_review: PENDING
+approved_tip: null
+merge_commit: null
+review_rounds: 0
+test_count_before_e4: 862      # at PR E3 approval
+test_count_at_submission: 906  # local full suite; the single local FAIL is a pre-existing __pycache__ scan in test_assetgenos_modules (clean on a fresh CI checkout)
+approval_record_pr: null
+next_authorized_step: null     # real provider / external calibration, or the next TGT construction drawing -- each needs its own go-ahead
+
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_tgt05_module.py' -v
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_gate_modules_boundary.py' -v
+  - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py'
+  - bash scripts/verify_repository_boundary.sh
+  - git diff --check
+
+artifacts:
+  - gate_modules/tgt05_normal_tissue_fatal_liability/module.yaml
+  - gate_modules/tgt05_normal_tissue_fatal_liability/__init__.py
+  - gate_modules/tgt05_normal_tissue_fatal_liability/contracts.py
+  - gate_modules/tgt05_normal_tissue_fatal_liability/ports.py
+  - gate_modules/tgt05_normal_tissue_fatal_liability/classify.py
+  - gate_modules/tgt05_normal_tissue_fatal_liability/evidence.py
+  - gate_modules/tgt05_normal_tissue_fatal_liability/aggregate.py
+  - gate_modules/tgt05_normal_tissue_fatal_liability/fatal_review.py
+  - gate_modules/tgt05_normal_tissue_fatal_liability/acceptance.py
+  - gate_modules/tgt05_normal_tissue_fatal_liability/module.py
+  - gate_modules/README.md
+  - src/contracts/crc_adc_target_gateset.yaml
+  - src/objects/crc_adc_target_gateset.py
+  - tests/test_tgt05_module.py
+  - tests/test_gate_modules_boundary.py
+  - tests/test_crc_adc_target_gateset.py
+  - tests/test_tgt05_module_construction_contract.py
+  - manifests/runtime_migration_pr_e4_manifest.yaml

@@ -4746,3 +4746,105 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   YAML 结构合法。
 - Next：提交、推送、CI 绿后回 `AI审核方案` 贴第一轮复审（item 06 truth table +
   fatal_review 两处摘要）。
+
+## 2026-08-29T19:30 EDT — Runtime Migration PR E4：MOD-TGT05@1.0.0 实现（分支 task_20260829_runtime-migration-pr-e4，基线 14ac39f）
+
+- 授权：用户在 PR E3 APPROVE 后追加 "go ahead and"。开工前审核方（ChatGPT
+  `AI审核方案`）拍板 **PR E4 = MOD-TGT05@1.0.0 deterministic implementation**
+  （「像 E2 一样是完整 Gate-specific scientific core，但不接 live provider、
+  不写外部 workspace、不做 calibration」），给 8 个 scoping 决策 E4-1…E4-8。
+- 变更定位：`RUNTIME_IMPL_ADD`（第五层）—— 严格实现冻结的 E3 施工合同；只调
+  injected port；窄修 binding：TGT-05 `primary_module_version` `0.0.0 → 1.0.0`。
+- E4-1 完整实现，10 个文件，标准包结构（无 shared framework / abstract base
+  class；MOD-TGT01 未重构）：
+  - `contracts.py` — `MOD-TGT05` / `1.0.0` / `TGT-05`；`TGT05_EVIDENCE_CEILING`
+    / `TGT05_GATE_QUESTION` 逐字 PR D；`EVIDENCE_FUNCTION_VALUES`（A/B/C 三分）
+    / `OBSERVATION_KIND_VALUES` / `VITAL_ORGAN_CLASSES`（六器官）/
+    `COVERAGE_RESULT_VALUES` / `FATAL_REVIEW_STATUS_VALUES`（`""` \|
+    `POTENTIAL_FATAL_PATTERN`）等枚举；`NormalizedLiabilityRecord`（按
+    observation kind 跨字段校验；`COVERAGE_CONTEXT` 必须 validated human PROTEIN
+    atlas NOT_DETECTED；一批 factual 谓词）、`Tgt05ModuleInput`
+    （`target_identity` 唯一权威、`evidence_regime == PUBLIC_ONLY`）、
+    `ClassifiedLiability`（`rejection_severity` `""`/`HARD`/`SOFT`）、
+    `Tgt05SweepCompletionRecord`（5 sweep 布尔 + 六器官 coverage state；
+    `path_b_sweeps_complete` / `path_c_sweeps_complete`）、`CoverageMapRecord`、
+    `FatalReviewRecord`（`required` iff `status==POTENTIAL_FATAL_PATTERN`；
+    `required` 时 `len(set(program_ids))>=2`；`none()`）、
+    `AssessmentProposalEnvelope`（8 identity pin + 科学字段；`NEGATIVE` raise；
+    `evidence_ceiling` 逐字 == `TGT05_EVIDENCE_CEILING`；不带
+    `assessment_id`/`assessment_version`/`review`、不带 fatal flag）、
+    `MachineAcceptanceRecord`、`Tgt05ModuleRunResult`（hard failure → 无
+    proposal + not accepted）。
+  - `ports.py` — `Tgt05LiabilityProviderPort`（`fetch_liability_records` +
+    `sweep_completion`）、`EvidenceIdAllocatorPort`、`SourceResolverPort`
+    （→ `CanonicalSourceRecord | None`）、`ExistingEvidenceLibraryPort`
+    （→ `EvidencePackage | None`，复用同一对象）。
+  - `classify.py` — `classify_record(record, *, canonical_target_identity)`：
+    unresolved → SOFT；target 身份不匹配 → HARD misbinding；`COVERAGE_CONTEXT`
+    → admit；`ATTRIBUTION_ADJUDICATION` 必须 SUPPORTS/REFUTES → admit；
+    `LIABILITY_RUNG_EVIDENCE` 逐字 frozen ladder（supported ADC clinical tox →
+    DIRECT；supported non-ADC clinical tox / validated human protein DETECTED /
+    translational NHP tox → INDIRECT_STRONG；RNA-only / rodent-only → WEAK；
+    其余 → SOFT reject）。
+  - `evidence.py` — 每个 admissible observation 一个 Gate-neutral PR A EP；
+    已在 Library 的复用**同一对象**（不调 allocator、不建 body）；provenance 取
+    resolved canonical SourceIndex record，mismatch → HARD；`_KEYS_BY_KIND` 按
+    observation kind 做 reuse parity（缺失 OR drift → HARD）；
+    `_NEUTRAL_DOES_NOT_SUPPORT` 含「absence of a normal-tissue on-target
+    liability / normal-tissue safety / a product-specific therapeutic window」；
+    (source_id, claim) 去重。
+  - `aggregate.py` — `aggregate(emitted, sweep)`：按 `liability_event_id` 分
+    disputed / undisputed；frozen truth table（undisputed DIRECT →
+    POSITIVE/DIRECT；else undisputed INDIRECT_STRONG → POSITIVE/INDIRECT_STRONG；
+    else WEAK-only → INCONCLUSIVE/WEAK；else INCONCLUSIVE/UNKNOWN，无 refs）；
+    positive precedence（established liability + uncovered organ → 仍 POSITIVE，
+    gap 进 critical_unknowns）；CONFLICTING 仅当无独立 undisputed strong
+    liability（Strength = disputed obs 可达最强 rung；真正撞 rung 的 REFUTES →
+    CONTRADICTING，无关 REFUTES → CONTEXTUAL）；coverage NOT_YET_COMPLETE →
+    PUBLIC_RESOLVABLE、EXHAUSTED → EXPERIMENT_REQUIRED；永不 NEGATIVE/safe。
+  - `fatal_review.py` — `detect(emitted)`：候选 = ADC_CLINICAL_TOXICITY +
+    LIABILITY_RUNG_EVIDENCE + attribution_supported + 非空 construct_fingerprint
+    + 非空 target_attribution_basis；`<2` → `none()`；按 EXACT
+    `(affected_tissue, toxicity_phenotype_key)` 分组，某组 ≥2 个不同
+    `program_id` → `POTENTIAL_FATAL_PATTERN`；无 fuzzy/embedding/ontology。
+  - `acceptance.py` — `classify_path`（A/B/C）+ `evaluate(...)`：E1 item-13
+    卫生（无 hard integrity failure / one EP per obs / resolved source / frozen
+    class / strength ≤ 最强 rung / Direction×Strength 是 frozen truth-table
+    输出 / never NEGATIVE / (source_id,claim) 去重 / evidence_ref 可解析 /
+    fatal_review.status 不越 POTENTIAL_FATAL_PATTERN）+ E4-6 path 完成度
+    （Path A/B → adc construct inventory + attribution sweep；Path C →
+    path_c_sweeps_complete）。
+  - `module.py` — `run(module_input, *, provider, evidence_id_allocator,
+    source_resolver, evidence_library)`：classify → build_evidence_packages →
+    fatal_review.detect → aggregate → CoverageMapRecord → classify_path →
+    acceptance.evaluate → accepted 才建 envelope → 装 run result。无单独
+    `target_identity` 参。
+  - `__init__.py` / `module.yaml`（`built_in: runtime_migration_pr_e4`；
+    `dominant_evidence_regime: PUBLIC_HYBRID` + `current_instantiation_regime:
+    PUBLIC_ONLY`；保守 boundary_flags 全 false）。
+- Binding 窄修：`src/contracts/crc_adc_target_gateset.yaml` TGT-05
+  `primary_module_version` `0.0.0 → 1.0.0` + `built_module_versions` 加
+  `TGT-05: "1.0.0"` + `rule` 措辞；`src/objects/crc_adc_target_gateset.py`
+  `BUILT_MODULE_VERSIONS` 加 `"TGT-05": "1.0.0"`；`gate_modules/README.md`
+  注册表加 `MOD-TGT05@1.0.0`（PR E4）。
+- 测试：`tests/test_tgt05_module.py`（38，全 synthetic：frozen truth table /
+  positive precedence / CONFLICTING per liability_event_id / fatal_review
+  trigger 语义 / path-based stop rule / exact canonical EP reuse + HARD
+  integrity gate / no IO·no scoring·no therapeutic-window / binding
+  reconciliation + MIGRATION_PENDING）；`tests/test_gate_modules_boundary.py`
+  加 `Tgt05ModuleManifestTests`；`tests/test_crc_adc_target_gateset.py`
+  `_BUILT_MODULE_VERSIONS` 加 TGT-05 + `test_tgt05_module_is_built_in_gate_modules`；
+  `tests/test_tgt05_module_construction_contract.py` 的 3 个 E3「尚无实现」
+  guard 改成「目录存在则必须是 PR E4 build」（同 E1→E2 先例）。
+- 未改：PR A/B/C 合同；PR D 的 TGT-05 Gate science；冻结的 E3 施工合同正文；
+  MOD-TGT01（binding 仍 `1.0.0`、代码未动）。无 generic framework / abstract
+  base class / 新依赖。`MIGRATION_PENDING` 未解除（8 建 2：TGT-01、TGT-05）。
+- 验证：`tests/test_tgt05_module.py` **38 OK**；全量 `unittest discover`
+  **906**（E3 approval 基线 862，E4 +44）—— 唯一 FAIL 是既有本机噪音
+  `test_assetgenos_modules.test_migration_does_not_include_legacy_runtime_state`
+  （物理扫 `genmodules/*/__pycache__`，本机 py3.12 上 `-B` 仍偶发落盘；在 stash
+  掉本次改动的 pristine tip 上同样 FAIL；CI 干净 checkout 上 GREEN）；
+  `git diff --check` clean；`gate_modules/` 在干净 tracked-tree 上边界合规；
+  YAML 结构合法。
+- Next：提交、推送、开 PR、CI 绿后回 `AI审核方案` 请求审核（E4-1…E4-8 逐条
+  落实摘要）。

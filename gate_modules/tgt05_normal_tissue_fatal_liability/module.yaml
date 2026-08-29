@@ -1,0 +1,92 @@
+module:
+  module_id: MOD-TGT05
+  module_name: tgt05_normal_tissue_fatal_liability
+  module_version: "1.0.0"
+  built_in: runtime_migration_pr_e4
+  construction_contract: src/contracts/gate_modules/tgt05_normal_tissue_fatal_liability.yaml
+  construction_drawing: docs/gate_modules/TGT-05_Normal_Tissue_Fatal_Liability.md
+
+  gate_binding:
+    gate_id: TGT-05
+    gate_version: "1.0"
+    gateset_id: ADC_TARGET_GATESET
+    gateset_version: "1.0"
+    instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v1
+    candidate_level: L04
+    # frozen PR D / gateset regime for TGT-05; the current instantiation runs the
+    # public path only (E3 dominant_evidence_regime_frozen_contract PUBLIC_HYBRID,
+    # current_instantiation_regime PUBLIC_ONLY -- the module input demands
+    # evidence_regime == PUBLIC_ONLY).
+    dominant_evidence_regime: PUBLIC_HYBRID
+    current_instantiation_regime: PUBLIC_ONLY
+
+  the_one_question: >-
+    Is there evidence of accessible normal-human-tissue expression, or observed
+    target-mediated toxicity, that creates a potentially material
+    on-target / off-tumor liability for ADC development? (verbatim fatal-first
+    gate_question inherited from the PR D TGT-05 contract; a target-level
+    public-evidence gate, NOT a product-specific therapeutic-window judgement;
+    not widened or narrowed)
+
+  purpose: >-
+    Deterministic Gate-specific scientific core for TGT-05. It turns normalized
+    normal-tissue expression / target-mediated-toxicity observations into atomic
+    Gate-neutral EvidencePackages, maps each to the frozen TGT-05 Evidence
+    Ladder (DIRECT / INDIRECT_STRONG / WEAK -- a validated protein NOT_DETECTED
+    is coverage context, never a rung and never safety), tracks per-vital-organ
+    protein coverage state, aggregates a proposed Direction x Strength strictly
+    per the frozen E3 item-06 truth table (no numeric score; never NEGATIVE /
+    safe), emits a machine-local ``fatal_review`` review TRIGGER when >= 2
+    distinct same-target ADC programs converge on an exact tissue + phenotype
+    key, enforces the E4-6 path-based stop-rule completion prerequisites, and
+    emits a non-canonical assessment proposal envelope for the human review
+    surface.
+
+  owns:
+    - input contract validation (no implicit default scientific context; the candidate's target_identity is the single authoritative target; evidence_regime is PUBLIC_ONLY)
+    - candidate <-> observation target-identity binding (a record whose target_identity differs from the candidate's canonical target is evidence misbinding and is a HARD rejection)
+    - the E4-2 three-way evidence-function split (LIABILITY_RUNG_EVIDENCE / ATTRIBUTION_ADJUDICATION / COVERAGE_CONTEXT); the provider supplies facts only and never sets a rung or a direction
+    - normalized record admissibility + frozen TGT-05 Evidence-Ladder rung classification (verbatim from the PR D contract; a validated human protein NOT_DETECTED is COVERAGE_CONTEXT, an scRNA / RNA-only atlas is WEAK, a rodent-only observation is WEAK)
+    - Gate-NEUTRAL EvidencePackage construction (PR A evidence_package shape); one package per observation; a negative-atlas observation is also an EvidencePackage whose interpretation_boundary explicitly does NOT support the absence of a liability, safety, or a product-specific therapeutic window; an observation already in the Evidence Library is reused as its EXACT canonical package (no allocator call, no new body); provenance comes from the resolved canonical SourceIndex record
+    - "hard identity / provenance integrity gate: a candidate<->target misbinding, a claimed-resolved source missing from the canonical SourceIndex, a canonical-source metadata conflict, or an incompatible canonical EvidencePackage rejects the WHOLE run (E1 item 13 on_failure) -- it never degrades to an accepted UNKNOWN"
+    - deterministic Direction x Strength aggregation per the frozen E3 item-06 truth table; positive precedence (an established DIRECT / INDIRECT_STRONG liability is not downgraded to UNKNOWN by an uncovered other organ -- the gap becomes a critical_unknown); CONFLICTING only per liability_event_id (an admissible source supports and another admissible source refutes the SAME event, with no independent undisputed DIRECT / INDIRECT_STRONG liability); a refutation never earns a NEGATIVE rung
+    - per-vital-organ protein coverage state + coverage map projection (read only for the UNKNOWN branch and for critical_unknowns; never to turn "no risk found" into safety)
+    - "machine-local fatal_review review TRIGGER (E4-5): required iff >= 2 distinct same-target ADC-clinical-toxicity programs, each with a construct fingerprint + disclosed target-attribution basis + SUPPORTS_TARGET_ATTRIBUTION, converge on an EXACT normalized affected_tissue key AND an EXACT toxicity_phenotype_key; status is at most POTENTIAL_FATAL_PATTERN; the machine NEVER emits PUBLIC_FATAL_SIGNAL_ESTABLISHED; no embeddings / LLM / ontology / fuzzy matching"
+    - machine acceptance record (E1 item 13) + the E4-6 path-based stop-rule completion prerequisites (Path A fatal pattern visible / Path B a DIRECT ADC liability exists / Path C no DIRECT ADC liability)
+    - non-canonical assessment proposal envelope (E3 item 12); the TGT-05 ceiling / inference / direction live here, never on the Gate-neutral package; the envelope carries no assessment_id / assessment_version / review and no fatal flag
+
+  does_not_own:
+    - web / literature / trial / patent / atlas retrieval; any source-specific live provider (Human Protein Atlas / GTEx / Tabula Sapiens / PubMed / ClinicalTrials.gov / FDA / ADCdb adapters)
+    - RNA / atlas normalisation, toxicity-phenotype keying, target-attribution stance assignment (the provider's job; the module only does exact-key comparisons)
+    - entity resolution, source registry, provenance ledger, serialization (shared infra, v5 section 6.5)
+    - database, cache, RUNS / ASSESSMENTS / EvidenceIndex persistence
+    - ontology / embedding / LLM inference of toxicity convergence or "materially distinct constructs"
+    - human target-attribution adjudication; the human materially-distinct / truly-target-mediated / biologically-meaningful-convergence judgement
+    - the fatal decision; human approval and canonical CandidateGateAssessment construction
+    - Candidate-level Decision / KILL, MatrixView writes, cross-Gate reasoning
+    - any product-specific therapeutic-window prediction
+
+  ports:
+    - name: Tgt05LiabilityProviderPort
+      role: supplies already-normalized, primary-source-resolved TGT-05 observations (each with observation_id, liability_event_id, evidence_function, and facts only) plus the typed Tgt05SweepCompletionRecord (5 sweep flags + per-vital-organ protein coverage state)
+    - name: EvidenceIdAllocatorPort
+      role: allocates EP-nnnnnnnn ids for observations not already in the Evidence Library; the Module never derives ids from the filesystem
+    - name: SourceResolverPort
+      role: resolves a provenance.source_id to its canonical SourceIndex record; an unresolved id cannot establish a ladder rung, and a provider record whose metadata disagrees with the canonical record is a HARD rejection
+    - name: ExistingEvidenceLibraryPort
+      role: read-only lookup by observation_id into the PR C reusable Evidence Library; returns the EXACT canonical EvidencePackage, reused unchanged (no allocator call, no re-created body); an incompatible returned package (missing OR drifted classification-driving field for that observation kind) is a hard integrity failure
+
+  boundary_flags:
+    performs_network_io: false
+    spawns_subprocess: false
+    writes_repository: false
+    allocates_ids_from_filesystem: false
+    constructs_canonical_assessment: false
+    produces_decision_or_kill: false
+    emits_established_fatal_signal: false
+    ontology_or_embedding_inference: false
+    numeric_scoring: false
+    proposes_negative_or_safe: false
+    predicts_therapeutic_window: false
+    modifies_frozen_gate_science: false
+    lifts_migration_pending: false
