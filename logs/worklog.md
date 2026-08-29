@@ -4645,3 +4645,63 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
   `module.yaml` 结构合法。
 - Next：提交、推送、CI 绿后回 `AI审核方案` 贴第四轮复审。
+
+## 2026-08-29T17:10 EDT — Runtime Migration PR E3 首版（TGT-05 / MOD-TGT05 Construction Contract）
+
+- 授权：用户在 PR E2 APPROVE（#108 @ 72546a3 + approval record #109）后追加
+  "go ahead"。审核方（ChatGPT `AI审核方案`）在 APPROVE 里说下一步是「真实
+  provider / external calibration，或按既定顺序开 TGT-05 的 construction
+  drawing」；真实 provider/calibration 属外部 workspace，故 in-repo 下一个 PR 由
+  审核方拍板为 **PR E3 = TGT-05 / MOD-TGT05 Construction Contract**（design-only，
+  与 E1 同模式；PR E4 才实现），并给了 8 个 scoping 决策 E3-1…E3-8。基线
+  `origin/main`（PR E2 收口后）。
+- 8 个 scoping 决策：E3-1 下一 Gate = TGT-05，顺序不变，machine identity
+  `TGT-05@1.0` / `MOD-TGT05` / `module_version 0.0.0`，PR D TGT-05 science 一字
+  不改；E3-2 严格 design-only，不建 generic GateModule framework / abstract
+  base class、不重构 MOD-TGT01；E3-3 17 项模板复用已批准的 E1 模板（PR E2 已
+  验证），item 03/05/07/08 与冻结 PR D `crc_adc_target_gateset.yaml:TGT-05` 做
+  normalized-equality parity test；E3-4 TGT-05 冻结成「单向 liability
+  detector」，绝不 safety predictor —— Direction 描述证据、非 candidate
+  desirability，`NEGATIVE` 在 public path 基本不可达（"no risk seen" negative
+  禁止），Module 不翻转 Direction；E3-5 fatal semantics 把「单产品毒性」（DIRECT
+  liability，非 fatal）与「target-intrinsic convergence」（≥2 materially
+  distinct 同靶点 ADC construct + convergent target-mediated normal-tissue
+  toxicity）彻底分开，每条 clinical ADC toxicity observation 必须可审计
+  construct fingerprint + observed severity FOR THIS PRODUCT + target-attribution
+  basis + primary source，「materially distinct」与「真 target-mediated」保留
+  human-review，无 numeric severity score、无 KILL；E3-6 source plan 区分
+  liability evidence 与 vital-organ coverage completeness，硬锁（RNA-only ✗→
+  protein / whole-tissue protein ✗→ cell-surface accessibility / non-ADC
+  severity ✗→ ADC / negative atlas ✗→ safety），CNS/cardiac/hepatic/pulmonary/
+  hematopoietic/GI coverage map，无 universal threshold，PUBLIC_ONLY path；
+  E3-7 asymmetric fatal-sweep-mandatory stop rule（Path A
+  `PUBLIC_FATAL_SIGNAL_ESTABLISHED` / Path B construct inventory + sweep 先做完
+  / Path C vital-organ + non-ADC + NHP + RNA-only sweep，无法解决 →
+  `EXPERIMENT_REQUIRED`），核心「absence of public risk evidence is not a stop
+  condition for safety」；E3-8 items 10–17 冻结（不再复制 E2 代码）PR E2 已验证
+  的 runtime genes（single authoritative canonical target identity / canonical
+  SourceIndex authority / Gate-neutral EP / exact canonical EP reuse /
+  classification-driving parity on reuse / non-canonical proposal envelope /
+  hard identity/provenance failure → machine reject / `UNKNOWN` ≠ integrity
+  failure / no Decision·KILL·persistence·score）。
+- 审核方原话：MOD-TGT05 的任务不是证明 target「安全」，而是尽可能可靠地发现
+  target-level normal-tissue liability；public evidence 可强力证实风险、通常不能
+  证实风险不存在 —— 这是 TGT-05 与 TGT-01 最大科学结构差异。
+- 交付：`src/contracts/gate_modules/tgt05_normal_tissue_fatal_liability.yaml`
+  （17 项 checklist，键名与 E1 一致；03/05/07/08 逐字继承 PR D TGT-05，parity
+  测试锁定）、`docs/gate_modules/TGT-05_Normal_Tissue_Fatal_Liability.md`
+  （人读施工图，17 项表格）、`tests/test_tgt05_module_construction_contract.py`
+  （32 tests：checklist 完整 + E1 模板复用；03/05/07/08 normalized-equality
+  parity vs PR D；liability-detector 语义；asymmetric stop rule；E2 genes 冻结；
+  无实现；顶层 `gate_modules/tgt05_*/` 不存在；TGT-05 binding 仍 `0.0.0`；
+  MOD-TGT01 binding 仍 `1.0.0`；正文无 numeric cutoff/TPM/FPKM）、
+  `manifests/runtime_migration_pr_e3_manifest.yaml`、handoff。
+- 未改：PR A/B/C 合同；PR D 的 TGT-05 Gate science；MOD-TGT01（binding 仍
+  `1.0.0`、`gate_modules/tgt01_*/` 代码未动）；TGT-05 `primary_module_version`
+  （仍 `0.0.0`，PR E4 才 bump）。无实现 / provider / runner / numeric scoring /
+  biological threshold / product-specific therapeutic-window logic / 新 ladder
+  semantics / generic framework / 新依赖。`MIGRATION_PENDING` 未解除。
+- 验证：全量 `unittest discover` **853 OK**（821 baseline + 32 new）/
+  `git diff --check` clean / 干净 tracked-tree worktree boundary passed /
+  YAML 结构合法。
+- Next：提交、推送、开 PR、CI 绿后回 `AI审核方案` 请求审核。
