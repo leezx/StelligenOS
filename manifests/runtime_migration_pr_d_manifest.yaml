@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_d
-status: pending_review
+status: approved
 scope: crc_adc_target_gateset_v1_roster_gate_contracts_evidence_ladders_gateset_and_binding
 repository_boundary: software_only_external_data
 data_added: false
@@ -35,8 +35,12 @@ defers:
   quantitative_ladder_calibration: "PR E+"
   epitope_layer_and_beyond: "PR E+"
   assessment_and_decision_evaluators: not_in_this_repo
-chatgpt_review: PENDING
-approved_tip: null
+chatgpt_review: APPROVE
+approved_tip: 35298de
+review_record: logs/chatgpt-review-2026-08-28-runtime-migration-pr-d.md
+review_rounds: 3
+scientific_review_rounds: 2
+test_count_at_approval: 751
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_crc_adc_target_gateset.py' -v
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py'

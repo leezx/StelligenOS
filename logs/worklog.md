@@ -4276,3 +4276,35 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   worktree boundary passed / YAML 结构合法。
 - Next：提交、推送、CI 绿后回 `AI审核方案` 请求复审（审核方预告：这一处修完即
   APPROVE PR #104 = v1.0 frozen ladders）。
+
+## 2026-08-29T00:20 EDT — Runtime Migration PR D APPROVE + merge（Runtime Migration PR A–D 全部完成）
+
+- ChatGPT `AI审核方案` 对 PR #104 @ `35298de`（科学审核第二轮修订）返回
+  **APPROVE**：Structure: PASS / TGT-01…TGT-08 scientific Evidence Ladders:
+  PASS / A2′ + B1 implementation: PASS。三轮（初版 REQUEST_CHANGES 结构 PASS +
+  6 组科学修改 → 科学审核第一轮 REQUEST_CHANGES 只剩 TGT-05 → 科学审核第二轮
+  APPROVE）。connector 写 review 仍 403。
+- Merge：`gh pr merge 104 --merge`，merge 提交 `16f5f01`。merge 前直接编辑 PR
+  #104 body（`743 OK / 27 tests` → `751 OK / 35 tests` + 科学审核小结），无新
+  commit。
+- 审核记录补登在独立 docs-only PR
+  `task_20260828_runtime-migration-pr-d-approval-record`
+  （`logs/chatgpt-review-2026-08-28-runtime-migration-pr-d.md` +
+  `manifests/runtime_migration_pr_d_manifest.yaml` status→approved /
+  approved_tip `35298de` / review_rounds 3 / scientific_review_rounds 2 /
+  test_count_at_approval 751），按 PR #95/#97/#99/#101/#103 先例。
+- **Runtime Migration PR A–D 全部完成**：
+  - PR A（core decision objects）`cbab012`
+  - PR B（canonical Gate / GateSet / EvidenceLadder / Decision）`d18974b`
+  - PR C（Matrix view / reusable EP references / provenance walk）`91a8e5b`
+  - PR D（CRC-ADC-TARGET-GATESET-v1：TGT-01…08 roster + 8 v1.0 frozen Evidence
+    Ladders + ADC_TARGET_GATESET@1.0 GateSet + INST-CRC-REFRACTORY-ADC-TARGET-v1
+    + bindings）`16f5f01`
+- 8 个 ladder 现为 `ADC_TARGET_GATESET@1.0` 在 refractory mCRC specialization
+  下的 v1.0 frozen scientific contracts。后续 PR E+ 只能实现各 Gate 的
+  Evidence Production Module 和定量 calibration，不能改 Gate question /
+  evidence class / ceiling / fatal / unknown / inference semantics（v5 §6.4）。
+- `MIGRATION_PENDING` 仍未解除（到 PR E 合并前 repository runtime 不得声称已
+  实现 Blueprint v1.3 conformance）。下一步：PR E+ —— 逐 Gate primary Evidence
+  Production Module（TGT-01…TGT-08），按 Blueprint v1.3 §H2.8 Gate Module
+  Acceptance Template 逐 Gate 绘施工图。
