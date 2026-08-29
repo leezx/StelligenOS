@@ -4254,3 +4254,25 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   worktree boundary passed / YAML 结构合法。
 - Next：提交、推送、CI 绿后回 `AI审核方案` 请求复审（审核方预告：下一轮只复审
   这 6 组，通过即 APPROVE PR #104 = v1.0 frozen ladders）。
+
+## 2026-08-28T23:55 EDT — Runtime Migration PR D 科学审核第二轮修订（同一 PR #104）
+
+- Review input：ChatGPT `AI审核方案` 对 PR #104 @ `10aa934` 返回
+  `REQUEST_CHANGES`：结构层继续 PASS；**TGT-01/03/04/06/07/08 六组全部接受**。
+  只剩 **TGT-05 `fatal_conditions` 一个 blocker**：单个 ADC construct 的
+  target-mediated toxicity 是 DIRECT evidence of ADC-relevant liability，但不是
+  target-wide fatal（可能 linker/payload/format 驱动）；fatal 必须是 convergent
+  target-mediated toxicity across materially distinct ADC constructs。
+- fix：TGT-05 `fatal_conditions` 两条 → 一条 convergent-across-materially-distinct-
+  constructs pattern，明确 "single ADC construct's toxicity ... is NOT
+  target-wide fatal"，去掉 "preclude an ADC therapeutic window"。测试加
+  `test_tgt05_fatal_requires_convergent_pattern_not_single_construct`。
+- 改动文件：`src/contracts/crc_adc_target_gateset.yaml`（仅 TGT-05
+  fatal_conditions）、`tests/test_crc_adc_target_gateset.py`（+1，35 PR D tests）、
+  handoff、worklog。未动其余 5 组 ladder、`src/objects/`、`data_layout/*`、
+  PR A/B/C、冻结文档。
+- 验证：`PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover` 751 OK
+  （716 baseline + 35 new）/ `git diff --check` clean / 干净 tracked-tree
+  worktree boundary passed / YAML 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 请求复审（审核方预告：这一处修完即
+  APPROVE PR #104 = v1.0 frozen ladders）。

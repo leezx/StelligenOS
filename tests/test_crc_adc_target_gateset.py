@@ -440,6 +440,14 @@ class LadderScienceRevisionTests(unittest.TestCase):
             c["evidence_ladder"]["INDIRECT_STRONG"]["admissible_evidence_classes"]
         ).lower())
 
+    def test_tgt05_fatal_requires_convergent_pattern_not_single_construct(self):
+        fatal = " ".join(self.contracts["TGT-05"]["fatal_conditions"]).lower()
+        self.assertIn("convergent target-mediated", fatal)
+        self.assertIn("materially distinct adc constructs", fatal)
+        self.assertIn("not target-wide fatal", fatal)
+        self.assertNotIn("preclude an adc therapeutic window", fatal)
+        self.assertEqual(len(self.contracts["TGT-05"]["fatal_conditions"]), 1)
+
     def test_tgt06_internalization_is_configuration_dependent(self):
         c = self.contracts["TGT-06"]
         allowed = " ".join(c["allowed_inference"]).lower()

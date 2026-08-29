@@ -355,8 +355,7 @@ gate_contracts:
       Incomplete normal-tissue coverage -> UNKNOWN, never auto-PASS (v5 section
       6.4: an unmeasured gate must not be turned into PASS / HOLD / KILL).
     fatal_conditions:
-      - clinical evidence of target-mediated on-target / off-tumor toxicity in a vital organ from an ADC against the same target that is severe enough to preclude an ADC therapeutic window
-      - protein-level human evidence of target expression in a vital organ combined with clinical on-target toxicity for the same target from any targeted modality, together indicating a normal-tissue liability incompatible with ADC development
+      - a convergent target-mediated on-target / off-tumor toxicity pattern across materially distinct ADC constructs against the same target (distinct antibodies / linkers / payloads / formats converging on the same target-driven normal-tissue toxicity) -- a potential target-intrinsic fatal signal. A single ADC construct's toxicity is DIRECT evidence of an ADC-relevant liability but is NOT target-wide fatal, since it may be linker / payload / format driven; normal-tissue expression and non-ADC modality toxicity are strong liability signals, not fatal on their own.
 
   TGT-06:
     gate_question: >-

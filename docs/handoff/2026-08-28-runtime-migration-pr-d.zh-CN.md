@@ -173,6 +173,26 @@ slot、只复用 PR A/B/C）。**科学 ladder 层 6 组最小修改**，不加 
 全 8 gate 无 numeric cutoff；逐条锁死上述 6 组修改。全量 `Ran 750 tests ... OK`
 （743 → 750）。结构 / roster / binding parity 测试不变，均通过。
 
+## 六之三、科学审核第二轮修订（2026-08-28，同一 PR #104）
+
+Review input：ChatGPT `AI审核方案` 对 PR #104 @ `10aa934` 返回 `REQUEST_CHANGES`：
+**结构层继续 PASS；TGT-01 / 03 / 04 / 06 / 07 / 08 六组全部接受**。只剩 **TGT-05
+`fatal_conditions` 一个 blocker**：单个 ADC construct 的 target-mediated toxicity
+是 DIRECT evidence of an ADC-relevant liability，但**不是 target-wide fatal**
+（可能由 linker / payload / format 驱动）；fatal 必须是"**convergent
+target-mediated toxicity across materially distinct ADC constructs**"
+（distinct antibodies / linkers / payloads / formats 收敛到同一 target-driven
+normal-tissue toxicity），无需机械写 "two or more"。normal-tissue expression
+与 non-ADC modality toxicity 是 strong liability signal，不单独 fatal。
+
+→ TGT-05 `fatal_conditions` 两条替换为一条：convergent 跨 materially distinct
+ADC constructs 的 target-mediated on-target/off-tumor toxicity pattern，明确
+"single ADC construct's toxicity ... is NOT target-wide fatal" 且不再出现
+"preclude an ADC therapeutic window" 这种 product-window 结论。`test_crc_adc_target_gateset.py`
+加 `test_tgt05_fatal_requires_convergent_pattern_not_single_construct`（+1，共
+35 PR D tests / 751 全量）。其余 ladder 未动；结构 / roster / binding parity
+测试不变均通过。审核方预告：这一处修完即 APPROVE PR #104 = v1.0 frozen ladders。
+
 ## 七、审核
 
 - 提交至 ChatGPT 网页版 `Biotech ideas` → `AI审核方案` 对话（Claude 通过浏览器
