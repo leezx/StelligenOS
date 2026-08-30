@@ -5230,3 +5230,60 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   MOD-TGT08@1.0.0）。其余五个（TGT-02 → 03 → 04 → 06 → 07）属后续 PR。
   `MIGRATION_PENDING` 保持。真实 provider / adapter 与外部 workspace calibration
   各自需 go-ahead。
+
+## 2026-08-30T01:00 EDT — Runtime Migration PR E7：TGT-02 / MOD-TGT02 Construction Contract（分支 task_20260829_runtime-migration-pr-e7，基线 PR E6 收口 @ 97ad48d）
+
+- 授权：用户在 PR E6 收口后 "go on"；开工前 `AI审核方案` 给出 **APPROVE-to-proceed**，
+  把 E7 冻结为 **TGT-02 / MOD-TGT02 Construction Contract，design-only**（Module 在
+  PR E8 才实现），并给了 9 个 scoping 决策 E7-1…E7-9 + 3 条 headline conclusion
+  （详见 `manifests/runtime_migration_pr_e7_manifest.yaml` +
+  `docs/handoff/2026-08-30-runtime-migration-pr-e7.zh-CN.md`）。
+- 变更定位：`DESIGN_ONLY`（第五层施工合同 + 施工图 + 17 项验收清单 + parity /
+  validation 测试 + manifest / handoff / worklog）。不写实现、不接 provider /
+  adapter、不上网、不产 runtime EvidencePackage·proposal·fatal-detector、不产
+  numeric·ranking score、不产 cohort-size·%-positive·H-score·heterogeneity
+  cutoff、不建 generic GateModule framework / abstract base class、不重构
+  MOD-TGT01 / MOD-TGT05 / MOD-TGT08。MOD-TGT02 `primary_module_version` 仍
+  `0.0.0`；`MIGRATION_PENDING` 保持。
+- 3 条 headline conclusion（审核方原话）：
+  1. **TGT-02 NEGATIVE 可达且是真正的 scientific NEGATIVE**（「malignant cells 对
+     该 target 缺乏足够的 population-level expression coverage」）—— 不是 TGT-08
+     的商业 NEGATIVE，也不是 TGT-05 的 liability 反向解释。
+  2. **NEGATIVE ≠ fatal ≠ KILL**。只有满足 PR D fatal condition 的跨 cohort
+     protein-level pattern 才进 machine-local `fatal_review =
+     POTENTIAL_FATAL_PATTERN`；Module 永不输出 canonical fatal flag / KILL。
+  3. **需要 typed `CrcCohortCoverageCompletion`**（E6-style gene，科学语义不同）：
+     只有 completed / audited CRC coverage search 才能把单个 observation 聚合成
+     cohort-level Gate judgement —— 一个漂亮 cohort 绝不是 population-level 答案。
+- 关键冻结点：Direction 相对 Gate question（POSITIVE / NEGATIVE / CONFLICTING /
+  INCONCLUSIVE）；DIRECT 需 protein + CRC + malignant-cell attributed + adequately
+  powered cohort qualification + completed audited landscape；「rare / highly
+  heterogeneous」**不由 Module 从 %/H-score/n 计算**，来自 auditable upstream
+  qualification（`expression_pattern` + `expression_pattern_basis`）；overall
+  Strength = 最强 qualifying evidence class，**无** E6-style two-axis weaker-
+  ceiling rule；**WEAK-only public landscape → `INCONCLUSIVE/UNKNOWN`，不是
+  `/WEAK`**（TGT-02-specific；`UNKNOWN` 零 evidence_refs）；graded INCONCLUSIVE vs
+  UNKNOWN 严格区分；CONFLICTING 不自动等同 biological heterogeneity（valid audited
+  multi-cohort 定性 RARE_HIGHLY_HETEROGENEOUS → NEGATIVE）；transcript ≠ protein、
+  stroma/immune ≠ malignant、bulk/pan-cancer = WEAK、normal-vs-tumor ≠ TI 的
+  hard locks；「across cohorts」= plural-cohorts 逻辑（> 2 independent cohort
+  identities）**不是新阈值**；`EXPERIMENT_REQUIRED` **可以且应该**用，但窄触发
+  （public CRC source space exhausted + 需要新的 malignant-cell-resolved protein /
+  cohort measurement）—— 与 TGT-08 不同；`inference_guard` 逐字 pin（EVGAP-02
+  primarily contributes TGT-02；generic CRC linkage does NOT discharge TGT-03）；
+  items 10-17 继承 E2/E4/E6 runtime genes（含 E6 completion-audit snapshot
+  parity）；HARD identity / provenance / completion-consistency /
+  classification-qualification failure 拒整个 run 不降级 UNKNOWN。
+- 交付：`src/contracts/gate_modules/tgt02_indication_specific_malignant_cell_coverage.yaml`
+  （17 项 checklist）+ `docs/gate_modules/TGT-02_Indication_Specific_Malignant_Cell_Coverage.md`
+  （17-row 表 + 三条 headline blockquote + frozen observation / completion 概念
+  shape）+ `tests/test_tgt02_module_construction_contract.py`（49 tests）+
+  manifest + handoff + 本条 worklog。
+- 验证：`tests/test_tgt02_module_construction_contract.py` **49 OK**；全量 **1102**
+  （E6 approval 基线 1053，E7 +49；1 个既有本机 `test_assetgenos_modules`
+  `__pycache__` 扫描 FAIL，CI 干净 checkout GREEN）；`git diff --check` clean；
+  YAML 结构合法。
+- Next：commit、push `origin/task_20260829_runtime-migration-pr-e7`、开 PR、CI 绿
+  （matrix py3.11 + 3.12）后回 `AI审核方案` 贴 E7 施工合同摘要 vs E7-1…E7-9 复审。
+  APPROVE → merge + 独立 docs-only approval-record PR。PR E8 = MOD-TGT02@1.0.0
+  implementation 需用户 go-ahead。
