@@ -516,7 +516,8 @@ context_specific_bindings:
       evidence_ladder_ref: external:crc_adc_target_gateset/TGT-02/evidence_ladder@v1
       assessment_rule_ref: external:crc_adc_target_gateset/TGT-02/assessment_rule@v1
       primary_module_id: MOD-TGT02
-      primary_module_version: "0.0.0"
+      # Built in Runtime Migration PR E8 (gate_modules/tgt02_indication_specific_malignant_cell_coverage/).
+      primary_module_version: "1.0.0"
     - gate_id: TGT-03
       gate_version: "1.0"
       gateset_id: ADC_TARGET_GATESET
@@ -597,8 +598,9 @@ primary_module_binding:
     Each gate declares exactly one primary Evidence Production Module slot, keyed
     by the deterministic id MOD-TGT0n. In PR D every primary_module_version was
     "0.0.0" (declared, not built). Runtime Migration PR E2 built MOD-TGT01 and
-    raised its version to "1.0.0"; PR E4 built MOD-TGT05 and PR E6 built
-    MOD-TGT08 and raised their versions to "1.0.0"; the other five remain
+    raised its version to "1.0.0"; PR E4 built MOD-TGT05, PR E6 built MOD-TGT08
+    and PR E8 built MOD-TGT02 and raised their versions to "1.0.0"; the other
+    four remain
     "0.0.0" until their
     own PR E-series builds them. A Module may not choose a different id, and may not
     modify the Gate id / name / candidate ownership, the gate_question, the
@@ -608,6 +610,7 @@ primary_module_binding:
   built_module_versions:
     # gate_id -> primary_module_version once the Module is built.
     TGT-01: "1.0.0"
+    TGT-02: "1.0.0"
     TGT-05: "1.0.0"
     TGT-08: "1.0.0"
 

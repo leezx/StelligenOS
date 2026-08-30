@@ -910,18 +910,19 @@ class BindingTests(unittest.TestCase):
         }
         self.assertEqual(bindings["TGT-05"], "1.0.0")
         self.assertEqual(bindings["TGT-01"], "1.0.0")
-        # Runtime Migration PR E6 built MOD-TGT08.
+        # Runtime Migration PR E6 built MOD-TGT08; PR E8 built MOD-TGT02.
         self.assertEqual(bindings["TGT-08"], "1.0.0")
-        for gid in ("TGT-02", "TGT-03", "TGT-04", "TGT-06", "TGT-07"):
+        self.assertEqual(bindings["TGT-02"], "1.0.0")
+        for gid in ("TGT-03", "TGT-04", "TGT-06", "TGT-07"):
             self.assertEqual(bindings[gid], "0.0.0")
 
     def test_built_module_versions_maps_are_consistent(self):
+        expected = {"TGT-01": "1.0.0", "TGT-02": "1.0.0", "TGT-05": "1.0.0", "TGT-08": "1.0.0"}
         self.assertEqual(
             self.gateset["primary_module_binding"]["built_module_versions"],
-            {"TGT-01": "1.0.0", "TGT-05": "1.0.0", "TGT-08": "1.0.0"},
+            expected,
         )
-        self.assertEqual(dict(BUILT_MODULE_VERSIONS),
-                         {"TGT-01": "1.0.0", "TGT-05": "1.0.0", "TGT-08": "1.0.0"})
+        self.assertEqual(dict(BUILT_MODULE_VERSIONS), expected)
 
     def test_migration_pending_remains(self):
         readme = (REPO_ROOT / "gate_modules" / "README.md").read_text()

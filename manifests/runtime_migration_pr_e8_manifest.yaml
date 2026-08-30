@@ -1,0 +1,135 @@
+phase: runtime_migration_pr_e8
+status: pending_review
+scope: mod_tgt02_deterministic_scientific_core_implementation_plus_narrow_binding_reconciliation
+repository_boundary: software_only_external_data
+
+# what E8 IS
+implementation_code_added: true            # gate_modules/tgt02_indication_specific_malignant_cell_coverage/
+module_version_built: "1.0.0"              # MOD-TGT02 (was 0.0.0 declared slot)
+standalone_package: true                   # no shared framework / base class; MOD-TGT01 / MOD-TGT05 / MOD-TGT08 not refactored
+binding_reconciled: true                   # TGT-02 primary_module_version 0.0.0 -> 1.0.0; built_module_versions gains TGT-02
+one_typed_completion_state_added: true     # CrcCohortCoverageCompletion -- a module-local run record, NOT a core object
+three_hard_completion_invariants_added: true  # completeness consistency, mandatory audit presence + snapshot parity, qualifying cohort-set parity
+machine_local_fatal_review_trigger_added: true  # FatalReviewRecord -- a review TRIGGER, never a conclusion / KILL / PUBLIC_FATAL_SIGNAL_ESTABLISHED
+
+# what E8 IS NOT
+live_provider_or_adapter_added: false      # only a normalized Tgt02CoverageProviderPort Protocol
+retrieval_added: false                     # no GEO / HPA / CPTAC / single-cell / spatial / TMA adapter, extractor, normalizer or runner
+network_or_subprocess_io_added: false
+database_or_cache_added: false
+persistence_in_repository_added: false     # all output is an in-memory Tgt02ModuleRunResult
+ids_allocated_from_filesystem: false       # injected EvidenceIdAllocatorPort
+numeric_or_ranking_scoring_added: false    # no cohort-size / percent-positive / H-score / heterogeneity cutoff, no ranking
+single_observation_becomes_a_direction: false   # the classifier only rung-classes a direction-SUPPORTING observation; aggregate produces Direction x Strength over a completed audited landscape
+weak_only_landscape_becomes_a_grade: false  # a WEAK-only public landscape is INCONCLUSIVE / UNKNOWN, never INCONCLUSIVE / WEAK
+rare_or_heterogeneous_computed_by_the_module: false   # consumed from expression_pattern + expression_pattern_basis, never from a % / H-score / n
+proposes_a_fatal_flag_or_kill: false       # a TGT-02 NEGATIVE is a Gate-relative scientific coverage judgement; fatal_review is at most POTENTIAL_FATAL_PATTERN
+cross_gate_conclusion_added: false          # no TGT-03 persistence, TGT-04 surface / density, TGT-05 therapeutic-index conclusion; generic CRC linkage never discharges TGT-03
+two_axis_weaker_ceiling_rule_added: false   # overall Strength is the HIGHEST qualifying evidence class (there is no E6-style two-axis score)
+ontology_or_embedding_inference_added: false   # classification + fatal_review are exact field reads only
+new_scientific_or_ladder_semantics_added: false   # the frozen E7 truth table + PR D TGT-02 ladder / ceiling / inference / fatal / unknown reproduced verbatim
+constructs_canonical_assessment_or_decision: false
+emits_public_fatal_signal_established: false
+touches_pr_a_contracts: false
+touches_pr_b_contracts: false
+touches_pr_c_contracts: false
+touches_pr_d_tgt02_science: false          # only the primary_module_version slot
+touches_e7_construction_contract_body: false
+mod_tgt01_modified: false
+mod_tgt05_modified: false
+mod_tgt08_modified: false
+generic_gatemodule_framework_or_base_class_added: false
+new_dependency_added: false                # still only PyYAML
+migration_pending_lifted: false            # four of eight primary Modules built (TGT-01, TGT-02, TGT-05, TGT-08)
+
+spec_refs:
+  - src/contracts/gate_modules/tgt02_indication_specific_malignant_cell_coverage.yaml (PR E7 -- the frozen 17-item construction contract, implemented verbatim, not re-interpreted)
+  - docs/gate_modules/TGT-02_Indication_Specific_Malignant_Cell_Coverage.md (PR E7 construction drawing)
+  - src/contracts/crc_adc_target_gateset.yaml gate_contracts.TGT-02 (frozen PR D gate_question / Evidence Ladder / evidence_ceiling / allowed+forbidden inference / inference_guard / fatal_conditions / unknown_behavior -- reproduced verbatim)
+  - src/objects/decision_model.py (PR A EvidencePackage shape + DIRECTION / STRENGTH / EVIDENCE_ROLE / CRITICAL_UNKNOWN / SOURCE_TYPE enums)
+  - gate_modules/tgt01_adc_modality_precedent/ (PR E2) + gate_modules/tgt05_normal_tissue_fatal_liability/ (PR E4) + gate_modules/tgt08_target_opportunity_competition_ip_whitespace/ (PR E6 -- the runtime genes E7 froze for MOD-TGT02: standalone-package shape, canonical target identity, Gate-neutral EvidencePackage, exact canonical reuse, classification-driving parity, hard identity / provenance / completion-consistency failure -> reject whole run, non-canonical proposal envelope, the E6 completion-audit snapshot-parity gene; reused not imported)
+  - CURRENT_SYSTEM v5 section 6.4 (one Gate -> one primary Module; Module 权责边界) / section 6.5 (shared infrastructure not per Gate) / section 11.2 (EVGAP-02 CRC linkage lock -- generic CRC linkage never discharges TGT-03)
+
+scoping_decisions:  # ChatGPT AI审核方案, before code, E8-1..E8-8 (APPROVE-to-proceed, with the implementation-level corrections captured below)
+  E8-1: >-
+    real deterministic MOD-TGT02 implementation (like E2 / E4 / E6, a full Gate-specific scientific core). files __init__ / module.yaml / contracts / ports / classify / evidence / aggregate / completion / fatal_review / acceptance / module -- completion.py and fatal_review.py are their own small files (run-level search-completeness authority + audit parity; the separate machine-local review trigger), NOT folded into aggregate.py. module_version 1.0.0; CrcCohortCoverageCompletion is a frozen dataclass -- a module-local run record, NOT a seventh core object. minimal binding update (TGT-02 primary_module_version 0.0.0 -> 1.0.0; built_module_versions + BUILT_MODULE_VERSIONS + gate_modules/README.md gain TGT-02 -> TGT-03 / TGT-04 / TGT-06 / TGT-07 stay 0.0.0); frozen E7 contract body untouched; also add manifest + handoff + worklog + tests/test_tgt02_module.py; NO generic GateModule framework / abstract base class; NO MOD-TGT01 / MOD-TGT05 / MOD-TGT08 refactor. run() is pure Python -- no network / subprocess / filesystem-derived ids / repository writes / db / cache / retrieval adapter / LLM.
+  E8-2: >-
+    one normalized Tgt02CoverageProviderPort (the package declares its own EvidenceIdAllocatorPort / SourceResolverPort / ExistingEvidenceLibraryPort -- it does NOT import MOD-TGT01 / 05 / 08 ports). every NormalizedCoverageObservation carries observation_kind in {PROTEIN_COHORT, MALIGNANT_SC_SPATIAL, TMA_TRANSCRIPT_PROTEIN_CONCORDANCE, BULK_CRC_RNA, PAN_CANCER_UNRESOLVED, MATCHED_NORMAL_TUMOR, SEARCH_COMPLETION_AUDIT} + molecular_layer in {"", PROTEIN, TRANSCRIPT, BOTH} + a TYPED assay_method (a classification-driving fact, NOT free text -- DIRECT is reachable only through VALIDATED_IHC / QUANTITATIVE_PROTEOMICS / VALIDATED_MULTIPLEX_IF) + malignant_cell_attribution + basis + cohort_adequacy_status + basis + expression_pattern + basis + crc_specific + cohort_id / cohort_ids + cohort_n (a raw fact only, never in the rung logic) + facts only. the provider NEVER sets a rung, a Direction, or a coverage-support implication, and never the final critical-unknown resolution kind. a SEARCH_COMPLETION_AUDIT observation additionally carries the 11-field structured completion snapshot.
+  E8-3: >-
+    deterministic rung classification. PROTEIN_COHORT + crc_specific + malignant_cell_attribution == MALIGNANT + a validated protein assay + cohort_adequacy_status == QUALIFIED -> DIRECT, qualifying_for_direct. MALIGNANT_SC_SPATIAL (SC / SPATIAL assay) or TMA_TRANSCRIPT_PROTEIN_CONCORDANCE, crc_specific, MALIGNANT -> INDIRECT_STRONG, qualifying_for_indirect (TMA concordance stays INDIRECT_STRONG even at the BOTH layer -- PR D froze it there). BULK_CRC_RNA / PAN_CANCER_UNRESOLVED -> WEAK, CONTEXTUAL. MATCHED_NORMAL_TUMOR / NON_MALIGNANT / unresolved-compartment / non-CRC -> CONTEXTUAL, rung "" (NOT a HARD failure; stroma / immune never becomes malignant coverage and does not discharge TGT-02). SEARCH_COMPLETION_AUDIT -> CONTEXTUAL, rung "". hard locks: transcript never DIRECT; a generic / non-validated protein assay never DIRECT; protein without malignant-cell attribution never DIRECT; cohort_n never changes a rung; a matched normal-vs-tumor comparison is context only, never a favourable-therapeutic-index read. the classifier only rung-classes a direction-SUPPORTING observation -- a single observation is NEVER a Direction.
+  E8-4: >-
+    deterministic aggregation with an explicit precedence -- 0. a HARD integrity failure -> no proposal; 1. completion not landscape-complete -> INCONCLUSIVE / UNKNOWN with zero evidence_refs (this is a legitimate non-error state, E7 item 13 / 15); 2. completion complete but the audit is invalid / missing -> HARD reject, never a soft UNKNOWN; 3. completion complete AND audited -> evaluate the qualifying evidence. overall Strength = the HIGHEST qualifying frozen evidence class (any qualifying DIRECT -> DIRECT; else any qualifying INDIRECT_STRONG -> INDIRECT_STRONG; else INCONCLUSIVE / UNKNOWN) -- there is NO E6-style two-axis weaker-ceiling rule. Direction over the qualifying directional evidence -- a valid audited multi-cohort RARE_HIGHLY_HETEROGENEOUS finding across >= 2 cohorts -> NEGATIVE (never CONFLICTING, Strength not auto-degraded); else material SUPPORTS + material OPPOSES -> CONFLICTING; else OPPOSES only -> NEGATIVE; else SUPPORTS only -> POSITIVE; else (qualifying nondirectional evidence) -> graded INCONCLUSIVE at the overall rung, strictly distinct from INCONCLUSIVE / UNKNOWN. a WEAK-only completed landscape -> INCONCLUSIVE / UNKNOWN, never INCONCLUSIVE / WEAK. "rare and highly heterogeneous" is consumed from expression_pattern + expression_pattern_basis, never computed; a missing / drifted basis is a HARD integrity failure.
+  E8-5: >-
+    one module-local typed CrcCohortCoverageCompletion (frozen dataclass in completion.py; fields per E7-5; NOT a seventh core object) with three HARD invariants. (1) completeness consistency -- public_crc_coverage_search_complete MUST equal all(protein_cohort / malignant_compartment_sc_spatial / tma_concordance / matched_normal_tumor component searches); a provider that claims the umbrella flag while a component is false is a completion integrity contradiction and rejects the whole run (never a soft UNKNOWN). (2) audit presence + snapshot parity -- a completion that claims public_crc_coverage_search_complete MUST be certified by EXACTLY ONE SEARCH_COMPLETION_AUDIT observation whose observation_id == audit_observation_id and whose 11-field structured snapshot (search_scope / sources_searched / landscape_as_of / the five per-component completion states / unresolved_item keys / qualifying_protein_cohort_ids / qualifying_indirect_cohort_ids) matches the typed completion field-for-field; no audit, two audits, or any drift is a HARD reject; the snapshot fields also enter the audit EP exact-reuse parity. (3) qualifying cohort-set parity -- qualifying_protein_cohort_ids / qualifying_indirect_cohort_ids MUST equal (as sets) the cohort identities of the observations classified qualifying DIRECT / qualifying INDIRECT_STRONG (evaluated only over a completed landscape, since "qualifying" is defined only there); a mismatch is a HARD reject. unresolved_items is a small typed CoverageUnresolvedItem(description, kind) with kind in {KNOWN_PUBLIC_NOT_YET_RESOLVED, ACCESS_OR_ANNOTATION_BLOCKED} -- an internal type only, not a core object.
+  E8-6: >-
+    machine-local fatal_review review TRIGGER (FatalReviewRecord fields -- required / status / evidence_ids / cohort_ids / coverage_class / cohort_adequacy_basis_refs / expression_pattern_basis_refs / landscape_as_of / crc_coverage_search_scope). status single value POTENTIAL_FATAL_PATTERN. the detector consumes only observations that already passed identity / provenance / rung classification / qualification basis / completion. required = true iff, on a COMPLETED audited landscape, there are DIRECT-class protein-cohort observations, each classified OPPOSES_COVERAGE with expression_pattern in {ABSENT, RARE_HIGHLY_HETEROGENEOUS} and an auditable expression_pattern_basis + basis_detail, and a QUALIFIED cohort_adequacy_status + an auditable cohort_adequacy_basis, that together provide cross-cohort support -- AT LEAST TWO independent cohort identities (distinct auditable cohort_ids), or one declared multi-cohort analysis with at least two auditable cohort_ids. this is >= 2, explicitly NOT "> 2" / ">= 3" (ChatGPT AI审核方案 confirmed the E8-6 draft's "> 2" wording was a typo; the frozen E7 item-08 across_cohorts_is_plural_cohorts_logic_not_a_new_threshold governs). a single negative cohort -> required = false; two observations from the same cohort are not cross-cohort; a transcript-only negative signal never contributes. NO numeric / percent-positive / H-score / heterogeneity threshold. the raw detector may compute internally, but a fatal_review is an actionable handoff ONLY on an accepted run; the machine NEVER emits PUBLIC_FATAL_SIGNAL_ESTABLISHED / a canonical fatal flag / KILL / HOLD / Decision, and NEVER decides whether the pattern is a real fatal signal (human review + the GateSet fatal policy do). fatal_review is NOT on the proposal envelope.
+  E8-7: >-
+    Gate-NEUTRAL EvidencePackage per observation (PR A shape) + exact canonical reuse -- an observation already in the Evidence Library is reused as the EXACT canonical object (no allocator call, no re-created body); provenance comes from the resolved canonical SourceIndex record (unresolved id or provider <-> canonical metadata conflict -> HARD reject). non-audit reuse parity keys are an always set (target_identity, context_key, landscape_as_of, observation_kind, molecular_layer, assay_method, crc_specific, malignant_cell_attribution + basis, cohort_adequacy_status + basis, expression_pattern + basis + basis_detail) plus the cohort keys for that kind; the audit EP adds the 11 snapshot fields; a missing OR drifted field -> HARD integrity failure. machine acceptance = the E7 item-13 checklist as executable checks. a HARD identity / provenance / completion-consistency / classification-qualification failure rejects the WHOLE run (proposal_envelope = None) -- NEVER degraded to an accepted UNKNOWN; a genuinely incomplete public CRC coverage search -> INCONCLUSIVE / UNKNOWN is NOT an integrity failure. critical_unknowns resolutions are PUBLIC_RESOLVABLE / EXPERIMENT_REQUIRED / CURRENTLY_UNRESOLVABLE with a NARROW deterministic mapping -- incomplete public search -> PUBLIC_RESOLVABLE; an access / annotation-blocked unresolved item -> CURRENTLY_UNRESOLVABLE; a completed landscape with qualifying INDIRECT_STRONG directional evidence and no qualifying DIRECT protein cohort -> same Direction / INDIRECT_STRONG + EXPERIMENT_REQUIRED (protein-level malignant-cell cohort confirmation); a completed WEAK-only landscape -> INCONCLUSIVE / UNKNOWN + EXPERIMENT_REQUIRED. a graded INCONCLUSIVE / DIRECT does NOT invent EXPERIMENT_REQUIRED (not frozen by E7). the module NEVER constructs a CandidateGateAssessment / HUMAN_APPROVED / Decision.
+  E8-8: >-
+    CI runs synthetic / in-memory acceptance scenarios only -- no internet, no real GEO / HPA / CPTAC / single-cell / spatial / TMA data. synthetic TARGET_A / CRC_COHORT_A / CRC_COHORT_B / CRC_COHORT_C / STROMA / IMMUNE; no HER2 / TROP2 / real target names. the scenario set is anchored to behaviours, not a number -- identity / package hygiene, the DIRECT / INDIRECT_STRONG / WEAK rung mapping and the hard scientific boundaries, the completion invariants (umbrella-vs-component contradiction, missing / duplicate / drifted audit, qualifying-set drift, incomplete-landscape UNKNOWN), the frozen truth table (POSITIVE / NEGATIVE / CONFLICTING / graded INCONCLUSIVE / INCONCLUSIVE-UNKNOWN, highest-qualifying-class Strength), qualified heterogeneity -> NEGATIVE, the fatal_review trigger (>= 2 cohorts, not "> 2"; single cohort / same-cohort / transcript-only -> no trigger; only on an accepted run), the narrow critical-unknown mapping, and the forbidden-output surface.
+
+three_headline_invariants:
+  - A single observation is never a Direction. Only aggregate, over a completed audited CRC coverage landscape, produces a proposed Direction x Strength.
+  - TGT-02 NEGATIVE is a Gate-relative SCIENTIFIC coverage judgement -- it is never a fatal flag and never a KILL. A cross-cohort protein-level negative-coverage pattern is surfaced at most as a machine-local fatal_review = POTENTIAL_FATAL_PATTERN.
+  - The typed CrcCohortCoverageCompletion grants the Module its authority to grade a population-level Direction; a completion that contradicts itself, cannot be audited, or disagrees with the qualifying evidence is worth nothing and rejects the whole run.
+
+delivers:
+  - gate_modules/tgt02_indication_specific_malignant_cell_coverage/ -- the 11-file deterministic Gate-specific scientific core (completion.py + fatal_review.py are their own files)
+  - src/contracts/crc_adc_target_gateset.yaml + src/objects/crc_adc_target_gateset.py -- TGT-02 binding 0.0.0 -> 1.0.0; built_module_versions / BUILT_MODULE_VERSIONS gain TGT-02
+  - gate_modules/README.md -- MOD-TGT02 registered as built (PR E8); the "unbuilt" count drops to four
+  - tests/test_tgt02_module.py -- the synthetic acceptance suite (75 tests)
+  - tests/test_tgt02_module_construction_contract.py -- the E7 contract-vs-repository reconciliation (package now exists, binding now 1.0.0, contract still frozen)
+  - tests/test_gate_modules_boundary.py + tests/test_crc_adc_target_gateset.py -- the narrowest registry / built-list synch (Tgt02ModuleManifestTests, _BUILT_MODULE_VERSIONS, test_tgt02_module_is_built_in_gate_modules)
+  - tests/test_tgt05_module.py + tests/test_tgt05_module_construction_contract.py + tests/test_tgt08_module.py + tests/test_tgt08_module_construction_contract.py -- the narrowest synch of hard-coded "only three built modules" assumptions
+  - manifests/runtime_migration_pr_e8_manifest.yaml -- this file
+  - docs/handoff/2026-08-30-runtime-migration-pr-e8.zh-CN.md -- the E8 handoff
+
+deferred:
+  - live retrieval providers / adapters / datasets (GEO / HPA / CPTAC / single-cell / spatial / TMA repositories) and an external runner
+  - the other four TGT primary Modules (TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)
+  - external workspace calibration of any cohort-adequacy / malignant-attribution / heterogeneity normalisation
+
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  gate_module_source_code_in_repository: allowed
+  gate_module_live_retrieval_execution_or_persistence_in_repository: forbidden
+  numeric_or_ranking_scoring: forbidden
+  cohort_size_or_percent_positive_or_hscore_or_heterogeneity_threshold: forbidden
+  generic_gatemodule_framework_or_base_class: forbidden
+  modifies_mod_tgt01: forbidden
+  modifies_mod_tgt05: forbidden
+  modifies_mod_tgt08: forbidden
+  modifies_e7_construction_contract_body: forbidden
+  migration_pending: remains
+
+chatgpt_review: pending
+approved_tip: null
+merge_commit: null
+review_rounds: 0
+test_count_before_e8: 1104        # at PR E7 approval
+test_count_at_submission: 1185    # local full suite (tests/test_tgt02_module.py 75 + reconciliation / registry synch)
+approval_record_pr: null
+next_authorized_step: null        # PR E9 = MOD-TGT03 construction contract -- needs its own go-ahead
+
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt02_module.py' -v
+  - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'
+  - bash scripts/verify_repository_boundary.sh
+  - git diff --check
+
+artifacts:
+  - gate_modules/tgt02_indication_specific_malignant_cell_coverage/__init__.py
+  - gate_modules/tgt02_indication_specific_malignant_cell_coverage/module.yaml
+  - gate_modules/tgt02_indication_specific_malignant_cell_coverage/contracts.py
+  - gate_modules/tgt02_indication_specific_malignant_cell_coverage/ports.py
+  - gate_modules/tgt02_indication_specific_malignant_cell_coverage/classify.py
+  - gate_modules/tgt02_indication_specific_malignant_cell_coverage/evidence.py
+  - gate_modules/tgt02_indication_specific_malignant_cell_coverage/aggregate.py
+  - gate_modules/tgt02_indication_specific_malignant_cell_coverage/completion.py
+  - gate_modules/tgt02_indication_specific_malignant_cell_coverage/fatal_review.py
+  - gate_modules/tgt02_indication_specific_malignant_cell_coverage/acceptance.py
+  - gate_modules/tgt02_indication_specific_malignant_cell_coverage/module.py
+  - tests/test_tgt02_module.py
+  - manifests/runtime_migration_pr_e8_manifest.yaml
+  - docs/handoff/2026-08-30-runtime-migration-pr-e8.zh-CN.md

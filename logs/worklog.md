@@ -5403,3 +5403,74 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   实现 3 个（MOD-TGT01/05/08 @ 1.0.0）。MOD-TGT02 `primary_module_version` 仍
   `0.0.0`（PR E8 bump）。TGT-03 → 04 → 06 → 07 属后续 PR。`MIGRATION_PENDING`
   保持。PR E8 = MOD-TGT02@1.0.0 实现需各自 go-ahead。
+
+## 2026-08-30T03:30 EDT — Runtime Migration PR E8：MOD-TGT02@1.0.0 实现（分支 task_20260829_runtime-migration-pr-e8，基线 76814c1）
+
+- 授权：用户 PR E7 收口后 "go on"。开工前审核方（ChatGPT `AI审核方案`）给
+  **APPROVE-to-proceed，带几处实现级修正**，冻结 E8 = MOD-TGT02@1.0.0
+  deterministic implementation，给 9 个 scoping 决策 E8-1…E8-8 + (a)(b)(c) + 3 条
+  headline invariant。审核方补的 3 个关键 implementation invariant（audit
+  presence、completion consistency、assay typing）已全部落实。E8-6 正文的
+  「> 2 independent cohort identities」经追问确认是笔误，实现 + 测试均按冻结 E7
+  的 **AT LEAST TWO（>= 2，明确不是 "> 2" / ">= 3"）**。
+- 新增实现包 `gate_modules/tgt02_indication_specific_malignant_cell_coverage/`
+  11 文件（`completion.py`、`fatal_review.py` 各自独立小文件）：
+  - `completion.py` —— typed `CrcCohortCoverageCompletion`（run record，非第七个
+    core object）+ 3 个 HARD invariant：completeness consistency
+    （`public_crc_coverage_search_complete == all(4 components)`，矛盾 → 拒整个
+    run）、mandatory audit presence + 11 字段 snapshot parity（无 / 两条 / drift
+    → HARD）、qualifying cohort-set parity（completion 的 qualifying id 集合必须
+    等于实际分类 qualifying `DIRECT` / `INDIRECT_STRONG` 的 cohort identities）。
+    `CoverageUnresolvedItem(description, kind)` internal type。
+  - `classify.py` —— 确定性 rung：`PROTEIN_COHORT` + crc + `MALIGNANT` +
+    validated protein assay + `QUALIFIED` → `DIRECT`；sc/spatial /
+    TMA-concordance → `INDIRECT_STRONG`（TMA 即使 `BOTH` 层也严格
+    `INDIRECT_STRONG`）；bulk / pan-cancer → `WEAK`；matched normal-tumor /
+    `NON_MALIGNANT` / non-CRC → `CONTEXTUAL` rung `""`（非 HARD）。hard locks：
+    transcript / generic protein assay / protein-without-attribution 永不
+    `DIRECT`；`cohort_n` 永不改 rung。单个 observation 永不是 Direction。
+  - `aggregate.py` —— precedence（HARD → 无 proposal；未 complete →
+    `INCONCLUSIVE/UNKNOWN` 零 refs；complete 但 audit 坏 → HARD；complete +
+    audited → 评估）；overall Strength = **最强 qualifying class**（无 two-axis
+    rule）；Direction：audited multi-cohort `RARE_HIGHLY_HETEROGENEOUS`（>= 2
+    cohorts）→ `NEGATIVE` 不 `CONFLICTING`；SUPPORTS+OPPOSES → `CONFLICTING`；
+    OPPOSES → `NEGATIVE`；SUPPORTS → `POSITIVE`；qualifying nondirectional →
+    graded `INCONCLUSIVE`；WEAK-only complete → `INCONCLUSIVE/UNKNOWN`（**无**
+    `INCONCLUSIVE/WEAK`）。窄 `EXPERIMENT_REQUIRED`：IS-only directional →
+    protein confirmation；WEAK-only complete → UNKNOWN + EXPERIMENT_REQUIRED。
+  - `fatal_review.py` —— `detect`：`required` iff completed audited landscape +
+    DIRECT-class protein cohorts，各 `OPPOSES_COVERAGE` + `ABSENT` /
+    `RARE_HIGHLY_HETEROGENEOUS` + auditable bases + `QUALIFIED` + basis，跨
+    **>= 2 independent cohort identities**（或 declared multi-cohort obs 带 >= 2
+    `cohort_ids`）。单 cohort / 同 cohort 两条 / transcript-only → 不触发。
+    `status` 单值 `POTENTIAL_FATAL_PATTERN`；raw detector 内部算，actionable 只在
+    accepted run；永不 `PUBLIC_FATAL_SIGNAL_ESTABLISHED` / KILL / HOLD /
+    Decision；不在 proposal envelope 上。
+  - `evidence.py` —— Gate-neutral PR A EP + exact canonical reuse；non-audit
+    parity keys 含 `assay_method` + `crc_specific`（都驱动 rung）；audit EP 加
+    11 snapshot 字段；缺失 OR drift → HARD。
+  - `acceptance.py` —— E7 item-13 可执行检查（rung hard locks、qualification
+    bases、no-early-one-cohort-grade、Direction×Strength == truth table、
+    fatal_review 边界、无 cross-Gate 结论、无 numeric/ranking score/cohort-size
+    threshold、无 PUBLIC_FATAL_SIGNAL_ESTABLISHED/KILL/HOLD/Decision）。
+  - `module.py` —— 纯 Python `run`，只调 injected port；HARD integrity failure
+    → 拒整个 run（`proposal_envelope=None`），绝不降级 accepted UNKNOWN；
+    fatal_review 只在 accepted run surface。
+- 窄修 binding：`crc_adc_target_gateset.yaml`/`.py` TGT-02 `0.0.0 → 1.0.0` +
+  `built_module_versions` / `BUILT_MODULE_VERSIONS` 加 TGT-02；
+  `gate_modules/README.md` 注册 `MOD-TGT02 … built (PR E8)`。
+- 测试：`tests/test_tgt02_module.py` **75 tests**（12 类）。
+  `tests/test_tgt02_module_construction_contract.py` 的 `NoImplementationInPrE7Tests`
+  迁成 `ContractIsFrozenAndImplementedInPrE8Tests`（合同仍冻结；实现包 11 文件
+  必须存在；binding 现 `1.0.0`）。`test_gate_modules_boundary.py`（+`Tgt02ModuleManifestTests`）、
+  `test_crc_adc_target_gateset.py`（+`test_tgt02_module_is_built…`）、
+  `test_tgt05_module*.py` / `test_tgt08_module*.py`（built-list / allowed-list
+  最窄同步）。
+- 验证：`tests/test_tgt02_module.py` **75 OK**；全量 **1185 OK**（E7 收口 1104）；
+  `bash scripts/verify_repository_boundary.sh` 只报既有 untracked 杂项（不属本
+  PR）；`git diff --check` clean；YAML 合法。
+- 未改：TGT01/05/08 module files、E7 施工合同正文、E7 drawing science 正文、PR
+  A/B/C、generic boundary scripts。`MIGRATION_PENDING` 保持。
+- Next：开 PR、CI 绿后回 `AI审核方案` 贴 E8 review。8 个 primary Module 已实现
+  4 个（TGT-01/05/08/02 @ 1.0.0）；TGT-03 → 04 → 06 → 07 属后续 PR（各自
+  go-ahead）。
