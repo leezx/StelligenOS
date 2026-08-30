@@ -4956,3 +4956,38 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 验证：`tests/test_tgt08_module_construction_contract.py` **45 OK**；全量待跑；
   YAML 结构合法；items 03/04/05/07/08 parity vs 冻结 PR D 全 True。
 - Next：跑全量、提交、推送、开 PR、CI 绿后回 `AI审核方案` 请求审核。
+
+## 2026-08-29T23:00 EDT — Runtime Migration PR E5 第一轮修订（PR #114 @ 502bc4f2 REQUEST_CHANGES）
+
+- 审核方复审 502bc4f2：**E5 大部分 PASS**（design-only scope、E1 17-item template
+  复用、03/05/07/08 PR D parity、三层边界、NEGATIVE 可达但不等于 KILL / sponsor
+  stop、FTO 边界、DIRECT 双轴、absence inference 需 completion provenance、
+  sponsor_review 独立 module-local trigger、E2/E4 genes 冻结、MOD-TGT08 仍
+  0.0.0、MIGRATION_PENDING 未解除）。只剩 2 个 narrow Direction×Strength /
+  two-axis contract blocker。
+- Blocker 1 — drawing item 06 把 "two-axis coverage complete" 错写成 "DIRECT"
+  （"at DIRECT if both axes complete, else INDIRECT_STRONG"），与同施工图 item 16
+  自相矛盾。修：冻结正确规则 —— overall Strength = **weaker required axis
+  ceiling**；overall DIRECT 需要 competitive 轴 AND composition-level patent 轴
+  都到 DIRECT authority；任一只到 INDIRECT_STRONG → overall 封顶 INDIRECT_STRONG。
+  新增 item 06 `strength_is_the_weaker_required_axis_ceiling`，item 13（overall
+  proposed_strength == weaker required axis ceiling；"both axes searched" alone
+  never DIRECT），item 16 `direct_requires`（"at DIRECT authority"），
+  `coverage_complete_is_not_direct_quality`（两轴 coverage complete 是 graded
+  非-UNKNOWN 的 precondition，不是 DIRECT）；drawing item 06/13/16 行改写；
+  新增 regression。
+- Blocker 2 — frozen truth table 缺 "landscape 完整、有有效 grade、但没有
+  directional signal"（既无 material SUPPORTS_OPPORTUNITY 也无 material
+  OPPOSES_OPPORTUNITY）这个合法状态。修：新增 **graded INCONCLUSIVE** ——
+  `INCONCLUSIVE / DIRECT` 或 `INCONCLUSIVE / INDIRECT_STRONG`（按 overall rung），
+  带非空 evidence_refs（CONTEXTUAL landscape packages）；item 06
+  `graded_inconclusive_vs_unknown` 严格区分二者（"we could not look" vs "we
+  looked well and the evidence does not resolve direction"）；items 13 / 15 +
+  drawing 更新；truth table `landscape_source_space_materially_incomplete` key
+  改名为 `..._or_a_mandatory_axis_not_searched`；新增 regression。
+- 未改：PR D、sponsor_review 契约、source plan / FTO boundary、repository scope、
+  MOD-TGT01 / MOD-TGT05。
+- 验证：`tests/test_tgt08_module_construction_contract.py` 45 → **48 OK**；全量
+  **966**（1 个既有本机 __pycache__ 噪音 FAIL，CI 干净 checkout 上 GREEN）；
+  `git diff --check` clean；YAML 结构合法；03/04/05/07/08 parity 仍全 True。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第一轮复审（2 个 blocker 摘要）。

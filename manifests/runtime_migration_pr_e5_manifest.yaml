@@ -63,13 +63,55 @@ deferred:
   retrieval_providers_and_datasets: "PR E6+"
   other_five_tgt_modules: "PR E6+ (TGT-02 -> TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)"
 
-chatgpt_review: PENDING
+chatgpt_review: REQUEST_CHANGES   # round 1; revision pushed, re-review pending
 approved_tip: null
 merge_commit: null
-review_rounds: 0
+review_rounds: 1
 test_count_before_e5: 918     # at PR E4 approval (round 1)
+test_count_at_submission: 963
+test_count_after_round_1: 966
 approval_record_pr: null
 next_authorized_step: null    # PR E6 = MOD-TGT08@1.0.0 implementation -- needs its own go-ahead
+
+review_round_1:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "502bc4f2"
+  accepted: >-
+    design-only scope; E1 17-item template reuse; items 03/05/07/08 PR D parity;
+    the three-layer boundary (Scientific Gates TGT-01..07 / TGT-08 opportunity
+    landscape / sponsor axis); NEGATIVE reachable but not a KILL / sponsor stop;
+    the FTO / infringement / no-design-around boundary; DIRECT as a
+    competitive + composition-patent two-axis structure; absence inference needs
+    completion provenance; sponsor_review as an independent module-local trigger
+    that never enters the scientific fatal policy; exact canonical EP reuse /
+    hard integrity reject genes; MOD-TGT08 still 0.0.0; MIGRATION_PENDING intact
+  scope: 2 narrow Direction x Strength / two-axis contract fixes; PR D, sponsor_review, source plan / FTO boundary, repository scope, MOD-TGT01 / MOD-TGT05 all unchanged
+  fixes:
+    blocker_1_coverage_complete_is_not_direct: >-
+      the drawing item 06 said "at DIRECT if both axes complete, else
+      INDIRECT_STRONG", contradicting its own item 16 (coverage complete !=
+      DIRECT quality). Frozen the correct rule: overall Strength is the WEAKER
+      REQUIRED AXIS CEILING -- an overall DIRECT needs BOTH the competitive axis
+      AND the composition-level patent axis at DIRECT authority; if either
+      reaches only INDIRECT_STRONG the overall assessment is capped at
+      INDIRECT_STRONG. Added item 06 strength_is_the_weaker_required_axis_ceiling,
+      updated item 13 (overall strength == weaker required axis ceiling) and
+      item 16 (direct_requires "at DIRECT authority"), reworded the drawing item
+      06/13/16 rows, and added regressions.
+    blocker_2_graded_inconclusive_state: >-
+      the frozen truth table claimed "exactly ONE mapping" but had no row for a
+      coverage-complete, fully audited landscape that carries a valid evidence
+      grade yet no material directional signal (neither material
+      SUPPORTS_OPPORTUNITY nor material OPPOSES_OPPORTUNITY). Added the graded
+      INCONCLUSIVE state -- INCONCLUSIVE / DIRECT or INCONCLUSIVE /
+      INDIRECT_STRONG at the overall rung, with non-empty evidence_refs (the
+      CONTEXTUAL landscape packages) -- and item 06
+      graded_inconclusive_vs_unknown drawing the strict distinction from
+      INCONCLUSIVE / UNKNOWN ("we could not look" vs "we looked well and the
+      evidence does not resolve direction"). Updated items 13 / 15 and the
+      drawing, added regressions.
+  tests_at_round_1: 48   # test_tgt08_module_construction_contract.py (was 45)
+  full_suite_at_round_1: 966
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_tgt08_module_construction_contract.py' -v

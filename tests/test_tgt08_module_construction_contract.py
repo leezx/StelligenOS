@@ -190,9 +190,14 @@ class CommercialStrategicBoundaryTests(unittest.TestCase):
         i06 = self.item["06_direction_interpretation"]
         self.assertIn("reachable", _norm(i06["NEGATIVE"]))
         tt = i06["frozen_truth_table"]
-        self.assertEqual(_norm(tt["DIRECT_only_material_opportunity_opposing_signals"]),
-                         "negative / direct")
-        self.assertEqual(_norm(tt["INDIRECT_STRONG_only_opposing"]), "negative / indirect_strong")
+        self.assertEqual(
+            _norm(tt["completed_landscape_only_material_opportunity_opposing_signals"]),
+            "negative / <overall rung>",
+        )
+        self.assertEqual(
+            _norm(tt["completed_landscape_only_material_opportunity_supporting_signals"]),
+            "positive / <overall rung>",
+        )
 
     def test_negative_is_never_a_kill_or_sponsor_stop(self):
         i15 = self.item["15_failure_unknown_and_conflict_behavior"]
@@ -230,14 +235,51 @@ class TwoAxisEvidenceBundleTests(unittest.TestCase):
     def setUp(self):
         self.item = yaml.safe_load(CONTRACT.read_text())["acceptance_checklist"]
 
-    def test_direct_requires_both_competitive_and_composition_patent_axes(self):
+    def test_direct_requires_both_axes_at_direct_authority_not_just_coverage(self):
         i16 = self.item["16_stop_rule"]
-        self.assertIn("primary-source competitive axis complete and the composition-level patent review complete",
-                      _norm(i16["direct_requires"]))
+        dr = _norm(i16["direct_requires"])
+        self.assertIn("both required axes complete at direct authority", dr)
+        self.assertIn("capped at indirect_strong", dr)
         two = i16["two_axis_mandatory_coverage"]
         self.assertEqual(len(two["before_a_complete_landscape_assessment_both_must_complete"]), 2)
+        cinc = _norm(two["coverage_complete_is_not_direct_quality"])
+        self.assertIn("precondition for a graded (non-unknown) assessment, not by themselves a direct one", cinc)
         i13 = " ".join(self.item["13_machine_acceptance_criteria"]["a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"]).lower()
-        self.assertIn("direct requires both the primary-source competitive axis and the composition-level patent review complete", i13)
+        self.assertIn("an overall direct requires both the primary-source competitive axis and the composition-level patent review complete at direct authority", i13)
+
+    def test_overall_strength_is_the_weaker_required_axis_ceiling(self):
+        i06 = self.item["06_direction_interpretation"]
+        s = _norm(i06["strength_is_the_weaker_required_axis_ceiling"])
+        self.assertIn("it is the ceiling of the weaker required axis", s)
+        self.assertIn("competitive direct + patent indirect_strong -> overall capped at indirect_strong", s)
+        tt = i06["frozen_truth_table"]
+        never = [_norm(x) for x in tt["never"]]
+        self.assertIn("both axes searched -> direct (the overall rung is the weaker required axis ceiling)", never)
+        i13 = " ".join(self.item["13_machine_acceptance_criteria"]["a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"]).lower()
+        self.assertIn("the overall proposed_strength equals the weaker required axis ceiling", i13)
+
+    def test_completed_landscape_with_no_directional_signal_is_a_graded_inconclusive(self):
+        tt = self.item["06_direction_interpretation"]["frozen_truth_table"]
+        self.assertEqual(
+            _norm(tt["completed_landscape_no_material_directional_signal_direct_authority"]),
+            "inconclusive / direct",
+        )
+        self.assertEqual(
+            _norm(tt["completed_landscape_no_material_directional_signal_indirect_strong_authority"]),
+            "inconclusive / indirect_strong",
+        )
+        gvu = _norm(self.item["06_direction_interpretation"]["graded_inconclusive_vs_unknown"])
+        self.assertIn("inconclusive / unknown means the landscape is materially incomplete", gvu)
+        self.assertIn("we could not look", gvu)
+        self.assertIn("we looked well and the evidence does not resolve direction", gvu)
+        i15 = self.item["15_failure_unknown_and_conflict_behavior"]
+        cl = _norm(i15["completed_landscape_with_no_material_directional_signal"])
+        self.assertIn("propose a graded inconclusive", cl)
+        self.assertIn("not inconclusive / unknown", cl)
+        self.assertIn("evidence_refs are non-empty", cl)
+        i13 = " ".join(self.item["13_machine_acceptance_criteria"]["a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"]).lower()
+        self.assertIn("a graded inconclusive carries non-empty evidence_refs", i13)
+        self.assertIn("inconclusive / unknown carries no evidence_refs", i13)
 
     def test_pipeline_db_alone_caps_at_indirect_strong(self):
         i09 = self.item["09_evidence_source_plan"]["two_axes"]["competitive_landscape_axis"]
@@ -262,9 +304,13 @@ class TwoAxisEvidenceBundleTests(unittest.TestCase):
 
     def test_incomplete_landscape_is_unknown(self):
         tt = self.item["06_direction_interpretation"]["frozen_truth_table"]
-        self.assertEqual(_norm(tt["landscape_source_space_materially_incomplete"]), "inconclusive / unknown")
+        self.assertEqual(
+            _norm(tt["landscape_source_space_materially_incomplete_or_a_mandatory_axis_not_searched"]),
+            "inconclusive / unknown",
+        )
         i15 = _norm(self.item["15_failure_unknown_and_conflict_behavior"]["incomplete_landscape"])
         self.assertIn("incomplete landscape -> unknown", i15)
+        self.assertIn("we could not look", i15)
         one_axis = _norm(self.item["16_stop_rule"]["two_axis_mandatory_coverage"]["one_axis_not_done"])
         self.assertIn("half landscape cannot yield a target-opportunity judgement", one_axis)
 
@@ -474,6 +520,13 @@ class DrawingTests(unittest.TestCase):
         text = " ".join(DRAWING.read_text().lower().split())
         self.assertIn("the first gate whose canonical assessment can be `negative`", text)
         self.assertIn("it is **not** a scientifically bad target", text)
+
+    def test_drawing_item06_does_not_conflate_coverage_complete_with_direct(self):
+        text = " ".join(DRAWING.read_text().lower().split())
+        self.assertNotIn("at `direct` if both axes complete", text)
+        self.assertIn("overall strength = the weaker required axis ceiling", text)
+        self.assertIn("no material directional signal → a graded `inconclusive`", text)
+        self.assertIn('*"both axes searched"* alone never yields `direct`', text)
 
 
 if __name__ == "__main__":

@@ -193,24 +193,49 @@ acceptance_checklist:
       the future Module places each atomic landscape fact into
       SUPPORTS_OPPORTUNITY / OPPOSES_OPPORTUNITY / CONTEXTUAL relative to the
       Gate question. The provider supplies facts only and never a Direction.
+    strength_is_the_weaker_required_axis_ceiling: >-
+      overall Strength is NOT "both axes were searched" -- it is the ceiling of
+      the WEAKER required axis. competitive-axis DIRECT authority AND
+      composition-level-patent-axis DIRECT authority -> overall DIRECT.
+      competitive DIRECT + patent INDIRECT_STRONG -> overall capped at
+      INDIRECT_STRONG. competitive INDIRECT_STRONG + patent DIRECT -> overall
+      capped at INDIRECT_STRONG. competitive INDIRECT_STRONG + patent
+      INDIRECT_STRONG -> overall INDIRECT_STRONG. Two coverage-complete axes are
+      the PRECONDITION for a graded (non-UNKNOWN) assessment (item 16), not by
+      themselves a DIRECT one.
+    graded_inconclusive_vs_unknown: >-
+      INCONCLUSIVE / UNKNOWN means the landscape is materially incomplete or
+      there is no admissible evaluable landscape. A GRADED INCONCLUSIVE
+      (INCONCLUSIVE / DIRECT or INCONCLUSIVE / INDIRECT_STRONG) means landscape
+      evidence EXISTS at that authority and is fully audited, but after
+      interpretation it carries no material directional target-specific signal
+      -- neither a material SUPPORTS_OPPORTUNITY nor a material
+      OPPOSES_OPPORTUNITY. The two states are strictly distinct: one is "we
+      could not look", the other is "we looked well and the evidence does not
+      resolve direction". This is why Direction x Strength is orthogonal
+      (Blueprint v1.3) and why PR A allows INCONCLUSIVE with a graded strength +
+      evidence_refs.
     frozen_truth_table:
       note: >-
         exactly ONE mapping -- E6 has no discretion. "material" means the signal
-        is target-specific and part of a completed axis (item 16); an
+        is target-specific and part of a coverage-complete axis (item 16); an
         indication-level unmet-need-only signal is a WEAK hypothesis and does
-        not participate in a target-specific CONFLICTING.
-      DIRECT_only_material_opportunity_supporting_signals: POSITIVE / DIRECT
-      DIRECT_only_material_opportunity_opposing_signals: NEGATIVE / DIRECT
-      DIRECT_both_material_supporting_and_opposing_signals: CONFLICTING / DIRECT
-      INDIRECT_STRONG_only_supporting: POSITIVE / INDIRECT_STRONG
-      INDIRECT_STRONG_only_opposing: NEGATIVE / INDIRECT_STRONG
-      INDIRECT_STRONG_both: CONFLICTING / INDIRECT_STRONG
+        not participate in a target-specific CONFLICTING. The DIRECT /
+        INDIRECT_STRONG label on each row is the OVERALL rung after
+        strength_is_the_weaker_required_axis_ceiling has been applied.
+      completed_landscape_only_material_opportunity_supporting_signals: POSITIVE / <overall rung>
+      completed_landscape_only_material_opportunity_opposing_signals: NEGATIVE / <overall rung>
+      completed_landscape_both_material_supporting_and_opposing_signals: CONFLICTING / <overall rung>
+      completed_landscape_no_material_directional_signal_direct_authority: INCONCLUSIVE / DIRECT
+      completed_landscape_no_material_directional_signal_indirect_strong_authority: INCONCLUSIVE / INDIRECT_STRONG
       indication_level_unmet_need_only: INCONCLUSIVE / WEAK
-      landscape_source_space_materially_incomplete: INCONCLUSIVE / UNKNOWN
+      landscape_source_space_materially_incomplete_or_a_mandatory_axis_not_searched: INCONCLUSIVE / UNKNOWN
       never:
         - refractory mCRC is grim -> this target is a good opportunity
         - UNKNOWN -> attractive / uncrowded / whitespace
         - a favorable commercial picture -> TGT-01 through TGT-07 are de-risked
+        - both axes searched -> DIRECT (the overall rung is the weaker required axis ceiling)
+        - a completed landscape with no directional signal -> UNKNOWN (that is a graded INCONCLUSIVE, not UNKNOWN)
     NEGATIVE: >-
       reachable and bounded. NEGATIVE means the current public opportunity
       evidence weighs against a differentiated entry for this target in
@@ -455,8 +480,10 @@ acceptance_checklist:
       - every provenance.source_id resolves to a canonical SourceIndex record whose metadata matches, and every evidence_ref.evidence_id resolves to a canonical EvidencePackage (PR C check_* functions; PR E2 / E4 gene)
       - every admissible evidence class used is in item 04's admissible list, and no item-04 not_admissible class is present
       - the proposed_strength does not exceed the ceiling of the highest ladder rung actually met (item 05) -- pipeline-database or target-level-patent evidence alone caps at INDIRECT_STRONG
-      - proposed_direction x proposed_strength is exactly the item-06 frozen truth table result for the evidence actually held (unmet-need-only -> INCONCLUSIVE / WEAK; a completed axis with only supporting or only opposing material target-specific signals -> POSITIVE or NEGATIVE at that rung; both -> CONFLICTING; a materially incomplete landscape -> INCONCLUSIVE / UNKNOWN)
-      - the item-16 two-axis mandatory completion conditions are satisfied for the rung proposed (DIRECT requires BOTH the primary-source competitive axis and the composition-level patent review complete)
+      - the overall proposed_strength equals the WEAKER required axis ceiling (item 06 strength_is_the_weaker_required_axis_ceiling) -- "both axes searched" alone never yields DIRECT
+      - proposed_direction x proposed_strength is exactly the item-06 frozen truth table result for the evidence actually held (unmet-need-only -> INCONCLUSIVE / WEAK; a coverage-complete landscape with only supporting or only opposing material target-specific signals -> POSITIVE or NEGATIVE at the overall rung; both -> CONFLICTING; a coverage-complete landscape with NO material directional signal -> a GRADED INCONCLUSIVE at the overall rung (INCONCLUSIVE / DIRECT or INCONCLUSIVE / INDIRECT_STRONG), never INCONCLUSIVE / UNKNOWN; a materially incomplete landscape or an unsearched mandatory axis -> INCONCLUSIVE / UNKNOWN)
+      - a graded INCONCLUSIVE carries non-empty evidence_refs (the CONTEXTUAL landscape packages); INCONCLUSIVE / UNKNOWN carries no evidence_refs
+      - the item-16 two-axis mandatory completion conditions are satisfied for the rung proposed (an overall DIRECT requires BOTH the primary-source competitive axis AND the composition-level patent review complete AT DIRECT AUTHORITY)
       - any absence-based whitespace / no-competitor claim is backed by an explicit completed-search provenance record (item 09) -- never by records == []
       - if the module-local sponsor_review record has required = true, its status is POTENTIAL_SPONSOR_FATAL_PATTERN (never a canonical fatal flag / KILL / STOP_FOR_SPONSOR / OUT_OF_MANDATE) and it carries the contributing competitor_program_ids, patent_family_ids, landscape_as_of and patent_scope
       - dedup -- one SRC -> many EP is allowed; the same (source, claim) is not duplicated across packages
@@ -502,15 +529,26 @@ acceptance_checklist:
     retrieval_failure: report a machine failure reason; do not emit a partial proposal envelope as if complete
     direction_and_strength_follow_the_item_06_frozen_truth_table: >-
       an indication-level unmet-need-only signal -> INCONCLUSIVE / WEAK (never
-      "good opportunity"); a completed axis with only material target-specific
-      opportunity-supporting signals -> POSITIVE, with only material
-      opportunity-opposing signals -> NEGATIVE, with both -> CONFLICTING, at the
-      rung the completed evidence supports.
+      "good opportunity"); a coverage-complete landscape with only material
+      target-specific opportunity-supporting signals -> POSITIVE, with only
+      material opportunity-opposing signals -> NEGATIVE, with both ->
+      CONFLICTING, at the OVERALL rung (the weaker required axis ceiling, item
+      06 strength_is_the_weaker_required_axis_ceiling).
+    completed_landscape_with_no_material_directional_signal: >-
+      propose a GRADED INCONCLUSIVE -- INCONCLUSIVE / DIRECT when both required
+      axes reach DIRECT authority, INCONCLUSIVE / INDIRECT_STRONG otherwise --
+      NOT INCONCLUSIVE / UNKNOWN. The landscape was audited and carries a valid
+      evidence grade; it simply does not resolve a positive / negative
+      opportunity direction. The evidence_refs are non-empty (the CONTEXTUAL
+      landscape packages).
     incomplete_landscape: >-
       propose INCONCLUSIVE / UNKNOWN. Verbatim from the frozen contract:
-      "Incomplete landscape -> UNKNOWN." UNKNOWN is never converted to
-      attractive / uncrowded / whitespace, and a materially incomplete axis
-      cannot produce a target-opportunity judgement.
+      "Incomplete landscape -> UNKNOWN." This is strictly the "we could not
+      look" state -- the landscape is materially incomplete, or a mandatory axis
+      was not searched, or there is no admissible evaluable landscape. UNKNOWN is
+      never converted to attractive / uncrowded / whitespace, and it is NEVER
+      used for a completed landscape that merely lacks a directional signal
+      (that is a graded INCONCLUSIVE above).
     weak_unmet_need_only: propose INCONCLUSIVE / WEAK; it does not participate in a target-specific CONFLICTING
     conflicting_evidence: >-
       propose CONFLICTING only with materially opportunity-supporting AND
@@ -541,18 +579,24 @@ acceptance_checklist:
         - the competitive-landscape coverage (item 09 competitive_landscape_axis must_cover_at_least)
         - the composition-level patent-landscape coverage (item 09 composition_level_patent_axis must_produce)
       coverage_complete_is_not_direct_quality: >-
-        a complete pipeline-database inventory plus a complete target-level
-        patent search can be coverage-complete, but the authority is only
-        INDIRECT_STRONG -- it can still produce POSITIVE / NEGATIVE /
-        CONFLICTING at INDIRECT_STRONG, not UNKNOWN
+        two coverage-complete axes are the PRECONDITION for a graded
+        (non-UNKNOWN) assessment, NOT by themselves a DIRECT one. A complete
+        pipeline-database inventory plus a complete target-level patent search
+        can be coverage-complete, but the authority of each axis is only
+        INDIRECT_STRONG -- the OVERALL rung is the weaker required axis ceiling
+        (item 06 strength_is_the_weaker_required_axis_ceiling), so this pair can
+        still produce POSITIVE / NEGATIVE / CONFLICTING / graded INCONCLUSIVE at
+        INDIRECT_STRONG, not UNKNOWN
       one_axis_not_done: >-
         if one axis is not searched (competition searched, patents not
         searched, or vice versa) the landscape is incomplete -> INCONCLUSIVE /
         UNKNOWN; a half landscape cannot yield a target-opportunity judgement
     direct_requires: >-
-      the primary-source competitive axis complete AND the composition-level
-      patent review complete -- only then can the proposal reach the DIRECT
-      ceiling
+      BOTH required axes complete AT DIRECT AUTHORITY -- the primary-source
+      competitive axis at DIRECT authority AND the composition-level patent
+      review at DIRECT authority. If both axes are coverage-complete but either
+      reaches only INDIRECT_STRONG authority, the overall assessment is capped at
+      INDIRECT_STRONG (item 06 strength_is_the_weaker_required_axis_ceiling).
     sponsor_review_provisional_stop:
       when: the machine has found an approved / registrational same-target mCRC ADC together with a strong composition-level congestion pattern
       then:
