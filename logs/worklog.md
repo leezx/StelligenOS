@@ -5403,3 +5403,196 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   实现 3 个（MOD-TGT01/05/08 @ 1.0.0）。MOD-TGT02 `primary_module_version` 仍
   `0.0.0`（PR E8 bump）。TGT-03 → 04 → 06 → 07 属后续 PR。`MIGRATION_PENDING`
   保持。PR E8 = MOD-TGT02@1.0.0 实现需各自 go-ahead。
+
+## 2026-08-30T03:30 EDT — Runtime Migration PR E8：MOD-TGT02@1.0.0 实现（分支 task_20260829_runtime-migration-pr-e8，基线 76814c1）
+
+- 授权：用户 PR E7 收口后 "go on"。开工前审核方（ChatGPT `AI审核方案`）给
+  **APPROVE-to-proceed，带几处实现级修正**，冻结 E8 = MOD-TGT02@1.0.0
+  deterministic implementation，给 9 个 scoping 决策 E8-1…E8-8 + (a)(b)(c) + 3 条
+  headline invariant。审核方补的 3 个关键 implementation invariant（audit
+  presence、completion consistency、assay typing）已全部落实。E8-6 正文的
+  「> 2 independent cohort identities」经追问确认是笔误，实现 + 测试均按冻结 E7
+  的 **AT LEAST TWO（>= 2，明确不是 "> 2" / ">= 3"）**。
+- 新增实现包 `gate_modules/tgt02_indication_specific_malignant_cell_coverage/`
+  11 文件（`completion.py`、`fatal_review.py` 各自独立小文件）：
+  - `completion.py` —— typed `CrcCohortCoverageCompletion`（run record，非第七个
+    core object）+ 3 个 HARD invariant：completeness consistency
+    （`public_crc_coverage_search_complete == all(4 components)`，矛盾 → 拒整个
+    run）、mandatory audit presence + 11 字段 snapshot parity（无 / 两条 / drift
+    → HARD）、qualifying cohort-set parity（completion 的 qualifying id 集合必须
+    等于实际分类 qualifying `DIRECT` / `INDIRECT_STRONG` 的 cohort identities）。
+    `CoverageUnresolvedItem(description, kind)` internal type。
+  - `classify.py` —— 确定性 rung：`PROTEIN_COHORT` + crc + `MALIGNANT` +
+    validated protein assay + `QUALIFIED` → `DIRECT`；sc/spatial /
+    TMA-concordance → `INDIRECT_STRONG`（TMA 即使 `BOTH` 层也严格
+    `INDIRECT_STRONG`）；bulk / pan-cancer → `WEAK`；matched normal-tumor /
+    `NON_MALIGNANT` / non-CRC → `CONTEXTUAL` rung `""`（非 HARD）。hard locks：
+    transcript / generic protein assay / protein-without-attribution 永不
+    `DIRECT`；`cohort_n` 永不改 rung。单个 observation 永不是 Direction。
+  - `aggregate.py` —— precedence（HARD → 无 proposal；未 complete →
+    `INCONCLUSIVE/UNKNOWN` 零 refs；complete 但 audit 坏 → HARD；complete +
+    audited → 评估）；overall Strength = **最强 qualifying class**（无 two-axis
+    rule）；Direction：audited multi-cohort `RARE_HIGHLY_HETEROGENEOUS`（>= 2
+    cohorts）→ `NEGATIVE` 不 `CONFLICTING`；SUPPORTS+OPPOSES → `CONFLICTING`；
+    OPPOSES → `NEGATIVE`；SUPPORTS → `POSITIVE`；qualifying nondirectional →
+    graded `INCONCLUSIVE`；WEAK-only complete → `INCONCLUSIVE/UNKNOWN`（**无**
+    `INCONCLUSIVE/WEAK`）。窄 `EXPERIMENT_REQUIRED`：IS-only directional →
+    protein confirmation；WEAK-only complete → UNKNOWN + EXPERIMENT_REQUIRED。
+  - `fatal_review.py` —— `detect`：`required` iff completed audited landscape +
+    DIRECT-class protein cohorts，各 `OPPOSES_COVERAGE` + `ABSENT` /
+    `RARE_HIGHLY_HETEROGENEOUS` + auditable bases + `QUALIFIED` + basis，跨
+    **>= 2 independent cohort identities**（或 declared multi-cohort obs 带 >= 2
+    `cohort_ids`）。单 cohort / 同 cohort 两条 / transcript-only → 不触发。
+    `status` 单值 `POTENTIAL_FATAL_PATTERN`；raw detector 内部算，actionable 只在
+    accepted run；永不 `PUBLIC_FATAL_SIGNAL_ESTABLISHED` / KILL / HOLD /
+    Decision；不在 proposal envelope 上。
+  - `evidence.py` —— Gate-neutral PR A EP + exact canonical reuse；non-audit
+    parity keys 含 `assay_method` + `crc_specific`（都驱动 rung）；audit EP 加
+    11 snapshot 字段；缺失 OR drift → HARD。
+  - `acceptance.py` —— E7 item-13 可执行检查（rung hard locks、qualification
+    bases、no-early-one-cohort-grade、Direction×Strength == truth table、
+    fatal_review 边界、无 cross-Gate 结论、无 numeric/ranking score/cohort-size
+    threshold、无 PUBLIC_FATAL_SIGNAL_ESTABLISHED/KILL/HOLD/Decision）。
+  - `module.py` —— 纯 Python `run`，只调 injected port；HARD integrity failure
+    → 拒整个 run（`proposal_envelope=None`），绝不降级 accepted UNKNOWN；
+    fatal_review 只在 accepted run surface。
+- 窄修 binding：`crc_adc_target_gateset.yaml`/`.py` TGT-02 `0.0.0 → 1.0.0` +
+  `built_module_versions` / `BUILT_MODULE_VERSIONS` 加 TGT-02；
+  `gate_modules/README.md` 注册 `MOD-TGT02 … built (PR E8)`。
+- 测试：`tests/test_tgt02_module.py` **75 tests**（12 类）。
+  `tests/test_tgt02_module_construction_contract.py` 的 `NoImplementationInPrE7Tests`
+  迁成 `ContractIsFrozenAndImplementedInPrE8Tests`（合同仍冻结；实现包 11 文件
+  必须存在；binding 现 `1.0.0`）。`test_gate_modules_boundary.py`（+`Tgt02ModuleManifestTests`）、
+  `test_crc_adc_target_gateset.py`（+`test_tgt02_module_is_built…`）、
+  `test_tgt05_module*.py` / `test_tgt08_module*.py`（built-list / allowed-list
+  最窄同步）。
+- 验证：`tests/test_tgt02_module.py` **75 OK**；全量 **1185 OK**（E7 收口 1104）；
+  `bash scripts/verify_repository_boundary.sh` 只报既有 untracked 杂项（不属本
+  PR）；`git diff --check` clean；YAML 合法。
+- 未改：TGT01/05/08 module files、E7 施工合同正文、E7 drawing science 正文、PR
+  A/B/C、generic boundary scripts。`MIGRATION_PENDING` 保持。
+- Next：开 PR、CI 绿后回 `AI审核方案` 贴 E8 review。8 个 primary Module 已实现
+  4 个（TGT-01/05/08/02 @ 1.0.0）；TGT-03 → 04 → 06 → 07 属后续 PR（各自
+  go-ahead）。
+
+## 2026-08-30T04:30 EDT — Runtime Migration PR E8 第一轮修订（PR #120 @ 86ded60 REQUEST_CHANGES）
+
+- 审核方（ChatGPT `AI审核方案`）第一轮结论：**REQUEST_CHANGES —— 7 个 runtime
+  correctness / integrity blocker**。E8 主体架构接受（11-file standalone、typed
+  assay、highest-qualifying-class aggregation、`>= 2` cross-cohort、binding
+  `TGT-02 → 1.0.0`、`MIGRATION_PENDING`、无 shared framework / IO / persistence、
+  冻结 E7 truth table、NEGATIVE ≠ fatal ≠ KILL、DIRECT / INDIRECT_STRONG / WEAK
+  ladder、TMA 永不 DIRECT）。全部窄修 + synthetic regression，无 rewrite。
+  exact-head CI `verify (3.11)` / `verify (3.12)` success。GitHub connector 403，
+  `AI审核方案` 对话为 authoritative。
+- **Blocker 1** —— 固定 Instantiation 的 context / scope 没真正绑定。冻结
+  Instantiation 是 `context_id CTX-CRC-REFRACTORY-MCRC` / `context_version 1`，
+  但 `Tgt02ModuleInput` 只查 `CTX-...` 前缀 + `> 0`；observation.context_key /
+  completion.search_scope 也没跟 input 比。修：`Tgt02ModuleInput` pin
+  `context_id == CTX-CRC-REFRACTORY-MCRC` + `context_version == 1`；
+  `module.run()` HARD-check 每条 observation 的 `context_key` vs run，和
+  （attempted 时）`completion.search_scope` vs run 的
+  `crc_coverage_search_scope`。test fixture `CTX_ID` 改成 canonical。+4 regression。
+- **Blocker 2** —— incomplete landscape + 两个 negative cohorts 会被 raw fatal
+  trigger 反向变成 rejected run。`fatal_review.detect()` 之前不接 completion，
+  module 无条件调用，然后 acceptance 又要求 `fatal_review.required →
+  landscape_complete`。修：`detect()` 接 `completion`，`not
+  completion.landscape_complete` → `FatalReviewRecord.none()`。incomplete + 两个
+  negative DIRECT cohort → accepted `INCONCLUSIVE/UNKNOWN`，无 fatal。+1 regression。
+- **Blocker 3** —— Gate-neutral EP 对 CONTEXTUAL evidence 写错事实。
+  `evidence._directly_supports()` 之前对任何 `PROTEIN_COHORT` 都写「annotated
+  CRC malignant cells」、任何 `MALIGNANT_SC_SPATIAL` 都写「CRC malignant
+  compartment」，于是一个 `NON_MALIGNANT` contextual observation 的 EP 反而声称
+  它在 malignant cells —— 违反 E7 item 11 factual neutrality。修：EP wording 按
+  实际字段陈述（`crc_specific` / `malignant_cell_attribution` / `molecular_layer`
+  / `assay` / `cohort_adequacy_status`）；incomplete `SEARCH_COMPLETION_AUDIT`
+  EP 报 snapshot factual state（「... NOT yet complete」），不再写「search was
+  completed」；`_NEUTRAL_CEILING` 改成真正中性的 observation-level expression /
+  search fact。+2 regression。
+- **Blocker 4** —— mandatory audit presence 没按冻结 E8-5 invariant 2 实现，且
+  exact-one 可被 `(source_id, claim)` dedup 绕过。修：恢复开工前 ruling ——
+  `CrcCohortCoverageCompletion` 只要 `attempted`（complete 与否）就 require
+  `audit_observation_id`；`audit_presence_failure` gate 在 `attempted` 而非
+  `attempted and public...`；incomplete audit 记录「搜到哪」但不赋 grading
+  authority。`module.run()` 从 **normalized admissible identity 层**（dedup 前）
+  统计 `SEARCH_COMPLETION_AUDIT` observations，第二条 audit 无法被 dedup 隐藏。
+  +4 regression。
+- **Blocker 5** —— `cohort_ids` 在没有 `declared_multi_cohort_analysis=True` 时
+  被当成 cross-cohort。`cohort_identities` 之前 `if self.cohort_ids: return
+  cohort_ids` 完全没查 declared flag，于是一条 observation 就能单独触发
+  cross-cohort fatal pattern。修：`NormalizedCoverageObservation.__post_init__`
+  强制 `cohort_ids` non-empty ↔ `declared_multi_cohort_analysis` true，且
+  declared multi-cohort 需 `>= 2` distinct `cohort_ids` 且无 single
+  `cohort_id`；`cohort_identities` 只在 declared flag true 时读 `cohort_ids`。
+  +3 regression。
+- **Blocker 6** —— EXPERIMENT_REQUIRED 在仍有 public unresolved source 时过早
+  出现（`CURRENTLY_UNRESOLVABLE` 与 `EXPERIMENT_REQUIRED` 可共存）。修：aggregate
+  只在 `completion.unresolved_items` 为空（public source space 真正 exhausted）
+  时才 auto-add `EXPERIMENT_REQUIRED`（IS-only protein confirmation 与 WEAK-only
+  两条映射）；否则 resolution 停在 `PUBLIC_RESOLVABLE` / `CURRENTLY_UNRESOLVABLE`。
+  +2 regression。
+- **Blocker 7** —— `one_evidence_package_per_observation` acceptance check 查错
+  字段（只查 `evidence_id` 不重复，没查 `observation_id` 唯一对应一个 EP）。修：
+  acceptance 加 `observation_id` 唯一性检查；`module.run()` 在 normalized-input
+  层对 duplicate `observation_id` 拒**整个 run**（Evidence Library 按
+  `observation_id` lookup canonical EP）。+1 regression。
+- 顺手同步：`src/objects/crc_adc_target_gateset.py` 注释「other five TGT gates」
+  → 「other four」（code map 已含 TGT-02）。
+- 验证：`tests/test_tgt02_module.py` **90 OK**（+15 `Round1RegressionTests`）；
+  全量 **1200 OK**（提交时 1185）；`git diff --check` clean；YAML 合法。
+- 未改：frozen E7 truth table、NEGATIVE ≠ fatal ≠ KILL、`>= 2` 规则、ladder、
+  highest-qualifying-class Strength、TMA never DIRECT、binding scope、
+  `MIGRATION_PENDING`、MOD-TGT01 / 05 / 08。
+- Next：push、CI 绿后回 `AI审核方案` 贴第二轮复审（7 个 blocker 已关闭 +
+  regression）。
+
+## 2026-08-30T05:30 EDT — Runtime Migration PR E8 第二轮修订（PR #120 @ bab4d4a REQUEST_CHANGES）
+
+- 审核方（ChatGPT `AI审核方案`）第二轮结论：**REQUEST_CHANGES —— 4 个窄
+  integrity / factual-output blocker**。第一轮 7 个 blocker 全部确认关闭
+  （canonical `context_id` pin、observation `context_key` / completion
+  `search_scope` HARD binding、incomplete landscape 保持 UNKNOWN、fatal detector
+  先查 `landscape_complete`、attempted completion 必有 audit、declared
+  multi-cohort guard、normalized duplicate `observation_id` HARD）。不重开架构 /
+  科学合同。exact-head CI `verify (3.11)` / `verify (3.12)` success。
+- **Blocker 1** —— provenance-bearing audit EP 仍可被 dedup 吃掉。normalized 层
+  audit exact-one 关闭了「两条 audit dedup 成一条」，但
+  `build_evidence_packages` 对所有 kind 共用一个 `(source_id, claim)` dedup，于是
+  一条 `SEARCH_COMPLETION_AUDIT` 若与 non-audit observation 撞 `(source_id,
+  claim)` 会被 drop —— completion 仍会 grade 却没有 provenance-bearing audit
+  EP。修：`module.run()` 额外验证 attempted completion 有**恰好一条** emitted /
+  reused `SEARCH_COMPLETION_AUDIT` EvidencePackage 匹配 `audit_observation_id`；
+  被 dedup drop → HARD reject。+1 regression。
+- **Blocker 2** —— exact canonical reuse 没验证完整 canonical identity /
+  provenance。`_reused_package_is_compatible()` 现在 (a) 把 `observation_id` 加进
+  exact-reuse identity parity（reused EP 的 `study_context.observation_id` 指向
+  别的 observation → HARD），(b) 验证 reused EP 自己的 provenance `source_type` /
+  `source_identifier` / `locator` 仍等于 resolved canonical SourceIndex（E7 item
+  13，不只是 `source_id` resolve）；`retrieved_at` 可保留 reused EP 自己的
+  timestamp。+2 regression。
+- **Blocker 3** —— EXPERIMENT_REQUIRED 的 structured resolution 第一轮已 gate 在
+  `public_space_exhausted`，但 WEAK-only 分支的 `aggregation_rationale` free text
+  仍固定写「a new ... measurement is required」。修：rationale 尾句按
+  `public_space_exhausted` 分支 —— 仍有 unresolved public path 时写「the
+  remaining unresolved public evidence path must be resolved before determining
+  whether a new measurement is required」。+2 regression（查 rationale text，不只
+  resolution enum）。
+- **Blocker 4** —— Gate-neutral EP 的 `study_context` 对所有 observation 硬编码
+  CRC tumor context（`indication: refractory_metastatic_colorectal_cancer` /
+  `sample_type: crc_tumor_tissue`），对 `SEARCH_COMPLETION_AUDIT` /
+  `PAN_CANCER_UNRESOLVED` / `MATCHED_NORMAL_TUMOR` / non-CRC contextual
+  observation 是事实错误。新 `_study_context_facts(o)` 按 kind / fact 给
+  non-inflated `(indication, sample_type)`：audit → `(not_applicable,
+  search_audit)`；pan-cancer → `(pan_cancer_or_unresolved,
+  dataset_or_source_reported)`；matched normal-tumor → `(colorectal_cancer,
+  matched_normal_and_tumor_tissue)`；`crc_specific False` → `(not_crc_resolved,
+  source_reported)`；CRC observation → `(colorectal_cancer, ...)` —— Module 绝不
+  把 source study 提升成「refractory metastatic CRC」（run context 已由
+  `context_key` / Instantiation 单独 pin）。+3 regression。
+- 顺手同步 PR #120 body 的 test 数（75 / 1185 → 当前）。
+- 验证：`tests/test_tgt02_module.py` **98 OK**（+8 `Round2RegressionTests`）；
+  全量 **1208 OK**（round 1 后 1200）；`git diff --check` clean；YAML 合法。
+- 未改：架构、frozen E7 truth table / science、`>= 2` 规则、ladder、
+  highest-qualifying-class Strength、binding scope、`MIGRATION_PENDING`、
+  MOD-TGT01 / 05 / 08。
+- Next：push、CI 绿后回 `AI审核方案` 贴第三轮复审。

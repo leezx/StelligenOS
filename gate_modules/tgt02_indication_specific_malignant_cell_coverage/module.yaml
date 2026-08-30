@@ -1,0 +1,106 @@
+module:
+  module_id: MOD-TGT02
+  module_name: tgt02_indication_specific_malignant_cell_coverage
+  module_version: "1.0.0"
+  built_in: runtime_migration_pr_e8
+  construction_contract: src/contracts/gate_modules/tgt02_indication_specific_malignant_cell_coverage.yaml
+  construction_drawing: docs/gate_modules/TGT-02_Indication_Specific_Malignant_Cell_Coverage.md
+
+  gate_binding:
+    gate_id: TGT-02
+    gate_version: "1.0"
+    gateset_id: ADC_TARGET_GATESET
+    gateset_version: "1.0"
+    instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v1
+    candidate_level: L04
+    # frozen PR D / gateset regime for TGT-02; the current instantiation runs the
+    # public path only.
+    dominant_evidence_regime: PUBLIC_HYBRID
+    current_instantiation_regime: PUBLIC_ONLY
+
+  the_one_question: >-
+    In refractory metastatic colorectal cancer, do malignant cells express the
+    target at the protein level with adequate cohort-level consistency? (verbatim
+    gate_question inherited from the PR D TGT-02 contract; a bidirectional
+    indication-specific malignant-cell coverage gate whose NEGATIVE is a genuine
+    scientific finding, NOT a fatal flag and NOT a KILL; not widened or narrowed)
+
+  purpose: >-
+    Deterministic Gate-specific scientific core for TGT-02. It turns normalized
+    public coverage facts (per-cohort protein / transcript expression,
+    malignant-compartment single-cell / spatial expression, CRC TMA
+    transcript-and-protein concordance, bulk CRC RNA, pan-cancer datasets,
+    matched normal-vs-tumor comparisons, audited search-completion records) into
+    atomic Gate-neutral EvidencePackages, maps each to a frozen TGT-02
+    Evidence-Ladder rung (DIRECT only for a validated protein assay in a
+    QUALIFIED CRC cohort with malignant-cell attribution; INDIRECT_STRONG for
+    qualifying sc / spatial malignant-compartment or CRC TMA concordance; WEAK
+    for bulk / pan-cancer) and a Module-owned Gate-relative coverage-support
+    reading (SUPPORTS_COVERAGE / OPPOSES_COVERAGE / CONTEXTUAL), tracks ONE typed
+    completion state (CrcCohortCoverageCompletion) with three HARD invariants
+    (completeness consistency, mandatory audit presence + snapshot parity,
+    qualifying cohort-set parity), aggregates a proposed Direction x Strength
+    strictly per the frozen E7 truth table (overall Strength is the HIGHEST
+    qualifying evidence class -- NO E6-style two-axis rule; NEGATIVE is
+    reachable; a valid audited multi-cohort RARE_HIGHLY_HETEROGENEOUS finding is
+    NEGATIVE not CONFLICTING; a completed landscape with qualifying nondirectional
+    evidence is a GRADED INCONCLUSIVE, distinct from INCONCLUSIVE / UNKNOWN; a
+    WEAK-only public landscape is INCONCLUSIVE / UNKNOWN, never INCONCLUSIVE /
+    WEAK; a single positive or negative cohort is never a completed
+    population-level answer), emits a machine-local fatal_review review TRIGGER
+    when DIRECT-class protein-cohort observations across at least two independent
+    cohort identities all support absent / rare-highly-heterogeneous
+    malignant-cell coverage on a completed audited landscape, and emits a
+    non-canonical assessment proposal envelope for the human review surface.
+
+  owns:
+    - input contract validation (no implicit default scientific context; the candidate's target_identity is the single authoritative target; landscape_as_of is mandatory)
+    - candidate <-> observation target-identity binding (an observation whose target_identity differs from the candidate's canonical target is evidence misbinding and is a HARD rejection)
+    - the seven observation kinds (PROTEIN_COHORT / MALIGNANT_SC_SPATIAL / TMA_TRANSCRIPT_PROTEIN_CONCORDANCE / BULK_CRC_RNA / PAN_CANCER_UNRESOLVED / MATCHED_NORMAL_TUMOR / SEARCH_COMPLETION_AUDIT) and the typed assay_method classification-driving fact; the provider supplies facts only and never sets a rung, a direction, or a coverage-support implication
+    - frozen TGT-02 Evidence-Ladder rung mapping and the deterministic Gate-relative coverage-support reading; transcript never reaches DIRECT; a generic / non-validated protein assay never reaches DIRECT; protein without malignant-cell attribution never reaches DIRECT; stromal / immune / unresolved-compartment expression is CONTEXTUAL and does NOT discharge TGT-02; a matched normal-vs-tumor comparison contextualises CRC malignant-cell expression only and is never a favourable-therapeutic-index read
+    - Gate-NEUTRAL EvidencePackage construction (PR A evidence_package shape); one package per observation; a package never carries "passes TGT-02", "has adequate malignant-cell coverage", "coverage is fatal", "should be killed", or a TGT-03 / TGT-04 / TGT-05 conclusion; an observation already in the Evidence Library is reused as its EXACT canonical package (no allocator call, no new body); provenance comes from the resolved canonical SourceIndex record
+    - "hard identity / provenance / completion-consistency / classification-qualification integrity gate: a candidate<->target misbinding, a claimed-resolved source missing from the canonical SourceIndex, a canonical-source metadata conflict, an incompatible canonical EvidencePackage, a completion whose umbrella flag contradicts its component searches, an attempted completion with no / more than one / a drifted SEARCH_COMPLETION_AUDIT observation, or a completion whose qualifying cohort-id sets disagree with the emitted qualifying evidence rejects the WHOLE run -- it is never degraded to an accepted UNKNOWN"
+    - one module-local typed CrcCohortCoverageCompletion (a run record, NOT a seventh core object); the mandatory public CRC coverage landscape is complete only when the umbrella flag AND all four declared component searches are complete AND certified by exactly one snapshot-consistent SEARCH_COMPLETION_AUDIT observation; an incomplete landscape is INCONCLUSIVE / UNKNOWN and is NOT an integrity failure
+    - deterministic Direction x Strength aggregation per the frozen E7 truth table; the overall Strength is the highest qualifying frozen evidence class (there is NO E6-style two-axis weaker-ceiling rule); a graded Direction is produced only over a completed audited landscape; NEGATIVE weighs the science against adequate malignant-cell coverage and is never a fatal flag / KILL / cross-cohort fatal pattern on its own
+    - "machine-local fatal_review review TRIGGER (E7 item 08 / 12): required iff DIRECT-class protein-cohort observations across at least two independent cohort identities (or one declared multi-cohort analysis with at least two auditable cohort_ids), each QUALIFIED + basis-backed and each supporting an ABSENT / RARE_HIGHLY_HETEROGENEOUS coverage class, on a completed audited landscape; status is at most POTENTIAL_FATAL_PATTERN; NO numeric / percent-positive / H-score / heterogeneity threshold; the machine NEVER emits PUBLIC_FATAL_SIGNAL_ESTABLISHED / a canonical fatal flag / KILL / HOLD / Decision, and NEVER decides whether the pattern is a real fatal signal; only an accepted run's trigger is an actionable handoff"
+    - machine acceptance record (E7 item 13) as executable checks
+    - non-canonical assessment proposal envelope (E7 item 12); the TGT-02 ceiling / inference / direction live here, never on the Gate-neutral package; the envelope carries no assessment_id / assessment_version / review, no TGT-03 / TGT-04 / TGT-05 conclusion, and no fatal flag
+
+  does_not_own:
+    - live GEO / HPA / CPTAC / single-cell / spatial / TMA repository retrieval; extractors; normalizers; a runner; a dry-run executor
+    - repository / atlas / TMA normalisation, malignant-compartment resolution, the upstream expression_pattern qualification, and the final critical-unknown resolution kind assignment by the provider (the provider supplies facts; the module does the deterministic mapping)
+    - entity resolution, source registry, provenance ledger, serialization (shared infra, v5 section 6.5)
+    - database, cache, RUNS / ASSESSMENTS / EvidenceIndex persistence
+    - whether a cohort is genuinely adequately powered, whether the malignant-cell attribution is convincing, whether the cohorts are genuinely independent / non-overlapping, whether a "rare and highly heterogeneous" interpretation is justified, and whether a cross-cohort negative pattern satisfies the GateSet fatal policy
+    - a TGT-03 persistence conclusion, a TGT-04 surface / density / localization / internalization conclusion, or a TGT-05 therapeutic-index conclusion, and letting generic CRC linkage discharge TGT-03
+    - human approval and canonical CandidateGateAssessment construction
+    - Candidate-level Decision / KILL / HOLD, PUBLIC_FATAL_SIGNAL_ESTABLISHED, MatrixView writes, cross-Gate reasoning
+    - any numeric or ranking score, and any cohort-size / percent-positive / H-score / heterogeneity cutoff
+
+  ports:
+    - name: Tgt02CoverageProviderPort
+      role: supplies already-normalized, primary/repository-source-resolved TGT-02 malignant-cell coverage observations (each with observation_kind, molecular_layer, a typed assay_method, malignant_cell_attribution + basis, cohort_adequacy_status + basis, expression_pattern + basis and facts only) plus the one typed completion contract (CrcCohortCoverageCompletion)
+    - name: EvidenceIdAllocatorPort
+      role: allocates EP-nnnnnnnn ids for observations not already in the Evidence Library; the Module never derives ids from the filesystem
+    - name: SourceResolverPort
+      role: resolves a provenance.source_id to its canonical SourceIndex record; an unresolved id or a provider observation whose metadata disagrees with the canonical record is a HARD rejection
+    - name: ExistingEvidenceLibraryPort
+      role: read-only lookup by observation_id into the PR C reusable Evidence Library; returns the EXACT canonical EvidencePackage, reused unchanged (no allocator call, no re-created body); an incompatible returned package (missing OR drifted classification-driving field, or a drifted audit snapshot) is a hard integrity failure
+
+  boundary_flags:
+    performs_network_io: false
+    spawns_subprocess: false
+    writes_repository: false
+    allocates_ids_from_filesystem: false
+    constructs_canonical_assessment: false
+    produces_decision_or_kill: false
+    emits_public_fatal_signal_established: false
+    persistence_conclusion_or_therapeutic_index_logic: false
+    scientific_de_risking_of_other_gates: false
+    ontology_or_embedding_inference: false
+    numeric_or_ranking_scoring: false
+    cohort_size_percent_positive_hscore_or_heterogeneity_threshold: false
+    grades_a_direction_before_the_landscape_is_complete: false
+    modifies_frozen_gate_science: false
+    modifies_mod_tgt01_mod_tgt05_or_mod_tgt08: false
+    lifts_migration_pending: false

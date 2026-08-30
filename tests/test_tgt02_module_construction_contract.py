@@ -16,11 +16,14 @@ Asserts:
   INCONCLUSIVE / WEAK); a single cohort is never a population-level answer (a
   typed CrcCohortCoverageCompletion gates the grade); EXPERIMENT_REQUIRED is
   allowed but narrow;
-* PR E7 ships no implementation -- no gate_modules/tgt02.../ directory, no
-  provider / adapter / retrieval / runner, no numeric / ranking score, no
-  cohort-size / %-positive / H-score / heterogeneity threshold, no generic
-  GateModule framework; MOD-TGT02 primary_module_version stays "0.0.0";
-  MOD-TGT01 / MOD-TGT05 / MOD-TGT08 are untouched; MIGRATION_PENDING remains;
+* the E7 contract PR shipped no implementation -- it forbade a
+  gate_modules/tgt02.../ directory, a provider / adapter / retrieval / runner, a
+  numeric / ranking score, a cohort-size / %-positive / H-score / heterogeneity
+  threshold and a generic GateModule framework, and left MOD-TGT02
+  primary_module_version at "0.0.0". Runtime Migration PR E8 then built the
+  deferred implementation package against this still-frozen contract and raised
+  the binding to "1.0.0"; MOD-TGT01 / MOD-TGT05 / MOD-TGT08 stay untouched and
+  MIGRATION_PENDING remains (see ContractIsFrozenAndImplementedInPrE8Tests);
 * the human-readable drawing exists and covers all 17 items.
 """
 
@@ -489,11 +492,16 @@ class RuntimeGeneAndProposalTests(unittest.TestCase):
         self.assertIn("the next gate in the fatal-first order (tgt-03) as context only", cons)
 
 
-class NoImplementationInPrE7Tests(unittest.TestCase):
+class ContractIsFrozenAndImplementedInPrE8Tests(unittest.TestCase):
+    """The E7 construction contract is design-only and stays frozen. The
+    implementation package it deferred is now built by PR E8, so the repository
+    state -- the package exists and the TGT-02 binding is 1.0.0 -- reconciles
+    with what the contract said would happen."""
+
     def setUp(self):
         self.doc = yaml.safe_load(CONTRACT.read_text())
 
-    def test_repository_policy_forbids_implementation(self):
+    def test_repository_policy_forbids_implementation_in_the_contract_pr(self):
         p = self.doc["repository_policy"]
         self.assertEqual(p["implementation_code_in_this_pr"], "forbidden")
         self.assertEqual(p["provider_or_adapter_in_this_pr"], "forbidden")
@@ -504,25 +512,32 @@ class NoImplementationInPrE7Tests(unittest.TestCase):
         self.assertEqual(p["modifies_mod_tgt01"], "forbidden")
         self.assertEqual(p["modifies_mod_tgt05"], "forbidden")
         self.assertEqual(p["modifies_mod_tgt08"], "forbidden")
+        # MIGRATION_PENDING remains -- five of eight primary Modules were still
+        # unbuilt when the contract froze; it stays until all eight ship.
         self.assertEqual(p["migration_pending"], "remains")
 
-    def test_no_tgt02_implementation_package_exists_yet(self):
+    def test_tgt02_implementation_package_now_exists_post_e8(self):
         pkg = ROOT / "gate_modules" / "tgt02_indication_specific_malignant_cell_coverage"
-        self.assertFalse(pkg.exists(), "PR E7 is design-only; the package is PR E8")
+        self.assertTrue(pkg.is_dir(), "PR E8 builds the deferred implementation package")
+        for f in ("__init__.py", "module.yaml", "contracts.py", "ports.py",
+                  "classify.py", "evidence.py", "aggregate.py", "completion.py",
+                  "fatal_review.py", "acceptance.py", "module.py"):
+            self.assertTrue((pkg / f).is_file(), f)
 
-    def test_tgt02_binding_is_still_zero_and_others_untouched(self):
+    def test_tgt02_binding_is_now_one_zero_zero_and_others_untouched(self):
         gs = yaml.safe_load(CRC_GATESET.read_text())
         by_gate = {
             b["gate_id"]: b["primary_module_version"]
             for b in gs["context_specific_bindings"]["gate_bindings"]
         }
-        self.assertEqual(by_gate["TGT-02"], "0.0.0")
+        self.assertEqual(by_gate["TGT-02"], "1.0.0")
         self.assertEqual(by_gate["TGT-01"], "1.0.0")
         self.assertEqual(by_gate["TGT-05"], "1.0.0")
         self.assertEqual(by_gate["TGT-08"], "1.0.0")
-        self.assertIn("per_gate_primary_modules", gs["migration"]["deferred"])
+        for g in ("TGT-03", "TGT-04", "TGT-06", "TGT-07"):
+            self.assertEqual(by_gate[g], "0.0.0")
 
-    def test_deferred_block_names_the_e8_implementation(self):
+    def test_deferred_block_named_the_e8_implementation(self):
         joined = " ".join(self.doc["deferred_to_pr_e8_plus"]).lower()
         self.assertIn("gate_modules/tgt02_indication_specific_malignant_cell_coverage/", joined)
         self.assertIn("crccohortcoveragecompletion", joined)
@@ -533,6 +548,7 @@ class NoImplementationInPrE7Tests(unittest.TestCase):
         py_files = sorted(str(p.relative_to(ROOT)) for p in gm.rglob("*.py"))
         allowed = (
             "tgt01_adc_modality_precedent",
+            "tgt02_indication_specific_malignant_cell_coverage",
             "tgt05_normal_tissue_fatal_liability",
             "tgt08_target_opportunity_competition_ip_whitespace",
         )

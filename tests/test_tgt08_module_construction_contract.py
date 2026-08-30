@@ -504,6 +504,7 @@ class NoImplementationInPrE5Tests(unittest.TestCase):
         py_files = sorted(str(p.relative_to(ROOT)) for p in gm.rglob("*.py"))
         allowed = (
             "tgt01_adc_modality_precedent",
+            "tgt02_indication_specific_malignant_cell_coverage",
             "tgt05_normal_tissue_fatal_liability",
             "tgt08_target_opportunity_competition_ip_whitespace",
         )
