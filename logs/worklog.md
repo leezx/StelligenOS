@@ -5024,3 +5024,25 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   **967**（1 个既有本机 __pycache__ 噪音 FAIL，CI 干净 checkout 上 GREEN）；
   `git diff --check` clean；YAML 结构合法；03/04/05/07/08 parity 仍全 True。
 - Next：提交、推送、CI 绿后回 `AI审核方案` 贴第二轮复审（1 个 blocker 摘要）。
+
+## 2026-08-29T23:45 EDT — Runtime Migration PR E5 第三轮修订（PR #114 @ e8d409e REQUEST_CHANGES）
+
+- 审核方复审 e8d409e：**上一轮 blocker 已在 item 06/15/16 + drawing 中正确关闭**
+  （WEAK-vs-two-axis precedence）。只剩 1 个极窄残余。
+- Blocker — item 13 machine acceptance 还保留旧的广义 UNKNOWN 规则。item 13 的
+  truth-table 判定句同时写 "unmet-need-only → INCONCLUSIVE / WEAK" 与 "a
+  materially incomplete landscape or an unsearched mandatory axis → INCONCLUSIVE
+  / UNKNOWN"，没有像 item 06/15/16 那样加 "only when a target-specific landscape
+  assessment was attempted"，E6 machine acceptance 仍可对同一 unmet-need-only
+  case 得两个结果。
+- 修（只改 item 13 一句 + regression）：改成 "unmet-need-only WITH NO
+  target-specific competitive/IP read attempted → INCONCLUSIVE / WEAK；
+  a target-specific landscape assessment WAS attempted and a mandatory axis is
+  incomplete, OR there is no admissible evaluable landscape → INCONCLUSIVE /
+  UNKNOWN"（与 item 06/15/16 precedence 一致）；drawing item 13 行同步；
+  `test_unmet_need_only_weak_is_exempt_from_the_two_axis_completion_rule` 扩展
+  一条 item 13 断言。其它全部未动。
+- 验证：`tests/test_tgt08_module_construction_contract.py` **49 OK**；全量 **967**
+  （1 个既有本机 __pycache__ 噪音 FAIL，CI 干净 checkout 上 GREEN）；
+  `git diff --check` clean；YAML 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第三轮复审（item 13 parity）。

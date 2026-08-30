@@ -63,14 +63,15 @@ deferred:
   retrieval_providers_and_datasets: "PR E6+"
   other_five_tgt_modules: "PR E6+ (TGT-02 -> TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)"
 
-chatgpt_review: REQUEST_CHANGES   # round 2; revision pushed, re-review pending
+chatgpt_review: REQUEST_CHANGES   # round 3; revision pushed, re-review pending
 approved_tip: null
 merge_commit: null
-review_rounds: 2
+review_rounds: 3
 test_count_before_e5: 918     # at PR E4 approval (round 1)
 test_count_at_submission: 963
 test_count_after_round_1: 966
 test_count_after_round_2: 967
+test_count_after_round_3: 967
 approval_record_pr: null
 next_authorized_step: null    # PR E6 = MOD-TGT08@1.0.0 implementation -- needs its own go-ahead
 
@@ -140,6 +141,26 @@ review_round_2:
       read -> UNKNOWN" entry, and added a regression.
   tests_at_round_2: 49   # test_tgt08_module_construction_contract.py
   full_suite_at_round_2: 967
+
+review_round_3:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "e8d409e"
+  round_2_status: the WEAK-vs-two-axis precedence confirmed closed in items 06 / 15 / 16 and the drawing
+  scope: item 13 machine-acceptance parity only -- the item-06 WEAK-vs-incomplete-landscape precedence had not been carried into the item-13 truth-table acceptance line; nothing else touched
+  fix:
+    item13_carries_the_same_precedence: >-
+      the item 13 machine-acceptance truth-table line still had the old
+      generalized rule ("a materially incomplete landscape or an unsearched
+      mandatory axis -> INCONCLUSIVE / UNKNOWN") without the "only when a
+      target-specific landscape assessment was attempted" qualifier that items
+      06 / 15 / 16 now carry. Reworded it to: unmet-need-only WITH NO
+      target-specific competitive / IP read attempted -> INCONCLUSIVE / WEAK;
+      a target-specific landscape assessment WAS attempted and a mandatory axis
+      is incomplete, OR there is no admissible evaluable landscape ->
+      INCONCLUSIVE / UNKNOWN. Updated the drawing item 13 row and extended the
+      regression to assert the item 13 precedence.
+  tests_at_round_3: 49   # test_tgt08_module_construction_contract.py (assertion added, count unchanged)
+  full_suite_at_round_3: 967
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_tgt08_module_construction_contract.py' -v

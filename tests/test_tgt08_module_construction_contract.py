@@ -334,6 +334,11 @@ class TwoAxisEvidenceBundleTests(unittest.TestCase):
         self.assertTrue(any("unmet-need-only with no target-specific read attempted -> unknown" in x for x in never))
         w = _norm(self.item["15_failure_unknown_and_conflict_behavior"]["weak_unmet_need_only"])
         self.assertIn("exempt from the two-axis mandatory completion", w)
+        # item 13 machine acceptance must carry the SAME precedence, not the
+        # old generalized "unsearched mandatory axis -> UNKNOWN" rule.
+        i13 = " ".join(self.item["13_machine_acceptance_criteria"]["a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"]).lower()
+        self.assertIn("unmet-need-only with no target-specific competitive / ip read attempted -> inconclusive / weak", i13)
+        self.assertIn("a target-specific landscape assessment was attempted and a mandatory axis is incomplete, or there is no admissible evaluable landscape -> inconclusive / unknown", i13)
 
     def test_absence_inference_needs_completion_provenance(self):
         i09 = _norm(self.item["09_evidence_source_plan"]["absence_inference_needs_completion_provenance"])
