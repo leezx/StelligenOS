@@ -5046,3 +5046,24 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   （1 个既有本机 __pycache__ 噪音 FAIL，CI 干净 checkout 上 GREEN）；
   `git diff --check` clean；YAML 结构合法。
 - Next：提交、推送、CI 绿后回 `AI审核方案` 贴第三轮复审（item 13 parity）。
+
+## 2026-08-30T00:00 EDT — Runtime Migration PR E5 APPROVE + merge（PR #114 @ 3e5a551）
+
+- 审核方第四轮复核 3e5a551：最后一个 residual blocker 已关闭 —— item 13 machine
+  acceptance 现在与 items 06/15/16 使用同一 precedence（unmet-need-only 且没有开始
+  target-specific competitive/IP read → INCONCLUSIVE / WEAK；一旦 target-specific
+  landscape assessment 已开始、mandatory axis 不完整或无 admissible evaluable
+  landscape → INCONCLUSIVE / UNKNOWN），regression 同时锁两条路径。
+  **APPROVE PR #114 @ 3e5a551。可以 merge。** PR E5 的 TGT-08 construction
+  contract 到此冻结。下一步 PR E6 = MOD-TGT08@1.0.0 deterministic
+  implementation。GitHub connector 四轮均 403，review state 未写回。
+- Merge：`f9b4ddd`（`Merge pull request #114 from
+  leezx/task_20260829_runtime-migration-pr-e5`）。
+- 补登：独立 docs-only PR `task_20260829_runtime-migration-pr-e5-approval-record` ——
+  `logs/chatgpt-review-2026-08-29-runtime-migration-pr-e5.md`（8 scoping 决策 /
+  四轮历史 / 三轮 blocker / APPROVE）+ `manifests/runtime_migration_pr_e5_manifest.yaml`
+  → `status: approved`、`chatgpt_review: APPROVE`、`approved_tip: 3e5a551`、
+  `merge_commit: f9b4ddd`、`review_rounds: 4`、`test_count_at_approval: 967`。
+- 状态：TGT-08 施工图已冻结。8 个 primary Module 已建 2 个（TGT-01@1.0.0、
+  TGT-05@1.0.0），TGT-08 施工合同已 APPROVE 但 Module 未建（`0.0.0`）。
+  `MIGRATION_PENDING` 保持。PR E6 = MOD-TGT08@1.0.0 implementation 需用户 go-ahead。

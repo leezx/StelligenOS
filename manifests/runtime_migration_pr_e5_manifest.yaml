@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_e5
-status: proposed
+status: approved
 scope: tgt08_mod_tgt08_construction_contract_drawing_validation_and_acceptance_checklist_only
 repository_boundary: software_only_external_data
 
@@ -63,16 +63,17 @@ deferred:
   retrieval_providers_and_datasets: "PR E6+"
   other_five_tgt_modules: "PR E6+ (TGT-02 -> TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)"
 
-chatgpt_review: REQUEST_CHANGES   # round 3; revision pushed, re-review pending
-approved_tip: null
-merge_commit: null
-review_rounds: 3
+chatgpt_review: APPROVE
+approved_tip: 3e5a551
+merge_commit: f9b4ddd
+review_rounds: 4   # initial submission + 3 revision rounds
 test_count_before_e5: 918     # at PR E4 approval (round 1)
 test_count_at_submission: 963
 test_count_after_round_1: 966
 test_count_after_round_2: 967
 test_count_after_round_3: 967
-approval_record_pr: null
+test_count_at_approval: 967
+approval_record_pr: task_20260829_runtime-migration-pr-e5-approval-record
 next_authorized_step: null    # PR E6 = MOD-TGT08@1.0.0 implementation -- needs its own go-ahead
 
 review_round_1:
