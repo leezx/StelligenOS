@@ -5194,3 +5194,39 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   本机 `__pycache__` 扫描 FAIL，CI 干净 checkout GREEN）；`git diff --check`
   clean。
 - Next：push、CI 绿后回 `AI审核方案` 贴第二轮复审（两个 blocker 已关闭 + regression）。
+
+## 2026-08-30T00:30 EDT — Runtime Migration PR E6 APPROVE + merge（PR #116 @ 9a033e8）
+
+- 审核方第二轮复核 `9a033e8`（exact-HEAD CI `verify 3.11` / `verify 3.12` 均
+  success，含 unit tests / repository boundary / no-bytecode-artifacts /
+  working-tree-clean）：
+  - **Blocker 1 已关闭。** `SEARCH_COMPLETION_AUDIT` 现在真正携带 typed
+    completion 的结构化 snapshot；`module.run()` 对命中
+    `completion.audit_observation_id` 的 audit record 做 snapshot parity，drift
+    → `hard_integrity_failures` → 整个 run 被拒；11 个 snapshot 字段全进
+    canonical EP reuse parity，旧 canonical audit EP 缺字段或 drift 同样无法
+    绕过。审核方**明确接受**「不强制所有 completed completion 都有 audit EP」的
+    reconciliation，评价其「比强制更忠实于 E5 truth table」（E5 item 09/13 只要
+    absence-based whitespace claim 有 explicit completed-search provenance，不是
+    所有 graded landscape 都要 audit EP）。
+  - **Blocker 2 已关闭。** `acceptance` 的
+    `sponsor_review_requires_both_core_landscape_axes_complete` 把「strong
+    pattern + one core axis incomplete → accepted UNKNOWN + actionable
+    trigger」截断为 machine acceptance FAIL → `proposal = None` → surfaced
+    `sponsor_review = none()`；未升级为「两轴必须 DIRECT」（E5 item 16 冻结的是
+    completeness）。
+  - Regression 锁到真正错误路径；其余没有需要改的地方。
+  **APPROVE PR #116 @ `9a033e8`。可以 merge。** GitHub connector 两轮均 403，
+  review state 未写回。
+- Merge：`c03fa34`（`Merge pull request #116 from
+  leezx/task_20260829_runtime-migration-pr-e6`）。
+- 补登：独立 docs-only PR `task_20260829_runtime-migration-pr-e6-approval-record`
+  —— `logs/chatgpt-review-2026-08-29-runtime-migration-pr-e6.md`（8 scoping 决策
+  / 3 headline invariant / 两轮历史 / 两个 blocker / APPROVE）+
+  `manifests/runtime_migration_pr_e6_manifest.yaml` → `status: approved`、
+  `chatgpt_review: APPROVE`、`approved_tip: 9a033e8`、`merge_commit: c03fa34`、
+  `review_rounds: 2`、`test_count_at_approval: 1053`、`review_round_1/2` 子块。
+- 状态：8 个 primary Module 已建 3 个（MOD-TGT01@1.0.0、MOD-TGT05@1.0.0、
+  MOD-TGT08@1.0.0）。其余五个（TGT-02 → 03 → 04 → 06 → 07）属后续 PR。
+  `MIGRATION_PENDING` 保持。真实 provider / adapter 与外部 workspace calibration
+  各自需 go-ahead。

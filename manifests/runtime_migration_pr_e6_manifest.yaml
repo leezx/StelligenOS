@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_e6
-status: pending_review
+status: approved
 scope: mod_tgt08_deterministic_scientific_core_implementation_plus_narrow_binding_reconciliation
 repository_boundary: software_only_external_data
 
@@ -49,9 +49,12 @@ spec_refs:
 scoping_decisions:  # ChatGPT AI审核方案, before code, 8 decisions E6-1..E6-8
   E6-1: real deterministic MOD-TGT08 implementation (like E2 / E4, a full Gate-specific scientific core). files __init__ / module.yaml / contracts / ports / classify / evidence / aggregate / sponsor_review / acceptance / module; module_version 1.0.0; the two typed completion states (CompetitiveLandscapeCompletion, PatentLandscapeCompletion) are frozen dataclasses in contracts.py -- module-local run records, NOT a seventh core object; minimal binding update (TGT-08 primary_module_version 0.0.0 -> 1.0.0; built_module_versions + BUILT_MODULE_VERSIONS gain TGT-08 -> the other five TGT gates stay 0.0.0); frozen E5 contract body untouched; also add module.yaml + manifest + handoff + worklog + tests/test_tgt08_module.py; NO generic GateModule framework / abstract base class; NO MOD-TGT01 / MOD-TGT05 refactor
   E6-2: one normalized Tgt08OpportunityProviderPort. every NormalizedOpportunityRecord carries evidence_axis in {COMPETITIVE, PATENT, UNMET_NEED} + observation_kind in {COMPETITOR_PROGRAM, PATENT_CLAIM, UNMET_NEED_CONTEXT, SEARCH_COMPLETION_AUDIT} + source_authority_kind + facts only (program stage / status / modality / indication context; patent family / publication / jurisdiction / claim_category / legal_status / composition_level; unmet-need outcome; audited-search completion). the provider NEVER sets an axis authority ceiling, a Direction, or an opportunity implication. N/A is an explicit empty value, never omission
-  E6-3: two module-local typed completion states + a derived per-axis authority ceiling. competitive: primary_source_landscape_complete -> DIRECT, else pipeline_inventory_complete -> INDIRECT_STRONG (a pipeline database is an index), else NOT_EVALUABLE. patent: composition_level_review_complete -> DIRECT, else target_level_search_complete -> INDIRECT_STRONG, else NOT_EVALUABLE. overall Strength = the WEAKER required axis ceiling (an overall DIRECT needs BOTH axes at DIRECT authority; "both axes searched" alone never yields DIRECT). frozen E5 truth table, verbatim -- neither target-specific axis attempted + admissible unmet need -> INCONCLUSIVE / WEAK (the only two-axis exemption, CONTEXTUAL refs); a target-specific assessment WAS attempted + a mandatory axis incomplete / not evaluable OR no admissible evaluable landscape -> INCONCLUSIVE / UNKNOWN (no refs); both axes evaluable -> only material SUPPORTS -> POSITIVE / overall, only material OPPOSES -> NEGATIVE / overall, both -> CONFLICTING / overall, neither -> graded INCONCLUSIVE / overall (CONTEXTUAL refs, strictly distinct from INCONCLUSIVE / UNKNOWN). legal Direction x Strength = {POSITIVE, NEGATIVE, CONFLICTING} x {DIRECT, INDIRECT_STRONG} + INCONCLUSIVE x {DIRECT, INDIRECT_STRONG, WEAK, UNKNOWN}
-  E6-4: deterministic Gate-relative opportunity implication. COMPETITOR_PROGRAM, exact target + exact refractory-mCRC context -- APPROVED / REGISTRATIONAL / ACTIVE_CLINICAL -> OPPOSES_OPPORTUNITY (qualifying); DISCONTINUED / FAILED -> CONTEXTUAL (a competitor failing is never automatically favorable -- that would be a scientific inference); other indication / early / preclinical -> CONTEXTUAL. PATENT_CLAIM, exact target -- live + relevant composition-level target-directed ADC claim -> OPPOSES_OPPORTUNITY (qualifying, DIRECT-eligible axis); live + relevant target-level-only hit -> OPPOSES_OPPORTUNITY (qualifying, patent axis capped at INDIRECT_STRONG); expired / abandoned / cancelled / IRRELEVANT -> CONTEXTUAL (one expired patent is not whitespace). UNMET_NEED_CONTEXT -> CONTEXTUAL (a WEAK hypothesis only). an absence SUPPORT is derived ONLY from an attempted + coverage-complete + evaluable + audited completion whose qualifying set is empty, and the supporting evidence is that SEARCH_COMPLETION_AUDIT EvidencePackage -- never "if not records: supports_opportunity = True". completion consistency is a HARD check -- competitive_completion.qualifying_program_ids MUST equal the set of qualifying competitor EvidencePackages emitted, patent_completion.qualifying_patent_family_ids MUST equal the qualifying patent-family EvidencePackages emitted
-  E6-5: machine-local sponsor_review review TRIGGER (SponsorReviewRecord: required / status / evidence_ids / competitor_program_ids / patent_family_ids / landscape_as_of / patent_scope). status single value POTENTIAL_SPONSOR_FATAL_PATTERN. required = true iff, among the emitted / reused evidence that already passed identity / provenance / classification, there is at least a competitive observation (exact target + ADC + exact refractory-mCRC context + APPROVED or REGISTRATIONAL + primary-source verified authority -- TRIAL_REGISTRY / REGULATORY_SOURCE / COMPANY_PRIMARY_DISCLOSURE / PRIMARY_CLINICAL_PUBLICATION, not PIPELINE_DATABASE + classified OPPOSES_OPPORTUNITY) AND a patent observation (exact target + live relevant composition-level target-directed ADC claim + official / primary patent provenance -- PATENT_PUBLICATION / OFFICIAL_PATENT_STATUS + classified OPPOSES_OPPORTUNITY). NO thresholds, NO ownership-linkage inference. the machine NEVER asserts "dominant" / "well protected" / "no differentiation path" / "this sponsor should stop", and NEVER emits a canonical fatal flag / KILL / STOP_FOR_SPONSOR / OUT_OF_MANDATE. sponsor_review is NOT on the proposal envelope; only an ACCEPTED run's trigger is an actionable handoff
+  E6-3: >-
+    two module-local typed completion states + a derived per-axis authority ceiling. competitive axis -- primary_source_landscape_complete -> DIRECT, else pipeline_inventory_complete -> INDIRECT_STRONG (a pipeline database is an index), else NOT_EVALUABLE. patent axis -- composition_level_review_complete -> DIRECT, else target_level_search_complete -> INDIRECT_STRONG, else NOT_EVALUABLE. overall Strength = the WEAKER required axis ceiling (an overall DIRECT needs BOTH axes at DIRECT authority; "both axes searched" alone never yields DIRECT). frozen E5 truth table, verbatim -- neither target-specific axis attempted + admissible unmet need -> INCONCLUSIVE / WEAK (the only two-axis exemption, CONTEXTUAL refs); a target-specific assessment WAS attempted + a mandatory axis incomplete / not evaluable OR no admissible evaluable landscape -> INCONCLUSIVE / UNKNOWN (no refs); both axes evaluable -> only material SUPPORTS -> POSITIVE / overall, only material OPPOSES -> NEGATIVE / overall, both -> CONFLICTING / overall, neither -> graded INCONCLUSIVE / overall (CONTEXTUAL refs, strictly distinct from INCONCLUSIVE / UNKNOWN). legal Direction x Strength = {POSITIVE, NEGATIVE, CONFLICTING} x {DIRECT, INDIRECT_STRONG} + INCONCLUSIVE x {DIRECT, INDIRECT_STRONG, WEAK, UNKNOWN}
+  E6-4: >-
+    deterministic Gate-relative opportunity implication. COMPETITOR_PROGRAM, exact target + exact refractory-mCRC context -- APPROVED / REGISTRATIONAL / ACTIVE_CLINICAL -> OPPOSES_OPPORTUNITY (qualifying); DISCONTINUED / FAILED -> CONTEXTUAL (a competitor failing is never automatically favorable -- that would be a scientific inference); other indication / early / preclinical -> CONTEXTUAL. PATENT_CLAIM, exact target -- live + relevant composition-level target-directed ADC claim -> OPPOSES_OPPORTUNITY (qualifying, DIRECT-eligible axis); live + relevant target-level-only hit -> OPPOSES_OPPORTUNITY (qualifying, patent axis capped at INDIRECT_STRONG); expired / abandoned / cancelled / IRRELEVANT -> CONTEXTUAL (one expired patent is not whitespace). UNMET_NEED_CONTEXT -> CONTEXTUAL (a WEAK hypothesis only). an absence SUPPORT is derived ONLY from an attempted + coverage-complete + evaluable + audited completion whose qualifying set is empty, and the supporting evidence is that SEARCH_COMPLETION_AUDIT EvidencePackage -- never a bare "records is empty -> supports_opportunity" shortcut. completion consistency is a HARD check -- competitive_completion.qualifying_program_ids MUST equal the set of qualifying competitor EvidencePackages emitted, patent_completion.qualifying_patent_family_ids MUST equal the qualifying patent-family EvidencePackages emitted
+  E6-5: >-
+    machine-local sponsor_review review TRIGGER (SponsorReviewRecord fields -- required / status / evidence_ids / competitor_program_ids / patent_family_ids / landscape_as_of / patent_scope). status single value POTENTIAL_SPONSOR_FATAL_PATTERN. required = true iff, among the emitted / reused evidence that already passed identity / provenance / classification, there is at least a competitive observation (exact target + ADC + exact refractory-mCRC context + APPROVED or REGISTRATIONAL + primary-source verified authority -- TRIAL_REGISTRY / REGULATORY_SOURCE / COMPANY_PRIMARY_DISCLOSURE / PRIMARY_CLINICAL_PUBLICATION, not PIPELINE_DATABASE + classified OPPOSES_OPPORTUNITY) AND a patent observation (exact target + live relevant composition-level target-directed ADC claim + official / primary patent provenance -- PATENT_PUBLICATION / OFFICIAL_PATENT_STATUS + classified OPPOSES_OPPORTUNITY). NO thresholds, NO ownership-linkage inference. the machine NEVER asserts "dominant" / "well protected" / "no differentiation path" / "this sponsor should stop", and NEVER emits a canonical fatal flag / KILL / STOP_FOR_SPONSOR / OUT_OF_MANDATE. sponsor_review is NOT on the proposal envelope; only an ACCEPTED run's trigger is an actionable handoff
   E6-6: Gate-NEUTRAL EvidencePackage per observation (PR A shape) + exact canonical reuse. an observation already in the Evidence Library is reused as the EXACT canonical object -- no allocator call, no re-created body; provenance comes from the resolved canonical SourceIndex record (unresolved id or provider <-> canonical metadata conflict -> HARD reject). reuse parity covers _parity_keys(record) = an always set (target_identity, evidence_axis, observation_kind, context_key, landscape_as_of, source_authority_kind) + the classification-driving keys FOR THAT observation kind; a missing OR drifted classification / absence driving field on a returned canonical package -> HARD integrity failure. a competition EP states a program fact, a patent EP a claim / status fact, an unmet-need EP an outcome fact, an audit EP a completed-search fact -- a package NEVER carries "good / bad opportunity", "TGT-08 NEGATIVE", "crowded target", "FTO blocked", "dominant competitor", "no design around" or "no differentiation path"; its does_not_support explicitly disclaims an FTO / infringement / validity / design-around conclusion, a "no differentiation path" conclusion, any scientific de-risking of TGT-01 through TGT-07, and a sponsor Decision / KILL / STOP_FOR_SPONSOR / OUT_OF_MANDATE
   E6-7: machine acceptance = the E5 item-13 checklist as executable checks. a HARD identity / provenance / completion-consistency / absence-provenance failure rejects the WHOLE run (proposal_envelope = None) -- it is NEVER degraded to an accepted UNKNOWN. a genuinely incomplete public landscape -> INCONCLUSIVE / UNKNOWN is NOT an integrity failure. critical_unknowns resolutions are PUBLIC_RESOLVABLE / CURRENTLY_UNRESOLVABLE -- NEVER EXPERIMENT_REQUIRED (freedom-to-operate is not an experiment). an accepted run's output surface is EvidencePackages + the two typed completion states + the sponsor_review record + one non-canonical AssessmentProposalEnvelope (no assessment_id / assessment_version / review, no FTO / legal / no-differentiation-path conclusion, no fatal flag) + a MachineAcceptanceRecord; the module NEVER constructs a CandidateGateAssessment
   E6-8: CI runs synthetic / in-memory acceptance scenarios only -- no internet, no real competitor / patent data. synthetic TARGET_A / PROGRAM_A / PROGRAM_B / PATENT_FAMILY_A / PATENT_FAMILY_B / REFRACTORY_MCRC context; no HER2 / TROP2 / real target names
@@ -97,14 +100,15 @@ deferred:
   external_workspace_calibration_run: "after E6 merge -- a real primary-source competitive + composition-level patent landscape smoke run in the external workspace"
   other_five_tgt_modules: "PR E-series+ (TGT-02 -> TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)"
 
-chatgpt_review: REQUEST_CHANGES   # round 1 -- 2 blockers; revision pushed, re-review pending
-approved_tip: null
-merge_commit: null
-review_rounds: 1
+chatgpt_review: APPROVE
+approved_tip: 9a033e8
+merge_commit: c03fa34
+review_rounds: 2                  # initial submission + 1 revision round
 test_count_before_e6: 967         # at PR E5 approval
 test_count_at_submission: 1042    # local full suite (test_tgt08_module.py 69)
-test_count_after_round_1: 1053    # test_tgt08_module.py 80 (+11 blocker regressions); the single local FAIL is a pre-existing __pycache__ scan in test_assetgenos_modules (clean on a fresh CI checkout)
-approval_record_pr: null
+test_count_after_round_1: 1053    # test_tgt08_module.py 80 (+11 blocker regressions)
+test_count_at_approval: 1053      # the single local FAIL is a pre-existing __pycache__ scan in test_assetgenos_modules (clean on a fresh CI checkout)
+approval_record_pr: task_20260829_runtime-migration-pr-e6-approval-record
 next_authorized_step: null        # real provider / external calibration, or the next TGT construction drawing -- each needs its own go-ahead
 
 review_round_1:
@@ -165,6 +169,38 @@ review_round_1:
       DIRECT-overall precondition for the trigger. +3 regressions.
   tests_at_round_1: 80   # test_tgt08_module.py (was 69)
   full_suite_at_round_1: 1053
+
+review_round_2:
+  verdict: APPROVE
+  reviewed_tip: "9a033e8"
+  round_1_status: >-
+    both round-1 blockers confirmed closed. Blocker 1 -- SEARCH_COMPLETION_AUDIT
+    now carries the typed completion's structured snapshot (scope / sources /
+    coverage / unresolved / authority flags / qualifying sets / patent
+    jurisdiction), module.run() HARD-rejects any drift on the record matching a
+    completion's audit_observation_id, and all 11 snapshot fields are canonical
+    EP reuse-parity keys so a drifted / missing reused audit EP cannot slip
+    through. The reviewer explicitly accepts not mandating an audit EP for every
+    completed completion -- "more faithful to the E5 truth table" than forcing
+    it, since an audited zero-qualifying landscape with a matching audit EP is
+    by definition a material absence SUPPORT (POSITIVE / CONFLICTING), and
+    forcing the EP would compress the frozen graded-INCONCLUSIVE branch; E5
+    item 09/13 only requires explicit completed-search provenance for an
+    absence-based whitespace / no-competitor claim, never for every graded
+    landscape. Blocker 2 -- acceptance's
+    sponsor_review_requires_both_core_landscape_axes_complete truncates the
+    "strong pattern + one core axis incomplete -> accepted UNKNOWN + actionable
+    trigger" path to machine-acceptance FAIL -> proposal = None -> surfaced
+    sponsor_review = none(); not escalated to "both axes DIRECT" (E5 item 16
+    froze completeness, not evidence authority). Regressions lock the real
+    failure paths, not just the happy path.
+  scope: no further changes; nothing else needs to move.
+  unchanged: >-
+    frozen E5 construction contract / TGT-08 Gate science; the frozen truth
+    table; the sponsor detector criteria; MOD-TGT01 / MOD-TGT05; the TGT-08
+    binding scope; MIGRATION_PENDING; the provider / IO / framework boundary.
+  tests_at_round_2: 80
+  full_suite_at_round_2: 1053
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt08_module.py' -v
