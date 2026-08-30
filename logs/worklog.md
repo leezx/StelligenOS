@@ -4916,3 +4916,43 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   `MIGRATION_PENDING` 保持。下一步（真实 provider / adapter + 外部 workspace
   calibration，或按 TGT-08 → 02 → 03 → 04 → 06 → 07 顺序的下一个施工图）各自需
   用户 go-ahead。
+
+## 2026-08-29T22:15 EDT — Runtime Migration PR E5：TGT-08 / MOD-TGT08 Construction Contract（分支 task_20260829_runtime-migration-pr-e5，基线 PR E4 收口）
+
+- 授权：用户在 PR E4 APPROVE + approval record merge 后说 "go on"。开工前审核方
+  （ChatGPT `AI审核方案`）拍板 **PR E5 = TGT-08 / MOD-TGT08 Construction Contract
+  （design-only）**，E5 通过后才是 PR E6 = MOD-TGT08@1.0.0 implementation；给了
+  8 个 scoping 决策 E5-1…E5-8 + 24 条测试清单 + 边界一句话。
+- 变更定位：`RUNTIME_CONTRACT_ADD`（第五层，design-only）—— 施工合同 + 施工图 +
+  17 项验收清单 + parity/validation 测试。不写实现、不接 provider、不做
+  trial/patent retrieval、不产 EvidencePackage/Assessment、不做 FTO /
+  sponsor decision runtime、不改冻结文档、不新增依赖、不改 MOD-TGT01/MOD-TGT05、
+  不改 TGT-08 `primary_module_version`、不解除 `MIGRATION_PENDING`。
+- E5-1 完整施工合同不写实现；E5-2 最关键边界（三层分离：Scientific Gates
+  TGT-01…07 / TGT-08 external opportunity landscape / Sponsor axis v5 §7；TGT-08
+  可输出 canonical `NEGATIVE` 但不是 KILL / STOP_FOR_SPONSOR / OUT_OF_MANDATE /
+  FTO blocked；`POSITIVE` ≠ TGT-01…07 de-risked；sponsor 变量不进 Direction）；
+  E5-3 17 项模板继承 E1 + 03/05/07/08 normalized-equality parity + 04 derived
+  parity；E5-4 frozen truth table（`NEGATIVE` 真正可达）；E5-5 DIRECT = 两轴
+  （competitive + composition-level patent）完成的 evidence bundle + absence
+  inference 需 completion provenance（`CompetitiveLandscapeCompletion` /
+  `PatentLandscapeCompletion` run-level machine records，非第七 core object）；
+  E5-6 独立 module-local `sponsor_review`（`POTENTIAL_SPONSOR_FATAL_PATTERN`，
+  routed to external sponsor governance，绝不走 scientific `fatal_gate_policy`；
+  machine 不断言 dominant / well-protected / no differentiation path / stop）；
+  E5-7 two-axis completeness + freshness stop rule（coverage complete ≠ DIRECT
+  quality；不用 `EXPERIMENT_REQUIRED`）；E5-8 items 10–17 冻结 E2/E4 runtime
+  genes。
+- 交付：`src/contracts/gate_modules/tgt08_target_opportunity_competition_ip_whitespace.yaml`
+  （17 项，parity 全绿）；
+  `docs/gate_modules/TGT-08_Target_Opportunity_Competition_IP_Whitespace.md`
+  （17 行表格 + 两句醒目标语）；
+  `tests/test_tgt08_module_construction_contract.py`（45 tests）；
+  `manifests/runtime_migration_pr_e5_manifest.yaml`（`chatgpt_review: PENDING`）。
+- 未改：PR A/B/C 合同；PR D 的 TGT-08 Gate science（parity 只读）；MOD-TGT01 /
+  MOD-TGT05（binding 仍 `1.0.0`、代码未动）；TGT-08 `primary_module_version`
+  （仍 `0.0.0`，PR E6 才 bump）。无 generic framework / abstract base class /
+  新依赖。`MIGRATION_PENDING` 未解除。
+- 验证：`tests/test_tgt08_module_construction_contract.py` **45 OK**；全量待跑；
+  YAML 结构合法；items 03/04/05/07/08 parity vs 冻结 PR D 全 True。
+- Next：跑全量、提交、推送、开 PR、CI 绿后回 `AI审核方案` 请求审核。
