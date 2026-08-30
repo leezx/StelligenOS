@@ -46,7 +46,7 @@ scoping_decisions:  # ChatGPT AI审核方案, before code, E7-1..E7-9
   E7-3: >-
     Direction x Strength -- TGT-02 is a BIDIRECTIONAL scientific coverage gate. Direction is relative to the Gate question: POSITIVE (evidence supports malignant-cell target coverage) / NEGATIVE (evidence supports a lack of adequate malignant-cell coverage: absent, or rare and highly heterogeneous) / CONFLICTING (admissible observations make genuinely incompatible coverage claims and no auditable pattern resolves them) / INCONCLUSIVE (evidence does not resolve). DIRECT requires protein-level AND CRC AND malignant-cell attributed AND adequately-powered cohort qualification AND a completed audited cohort landscape -> POSITIVE / DIRECT (broad consistent presence), NEGATIVE / DIRECT (absent, or rare + highly heterogeneous). "rare / highly heterogeneous" is NOT computed by the Module from a percent / H-score / n -- it arrives as an auditable upstream qualification (expression_pattern in {ABSENT, RARE_HIGHLY_HETEROGENEOUS} with expression_pattern_basis in {SOURCE_REPORTED, HUMAN_REVIEWED_NORMALIZATION}); a missing / drifted basis is a HARD integrity failure. INDIRECT_STRONG = qualifying sc / spatial malignant-compartment or CRC TMA transcript+protein concordance -> POSITIVE / INDIRECT_STRONG (present) or NEGATIVE / INDIRECT_STRONG (absent / strongly non-covered); transcript-only never upgrades DIRECT and quantity never raises the ceiling. WEAK observations are admissible hypothesis / context evidence, BUT a WEAK-only public landscape -> INCONCLUSIVE / UNKNOWN, NOT INCONCLUSIVE / WEAK (TGT-02-specific -- bulk RNA does not answer the CRC x malignant-compartment x cohort-level question; PR A: INCONCLUSIVE / UNKNOWN carries zero evidence_refs, a graded INCONCLUSIVE carries CONTEXTUAL refs). graded INCONCLUSIVE = qualifying DIRECT / INDIRECT_STRONG evidence exists and the landscape is complete but coverage direction is MIXED / does not resolve. CONFLICTING is not auto-equated with real biological heterogeneity: a valid audited multi-cohort finding characterizing coverage as RARE_HIGHLY_HETEROGENEOUS is NEGATIVE, not CONFLICTING; Strength is not auto-degraded by a conflict. overall Strength = the highest qualifying frozen evidence class after the public CRC coverage search is complete -- there is NO E6-style two-axis weaker-ceiling rule (the Direct ladder itself already states protein cohort = DIRECT, sc / spatial / TMA = lower rung).
   E7-4: >-
-    fatal -- machine-local fatal_review, never a direct KILL. PR D fatal = "protein-level evidence of absent, or rare and highly heterogeneous, target expression in CRC malignant cells across cohorts". the Module never emits a canonical fatal flag / KILL / HOLD / Decision. the machine at most surfaces a candidate pattern when: protein-level observations, each with CRC malignant-cell attribution, each with a QUALIFIED cohort_adequacy_status + auditable cohort_adequacy_basis, each with a negative coverage class (ABSENT / RARE_HIGHLY_HETEROGENEOUS) + auditable expression_pattern_basis, on a completed audited CRC coverage landscape, with cross-cohort support -- MORE THAN TWO independent cohort identities (or one declared multi-cohort analysis with more than two auditable cohort_ids). "across cohorts" is plural-cohorts logic, NOT a new biological threshold. human-only fatal adjudication: whether the cohort adequacy basis is convincing, whether the cohorts are genuinely independent / non-overlapping, whether the "rare and highly heterogeneous" characterisation is justified, whether assay / platform differences explain the apparent convergence, whether it satisfies the GateSet fatal policy. the machine always emits at most fatal_review status POTENTIAL_FATAL_PATTERN; never PUBLIC_FATAL_SIGNAL_ESTABLISHED. PR D fatal_gate_policy_ref is an independent GateSet-level policy reference. no numeric / percent-positive / H-score / heterogeneity threshold.
+    fatal -- machine-local fatal_review, never a direct KILL. PR D fatal = "protein-level evidence of absent, or rare and highly heterogeneous, target expression in CRC malignant cells across cohorts". the Module never emits a canonical fatal flag / KILL / HOLD / Decision. the machine at most surfaces a candidate pattern when: protein-level observations, each with CRC malignant-cell attribution, each with a QUALIFIED cohort_adequacy_status + auditable cohort_adequacy_basis, each with a negative coverage class (ABSENT / RARE_HIGHLY_HETEROGENEOUS) + auditable expression_pattern_basis, on a completed audited CRC coverage landscape, with cross-cohort support -- AT LEAST TWO independent cohort identities (or one declared multi-cohort analysis with at least two auditable cohort_ids). "across cohorts" is plural-cohorts logic (at least two, NOT "more than two" / "> 2"), NOT a new biological threshold. human-only fatal adjudication: whether the cohort adequacy basis is convincing, whether the cohorts are genuinely independent / non-overlapping, whether the "rare and highly heterogeneous" characterisation is justified, whether assay / platform differences explain the apparent convergence, whether it satisfies the GateSet fatal policy. the machine always emits at most fatal_review status POTENTIAL_FATAL_PATTERN; never PUBLIC_FATAL_SIGNAL_ESTABLISHED. PR D fatal_gate_policy_ref is an independent GateSet-level policy reference. no numeric / percent-positive / H-score / heterogeneity threshold.
   E7-5: >-
     typed CrcCohortCoverageCompletion (PR E8 module-local frozen dataclass, NOT a seventh core object): attempted / landscape_as_of / search_scope / sources_searched / public_crc_coverage_search_complete / protein_cohort_search_complete / malignant_compartment_sc_spatial_search_complete / tma_concordance_search_complete / matched_normal_tumor_search_complete / unresolved_items / qualifying_protein_cohort_ids / qualifying_indirect_cohort_ids / audit_observation_id. NO E6-style two mandatory axes -- overall Strength = the highest qualifying frozen evidence class after the public CRC coverage search is complete. completion <-> SEARCH_COMPLETION_AUDIT snapshot parity (E6 gene) frozen for E8: search_scope / sources_searched / landscape_as_of / per-component completion states / unresolved_items / qualifying cohort ids; a missing / drifted snapshot -> HARD reject. normalized observation conceptual shape frozen in the drawing: observation_id / target_identity / context_key / landscape_as_of / observation_kind (PROTEIN_COHORT / MALIGNANT_SC_SPATIAL / TMA_TRANSCRIPT_PROTEIN_CONCORDANCE / BULK_CRC_RNA / PAN_CANCER_UNRESOLVED / MATCHED_NORMAL_TUMOR / SEARCH_COMPLETION_AUDIT) / molecular_layer (PROTEIN / TRANSCRIPT / BOTH) / assay_method / cohort_id / cohort_ids / cohort_n (raw fact, optional) / crc_specific / malignant_cell_attribution (MALIGNANT / NON_MALIGNANT / UNRESOLVED) + malignant_attribution_basis / cohort_adequacy_status (QUALIFIED / NOT_ESTABLISHED) + cohort_adequacy_basis / expression_pattern (PRESENT_CONSISTENT / ABSENT / RARE_HIGHLY_HETEROGENEOUS / MIXED_OR_UNRESOLVED) + expression_pattern_basis / source_id + source metadata + retrieved_at. the provider outputs facts only -- never a rung, a direction, or a pass / fail.
   E7-6: >-
@@ -81,13 +81,14 @@ deferred:
   retrieval_providers_and_datasets: "PR E8+ (GEO / HPA / CPTAC / single-cell / spatial / TMA repositories)"
   other_four_tgt_modules: "PR E8+ (TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)"
 
-chatgpt_review: REQUEST_CHANGES   # round 1 -- 4 narrow fixes; revision pushed, re-review pending
+chatgpt_review: REQUEST_CHANGES   # round 2 -- governance-record sync only (the 4 round-1 blockers were confirmed closed in the contract/drawing/tests); revision pushed, re-review pending
 approved_tip: null
 merge_commit: null
-review_rounds: 1
+review_rounds: 2
 test_count_before_e7: 1053        # at PR E6 approval
 test_count_at_submission: 1102    # local full suite (test_tgt02_module_construction_contract.py 49)
 test_count_after_round_1: 1104    # test_tgt02_module_construction_contract.py 51 (+2 blocker regressions); the single local FAIL is a pre-existing __pycache__ scan in test_assetgenos_modules (clean on a fresh CI checkout)
+test_count_after_round_2: 1104    # unchanged -- round 2 was a docs/governance-record sync only (no contract, drawing, or test-science change; one test comment line synced)
 approval_record_pr: null
 next_authorized_step: null        # PR E8 = MOD-TGT02@1.0.0 implementation -- needs its own go-ahead
 
@@ -155,6 +156,49 @@ review_round_1:
       union DIRECT union INDIRECT_STRONG union WEAK).
   tests_at_round_1: 51   # test_tgt02_module_construction_contract.py (was 49)
   full_suite_at_round_1: 1104
+
+review_round_2:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "8876533"
+  accepted: >-
+    all 4 round-1 blockers confirmed CLOSED in the machine contract, the drawing,
+    and the tests -- qualifying is rung-specific; "across cohorts" is at-least-two
+    (plural-cohorts logic, explicitly NOT "> 2"); Direction is an aggregate over a
+    completed audited landscape, never a single observation; item-04 derived
+    parity is an exact set equality. No science, scope, or architecture change
+    requested.
+  scope: >-
+    stale governance-record synchronization ONLY -- three tracked artifacts still
+    carried the round-1 "> 2" / "MORE THAN TWO" wording phrased as the current
+    rule.
+  fixes:
+    manifest_scoping_decisions_e7_4: >-
+      scoping_decisions.E7-4 said "with cross-cohort support -- MORE THAN TWO
+      independent cohort identities (or one declared multi-cohort analysis with
+      more than two auditable cohort_ids)". Synced to "AT LEAST TWO independent
+      cohort identities (or one declared multi-cohort analysis with at least two
+      auditable cohort_ids)" and added the explicit "plural-cohorts logic (at
+      least two, NOT 'more than two' / '> 2')" note.
+    handoff_e7_4_row: >-
+      docs/handoff/2026-08-30-runtime-migration-pr-e7.zh-CN.md E7-4 scoping row
+      carried "> 2 independent cohort identities" / "> 2 auditable cohort_ids".
+      Synced to "at least two ..." with the same explicit not-"> 2" note.
+    worklog_build_entry: >-
+      logs/worklog.md E7 build entry described "across cohorts" as plural-cohorts
+      logic "(> 2 independent cohort identities)". Synced to "at least two
+      independent cohort identities". The round-1 revision entry keeps its
+      "round-1 old bug" markers verbatim.
+    test_comment_line: >-
+      one stale comment line in test_no_numeric_threshold_or_ranking_score_in_the_contract
+      said '"> 2 independent cohort identities" is plural-cohorts logic'. Synced
+      to '"at least two independent cohort identities"'. No test assertion or
+      test-science changed; the blocker-2 regressions (which assert the contract
+      says NOT "more than two" / "> 2") are untouched.
+  not_changed: >-
+    the machine contract, the drawing, and every test assertion -- all already
+    correct after round 1.
+  tests_at_round_2: 51   # unchanged
+  full_suite_at_round_2: 1104
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt02_module_construction_contract.py' -v

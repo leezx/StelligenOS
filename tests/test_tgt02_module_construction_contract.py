@@ -539,8 +539,8 @@ class NoImplementationInPrE7Tests(unittest.TestCase):
         self.assertTrue(all(any(pkg in p for pkg in allowed) for p in py_files), py_files)
 
     def test_no_numeric_threshold_or_ranking_score_in_the_contract(self):
-        # "> 2 independent cohort identities" is plural-cohorts logic, explicitly
-        # NOT a biological threshold (E7-4). A real threshold is a percent / an
+        # "at least two independent cohort identities" is plural-cohorts logic,
+        # explicitly NOT a biological threshold (E7-4). A real threshold is a percent / an
         # H-score / a per-cell or expression cutoff, or a ranking score.
         text = CONTRACT.read_text().lower()
         # a real threshold is a percent / an H-score / a per-cell or expression

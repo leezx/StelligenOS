@@ -5266,8 +5266,8 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   UNKNOWN 严格区分；CONFLICTING 不自动等同 biological heterogeneity（valid audited
   multi-cohort 定性 RARE_HIGHLY_HETEROGENEOUS → NEGATIVE）；transcript ≠ protein、
   stroma/immune ≠ malignant、bulk/pan-cancer = WEAK、normal-vs-tumor ≠ TI 的
-  hard locks；「across cohorts」= plural-cohorts 逻辑（> 2 independent cohort
-  identities）**不是新阈值**；`EXPERIMENT_REQUIRED` **可以且应该**用，但窄触发
+  hard locks；「across cohorts」= plural-cohorts 逻辑（at least two independent
+  cohort identities）**不是新阈值**；`EXPERIMENT_REQUIRED` **可以且应该**用，但窄触发
   （public CRC source space exhausted + 需要新的 malignant-cell-resolved protein /
   cohort measurement）—— 与 TGT-08 不同；`inference_guard` 逐字 pin（EVGAP-02
   primarily contributes TGT-02；generic CRC linkage does NOT discharge TGT-03）；
@@ -5340,3 +5340,35 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   **1104**（1 个既有本机 `__pycache__` 扫描 FAIL，CI 干净 checkout GREEN）；
   `git diff --check` clean；YAML 合法。
 - Next：push、CI 绿后回 `AI审核方案` 贴第二轮复审（4 个 blocker 已关闭 + regression）。
+
+## 2026-08-30T02:00 EDT — Runtime Migration PR E7 第二轮修订（PR #118 @ 8876533 REQUEST_CHANGES）
+
+- 审核方（ChatGPT `AI审核方案`）第二轮结论：**REQUEST_CHANGES —— 只剩 stale
+  governance-record 同步**。4 个第一轮 blocker 在 machine contract / drawing /
+  tests 里已确认全部关闭；不改 science、scope、architecture。
+- 唯一 blocker：三个被 git 跟踪的治理产物仍以「当前规则」口吻保留第一轮的
+  `> 2` / `MORE THAN TWO` 文案：
+  - **manifest** `scoping_decisions.E7-4`：`MORE THAN TWO independent cohort
+    identities (or one declared multi-cohort analysis with more than two
+    auditable cohort_ids)` → `AT LEAST TWO independent cohort identities (or one
+    declared multi-cohort analysis with at least two auditable cohort_ids)`，并补
+    「plural-cohorts logic（at least two，NOT "more than two" / "> 2"）」注释。
+  - **handoff** `2026-08-30-runtime-migration-pr-e7.zh-CN.md` E7-4 scoping 行：
+    `> 2 independent cohort identities` / `> 2 auditable cohort_ids` → `at least
+    two ...`，同补 not-"> 2" 注释。
+  - **worklog** E7 首版条目：把「across cohorts = plural-cohorts 逻辑（> 2
+    independent cohort identities）」同步成「at least two independent cohort
+    identities」。第一轮修订条目里明确标注「round-1 old bug」的历史文案保留原样。
+  - **test comment**：`test_no_numeric_threshold_or_ranking_score_in_the_contract`
+    里一行 stale 注释 `"> 2 independent cohort identities" is plural-cohorts
+    logic` → `"at least two independent cohort identities"`。**无任何测试断言 /
+    test-science 改动**；blocker-2 regression（断言合同写「NOT more than two /
+    "> 2"」）原样不动。
+- manifest 增 `review_round_2` block、`review_rounds: 2`、`chatgpt_review` 注释更新；
+  `test_count_after_round_2: 1104`（不变 —— 纯治理记录同步）。
+- 未改：machine contract、drawing、所有测试断言 —— 第一轮后即已正确。
+- 验证：`tests/test_tgt02_module_construction_contract.py` **51 OK**；全量 **1104**
+  （1 个既有本机 `__pycache__` 扫描 FAIL，CI 干净 checkout GREEN）；
+  `git diff --check` clean；YAML 合法。
+- Next：push、CI 绿后回 `AI审核方案` 贴第三轮复审（治理记录已同步，机器合同 /
+  drawing / tests 第一轮后即正确，请 re-review）。预期 APPROVE。
