@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_e8
-status: pending_review
+status: approved
 scope: mod_tgt02_deterministic_scientific_core_implementation_plus_narrow_binding_reconciliation
 repository_boundary: software_only_external_data
 
@@ -103,15 +103,15 @@ repository_policy:
   modifies_e7_construction_contract_body: forbidden
   migration_pending: remains
 
-chatgpt_review: REQUEST_CHANGES   # round 2 -- round-1's 7 blockers confirmed closed; 4 narrow integrity / factual-output blockers remain; revision pushed, re-review pending
-approved_tip: null
-merge_commit: null
-review_rounds: 2
+chatgpt_review: APPROVE          # round 3 -- APPROVE @ 3e48626 (rounds 1-2 REQUEST_CHANGES: 7 then 4 narrow blockers, all closed); ChatGPT AI审核方案 is authoritative (GitHub connector returned 403 every round)
+approved_tip: 3e48626
+merge_commit: ca0b4ad            # Merge pull request #120 from leezx/task_20260829_runtime-migration-pr-e8
+review_rounds: 3
 test_count_before_e8: 1104        # at PR E7 approval
 test_count_at_submission: 1185    # local full suite (tests/test_tgt02_module.py 75 + reconciliation / registry synch)
 test_count_after_round_1: 1200    # tests/test_tgt02_module.py 90 (+15 Round1RegressionTests)
 test_count_after_round_2: 1208    # tests/test_tgt02_module.py 98 (+8 Round2RegressionTests)
-approval_record_pr: null
+approval_record_pr: task_20260829_runtime-migration-pr-e8-approval-record   # docs-only: this manifest -> approved + logs/chatgpt-review-2026-08-30-runtime-migration-pr-e8.md
 next_authorized_step: null        # PR E9 = MOD-TGT03 construction contract -- needs its own go-ahead
 
 review_round_1:
@@ -236,6 +236,22 @@ review_round_2:
       current counts.
   tests_at_round_2: 98   # tests/test_tgt02_module.py (was 90; +8 Round2RegressionTests)
   full_suite_at_round_2: 1208
+
+review_round_3:
+  verdict: APPROVE
+  reviewed_tip: "3e48626"
+  merge_commit: "ca0b4ad"
+  summary: >-
+    APPROVE -- MOD-TGT02@1.0.0 deterministic implementation can merge. All 4
+    round-2 blockers substantively closed (audit-EP dedup bypass, canonical EP
+    reuse identity/provenance parity, WEAK-only rationale premature-experiment
+    text, EP study_context CRC-context inflation). No scope creep -- relative to
+    bab4d4a only aggregate.py / evidence.py / module.py, tests and governance
+    records changed. exact-head CI verify (3.11) + verify (3.12) success (unit
+    tests, repository boundary, no-bytecode, working-tree-clean all pass). Next:
+    PR E9 = MOD-TGT03 construction contract (needs its own go-ahead).
+  github_connector: "403 Resource not accessible by integration every round -- ChatGPT AI审核方案 conversation is authoritative; GitHub review state not written"
+  test_count_at_approval: 1208
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt02_module.py' -v
