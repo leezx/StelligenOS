@@ -4916,3 +4916,133 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   `MIGRATION_PENDING` 保持。下一步（真实 provider / adapter + 外部 workspace
   calibration，或按 TGT-08 → 02 → 03 → 04 → 06 → 07 顺序的下一个施工图）各自需
   用户 go-ahead。
+
+## 2026-08-29T22:15 EDT — Runtime Migration PR E5：TGT-08 / MOD-TGT08 Construction Contract（分支 task_20260829_runtime-migration-pr-e5，基线 PR E4 收口）
+
+- 授权：用户在 PR E4 APPROVE + approval record merge 后说 "go on"。开工前审核方
+  （ChatGPT `AI审核方案`）拍板 **PR E5 = TGT-08 / MOD-TGT08 Construction Contract
+  （design-only）**，E5 通过后才是 PR E6 = MOD-TGT08@1.0.0 implementation；给了
+  8 个 scoping 决策 E5-1…E5-8 + 24 条测试清单 + 边界一句话。
+- 变更定位：`RUNTIME_CONTRACT_ADD`（第五层，design-only）—— 施工合同 + 施工图 +
+  17 项验收清单 + parity/validation 测试。不写实现、不接 provider、不做
+  trial/patent retrieval、不产 EvidencePackage/Assessment、不做 FTO /
+  sponsor decision runtime、不改冻结文档、不新增依赖、不改 MOD-TGT01/MOD-TGT05、
+  不改 TGT-08 `primary_module_version`、不解除 `MIGRATION_PENDING`。
+- E5-1 完整施工合同不写实现；E5-2 最关键边界（三层分离：Scientific Gates
+  TGT-01…07 / TGT-08 external opportunity landscape / Sponsor axis v5 §7；TGT-08
+  可输出 canonical `NEGATIVE` 但不是 KILL / STOP_FOR_SPONSOR / OUT_OF_MANDATE /
+  FTO blocked；`POSITIVE` ≠ TGT-01…07 de-risked；sponsor 变量不进 Direction）；
+  E5-3 17 项模板继承 E1 + 03/05/07/08 normalized-equality parity + 04 derived
+  parity；E5-4 frozen truth table（`NEGATIVE` 真正可达）；E5-5 DIRECT = 两轴
+  （competitive + composition-level patent）完成的 evidence bundle + absence
+  inference 需 completion provenance（`CompetitiveLandscapeCompletion` /
+  `PatentLandscapeCompletion` run-level machine records，非第七 core object）；
+  E5-6 独立 module-local `sponsor_review`（`POTENTIAL_SPONSOR_FATAL_PATTERN`，
+  routed to external sponsor governance，绝不走 scientific `fatal_gate_policy`；
+  machine 不断言 dominant / well-protected / no differentiation path / stop）；
+  E5-7 two-axis completeness + freshness stop rule（coverage complete ≠ DIRECT
+  quality；不用 `EXPERIMENT_REQUIRED`）；E5-8 items 10–17 冻结 E2/E4 runtime
+  genes。
+- 交付：`src/contracts/gate_modules/tgt08_target_opportunity_competition_ip_whitespace.yaml`
+  （17 项，parity 全绿）；
+  `docs/gate_modules/TGT-08_Target_Opportunity_Competition_IP_Whitespace.md`
+  （17 行表格 + 两句醒目标语）；
+  `tests/test_tgt08_module_construction_contract.py`（45 tests）；
+  `manifests/runtime_migration_pr_e5_manifest.yaml`（`chatgpt_review: PENDING`）。
+- 未改：PR A/B/C 合同；PR D 的 TGT-08 Gate science（parity 只读）；MOD-TGT01 /
+  MOD-TGT05（binding 仍 `1.0.0`、代码未动）；TGT-08 `primary_module_version`
+  （仍 `0.0.0`，PR E6 才 bump）。无 generic framework / abstract base class /
+  新依赖。`MIGRATION_PENDING` 未解除。
+- 验证：`tests/test_tgt08_module_construction_contract.py` **45 OK**；全量待跑；
+  YAML 结构合法；items 03/04/05/07/08 parity vs 冻结 PR D 全 True。
+- Next：跑全量、提交、推送、开 PR、CI 绿后回 `AI审核方案` 请求审核。
+
+## 2026-08-29T23:00 EDT — Runtime Migration PR E5 第一轮修订（PR #114 @ 502bc4f2 REQUEST_CHANGES）
+
+- 审核方复审 502bc4f2：**E5 大部分 PASS**（design-only scope、E1 17-item template
+  复用、03/05/07/08 PR D parity、三层边界、NEGATIVE 可达但不等于 KILL / sponsor
+  stop、FTO 边界、DIRECT 双轴、absence inference 需 completion provenance、
+  sponsor_review 独立 module-local trigger、E2/E4 genes 冻结、MOD-TGT08 仍
+  0.0.0、MIGRATION_PENDING 未解除）。只剩 2 个 narrow Direction×Strength /
+  two-axis contract blocker。
+- Blocker 1 — drawing item 06 把 "two-axis coverage complete" 错写成 "DIRECT"
+  （"at DIRECT if both axes complete, else INDIRECT_STRONG"），与同施工图 item 16
+  自相矛盾。修：冻结正确规则 —— overall Strength = **weaker required axis
+  ceiling**；overall DIRECT 需要 competitive 轴 AND composition-level patent 轴
+  都到 DIRECT authority；任一只到 INDIRECT_STRONG → overall 封顶 INDIRECT_STRONG。
+  新增 item 06 `strength_is_the_weaker_required_axis_ceiling`，item 13（overall
+  proposed_strength == weaker required axis ceiling；"both axes searched" alone
+  never DIRECT），item 16 `direct_requires`（"at DIRECT authority"），
+  `coverage_complete_is_not_direct_quality`（两轴 coverage complete 是 graded
+  非-UNKNOWN 的 precondition，不是 DIRECT）；drawing item 06/13/16 行改写；
+  新增 regression。
+- Blocker 2 — frozen truth table 缺 "landscape 完整、有有效 grade、但没有
+  directional signal"（既无 material SUPPORTS_OPPORTUNITY 也无 material
+  OPPOSES_OPPORTUNITY）这个合法状态。修：新增 **graded INCONCLUSIVE** ——
+  `INCONCLUSIVE / DIRECT` 或 `INCONCLUSIVE / INDIRECT_STRONG`（按 overall rung），
+  带非空 evidence_refs（CONTEXTUAL landscape packages）；item 06
+  `graded_inconclusive_vs_unknown` 严格区分二者（"we could not look" vs "we
+  looked well and the evidence does not resolve direction"）；items 13 / 15 +
+  drawing 更新；truth table `landscape_source_space_materially_incomplete` key
+  改名为 `..._or_a_mandatory_axis_not_searched`；新增 regression。
+- 未改：PR D、sponsor_review 契约、source plan / FTO boundary、repository scope、
+  MOD-TGT01 / MOD-TGT05。
+- 验证：`tests/test_tgt08_module_construction_contract.py` 45 → **48 OK**；全量
+  **966**（1 个既有本机 __pycache__ 噪音 FAIL，CI 干净 checkout 上 GREEN）；
+  `git diff --check` clean；YAML 结构合法；03/04/05/07/08 parity 仍全 True。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第一轮复审（2 个 blocker 摘要）。
+
+## 2026-08-29T23:30 EDT — Runtime Migration PR E5 第二轮修订（PR #114 @ c65990e REQUEST_CHANGES）
+
+- 审核方复审 c65990e：**上一轮两个 blocker 都已关闭**（weaker-axis ceiling 贯穿
+  item 06/13/16；graded INCONCLUSIVE 与 INCONCLUSIVE/UNKNOWN 分开，且有
+  regression）。只剩 1 个非常窄的 contract inconsistency。
+- Blocker — WEAK unmet-need exception 与 two-axis completion rule 冲突。第一轮修订
+  写的 "two coverage-complete axes are the PRECONDITION for a graded (non-UNKNOWN)
+  assessment" 与冻结的 item 06 "indication-level unmet need only → INCONCLUSIVE /
+  WEAK"（一个不需要任何轴完成的 graded 非-UNKNOWN 状态）冲突。典型场景：只有
+  refractory mCRC unmet-need evidence、竞争轴与专利轴都未搜 → item 06 说 WEAK、
+  item 16 说 UNKNOWN。
+- 修（不改任何 Gate science）：冻结显式 precedence —— two-axis mandatory
+  completion 是 **target-specific DIRECT / INDIRECT_STRONG** opportunity
+  assessment 的前提，**不是** frozen unmet-need-only WEAK hypothesis 的前提。
+  (a) 只有 indication-level unmet-need evidence、**没有 attempt 任何 target-specific
+  competitive/IP read** → INCONCLUSIVE / WEAK；(b) **attempt 了** target-specific
+  landscape assessment 且某 mandatory axis incomplete → INCONCLUSIVE / UNKNOWN。
+  新增 item 06 `unmet_need_only_vs_incomplete_target_landscape`；改写 item 06
+  `strength_is_the_weaker_required_axis_ceiling`（WEAK exempt）+ item 16
+  `one_axis_not_done`（EXCEPTION 子句）+ `coverage_complete_is_not_direct_quality`
+  + item 15 `weak_unmet_need_only` / `incomplete_landscape` + drawing item
+  06/15/16 行；truth table 两行 key 改名
+  （`indication_level_unmet_need_only_no_target_specific_read_attempted` /
+  `target_specific_landscape_attempted_but_a_mandatory_axis_incomplete_or_no_admissible_evaluable_landscape`），
+  never 加 "unmet-need-only with no target-specific read attempted → UNKNOWN"；
+  新增 regression `test_unmet_need_only_weak_is_exempt_from_the_two_axis_completion_rule`。
+- 未改：PR D、sponsor_review 契约、source plan / FTO boundary、repository scope、
+  MOD-TGT01 / MOD-TGT05。
+- 验证：`tests/test_tgt08_module_construction_contract.py` 48 → **49 OK**；全量
+  **967**（1 个既有本机 __pycache__ 噪音 FAIL，CI 干净 checkout 上 GREEN）；
+  `git diff --check` clean；YAML 结构合法；03/04/05/07/08 parity 仍全 True。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第二轮复审（1 个 blocker 摘要）。
+
+## 2026-08-29T23:45 EDT — Runtime Migration PR E5 第三轮修订（PR #114 @ e8d409e REQUEST_CHANGES）
+
+- 审核方复审 e8d409e：**上一轮 blocker 已在 item 06/15/16 + drawing 中正确关闭**
+  （WEAK-vs-two-axis precedence）。只剩 1 个极窄残余。
+- Blocker — item 13 machine acceptance 还保留旧的广义 UNKNOWN 规则。item 13 的
+  truth-table 判定句同时写 "unmet-need-only → INCONCLUSIVE / WEAK" 与 "a
+  materially incomplete landscape or an unsearched mandatory axis → INCONCLUSIVE
+  / UNKNOWN"，没有像 item 06/15/16 那样加 "only when a target-specific landscape
+  assessment was attempted"，E6 machine acceptance 仍可对同一 unmet-need-only
+  case 得两个结果。
+- 修（只改 item 13 一句 + regression）：改成 "unmet-need-only WITH NO
+  target-specific competitive/IP read attempted → INCONCLUSIVE / WEAK；
+  a target-specific landscape assessment WAS attempted and a mandatory axis is
+  incomplete, OR there is no admissible evaluable landscape → INCONCLUSIVE /
+  UNKNOWN"（与 item 06/15/16 precedence 一致）；drawing item 13 行同步；
+  `test_unmet_need_only_weak_is_exempt_from_the_two_axis_completion_rule` 扩展
+  一条 item 13 断言。其它全部未动。
+- 验证：`tests/test_tgt08_module_construction_contract.py` **49 OK**；全量 **967**
+  （1 个既有本机 __pycache__ 噪音 FAIL，CI 干净 checkout 上 GREEN）；
+  `git diff --check` clean；YAML 结构合法。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第三轮复审（item 13 parity）。

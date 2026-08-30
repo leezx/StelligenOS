@@ -1,0 +1,690 @@
+version: "0.1.0"
+name: stelligenos-gate-module-construction-contract-tgt08
+description: >-
+  Runtime Migration PR E5. The frozen construction contract for MOD-TGT08, the
+  single primary Evidence Production Module of Gate TGT-08 (Target Opportunity /
+  Competition / IP Whitespace) under ADC_TARGET_GATESET@1.0 /
+  INST-CRC-REFRACTORY-ADC-TARGET-v1. This PR delivers the contract + a
+  human-readable construction drawing
+  (docs/gate_modules/TGT-08_Target_Opportunity_Competition_IP_Whitespace.md) +
+  validation / parity tests + a 17-item acceptance checklist ONLY. It ships no
+  implementation. The Module is built in PR E6, and only after this contract is
+  APPROVED (CURRENT_SYSTEM v5 section 6.4). TGT-08 needs its semantics frozen
+  BEFORE any code because it slides very easily into the old failure mode of
+  fusing a scientific judgement, a legal (freedom-to-operate) judgement and a
+  sponsor (should-we-invest) judgement into one blended score.
+
+migration:
+  pr: runtime_migration_pr_e5
+  scope: tgt08_mod_tgt08_construction_contract_drawing_validation_and_acceptance_checklist_only
+  spec_refs:
+    - docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md (section 6.4 one Gate -> one primary Evidence Production Module + Module 权责边界; section 6.5 shared infrastructure; section 7 the sponsor-relative axis is an independent governance route, OUT_OF_MANDATE / STOP_FOR_SPONSOR are not a KILL; section 16 B group question 23 -> PR E+)
+    - src/contracts/crc_adc_target_gateset.yaml (PR D -- the frozen TGT-08 gate contract, Evidence Ladder, allowed/forbidden inference, unknown behavior and fatal_conditions -- inherited verbatim)
+    - src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml (PR E1 -- the approved 17-item construction template, reused here)
+    - gate_modules/tgt01_adc_modality_precedent/ + gate_modules/tgt05_normal_tissue_fatal_liability/ (PR E2 / E4 -- the runtime boundary genes this contract freezes for MOD-TGT08 -- canonical target identity, Gate-neutral EvidencePackage, exact canonical EP reuse, classification-driving parity, hard identity/provenance failure -> machine reject, non-canonical proposal envelope, a machine-local review-trigger record that is never a machine conclusion)
+    - src/contracts/data_layout/evidence_package.schema.json / assessment.schema.json (PR A shapes the Module must produce)
+    - src/contracts/evidence_reference.yaml (PR C reusable-EvidencePackage reference layer + provenance walk)
+    - src/contracts/gate_contracts.yaml (PR B -- assessment_rule / fatal_gate_policy are GateSet-level refs, not Module logic)
+  boundary: >-
+    design-before-execution. PR E5 delivers the contract, the drawing, the
+    validation / parity tests and the acceptance checklist. It adds NO
+    implementation, NO provider / adapter, NO trial or patent retrieval, NO
+    runtime classifier, NO extractor / normalizer / runner / dry-run executor,
+    NO EvidencePackage or assessment runtime output, NO sponsor decision
+    runtime, NO freedom-to-operate engine, NO external data, NO numeric scoring
+    or ranking score, and NO new scientific or strategic ladder semantics. It
+    does NOT create a generic GateModule framework, an abstract base class, or
+    refactor MOD-TGT01 / MOD-TGT05. MIGRATION_PENDING remains.
+  next: >-
+    runtime_migration_pr_e6 implements MOD-TGT08 as a deterministic
+    Gate-specific core in
+    gate_modules/tgt08_target_opportunity_competition_ip_whitespace/ and raises
+    the TGT-08 gate_binding primary_module_version from "0.0.0" to "1.0.0". It
+    may start only after this contract is APPROVED.
+  order: >-
+    fatal-first + cheap-first: TGT-01 -> TGT-05 -> TGT-08 -> TGT-02 -> TGT-03 ->
+    TGT-04 -> TGT-06 -> TGT-07. TGT-01 calibrated the Module mechanics; TGT-05
+    is the first fatal-first target-liability pruning Gate; TGT-08 is the
+    commercial / strategic opportunity gate and the first Gate whose canonical
+    Assessment can be NEGATIVE.
+
+template_provenance:
+  status: RECONSTRUCTED
+  template_basis: >-
+    approved E1 17-item construction template
+    (src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml), already
+    validated by the merged PR E2 and PR E4 implementations. PR E5 reuses it and
+    does not reinvent the template.
+  blueprint_status: >-
+    Blueprint v1.3 section H2.8 (Gate Module Acceptance Template, 17 items) is
+    referenced by CURRENT_SYSTEM v5 but NOT present in this repository or the
+    File Library.
+  source:
+    - "approved E1 17-item construction template (validated by the merged PR E2 and PR E4 implementations)"
+    - CURRENT_SYSTEM v5 section 6.4 (one Gate -> one primary Module; the Module 权责边界 list) + section 7 (sponsor-relative axis)
+    - ADC_TARGET_GATESET@1.0 / TGT-08 frozen contract (src/contracts/crc_adc_target_gateset.yaml, PR D)
+    - runtime migration PR A-E4 contracts (objects / Gate system / Matrix + provenance / CRC GateSet / MOD-TGT01 / MOD-TGT05)
+  claim:
+    not_claimed_verbatim_from_blueprint: true
+    seventeen_item_template_reused_from_e1: true
+    functionally_complete_and_consistent_with_prior_frozen_decisions: true
+
+kernel_invariant: >-
+  The kernel defines the contract; the Gate Module implements the contract.
+  One-way dependency, exactly like extensions/ and MOD-TGT01 / MOD-TGT05: a
+  future gate_modules/ implementation MAY import kernel objects / Gate identity /
+  contracts; src/ MUST NEVER import gate_modules/. The Module may not modify the
+  Gate id / name / candidate ownership, the gate_question, the Evidence Ladder,
+  the evidence ceiling, or the fatal / unknown / conflict / inference semantics
+  (CURRENT_SYSTEM v5 section 6.4). It may not reason across Gates, lower a
+  measurement requirement, or turn UNKNOWN into PASS / HOLD / KILL.
+  TGT-08-specific: MOD-TGT08 evaluates the EXTERNAL OPPORTUNITY LANDSCAPE. It
+  does not evaluate the target's scientific validity (that is TGT-01 through
+  TGT-07) and it does not decide whether this sponsor should proceed (that is
+  the sponsor-relative axis, v5 section 7). IP whitespace is an evidence-backed
+  landscape signal; it is not freedom to operate.
+
+# The 17-item Gate Module Acceptance checklist (template reused from the
+# approved PR E1 template -- see template_provenance). Each item the future
+# MOD-TGT08 implementation must satisfy before it can be accepted.
+acceptance_checklist:
+
+  "01_gate_identity_and_version":
+    gate_id: TGT-08
+    gate_version: "1.0"
+    canonical_gateset_id: ADC_TARGET_GATESET
+    gateset_version: "1.0"
+    candidate_level: L04
+    candidate_ownership: ADC_TARGET (L04)
+    instantiation_binding: INST-CRC-REFRACTORY-ADC-TARGET-v1
+    rule: the Module inherits this identity; it does not own, rename or redefine it
+
+  "02_primary_module_identity_and_version":
+    primary_module_id: MOD-TGT08
+    deterministic_id_rule: "Data Layout Spec Appendix A: Module = MOD-<GATE without hyphen>"
+    construction_contract_version: "0.1.0"
+    module_implementation_version: "0.0.0"
+    rule: >-
+      exactly one primary Evidence Production Module per Gate. "0.0.0" means
+      declared, not built (the PR D gate_binding slot). PR E6 builds it and
+      raises the version to >= 1.0; PR E5 does not change the binding version.
+      MOD-TGT08 does not own the Gate identity.
+
+  "03_gate_question":
+    verbatim_from: src/contracts/crc_adc_target_gateset.yaml gate_contracts.TGT-08.gate_question
+    text: >-
+      Is there a differentiated opportunity for this target in refractory mCRC:
+      unmet need, competitive landscape, and IP whitespace signals?
+    rule: the Module quotes this verbatim and may not widen or narrow it
+    tgt08_framing:
+      answers: >-
+        whether the current public opportunity landscape -- refractory mCRC
+        unmet need, the target-specific competitive picture, and composition /
+        target IP-whitespace signals -- points toward or away from a
+        differentiated entry for this target
+      does_not_answer:
+        - the target's scientific validity (TGT-01 through TGT-07 own that; a favorable commercial picture never de-risks the science)
+        - a freedom-to-operate opinion or whether any molecule will infringe (this gate surfaces IP-whitespace signals only)
+        - whether a design-around exists or does not exist (no epitope / antibody / linker / payload / DAR is chosen at L04)
+        - whether this sponsor should invest, how, or where (that is the sponsor-relative axis, v5 section 7 -- OUT_OF_MANDATE / STOP_FOR_SPONSOR are not a KILL)
+      negative_is_reachable_and_bounded: >-
+        a complete, audited opportunity landscape can weigh AGAINST a
+        differentiated entry -- so TGT-08 can propose a canonical NEGATIVE
+        Assessment. That NEGATIVE means only "current public opportunity
+        evidence weighs against a differentiated entry for this target in
+        refractory mCRC". It is NOT: a scientifically bad target, a KILL,
+        STOP_FOR_SPONSOR, OUT_OF_MANDATE, an FTO-blocked finding, or "no viable
+        molecule can be designed".
+
+  "04_admissible_evidence_classes":
+    verbatim_from: gate_contracts.TGT-08.evidence_required + evidence_ladder.*.admissible_evidence_classes
+    evidence_required_from_pr_d:
+      - refractory mCRC standard-of-care and outcomes
+      - competitor ADC and other targeted programs against the target (trial registries, regulatory filings, company disclosures, pipeline databases)
+      - patent landscape for the target and for ADC compositions against it
+      - approved or failed programs against the target and the disclosed reasons
+    admissible:
+      - current competitive and clinical landscape for the target in mCRC from trial registries / regulatory sources / company disclosures, together with a composition-level patent-landscape review
+      - pipeline-database competitor summaries for the target
+      - a target-level (not composition-level) patent search
+      - opportunity asserted from indication-level unmet need alone, with no target-specific competitive or IP read
+    not_admissible_into_this_gate:
+      - ADC-modality precedent / addressability evidence (that is TGT-01)
+      - CRC malignant-cell target expression / coverage evidence (TGT-02)
+      - treatment / metastatic persistence evidence (TGT-03)
+      - surface availability / antigen density / localization evidence (TGT-04)
+      - normal-tissue expression / target-mediated toxicity / fatal-liability evidence (TGT-05)
+      - internalization / trafficking evidence (TGT-06)
+      - shedding / soluble-antigen / sink evidence (TGT-07)
+      - a freedom-to-operate opinion, an infringement / validity / enforceability judgement, or a design-around availability conclusion (not admissible into ANY L04 Gate)
+      - sponsor capability / cash runway / risk appetite / company mandate (sponsor-relative axis, not Gate evidence)
+    derived_parity_rule: >-
+      item 04 admissible is the union of the frozen evidence_ladder
+      admissible_evidence_classes; a construction-contract test checks it against
+      evidence_required + the ladder so no commercial evidence class is smuggled
+      in.
+
+  "05_evidence_ladder_and_evidence_ceiling":
+    verbatim_from: gate_contracts.TGT-08.evidence_ladder + evidence_ceiling
+    DIRECT:
+      admissible_evidence_classes:
+        - current competitive and clinical landscape for the target in mCRC from trial registries / regulatory sources / company disclosures, together with a composition-level patent-landscape review
+      ceiling_rule: establishes the current opportunity / competition / IP-whitespace picture
+    INDIRECT_STRONG:
+      admissible_evidence_classes:
+        - pipeline-database competitor summaries for the target
+        - a target-level (not composition-level) patent search
+      ceiling_rule: strong support; primary-source disclosures plus a composition-level review are required for DIRECT
+    WEAK:
+      admissible_evidence_classes:
+        - opportunity asserted from indication-level unmet need alone, with no target-specific competitive or IP read
+      ceiling_rule: no opportunity / whitespace claim; hypothesis only
+    evidence_ceiling: primary-source competitive and regulatory landscape for the target in mCRC plus a composition-level patent-landscape review
+    rule: the Module reproduces this mapping exactly; it does not redefine the grades, add rungs, or exceed the ceiling. A normalized-equality parity test binds this item to the frozen PR D contract.
+
+  "06_direction_interpretation":
+    strength_direction_rule: >-
+      Strength is orthogonal to Direction (Blueprint v1.3). The Module proposes
+      both; it never merges them and never emits a numeric or ranking score.
+      Direction describes the evidence RELATIVE TO THE GATE QUESTION (a
+      differentiated opportunity), not sponsor desirability. TGT-08 is the first
+      Gate whose canonical Assessment can be NEGATIVE.
+    fact_interpretation: >-
+      the future Module places each atomic landscape fact into
+      SUPPORTS_OPPORTUNITY / OPPOSES_OPPORTUNITY / CONTEXTUAL relative to the
+      Gate question. The provider supplies facts only and never a Direction.
+    strength_is_the_weaker_required_axis_ceiling: >-
+      overall Strength is NOT "both axes were searched" -- it is the ceiling of
+      the WEAKER required axis. competitive-axis DIRECT authority AND
+      composition-level-patent-axis DIRECT authority -> overall DIRECT.
+      competitive DIRECT + patent INDIRECT_STRONG -> overall capped at
+      INDIRECT_STRONG. competitive INDIRECT_STRONG + patent DIRECT -> overall
+      capped at INDIRECT_STRONG. competitive INDIRECT_STRONG + patent
+      INDIRECT_STRONG -> overall INDIRECT_STRONG. Two coverage-complete axes are
+      the PRECONDITION for a TARGET-SPECIFIC DIRECT / INDIRECT_STRONG graded
+      opportunity assessment (item 16), not by themselves a DIRECT one. The
+      explicit indication-level unmet-need-only WEAK hypothesis is EXEMPT from
+      the two-axis precondition -- it is precisely the "no target-specific
+      competitive / IP read attempted" state (item 06 precedence:
+      unmet_need_only_vs_incomplete_target_landscape).
+    graded_inconclusive_vs_unknown: >-
+      INCONCLUSIVE / UNKNOWN means the landscape is materially incomplete or
+      there is no admissible evaluable landscape. A GRADED INCONCLUSIVE
+      (INCONCLUSIVE / DIRECT or INCONCLUSIVE / INDIRECT_STRONG) means landscape
+      evidence EXISTS at that authority and is fully audited, but after
+      interpretation it carries no material directional target-specific signal
+      -- neither a material SUPPORTS_OPPORTUNITY nor a material
+      OPPOSES_OPPORTUNITY. The two states are strictly distinct: one is "we
+      could not look", the other is "we looked well and the evidence does not
+      resolve direction". This is why Direction x Strength is orthogonal
+      (Blueprint v1.3) and why PR A allows INCONCLUSIVE with a graded strength +
+      evidence_refs.
+    unmet_need_only_vs_incomplete_target_landscape: >-
+      the two-axis mandatory completion (item 16) is a prerequisite for a
+      TARGET-SPECIFIC DIRECT / INDIRECT_STRONG opportunity assessment, NOT for
+      the frozen unmet-need-only WEAK hypothesis. Precedence: (a)
+      indication-level unmet-need evidence only, with NO target-specific
+      competitive / IP read attempted -> INCONCLUSIVE / WEAK (the frozen PR D
+      WEAK rung -- "hypothesis only"); (b) a target-specific landscape
+      assessment WAS attempted and one mandatory axis is incomplete ->
+      INCONCLUSIVE / UNKNOWN ("Incomplete landscape -> UNKNOWN"). Both PR D
+      statements are preserved -- the WEAK rung and the incomplete-landscape ->
+      UNKNOWN rule are about different situations.
+    frozen_truth_table:
+      note: >-
+        exactly ONE mapping -- E6 has no discretion. "material" means the signal
+        is target-specific and part of a coverage-complete axis (item 16); an
+        indication-level unmet-need-only signal is a WEAK hypothesis and does
+        not participate in a target-specific CONFLICTING. The DIRECT /
+        INDIRECT_STRONG label on each row is the OVERALL rung after
+        strength_is_the_weaker_required_axis_ceiling has been applied.
+      completed_landscape_only_material_opportunity_supporting_signals: POSITIVE / <overall rung>
+      completed_landscape_only_material_opportunity_opposing_signals: NEGATIVE / <overall rung>
+      completed_landscape_both_material_supporting_and_opposing_signals: CONFLICTING / <overall rung>
+      completed_landscape_no_material_directional_signal_direct_authority: INCONCLUSIVE / DIRECT
+      completed_landscape_no_material_directional_signal_indirect_strong_authority: INCONCLUSIVE / INDIRECT_STRONG
+      indication_level_unmet_need_only_no_target_specific_read_attempted: INCONCLUSIVE / WEAK
+      target_specific_landscape_attempted_but_a_mandatory_axis_incomplete_or_no_admissible_evaluable_landscape: INCONCLUSIVE / UNKNOWN
+      never:
+        - refractory mCRC is grim -> this target is a good opportunity
+        - UNKNOWN -> attractive / uncrowded / whitespace
+        - a favorable commercial picture -> TGT-01 through TGT-07 are de-risked
+        - both axes searched -> DIRECT (the overall rung is the weaker required axis ceiling)
+        - a completed landscape with no directional signal -> UNKNOWN (that is a graded INCONCLUSIVE, not UNKNOWN)
+        - unmet-need-only with no target-specific read attempted -> UNKNOWN (that is the frozen WEAK hypothesis, item 06 unmet_need_only_vs_incomplete_target_landscape)
+    NEGATIVE: >-
+      reachable and bounded. NEGATIVE means the current public opportunity
+      evidence weighs against a differentiated entry for this target in
+      refractory mCRC. It is NOT a KILL, NOT STOP_FOR_SPONSOR, NOT
+      OUT_OF_MANDATE, NOT an FTO-blocked finding, NOT "no viable molecule can be
+      designed", and NOT a scientific judgement about the target.
+    CONFLICTING: >-
+      only when materially opportunity-supporting AND materially
+      opportunity-opposing target-specific signals are co-present on a completed
+      axis (e.g. clinical whitespace together with dense composition-level
+      patent congestion). An indication-level unmet-need-only signal never turns
+      a target-specific opposing signal into CONFLICTING -- strong target
+      congestion plus a large unmet need is NEGATIVE at the strong rung, not
+      CONFLICTING.
+    sponsor_variables_excluded: >-
+      sponsor capability, cash runway, risk appetite and company mandate MUST
+      NOT enter the Module's Direction -- they belong to the sponsor axis, not
+      to Gate evidence.
+    absolute_note: Direction is about the external opportunity evidence, not the sponsor and not the science.
+
+  "07_allowed_and_forbidden_inference":
+    verbatim_from: gate_contracts.TGT-08.allowed_inference + forbidden_inference
+    allowed:
+      - the relative attractiveness and crowding of the target opportunity
+      - IP whitespace signals for the target and ADC compositions (dense claim coverage or apparent congestion feeds a NEGATIVE target-opportunity assessment, not a KILL)
+    forbidden:
+      - scientific de-risking (TGT-01 through TGT-07) from a favorable commercial picture
+      - a freedom-to-operate opinion or a "no viable design-around" conclusion (this gate surfaces IP whitespace signals only; a composition-level FTO judgement is not possible at the L04 target stage, before any epitope / antibody / linker / payload / DAR is chosen)
+    also_forbidden_for_the_module:
+      - infringement, claim validity, claim enforceability or legal-clearance judgements
+      - a "this molecule will infringe" or "no design-around exists" conclusion
+      - a "no differentiation path" conclusion (future differentiation may come from a novel epitope, a different antibody, conditional binding, the linker / payload, DAR, the bystander profile, patient selection, a combination or a regimen -- none chosen at L04)
+      - converting a sponsor / mandate / capital constraint into a Gate Direction
+    rule: the Module obeys this boundary verbatim and produces no cross-Gate scientific conclusion, no FTO / legal conclusion, and no sponsor decision. A normalized-equality parity test binds this item to the frozen PR D contract.
+
+  "08_fatal_conditions":
+    verbatim_from: gate_contracts.TGT-08.fatal_conditions
+    potential_fatal_signal:
+      - a dominant, well-protected competitor ADC already approved or in registrational trials for the same target in mCRC with no differentiation path (a commercial / strategic potential fatal signal decided on the sponsor axis per v5 section 7, not a canonical scientific KILL)
+    machine_vs_human_split:
+      machine_may_detect_a_candidate_pattern_when:
+        - the same target
+        - an ADC modality
+        - the same refractory mCRC context
+        - approved OR in a registrational trial
+        - primary-source verified (not a pipeline-database row alone)
+        - composition-level patent congestion evidence is present for the target
+      machine_never_asserts:
+        - the competitor is truly "dominant"
+        - the patent estate is legally "well protected"
+        - there is "no differentiation path"
+        - this sponsor should stop
+    machine_output_is_only_a_potential_pattern: >-
+      the Module may emit at most a machine-local sponsor_review record with
+      status POTENTIAL_SPONSOR_FATAL_PATTERN (see item 12). It NEVER emits a
+      canonical fatal flag, a KILL, STOP_FOR_SPONSOR or OUT_OF_MANDATE. Human /
+      sponsor governance decides the commercial consequence.
+    human_review_reserved:
+      - whether the competitor is strategically dominant
+      - whether the patent estate is legally well protected
+      - whether a credible differentiation path exists
+      - whether this sponsor proceeds
+    rule: >-
+      the Module only recognises and reports this evidence pattern. It never
+      performs a Candidate-level KILL or a sponsor decision. A
+      normalized-equality parity test binds potential_fatal_signal to the frozen
+      PR D contract.
+
+  "09_evidence_source_plan":
+    dominant_evidence_regime_frozen_contract: PUBLIC_PRIMARY
+    current_instantiation_regime: PUBLIC_ONLY
+    experimental_sources: >-
+      none. TGT-08 is a public-evidence landscape gate; its gaps are resolved by
+      public search, external legal review or sponsor governance, never by an
+      experiment.
+    two_axes:
+      competitive_landscape_axis:
+        direct_authority:
+          - trial registries (ClinicalTrials.gov and equivalents)
+          - regulatory filings / approvals
+          - company primary disclosures
+          - primary clinical publications where needed
+        must_cover_at_least:
+          - approved programs against the target
+          - registrational-stage programs against the target
+          - active clinical programs against the target
+          - discontinued / failed programs against the target and the disclosed reasons
+          - same-target ADC programs
+          - relevant same-target non-ADC targeted programs
+          - refractory / mCRC indication relevance for each
+        indirect_strong_only:
+          - pipeline-database competitor summaries (discovery / inventory / reconciliation index -- never the evidence authority)
+      composition_level_patent_axis:
+        direct_authority:
+          - actual patent publications / families / legal-status records for target-directed ADC compositions
+        must_produce:
+          - relevant composition claim families
+          - assignees
+          - family / legal status
+          - declared jurisdiction / search scope
+          - claim-category mapping
+          - apparent congestion / whitespace signals
+        indirect_strong_only:
+          - a target-level (not composition-level) patent search
+        patent_database_authority: >-
+          Lens / PATENTSCOPE / Google Patents / EPO-class tools may discover,
+          search, link families and normalize metadata, but the canonical
+          provenance of a claim fact is the actual patent publication / official
+          status source. Index is not evidence authority (same rule as ADCdb in
+          TGT-01).
+        not_fto: >-
+          a composition-level patent landscape is NOT a freedom-to-operate
+          judgement. MOD-TGT08 must not judge infringement, claim validity,
+          enforceability, legal clearance, definitive design-around availability,
+          "this molecule will infringe" or "no design-around exists".
+    absence_inference_needs_completion_provenance: >-
+      TGT-08 may derive a favorable opportunity signal from "no competition
+      found" ONLY when a complete audited search returned no qualifying
+      competitor -- never from records == [] alone. "no patent found" is not
+      "patent whitespace". The future Module must carry module-local typed
+      completion state, conceptually a CompetitiveLandscapeCompletion and a
+      PatentLandscapeCompletion, each pinning as_of date, search scope, sources
+      searched, context / target, unresolved items and a completion status.
+      These are run-level machine records, NOT a seventh core object.
+    no_universal_threshold: >-
+      no competitor count cutoff, no patent-family count cutoff, no claim-count
+      cutoff, no ranking score. Any threshold that has not been through
+      calibration is forbidden in this PR.
+    connect_provider_in_this_pr: false
+    shared_infrastructure_note: >-
+      trial / regulatory / patent retrieval, entity resolution, the provenance
+      ledger and evidence serialization are shared infrastructure
+      (CURRENT_SYSTEM v5 section 6.5). A future Module reuses them; it does not
+      re-implement them per Gate.
+
+  "10_input_contract":
+    required_inputs:
+      - candidate_id (CAND-L04-nnnnnn) and the candidate's CANONICAL target identity (the single authoritative target -- inherited from the MOD-TGT01 / PR E2 gene; no separate drift-prone target argument)
+      - instantiation_id (INST-CRC-REFRACTORY-ADC-TARGET-v1) plus its context_id / context_version
+      - the frozen TGT-08 gate_contract_ref and evidence_ladder_ref
+      - the refractory mCRC context (indication + treatment state)
+      - run context (run_id, evidence_regime = PUBLIC_ONLY)
+      - landscape_as_of (the date the landscape is asserted current as of)
+      - the retrieval / patent search scope and declared jurisdictions
+      - existing evidence_refs for this (candidate, gate), if any
+    forbidden: >-
+      any implicit default context. The Module must fail rather than assume an
+      indication, a landscape_as_of date, a search scope, or an evidence regime
+      not supplied by the Instantiation. TGT-08 is time-dependent: a landscape
+      with no as_of date is not admissible.
+
+  "11_evidencepackage_output_contract":
+    each_package:
+      - is atomic and Gate-NEUTRAL -- one neutral empirical landscape fact, no grade, no direction, no TGT-08 opportunity conclusion stamped onto it
+      - carries full provenance from the resolved canonical SourceIndex record (SRC-nnnnnnnn, source_type, source_identifier, locator, retrieved_at)
+      - carries candidate_refs and a measurement / claim block
+      - carries interpretation_boundary (observation-level directly_supports / does_not_support / limitations / a neutral observation-level evidence_ceiling)
+      - carries derivation (module_run_id, code_commit)
+      - a competitive-landscape observation states a fact such as "PROGRAM_X is in a registrational trial in mCRC against this target"; a patent observation states a fact such as "PATENT_FAMILY_X contains a composition claim of category Y with legal status Z"
+    rules:
+      - a package NEVER carries "TGT-08 NEGATIVE patent evidence", "FTO blocked", "bad target", "no differentiation path" or any Gate-relative conclusion -- that lives only on the Assessment / proposal layer
+      - the Module references an existing EvidencePackage by evidence_id -- it reuses the EXACT canonical package, never copies or re-creates one (PR C / E1 item 11; PR E2 / E4 gene)
+      - on reuse, every classification-driving observation field (target identity, evidence class, program / family identity, indication context, registrational status, claim category, legal status, ...) must be present AND equal on the canonical package's study_context; a missing or drifted field is a HARD identity integrity failure (PR E2 / E4 gene)
+      - forward status / superseded_by never appear on evidence.json (PR C -- they live only on the EvidenceIndexEntry)
+    shape_ref: src/contracts/data_layout/evidence_package.schema.json + src/objects/decision_model.py EvidencePackage (PR A)
+
+  "12_assessment_proposal_envelope_contract":
+    the_module_emits: >-
+      a non-canonical, module-local assessment PROPOSAL ENVELOPE. It is NOT a
+      CandidateGateAssessment. Per PR A, a CandidateGateAssessment is the
+      canonical matrix cell and CANONICAL_REVIEW_STATUS is HUMAN_APPROVED --
+      constructing that object with review.status != HUMAN_APPROVED is rejected.
+    the_proposal_envelope_carries:
+      identity_pins_for_deterministic_canonicalisation:
+        - candidate_id (CAND-L04-nnnnnn)
+        - instantiation_id (INST-CRC-REFRACTORY-ADC-TARGET-v1)
+        - context_id
+        - context_version
+        - gateset_id (ADC_TARGET_GATESET)
+        - gateset_version
+        - gate_id (TGT-08)
+        - gate_version
+      scientific_fields:
+        - proposed_direction + proposed_strength (POSITIVE / NEGATIVE / CONFLICTING / INCONCLUSIVE x DIRECT / INDIRECT_STRONG / WEAK / UNKNOWN; never a Decision, never a numeric or ranking score)
+        - evidence_refs [{evidence_id, role}] referencing the EvidencePackages above (role in SUPPORTING / CONTRADICTING / CONTEXTUAL, relative to the Gate question)
+        - aggregation_rationale, critical_unknowns, evidence_ceiling
+      machine_record:
+        - the machine acceptance record (item 13)
+    sponsor_review:
+      what_it_is: >-
+        a NON-CANONICAL, module-local, machine-generated human-review aid on the
+        run result -- NOT a field of the proposal envelope, NOT a
+        CandidateGateAssessment field, NOT a new core object, NOT a Decision, NOT
+        a Gate fatal flag, NOT a KILL, NOT STOP_FOR_SPONSOR, NOT OUT_OF_MANDATE.
+        It is a distinct record from TGT-05's fatal_review and is routed to
+        sponsor governance, not to the scientific fatal_gate_policy.
+      fields:
+        - required (bool)
+        - status (POTENTIAL_SPONSOR_FATAL_PATTERN when required; otherwise empty)
+        - evidence_ids ([EP-nnnnnnnn] of the contributing competitor + patent observations)
+        - competitor_program_ids ([the same-target ADC programs approved / in a registrational trial in mCRC])
+        - patent_family_ids ([the composition-level patent families showing congestion])
+        - landscape_as_of (the pinned as_of date)
+        - patent_scope (the declared patent search scope / jurisdictions)
+      machine_may_emit: POTENTIAL_SPONSOR_FATAL_PATTERN
+      machine_never_emits:
+        - a canonical fatal flag
+        - KILL
+        - STOP_FOR_SPONSOR
+        - OUT_OF_MANDATE
+      required_is_true_iff: >-
+        the machine has a same-target ADC program that is approved OR in a
+        registrational trial in refractory mCRC, primary-source verified, with
+        composition-level patent congestion evidence present. Otherwise required
+        = false.
+      human_review_decides: >-
+        whether the competitor is strategically dominant, whether the patent
+        estate is legally well protected, whether a credible differentiation
+        path exists, and whether this sponsor proceeds. Only sponsor governance
+        acts on the commercial consequence. The module never performs a KILL or
+        a sponsor decision.
+    the_proposal_envelope_never_carries:
+      - assessment_id / assessment_version (human canonicalisation assigns them)
+      - review.status / review.reviewer / review.reviewed_at (human canonicalisation only)
+      - a freedom-to-operate opinion or an infringement / validity conclusion
+      - a "no differentiation path" conclusion
+      - a fatal flag, a KILL, STOP_FOR_SPONSOR or OUT_OF_MANDATE (the potential-sponsor-fatal-pattern signal lives in the module-local sponsor_review record, not the proposal envelope)
+      - a numeric or ranking score
+    rules:
+      - a canonical CandidateGateAssessment (review.status = HUMAN_APPROVED) is constructed only after human approval (item 14), by the review surface, never by the Module
+      - the proposed_direction x proposed_strength combination is checked against the frozen item-06 truth table and the PR A direction x strength matrix
+      - PR E5 only DEFINES this envelope's field list and the sponsor_review record's field list; it adds no new core object and no runtime implementation
+    shape_ref: >-
+      src/contracts/data_layout/assessment.schema.json is the canonicalisation
+      TARGET, not a machine-proposal schema. The proposal envelope carries that
+      schema's identity pins and scientific fields for a deterministic
+      canonicalisation and omits assessment_id / assessment_version / review.
+
+  "13_machine_acceptance_criteria":
+    a_proposal_envelope_and_its_packages_are_machine_acceptable_iff:
+      - every EvidencePackage validates against evidence_package.schema.json (shape / ids / nested blocks / date patterns)
+      - every provenance.source_id resolves to a canonical SourceIndex record whose metadata matches, and every evidence_ref.evidence_id resolves to a canonical EvidencePackage (PR C check_* functions; PR E2 / E4 gene)
+      - every admissible evidence class used is in item 04's admissible list, and no item-04 not_admissible class is present
+      - the proposed_strength does not exceed the ceiling of the highest ladder rung actually met (item 05) -- pipeline-database or target-level-patent evidence alone caps at INDIRECT_STRONG
+      - the overall proposed_strength equals the WEAKER required axis ceiling (item 06 strength_is_the_weaker_required_axis_ceiling) -- "both axes searched" alone never yields DIRECT
+      - proposed_direction x proposed_strength is exactly the item-06 frozen truth table result for the evidence actually held, with the same item-06 precedence between the WEAK hypothesis and an incomplete target-specific landscape (unmet-need-only WITH NO target-specific competitive / IP read attempted -> INCONCLUSIVE / WEAK; a coverage-complete landscape with only supporting or only opposing material target-specific signals -> POSITIVE or NEGATIVE at the overall rung; both -> CONFLICTING; a coverage-complete landscape with NO material directional signal -> a GRADED INCONCLUSIVE at the overall rung (INCONCLUSIVE / DIRECT or INCONCLUSIVE / INDIRECT_STRONG), never INCONCLUSIVE / UNKNOWN; a target-specific landscape assessment WAS attempted and a mandatory axis is incomplete, OR there is no admissible evaluable landscape -> INCONCLUSIVE / UNKNOWN)
+      - a graded INCONCLUSIVE carries non-empty evidence_refs (the CONTEXTUAL landscape packages); INCONCLUSIVE / UNKNOWN carries no evidence_refs
+      - the item-16 two-axis mandatory completion conditions are satisfied for the rung proposed (an overall DIRECT requires BOTH the primary-source competitive axis AND the composition-level patent review complete AT DIRECT AUTHORITY)
+      - any absence-based whitespace / no-competitor claim is backed by an explicit completed-search provenance record (item 09) -- never by records == []
+      - if the module-local sponsor_review record has required = true, its status is POTENTIAL_SPONSOR_FATAL_PATTERN (never a canonical fatal flag / KILL / STOP_FOR_SPONSOR / OUT_OF_MANDATE) and it carries the contributing competitor_program_ids, patent_family_ids, landscape_as_of and patent_scope
+      - dedup -- one SRC -> many EP is allowed; the same (source, claim) is not duplicated across packages
+      - all required fields present; no numeric or ranking score anywhere
+      - no freedom-to-operate / infringement / validity / "no design-around" / "no differentiation path" wording appears anywhere in the proposal or the sponsor_review record
+      - no TGT-01 through TGT-07 scientific inference and no sponsor Decision / KILL / STOP_FOR_SPONSOR / OUT_OF_MANDATE appears anywhere
+    on_failure: >-
+      the run is rejected with a machine reason and nothing enters the canonical
+      record. A HARD identity / provenance integrity failure (candidate <->
+      target misbinding, a claimed-resolved source missing from the canonical
+      SourceIndex, a canonical-source metadata conflict, an incompatible
+      canonical EvidencePackage, an absence claim with no completion provenance)
+      rejects the WHOLE run -- it is never degraded to an accepted UNKNOWN
+      (PR E2 / E4 gene). UNKNOWN from a genuinely incomplete landscape is NOT an
+      integrity failure.
+
+  "14_human_acceptance_and_review_surface":
+    the_human_sees:
+      - the proposed_direction + proposed_strength and the aggregation_rationale
+      - each EvidencePackage's claim, source and interpretation_boundary (drill-down)
+      - the ladder rung each package maps to, and any critical_unknowns
+      - the two-axis completion state (CompetitiveLandscapeCompletion, PatentLandscapeCompletion) with as_of date, search scope, sources searched and unresolved items
+      - the module-local sponsor_review record (item 12) -- status POTENTIAL_SPONSOR_FATAL_PATTERN, the contributing evidence_ids / competitor_program_ids / patent_family_ids / landscape_as_of / patent_scope
+      - the machine acceptance record (item 13 pass / fail detail)
+    human_only_judgements:
+      - whether a competitor's indication / context genuinely matches refractory mCRC
+      - how to interpret a registrational-stage or discontinued status
+      - whether the competition is strategically material
+      - whether a patent family is genuinely relevant and whether apparent claim congestion is actually meaningful
+      - whether the opportunity-support / opportunity-opposition aggregation is reasonable
+      - final approval -- on HUMAN_APPROVED the review surface constructs the canonical CandidateGateAssessment (review.status = HUMAN_APPROVED) from the proposal envelope; it enters ASSESSMENTS/<cand>/vNNN.json and the MatrixView rebuilds (PR C). The Module never constructs that object.
+    sponsor_only_judgements:
+      - whether the competitor is truly dominant
+      - whether the patent estate is well protected
+      - whether a credible differentiation path exists
+      - whether this sponsor proceeds
+    complexity_note: >-
+      TGT-08 mixes commercial, clinical and IP reading. The Module surfaces the
+      landscape facts and a candidate sponsor-fatal pattern; the strategic and
+      legal calls are human / sponsor calls it does not make.
+
+  "15_failure_unknown_and_conflict_behavior":
+    retrieval_failure: report a machine failure reason; do not emit a partial proposal envelope as if complete
+    direction_and_strength_follow_the_item_06_frozen_truth_table: >-
+      an indication-level unmet-need-only signal -> INCONCLUSIVE / WEAK (never
+      "good opportunity"); a coverage-complete landscape with only material
+      target-specific opportunity-supporting signals -> POSITIVE, with only
+      material opportunity-opposing signals -> NEGATIVE, with both ->
+      CONFLICTING, at the OVERALL rung (the weaker required axis ceiling, item
+      06 strength_is_the_weaker_required_axis_ceiling).
+    completed_landscape_with_no_material_directional_signal: >-
+      propose a GRADED INCONCLUSIVE -- INCONCLUSIVE / DIRECT when both required
+      axes reach DIRECT authority, INCONCLUSIVE / INDIRECT_STRONG otherwise --
+      NOT INCONCLUSIVE / UNKNOWN. The landscape was audited and carries a valid
+      evidence grade; it simply does not resolve a positive / negative
+      opportunity direction. The evidence_refs are non-empty (the CONTEXTUAL
+      landscape packages).
+    incomplete_landscape: >-
+      propose INCONCLUSIVE / UNKNOWN. Verbatim from the frozen contract:
+      "Incomplete landscape -> UNKNOWN." This is strictly the "we could not
+      look" state -- a target-specific landscape assessment WAS attempted and
+      the landscape is materially incomplete, or a mandatory axis was started
+      but not finished, or there is no admissible evaluable landscape. UNKNOWN is
+      never converted to attractive / uncrowded / whitespace, and it is NEVER
+      used for a completed landscape that merely lacks a directional signal
+      (that is a graded INCONCLUSIVE above), and NEVER for the explicit
+      unmet-need-only WEAK hypothesis (item 06
+      unmet_need_only_vs_incomplete_target_landscape).
+    weak_unmet_need_only: >-
+      propose INCONCLUSIVE / WEAK when there is only an indication-level
+      unmet-need signal and NO target-specific competitive / IP read was
+      attempted -- the frozen PR D WEAK "hypothesis only" rung. It does not
+      participate in a target-specific CONFLICTING and is EXEMPT from the
+      two-axis mandatory completion (item 16) -- an unsearched target-specific
+      axis makes it UNKNOWN only when a target-specific assessment was actually
+      attempted.
+    conflicting_evidence: >-
+      propose CONFLICTING only with materially opportunity-supporting AND
+      materially opportunity-opposing target-specific signals on a completed
+      axis, with non-empty key_supporting_evidence and key_contradicting_evidence
+    negative_is_not_a_kill: >-
+      a NEGATIVE target-opportunity assessment, including one driven by dense
+      composition-level claim coverage, is a canonical Gate Assessment. It is
+      never a KILL, STOP_FOR_SPONSOR or OUT_OF_MANDATE, and it never de-risks or
+      re-risks TGT-01 through TGT-07.
+    resolution_kinds: >-
+      TGT-08 critical_unknowns use PUBLIC_RESOLVABLE, CURRENTLY_UNRESOLVABLE, or
+      "external legal / sponsor review required". TGT-08 does NOT use
+      EXPERIMENT_REQUIRED -- freedom to operate is not an experiment.
+    absolute_rules:
+      - UNKNOWN is never silently converted to PASS / HOLD / KILL (CURRENT_SYSTEM v5 section 6.4)
+      - UNKNOWN from an incomplete landscape is NOT an integrity failure (PR E2 / E4 gene)
+      - an absence-based whitespace claim without completion provenance IS an integrity failure
+
+  "16_stop_rule":
+    principle: >-
+      TGT-08 is time-dependent and two-axis. The stop is not "found one
+      competitor, stop" -- both the competitive-landscape axis and the
+      composition-level patent axis must reach coverage completeness, and the
+      landscape must be pinned to a landscape_as_of date.
+    two_axis_mandatory_coverage:
+      before_a_complete_landscape_assessment_both_must_complete:
+        - the competitive-landscape coverage (item 09 competitive_landscape_axis must_cover_at_least)
+        - the composition-level patent-landscape coverage (item 09 composition_level_patent_axis must_produce)
+      coverage_complete_is_not_direct_quality: >-
+        two coverage-complete axes are the PRECONDITION for a TARGET-SPECIFIC
+        DIRECT / INDIRECT_STRONG graded opportunity assessment, NOT by
+        themselves a DIRECT one, and NOT a precondition for the frozen
+        unmet-need-only WEAK hypothesis (item 06
+        unmet_need_only_vs_incomplete_target_landscape). A complete
+        pipeline-database inventory plus a complete target-level patent search
+        can be coverage-complete, but the authority of each axis is only
+        INDIRECT_STRONG -- the OVERALL rung is the weaker required axis ceiling
+        (item 06 strength_is_the_weaker_required_axis_ceiling), so this pair can
+        still produce POSITIVE / NEGATIVE / CONFLICTING / graded INCONCLUSIVE at
+        INDIRECT_STRONG, not UNKNOWN
+      one_axis_not_done: >-
+        if a target-specific landscape assessment WAS attempted and one axis is
+        not searched (competition searched, patents not searched, or vice
+        versa) the landscape is incomplete -> INCONCLUSIVE / UNKNOWN; a half
+        landscape cannot yield a target-opportunity judgement. EXCEPTION: the
+        explicit indication-level unmet-need-only WEAK hypothesis -- no
+        target-specific competitive / IP read attempted -> INCONCLUSIVE / WEAK
+        (item 06 unmet_need_only_vs_incomplete_target_landscape), not UNKNOWN.
+    direct_requires: >-
+      BOTH required axes complete AT DIRECT AUTHORITY -- the primary-source
+      competitive axis at DIRECT authority AND the composition-level patent
+      review at DIRECT authority. If both axes are coverage-complete but either
+      reaches only INDIRECT_STRONG authority, the overall assessment is capped at
+      INDIRECT_STRONG (item 06 strength_is_the_weaker_required_axis_ceiling).
+    sponsor_review_provisional_stop:
+      when: the machine has found an approved / registrational same-target mCRC ADC together with a strong composition-level congestion pattern
+      then:
+        - set the module-local sponsor_review record required = true, status = POTENTIAL_SPONSOR_FATAL_PATTERN
+        - provisionally stop chasing weaker unmet-need / secondary pipeline evidence
+        - hand off to the human / sponsor review surface
+      but: the two core axes' completeness still must be satisfied -- the search does not end at the first strong competitor (it may not be dominant, the patent may be expired, key claims may not cover the ADC composition, another entrant may have failed, or a clear differentiation whitespace may exist)
+    normal_stop_after_mandatory_coverage:
+      - the evidence ceiling is reached
+      - OR additional public evidence cannot change Direction / Strength
+      - OR the enumerated public source space is exhausted
+      - OR the sponsor_review handoff is triggered after both core axes complete
+    fto_is_not_an_experiment: >-
+      a residual composition-level IP question is never written as
+      EXPERIMENT_REQUIRED; it is PUBLIC_RESOLVABLE, CURRENTLY_UNRESOLVABLE, or
+      routed to external legal / sponsor review
+    rule: bounds the "infinite landscape gathering" failure mode without ever treating a single strong competitor as a completed opportunity assessment
+
+  "17_downstream_consumer_and_handoff":
+    the_module_hands_off:
+      - a set of EvidencePackages and one assessment proposal envelope, to the human review surface (item 14)
+      - separately, a module-local sponsor_review record, to sponsor governance
+    once_human_approved_the_resulting_canonical_CandidateGateAssessment_is_consumed_by:
+      - the MatrixView cell for (this candidate_id, TGT-08) (PR C)
+      - the ADC_TARGET_GATESET decision layer (decision_rule / fatal_gate_policy / required_gate_policy / unknown_policy) which turns the eight TGT assessments into a Candidate-level Decision (PR B)
+      - the next Gate in the fatal-first order (TGT-02) as context only -- never as a substitute for its own measurement
+    the_sponsor_review_record_is_routed_to:
+      - external sponsor governance (e.g. SearchSpaceAdmission / ProgramCommitmentReview) on the sponsor-relative axis (v5 section 7)
+    this_module_does_not:
+      - construct a CandidateGateAssessment or emit a HUMAN_APPROVED record
+      - produce a Candidate-level Decision, a KILL, STOP_FOR_SPONSOR or OUT_OF_MANDATE
+      - route the sponsor_review record through the scientific fatal_gate_policy or turn it into a canonical scientific fatal
+      - make a freedom-to-operate, infringement, validity or design-around conclusion
+      - make a "no differentiation path" conclusion
+      - de-risk or re-risk any of TGT-01 through TGT-07 from a favorable or unfavorable commercial picture
+      - let a sponsor / mandate / capital variable enter the Gate Direction
+      - write to any other Gate's evidence index or assessment
+      - modify the Matrix (a rebuildable projection; PR C)
+
+deferred_to_pr_e6_plus:
+  - the new top-level gate_modules/tgt08_target_opportunity_competition_ip_whitespace/ implementation (providers, adapters, trial / patent retrieval, extractor, normalizer, runner, dry-run executor, EvidencePackage writer, assessment proposer, sponsor_review detector) and the primary_module_version bump to "1.0.0"
+  - connecting any retrieval provider, patent database or dataset
+  - the other five TGT primary Modules (TGT-02 -> TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)
+
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  implementation_code_in_this_pr: forbidden
+  provider_or_adapter_in_this_pr: forbidden
+  trial_or_patent_retrieval_in_this_pr: forbidden
+  numeric_or_ranking_scoring: forbidden
+  freedom_to_operate_or_legal_logic_in_this_pr: forbidden
+  sponsor_decision_runtime_in_this_pr: forbidden
+  new_scientific_or_strategic_ladder_semantics_in_this_pr: forbidden
+  generic_gatemodule_framework_or_base_class_in_this_pr: forbidden
+  modifies_mod_tgt01: forbidden
+  modifies_mod_tgt05: forbidden
+  migration_pending: remains
