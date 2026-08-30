@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import re
 
-from .aggregate import AggregationOutcome
+from .aggregate import AggregationOutcome, audit_snapshot_mismatch
 from .contracts import (
     LEGAL_DIRECTION_STRENGTH_PAIRS,
     AssessmentProposalEnvelope,
@@ -158,6 +158,23 @@ def evaluate(
         f"EvidencePackages actually emitted {sorted(emitted_qualifying_families)}",
     )
 
+    # --- completion audit snapshot parity (E6 round-1 blocker 1) --------
+    audit_snapshot_ok = True
+    audit_snapshot_why: list[str] = []
+    for e in emitted:
+        rec = e.classified.record
+        if rec.observation_kind != "SEARCH_COMPLETION_AUDIT":
+            continue
+        why = audit_snapshot_mismatch(rec, competitive, patent)
+        if why:
+            audit_snapshot_ok = False
+            audit_snapshot_why.append(f"{rec.observation_id}: {why}")
+    record(
+        "completion_audit_evidence_snapshots_its_typed_completion",
+        audit_snapshot_ok,
+        "; ".join(audit_snapshot_why),
+    )
+
     # --- absence provenance (E6-4) -----------------------------------
     def _has_audit_ep(axis: str, obs_id: str) -> bool:
         return any(
@@ -273,6 +290,18 @@ def evaluate(
         "sponsor_review_is_at_most_a_potential_pattern",
         sponsor_review.status in ("", "POTENTIAL_SPONSOR_FATAL_PATTERN"),
         "sponsor_review.status asserts more than a machine-detectable potential pattern",
+    )
+    # E6 round-1 blocker 2: a sponsor_review trigger is a provisional-stop
+    # handoff (E5 item 16) -- it is only actionable on a COMPLETED two-axis
+    # landscape. A pattern found while a core axis is still incomplete (the run
+    # would otherwise be an accepted INCONCLUSIVE / UNKNOWN) must NOT surface as
+    # an actionable trigger; the run fails machine acceptance instead.
+    record(
+        "sponsor_review_requires_both_core_landscape_axes_complete",
+        (not sponsor_review.required)
+        or (competitive.coverage_complete and patent.coverage_complete),
+        "a sponsor_review trigger was raised on an incomplete two-axis landscape "
+        "(E5 item 16: the provisional stop still requires both core axes complete)",
     )
     record(
         "sponsor_review_is_not_a_proposal_field",

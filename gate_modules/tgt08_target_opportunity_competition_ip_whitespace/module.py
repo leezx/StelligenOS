@@ -112,6 +112,19 @@ def run(
         if c.rejection_severity == "HARD"
     ]
 
+    # E6 round-1 blocker 1: a SEARCH_COMPLETION_AUDIT EvidencePackage that names
+    # a completion's audit_observation_id must snapshot that typed completion
+    # exactly. Any drift is a HARD run-level integrity failure -- never a
+    # trustworthy completion certificate.
+    for e in emitted:
+        record = e.classified.record
+        if record.observation_kind != "SEARCH_COMPLETION_AUDIT":
+            continue
+        why = _aggregate.audit_snapshot_mismatch(record, competitive, patent)
+        if why:
+            hard_integrity_failures.append((record.observation_id, why))
+            rejected_records.append((record.observation_id, why))
+
     checks, reasons = acceptance.evaluate(
         emitted=emitted,
         outcome=outcome,

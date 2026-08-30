@@ -66,7 +66,15 @@ _KEYS_BY_KIND: dict[str, tuple[str, ...]] = {
         "claim_category", "legal_status", "composition_level",
     ),
     "UNMET_NEED_CONTEXT": (),
-    "SEARCH_COMPLETION_AUDIT": (),
+    # E6 round-1 blocker 1: the audit EP is a completion certificate, so every
+    # completion-driving snapshot field is classification-driving on reuse.
+    "SEARCH_COMPLETION_AUDIT": (
+        "audit_search_scope", "audit_sources_searched", "audit_coverage_complete",
+        "audit_unresolved_items", "audit_primary_source_landscape_complete",
+        "audit_pipeline_inventory_complete", "audit_qualifying_program_ids",
+        "audit_jurisdictions", "audit_composition_level_review_complete",
+        "audit_target_level_search_complete", "audit_qualifying_patent_family_ids",
+    ),
 }
 
 
@@ -263,6 +271,17 @@ def build_evidence_packages(
             "claim_category": record.claim_category,
             "legal_status": record.legal_status,
             "composition_level": record.composition_level,
+            "audit_search_scope": record.audit_search_scope,
+            "audit_sources_searched": record.audit_sources_searched,
+            "audit_coverage_complete": record.audit_coverage_complete,
+            "audit_unresolved_items": record.audit_unresolved_items,
+            "audit_primary_source_landscape_complete": record.audit_primary_source_landscape_complete,
+            "audit_pipeline_inventory_complete": record.audit_pipeline_inventory_complete,
+            "audit_qualifying_program_ids": record.audit_qualifying_program_ids,
+            "audit_jurisdictions": record.audit_jurisdictions,
+            "audit_composition_level_review_complete": record.audit_composition_level_review_complete,
+            "audit_target_level_search_complete": record.audit_target_level_search_complete,
+            "audit_qualifying_patent_family_ids": record.audit_qualifying_patent_family_ids,
         }
         package = EvidencePackage(
             evidence_id=evidence_id,

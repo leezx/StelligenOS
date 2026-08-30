@@ -97,14 +97,74 @@ deferred:
   external_workspace_calibration_run: "after E6 merge -- a real primary-source competitive + composition-level patent landscape smoke run in the external workspace"
   other_five_tgt_modules: "PR E-series+ (TGT-02 -> TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)"
 
-chatgpt_review: PENDING
+chatgpt_review: REQUEST_CHANGES   # round 1 -- 2 blockers; revision pushed, re-review pending
 approved_tip: null
 merge_commit: null
-review_rounds: null
-test_count_before_e6: 967        # at PR E5 approval
-test_count_at_submission: 1042   # local full suite (test_tgt08_module.py 69); the single local FAIL is a pre-existing __pycache__ scan in test_assetgenos_modules (clean on a fresh CI checkout)
+review_rounds: 1
+test_count_before_e6: 967         # at PR E5 approval
+test_count_at_submission: 1042    # local full suite (test_tgt08_module.py 69)
+test_count_after_round_1: 1053    # test_tgt08_module.py 80 (+11 blocker regressions); the single local FAIL is a pre-existing __pycache__ scan in test_assetgenos_modules (clean on a fresh CI checkout)
 approval_record_pr: null
-next_authorized_step: null       # real provider / external calibration, or the next TGT construction drawing -- each needs its own go-ahead
+next_authorized_step: null        # real provider / external calibration, or the next TGT construction drawing -- each needs its own go-ahead
+
+review_round_1:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "d1c2da4"
+  accepted: >-
+    standalone package; no shared framework / base class; binding builds only
+    TGT-08; the weaker-axis truth table; the WEAK two-axis exemption; graded
+    INCONCLUSIVE vs INCONCLUSIVE / UNKNOWN; NEGATIVE reachable and not a KILL /
+    sponsor stop; competitive / patent classification; Gate-neutral EP; the
+    exact-canonical-reuse mainline; the HARD source / identity integrity gate;
+    the strict sponsor pattern detection criteria; sponsor_review surfaced only
+    on an accepted run; no live IO / FTO / Decision runtime
+  scope: >-
+    2 evidence-integrity / sponsor-handoff blockers -- both "the machine must
+    not gain authority from a bare provider boolean". The frozen E5 truth table,
+    the sponsor detector criteria, TGT-08 science, the binding scope and
+    MOD-TGT01 / MOD-TGT05 are all unchanged.
+  fixes:
+    blocker_1_search_completion_audit_must_snapshot_its_typed_completion: >-
+      the SEARCH_COMPLETION_AUDIT observation carried no structured mirror of
+      the typed completion (scope / sources / authority flags / qualifying set),
+      aggregate._audit_ep_for() matched on observation_id + axis only, and
+      _KEYS_BY_KIND["SEARCH_COMPLETION_AUDIT"] was () -- so a provider could pair
+      an arbitrary "audit" record with a DIRECT / zero-hit completion and fake
+      whitespace (headline invariant 1 bypass). Added an axis-specific factual
+      snapshot to NormalizedOpportunityRecord for the audit kind
+      (audit_search_scope / audit_sources_searched / audit_coverage_complete /
+      audit_unresolved_items; competitive: audit_primary_source_landscape_complete
+      / audit_pipeline_inventory_complete / audit_qualifying_program_ids; patent:
+      audit_jurisdictions / audit_composition_level_review_complete /
+      audit_target_level_search_complete / audit_qualifying_patent_family_ids).
+      New aggregate.audit_snapshot_mismatch() HARD-checks the snapshot == the
+      typed completion; module.run() adds any drift to hard_integrity_failures
+      (whole-run reject, proposal = None, never an accepted UNKNOWN);
+      acceptance adds completion_audit_evidence_snapshots_its_typed_completion;
+      evidence._KEYS_BY_KIND["SEARCH_COMPLETION_AUDIT"] now lists every snapshot
+      field so a reused canonical audit EP with a drifted / missing snapshot is
+      a HARD integrity failure. NOT mandating an audit EP for every
+      coverage-complete completion -- an audited zero-qualifying landscape with a
+      snapshot-consistent audit EP is by definition a material audited absence
+      (POSITIVE per the frozen truth table); the "completed landscape, no
+      material directional signal -> INCONCLUSIVE / graded" row stays reachable
+      only when no such clean certificate is present (audit EP absent ->
+      conservative graded INCONCLUSIVE, never whitespace). +7 regressions.
+    blocker_2_sponsor_review_requires_both_core_axes_complete: >-
+      sponsor_review.detect() never looked at the two completion states and
+      acceptance had no "sponsor_review.required => both core axes complete"
+      check, so a valid pattern found on an incomplete landscape (the run
+      otherwise an accepted INCONCLUSIVE / UNKNOWN) surfaced as an actionable
+      trigger, violating E5 item 16's provisional-stop condition. acceptance
+      adds sponsor_review_requires_both_core_landscape_axes_complete
+      (sponsor_review.required => competitive.coverage_complete AND
+      patent.coverage_complete); a fail rejects the run and module.run() then
+      surfaces sponsor_review as none(). The raw detector still finds the
+      candidate pattern internally; it is simply not an actionable handoff.
+      NOT requiring both axes at DIRECT -- E5 froze completeness, not a
+      DIRECT-overall precondition for the trigger. +3 regressions.
+  tests_at_round_1: 80   # test_tgt08_module.py (was 69)
+  full_suite_at_round_1: 1053
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt08_module.py' -v

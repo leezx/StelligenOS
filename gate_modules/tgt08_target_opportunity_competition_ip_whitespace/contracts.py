@@ -311,6 +311,24 @@ class NormalizedOpportunityRecord:
     claim_category: str = ""
     legal_status: str = ""
     composition_level: bool = False
+    # SEARCH_COMPLETION_AUDIT-specific: a structured, drift-checkable mirror of
+    # the typed completion state this audit certifies (E6 round-1 blocker 1). An
+    # absence inference and a completion's derived axis authority ceiling are
+    # only trustworthy when this snapshot == the completion; the module
+    # HARD-rejects the run on any drift and re-verifies it on canonical reuse.
+    audit_search_scope: str = ""
+    audit_sources_searched: tuple[str, ...] = ()
+    audit_coverage_complete: bool = False
+    audit_unresolved_items: tuple[str, ...] = ()
+    # competitive audit axis
+    audit_primary_source_landscape_complete: bool = False
+    audit_pipeline_inventory_complete: bool = False
+    audit_qualifying_program_ids: tuple[str, ...] = ()
+    # patent audit axis
+    audit_jurisdictions: tuple[str, ...] = ()
+    audit_composition_level_review_complete: bool = False
+    audit_target_level_search_complete: bool = False
+    audit_qualifying_patent_family_ids: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         _pattern(self.observation_id, _OBS_ID, "observation_id")
@@ -369,6 +387,60 @@ class NormalizedOpportunityRecord:
                 raise ValueError(
                     "a SEARCH_COMPLETION_AUDIT record carries source_authority_kind SEARCH_AUDIT"
                 )
+
+        # --- audit-snapshot shape (E6 round-1 blocker 1) -------------------
+        _text(self.audit_search_scope, "audit_search_scope", allow_empty=True)
+        for name in ("audit_sources_searched", "audit_unresolved_items",
+                     "audit_qualifying_program_ids", "audit_jurisdictions",
+                     "audit_qualifying_patent_family_ids"):
+            _str_tuple(getattr(self, name), name)
+        for name in ("audit_coverage_complete",
+                     "audit_primary_source_landscape_complete",
+                     "audit_pipeline_inventory_complete",
+                     "audit_composition_level_review_complete",
+                     "audit_target_level_search_complete"):
+            _bool(getattr(self, name), name)
+
+        _competitive_audit_fields = (
+            self.audit_primary_source_landscape_complete
+            or self.audit_pipeline_inventory_complete
+            or bool(self.audit_qualifying_program_ids)
+        )
+        _patent_audit_fields = (
+            self.audit_composition_level_review_complete
+            or self.audit_target_level_search_complete
+            or bool(self.audit_jurisdictions)
+            or bool(self.audit_qualifying_patent_family_ids)
+        )
+        _any_audit_field = (
+            bool(self.audit_search_scope.strip())
+            or bool(self.audit_sources_searched)
+            or self.audit_coverage_complete
+            or bool(self.audit_unresolved_items)
+            or _competitive_audit_fields
+            or _patent_audit_fields
+        )
+        if self.observation_kind == "SEARCH_COMPLETION_AUDIT":
+            if not self.audit_search_scope.strip():
+                raise ValueError(
+                    "a SEARCH_COMPLETION_AUDIT record carries a non-empty audit_search_scope"
+                )
+            if not self.audit_sources_searched:
+                raise ValueError(
+                    "a SEARCH_COMPLETION_AUDIT record lists the sources searched"
+                )
+            if self.evidence_axis == "COMPETITIVE" and _patent_audit_fields:
+                raise ValueError(
+                    "a COMPETITIVE SEARCH_COMPLETION_AUDIT carries no patent-axis snapshot fields"
+                )
+            if self.evidence_axis == "PATENT" and _competitive_audit_fields:
+                raise ValueError(
+                    "a PATENT SEARCH_COMPLETION_AUDIT carries no competitive-axis snapshot fields"
+                )
+        elif _any_audit_field:
+            raise ValueError(
+                "only a SEARCH_COMPLETION_AUDIT record carries an audit snapshot"
+            )
 
     # --- factual predicates (field reads only, no interpretation) -----------
     @property

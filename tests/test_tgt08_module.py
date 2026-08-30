@@ -246,9 +246,53 @@ def _unmet(
     )
 
 
+_COMP_SCOPE = "primary-source competitive + regulatory sweep"
+_COMP_SOURCES = ("TRIAL_REGISTRY", "REGULATORY_SOURCE")
+_PAT_SCOPE = "composition-level target-directed ADC claims"
+_PAT_SOURCES = ("PATENT_PUBLICATION", "OFFICIAL_PATENT_STATUS")
+
+
 def _audit(
-    axis: str, *, observation_id: str, target: str = TARGET_A, as_of: str = AS_OF
+    axis: str,
+    *,
+    observation_id: str,
+    target: str = TARGET_A,
+    as_of: str = AS_OF,
+    coverage_complete: bool = True,
+    primary: bool = True,
+    pipeline: bool = True,
+    composition: bool = True,
+    target_level: bool = True,
+    qualifying: tuple[str, ...] = (),
+    unresolved: tuple[str, ...] = (),
+    scope: str | None = None,
+    sources: tuple[str, ...] | None = None,
+    jurisdictions: tuple[str, ...] = ("US", "EP"),
 ) -> NormalizedOpportunityRecord:
+    """A SEARCH_COMPLETION_AUDIT record whose structured snapshot matches a
+    default `_comp_completion()` / `_pat_completion()` (E6 round-1 blocker 1).
+    Vary the keyword args in lock-step with the paired completion."""
+    if axis == "COMPETITIVE":
+        extra = dict(
+            audit_search_scope=scope or _COMP_SCOPE,
+            audit_sources_searched=sources or _COMP_SOURCES,
+            audit_coverage_complete=coverage_complete,
+            audit_unresolved_items=unresolved,
+            audit_primary_source_landscape_complete=primary and coverage_complete,
+            audit_pipeline_inventory_complete=pipeline and coverage_complete,
+            audit_qualifying_program_ids=qualifying,
+        )
+    else:
+        extra = dict(
+            audit_search_scope=scope or _PAT_SCOPE,
+            audit_sources_searched=sources or _PAT_SOURCES,
+            audit_coverage_complete=coverage_complete,
+            audit_unresolved_items=unresolved,
+            audit_jurisdictions=jurisdictions,
+            audit_composition_level_review_complete=composition and coverage_complete,
+            audit_target_level_search_complete=target_level and coverage_complete,
+            audit_qualifying_patent_family_ids=qualifying,
+        )
     return NormalizedOpportunityRecord(
         observation_id=observation_id,
         target_identity=target,
@@ -264,6 +308,7 @@ def _audit(
         primary_or_official_source_resolved=True,
         context_key=CONTEXT_KEY,
         landscape_as_of=as_of,
+        **extra,
     )
 
 
@@ -299,8 +344,8 @@ def _comp_completion(
         primary_source_landscape_complete=primary and coverage_complete,
         pipeline_inventory_complete=pipeline and coverage_complete,
         landscape_as_of=as_of,
-        search_scope="primary-source competitive + regulatory sweep",
-        sources_searched=("TRIAL_REGISTRY", "REGULATORY_SOURCE"),
+        search_scope=_COMP_SCOPE,
+        sources_searched=_COMP_SOURCES,
         unresolved_items=unresolved,
         qualifying_program_ids=qualifying,
         audit_observation_id=audit_obs,
@@ -338,9 +383,9 @@ def _pat_completion(
         composition_level_review_complete=composition and coverage_complete,
         target_level_search_complete=target_level and coverage_complete,
         landscape_as_of=as_of,
-        patent_scope="composition-level target-directed ADC claims",
+        patent_scope=_PAT_SCOPE,
         jurisdictions=("US", "EP"),
-        sources_searched=("PATENT_PUBLICATION", "OFFICIAL_PATENT_STATUS"),
+        sources_searched=_PAT_SOURCES,
         unresolved_items=unresolved,
         qualifying_patent_family_ids=qualifying,
         audit_observation_id=audit_obs,
@@ -753,8 +798,8 @@ class AggregationTruthTableTests(unittest.TestCase):
 
     def test_both_axes_indirect_strong_supporting_only_is_positive_indirect_strong(self) -> None:
         res = _run(
-            [_audit("COMPETITIVE", observation_id="OBS-COMP-AUDIT"),
-             _audit("PATENT", observation_id="OBS-PAT-AUDIT")],
+            [_audit("COMPETITIVE", observation_id="OBS-COMP-AUDIT", primary=False),
+             _audit("PATENT", observation_id="OBS-PAT-AUDIT", composition=False)],
             competitive=_comp_completion(primary=False, audit_obs="OBS-COMP-AUDIT"),
             patent=_pat_completion(composition=False, audit_obs="OBS-PAT-AUDIT"),
         )
@@ -764,7 +809,7 @@ class AggregationTruthTableTests(unittest.TestCase):
     def test_competitive_direct_patent_indirect_strong_overall_indirect_strong(self) -> None:
         res = _run(
             [_audit("COMPETITIVE", observation_id="OBS-COMP-AUDIT"),
-             _audit("PATENT", observation_id="OBS-PAT-AUDIT")],
+             _audit("PATENT", observation_id="OBS-PAT-AUDIT", composition=False)],
             competitive=_comp_completion(audit_obs="OBS-COMP-AUDIT"),
             patent=_pat_completion(composition=False, audit_obs="OBS-PAT-AUDIT"),
         )
@@ -934,10 +979,89 @@ class AbsenceInferenceTests(unittest.TestCase):
             self.assertTrue(ep.provenance["retrieved_at"].startswith("2026-"))
 
 
+# --- completion audit snapshot parity (E6 round-1 blocker 1) -----
+
+class AuditCompletionSnapshotParityTests(unittest.TestCase):
+    """A SEARCH_COMPLETION_AUDIT EvidencePackage that names a completion's
+    audit_observation_id must carry a structured snapshot equal to that typed
+    completion. Any drift is a HARD run-level integrity failure -- the machine
+    never derives an axis ceiling or an absence inference from an audit whose
+    own snapshot disagrees with the completion it certifies."""
+
+    def _run_comp_audit(self, audit: NormalizedOpportunityRecord) -> Tgt08ModuleRunResult:
+        return _run(
+            [audit],
+            competitive=_comp_completion(audit_obs="OBS-COMP-AUDIT"),
+            patent=_pat_completion(attempted=False),
+        )
+
+    def _assert_hard(self, res: Tgt08ModuleRunResult) -> None:
+        self.assertTrue(res.hard_integrity_failures)
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertIsNone(res.proposal_envelope)
+
+    def test_audit_snapshot_search_scope_drift_is_hard(self) -> None:
+        self._assert_hard(self._run_comp_audit(
+            _audit("COMPETITIVE", observation_id="OBS-COMP-AUDIT",
+                   scope="an entirely different declared scope")))
+
+    def test_audit_snapshot_sources_drift_is_hard(self) -> None:
+        self._assert_hard(self._run_comp_audit(
+            _audit("COMPETITIVE", observation_id="OBS-COMP-AUDIT",
+                   sources=("PIPELINE_DATABASE",))))
+
+    def test_audit_snapshot_coverage_flag_drift_is_hard(self) -> None:
+        self._assert_hard(self._run_comp_audit(
+            _audit("COMPETITIVE", observation_id="OBS-COMP-AUDIT",
+                   coverage_complete=False)))
+
+    def test_audit_snapshot_direct_authority_flag_drift_is_hard(self) -> None:
+        self._assert_hard(self._run_comp_audit(
+            _audit("COMPETITIVE", observation_id="OBS-COMP-AUDIT", primary=False)))
+
+    def test_audit_snapshot_qualifying_program_set_drift_is_hard(self) -> None:
+        self._assert_hard(self._run_comp_audit(
+            _audit("COMPETITIVE", observation_id="OBS-COMP-AUDIT",
+                   qualifying=("PROGRAM_GHOST",))))
+
+    def test_audit_snapshot_patent_jurisdiction_drift_is_hard(self) -> None:
+        res = _run(
+            [_audit("PATENT", observation_id="OBS-PAT-AUDIT", jurisdictions=("JP",))],
+            competitive=_comp_completion(attempted=False),
+            patent=_pat_completion(audit_obs="OBS-PAT-AUDIT"),
+        )
+        self._assert_hard(res)
+
+    def test_snapshot_consistent_audit_is_accepted(self) -> None:
+        # the control: a faithful snapshot backs the completion and the run
+        # reaches an accepted INCONCLUSIVE / UNKNOWN (patent axis unsearched).
+        res = self._run_comp_audit(
+            _audit("COMPETITIVE", observation_id="OBS-COMP-AUDIT"))
+        self.assertFalse(res.hard_integrity_failures)
+        self.assertTrue(res.machine_acceptance.accepted)
+
+    def test_reused_completion_audit_ep_snapshot_drift_is_hard(self) -> None:
+        audit = _audit("COMPETITIVE", observation_id="OBS-COMP-AUDIT")
+        seed = self._run_comp_audit(audit)
+        self.assertEqual(len(seed.evidence_packages), 1)
+        ep = seed.evidence_packages[0]
+        ctx = dict(ep.study_context)
+        ctx["audit_search_scope"] = "a canonical package recorded under a different scope"
+        drifted = dataclasses.replace(ep, study_context=ctx)
+        res = _run(
+            [audit],
+            competitive=_comp_completion(audit_obs="OBS-COMP-AUDIT"),
+            patent=_pat_completion(attempted=False),
+            library={"OBS-COMP-AUDIT": drifted},
+            existing_evidence_ids=(ep.evidence_id,),
+        )
+        self._assert_hard(res)
+
+
 # --- machine-local sponsor_review TRIGGER --------------------
 
 class SponsorReviewTests(unittest.TestCase):
-    def _trigger_run(self, **over) -> Tgt08ModuleRunResult:
+    def _trigger_run(self, *, incomplete: str | None = None, **over) -> Tgt08ModuleRunResult:
         comp = _competitor(stage=over.get("stage", "APPROVED"),
                            modality=over.get("modality", "ADC"),
                            authority=over.get("comp_authority", "TRIAL_REGISTRY"),
@@ -948,12 +1072,14 @@ class SponsorReviewTests(unittest.TestCase):
                       composition=over.get("composition", True),
                       authority=over.get("pat_authority", "PATENT_PUBLICATION"),
                       family="PATENT_FAMILY_A")
+        comp_kw = dict(audit_obs="OBS-COMP-CERT", qualifying=("PROGRAM_A",),
+                       coverage_complete=incomplete != "competitive")
+        pat_kw = dict(audit_obs="OBS-PAT-CERT", qualifying=("PATENT_FAMILY_A",),
+                      coverage_complete=incomplete != "patent")
         return _run(
             [comp, pat],
-            competitive=_comp_completion(audit_obs="OBS-COMP-CERT",
-                                        qualifying=("PROGRAM_A",)),
-            patent=_pat_completion(audit_obs="OBS-PAT-CERT",
-                                   qualifying=("PATENT_FAMILY_A",)),
+            competitive=_comp_completion(**comp_kw),
+            patent=_pat_completion(**pat_kw),
         )
 
     def test_approved_adc_plus_live_composition_patent_triggers_potential_pattern(self) -> None:
@@ -998,6 +1124,32 @@ class SponsorReviewTests(unittest.TestCase):
         self.assertFalse(res.machine_acceptance.accepted)
         self.assertFalse(res.sponsor_review.required)
         self.assertEqual(res.sponsor_review.status, "")
+
+    def test_sponsor_pattern_on_incomplete_competitive_axis_is_not_accepted(self) -> None:
+        # E6 round-1 blocker 2: a sponsor_review handoff is a provisional stop
+        # (E5 item 16) -- it must not surface as actionable while a core axis is
+        # still incomplete (the run would otherwise be an accepted
+        # INCONCLUSIVE / UNKNOWN).
+        res = self._trigger_run(incomplete="competitive")
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertIsNone(res.proposal_envelope)
+        self.assertFalse(res.sponsor_review.required)
+        self.assertEqual(res.sponsor_review.status, "")
+        self.assertTrue(
+            any("both core" in r or "incomplete two-axis" in r
+                for r in res.machine_acceptance.reasons)
+        )
+
+    def test_sponsor_pattern_on_incomplete_patent_axis_is_not_accepted(self) -> None:
+        res = self._trigger_run(incomplete="patent")
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertFalse(res.sponsor_review.required)
+
+    def test_sponsor_pattern_with_both_axes_complete_is_accepted_and_surfaced(self) -> None:
+        res = self._trigger_run()
+        self.assertTrue(res.machine_acceptance.accepted)
+        self.assertTrue(res.sponsor_review.required)
+        self.assertEqual(res.sponsor_review.status, "POTENTIAL_SPONSOR_FATAL_PATTERN")
 
     def test_sponsor_review_is_absent_from_the_proposal_envelope(self) -> None:
         names = AssessmentProposalEnvelope.field_names()

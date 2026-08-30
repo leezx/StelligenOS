@@ -57,6 +57,73 @@ class AggregationOutcome:
     patent_absence_support: bool
 
 
+def audit_snapshot_mismatch(
+    record,
+    competitive: CompetitiveLandscapeCompletion,
+    patent: PatentLandscapeCompletion,
+) -> str:
+    """E6 round-1 blocker 1: a SEARCH_COMPLETION_AUDIT record that names a
+    completion's ``audit_observation_id`` MUST carry a structured snapshot equal
+    to that typed completion state. Return "" when it matches (or is not the
+    certificate for either completion), else a drift reason. A non-empty return
+    is a HARD run-level integrity failure -- the machine never derives an axis
+    ceiling or an absence inference from an audit whose own snapshot disagrees
+    with the completion it is supposed to certify."""
+
+    axis = record.evidence_axis
+    if axis == "COMPETITIVE":
+        c = competitive
+        if not c.attempted or c.audit_observation_id != record.observation_id:
+            return ""
+        pairs = (
+            (record.audit_search_scope, c.search_scope, "audit_search_scope"),
+            (set(record.audit_sources_searched), set(c.sources_searched),
+             "audit_sources_searched"),
+            (record.audit_coverage_complete, c.coverage_complete,
+             "audit_coverage_complete"),
+            (set(record.audit_unresolved_items), set(c.unresolved_items),
+             "audit_unresolved_items"),
+            (record.audit_primary_source_landscape_complete,
+             c.primary_source_landscape_complete,
+             "audit_primary_source_landscape_complete"),
+            (record.audit_pipeline_inventory_complete, c.pipeline_inventory_complete,
+             "audit_pipeline_inventory_complete"),
+            (set(record.audit_qualifying_program_ids), set(c.qualifying_program_ids),
+             "audit_qualifying_program_ids"),
+        )
+    elif axis == "PATENT":
+        p = patent
+        if not p.attempted or p.audit_observation_id != record.observation_id:
+            return ""
+        pairs = (
+            (record.audit_search_scope, p.patent_scope, "audit_search_scope"),
+            (set(record.audit_sources_searched), set(p.sources_searched),
+             "audit_sources_searched"),
+            (record.audit_coverage_complete, p.coverage_complete,
+             "audit_coverage_complete"),
+            (set(record.audit_unresolved_items), set(p.unresolved_items),
+             "audit_unresolved_items"),
+            (set(record.audit_jurisdictions), set(p.jurisdictions),
+             "audit_jurisdictions"),
+            (record.audit_composition_level_review_complete,
+             p.composition_level_review_complete,
+             "audit_composition_level_review_complete"),
+            (record.audit_target_level_search_complete, p.target_level_search_complete,
+             "audit_target_level_search_complete"),
+            (set(record.audit_qualifying_patent_family_ids),
+             set(p.qualifying_patent_family_ids), "audit_qualifying_patent_family_ids"),
+        )
+    else:
+        return ""
+    for got, want, name in pairs:
+        if got != want:
+            return (
+                f"SEARCH_COMPLETION_AUDIT snapshot field {name} = {got!r} disagrees "
+                f"with the typed completion state {want!r}"
+            )
+    return ""
+
+
 def _audit_ep_for(emitted: list[EmittedEvidence], axis: str, observation_id: str) -> str:
     for e in emitted:
         r = e.classified.record

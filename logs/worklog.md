@@ -5146,3 +5146,51 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Next：commit、push `origin/task_20260829_runtime-migration-pr-e6`、开 PR、CI
   绿（matrix py3.11 + 3.12）后回 `AI审核方案` 贴 E6 实现摘要 vs E6-1…E6-8 复审。
   APPROVE → merge + 独立 docs-only approval-record PR。
+
+## 2026-08-30T00:10 EDT — Runtime Migration PR E6 第一轮修订（PR #116 @ d1c2da4 REQUEST_CHANGES）
+
+- 审核方复审 `d1c2da4`（exact-head CI success）：主链、包结构、binding scope、
+  weaker-axis truth table、WEAK 豁免、graded INCONCLUSIVE、NEGATIVE 边界、
+  competitive/patent classification、Gate-neutral EP、exact canonical reuse
+  主机制、HARD source/identity gate、sponsor pattern detection criteria、
+  accepted-run 才 surface sponsor_review、无 live IO —— **全部确认通过、不重开**。
+  只剩 2 个 blocker，本质同一原则「机器不能因为 provider 给了一个布尔声明就获得
+  本不该有的 authority」。
+- **Blocker 1** —— `SEARCH_COMPLETION_AUDIT` 没真正证明 completion。audit
+  observation 不带 completion 的结构化事实（scope/sources/authority flags/
+  qualifying set），`aggregate._audit_ep_for()` 只按 observation_id+axis 匹配，
+  `_KEYS_BY_KIND["SEARCH_COMPLETION_AUDIT"] = ()`，provider 可把任意 audit 配一个
+  DIRECT/zero-hit completion 伪造 whitespace（headline invariant 1 可绕过）。
+  修：`NormalizedOpportunityRecord` 给 audit kind 加 axis-specific 结构化 snapshot
+  字段（`audit_search_scope` / `audit_sources_searched` / `audit_coverage_complete` /
+  `audit_unresolved_items`；competitive 再带
+  `audit_primary_source_landscape_complete` / `audit_pipeline_inventory_complete` /
+  `audit_qualifying_program_ids`；patent 再带 `audit_jurisdictions` /
+  `audit_composition_level_review_complete` / `audit_target_level_search_complete` /
+  `audit_qualifying_patent_family_ids`）；新 `aggregate.audit_snapshot_mismatch()`
+  HARD-check「snapshot == typed completion」；`module.run()` 把 drift 加进
+  `hard_integrity_failures`（拒整个 run、proposal=None、绝不降级 UNKNOWN）；
+  `acceptance` 加 `completion_audit_evidence_snapshots_its_typed_completion`；
+  `evidence._KEYS_BY_KIND["SEARCH_COMPLETION_AUDIT"]` 列全 snapshot 字段 →
+  reused canonical audit EP 缺失/drift 即 HARD。**未**强制「每个 coverage_complete
+  completion 必须有 audit EP」—— snapshot-consistent audit EP + audited
+  zero-qualifying = material audited absence（按 frozen truth table → POSITIVE）；
+  「completed landscape / no material directional signal → graded INCONCLUSIVE」
+  行只在无 clean certificate 时可达（audit EP 缺席 → 保守 graded INCONCLUSIVE，
+  绝不 whitespace）。+7 regression。
+- **Blocker 2** —— `sponsor_review` 可在 incomplete landscape 上成为 accepted
+  actionable trigger。detector 不看两个 completion state，`acceptance` 没有
+  `sponsor_review.required ⇒ both core axes complete`，valid pattern +
+  incomplete axis（run 本会是 accepted INCONCLUSIVE/UNKNOWN）→ trigger 被
+  surface，违反 E5 item 16 provisional-stop。修：`acceptance` 加
+  `sponsor_review_requires_both_core_landscape_axes_complete`
+  （`required ⇒ competitive.coverage_complete AND patent.coverage_complete`），
+  不满足 → run 不 accepted → `module.run()` surface `sponsor_review = none()`；
+  raw detector 内部仍可发现 candidate pattern，但不是 actionable handoff。
+  **未**要求两轴 DIRECT（E5 冻结的是 completeness）。+3 regression。
+- 未改：frozen E5 truth table、sponsor detector criteria、TGT-08 science、
+  binding scope、MOD-TGT01 / MOD-TGT05。
+- 验证：`tests/test_tgt08_module.py` **80 OK**（+11）；全量 **1053**（1 个既有
+  本机 `__pycache__` 扫描 FAIL，CI 干净 checkout GREEN）；`git diff --check`
+  clean。
+- Next：push、CI 绿后回 `AI审核方案` 贴第二轮复审（两个 blocker 已关闭 + regression）。
