@@ -5372,3 +5372,34 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   `git diff --check` clean；YAML 合法。
 - Next：push、CI 绿后回 `AI审核方案` 贴第三轮复审（治理记录已同步，机器合同 /
   drawing / tests 第一轮后即正确，请 re-review）。预期 APPROVE。
+
+## 2026-08-30T02:30 EDT — Runtime Migration PR E7 第三轮修订 + APPROVE + merge（PR #118 @ a1d00b1）
+
+- 第三轮（`a1d00b1`，无新 commit）：审核方确认 tracked governance artifacts 已
+  同步、contract-head CI success；唯一残余是纯 PR #118 **description body**
+  metadata。`gh pr edit 118 --body`：
+  - "Other frozen rulings" 段 `"across cohorts" = plural-cohorts logic (> 2
+    independent cohort identities)` → `at least two independent cohort
+    identities（explicitly NOT "> 2"）`。
+  - 测试数字 `49 tests` / `1102 full suite` → `51 contract tests` /
+    `1104 full suite`。
+  - 不动任何文件或 science。
+- 第四轮 **APPROVE @ `a1d00b1`**：「APPROVE —— TGT-02 construction contract 可以
+  merge。」第一轮 4 个 substantive blocker（qualifying rung-specific；"across
+  cohorts" = at-least-two，明确不是 `> 2`；Direction 是 completed audited
+  landscape 上的 aggregate，非单个 observation；item-04 derived parity 是 exact
+  set equality）+ 第二轮 governance-record blocker + 第三轮 PR-body blocker 均
+  关闭，无新问题。exact-head CI `verify (3.11)` / `verify (3.12)` success。
+  GitHub connector 每轮 `403`，`AI审核方案` 对话结论为 authoritative。
+- Merge：`9ec30e6`（`Merge pull request #118`）。feature branch 本地 + remote
+  已删。
+- 独立 docs-only PR `task_20260829_runtime-migration-pr-e7-approval-record`：
+  `logs/chatgpt-review-2026-08-30-runtime-migration-pr-e7.md` +
+  `manifests/runtime_migration_pr_e7_manifest.yaml` → `status: approved` /
+  `chatgpt_review: APPROVE` / `approved_tip: a1d00b1` / `merge_commit: 9ec30e6`
+  / `review_rounds: 4` / `test_count_at_approval: 1104` + `review_round_3` /
+  `review_round_4` block。不改 E7 施工合同 / drawing / 测试内容。
+- 状态：8 个 primary Module 施工合同已 APPROVE 4 个（MOD-TGT01/05/08/02）；已
+  实现 3 个（MOD-TGT01/05/08 @ 1.0.0）。MOD-TGT02 `primary_module_version` 仍
+  `0.0.0`（PR E8 bump）。TGT-03 → 04 → 06 → 07 属后续 PR。`MIGRATION_PENDING`
+  保持。PR E8 = MOD-TGT02@1.0.0 实现需各自 go-ahead。

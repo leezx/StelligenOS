@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_e7
-status: pending_review
+status: approved
 scope: tgt02_mod_tgt02_construction_contract_drawing_validation_and_acceptance_checklist_only
 repository_boundary: software_only_external_data
 
@@ -81,15 +81,16 @@ deferred:
   retrieval_providers_and_datasets: "PR E8+ (GEO / HPA / CPTAC / single-cell / spatial / TMA repositories)"
   other_four_tgt_modules: "PR E8+ (TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)"
 
-chatgpt_review: REQUEST_CHANGES   # round 2 -- governance-record sync only (the 4 round-1 blockers were confirmed closed in the contract/drawing/tests); revision pushed, re-review pending
-approved_tip: null
-merge_commit: null
-review_rounds: 2
+chatgpt_review: APPROVE          # round 4 -- APPROVE @ a1d00b1 (rounds 1-3 REQUEST_CHANGES: 4 substantive blockers, then governance-record sync, then PR-body sync); ChatGPT AI审核方案 is authoritative (GitHub connector returned 403 every round)
+approved_tip: a1d00b1
+merge_commit: 9ec30e6            # Merge pull request #118 from leezx/task_20260829_runtime-migration-pr-e7
+review_rounds: 4
 test_count_before_e7: 1053        # at PR E6 approval
 test_count_at_submission: 1102    # local full suite (test_tgt02_module_construction_contract.py 49)
 test_count_after_round_1: 1104    # test_tgt02_module_construction_contract.py 51 (+2 blocker regressions); the single local FAIL is a pre-existing __pycache__ scan in test_assetgenos_modules (clean on a fresh CI checkout)
 test_count_after_round_2: 1104    # unchanged -- round 2 was a docs/governance-record sync only (no contract, drawing, or test-science change; one test comment line synced)
-approval_record_pr: null
+test_count_at_approval: 1104      # unchanged through rounds 3-4 (PR-body sync only)
+approval_record_pr: task_20260829_runtime-migration-pr-e7-approval-record   # docs-only: this manifest -> approved + logs/chatgpt-review-2026-08-30-runtime-migration-pr-e7.md
 next_authorized_step: null        # PR E8 = MOD-TGT02@1.0.0 implementation -- needs its own go-ahead
 
 review_round_1:
@@ -199,6 +200,44 @@ review_round_2:
     correct after round 1.
   tests_at_round_2: 51   # unchanged
   full_suite_at_round_2: 1104
+
+review_round_3:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "a1d00b1"
+  accepted: >-
+    the 4 substantive blockers stay closed; the tracked governance artifacts
+    (manifest E7-4, handoff E7-4, worklog, test comment) are now synced to
+    "at least two"; exact-head CI success.
+  scope: >-
+    stale PR #118 DESCRIPTION BODY synchronization ONLY -- no file or science
+    change.
+  fixes:
+    pr_body_other_frozen_rulings: >-
+      the "Other frozen rulings" section still read '"across cohorts" =
+      plural-cohorts logic (> 2 independent cohort identities)'. Edited via
+      `gh pr edit 118 --body` to "at least two independent cohort identities,
+      explicitly NOT '> 2'".
+    pr_body_test_counts: >-
+      the PR body still cited "49 tests" and "1102 tests". Updated to "51 tests"
+      (contract) and "1104 tests" (full suite).
+  not_changed: any tracked file, the contract, the drawing, the tests.
+  tests_at_round_3: 51   # unchanged
+  full_suite_at_round_3: 1104
+
+review_round_4:
+  verdict: APPROVE
+  reviewed_tip: "a1d00b1"
+  merge_commit: "9ec30e6"
+  summary: >-
+    APPROVE -- TGT-02 construction contract can merge. All round-1 substantive
+    blockers stay closed (qualifying rung-specific; "across cohorts" is
+    at-least-two, explicitly NOT "> 2"; Direction is an aggregate over a
+    completed audited landscape, never a single observation; item-04 derived
+    parity is an exact set equality). The round-2 governance-record blocker and
+    the round-3 PR-body blocker are closed. No new issues. exact-head CI
+    verify (3.11) + verify (3.12) success. Next: PR E8 = MOD-TGT02@1.0.0
+    deterministic implementation (needs its own go-ahead).
+  github_connector: "403 Resource not accessible by integration every round -- ChatGPT AI审核方案 conversation is authoritative; GitHub review state not written"
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt02_module_construction_contract.py' -v
