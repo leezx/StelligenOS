@@ -452,7 +452,11 @@ class NoImplementationInPrE3Tests(unittest.TestCase):
         py_files = sorted(str(p.relative_to(ROOT)) for p in gm.rglob("*.py"))
         # only the built per-gate packages may exist under gate_modules/ -- no
         # shared framework / base-class / registry module at the root.
-        allowed = ("tgt01_adc_modality_precedent", "tgt05_normal_tissue_fatal_liability")
+        allowed = (
+            "tgt01_adc_modality_precedent",
+            "tgt05_normal_tissue_fatal_liability",
+            "tgt08_target_opportunity_competition_ip_whitespace",
+        )
         self.assertTrue(
             all(any(pkg in p for pkg in allowed) for p in py_files), py_files
         )

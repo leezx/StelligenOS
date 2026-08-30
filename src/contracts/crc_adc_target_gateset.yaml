@@ -589,15 +589,17 @@ context_specific_bindings:
       evidence_ladder_ref: external:crc_adc_target_gateset/TGT-08/evidence_ladder@v1
       assessment_rule_ref: external:crc_adc_target_gateset/TGT-08/assessment_rule@v1
       primary_module_id: MOD-TGT08
-      primary_module_version: "0.0.0"
+      # Built in Runtime Migration PR E6 (gate_modules/tgt08_target_opportunity_competition_ip_whitespace/).
+      primary_module_version: "1.0.0"
 
 primary_module_binding:
   rule: >-
     Each gate declares exactly one primary Evidence Production Module slot, keyed
     by the deterministic id MOD-TGT0n. In PR D every primary_module_version was
     "0.0.0" (declared, not built). Runtime Migration PR E2 built MOD-TGT01 and
-    raised its version to "1.0.0"; PR E4 built MOD-TGT05 and raised its version
-    to "1.0.0"; the other six remain "0.0.0" until their
+    raised its version to "1.0.0"; PR E4 built MOD-TGT05 and PR E6 built
+    MOD-TGT08 and raised their versions to "1.0.0"; the other five remain
+    "0.0.0" until their
     own PR E-series builds them. A Module may not choose a different id, and may not
     modify the Gate id / name / candidate ownership, the gate_question, the
     Evidence Ladder, the evidence ceiling, or the fatal / unknown / conflict
@@ -607,6 +609,7 @@ primary_module_binding:
     # gate_id -> primary_module_version once the Module is built.
     TGT-01: "1.0.0"
     TGT-05: "1.0.0"
+    TGT-08: "1.0.0"
 
 repository_policy:
   instances_external_only: true
