@@ -130,14 +130,14 @@ class CrcCohortCoverageCompletion:
             raise ValueError("unresolved_items must be a tuple of CoverageUnresolvedItem")
         _str_tuple(self.qualifying_protein_cohort_ids, "qualifying_protein_cohort_ids")
         _str_tuple(self.qualifying_indirect_cohort_ids, "qualifying_indirect_cohort_ids")
-        _text(
-            self.audit_observation_id,
-            "audit_observation_id",
-            allow_empty=not (self.attempted and self.public_crc_coverage_search_complete),
-        )
-        if self.attempted and self.audit_observation_id:
+        # An attempted CRC coverage search -- complete or not -- MUST be certified
+        # by exactly one SEARCH_COMPLETION_AUDIT observation (E8-5 invariant 2).
+        # An incomplete audit records where the search got to; it does not grant
+        # grading authority (that still needs ``landscape_complete``).
+        _text(self.audit_observation_id, "audit_observation_id", allow_empty=not self.attempted)
+        if self.attempted:
             if not _OBS_ID.match(self.audit_observation_id):
-                raise ValueError("audit_observation_id does not match OBS-...")
+                raise ValueError("an attempted CRC coverage landscape names its audit_observation_id")
 
         if not self.attempted:
             for name in (
@@ -157,12 +157,8 @@ class CrcCohortCoverageCompletion:
                 raise ValueError(
                     "an unattempted coverage landscape has no searched sources / qualifying ids"
                 )
-        if self.attempted and self.public_crc_coverage_search_complete and not self.audit_observation_id:
-            raise ValueError(
-                "a completed CRC coverage landscape needs a SEARCH_COMPLETION_AUDIT observation"
-            )
-        if self.public_crc_coverage_search_complete and not self.sources_searched:
-            raise ValueError("a completed CRC coverage landscape lists the sources searched")
+        if self.attempted and not self.sources_searched:
+            raise ValueError("an attempted CRC coverage landscape lists the sources searched")
 
     # --- E8-5 invariant 1: completeness consistency ----------------------------
     @property
@@ -317,18 +313,17 @@ def audit_presence_failure(
     completion: CrcCohortCoverageCompletion, audit_observation_ids: list[str]
 ) -> str:
     """E8-5 invariant 2 (presence half). ``audit_observation_ids`` is every
-    emitted ``SEARCH_COMPLETION_AUDIT`` observation id. A completion that claims
-    ``public_crc_coverage_search_complete`` needs EXACTLY ONE, and it must be
-    ``audit_observation_id`` (E8-4 precedence 2: a complete landscape with a
-    missing / invalid audit is a HARD reject, never a soft UNKNOWN). A landscape
-    that is only ``attempted`` but not yet complete carries no audit and that is
-    NOT an integrity failure. Snapshot drift is checked separately by
-    :func:`audit_snapshot_mismatch`."""
+    admissible ``SEARCH_COMPLETION_AUDIT`` observation id at the NORMALIZED
+    identity layer (before any (source_id, claim) dedup -- a second audit must
+    not be hidden by dedup). An ``attempted`` completion -- complete OR not --
+    needs EXACTLY ONE, and it must be ``audit_observation_id``. An unattempted
+    completion carries none. Return "" when satisfied, else a HARD reason.
+    Snapshot drift is checked separately by :func:`audit_snapshot_mismatch`."""
 
-    if not (completion.attempted and completion.public_crc_coverage_search_complete):
+    if not completion.attempted:
         if audit_observation_ids:
             return (
-                "a CRC coverage landscape that is not yet complete carries "
+                "an unattempted CRC coverage landscape carries "
                 f"{len(audit_observation_ids)} SEARCH_COMPLETION_AUDIT observation(s)"
             )
         return ""

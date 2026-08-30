@@ -114,16 +114,22 @@ def aggregate(
         (f"unresolved CRC coverage search item: {i.description}", i.resolution)
         for i in completion.unresolved_items
     ]
+    # EXPERIMENT_REQUIRED only when the public source space is TRULY exhausted --
+    # i.e. no declared unresolved public item still offers a resolution path
+    # (E7 item 15 / E8-7). While any unresolved item remains, a blocked / not-yet-
+    # fetched public source could still supply the missing measurement.
+    public_space_exhausted = not completion.unresolved_items
 
     # WEAK-only completed landscape -> INCONCLUSIVE / UNKNOWN (never / WEAK).
     if not overall:
-        unknowns.append((
-            "the completed public CRC coverage search yielded no DIRECT protein "
-            "cohort and no qualifying malignant-compartment sc / spatial / TMA "
-            "concordance evidence -- only bulk / pan-cancer signal remains, which "
-            "cannot answer the CRC x malignant-compartment x cohort-level question",
-            "EXPERIMENT_REQUIRED",
-        ))
+        if public_space_exhausted:
+            unknowns.append((
+                "the completed public CRC coverage search yielded no DIRECT protein "
+                "cohort and no qualifying malignant-compartment sc / spatial / TMA "
+                "concordance evidence -- only bulk / pan-cancer signal remains, which "
+                "cannot answer the CRC x malignant-compartment x cohort-level question",
+                "EXPERIMENT_REQUIRED",
+            ))
         return AggregationOutcome(
             proposed_direction="INCONCLUSIVE",
             proposed_strength="UNKNOWN",
@@ -242,8 +248,14 @@ def aggregate(
 
     # EXPERIMENT_REQUIRED -- exactly the one E7-explicit graded mapping: a
     # directional INDIRECT_STRONG assessment with no qualifying DIRECT protein
-    # cohort needs a protein-level confirmation.
-    if direction in ("POSITIVE", "NEGATIVE") and overall == "INDIRECT_STRONG" and not has_direct:
+    # cohort needs a protein-level confirmation. Only once the public source
+    # space is truly exhausted (no unresolved public item still offers a path).
+    if (
+        public_space_exhausted
+        and direction in ("POSITIVE", "NEGATIVE")
+        and overall == "INDIRECT_STRONG"
+        and not has_direct
+    ):
         unknowns.append((
             "protein-level malignant-cell cohort confirmation of the "
             "malignant-compartment coverage direction",

@@ -26,15 +26,25 @@ the same cohort are not cross-cohort.
 
 from __future__ import annotations
 
+from .completion import CrcCohortCoverageCompletion
 from .contracts import EmittedEvidence, FatalReviewRecord
 
 
 def detect(
     emitted: list[EmittedEvidence],
+    completion: CrcCohortCoverageCompletion,
     *,
     landscape_as_of: str,
     crc_coverage_search_scope: str,
 ) -> FatalReviewRecord:
+    # A cross-cohort fatal pattern exists ONLY over a completed, audited CRC
+    # coverage landscape (E7 item 08 / 16). An incomplete landscape is a
+    # legitimate INCONCLUSIVE / UNKNOWN -- there is no fatal trigger yet, and a
+    # premature raw trigger must NOT turn that accepted UNKNOWN into a rejected
+    # run.
+    if not completion.landscape_complete:
+        return FatalReviewRecord.none()
+
     candidates = [
         e
         for e in emitted

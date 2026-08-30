@@ -79,10 +79,11 @@ def evaluate(
         "qualification integrity failure(s): "
         + "; ".join(f"{i}: {why}" for i, why in hard_integrity_failures),
     )
+    obs_ids = [e.observation.observation_id for e in emitted]
     record(
         "one_evidence_package_per_observation",
-        len(ep_ids) == len(set(ep_ids)),
-        "an observation does not map to exactly one EvidencePackage",
+        len(ep_ids) == len(set(ep_ids)) and len(obs_ids) == len(set(obs_ids)),
+        "an observation_id does not map to exactly one EvidencePackage",
     )
     record(
         "every_emitted_observation_has_a_resolved_primary_or_repository_source",

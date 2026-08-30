@@ -5474,3 +5474,74 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Next：开 PR、CI 绿后回 `AI审核方案` 贴 E8 review。8 个 primary Module 已实现
   4 个（TGT-01/05/08/02 @ 1.0.0）；TGT-03 → 04 → 06 → 07 属后续 PR（各自
   go-ahead）。
+
+## 2026-08-30T04:30 EDT — Runtime Migration PR E8 第一轮修订（PR #120 @ 86ded60 REQUEST_CHANGES）
+
+- 审核方（ChatGPT `AI审核方案`）第一轮结论：**REQUEST_CHANGES —— 7 个 runtime
+  correctness / integrity blocker**。E8 主体架构接受（11-file standalone、typed
+  assay、highest-qualifying-class aggregation、`>= 2` cross-cohort、binding
+  `TGT-02 → 1.0.0`、`MIGRATION_PENDING`、无 shared framework / IO / persistence、
+  冻结 E7 truth table、NEGATIVE ≠ fatal ≠ KILL、DIRECT / INDIRECT_STRONG / WEAK
+  ladder、TMA 永不 DIRECT）。全部窄修 + synthetic regression，无 rewrite。
+  exact-head CI `verify (3.11)` / `verify (3.12)` success。GitHub connector 403，
+  `AI审核方案` 对话为 authoritative。
+- **Blocker 1** —— 固定 Instantiation 的 context / scope 没真正绑定。冻结
+  Instantiation 是 `context_id CTX-CRC-REFRACTORY-MCRC` / `context_version 1`，
+  但 `Tgt02ModuleInput` 只查 `CTX-...` 前缀 + `> 0`；observation.context_key /
+  completion.search_scope 也没跟 input 比。修：`Tgt02ModuleInput` pin
+  `context_id == CTX-CRC-REFRACTORY-MCRC` + `context_version == 1`；
+  `module.run()` HARD-check 每条 observation 的 `context_key` vs run，和
+  （attempted 时）`completion.search_scope` vs run 的
+  `crc_coverage_search_scope`。test fixture `CTX_ID` 改成 canonical。+4 regression。
+- **Blocker 2** —— incomplete landscape + 两个 negative cohorts 会被 raw fatal
+  trigger 反向变成 rejected run。`fatal_review.detect()` 之前不接 completion，
+  module 无条件调用，然后 acceptance 又要求 `fatal_review.required →
+  landscape_complete`。修：`detect()` 接 `completion`，`not
+  completion.landscape_complete` → `FatalReviewRecord.none()`。incomplete + 两个
+  negative DIRECT cohort → accepted `INCONCLUSIVE/UNKNOWN`，无 fatal。+1 regression。
+- **Blocker 3** —— Gate-neutral EP 对 CONTEXTUAL evidence 写错事实。
+  `evidence._directly_supports()` 之前对任何 `PROTEIN_COHORT` 都写「annotated
+  CRC malignant cells」、任何 `MALIGNANT_SC_SPATIAL` 都写「CRC malignant
+  compartment」，于是一个 `NON_MALIGNANT` contextual observation 的 EP 反而声称
+  它在 malignant cells —— 违反 E7 item 11 factual neutrality。修：EP wording 按
+  实际字段陈述（`crc_specific` / `malignant_cell_attribution` / `molecular_layer`
+  / `assay` / `cohort_adequacy_status`）；incomplete `SEARCH_COMPLETION_AUDIT`
+  EP 报 snapshot factual state（「... NOT yet complete」），不再写「search was
+  completed」；`_NEUTRAL_CEILING` 改成真正中性的 observation-level expression /
+  search fact。+2 regression。
+- **Blocker 4** —— mandatory audit presence 没按冻结 E8-5 invariant 2 实现，且
+  exact-one 可被 `(source_id, claim)` dedup 绕过。修：恢复开工前 ruling ——
+  `CrcCohortCoverageCompletion` 只要 `attempted`（complete 与否）就 require
+  `audit_observation_id`；`audit_presence_failure` gate 在 `attempted` 而非
+  `attempted and public...`；incomplete audit 记录「搜到哪」但不赋 grading
+  authority。`module.run()` 从 **normalized admissible identity 层**（dedup 前）
+  统计 `SEARCH_COMPLETION_AUDIT` observations，第二条 audit 无法被 dedup 隐藏。
+  +4 regression。
+- **Blocker 5** —— `cohort_ids` 在没有 `declared_multi_cohort_analysis=True` 时
+  被当成 cross-cohort。`cohort_identities` 之前 `if self.cohort_ids: return
+  cohort_ids` 完全没查 declared flag，于是一条 observation 就能单独触发
+  cross-cohort fatal pattern。修：`NormalizedCoverageObservation.__post_init__`
+  强制 `cohort_ids` non-empty ↔ `declared_multi_cohort_analysis` true，且
+  declared multi-cohort 需 `>= 2` distinct `cohort_ids` 且无 single
+  `cohort_id`；`cohort_identities` 只在 declared flag true 时读 `cohort_ids`。
+  +3 regression。
+- **Blocker 6** —— EXPERIMENT_REQUIRED 在仍有 public unresolved source 时过早
+  出现（`CURRENTLY_UNRESOLVABLE` 与 `EXPERIMENT_REQUIRED` 可共存）。修：aggregate
+  只在 `completion.unresolved_items` 为空（public source space 真正 exhausted）
+  时才 auto-add `EXPERIMENT_REQUIRED`（IS-only protein confirmation 与 WEAK-only
+  两条映射）；否则 resolution 停在 `PUBLIC_RESOLVABLE` / `CURRENTLY_UNRESOLVABLE`。
+  +2 regression。
+- **Blocker 7** —— `one_evidence_package_per_observation` acceptance check 查错
+  字段（只查 `evidence_id` 不重复，没查 `observation_id` 唯一对应一个 EP）。修：
+  acceptance 加 `observation_id` 唯一性检查；`module.run()` 在 normalized-input
+  层对 duplicate `observation_id` 拒**整个 run**（Evidence Library 按
+  `observation_id` lookup canonical EP）。+1 regression。
+- 顺手同步：`src/objects/crc_adc_target_gateset.py` 注释「other five TGT gates」
+  → 「other four」（code map 已含 TGT-02）。
+- 验证：`tests/test_tgt02_module.py` **90 OK**（+15 `Round1RegressionTests`）；
+  全量 **1200 OK**（提交时 1185）；`git diff --check` clean；YAML 合法。
+- 未改：frozen E7 truth table、NEGATIVE ≠ fatal ≠ KILL、`>= 2` 规则、ladder、
+  highest-qualifying-class Strength、TMA never DIRECT、binding scope、
+  `MIGRATION_PENDING`、MOD-TGT01 / 05 / 08。
+- Next：push、CI 绿后回 `AI审核方案` 贴第二轮复审（7 个 blocker 已关闭 +
+  regression）。

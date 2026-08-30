@@ -103,14 +103,79 @@ repository_policy:
   modifies_e7_construction_contract_body: forbidden
   migration_pending: remains
 
-chatgpt_review: pending
+chatgpt_review: REQUEST_CHANGES   # round 1 -- 7 runtime correctness / integrity blockers; architecture accepted; revision pushed, re-review pending
 approved_tip: null
 merge_commit: null
-review_rounds: 0
+review_rounds: 1
 test_count_before_e8: 1104        # at PR E7 approval
 test_count_at_submission: 1185    # local full suite (tests/test_tgt02_module.py 75 + reconciliation / registry synch)
+test_count_after_round_1: 1200    # tests/test_tgt02_module.py 90 (+15 Round1RegressionTests)
 approval_record_pr: null
 next_authorized_step: null        # PR E9 = MOD-TGT03 construction contract -- needs its own go-ahead
+
+review_round_1:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "86ded60"
+  accepted: >-
+    the whole architecture -- 11-file standalone package, typed assay_method,
+    highest-qualifying-class aggregation (no two-axis rule), ">= 2 not > 2"
+    cross-cohort, binding TGT-02 -> 1.0.0, MIGRATION_PENDING, no shared framework
+    / IO / persistence, the frozen E7 truth table, NEGATIVE != fatal != KILL, the
+    DIRECT / INDIRECT_STRONG / WEAK ladder, TMA never DIRECT.
+  scope: 7 narrow runtime correctness / integrity fixes + synthetic regressions -- no rewrite.
+  fixes:
+    blocker_1_fixed_instantiation_context_and_scope_binding: >-
+      Tgt02ModuleInput now pins context_id == CTX-CRC-REFRACTORY-MCRC and
+      context_version == 1 (the fixed Instantiation; E7 item 10 no implicit
+      context). module.run() HARD-checks every observation.context_key against
+      the run's context_key and, when the completion is attempted,
+      completion.search_scope against the run's crc_coverage_search_scope. The
+      test fixture CTX_ID moved to the canonical CTX-CRC-REFRACTORY-MCRC.
+      +4 regressions.
+    blocker_2_incomplete_landscape_two_negative_cohorts_stays_unknown: >-
+      fatal_review.detect() now takes the completion and returns none() when
+      not completion.landscape_complete. An incomplete search with two negative
+      DIRECT-class protein cohorts is an accepted INCONCLUSIVE / UNKNOWN with no
+      fatal trigger, no longer a rejected run. +1 regression.
+    blocker_3_gate_neutral_ep_wording_for_contextual_evidence: >-
+      evidence._directly_supports() now states the observation's actual fields
+      (crc_specific, malignant_cell_attribution, molecular_layer, assay,
+      cohort_adequacy_status) instead of assuming "annotated CRC malignant
+      cells" / "CRC malignant compartment" by observation kind; an incomplete
+      SEARCH_COMPLETION_AUDIT EP now reports the snapshot factual state ("...
+      NOT yet complete") rather than "search was completed". _NEUTRAL_CEILING is
+      now a truly neutral observation-level expression / search fact. +2 regressions.
+    blocker_4_mandatory_audit_presence_and_dedup_bypass: >-
+      restored the pre-code E8-5 invariant 2 -- CrcCohortCoverageCompletion
+      requires audit_observation_id whenever attempted (complete OR not);
+      audit_presence_failure gates on attempted, not on public_crc_coverage_search_complete;
+      an incomplete audit records where the search got to and does not grant
+      grading authority. module.run() counts SEARCH_COMPLETION_AUDIT observations
+      at the normalized admissible-identity layer (before (source_id, claim)
+      dedup) so a second audit cannot be hidden. +4 regressions.
+    blocker_5_cohort_ids_without_declared_multi_cohort_analysis: >-
+      NormalizedCoverageObservation.__post_init__ now enforces cohort_ids
+      non-empty <-> declared_multi_cohort_analysis true, and a declared
+      multi-cohort analysis needs >= 2 distinct cohort_ids and no single
+      cohort_id; cohort_identities reads cohort_ids only when the declared flag
+      is true, so a stray tuple cannot make one observation stand in for
+      cross-cohort support. +3 regressions.
+    blocker_6_experiment_required_premature_while_public_path_remains: >-
+      aggregate now only auto-adds EXPERIMENT_REQUIRED (the IS-only protein
+      confirmation and the WEAK-only mappings) when completion.unresolved_items
+      is empty -- while any unresolved public item remains, a blocked / not-yet-
+      fetched public source could still supply the missing measurement, so the
+      resolution stays PUBLIC_RESOLVABLE / CURRENTLY_UNRESOLVABLE. +2 regressions.
+    blocker_7_one_evidence_package_per_observation_checks_the_wrong_field: >-
+      acceptance now also checks observation_id uniqueness among emitted
+      packages, and module.run() rejects the WHOLE run at the normalized-input
+      layer when any observation_id appears more than once (the Evidence Library
+      resolves canonical packages by observation_id). +1 regression.
+    non_blocking_sync: >-
+      src/objects/crc_adc_target_gateset.py comment "The other five TGT gates"
+      -> "The other four TGT gates" (the code map already had TGT-02).
+  tests_at_round_1: 90   # tests/test_tgt02_module.py (was 75; +15 Round1RegressionTests)
+  full_suite_at_round_1: 1200
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt02_module.py' -v

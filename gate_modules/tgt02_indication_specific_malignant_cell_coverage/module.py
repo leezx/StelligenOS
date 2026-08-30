@@ -103,6 +103,42 @@ def run(
         if c.rejection_severity == "HARD"
     ]
 
+    # --- normalized-input identity gate (E7 item 10) ---------------------
+    # A duplicate observation_id is an ambiguous identity -- the Evidence
+    # Library resolves canonical packages BY observation_id, so two normalized
+    # records sharing one id cannot both be trustworthy. HARD, whole run.
+    obs_id_counts: dict[str, int] = {}
+    for o in observations:
+        obs_id_counts[o.observation_id] = obs_id_counts.get(o.observation_id, 0) + 1
+    for oid, n in obs_id_counts.items():
+        if n > 1:
+            why = f"observation_id {oid!r} appears {n} times -- ambiguous observation identity"
+            hard_integrity_failures.append((oid, why))
+            rejected_records.append((oid, why))
+
+    # Every observation must belong to THIS candidate's scientific context and
+    # THIS run's declared CRC coverage search scope -- no implicit default
+    # context, and a foreign completion may not be used for grading (E7 item 10).
+    for o in observations:
+        if o.context_key.strip() != module_input.context_key.strip():
+            why = (
+                f"observation {o.observation_id} carries context_key "
+                f"{o.context_key!r}, not the run's context_key "
+                f"{module_input.context_key!r}"
+            )
+            hard_integrity_failures.append((o.observation_id, why))
+            rejected_records.append((o.observation_id, why))
+    if completion.attempted and (
+        completion.search_scope.strip() != module_input.crc_coverage_search_scope.strip()
+    ):
+        why = (
+            "coverage_completion.search_scope "
+            f"{completion.search_scope!r} != the run's declared "
+            f"crc_coverage_search_scope {module_input.crc_coverage_search_scope!r}"
+        )
+        hard_integrity_failures.append(("coverage_completion", why))
+        rejected_records.append(("coverage_completion", why))
+
     # --- E8-5 invariant 1: completion completeness consistency -------------
     why = completeness_contradiction(completion)
     if why:
@@ -110,10 +146,13 @@ def run(
         rejected_records.append(("coverage_completion", why))
 
     # --- E8-5 invariant 2: audit presence + snapshot parity --------------
+    # Count SEARCH_COMPLETION_AUDIT observations at the NORMALIZED admissible
+    # identity layer -- a second audit must not be hidden by (source_id, claim)
+    # dedup in build_evidence_packages.
     audit_obs_ids = [
-        e.observation.observation_id
-        for e in emitted
-        if e.observation.observation_kind == "SEARCH_COMPLETION_AUDIT"
+        c.observation.observation_id
+        for c in classified
+        if c.admissible and c.observation.observation_kind == "SEARCH_COMPLETION_AUDIT"
     ]
     why = audit_presence_failure(completion, audit_obs_ids)
     if why:
@@ -154,6 +193,7 @@ def run(
     outcome = aggregate(emitted, completion)
     raw_fatal_review = detect_fatal_review(
         emitted,
+        completion,
         landscape_as_of=module_input.landscape_as_of,
         crc_coverage_search_scope=module_input.crc_coverage_search_scope,
     )

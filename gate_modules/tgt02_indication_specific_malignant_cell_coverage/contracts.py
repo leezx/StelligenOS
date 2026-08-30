@@ -49,6 +49,11 @@ GATE_VERSION: Final[str] = "1.0"
 GATESET_ID: Final[str] = "ADC_TARGET_GATESET"
 GATESET_VERSION: Final[str] = "1.0"
 INSTANTIATION_ID: Final[str] = "INST-CRC-REFRACTORY-ADC-TARGET-v1"
+#: The fixed Instantiation's frozen scientific context (PR D
+#: crc_adc_target_gateset.yaml context_id / context_version). The Module must
+#: not run against any other context (E7 item 10: no implicit default context).
+CONTEXT_ID: Final[str] = "CTX-CRC-REFRACTORY-MCRC"
+CONTEXT_VERSION: Final[int] = 1
 CANDIDATE_LEVEL: Final[str] = "L04"
 
 #: Verbatim from the frozen PR D TGT-02 contract. Reproduced only by the
@@ -326,6 +331,26 @@ class NormalizedCoverageObservation:
         if not isinstance(self.cohort_n, int) or isinstance(self.cohort_n, bool) or self.cohort_n < 0:
             raise ValueError("cohort_n must be a non-negative integer (a raw fact only)")
         _bool(self.declared_multi_cohort_analysis, "declared_multi_cohort_analysis")
+        # cohort_ids is the auditable cohort set of ONE declared multi-cohort
+        # analysis -- it is only cross-cohort when the observation itself declares
+        # the analysis (E7 item 08: "one declared multi-cohort analysis with at
+        # least two auditable cohort_ids"). A stray cohort_ids tuple must never
+        # let a single observation stand in for cross-cohort support.
+        if self.cohort_ids and not self.declared_multi_cohort_analysis:
+            raise ValueError(
+                "cohort_ids is only set on a declared multi-cohort analysis "
+                "(declared_multi_cohort_analysis must be true)"
+            )
+        if self.declared_multi_cohort_analysis:
+            if len(set(self.cohort_ids)) < 2:
+                raise ValueError(
+                    "a declared multi-cohort analysis names at least two distinct "
+                    "auditable cohort_ids"
+                )
+            if self.cohort_id.strip():
+                raise ValueError(
+                    "a declared multi-cohort analysis carries cohort_ids, not a single cohort_id"
+                )
 
         # --- cross-field shape by observation kind ---------------------------
         kind = self.observation_kind
@@ -431,10 +456,10 @@ class NormalizedCoverageObservation:
     @property
     def cohort_identities(self) -> tuple[str, ...]:
         """Every distinct auditable cohort identity this observation represents:
-        its ``cohort_ids`` for a declared multi-cohort analysis, else its single
-        ``cohort_id``."""
+        its ``cohort_ids`` ONLY when it declares a multi-cohort analysis, else
+        its single ``cohort_id``."""
 
-        if self.cohort_ids:
+        if self.declared_multi_cohort_analysis and self.cohort_ids:
             seen: list[str] = []
             for cid in self.cohort_ids:
                 if cid not in seen:
@@ -658,7 +683,16 @@ class Tgt02ModuleInput:
         if self.instantiation_id != INSTANTIATION_ID:
             raise ValueError(f"instantiation_id must be {INSTANTIATION_ID!r} for MOD-TGT02")
         _pattern(self.context_id, _CTX_ID, "context_id")
+        if self.context_id != CONTEXT_ID:
+            raise ValueError(
+                f"context_id must be {CONTEXT_ID!r} for the fixed TGT-02 Instantiation "
+                "-- there is no implicit default scientific context (E7 item 10)"
+            )
         _positive_int(self.context_version, "context_version")
+        if self.context_version != CONTEXT_VERSION:
+            raise ValueError(
+                f"context_version must be {CONTEXT_VERSION} for the fixed TGT-02 Instantiation"
+            )
         if self.gateset_id != GATESET_ID:
             raise ValueError(f"gateset_id must be {GATESET_ID!r}")
         if self.gateset_version != GATESET_VERSION:

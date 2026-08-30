@@ -83,7 +83,7 @@ GATESET_YAML = REPO_ROOT / "src" / "contracts" / "crc_adc_target_gateset.yaml"
 
 TARGET_A = "TARGET_A"
 CAND = "CAND-L04-000123"
-CTX_ID = "CTX-CRC-REFRACTORY"
+CTX_ID = "CTX-CRC-REFRACTORY-MCRC"
 INST = "INST-CRC-REFRACTORY-ADC-TARGET-v1"
 CONTEXT_KEY = "REFRACTORY_MCRC"
 AS_OF = "2026-08-30"
@@ -351,7 +351,7 @@ def _completion(
         unresolved_items=unresolved,
         qualifying_protein_cohort_ids=qualifying_protein,
         qualifying_indirect_cohort_ids=qualifying_indirect,
-        audit_observation_id=(audit_obs_id or "") if (attempted and umbrella) else "",
+        audit_observation_id=(audit_obs_id or "") if attempted else "",
     )
 
 
@@ -748,13 +748,13 @@ class CompletionInvariantTests(unittest.TestCase):
 
     def test_single_positive_cohort_incomplete_landscape_is_unknown(self):
         comp = _completion(attempted=True, complete=False, protein_complete=True)
-        res = _run([_protein(cohort="CRC_COHORT_A", pattern="PRESENT_CONSISTENT")], comp)
+        res = _run([_protein(cohort="CRC_COHORT_A", pattern="PRESENT_CONSISTENT"), _audit(comp)], comp)
         self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
         self.assertEqual(_pair(res), ("INCONCLUSIVE", "UNKNOWN"))
 
     def test_single_negative_cohort_incomplete_landscape_is_unknown(self):
         comp = _completion(attempted=True, complete=False, protein_complete=True)
-        res = _run([_protein(cohort="CRC_COHORT_A", pattern="ABSENT")], comp)
+        res = _run([_protein(cohort="CRC_COHORT_A", pattern="ABSENT"), _audit(comp)], comp)
         self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
         self.assertEqual(_pair(res), ("INCONCLUSIVE", "UNKNOWN"))
         self.assertFalse(res.fatal_review.required)
@@ -951,7 +951,7 @@ class CriticalUnknownTests(unittest.TestCase):
             attempted=True, complete=False, protein_complete=True,
             unresolved=(CoverageUnresolvedItem("sc atlas not yet resolved", "KNOWN_PUBLIC_NOT_YET_RESOLVED"),),
         )
-        res = _run([_protein(cohort="CRC_COHORT_A", pattern="PRESENT_CONSISTENT")], comp)
+        res = _run([_protein(cohort="CRC_COHORT_A", pattern="PRESENT_CONSISTENT"), _audit(comp)], comp)
         self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
         resolutions = {r for _, r in res.proposal_envelope.critical_unknowns}
         self.assertIn("PUBLIC_RESOLVABLE", resolutions)
@@ -962,7 +962,7 @@ class CriticalUnknownTests(unittest.TestCase):
             attempted=True, complete=False, protein_complete=True,
             unresolved=(CoverageUnresolvedItem("CPTAC access pending DUA", "ACCESS_OR_ANNOTATION_BLOCKED"),),
         )
-        res = _run([_protein(cohort="CRC_COHORT_A", pattern="PRESENT_CONSISTENT")], comp)
+        res = _run([_protein(cohort="CRC_COHORT_A", pattern="PRESENT_CONSISTENT"), _audit(comp)], comp)
         resolutions = {r for _, r in res.proposal_envelope.critical_unknowns}
         self.assertIn("CURRENTLY_UNRESOLVABLE", resolutions)
 
@@ -1022,6 +1022,142 @@ class ForbiddenOutputTests(unittest.TestCase):
             for token in ("passes tgt-02", "adequate malignant-cell coverage", "should be killed",
                           "coverage is fatal"):
                 self.assertNotIn(token, blob)
+
+
+class Round1RegressionTests(unittest.TestCase):
+    """ChatGPT AI审核方案 PR E8 review round 1 -- the seven runtime blockers."""
+
+    # --- blocker 1: fixed Instantiation context / scope binding ---------------
+    def test_non_canonical_context_id_is_rejected_at_the_input(self):
+        with self.assertRaises(ValueError):
+            dataclasses.replace(_input(), context_id="CTX-CRC-REFRACTORY")
+
+    def test_non_canonical_context_version_is_rejected_at_the_input(self):
+        with self.assertRaises(ValueError):
+            dataclasses.replace(_input(), context_version=2)
+
+    def test_observation_context_key_drift_is_a_hard_run_rejection(self):
+        comp = _completion(qualifying_protein=("CRC_COHORT_A",))
+        foreign = dataclasses.replace(
+            _protein(cohort="CRC_COHORT_A", pattern="PRESENT_CONSISTENT"),
+            context_key="SOME_OTHER_CRC_CONTEXT",
+        )
+        res = _run([foreign, _audit(comp)], comp)
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertTrue(any("context_key" in why for _, why in res.hard_integrity_failures))
+        self.assertIsNone(res.proposal_envelope)
+
+    def test_completion_search_scope_drift_is_a_hard_run_rejection(self):
+        comp = dataclasses.replace(
+            _completion(qualifying_protein=("CRC_COHORT_A",)),
+            search_scope="a different declared CRC coverage search scope",
+        )
+        res = _run([_protein(cohort="CRC_COHORT_A", pattern="PRESENT_CONSISTENT"), _audit(comp)], comp)
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertTrue(any("search_scope" in why for _, why in res.hard_integrity_failures))
+
+    # --- blocker 2: incomplete landscape + two negative cohorts -> UNKNOWN ----
+    def test_incomplete_landscape_with_two_negative_cohorts_is_accepted_unknown_not_rejected(self):
+        comp = _completion(attempted=True, complete=False, protein_complete=True)
+        res = _run([
+            _protein(cohort="CRC_COHORT_A", pattern="ABSENT"),
+            _protein(cohort="CRC_COHORT_B", pattern="ABSENT"),
+            _audit(comp),
+        ], comp)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        self.assertEqual(_pair(res), ("INCONCLUSIVE", "UNKNOWN"))
+        self.assertFalse(res.fatal_review.required)
+
+    # --- blocker 3: Gate-neutral EP wording for CONTEXTUAL evidence -----------
+    def test_non_malignant_protein_ep_does_not_claim_crc_malignant_cells(self):
+        comp = _completion()
+        obs = [
+            _protein(observation_id="OBS-CTX-1", cohort="STROMA",
+                     pattern="PRESENT_CONSISTENT", attribution="NON_MALIGNANT"),
+            _audit(comp),
+        ]
+        res = _run(obs, comp)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        ep = next(e for e in res.evidence_packages
+                  if e.study_context["observation_id"] == "OBS-CTX-1")
+        text = " ".join(ep.interpretation_boundary["directly_supports"]).lower()
+        self.assertNotIn("malignant cells", text)
+        self.assertNotIn("malignant compartment", text)
+        self.assertIn("non_malignant", text)
+
+    def test_incomplete_audit_ep_does_not_say_search_completed(self):
+        comp = _completion(attempted=True, complete=False, protein_complete=True)
+        res = _run([_protein(cohort="CRC_COHORT_A", pattern="PRESENT_CONSISTENT"), _audit(comp)], comp)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        audit_ep = next(e for e in res.evidence_packages
+                        if e.study_context["observation_kind"] == "SEARCH_COMPLETION_AUDIT")
+        text = " ".join(audit_ep.interpretation_boundary["directly_supports"]).lower()
+        self.assertIn("not yet complete", text)
+
+    # --- blocker 4: mandatory audit presence, dedup cannot hide a 2nd audit --
+    def test_attempted_incomplete_without_audit_is_hard(self):
+        comp = _completion(attempted=True, complete=False, protein_complete=True)
+        res = _run([_protein(cohort="CRC_COHORT_A", pattern="PRESENT_CONSISTENT")], comp)
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertTrue(res.hard_integrity_failures)
+
+    def test_two_audits_with_the_same_source_and_claim_is_hard(self):
+        comp = _completion(qualifying_protein=("CRC_COHORT_A",))
+        src = _next_src()
+        a1 = _audit(comp, observation_id="OBS-AUDIT-A", source_id=src)
+        a2 = _audit(comp, observation_id="OBS-AUDIT-B", source_id=src)  # same (source_id, claim)
+        res = _run([_protein(cohort="CRC_COHORT_A", pattern="PRESENT_CONSISTENT"), a1, a2], comp)
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertTrue(any("EXACTLY ONE" in why or "no SEARCH_COMPLETION_AUDIT" in why
+                            for _, why in res.hard_integrity_failures))
+
+    # --- blocker 5: cohort_ids without declared_multi_cohort_analysis --------
+    def test_cohort_ids_without_declared_multi_cohort_analysis_is_invalid(self):
+        with self.assertRaises(ValueError):
+            _protein(cohort="", cohort_ids=("CRC_COHORT_A", "CRC_COHORT_B"),
+                     pattern="ABSENT", declared_multi_cohort=False)
+
+    def test_declared_multi_cohort_needs_at_least_two_cohort_ids(self):
+        with self.assertRaises(ValueError):
+            _protein(cohort="", cohort_ids=("CRC_COHORT_A",),
+                     pattern="ABSENT", declared_multi_cohort=True)
+
+    def test_single_cohort_observation_never_yields_multiple_cohort_identities(self):
+        o = _protein(cohort="CRC_COHORT_A", pattern="ABSENT")
+        self.assertEqual(o.cohort_identities, ("CRC_COHORT_A",))
+
+    # --- blocker 6: EXPERIMENT_REQUIRED premature while public path remains --
+    def test_complete_indirect_only_with_blocked_unresolved_item_is_not_experiment_required(self):
+        comp = _completion(
+            qualifying_indirect=("CRC_COHORT_A",),
+            unresolved=(CoverageUnresolvedItem("HPA protein page access blocked", "ACCESS_OR_ANNOTATION_BLOCKED"),),
+        )
+        res = _run([_sc(cohort="CRC_COHORT_A", pattern="PRESENT_CONSISTENT"), _audit(comp)], comp)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        resolutions = {r for _, r in res.proposal_envelope.critical_unknowns}
+        self.assertIn("CURRENTLY_UNRESOLVABLE", resolutions)
+        self.assertNotIn("EXPERIMENT_REQUIRED", resolutions)
+
+    def test_complete_weak_only_with_unresolved_item_is_not_experiment_required(self):
+        comp = _completion(
+            unresolved=(CoverageUnresolvedItem("bulk deconvolution dataset pending", "KNOWN_PUBLIC_NOT_YET_RESOLVED"),),
+        )
+        res = _run([_bulk(kind="BULK_CRC_RNA"), _audit(comp)], comp)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        resolutions = {r for _, r in res.proposal_envelope.critical_unknowns}
+        self.assertNotIn("EXPERIMENT_REQUIRED", resolutions)
+        self.assertIn("PUBLIC_RESOLVABLE", resolutions)
+
+    # --- blocker 7: duplicate observation_id is an identity failure ----------
+    def test_duplicate_observation_id_is_a_hard_run_rejection(self):
+        comp = _completion(qualifying_protein=("CRC_COHORT_A",))
+        a = _protein(observation_id="OBS-DUP", cohort="CRC_COHORT_A", pattern="PRESENT_CONSISTENT")
+        b = _protein(observation_id="OBS-DUP", cohort="CRC_COHORT_B", pattern="ABSENT")
+        res = _run([a, b, _audit(comp)], comp)
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertTrue(any("ambiguous observation identity" in why
+                            for _, why in res.hard_integrity_failures))
+        self.assertIsNone(res.proposal_envelope)
 
 
 if __name__ == "__main__":

@@ -43,7 +43,7 @@ _NEUTRAL_LIMITATIONS: tuple[str, ...] = (
     "Gate-relative interpretation (Evidence-Ladder rung, Direction x Strength, "
     "fatal_review) is applied by the aggregate / review layer, not this package",
 )
-_NEUTRAL_CEILING = "an observation-level malignant-cell coverage fact for the named target in CRC"
+_NEUTRAL_CEILING = "an observation-level target-expression / search fact for the named target"
 
 _KEYS_ALWAYS: tuple[str, ...] = (
     "target_identity",
@@ -95,41 +95,44 @@ def _parity_keys(observation: NormalizedCoverageObservation) -> tuple[str, ...]:
 
 
 def _directly_supports(item: ClassifiedCoverage) -> tuple[str, ...]:
+    """State the observation's ACTUAL fields (E7 item 11 Gate-neutral factual
+    contract). Never assume a malignant / CRC / complete claim from the
+    observation kind -- a NON_MALIGNANT / non-CRC / unresolved-compartment
+    contextual observation must not be written as if it were in CRC malignant
+    cells, and an incomplete audit must not be written as a completed search."""
+
     o = item.observation
-    cohort_label = o.cohort_id or ",".join(o.cohort_ids)
-    pattern_label = o.expression_pattern or "an unqualified pattern"
-    if o.observation_kind == "PROTEIN_COHORT":
-        return (
-            f"cohort {cohort_label!r} ({o.assay_method}) reported {pattern_label} "
-            f"target protein expression in annotated CRC malignant cells; cohort "
-            f"adequacy {o.cohort_adequacy_status}",
+    if o.observation_kind == "SEARCH_COMPLETION_AUDIT":
+        state = (
+            "declared public CRC coverage search complete"
+            if o.audit_public_crc_coverage_search_complete
+            else "declared public CRC coverage search NOT yet complete"
         )
-    if o.observation_kind == "MALIGNANT_SC_SPATIAL":
         return (
-            f"{o.assay_method} resolved target expression to the CRC malignant "
-            f"compartment as {pattern_label} (cohort {cohort_label!r})",
+            f"a CRC coverage search-completion record as of {o.audit_landscape_as_of}: "
+            f"{state}; components -- protein cohort "
+            f"{o.audit_protein_cohort_search_complete}, malignant-compartment "
+            f"sc/spatial {o.audit_malignant_compartment_sc_spatial_search_complete}, "
+            f"TMA concordance {o.audit_tma_concordance_search_complete}, matched "
+            f"normal-tumor {o.audit_matched_normal_tumor_search_complete}",
         )
-    if o.observation_kind == "TMA_TRANSCRIPT_PROTEIN_CONCORDANCE":
-        return (
-            f"CRC tissue-microarray transcript-and-protein concordance with "
-            f"malignant-cell attribution reported {pattern_label} (cohort {cohort_label!r})",
-        )
-    if o.observation_kind == "BULK_CRC_RNA":
-        return (
-            f"bulk CRC RNA expression for the target without malignant-cell "
-            f"deconvolution: {o.claim}",
-        )
-    if o.observation_kind == "PAN_CANCER_UNRESOLVED":
-        return (
-            f"a pan-cancer dataset not resolved to colorectal cancer: {o.claim}",
-        )
+
+    cohort_label = ",".join(o.cohort_identities) or "(unnamed cohort)"
+    pattern_label = o.expression_pattern or "an unqualified expression pattern"
+    facts = (
+        f"crc_specific={o.crc_specific}, "
+        f"malignant_cell_attribution={o.malignant_cell_attribution}, "
+        f"molecular_layer={o.molecular_layer}, assay={o.assay_method}, "
+        f"cohort_adequacy_status={o.cohort_adequacy_status}"
+    )
     if o.observation_kind == "MATCHED_NORMAL_TUMOR":
         return (
-            f"a matched normal-vs-tumor CRC comparison (context only): {o.claim}",
+            f"a matched normal-vs-tumor comparison for the target ({facts}); "
+            f"context only: {o.claim}",
         )
     return (
-        f"a declared CRC malignant-cell coverage search was completed as of "
-        f"{o.audit_landscape_as_of}: {o.claim}",
+        f"cohort {cohort_label!r} reported {pattern_label} target expression "
+        f"({facts})",
     )
 
 
