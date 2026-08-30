@@ -1,0 +1,98 @@
+module:
+  module_id: MOD-TGT08
+  module_name: tgt08_target_opportunity_competition_ip_whitespace
+  module_version: "1.0.0"
+  built_in: runtime_migration_pr_e6
+  construction_contract: src/contracts/gate_modules/tgt08_target_opportunity_competition_ip_whitespace.yaml
+  construction_drawing: docs/gate_modules/TGT-08_Target_Opportunity_Competition_IP_Whitespace.md
+
+  gate_binding:
+    gate_id: TGT-08
+    gate_version: "1.0"
+    gateset_id: ADC_TARGET_GATESET
+    gateset_version: "1.0"
+    instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v1
+    candidate_level: L04
+    # frozen PR D / gateset regime for TGT-08; the current instantiation runs the
+    # public path only.
+    dominant_evidence_regime: PUBLIC_PRIMARY
+    current_instantiation_regime: PUBLIC_ONLY
+
+  the_one_question: >-
+    Is there a differentiated opportunity for this target in refractory mCRC:
+    unmet need, competitive landscape, and IP whitespace signals? (verbatim
+    gate_question inherited from the PR D TGT-08 contract; a target-level
+    external-opportunity gate, NOT a scientific de-risking judgement and NOT a
+    sponsor decision; not widened or narrowed)
+
+  purpose: >-
+    Deterministic Gate-specific scientific core for TGT-08. It turns normalized
+    public-landscape facts (competitor programs, patent claims / statuses,
+    indication-level unmet need, audited search-completion records) into atomic
+    Gate-neutral EvidencePackages, maps each to a frozen TGT-08 evidence class
+    and a Module-owned Gate-relative opportunity implication
+    (SUPPORTS_OPPORTUNITY / OPPOSES_OPPORTUNITY / CONTEXTUAL), tracks two typed
+    completion states (CompetitiveLandscapeCompletion, PatentLandscapeCompletion)
+    and derives each axis's authority ceiling from them, aggregates a proposed
+    Direction x Strength strictly per the frozen E5 truth table (overall
+    Strength is the WEAKER required axis ceiling; NEGATIVE is reachable; a
+    coverage-complete landscape with no directional signal is a GRADED
+    INCONCLUSIVE, distinct from INCONCLUSIVE / UNKNOWN; the unmet-need-only WEAK
+    hypothesis is exempt from the two-axis mandatory completion; an absence
+    inference is derived ONLY from an audited completion, never from records ==
+    []), emits a machine-local sponsor_review review TRIGGER when a
+    primary-source-verified approved / registrational same-target mCRC ADC
+    coincides with a live composition-level target-directed ADC patent claim,
+    and emits a non-canonical assessment proposal envelope for the human review
+    surface.
+
+  owns:
+    - input contract validation (no implicit default context; the candidate's target_identity is the single authoritative target; landscape_as_of is mandatory -- a landscape with no as_of is not admissible)
+    - candidate <-> record target-identity binding (a record whose target_identity differs from the candidate's canonical target is evidence misbinding and is a HARD rejection)
+    - the three-axis fact split (COMPETITIVE / PATENT / UNMET_NEED) and the four observation kinds (COMPETITOR_PROGRAM / PATENT_CLAIM / UNMET_NEED_CONTEXT / SEARCH_COMPLETION_AUDIT); the provider supplies facts only and never sets an axis ceiling, a direction, or an opportunity implication
+    - frozen TGT-08 evidence-class mapping and the deterministic Gate-relative opportunity implication (approved / registrational / active-clinical same-context same-target program -> OPPOSES; a competitor failing is CONTEXTUAL, never automatically favorable; a live relevant composition-level ADC claim -> OPPOSES; a target-level-only live hit -> OPPOSES with the patent axis capped at INDIRECT_STRONG; an expired patent is CONTEXTUAL, never whitespace; unmet need is CONTEXTUAL / WEAK hypothesis only)
+    - Gate-NEUTRAL EvidencePackage construction (PR A evidence_package shape); one package per observation; a package never carries a good / bad opportunity, TGT-08 NEGATIVE, crowded target, FTO blocked, dominant competitor, no design around or no differentiation path; an observation already in the Evidence Library is reused as its EXACT canonical package (no allocator call, no new body); provenance comes from the resolved canonical SourceIndex record
+    - "hard identity / provenance / completion integrity gate: a candidate<->target misbinding, a claimed-resolved source missing from the canonical SourceIndex, a canonical-source metadata conflict, an incompatible canonical EvidencePackage, a completion state whose qualifying set disagrees with the emitted qualifying evidence, or an absence SUPPORT with no backing completion-audit EvidencePackage rejects the WHOLE run -- it is never degraded to an accepted UNKNOWN"
+    - deterministic Direction x Strength aggregation per the frozen E5 truth table; the overall Strength is the weaker required axis ceiling (an overall DIRECT needs BOTH axes at DIRECT authority; two coverage-complete axes alone never yield DIRECT); the unmet-need-only WEAK hypothesis is exempt from the two-axis mandatory completion; a coverage-complete audited landscape with no material directional signal is a GRADED INCONCLUSIVE (with CONTEXTUAL evidence_refs), never INCONCLUSIVE / UNKNOWN; NEGATIVE weighs against a differentiated entry and is never a KILL / STOP_FOR_SPONSOR / OUT_OF_MANDATE / FTO-blocked finding / scientific verdict
+    - two module-local typed completion states + their derived axis authority ceilings; an absence inference (no qualifying competitor / no qualifying live claim -> SUPPORTS_OPPORTUNITY) is derived ONLY from an attempted + coverage-complete + evaluable + audited completion whose qualifying set is empty, and the supporting evidence is the SEARCH_COMPLETION_AUDIT EvidencePackage -- never from an empty record list
+    - "machine-local sponsor_review review TRIGGER (E6-5): required iff a primary-source-verified approved / registrational same-target refractory-mCRC ADC program coincides with an official / primary live composition-level target-directed ADC patent claim, both classified OPPOSES_OPPORTUNITY; status is at most POTENTIAL_SPONSOR_FATAL_PATTERN; NO thresholds, NO ownership-linkage inference; the machine NEVER asserts dominant / well protected / no differentiation path / this sponsor should stop, and NEVER emits a canonical fatal flag / KILL / STOP_FOR_SPONSOR / OUT_OF_MANDATE; only an accepted run's trigger is an actionable handoff"
+    - machine acceptance record (E5 item 13) as executable checks
+    - non-canonical assessment proposal envelope (E5 item 12); the TGT-08 ceiling / inference / direction live here, never on the Gate-neutral package; the envelope carries no assessment_id / assessment_version / review, no FTO / legal / no-differentiation-path conclusion, and no fatal flag / KILL / STOP_FOR_SPONSOR / OUT_OF_MANDATE
+
+  does_not_own:
+    - live ClinicalTrials.gov / FDA / trial-registry / company-disclosure retrieval; live patent retrieval; Lens / PATENTSCOPE / Google Patents / EPO adapters
+    - trial / regulatory / patent normalisation, source-authority keying, opportunity-implication assignment by the provider (the provider supplies facts; the module does the deterministic mapping)
+    - entity resolution, source registry, provenance ledger, serialization (shared infra, v5 section 6.5)
+    - database, cache, RUNS / ASSESSMENTS / EvidenceIndex persistence
+    - a freedom-to-operate opinion, an infringement / validity / enforceability judgement, a legal-clearance conclusion, a definitive design-around-availability conclusion, or a "no differentiation path" conclusion
+    - any scientific de-risking or re-risking of TGT-01 through TGT-07 from a favorable or unfavorable commercial picture
+    - the strategic materiality judgement, the "dominant" / "well protected" judgement, the sponsor routing / capital-allocation decision, and whether this sponsor proceeds
+    - human approval and canonical CandidateGateAssessment construction
+    - Candidate-level Decision / KILL / STOP_FOR_SPONSOR / OUT_OF_MANDATE, MatrixView writes, cross-Gate reasoning
+
+  ports:
+    - name: Tgt08OpportunityProviderPort
+      role: supplies already-normalized, primary/official-source-resolved TGT-08 landscape observations (each with evidence_axis, observation_kind, source_authority_kind and facts only) plus the two typed completion contracts (CompetitiveLandscapeCompletion, PatentLandscapeCompletion)
+    - name: EvidenceIdAllocatorPort
+      role: allocates EP-nnnnnnnn ids for observations not already in the Evidence Library; the Module never derives ids from the filesystem
+    - name: SourceResolverPort
+      role: resolves a provenance.source_id to its canonical SourceIndex record; an unresolved id or a provider record whose metadata disagrees with the canonical record is a HARD rejection
+    - name: ExistingEvidenceLibraryPort
+      role: read-only lookup by observation_id into the PR C reusable Evidence Library; returns the EXACT canonical EvidencePackage, reused unchanged (no allocator call, no re-created body); an incompatible returned package (missing OR drifted classification / absence driving field) is a hard integrity failure
+
+  boundary_flags:
+    performs_network_io: false
+    spawns_subprocess: false
+    writes_repository: false
+    allocates_ids_from_filesystem: false
+    constructs_canonical_assessment: false
+    produces_decision_or_kill: false
+    emits_sponsor_stop_or_out_of_mandate: false
+    freedom_to_operate_or_legal_logic: false
+    scientific_de_risking_of_other_gates: false
+    ontology_or_embedding_inference: false
+    numeric_or_ranking_scoring: false
+    absence_inference_without_audited_completion: false
+    modifies_frozen_gate_science: false
+    modifies_mod_tgt01_or_mod_tgt05: false
+    lifts_migration_pending: false

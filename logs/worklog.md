@@ -5067,3 +5067,82 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 状态：TGT-08 施工图已冻结。8 个 primary Module 已建 2 个（TGT-01@1.0.0、
   TGT-05@1.0.0），TGT-08 施工合同已 APPROVE 但 Module 未建（`0.0.0`）。
   `MIGRATION_PENDING` 保持。PR E6 = MOD-TGT08@1.0.0 implementation 需用户 go-ahead。
+
+## 2026-08-29T23:59 EDT — Runtime Migration PR E6：MOD-TGT08@1.0.0 实现（分支 task_20260829_runtime-migration-pr-e6，基线 PR E5 收口 @ 14b7ac5）
+
+- 授权：用户在 PR E5 APPROVE 后 "go ahead"；开工前 `AI审核方案` 拍板
+  **PR E6 = MOD-TGT08@1.0.0 deterministic implementation**（像 E2 / E4 一样是完整
+  Gate-specific scientific core，严格实现冻结的 E5 施工合同，不接 live provider、
+  不写外部 workspace、不做 calibration），给了 8 个 scoping 决策 E6-1…E6-8 + 3 条
+  headline invariant（详见 `manifests/runtime_migration_pr_e6_manifest.yaml` +
+  `docs/handoff/2026-08-29-runtime-migration-pr-e6.zh-CN.md`）。
+- 变更定位：`RUNTIME_IMPL_ADD`（第五层）。新增 top-level 包
+  `gate_modules/tgt08_target_opportunity_competition_ip_whitespace/`（`__init__` /
+  `module.yaml` / `contracts` / `ports` / `classify` / `evidence` / `aggregate` /
+  `sponsor_review` / `acceptance` / `module`），确定性、只调 injected port，不上网 /
+  不开 subprocess / 不写仓库 / 不自增 ID / 无 ontology·embedding·LLM / 不产
+  canonical Assessment·Decision·KILL·STOP_FOR_SPONSOR·OUT_OF_MANDATE / 不产
+  numeric·ranking score / 不产 FTO·legal 结论。
+- 三层边界（E6 严格守 E5 冻结语义）：Scientific Gates TGT-01…07（靶点生物学 / ADC
+  可行性 / liability）— **TGT-08（external opportunity landscape：competition /
+  target-specific differentiation / IP-whitespace SIGNALS）** — Sponsor axis
+  （v5 §7，OUT_OF_MANDATE / STOP_FOR_SPONSOR 不是 KILL）。TGT-08 NEGATIVE 只表示
+  「当前 public opportunity evidence 不利于一个 differentiated entry」，不是
+  scientifically bad target / KILL / sponsor stop / FTO blocked。
+- 关键实现点：
+  - `contracts.py` —— `NormalizedOpportunityRecord`（3 axes × 4 observation kind，
+    facts only + factual 谓词）；`CompetitiveLandscapeCompletion` /
+    `PatentLandscapeCompletion` frozen dataclass（`axis_ceiling` / `evaluable`
+    派生；未 attempted 时禁 complete/qualifying/sources；coverage-complete 需
+    audit obs id + sources_searched）；`SponsorReviewRecord`（`required` iff
+    `POTENTIAL_SPONSOR_FATAL_PATTERN`，≥1 competitor + ≥1 patent + ≥1 evidence；
+    `none()`）；`AssessmentProposalEnvelope`（合法 Direction×Strength 对；
+    `EXPERIMENT_REQUIRED` 直接 raise；role↔direction 一致；`evidence_ceiling`
+    逐字 == `TGT08_EVIDENCE_CEILING`；无 `assessment_id`/`assessment_version`/
+    `review`）；`Tgt08ModuleRunResult`（hard failure → 无 proposal + not accepted；
+    `sponsor_review.required` 需 accepted run）；module 级 `overall_strength()`
+    取较弱轴。
+  - `classify.py` —— 逐字 E6-4 mapping（unresolved → SOFT；target 不匹配 → HARD；
+    audit / unmet-need → CONTEXTUAL；competitor APPROVED/REGISTRATIONAL/
+    ACTIVE_CLINICAL 同 context → OPPOSES qualifying，dead/other-indication/early
+    → CONTEXTUAL；patent live composition-level ADC claim → OPPOSES qualifying，
+    live target-level-only → OPPOSES qualifying，dead/irrelevant → CONTEXTUAL）。
+  - `evidence.py` —— Gate-neutral PR A EvidencePackage / observation；exact
+    canonical reuse（同一对象、不调 allocator）；`_parity_keys` = always +
+    kind-specific，缺失 OR drift → HARD；provenance 取 canonical SourceIndex，
+    mismatch → HARD；`_NEUTRAL_DOES_NOT_SUPPORT` 声明不含 FTO / no-differentiation-
+    path / TGT-01…07 de-risking / sponsor Decision·KILL。
+  - `aggregate.py` —— frozen precedence（WEAK 两轴豁免 → INCONCLUSIVE/WEAK；
+    incomplete → INCONCLUSIVE/UNKNOWN；两轴 evaluable → POSITIVE / NEGATIVE /
+    CONFLICTING / graded INCONCLUSIVE @ 较弱轴 ceiling）；absence SUPPORT 只来自
+    attempted + coverage_complete + evaluable + zero qualifying + audit EP；
+    `unresolved_items` → CURRENTLY_UNRESOLVABLE，incomplete 轴 → PUBLIC_RESOLVABLE；
+    NEGATIVE rationale 明写 NOT a KILL。
+  - `sponsor_review.py` —— `detect()` 机械匹配：competitor（ADC + exact context +
+    APPROVED/REGISTRATIONAL + primary authority + OPPOSES）AND patent（live
+    composition-level ADC claim + official/primary provenance + OPPOSES）→
+    `POTENTIAL_SPONSOR_FATAL_PATTERN`；否则 `none()`。无阈值 / 无 ownership linkage。
+  - `acceptance.py` —— E5 item-13 可执行检查（identity / hygiene / freshness /
+    completion↔emitted 一致性 / absence provenance / frozen precedence / role↔
+    direction / sponsor_review 边界 / 无 FTO·strategy·science·decision·score 措辞）。
+  - `module.py` —— `run()`：classify → build EP → aggregate → sponsor_review.detect
+    → acceptance.evaluate → accepted 才建 envelope；`run_sponsor_review =
+    sponsor_review if accepted else none()`。
+- Binding 窄修：`src/contracts/crc_adc_target_gateset.yaml` TGT-08
+  `primary_module_version` `0.0.0 → 1.0.0` + `built_module_versions` +
+  `rule` 措辞；`src/objects/crc_adc_target_gateset.py` `BUILT_MODULE_VERSIONS`
+  加 `"TGT-08": "1.0.0"`；`gate_modules/README.md` 注册表加 `MOD-TGT08@1.0.0`
+  （built, PR E6）+「其余五个」措辞。冻结的 E5 合同正文一字未改。
+- 测试：新增 `tests/test_tgt08_module.py`（69 tests，全 synthetic，
+  `TARGET_A` / `PROGRAM_A/B` / `PATENT_FAMILY_A/B` / `REFRACTORY_MCRC`，无 HER2 /
+  TROP2）；`tests/test_gate_modules_boundary.py` 新增 `Tgt08ModuleManifestTests`；
+  `tests/test_crc_adc_target_gateset.py` `_BUILT_MODULE_VERSIONS` + TGT-08 test；
+  `tests/test_tgt05_module.py` `BindingTests` 更新（TGT-08 现在 1.0.0）；
+  `tests/test_tgt05_module_construction_contract.py` `allowed` 包列表加 tgt08。
+- 验证：`tests/test_tgt08_module.py` **69 OK**；全量 **1042**（E5 approval 基线
+  967，E6 +75；1 个既有本机 `test_assetgenos_modules` `__pycache__` 扫描 FAIL，
+  CI 干净 checkout 上 GREEN）；`git diff --check` clean；`gate_modules/` 通过
+  repository boundary；YAML 结构合法。
+- Next：commit、push `origin/task_20260829_runtime-migration-pr-e6`、开 PR、CI
+  绿（matrix py3.11 + 3.12）后回 `AI审核方案` 贴 E6 实现摘要 vs E6-1…E6-8 复审。
+  APPROVE → merge + 独立 docs-only approval-record PR。
