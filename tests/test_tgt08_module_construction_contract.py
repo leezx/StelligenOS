@@ -243,7 +243,8 @@ class TwoAxisEvidenceBundleTests(unittest.TestCase):
         two = i16["two_axis_mandatory_coverage"]
         self.assertEqual(len(two["before_a_complete_landscape_assessment_both_must_complete"]), 2)
         cinc = _norm(two["coverage_complete_is_not_direct_quality"])
-        self.assertIn("precondition for a graded (non-unknown) assessment, not by themselves a direct one", cinc)
+        self.assertIn("precondition for a target-specific direct / indirect_strong graded opportunity assessment, not by themselves a direct one", cinc)
+        self.assertIn("not a precondition for the frozen unmet-need-only weak hypothesis", cinc)
         i13 = " ".join(self.item["13_machine_acceptance_criteria"]["a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"]).lower()
         self.assertIn("an overall direct requires both the primary-source competitive axis and the composition-level patent review complete at direct authority", i13)
 
@@ -298,14 +299,17 @@ class TwoAxisEvidenceBundleTests(unittest.TestCase):
         i05 = self.item["05_evidence_ladder_and_evidence_ceiling"]["WEAK"]
         self.assertIn("no opportunity / whitespace claim; hypothesis only", _norm(i05["ceiling_rule"]))
         tt = self.item["06_direction_interpretation"]["frozen_truth_table"]
-        self.assertEqual(_norm(tt["indication_level_unmet_need_only"]), "inconclusive / weak")
+        self.assertEqual(
+            _norm(tt["indication_level_unmet_need_only_no_target_specific_read_attempted"]),
+            "inconclusive / weak",
+        )
         never = [_norm(x) for x in tt["never"]]
         self.assertIn("refractory mcrc is grim -> this target is a good opportunity", never)
 
     def test_incomplete_landscape_is_unknown(self):
         tt = self.item["06_direction_interpretation"]["frozen_truth_table"]
         self.assertEqual(
-            _norm(tt["landscape_source_space_materially_incomplete_or_a_mandatory_axis_not_searched"]),
+            _norm(tt["target_specific_landscape_attempted_but_a_mandatory_axis_incomplete_or_no_admissible_evaluable_landscape"]),
             "inconclusive / unknown",
         )
         i15 = _norm(self.item["15_failure_unknown_and_conflict_behavior"]["incomplete_landscape"])
@@ -313,6 +317,23 @@ class TwoAxisEvidenceBundleTests(unittest.TestCase):
         self.assertIn("we could not look", i15)
         one_axis = _norm(self.item["16_stop_rule"]["two_axis_mandatory_coverage"]["one_axis_not_done"])
         self.assertIn("half landscape cannot yield a target-opportunity judgement", one_axis)
+
+    def test_unmet_need_only_weak_is_exempt_from_the_two_axis_completion_rule(self):
+        i06 = self.item["06_direction_interpretation"]
+        prec = _norm(i06["unmet_need_only_vs_incomplete_target_landscape"])
+        self.assertIn("is a prerequisite for a target-specific direct / indirect_strong opportunity assessment, not for the frozen unmet-need-only weak hypothesis", prec)
+        self.assertIn("no target-specific competitive / ip read attempted -> inconclusive / weak", prec)
+        self.assertIn("one mandatory axis is incomplete -> inconclusive / unknown", prec)
+        self.assertIn("both pr d statements are preserved", prec)
+        s = _norm(i06["strength_is_the_weaker_required_axis_ceiling"])
+        self.assertIn("the explicit indication-level unmet-need-only weak hypothesis is exempt from the two-axis precondition", s)
+        one_axis = _norm(self.item["16_stop_rule"]["two_axis_mandatory_coverage"]["one_axis_not_done"])
+        self.assertIn("exception: the explicit indication-level unmet-need-only weak hypothesis", one_axis)
+        self.assertIn("not unknown", one_axis)
+        never = [_norm(x) for x in i06["frozen_truth_table"]["never"]]
+        self.assertTrue(any("unmet-need-only with no target-specific read attempted -> unknown" in x for x in never))
+        w = _norm(self.item["15_failure_unknown_and_conflict_behavior"]["weak_unmet_need_only"])
+        self.assertIn("exempt from the two-axis mandatory completion", w)
 
     def test_absence_inference_needs_completion_provenance(self):
         i09 = _norm(self.item["09_evidence_source_plan"]["absence_inference_needs_completion_provenance"])

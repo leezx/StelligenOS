@@ -4991,3 +4991,36 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   **966**（1 个既有本机 __pycache__ 噪音 FAIL，CI 干净 checkout 上 GREEN）；
   `git diff --check` clean；YAML 结构合法；03/04/05/07/08 parity 仍全 True。
 - Next：提交、推送、CI 绿后回 `AI审核方案` 贴第一轮复审（2 个 blocker 摘要）。
+
+## 2026-08-29T23:30 EDT — Runtime Migration PR E5 第二轮修订（PR #114 @ c65990e REQUEST_CHANGES）
+
+- 审核方复审 c65990e：**上一轮两个 blocker 都已关闭**（weaker-axis ceiling 贯穿
+  item 06/13/16；graded INCONCLUSIVE 与 INCONCLUSIVE/UNKNOWN 分开，且有
+  regression）。只剩 1 个非常窄的 contract inconsistency。
+- Blocker — WEAK unmet-need exception 与 two-axis completion rule 冲突。第一轮修订
+  写的 "two coverage-complete axes are the PRECONDITION for a graded (non-UNKNOWN)
+  assessment" 与冻结的 item 06 "indication-level unmet need only → INCONCLUSIVE /
+  WEAK"（一个不需要任何轴完成的 graded 非-UNKNOWN 状态）冲突。典型场景：只有
+  refractory mCRC unmet-need evidence、竞争轴与专利轴都未搜 → item 06 说 WEAK、
+  item 16 说 UNKNOWN。
+- 修（不改任何 Gate science）：冻结显式 precedence —— two-axis mandatory
+  completion 是 **target-specific DIRECT / INDIRECT_STRONG** opportunity
+  assessment 的前提，**不是** frozen unmet-need-only WEAK hypothesis 的前提。
+  (a) 只有 indication-level unmet-need evidence、**没有 attempt 任何 target-specific
+  competitive/IP read** → INCONCLUSIVE / WEAK；(b) **attempt 了** target-specific
+  landscape assessment 且某 mandatory axis incomplete → INCONCLUSIVE / UNKNOWN。
+  新增 item 06 `unmet_need_only_vs_incomplete_target_landscape`；改写 item 06
+  `strength_is_the_weaker_required_axis_ceiling`（WEAK exempt）+ item 16
+  `one_axis_not_done`（EXCEPTION 子句）+ `coverage_complete_is_not_direct_quality`
+  + item 15 `weak_unmet_need_only` / `incomplete_landscape` + drawing item
+  06/15/16 行；truth table 两行 key 改名
+  （`indication_level_unmet_need_only_no_target_specific_read_attempted` /
+  `target_specific_landscape_attempted_but_a_mandatory_axis_incomplete_or_no_admissible_evaluable_landscape`），
+  never 加 "unmet-need-only with no target-specific read attempted → UNKNOWN"；
+  新增 regression `test_unmet_need_only_weak_is_exempt_from_the_two_axis_completion_rule`。
+- 未改：PR D、sponsor_review 契约、source plan / FTO boundary、repository scope、
+  MOD-TGT01 / MOD-TGT05。
+- 验证：`tests/test_tgt08_module_construction_contract.py` 48 → **49 OK**；全量
+  **967**（1 个既有本机 __pycache__ 噪音 FAIL，CI 干净 checkout 上 GREEN）；
+  `git diff --check` clean；YAML 结构合法；03/04/05/07/08 parity 仍全 True。
+- Next：提交、推送、CI 绿后回 `AI审核方案` 贴第二轮复审（1 个 blocker 摘要）。

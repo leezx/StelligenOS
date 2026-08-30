@@ -201,8 +201,12 @@ acceptance_checklist:
       INDIRECT_STRONG. competitive INDIRECT_STRONG + patent DIRECT -> overall
       capped at INDIRECT_STRONG. competitive INDIRECT_STRONG + patent
       INDIRECT_STRONG -> overall INDIRECT_STRONG. Two coverage-complete axes are
-      the PRECONDITION for a graded (non-UNKNOWN) assessment (item 16), not by
-      themselves a DIRECT one.
+      the PRECONDITION for a TARGET-SPECIFIC DIRECT / INDIRECT_STRONG graded
+      opportunity assessment (item 16), not by themselves a DIRECT one. The
+      explicit indication-level unmet-need-only WEAK hypothesis is EXEMPT from
+      the two-axis precondition -- it is precisely the "no target-specific
+      competitive / IP read attempted" state (item 06 precedence:
+      unmet_need_only_vs_incomplete_target_landscape).
     graded_inconclusive_vs_unknown: >-
       INCONCLUSIVE / UNKNOWN means the landscape is materially incomplete or
       there is no admissible evaluable landscape. A GRADED INCONCLUSIVE
@@ -215,6 +219,17 @@ acceptance_checklist:
       resolve direction". This is why Direction x Strength is orthogonal
       (Blueprint v1.3) and why PR A allows INCONCLUSIVE with a graded strength +
       evidence_refs.
+    unmet_need_only_vs_incomplete_target_landscape: >-
+      the two-axis mandatory completion (item 16) is a prerequisite for a
+      TARGET-SPECIFIC DIRECT / INDIRECT_STRONG opportunity assessment, NOT for
+      the frozen unmet-need-only WEAK hypothesis. Precedence: (a)
+      indication-level unmet-need evidence only, with NO target-specific
+      competitive / IP read attempted -> INCONCLUSIVE / WEAK (the frozen PR D
+      WEAK rung -- "hypothesis only"); (b) a target-specific landscape
+      assessment WAS attempted and one mandatory axis is incomplete ->
+      INCONCLUSIVE / UNKNOWN ("Incomplete landscape -> UNKNOWN"). Both PR D
+      statements are preserved -- the WEAK rung and the incomplete-landscape ->
+      UNKNOWN rule are about different situations.
     frozen_truth_table:
       note: >-
         exactly ONE mapping -- E6 has no discretion. "material" means the signal
@@ -228,14 +243,15 @@ acceptance_checklist:
       completed_landscape_both_material_supporting_and_opposing_signals: CONFLICTING / <overall rung>
       completed_landscape_no_material_directional_signal_direct_authority: INCONCLUSIVE / DIRECT
       completed_landscape_no_material_directional_signal_indirect_strong_authority: INCONCLUSIVE / INDIRECT_STRONG
-      indication_level_unmet_need_only: INCONCLUSIVE / WEAK
-      landscape_source_space_materially_incomplete_or_a_mandatory_axis_not_searched: INCONCLUSIVE / UNKNOWN
+      indication_level_unmet_need_only_no_target_specific_read_attempted: INCONCLUSIVE / WEAK
+      target_specific_landscape_attempted_but_a_mandatory_axis_incomplete_or_no_admissible_evaluable_landscape: INCONCLUSIVE / UNKNOWN
       never:
         - refractory mCRC is grim -> this target is a good opportunity
         - UNKNOWN -> attractive / uncrowded / whitespace
         - a favorable commercial picture -> TGT-01 through TGT-07 are de-risked
         - both axes searched -> DIRECT (the overall rung is the weaker required axis ceiling)
         - a completed landscape with no directional signal -> UNKNOWN (that is a graded INCONCLUSIVE, not UNKNOWN)
+        - unmet-need-only with no target-specific read attempted -> UNKNOWN (that is the frozen WEAK hypothesis, item 06 unmet_need_only_vs_incomplete_target_landscape)
     NEGATIVE: >-
       reachable and bounded. NEGATIVE means the current public opportunity
       evidence weighs against a differentiated entry for this target in
@@ -544,12 +560,22 @@ acceptance_checklist:
     incomplete_landscape: >-
       propose INCONCLUSIVE / UNKNOWN. Verbatim from the frozen contract:
       "Incomplete landscape -> UNKNOWN." This is strictly the "we could not
-      look" state -- the landscape is materially incomplete, or a mandatory axis
-      was not searched, or there is no admissible evaluable landscape. UNKNOWN is
+      look" state -- a target-specific landscape assessment WAS attempted and
+      the landscape is materially incomplete, or a mandatory axis was started
+      but not finished, or there is no admissible evaluable landscape. UNKNOWN is
       never converted to attractive / uncrowded / whitespace, and it is NEVER
       used for a completed landscape that merely lacks a directional signal
-      (that is a graded INCONCLUSIVE above).
-    weak_unmet_need_only: propose INCONCLUSIVE / WEAK; it does not participate in a target-specific CONFLICTING
+      (that is a graded INCONCLUSIVE above), and NEVER for the explicit
+      unmet-need-only WEAK hypothesis (item 06
+      unmet_need_only_vs_incomplete_target_landscape).
+    weak_unmet_need_only: >-
+      propose INCONCLUSIVE / WEAK when there is only an indication-level
+      unmet-need signal and NO target-specific competitive / IP read was
+      attempted -- the frozen PR D WEAK "hypothesis only" rung. It does not
+      participate in a target-specific CONFLICTING and is EXEMPT from the
+      two-axis mandatory completion (item 16) -- an unsearched target-specific
+      axis makes it UNKNOWN only when a target-specific assessment was actually
+      attempted.
     conflicting_evidence: >-
       propose CONFLICTING only with materially opportunity-supporting AND
       materially opportunity-opposing target-specific signals on a completed
@@ -579,8 +605,11 @@ acceptance_checklist:
         - the competitive-landscape coverage (item 09 competitive_landscape_axis must_cover_at_least)
         - the composition-level patent-landscape coverage (item 09 composition_level_patent_axis must_produce)
       coverage_complete_is_not_direct_quality: >-
-        two coverage-complete axes are the PRECONDITION for a graded
-        (non-UNKNOWN) assessment, NOT by themselves a DIRECT one. A complete
+        two coverage-complete axes are the PRECONDITION for a TARGET-SPECIFIC
+        DIRECT / INDIRECT_STRONG graded opportunity assessment, NOT by
+        themselves a DIRECT one, and NOT a precondition for the frozen
+        unmet-need-only WEAK hypothesis (item 06
+        unmet_need_only_vs_incomplete_target_landscape). A complete
         pipeline-database inventory plus a complete target-level patent search
         can be coverage-complete, but the authority of each axis is only
         INDIRECT_STRONG -- the OVERALL rung is the weaker required axis ceiling
@@ -588,9 +617,13 @@ acceptance_checklist:
         still produce POSITIVE / NEGATIVE / CONFLICTING / graded INCONCLUSIVE at
         INDIRECT_STRONG, not UNKNOWN
       one_axis_not_done: >-
-        if one axis is not searched (competition searched, patents not
-        searched, or vice versa) the landscape is incomplete -> INCONCLUSIVE /
-        UNKNOWN; a half landscape cannot yield a target-opportunity judgement
+        if a target-specific landscape assessment WAS attempted and one axis is
+        not searched (competition searched, patents not searched, or vice
+        versa) the landscape is incomplete -> INCONCLUSIVE / UNKNOWN; a half
+        landscape cannot yield a target-opportunity judgement. EXCEPTION: the
+        explicit indication-level unmet-need-only WEAK hypothesis -- no
+        target-specific competitive / IP read attempted -> INCONCLUSIVE / WEAK
+        (item 06 unmet_need_only_vs_incomplete_target_landscape), not UNKNOWN.
     direct_requires: >-
       BOTH required axes complete AT DIRECT AUTHORITY -- the primary-source
       competitive axis at DIRECT authority AND the composition-level patent

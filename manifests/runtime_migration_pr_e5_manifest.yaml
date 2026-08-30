@@ -63,13 +63,14 @@ deferred:
   retrieval_providers_and_datasets: "PR E6+"
   other_five_tgt_modules: "PR E6+ (TGT-02 -> TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)"
 
-chatgpt_review: REQUEST_CHANGES   # round 1; revision pushed, re-review pending
+chatgpt_review: REQUEST_CHANGES   # round 2; revision pushed, re-review pending
 approved_tip: null
 merge_commit: null
-review_rounds: 1
+review_rounds: 2
 test_count_before_e5: 918     # at PR E4 approval (round 1)
 test_count_at_submission: 963
 test_count_after_round_1: 966
+test_count_after_round_2: 967
 approval_record_pr: null
 next_authorized_step: null    # PR E6 = MOD-TGT08@1.0.0 implementation -- needs its own go-ahead
 
@@ -112,6 +113,33 @@ review_round_1:
       drawing, added regressions.
   tests_at_round_1: 48   # test_tgt08_module_construction_contract.py (was 45)
   full_suite_at_round_1: 966
+
+review_round_2:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "c65990e"
+  round_1_status: both round-1 blockers confirmed closed (weaker-axis ceiling across items 06/13/16; graded INCONCLUSIVE vs INCONCLUSIVE/UNKNOWN with regressions)
+  scope: 1 residual narrow contract inconsistency -- the WEAK unmet-need exception vs the two-axis completion rule; PR D, sponsor_review, source plan / FTO boundary, repository scope, MOD-TGT01 / MOD-TGT05 all unchanged
+  fix:
+    weak_unmet_need_is_exempt_from_the_two_axis_precondition: >-
+      the round-1 fix said "two coverage-complete axes are the PRECONDITION for
+      a graded (non-UNKNOWN) assessment", which collided with the frozen item 06
+      "indication-level unmet need only -> INCONCLUSIVE / WEAK" (a graded
+      non-UNKNOWN state that needs no axis complete). Frozen the explicit
+      precedence (no Gate science changed): the two-axis mandatory completion is
+      a prerequisite for a TARGET-SPECIFIC DIRECT / INDIRECT_STRONG opportunity
+      assessment, NOT for the frozen unmet-need-only WEAK hypothesis. (a)
+      indication-level unmet-need evidence only, NO target-specific competitive /
+      IP read attempted -> INCONCLUSIVE / WEAK; (b) a target-specific landscape
+      assessment WAS attempted and a mandatory axis is incomplete ->
+      INCONCLUSIVE / UNKNOWN. Added item 06
+      unmet_need_only_vs_incomplete_target_landscape, reworded item 06
+      strength_is_the_weaker_required_axis_ceiling + item 16 one_axis_not_done +
+      coverage_complete_is_not_direct_quality + item 15 weak_unmet_need_only /
+      incomplete_landscape + the drawing item 06/15/16 rows, renamed the two
+      truth-table rows, added a "never unmet-need-only with no target-specific
+      read -> UNKNOWN" entry, and added a regression.
+  tests_at_round_2: 49   # test_tgt08_module_construction_contract.py
+  full_suite_at_round_2: 967
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_tgt08_module_construction_contract.py' -v
