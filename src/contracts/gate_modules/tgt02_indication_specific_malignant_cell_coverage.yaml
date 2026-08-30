@@ -212,12 +212,34 @@ acceptance_checklist:
       {SOURCE_REPORTED, HUMAN_REVIEWED_NORMALIZATION}). The Module only consumes
       the qualified state; a missing or drifted qualification basis is a HARD
       integrity failure.
+    qualifying_is_rung_specific:
+      note: >-
+        "qualifying" is NOT a single protein-level bar -- it is RUNG-SPECIFIC.
+        A qualifying observation satisfies the frozen admissibility requirements
+        of its applicable Evidence-Ladder rung AND belongs to the completed /
+        audited CRC coverage landscape (item 16).
+      DIRECT_qualification_additionally_requires: protein-level + CRC-specific + malignant-cell attribution + a QUALIFIED cohort adequacy status
+      INDIRECT_STRONG_qualification_requires: the corresponding frozen sc / spatial malignant-compartment predicate, or the CRC TMA transcript-and-protein concordance + malignant-cell attribution predicate
+      note_2: >-
+        sc / spatial malignant-compartment evidence can be a qualifying
+        INDIRECT_STRONG observation WITHOUT being protein-level; a protein cohort
+        DIRECT still requires protein-level.
+    direction_is_an_aggregate_not_an_observation: >-
+      a single observation is never a Direction. The classifier emits only a
+      Gate-neutral, rung-classed, direction-SUPPORTING observation (item 11: an
+      EvidencePackage carries no grade / direction). A single negative protein
+      cohort is a DIRECT-class, NEGATIVE-supporting observation -- NOT yet a
+      NEGATIVE / DIRECT proposal, and NOT fatal. The proposed Direction x
+      Strength is produced only by aggregate over a COMPLETED, audited CRC
+      coverage landscape (item 16). Until that landscape is complete the final
+      Assessment stays INCONCLUSIVE / UNKNOWN.
     frozen_truth_table:
       note: >-
-        exactly ONE mapping -- E8 has no discretion. "qualifying" means the
-        observation is protein-level / malignant-cell attributed / CRC-specific
-        and part of a completed, audited CRC coverage landscape (item 16). A
-        WEAK-only public landscape does not answer the Gate question.
+        exactly ONE mapping -- E8 has no discretion. "qualifying" is rung-specific
+        (see qualifying_is_rung_specific) and part of a completed, audited CRC
+        coverage landscape (item 16). A WEAK-only public landscape does not answer
+        the Gate question. Every row below is an AGGREGATE result over a completed
+        landscape, never an observation-level output.
       qualifying_protein_cohort_supports_broad_consistent_presence: POSITIVE / DIRECT
       qualifying_protein_cohort_supports_absent_expression: NEGATIVE / DIRECT
       qualifying_protein_cohort_supports_rare_highly_heterogeneous_coverage: NEGATIVE / DIRECT
@@ -227,6 +249,9 @@ acceptance_checklist:
       qualifying_direct_authority_landscape_with_no_directional_resolution: INCONCLUSIVE / DIRECT
       qualifying_indirect_strong_landscape_with_no_directional_resolution: INCONCLUSIVE / INDIRECT_STRONG
       weak_only_public_evidence_or_incomplete_crc_coverage_search: INCONCLUSIVE / UNKNOWN
+      single_direct_class_negative_cohort_with_the_crc_coverage_landscape_incomplete: INCONCLUSIVE / UNKNOWN
+      completed_audited_landscape_highest_rung_direct_material_negative_no_unresolved_incompatible_positive: NEGATIVE / DIRECT
+      completed_audited_landscape_with_incompatible_positive_and_negative_evidence_and_no_qualified_heterogeneity_pattern: CONFLICTING / DIRECT
       never:
         - a strong CRC RNA signal by itself -> DIRECT (transcript is never protein-level)
         - stromal / immune / mixed-tissue expression -> malignant-cell coverage
@@ -284,25 +309,28 @@ acceptance_checklist:
     framing: >-
       a potential fatal signal that malignant-cell coverage for this target in
       refractory mCRC is inadequate for an ADC. A single negative protein cohort
-      is a DIRECT NEGATIVE observation but is NOT a cross-cohort fatal pattern.
+      is a DIRECT-class, NEGATIVE-supporting observation -- NOT yet a NEGATIVE /
+      DIRECT proposal and NOT a cross-cohort fatal pattern.
     single_cohort_vs_cross_cohort_pattern:
-      one_protein_cohort_supporting_absent_or_rare_heterogeneous_coverage: DIRECT NEGATIVE evidence; NOT a cross-cohort fatal pattern
-      transcript_only_negative_signal: at most INDIRECT_STRONG NEGATIVE; NOT fatal (protein-level confirmation is required)
+      one_protein_cohort_supporting_absent_or_rare_heterogeneous_coverage: a DIRECT-class, NEGATIVE-supporting observation -- NOT yet a NEGATIVE / DIRECT proposal, NOT fatal
+      transcript_only_negative_signal: at most an INDIRECT_STRONG-class, NEGATIVE-supporting observation; NOT fatal (protein-level confirmation is required)
       matched_normal_tumor_comparison: contextualises CRC malignant-cell expression only; never a fatal input on its own
-      protein_level_negative_coverage_class_across_more_than_two_independent_cohorts: potential fatal pattern
+      protein_level_negative_coverage_class_across_at_least_two_independent_cohorts: potential fatal pattern
     across_cohorts_is_plural_cohorts_logic_not_a_new_threshold: >-
-      "across cohorts" is implemented as at least MORE THAN TWO independent
-      cohort identities (distinct auditable cohort_ids). This is not a new
-      biological threshold -- it is the logical realisation of the frozen word
-      "cohorts" (plural, more than a single cohort). One primary observation
-      that explicitly represents a declared multi-cohort analysis with more than
-      two auditable cohort_ids is also admissible as cross-cohort support.
+      "across cohorts" is implemented as AT LEAST TWO independent cohort
+      identities (distinct auditable cohort_ids) -- plural logic, not a new
+      biological threshold: one cohort is not cross-cohort; two independent
+      qualifying cohorts is a cross-cohort candidate pattern. It is NOT "more
+      than two" / "> 2" (that would be an unintended >= 3 threshold). One primary
+      observation that explicitly represents a declared multi-cohort analysis
+      with at least two auditable cohort_ids is also admissible as cross-cohort
+      support.
     machine_detection_criteria:
       - protein-level observations, each with CRC malignant-cell attribution
       - each with a QUALIFIED cohort adequacy status and an auditable cohort_adequacy_basis
       - each with a negative coverage class -- expression_pattern in {ABSENT, RARE_HIGHLY_HETEROGENEOUS} -- carrying an auditable expression_pattern_basis
       - a completed, audited CRC coverage landscape (item 16)
-      - cross-cohort support -- more than two independent cohort identities, or one declared multi-cohort analysis with more than two auditable cohort_ids
+      - cross-cohort support -- at least two independent cohort identities, or one declared multi-cohort analysis with at least two auditable cohort_ids
     human_review_reserved:
       - whether a cohort's adequacy basis is scientifically convincing
       - whether the cohorts are genuinely independent / non-overlapping
@@ -442,7 +470,7 @@ acceptance_checklist:
         - required (bool)
         - status (POTENTIAL_FATAL_PATTERN when required; otherwise empty)
         - evidence_ids ([EP-nnnnnnnn] of the contributing protein-level negative-coverage observations)
-        - cohort_ids ([the > 2 independent CRC cohort identities])
+        - cohort_ids ([the at-least-two independent CRC cohort identities])
         - coverage_class ([the expression_pattern per contributing observation -- ABSENT / RARE_HIGHLY_HETEROGENEOUS])
         - cohort_adequacy_basis_refs ([the disclosed cohort_adequacy_basis per observation])
         - expression_pattern_basis_refs ([the disclosed expression_pattern_basis per observation])
@@ -451,8 +479,8 @@ acceptance_checklist:
       machine_never_emits: PUBLIC_FATAL_SIGNAL_ESTABLISHED / a canonical fatal flag / KILL / HOLD / Decision
       required_is_true_iff: >-
         the machine has protein-level CRC malignant-cell-attributed observations
-        across more than two independent cohort identities (or one declared
-        multi-cohort analysis with more than two auditable cohort_ids), each with
+        across AT LEAST TWO independent cohort identities (or one declared
+        multi-cohort analysis with at least two auditable cohort_ids), each with
         a QUALIFIED cohort_adequacy_status + auditable cohort_adequacy_basis and a
         negative coverage class (ABSENT / RARE_HIGHLY_HETEROGENEOUS) with an
         auditable expression_pattern_basis, on a completed audited CRC coverage
@@ -496,7 +524,7 @@ acceptance_checklist:
       - every QUALIFIED cohort_adequacy_status carries an auditable cohort_adequacy_basis, and every ABSENT / RARE_HIGHLY_HETEROGENEOUS expression_pattern carries an auditable expression_pattern_basis; a missing / drifted qualification basis is a HARD integrity failure
       - the mandatory CRC coverage landscape is complete for the path taken (item 16); the Module did not grade early on a single positive or negative cohort
       - proposed_direction x proposed_strength is exactly the item-06 frozen truth table result for the evidence actually held; WEAK-only public evidence -> INCONCLUSIVE / UNKNOWN (never INCONCLUSIVE / WEAK); INCONCLUSIVE / UNKNOWN carries zero evidence_refs; a graded INCONCLUSIVE carries CONTEXTUAL evidence_refs
-      - if the module-local fatal_review record has required = true, its status is POTENTIAL_FATAL_PATTERN (never PUBLIC_FATAL_SIGNAL_ESTABLISHED), it carries > 2 independent cohort_ids with cohort_adequacy_basis_refs and expression_pattern_basis_refs, and it is surfaced only on an accepted run
+      - if the module-local fatal_review record has required = true, its status is POTENTIAL_FATAL_PATTERN (never PUBLIC_FATAL_SIGNAL_ESTABLISHED), it carries at least two independent cohort_ids with cohort_adequacy_basis_refs and expression_pattern_basis_refs, and it is surfaced only on an accepted run
       - fatal_review is not a field of the proposal envelope
       - dedup -- one SRC -> many EP is allowed; the same (source, claim) is not duplicated across packages
       - all required fields present; no numeric or ranking score anywhere; no cohort-size / percent-positive / H-score / heterogeneity threshold

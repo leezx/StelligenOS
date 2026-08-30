@@ -5287,3 +5287,56 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   （matrix py3.11 + 3.12）后回 `AI审核方案` 贴 E7 施工合同摘要 vs E7-1…E7-9 复审。
   APPROVE → merge + 独立 docs-only approval-record PR。PR E8 = MOD-TGT02@1.0.0
   implementation 需用户 go-ahead。
+
+## 2026-08-30T01:30 EDT — Runtime Migration PR E7 第一轮修订（PR #118 @ 61c2db9 REQUEST_CHANGES）
+
+- 审核方复审 `61c2db9`（exact-HEAD CI `verify 3.11` / `verify 3.12` 均通过）：
+  主体架构全部确认通过、不重开（design-only、17-item template、PR D 03/05/07/08
+  parity + inference_guard 逐字、bidirectional NEGATIVE scientific semantics、
+  NEGATIVE≠fatal≠KILL、typed completion、WEAK-only→UNKNOWN、EXPERIMENT_REQUIRED
+  窄触发、source hard locks、E2/E4/E6 runtime genes、binding 0.0.0、
+  MIGRATION_PENDING）。只剩 4 个窄 blocker。
+- **Blocker 1** —— item 06 `frozen_truth_table.note` 把「qualifying」定义成
+  protein-level / malignant-cell attributed / CRC-specific，与它自己的
+  `qualifying_sc_spatial_or_tma_concordance` 行（sc/spatial 不是 protein-level）
+  自相矛盾，E8 无法判断 sc/spatial 算不算 qualifying。修：加 item 06
+  `qualifying_is_rung_specific` —— qualifying observation 满足**其适用 rung 的**
+  frozen admissibility 且属于 completed landscape；DIRECT 再加 protein-level +
+  CRC + malignant attribution + QUALIFIED cohort adequacy；INDIRECT_STRONG 再加
+  sc/spatial malignant-compartment 或 TMA transcript+protein concordance
+  predicate；sc/spatial 可以是 qualifying INDIRECT_STRONG 而不必 protein-level。
+  truth-table note 引用它。+1 regression。
+- **Blocker 2** —— 「across cohorts」被写成 MORE THAN TWO / `> 2` independent
+  cohort_ids（= 无意的 ≥ 3 阈值），偏离开工前冻结的 plural logic（≥ 2：一个
+  cohort 不是 cross-cohort，两个 independent qualifying cohort 就是 cross-cohort
+  candidate pattern）。全局改成「at least two independent [qualifying] cohort
+  identities」（item 08
+  `across_cohorts_is_plural_cohorts_logic_not_a_new_threshold` /
+  `machine_detection_criteria` / `single_cohort_vs_cross_cohort_pattern`、item 12
+  `fatal_review` fields + `required_is_true_iff`、item 13、drawing）；合同明写
+  「NOT "more than two" / "> 2"」。regression 断言 "at least two"、无 "more than
+  two"、合同里无 "> 2 independent"。
+- **Blocker 3** —— item 08 仍写「a single negative protein cohort **is** DIRECT
+  NEGATIVE evidence」，把 observation class 与 final Gate Direction 混写。修：加
+  item 06 `direction_is_an_aggregate_not_an_observation` —— 单个 observation 永
+  不是 Direction；classifier 只产 Gate-neutral、rung-classed、direction-
+  SUPPORTING observation，aggregate 只在 **completed audited CRC coverage
+  landscape** 上产 proposed Direction × Strength，未完成前 final Assessment 仍
+  `INCONCLUSIVE / UNKNOWN`。item 08 framing + `single_cohort_vs_cross_cohort_pattern`
+  改成「DIRECT-class, NEGATIVE-supporting observation —— NOT yet a NEGATIVE /
+  DIRECT proposal, NOT fatal」。加 3 条 truth-table 行：single DIRECT-class
+  negative cohort + landscape incomplete → `INCONCLUSIVE / UNKNOWN`；completed
+  audited landscape（highest rung DIRECT、material negative、no unresolved
+  incompatible positive）→ `NEGATIVE / DIRECT`；completed landscape 有
+  incompatible positive + negative 且无 qualified heterogeneity pattern →
+  `CONFLICTING / DIRECT`。+1 regression。
+- **Blocker 4** —— item 04 「derived parity」测试只是 superset 检查（每个
+  ladder / evidence_required class ∈ admissible），新的 unfrozen class 可以偷加
+  而测试仍绿。改成 `set(item04.admissible) == set(evidence_required ∪ DIRECT ∪
+  INDIRECT_STRONG ∪ WEAK)`。
+- 未改：PR D、NEGATIVE/fatal 总体架构、completion concept、EXPERIMENT_REQUIRED、
+  source plan、MOD-TGT01/05/08、binding、MIGRATION_PENDING。
+- 验证：`tests/test_tgt02_module_construction_contract.py` **51 OK**（+2）；全量
+  **1104**（1 个既有本机 `__pycache__` 扫描 FAIL，CI 干净 checkout GREEN）；
+  `git diff --check` clean；YAML 合法。
+- Next：push、CI 绿后回 `AI审核方案` 贴第二轮复审（4 个 blocker 已关闭 + regression）。

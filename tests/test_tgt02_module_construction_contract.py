@@ -170,22 +170,23 @@ class VerbatimFromPrDTests(unittest.TestCase):
             [_norm(x) for x in self.tgt02["fatal_conditions"]],
         )
 
-    def test_item04_derived_parity_against_evidence_required_and_ladder(self):
+    def test_item04_derived_parity_is_exact_not_just_a_superset(self):
+        # E7 round-1 blocker 4: item 04 admissible MUST equal the union of the
+        # frozen PR D evidence_required and the ladder classes -- not merely a
+        # superset -- so a new unfrozen evidence class cannot be smuggled in.
         i = self.item["04_admissible_evidence_classes"]
         self.assertEqual(
             [_norm(x) for x in i["evidence_required_from_pr_d"]],
             [_norm(x) for x in self.tgt02["evidence_required"]],
         )
-        ladder_classes = []
+        expected = {_norm(x) for x in self.tgt02["evidence_required"]}
         for grade in ("DIRECT", "INDIRECT_STRONG", "WEAK"):
-            ladder_classes += [
-                _norm(x) for x in self.tgt02["evidence_ladder"][grade]["admissible_evidence_classes"]
-            ]
-        admissible = [_norm(x) for x in i["admissible"]]
-        for c in ladder_classes:
-            self.assertIn(c, admissible)
-        for c in (_norm(x) for x in self.tgt02["evidence_required"]):
-            self.assertIn(c, admissible)
+            expected |= {
+                _norm(x)
+                for x in self.tgt02["evidence_ladder"][grade]["admissible_evidence_classes"]
+            }
+        actual = {_norm(x) for x in i["admissible"]}
+        self.assertEqual(actual, expected)
 
     def test_item04_excludes_the_other_seven_gates(self):
         na = " ".join(self.item["04_admissible_evidence_classes"]["not_admissible_into_this_gate"])
@@ -234,6 +235,39 @@ class BidirectionalDirectionTests(unittest.TestCase):
         s = _norm(self.i06["strength_is_the_highest_qualifying_evidence_class"])
         self.assertIn("highest qualifying frozen evidence class actually met", s)
         self.assertIn("no e6-style two-axis weaker-ceiling rule here", s)
+
+    def test_qualifying_is_rung_specific_not_a_single_protein_bar(self):
+        # E7 round-1 blocker 1: "qualifying" is rung-specific, so sc/spatial can
+        # be qualifying INDIRECT_STRONG without being protein-level.
+        q = self.i06["qualifying_is_rung_specific"]
+        self.assertIn("rung-specific", _norm(q["note"]))
+        self.assertIn("protein-level", _norm(q["DIRECT_qualification_additionally_requires"]))
+        self.assertIn("malignant-compartment", _norm(q["INDIRECT_STRONG_qualification_requires"]))
+        self.assertIn("without being protein-level", _norm(q["note_2"]))
+        self.assertIn("rung-specific", _norm(self.i06["frozen_truth_table"]["note"]))
+
+    def test_direction_is_an_aggregate_not_an_observation(self):
+        # E7 round-1 blocker 3: a single observation is never a Direction; the
+        # classifier emits a rung-classed, direction-SUPPORTING observation and
+        # aggregate produces the proposal only over a completed landscape.
+        d = _norm(self.i06["direction_is_an_aggregate_not_an_observation"])
+        self.assertIn("a single observation is never a direction", d)
+        self.assertIn("direct-class, negative-supporting observation", d)
+        self.assertIn("not yet a negative / direct proposal", d)
+        self.assertIn("until that landscape is complete the final assessment stays inconclusive / unknown", d)
+        tt = self.i06["frozen_truth_table"]
+        self.assertEqual(
+            _norm(tt["single_direct_class_negative_cohort_with_the_crc_coverage_landscape_incomplete"]),
+            "inconclusive / unknown",
+        )
+        self.assertEqual(
+            _norm(tt["completed_audited_landscape_highest_rung_direct_material_negative_no_unresolved_incompatible_positive"]),
+            "negative / direct",
+        )
+        self.assertEqual(
+            _norm(tt["completed_audited_landscape_with_incompatible_positive_and_negative_evidence_and_no_qualified_heterogeneity_pattern"]),
+            "conflicting / direct",
+        )
 
     def test_rare_or_heterogeneous_is_upstream_qualified_never_computed(self):
         r = _norm(self.i06["rare_or_highly_heterogeneous_is_upstream_qualified"])
@@ -286,17 +320,33 @@ class FatalBoundaryTests(unittest.TestCase):
         self.item = yaml.safe_load(CONTRACT.read_text())["acceptance_checklist"]
         self.i08 = self.item["08_fatal_conditions"]
 
-    def test_single_cohort_is_not_a_cross_cohort_fatal_pattern(self):
+    def test_single_cohort_is_a_supporting_observation_not_a_direction_or_fatal(self):
         s = self.i08["single_cohort_vs_cross_cohort_pattern"]
-        self.assertIn("direct negative evidence; not a cross-cohort fatal pattern",
-                      _norm(s["one_protein_cohort_supporting_absent_or_rare_heterogeneous_coverage"]))
-        self.assertIn("at most indirect_strong negative; not fatal",
-                      _norm(s["transcript_only_negative_signal"]))
+        one = _norm(s["one_protein_cohort_supporting_absent_or_rare_heterogeneous_coverage"])
+        self.assertIn("direct-class, negative-supporting observation", one)
+        self.assertIn("not yet a negative / direct proposal", one)
+        self.assertIn("not fatal", one)
+        self.assertIn("not fatal", _norm(s["transcript_only_negative_signal"]))
 
-    def test_across_cohorts_is_plural_logic_not_a_threshold(self):
+    def test_across_cohorts_is_at_least_two_not_more_than_two(self):
+        # E7 round-1 blocker 2: the frozen scoping is plural logic (>= 2), NOT
+        # "more than two" / "> 2" (which would be an unintended >= 3 threshold).
         a = _norm(self.i08["across_cohorts_is_plural_cohorts_logic_not_a_new_threshold"])
-        self.assertIn("at least more than two independent cohort identities", a)
-        self.assertIn("not a new biological threshold", a)
+        self.assertIn("at least two independent cohort identities", a)
+        self.assertIn("two independent qualifying cohorts is a cross-cohort candidate pattern", a)
+        self.assertIn('it is not "more than two" / "> 2"', a)
+        self.assertNotIn("more than two independent", a.replace('it is not "more than two"', ""))
+        crit = " ".join(self.i08["machine_detection_criteria"]).lower()
+        self.assertIn("at least two independent cohort identities", crit)
+        self.assertNotIn("more than two", crit)
+        riff = _norm(
+            self.item["12_assessment_proposal_envelope_contract"]["fatal_review"]["required_is_true_iff"]
+        )
+        self.assertIn("at least two independent cohort identities", riff)
+        self.assertNotIn("more than two", riff)
+        # the whole contract must not smuggle a "> 2" threshold back in
+        body = CONTRACT.read_text()
+        self.assertNotIn("> 2 independent", body)
 
     def test_machine_emits_at_most_potential_fatal_pattern(self):
         m = _norm(self.i08["machine_output_is_only_a_potential_pattern"])

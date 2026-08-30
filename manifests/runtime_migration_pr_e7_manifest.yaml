@@ -81,14 +81,80 @@ deferred:
   retrieval_providers_and_datasets: "PR E8+ (GEO / HPA / CPTAC / single-cell / spatial / TMA repositories)"
   other_four_tgt_modules: "PR E8+ (TGT-03 -> TGT-04 -> TGT-06 -> TGT-07)"
 
-chatgpt_review: PENDING
+chatgpt_review: REQUEST_CHANGES   # round 1 -- 4 narrow fixes; revision pushed, re-review pending
 approved_tip: null
 merge_commit: null
-review_rounds: null
-test_count_before_e7: 1053       # at PR E6 approval
-test_count_at_submission: 1102   # local full suite (test_tgt02_module_construction_contract.py 49); the single local FAIL is a pre-existing __pycache__ scan in test_assetgenos_modules (clean on a fresh CI checkout)
+review_rounds: 1
+test_count_before_e7: 1053        # at PR E6 approval
+test_count_at_submission: 1102    # local full suite (test_tgt02_module_construction_contract.py 49)
+test_count_after_round_1: 1104    # test_tgt02_module_construction_contract.py 51 (+2 blocker regressions); the single local FAIL is a pre-existing __pycache__ scan in test_assetgenos_modules (clean on a fresh CI checkout)
 approval_record_pr: null
-next_authorized_step: null       # PR E8 = MOD-TGT02@1.0.0 implementation -- needs its own go-ahead
+next_authorized_step: null        # PR E8 = MOD-TGT02@1.0.0 implementation -- needs its own go-ahead
+
+review_round_1:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "61c2db9"
+  accepted: >-
+    the whole design -- design-only scope; the 17-item template; PR D
+    03/05/07/08 parity + inference_guard verbatim; the bidirectional NEGATIVE
+    scientific semantics and NEGATIVE != fatal != KILL; the typed
+    CrcCohortCoverageCompletion and the no-two-axis strength rule; WEAK-only ->
+    INCONCLUSIVE / UNKNOWN; the narrow EXPERIMENT_REQUIRED trigger; the source
+    hard locks; the E2/E4/E6 runtime-gene inheritance; MOD-TGT02 binding 0.0.0;
+    MIGRATION_PENDING remains
+  scope: 4 narrow fixes -- PR D, the NEGATIVE/fatal architecture, the completion
+    concept, EXPERIMENT_REQUIRED, the source plan, MOD-TGT01/05/08 and the
+    binding are all unchanged.
+  fixes:
+    blocker_1_qualifying_is_rung_specific: >-
+      item 06 frozen_truth_table.note defined "qualifying" as protein-level /
+      malignant-cell attributed / CRC-specific, which contradicted its own
+      qualifying_sc_spatial_or_tma_concordance rows (sc/spatial is not
+      protein-level) and left E8 unable to tell whether sc/spatial counts as
+      qualifying. Added item 06 qualifying_is_rung_specific: a qualifying
+      observation satisfies its APPLICABLE Evidence-Ladder rung's frozen
+      admissibility and belongs to the completed landscape -- DIRECT adds
+      protein-level + CRC + malignant attribution + a QUALIFIED cohort adequacy
+      status; INDIRECT_STRONG adds the sc/spatial malignant-compartment or TMA
+      transcript+protein concordance predicates; sc/spatial can be a qualifying
+      INDIRECT_STRONG observation without being protein-level. The truth-table
+      note now references it. +1 regression.
+    blocker_2_across_cohorts_is_at_least_two_not_more_than_two: >-
+      "across cohorts" had been written as MORE THAN TWO / > 2 independent
+      cohort_ids -- an unintended >= 3 threshold -- instead of the frozen plural
+      logic (>= 2: one cohort is not cross-cohort, two independent qualifying
+      cohorts is a cross-cohort candidate pattern). Changed globally to "at
+      least two independent [qualifying] cohort identities" across item 08
+      (across_cohorts_is_plural_cohorts_logic_not_a_new_threshold,
+      machine_detection_criteria, single_cohort_vs_cross_cohort_pattern), item
+      12 fatal_review fields + required_is_true_iff, item 13, and the drawing.
+      The contract now explicitly states it is NOT "more than two" / "> 2".
+      Regressions assert "at least two", no "more than two", and no "> 2
+      independent" anywhere in the contract.
+    blocker_3_direction_is_an_aggregate_not_an_observation: >-
+      item 08 still said a single negative protein cohort IS "DIRECT NEGATIVE
+      evidence", conflating an observation class with a final Gate Direction.
+      Added item 06 direction_is_an_aggregate_not_an_observation: a single
+      observation is never a Direction; the classifier emits a Gate-neutral,
+      rung-classed, direction-SUPPORTING observation, and aggregate produces the
+      proposed Direction x Strength only over a COMPLETED, audited CRC coverage
+      landscape -- until then the final Assessment stays INCONCLUSIVE / UNKNOWN.
+      item 08 framing + single_cohort_vs_cross_cohort_pattern now say
+      "DIRECT-class, NEGATIVE-supporting observation -- NOT yet a NEGATIVE /
+      DIRECT proposal, NOT fatal". Three truth-table rows added: a single
+      DIRECT-class negative cohort with the landscape incomplete ->
+      INCONCLUSIVE / UNKNOWN; a completed audited landscape (highest rung DIRECT,
+      material negative, no unresolved incompatible positive) -> NEGATIVE /
+      DIRECT; a completed landscape with incompatible positive + negative
+      evidence and no qualified heterogeneity pattern -> CONFLICTING / DIRECT.
+      +1 regression.
+    blocker_4_item04_derived_parity_is_exact_not_a_superset: >-
+      the item-04 test only checked that every ladder / evidence_required class
+      was IN admissible -- a new unfrozen class could be added and stay green.
+      Rewrote it to assert set(item04.admissible) == set(evidence_required
+      union DIRECT union INDIRECT_STRONG union WEAK).
+  tests_at_round_1: 51   # test_tgt02_module_construction_contract.py (was 49)
+  full_suite_at_round_1: 1104
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt02_module_construction_contract.py' -v
