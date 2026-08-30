@@ -46,6 +46,7 @@ _NEUTRAL_LIMITATIONS: tuple[str, ...] = (
 _NEUTRAL_CEILING = "an observation-level target-expression / search fact for the named target"
 
 _KEYS_ALWAYS: tuple[str, ...] = (
+    "observation_id",
     "target_identity",
     "context_key",
     "landscape_as_of",
@@ -144,6 +145,28 @@ def _measurement_result(item: ClassifiedCoverage) -> str:
     )
 
 
+def _study_context_facts(o: NormalizedCoverageObservation) -> tuple[str, str]:
+    """kind / fact-specific, NON-inflated study context for the neutral EP
+    (E7 item 11). The Module never promotes a source study to "refractory
+    metastatic colorectal cancer" -- the run's scientific context is pinned
+    separately by context_key / the Instantiation; a source EP states only what
+    the source itself is. Returns (indication, sample_type)."""
+
+    kind = o.observation_kind
+    if kind == "SEARCH_COMPLETION_AUDIT":
+        return "not_applicable", "search_audit"
+    if kind == "PAN_CANCER_UNRESOLVED":
+        return "pan_cancer_or_unresolved", "dataset_or_source_reported"
+    if kind == "MATCHED_NORMAL_TUMOR":
+        return "colorectal_cancer", "matched_normal_and_tumor_tissue"
+    if not o.crc_specific:
+        return "not_crc_resolved", "source_reported"
+    if kind == "BULK_CRC_RNA":
+        return "colorectal_cancer", "bulk_crc_tissue_or_source_reported"
+    # CRC-specific PROTEIN_COHORT / MALIGNANT_SC_SPATIAL / TMA concordance
+    return "colorectal_cancer", "crc_tumor_tissue"
+
+
 def _as_rejected(
     item: ClassifiedCoverage, reason: str, *, severity: str
 ) -> ClassifiedCoverage:
@@ -160,11 +183,26 @@ def _as_rejected(
 
 
 def _reused_package_is_compatible(
-    existing: EvidencePackage, item: ClassifiedCoverage, candidate_id: str
+    existing: EvidencePackage,
+    item: ClassifiedCoverage,
+    candidate_id: str,
+    canonical,
 ) -> str:
     o = item.observation
     if existing.provenance.get("source_id") != o.source_id:
         return "canonical EvidencePackage provenance.source_id differs from the observation"
+    # E7 item 13: the reused EP's own provenance metadata must still equal the
+    # resolved canonical SourceIndex record -- not just resolve to the same id.
+    # (retrieved_at is allowed to keep the reused EP's own retrieval timestamp.)
+    if (
+        existing.provenance.get("source_type") != canonical.source_type
+        or existing.provenance.get("source_identifier") != canonical.source_identifier
+        or existing.provenance.get("locator") != canonical.locator
+    ):
+        return (
+            "canonical EvidencePackage provenance (source_type / source_identifier "
+            "/ locator) no longer matches the resolved canonical SourceIndex record"
+        )
     if existing.claim != o.claim:
         return "canonical EvidencePackage claim differs from the observation"
     if candidate_id not in tuple(existing.candidate_refs):
@@ -246,7 +284,9 @@ def build_evidence_packages(
 
         existing = evidence_library.resolve(o.observation_id)
         if existing is not None:
-            why = _reused_package_is_compatible(existing, item, module_input.candidate_id)
+            why = _reused_package_is_compatible(
+                existing, item, module_input.candidate_id, canonical
+            )
             if why:
                 extra_rejections.append(
                     _as_rejected(
@@ -273,10 +313,11 @@ def build_evidence_packages(
                 f"allocator returned {evidence_id}, which is already an "
                 "existing_evidence_id for this (candidate, gate)"
             )
+        sc_indication, sc_sample_type = _study_context_facts(o)
         study_context = {
-            "indication": "refractory_metastatic_colorectal_cancer",
+            "indication": sc_indication,
             "treatment_state": "not_applicable",
-            "sample_type": "crc_tumor_tissue",
+            "sample_type": sc_sample_type,
             "observation_id": o.observation_id,
             "target_identity": o.target_identity,
             "context_key": o.context_key,

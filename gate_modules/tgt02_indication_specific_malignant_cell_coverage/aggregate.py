@@ -130,6 +130,13 @@ def aggregate(
                 "cannot answer the CRC x malignant-compartment x cohort-level question",
                 "EXPERIMENT_REQUIRED",
             ))
+        _weak_tail = (
+            "a new malignant-cell-resolved protein / adequately powered cohort "
+            "measurement is required."
+            if public_space_exhausted
+            else "the remaining unresolved public evidence path must be resolved "
+            "before determining whether a new measurement is required."
+        )
         return AggregationOutcome(
             proposed_direction="INCONCLUSIVE",
             proposed_strength="UNKNOWN",
@@ -138,9 +145,7 @@ def aggregate(
                 "the public CRC coverage landscape is complete and audited but "
                 "carries only WEAK bulk / pan-cancer evidence. Verbatim from the "
                 "frozen contract: 'Only bulk RNA available -> UNKNOWN, not a pass.' "
-                "INCONCLUSIVE / UNKNOWN with zero evidence_refs; a new "
-                "malignant-cell-resolved protein / adequately powered cohort "
-                "measurement is required."
+                f"INCONCLUSIVE / UNKNOWN with zero evidence_refs; {_weak_tail}"
             ),
             critical_unknowns=tuple(unknowns),
             overall_ceiling=_UNKNOWN_CEILING,

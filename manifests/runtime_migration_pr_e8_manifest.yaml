@@ -103,13 +103,14 @@ repository_policy:
   modifies_e7_construction_contract_body: forbidden
   migration_pending: remains
 
-chatgpt_review: REQUEST_CHANGES   # round 1 -- 7 runtime correctness / integrity blockers; architecture accepted; revision pushed, re-review pending
+chatgpt_review: REQUEST_CHANGES   # round 2 -- round-1's 7 blockers confirmed closed; 4 narrow integrity / factual-output blockers remain; revision pushed, re-review pending
 approved_tip: null
 merge_commit: null
-review_rounds: 1
+review_rounds: 2
 test_count_before_e8: 1104        # at PR E7 approval
 test_count_at_submission: 1185    # local full suite (tests/test_tgt02_module.py 75 + reconciliation / registry synch)
 test_count_after_round_1: 1200    # tests/test_tgt02_module.py 90 (+15 Round1RegressionTests)
+test_count_after_round_2: 1208    # tests/test_tgt02_module.py 98 (+8 Round2RegressionTests)
 approval_record_pr: null
 next_authorized_step: null        # PR E9 = MOD-TGT03 construction contract -- needs its own go-ahead
 
@@ -176,6 +177,65 @@ review_round_1:
       -> "The other four TGT gates" (the code map already had TGT-02).
   tests_at_round_1: 90   # tests/test_tgt02_module.py (was 75; +15 Round1RegressionTests)
   full_suite_at_round_1: 1200
+
+review_round_2:
+  verdict: REQUEST_CHANGES
+  reviewed_tip: "bab4d4a"
+  accepted: >-
+    all 7 round-1 blockers confirmed closed -- the canonical context_id pin, the
+    observation context_key / completion search_scope HARD binding, the
+    incomplete-landscape-stays-UNKNOWN fix, the completion-gated fatal detector,
+    the mandatory audit for any attempted completion, the declared-multi-cohort
+    guard, the normalized duplicate-observation_id HARD reject. No architecture /
+    scientific-contract change requested.
+  scope: 4 narrow integrity / factual-output fixes + synthetic regressions.
+  fixes:
+    blocker_1_provenance_bearing_audit_ep_can_be_dropped_by_dedup: >-
+      the normalized-layer audit exact-one check closed the "two audits dedup'd
+      to one" bypass, but build_evidence_packages still shares one
+      (source_id, claim) dedup for all kinds, so a SEARCH_COMPLETION_AUDIT that
+      collides with a non-audit observation can be dropped -- and the completion
+      still grades with no provenance-bearing audit EP. module.run() now also
+      verifies that an attempted completion has EXACTLY ONE emitted / reused
+      SEARCH_COMPLETION_AUDIT EvidencePackage matching audit_observation_id; a
+      missing one (dedup loser) is a HARD reject. +1 regression.
+    blocker_2_exact_canonical_reuse_identity_and_provenance_parity: >-
+      _reused_package_is_compatible() now (a) includes observation_id in the
+      exact-reuse identity parity (a reused EP whose study_context.observation_id
+      names a different observation is a HARD failure) and (b) verifies the
+      reused EP's own provenance source_type / source_identifier / locator still
+      equal the resolved canonical SourceIndex record, not just that source_id
+      resolves (E7 item 13). retrieved_at may keep the reused EP's own timestamp.
+      +2 regressions.
+    blocker_3_weak_only_rationale_pre_declares_a_new_experiment: >-
+      the EXPERIMENT_REQUIRED structured resolution was gated on
+      public_space_exhausted in round 1, but the WEAK-only branch's
+      aggregation_rationale free text still ended "a new ... measurement is
+      required" regardless. The rationale tail now branches on
+      public_space_exhausted -- when an unresolved public path remains it reads
+      "the remaining unresolved public evidence path must be resolved before
+      determining whether a new measurement is required". +2 regressions
+      (rationale text, not just the resolution enum).
+    blocker_4_ep_study_context_hardcodes_the_crc_tumor_context: >-
+      directly_supports() was made field-accurate in round 1, but the structured
+      study_context was still uniformly indication
+      refractory_metastatic_colorectal_cancer / sample_type crc_tumor_tissue for
+      every EP -- factually wrong for SEARCH_COMPLETION_AUDIT,
+      PAN_CANCER_UNRESOLVED, MATCHED_NORMAL_TUMOR and non-CRC contextual
+      observations. New _study_context_facts(o) sets a kind / fact-specific,
+      non-inflated (indication, sample_type): audit -> (not_applicable,
+      search_audit); pan-cancer -> (pan_cancer_or_unresolved,
+      dataset_or_source_reported); matched normal-tumor -> (colorectal_cancer,
+      matched_normal_and_tumor_tissue); crc_specific False -> (not_crc_resolved,
+      source_reported); a CRC observation -> (colorectal_cancer, ...) -- the
+      Module never promotes a source study to "refractory metastatic CRC" (the
+      run context is pinned separately by context_key / the Instantiation).
+      +3 regressions.
+    non_blocking_pr_body_test_count_sync: >-
+      the PR #120 body still cited "75 tests / 1185 full suite"; updated to the
+      current counts.
+  tests_at_round_2: 98   # tests/test_tgt02_module.py (was 90; +8 Round2RegressionTests)
+  full_suite_at_round_2: 1208
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt02_module.py' -v

@@ -158,6 +158,24 @@ def run(
     if why:
         hard_integrity_failures.append(("coverage_completion", why))
         rejected_records.append(("coverage_completion", why))
+    # The completion's authority is backed by a PROVENANCE-BEARING audit EP. The
+    # normalized exact-one check above cannot catch the audit being lost to the
+    # shared (source_id, claim) dedup in build_evidence_packages, so verify the
+    # emitted / reused surface too: an attempted completion needs exactly one
+    # matching SEARCH_COMPLETION_AUDIT EvidencePackage.
+    audit_eps = [
+        e for e in emitted
+        if e.observation.observation_kind == "SEARCH_COMPLETION_AUDIT"
+        and e.observation.observation_id == completion.audit_observation_id
+    ]
+    if completion.attempted and len(audit_eps) != 1:
+        why = (
+            "the attempted CRC coverage landscape has no matching provenance-bearing "
+            f"SEARCH_COMPLETION_AUDIT EvidencePackage (got {len(audit_eps)}; it may "
+            "have been lost to (source_id, claim) dedup against a non-audit observation)"
+        )
+        hard_integrity_failures.append(("coverage_completion", why))
+        rejected_records.append(("coverage_completion", why))
     for e in emitted:
         o = e.observation
         if o.observation_kind != "SEARCH_COMPLETION_AUDIT":

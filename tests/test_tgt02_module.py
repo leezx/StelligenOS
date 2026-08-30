@@ -1160,5 +1160,106 @@ class Round1RegressionTests(unittest.TestCase):
         self.assertIsNone(res.proposal_envelope)
 
 
+class Round2RegressionTests(unittest.TestCase):
+    """ChatGPT AI审核方案 PR E8 review round 2 -- the four narrow blockers."""
+
+    # --- blocker 1: a provenance-bearing audit EP dropped by dedup ----------
+    def test_audit_ep_lost_to_source_claim_dedup_is_a_hard_run_rejection(self):
+        comp = _completion(qualifying_protein=("CRC_COHORT_A",))
+        shared_src = _next_src()
+        prot = _protein(observation_id="OBS-COLLIDE-P", cohort="CRC_COHORT_A",
+                        pattern="PRESENT_CONSISTENT", source_id=shared_src)
+        audit = _audit(comp, observation_id=comp.audit_observation_id, source_id=shared_src)
+        # give the audit the SAME claim as the protein observation so the shared
+        # (source_id, claim) dedup drops the audit EP.
+        audit = dataclasses.replace(audit, claim=prot.claim)
+        res = _run([prot, audit], comp)
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertTrue(any("provenance-bearing" in why or "dedup" in why or
+                            "SEARCH_COMPLETION_AUDIT" in why
+                            for _, why in res.hard_integrity_failures))
+        self.assertIsNone(res.proposal_envelope)
+
+    # --- blocker 2: exact canonical reuse identity / provenance parity ------
+    def _emit_reusable(self, oid="OBS-REUSE-2"):
+        comp = _completion(qualifying_protein=("CRC_COHORT_A",))
+        p = _protein(observation_id=oid, cohort="CRC_COHORT_A", pattern="PRESENT_CONSISTENT")
+        res = _run([p, _audit(comp)], comp)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        ep = next(e for e in res.evidence_packages if e.study_context["observation_id"] == oid)
+        return comp, p, ep
+
+    def test_reused_ep_observation_id_drift_is_hard(self):
+        comp, p, ep = self._emit_reusable()
+        drifted = dataclasses.replace(
+            ep, study_context={**ep.study_context, "observation_id": "OBS-SOMEONE-ELSE"}
+        )
+        res = _run([p, _audit(comp)], comp, library={p.observation_id: drifted})
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertTrue(res.hard_integrity_failures)
+
+    def test_reused_ep_provenance_metadata_drift_from_canonical_is_hard(self):
+        comp, p, ep = self._emit_reusable()
+        drifted = dataclasses.replace(
+            ep, provenance={**dict(ep.provenance), "source_identifier": "A-DIFFERENT-ACCESSION"}
+        )
+        res = _run([p, _audit(comp)], comp, library={p.observation_id: drifted})
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertTrue(any("canonical SourceIndex" in why or "provenance" in why
+                            for _, why in res.hard_integrity_failures))
+
+    # --- blocker 3: WEAK-only rationale must not pre-declare a new experiment -
+    def test_weak_only_rationale_with_unresolved_public_path_does_not_declare_new_measurement(self):
+        comp = _completion(
+            unresolved=(CoverageUnresolvedItem("bulk deconvolution pending", "KNOWN_PUBLIC_NOT_YET_RESOLVED"),),
+        )
+        res = _run([_bulk(kind="BULK_CRC_RNA"), _audit(comp)], comp)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        rationale = res.proposal_envelope.aggregation_rationale.lower()
+        self.assertIn("must be resolved before determining whether a new measurement", rationale)
+        self.assertNotIn("a new malignant-cell-resolved protein / adequately powered cohort "
+                         "measurement is required", rationale)
+        self.assertNotIn("EXPERIMENT_REQUIRED",
+                         {r for _, r in res.proposal_envelope.critical_unknowns})
+
+    def test_weak_only_rationale_with_exhausted_public_space_does_declare_new_measurement(self):
+        comp = _completion()
+        res = _run([_bulk(kind="BULK_CRC_RNA"), _audit(comp)], comp)
+        rationale = res.proposal_envelope.aggregation_rationale.lower()
+        self.assertIn("a new malignant-cell-resolved protein / adequately powered cohort "
+                      "measurement is required", rationale)
+
+    # --- blocker 4: EP study_context is kind / fact specific ----------------
+    def test_search_completion_audit_ep_study_context_is_not_crc_tumor_tissue(self):
+        comp = _completion(qualifying_protein=("CRC_COHORT_A",))
+        res = _run([_protein(cohort="CRC_COHORT_A", pattern="PRESENT_CONSISTENT"), _audit(comp)], comp)
+        audit_ep = next(e for e in res.evidence_packages
+                        if e.study_context["observation_kind"] == "SEARCH_COMPLETION_AUDIT")
+        self.assertNotEqual(audit_ep.study_context["sample_type"], "crc_tumor_tissue")
+        self.assertEqual(audit_ep.study_context["sample_type"], "search_audit")
+
+    def test_pan_cancer_ep_study_context_does_not_claim_refractory_mcrc(self):
+        comp = _completion()
+        res = _run([_bulk(kind="PAN_CANCER_UNRESOLVED", cohort="PANCAN"), _audit(comp)], comp)
+        pc_ep = next(e for e in res.evidence_packages
+                     if e.study_context["observation_kind"] == "PAN_CANCER_UNRESOLVED")
+        self.assertNotEqual(pc_ep.study_context["indication"],
+                            "refractory_metastatic_colorectal_cancer")
+
+    def test_non_crc_contextual_ep_study_context_does_not_claim_crc_tumor_tissue(self):
+        comp = _completion()
+        obs = [
+            _protein(observation_id="OBS-NONCRC", cohort="OTHER_TISSUE",
+                     pattern="PRESENT_CONSISTENT", crc_specific=False),
+            _audit(comp),
+        ]
+        res = _run(obs, comp)
+        ep = next(e for e in res.evidence_packages
+                  if e.study_context["observation_id"] == "OBS-NONCRC")
+        self.assertNotEqual(ep.study_context["sample_type"], "crc_tumor_tissue")
+        self.assertNotEqual(ep.study_context["indication"],
+                            "refractory_metastatic_colorectal_cancer")
+
+
 if __name__ == "__main__":
     unittest.main()

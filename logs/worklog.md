@@ -5545,3 +5545,54 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   `MIGRATION_PENDING`、MOD-TGT01 / 05 / 08。
 - Next：push、CI 绿后回 `AI审核方案` 贴第二轮复审（7 个 blocker 已关闭 +
   regression）。
+
+## 2026-08-30T05:30 EDT — Runtime Migration PR E8 第二轮修订（PR #120 @ bab4d4a REQUEST_CHANGES）
+
+- 审核方（ChatGPT `AI审核方案`）第二轮结论：**REQUEST_CHANGES —— 4 个窄
+  integrity / factual-output blocker**。第一轮 7 个 blocker 全部确认关闭
+  （canonical `context_id` pin、observation `context_key` / completion
+  `search_scope` HARD binding、incomplete landscape 保持 UNKNOWN、fatal detector
+  先查 `landscape_complete`、attempted completion 必有 audit、declared
+  multi-cohort guard、normalized duplicate `observation_id` HARD）。不重开架构 /
+  科学合同。exact-head CI `verify (3.11)` / `verify (3.12)` success。
+- **Blocker 1** —— provenance-bearing audit EP 仍可被 dedup 吃掉。normalized 层
+  audit exact-one 关闭了「两条 audit dedup 成一条」，但
+  `build_evidence_packages` 对所有 kind 共用一个 `(source_id, claim)` dedup，于是
+  一条 `SEARCH_COMPLETION_AUDIT` 若与 non-audit observation 撞 `(source_id,
+  claim)` 会被 drop —— completion 仍会 grade 却没有 provenance-bearing audit
+  EP。修：`module.run()` 额外验证 attempted completion 有**恰好一条** emitted /
+  reused `SEARCH_COMPLETION_AUDIT` EvidencePackage 匹配 `audit_observation_id`；
+  被 dedup drop → HARD reject。+1 regression。
+- **Blocker 2** —— exact canonical reuse 没验证完整 canonical identity /
+  provenance。`_reused_package_is_compatible()` 现在 (a) 把 `observation_id` 加进
+  exact-reuse identity parity（reused EP 的 `study_context.observation_id` 指向
+  别的 observation → HARD），(b) 验证 reused EP 自己的 provenance `source_type` /
+  `source_identifier` / `locator` 仍等于 resolved canonical SourceIndex（E7 item
+  13，不只是 `source_id` resolve）；`retrieved_at` 可保留 reused EP 自己的
+  timestamp。+2 regression。
+- **Blocker 3** —— EXPERIMENT_REQUIRED 的 structured resolution 第一轮已 gate 在
+  `public_space_exhausted`，但 WEAK-only 分支的 `aggregation_rationale` free text
+  仍固定写「a new ... measurement is required」。修：rationale 尾句按
+  `public_space_exhausted` 分支 —— 仍有 unresolved public path 时写「the
+  remaining unresolved public evidence path must be resolved before determining
+  whether a new measurement is required」。+2 regression（查 rationale text，不只
+  resolution enum）。
+- **Blocker 4** —— Gate-neutral EP 的 `study_context` 对所有 observation 硬编码
+  CRC tumor context（`indication: refractory_metastatic_colorectal_cancer` /
+  `sample_type: crc_tumor_tissue`），对 `SEARCH_COMPLETION_AUDIT` /
+  `PAN_CANCER_UNRESOLVED` / `MATCHED_NORMAL_TUMOR` / non-CRC contextual
+  observation 是事实错误。新 `_study_context_facts(o)` 按 kind / fact 给
+  non-inflated `(indication, sample_type)`：audit → `(not_applicable,
+  search_audit)`；pan-cancer → `(pan_cancer_or_unresolved,
+  dataset_or_source_reported)`；matched normal-tumor → `(colorectal_cancer,
+  matched_normal_and_tumor_tissue)`；`crc_specific False` → `(not_crc_resolved,
+  source_reported)`；CRC observation → `(colorectal_cancer, ...)` —— Module 绝不
+  把 source study 提升成「refractory metastatic CRC」（run context 已由
+  `context_key` / Instantiation 单独 pin）。+3 regression。
+- 顺手同步 PR #120 body 的 test 数（75 / 1185 → 当前）。
+- 验证：`tests/test_tgt02_module.py` **98 OK**（+8 `Round2RegressionTests`）；
+  全量 **1208 OK**（round 1 后 1200）；`git diff --check` clean；YAML 合法。
+- 未改：架构、frozen E7 truth table / science、`>= 2` 规则、ladder、
+  highest-qualifying-class Strength、binding scope、`MIGRATION_PENDING`、
+  MOD-TGT01 / 05 / 08。
+- Next：push、CI 绿后回 `AI审核方案` 贴第三轮复审。
