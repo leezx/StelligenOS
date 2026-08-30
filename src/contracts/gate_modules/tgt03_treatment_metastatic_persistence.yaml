@@ -1,0 +1,808 @@
+version: "0.1.0"
+name: stelligenos-gate-module-construction-contract-tgt03
+description: >-
+  Runtime Migration PR E9. The frozen construction contract for MOD-TGT03, the
+  single primary Evidence Production Module of Gate TGT-03 (Treatment /
+  Metastatic Persistence) under ADC_TARGET_GATESET@1.0 /
+  INST-CRC-REFRACTORY-ADC-TARGET-v1. This PR delivers the contract + a
+  human-readable construction drawing
+  (docs/gate_modules/TGT-03_Treatment_Metastatic_Persistence.md) + validation /
+  parity tests + a 17-item acceptance checklist ONLY. It ships no implementation.
+  The Module is built in PR E10, and only after this contract is APPROVED
+  (CURRENT_SYSTEM v5 section 6.4). TGT-03 needs its semantics frozen BEFORE any
+  code because it slides very easily into three failure modes: (a) "baseline CRC
+  expression (TGT-02) -> assume the target persists in the treated / metastatic
+  setting", (b) "one paired biopsy series or one loss observation -> a completed
+  population-level persistence answer or an early fatal call", and (c) confusing
+  a scientific NEGATIVE ("the target is materially lost in the actual refractory
+  / metastatic context") with a KILL.
+
+headline_conclusions:  # ChatGPT AI审核方案, frozen verbatim, before code
+  - >-
+    Baseline expression is not persistence. TGT-02 evidence cannot discharge
+    TGT-03 unless the evidence source itself explicitly measures a qualified
+    treatment / metastasis context.
+  - >-
+    TGT-03 is a bidirectional scientific persistence gate: qualified
+    clinical-context retention supports POSITIVE, qualified clinical-context near
+    / marked loss supports NEGATIVE; NEGATIVE is not fatal and not KILL.
+  - >-
+    Reproducible protein-level near / marked loss may trigger only
+    POTENTIAL_FATAL_PATTERN; reproducibility requires auditable evidence and is
+    not defined solely by a numeric context count. The Module never decides
+    fatality.
+
+core_chain: >-
+  qualified treatment / metastasis context x measurement layer x malignant-cell
+  attribution x audited persistence-search completion -> Gate-neutral empirical
+  persistence observations -> frozen rung -> aggregate persistence Direction x
+  Strength -> optional reproducible-loss fatal_review -> human review / GateSet
+  policy. It never becomes: baseline CRC expression -> assumed persistence; a
+  minor down-regulation -> assumed loss / fatal; two observations -> automatically
+  "reproducible"; protein persistence -> assumed surface density; NEGATIVE -> KILL.
+
+migration:
+  pr: runtime_migration_pr_e9
+  scope: tgt03_mod_tgt03_construction_contract_drawing_validation_and_acceptance_checklist_only
+  spec_refs:
+    - docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md (section 6.4 one Gate -> one primary Evidence Production Module + Module 权责边界; section 6.5 shared infrastructure; section 11.2 EVGAP-02 CRC linkage lock; section 16 B group question 23 -> PR E+)
+    - src/contracts/crc_adc_target_gateset.yaml (PR D -- the frozen TGT-03 gate contract, Evidence Ladder, allowed/forbidden inference, unknown behavior, fatal_conditions and inference_guard -- inherited verbatim)
+    - src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml (PR E1 -- the approved 17-item construction template, reused here)
+    - src/contracts/gate_modules/tgt02_indication_specific_malignant_cell_coverage.yaml (PR E7 -- the reachable-scientific-NEGATIVE + typed-completion + machine-local fatal_review + no-two-axis-strength precedent, and the bidirectional-coverage-vs-fatal separation this contract mirrors for persistence)
+    - src/contracts/gate_modules/tgt05_normal_tissue_fatal_liability.yaml + tgt08_target_opportunity_competition_ip_whitespace.yaml (PR E3 / E5 -- the fatal-vs-scientific separation precedent)
+    - gate_modules/tgt01_adc_modality_precedent/ + gate_modules/tgt02_indication_specific_malignant_cell_coverage/ + gate_modules/tgt05_normal_tissue_fatal_liability/ + gate_modules/tgt08_target_opportunity_competition_ip_whitespace/ (PR E2 / E8 / E4 / E6 -- the runtime boundary genes this contract freezes for MOD-TGT03: canonical target identity + fixed-Instantiation context pin, observation context_key / completion search_scope HARD binding, Gate-neutral EvidencePackage, exact canonical EP reuse incl. observation_id + canonical-provenance re-check, kind/fact-specific study_context, a SEARCH_COMPLETION_AUDIT EP that cannot be lost to dedup, hard identity/provenance/completion-consistency failure -> whole-run reject, non-canonical proposal envelope, completion-audit snapshot parity)
+    - src/contracts/data_layout/evidence_package.schema.json / assessment.schema.json (PR A shapes the Module must produce)
+    - src/contracts/evidence_reference.yaml (PR C reusable-EvidencePackage reference layer + provenance walk)
+    - src/contracts/gate_contracts.yaml (PR B -- assessment_rule / fatal_gate_policy are GateSet-level refs, not Module logic)
+  boundary: >-
+    design-before-execution. PR E9 delivers the contract, the drawing, the
+    validation / parity tests and the acceptance checklist. It adds NO
+    implementation, NO provider / adapter, NO GEO / HPA / CPTAC / scRNA / spatial
+    / paired-biopsy retrieval, NO extractor / normalizer / runner / dry-run
+    executor, NO EvidencePackage or proposal runtime, NO fatal detector runtime,
+    NO external data, NO numeric or ranking score, NO fold-change /
+    percent-positive / H-score / down-regulation cutoff, and NO new scientific
+    ladder semantics. It does NOT create a generic GateModule framework, an
+    abstract base class, or refactor MOD-TGT01 / MOD-TGT02 / MOD-TGT05 /
+    MOD-TGT08. The ONLY existing file it may mutate is an append to
+    logs/worklog.md; everything else it delivers is a NEW file. It does NOT touch
+    src/contracts/crc_adc_target_gateset.yaml, src/objects/crc_adc_target_gateset.py,
+    gate_modules/README.md, tests/test_crc_adc_target_gateset.py or
+    tests/test_gate_modules_boundary.py -- those wait for PR E10.
+    MIGRATION_PENDING remains.
+  next: >-
+    runtime_migration_pr_e10 implements MOD-TGT03 as a deterministic Gate-specific
+    scientific core in gate_modules/tgt03_treatment_metastatic_persistence/ and
+    raises the TGT-03 gate_binding primary_module_version from "0.0.0" to "1.0.0".
+    It may start only after this contract is APPROVED.
+  order: >-
+    fatal-first + cheap-first: TGT-01 -> TGT-05 -> TGT-08 -> TGT-02 -> TGT-03 ->
+    TGT-04 -> TGT-06 -> TGT-07. TGT-01 calibrated the Module mechanics; TGT-05
+    was the first fatal-first liability gate; TGT-08 was the external opportunity
+    gate and the first reachable canonical NEGATIVE; TGT-02 was the first
+    indication-specific malignant-cell coverage gate; TGT-03 is the first
+    treatment / metastatic persistence gate -- a bidirectional scientific
+    persistence judgement whose NEGATIVE (materially impaired persistence) is a
+    genuine scientific finding, distinct from the reproducible-loss fatal pattern.
+
+template_provenance:
+  status: RECONSTRUCTED
+  template_basis: >-
+    approved E1 17-item construction template
+    (src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml), already
+    validated by the merged PR E2 / E4 / E6 / E8 implementations and reused
+    verbatim in PR E7. PR E9 reuses it and does not reinvent the template.
+  blueprint_status: >-
+    Blueprint v1.3 section H2.8 (Gate Module Acceptance Template, 17 items) is
+    referenced by CURRENT_SYSTEM v5 but NOT present in this repository or the
+    File Library.
+  source:
+    - "approved E1 17-item construction template (validated by the merged PR E2 / E4 / E6 / E8 implementations and PR E7)"
+    - CURRENT_SYSTEM v5 section 6.4 (one Gate -> one primary Module; the Module 权责边界 list) + section 11.2 (EVGAP-02 CRC linkage lock)
+    - ADC_TARGET_GATESET@1.0 / TGT-03 frozen contract (src/contracts/crc_adc_target_gateset.yaml, PR D)
+    - runtime migration PR A-E8 contracts (objects / Gate system / Matrix + provenance / CRC GateSet / MOD-TGT01 / MOD-TGT02 / MOD-TGT05 / MOD-TGT08)
+  claim:
+    not_claimed_verbatim_from_blueprint: true
+    seventeen_item_template_reused_from_e1: true
+    functionally_complete_and_consistent_with_prior_frozen_decisions: true
+
+kernel_invariant: >-
+  The kernel defines the contract; the Gate Module implements the contract.
+  One-way dependency, exactly like extensions/ and MOD-TGT01 / MOD-TGT02 /
+  MOD-TGT05 / MOD-TGT08: a future gate_modules/ implementation MAY import kernel
+  objects / Gate identity / contracts; src/ MUST NEVER import gate_modules/. The
+  Module may not modify the Gate id / name / candidate ownership, the
+  gate_question, the Evidence Ladder, the evidence ceiling, or the fatal /
+  unknown / conflict / inference semantics (CURRENT_SYSTEM v5 section 6.4). It
+  may not reason across Gates, lower a measurement requirement, or turn UNKNOWN
+  into PASS / HOLD / KILL. TGT-03-specific: MOD-TGT03 is a BIDIRECTIONAL
+  scientific persistence gate. Qualified protein / malignant-cell-attributed
+  clinical-context evidence can establish that the target is retained in the
+  treated / refractory / metastatic CRC setting (POSITIVE) OR that it is
+  materially lost there (NEGATIVE). But NEGATIVE is a Gate-relative scientific
+  assessment; it is not a fatal flag and not a KILL. A cross-context or
+  explicitly reproducible protein-level near / marked loss that meets the PR D
+  fatal condition is surfaced at most as a machine-local fatal_review =
+  POTENTIAL_FATAL_PATTERN; the GateSet fatal_gate_policy (PR B) decides the
+  Candidate-level consequence. The Module never PASSES and never KILLs the target.
+
+# The 17-item Gate Module Acceptance checklist (template reused from the approved
+# PR E1 template -- see template_provenance). Each item the future MOD-TGT03
+# implementation (PR E10) must satisfy before it can be accepted.
+acceptance_checklist:
+
+  "01_gate_identity_and_version":
+    gate_id: TGT-03
+    gate_version: "1.0"
+    gate_name: Treatment / Metastatic Persistence
+    canonical_gateset_id: ADC_TARGET_GATESET
+    gateset_version: "1.0"
+    candidate_level: L04
+    candidate_ownership: ADC_TARGET (L04)
+    instantiation_binding: INST-CRC-REFRACTORY-ADC-TARGET-v1
+    rule: the Module inherits this identity; it does not own, rename or redefine it
+
+  "02_primary_module_identity_and_version":
+    primary_module_id: MOD-TGT03
+    deterministic_id_rule: "Data Layout Spec Appendix A: Module = MOD-<GATE without hyphen>"
+    construction_contract_version: "0.1.0"
+    module_implementation_version: "0.0.0"
+    rule: >-
+      exactly one primary Evidence Production Module per Gate. "0.0.0" means
+      declared, not built (the PR D gate_binding slot). PR E10 builds it and
+      raises the version to >= 1.0; PR E9 does not change the binding version.
+      MOD-TGT03 does not own the Gate identity.
+
+  "03_gate_question":
+    verbatim_from: src/contracts/crc_adc_target_gateset.yaml gate_contracts.TGT-03.gate_question
+    text: >-
+      Does target expression persist in the actual clinical setting: refractory /
+      prior-treated and/or metastatic CRC (including colorectal liver metastases)?
+    rule: the Module quotes this verbatim and may not widen or narrow it
+    tgt03_framing:
+      answers: >-
+        whether admissible public evidence establishes that the target is
+        retained (or is materially lost) at the protein level in an explicitly
+        qualified refractory / prior-treated OR metastatic CRC context, with
+        malignant-cell attribution and an audited persistence-search landscape
+      does_not_answer:
+        - whether the target is adequately expressed on treatment-naive CRC malignant cells at the population level (that is TGT-02, and TGT-02 evidence never discharges TGT-03)
+        - whether the target is on the cell surface or at adequate density in the persisting population (that is TGT-04, and persistence never establishes surface / density)
+        - whether there is a favorable therapeutic index (that is TGT-05)
+        - whether the candidate is desirable (Direction is about the evidence relative to the Gate question, not the candidate)
+
+  "04_admissible_evidence_classes":
+    verbatim_from: gate_contracts.TGT-03.evidence_required + evidence_ladder.*.admissible_evidence_classes
+    evidence_required_from_pr_d:
+      - paired pre-/post-treatment CRC biopsies with target scoring
+      - refractory or chemotherapy-exposed CRC cohort expression
+      - metastatic CRC lesion expression (liver / CRLM / lung / peritoneal)
+      - target expression in a validated CRC treatment-resistance model
+    admissible:
+      - paired pre-/post-treatment CRC biopsies with target scoring
+      - refractory or chemotherapy-exposed CRC cohort expression
+      - metastatic CRC lesion expression (liver / CRLM / lung / peritoneal)
+      - target expression in a validated CRC treatment-resistance model
+      - protein-level target retention in refractory or prior-treated CRC with malignant-cell attribution
+      - protein-level target expression in metastatic CRC lesions (matched or cohort-level) with malignant-cell attribution
+      - transcriptomic persistence in the treated or metastatic CRC malignant compartment
+      - persistence demonstrated in a well-validated CRC treatment-resistance model
+      - persistence inferred only from treatment-naive primary CRC expression
+      - treated / metastatic persistence data from a different tumor type
+    not_admissible_into_this_gate:
+      - ADC-modality precedent / addressability evidence (that is TGT-01)
+      - treatment-naive baseline malignant-cell coverage as a persistence claim (that is TGT-02; it is admissible here ONLY as the frozen WEAK class "persistence inferred only from treatment-naive primary CRC expression" and never above WEAK)
+      - surface availability / antigen density / localization / internalization evidence (TGT-04 / TGT-06)
+      - normal-tissue liability / therapeutic-index evidence (TGT-05)
+      - shedding / soluble-antigen / sink evidence (TGT-07)
+      - competitive landscape / IP-whitespace evidence (TGT-08)
+
+  "05_evidence_ladder_and_evidence_ceiling":
+    verbatim_from: gate_contracts.TGT-03.evidence_ladder + evidence_ceiling
+    DIRECT:
+      admissible_evidence_classes:
+        - protein-level target retention in refractory or prior-treated CRC with malignant-cell attribution
+        - protein-level target expression in metastatic CRC lesions (matched or cohort-level) with malignant-cell attribution
+      ceiling_rule: establishes persistence in the intended treatment / metastatic context
+    INDIRECT_STRONG:
+      admissible_evidence_classes:
+        - transcriptomic persistence in the treated or metastatic CRC malignant compartment
+        - persistence demonstrated in a well-validated CRC treatment-resistance model
+      ceiling_rule: strong support; protein confirmation in the clinical context is required for DIRECT
+    WEAK:
+      admissible_evidence_classes:
+        - persistence inferred only from treatment-naive primary CRC expression
+        - treated / metastatic persistence data from a different tumor type
+      ceiling_rule: no persistence claim; hypothesis only
+    evidence_ceiling: protein-level target retention in refractory / prior-treated and/or metastatic CRC with malignant-cell attribution
+    rule: >-
+      the Module reproduces this mapping exactly; it does not redefine the
+      grades, add rungs, or exceed the ceiling. A normalized-equality parity
+      test binds this item to the frozen PR D contract. Transcript evidence and a
+      treatment-resistance model never exceed INDIRECT_STRONG -- a resistance
+      model's context is a model, so its ceiling is INDIRECT_STRONG even when it
+      measures protein. Quantity (many strong transcript / model datasets) never
+      raises the evidence-class ceiling to DIRECT.
+    direct_protein_measurement_is_not_a_closed_assay_whitelist: >-
+      the PR D DIRECT class is "protein-level target retention ... with
+      malignant-cell attribution" -- it does NOT list a closed set of assays
+      (unlike TGT-02, whose PR D explicitly enumerated validated IHC /
+      quantitative proteomics / validated multiplex IF). MOD-TGT03 freezes DIRECT
+      as: a protein-level clinical-context measurement + a factual assay_method
+      type + a protein_measurement_validation_status / basis. Validated IHC,
+      quantitative proteomics and validated multiplex IF are ADMISSIBLE EXAMPLES,
+      not an exhaustive closed enum; PR E10 must not auto-downgrade another
+      reliable protein-level method just because it is not one of the three.
+
+  "06_direction_interpretation":
+    strength_direction_rule: >-
+      Strength is orthogonal to Direction (Blueprint v1.3). The Module proposes
+      both; it never merges them and never emits a numeric or ranking score.
+      Direction describes the evidence RELATIVE TO THE GATE QUESTION (does the
+      target persist at the protein level in the actual refractory / prior-treated
+      / metastatic CRC context), not candidate desirability. TGT-03 is a
+      bidirectional scientific persistence gate.
+    direction_definitions:
+      POSITIVE: qualifying evidence supports retention / persistence of target expression in the intended treated / refractory / metastatic CRC context
+      NEGATIVE: qualifying evidence supports clinically contextual target loss / materially impaired persistence
+      CONFLICTING: qualifying evidence makes genuinely incompatible persistence claims and no auditable context-specific characterization resolves them
+      INCONCLUSIVE: qualifying evidence does not resolve persistence direction
+    persistence_pattern_is_upstream_qualified: >-
+      "retained", "near / marked loss" and "transient / minor down-regulation"
+      are CLASSIFICATION-DRIVING qualified factual states. MOD-TGT03 does NOT
+      compute them from a fold-change, a percent-positive value, an H-score or a
+      cohort n. They must arrive as an auditable upstream qualification
+      (persistence_pattern in {RETAINED, NEAR_LOSS_OR_MARKED_LOSS,
+      TRANSIENT_OR_MINOR_DOWNREGULATION, MIXED_OR_UNRESOLVED} with
+      persistence_pattern_basis in {SOURCE_REPORTED, HUMAN_REVIEWED_NORMALIZATION}).
+      The Module only consumes the qualified state; a missing or drifted
+      qualification basis for a classification-driving pattern is a HARD
+      integrity failure.
+    persistence_pattern_to_support_mapping:
+      RETAINED: SUPPORTS_PERSISTENCE
+      TRANSIENT_OR_MINOR_DOWNREGULATION: >-
+        SUPPORTS_PERSISTENCE when the qualified observation establishes that
+        expression REMAINS PRESENT in the relevant treated / metastatic context.
+        It can contribute a POSITIVE Direction. It can NEVER contribute a
+        NEGATIVE Direction, NEVER contribute to a fatal_review, and NEVER
+        establish TGT-04 surface / density. Only when the observation is itself
+        ambiguous about retention is it NONDIRECTIONAL / CONTEXTUAL. "Not
+        sufficient for fatal" is NOT the same as "scientifically non-directional".
+      NEAR_LOSS_OR_MARKED_LOSS: OPPOSES_PERSISTENCE
+      MIXED_OR_UNRESOLVED: NONDIRECTIONAL / CONTEXTUAL
+    qualifying_is_rung_specific:
+      note: >-
+        "qualifying" is RUNG-SPECIFIC. A qualifying observation satisfies the
+        frozen admissibility requirements of its applicable Evidence-Ladder rung
+        AND belongs to the completed / audited persistence-search landscape
+        (item 16).
+      DIRECT_qualification_additionally_requires: protein-level + CRC + an explicitly qualified refractory / prior-treated OR metastatic clinical context + malignant-cell attribution + a QUALIFIED clinical-context adequacy status with an auditable basis
+      INDIRECT_STRONG_qualification_requires: qualifying transcriptomic persistence in the treated / metastatic CRC malignant compartment, or a well-validated CRC treatment-resistance model persistence result
+      note_2: >-
+        paired pre-/post-treatment protein evidence is a high-information DIRECT
+        form, but it is STILL just DIRECT -- there is no SUPER_DIRECT rung. A
+        resistance-model persistence result is INDIRECT_STRONG even if it
+        measures protein.
+    direction_is_an_aggregate_not_an_observation: >-
+      a single observation is never a Direction. The classifier emits only a
+      Gate-neutral, rung-classed, direction-SUPPORTING observation (item 11: an
+      EvidencePackage carries no grade / direction). A single refractory-CRC
+      protein loss observation is a DIRECT-class, NEGATIVE-supporting observation
+      -- NOT yet a NEGATIVE / DIRECT proposal, and NOT fatal. The proposed
+      Direction x Strength is produced only by aggregate over a COMPLETED, audited
+      persistence-search landscape (item 16). Until that landscape is complete the
+      final Assessment stays INCONCLUSIVE / UNKNOWN.
+    strength_is_the_highest_qualifying_evidence_class: >-
+      after the public persistence landscape is complete (item 16), the overall
+      Strength is the ceiling of the HIGHEST qualifying frozen evidence class
+      actually met -- qualifying clinical-context protein evidence -> DIRECT; else
+      qualifying treated / metastatic transcript or resistance-model persistence
+      -> INDIRECT_STRONG; else INCONCLUSIVE / UNKNOWN. There is NO E6-style
+      two-axis weaker-ceiling rule, and the four mandatory search components are
+      search-space completeness, not a four-axis score.
+    frozen_truth_table:
+      note: >-
+        exactly ONE mapping -- E10 has no discretion. "qualifying" is
+        rung-specific (see qualifying_is_rung_specific) and part of a completed,
+        audited persistence-search landscape (item 16). Every row below is an
+        AGGREGATE result over a completed landscape, never an observation-level
+        output.
+      qualifying_clinical_context_protein_supports_retention: POSITIVE / DIRECT
+      qualifying_clinical_context_protein_supports_near_or_marked_loss: NEGATIVE / DIRECT
+      qualifying_treated_metastatic_transcript_or_resistance_model_supports_retention: POSITIVE / INDIRECT_STRONG
+      qualifying_treated_metastatic_transcript_or_resistance_model_supports_near_or_marked_loss: NEGATIVE / INDIRECT_STRONG
+      qualifying_landscape_with_genuinely_incompatible_retained_vs_loss_claims_and_no_resolving_characterization: CONFLICTING / <overall rung>
+      qualifying_direct_authority_landscape_with_no_directional_resolution: INCONCLUSIVE / DIRECT
+      qualifying_indirect_strong_landscape_with_no_directional_resolution: INCONCLUSIVE / INDIRECT_STRONG
+      qualified_context_or_site_or_time_variation_that_cannot_answer_overall_persistence: INCONCLUSIVE / <overall rung>
+      weak_only_public_evidence_or_incomplete_persistence_search: INCONCLUSIVE / UNKNOWN
+      single_direct_class_loss_observation_with_the_persistence_landscape_incomplete: INCONCLUSIVE / UNKNOWN
+      never:
+        - a transcript or resistance-model persistence signal by itself -> DIRECT (protein confirmation in the clinical context is required)
+        - a transient / minor down-regulation -> NEGATIVE, or -> a fatal_review contribution
+        - a treatment-naive primary CRC expression -> above WEAK, or -> a persistence claim
+        - baseline malignant-cell coverage (TGT-02) -> a persistence claim
+        - a qualified context / site / time variation -> automatically CONFLICTING
+        - a WEAK-only public landscape -> INCONCLUSIVE / WEAK (that is INCONCLUSIVE / UNKNOWN -- verbatim "Only treatment-naive primary CRC data -> UNKNOWN")
+        - absence of persistence evidence -> POSITIVE / retained
+    weak_vs_unknown: >-
+      a WEAK observation (treatment-naive primary CRC only; treated / metastatic
+      persistence from a different tumor type) is an admissible hypothesis /
+      context observation and may enter the Evidence Library for human drill-down,
+      but a WEAK-only public landscape yields INCONCLUSIVE / UNKNOWN, NOT
+      INCONCLUSIVE / WEAK. Per PR A, INCONCLUSIVE / UNKNOWN carries ZERO
+      evidence_refs; a graded INCONCLUSIVE (DIRECT / INDIRECT_STRONG) carries its
+      CONTEXTUAL evidence_refs.
+    graded_inconclusive_vs_unknown: >-
+      graded INCONCLUSIVE means qualifying DIRECT- or INDIRECT_STRONG-quality
+      evidence EXISTS and the landscape is complete, but after interpretation the
+      persistence direction is MIXED / does not resolve retention vs materially
+      impaired persistence. UNKNOWN means the persistence question still cannot be
+      answered (WEAK-only, or the mandatory persistence search is incomplete). The
+      two states are strictly distinct.
+    conflicting_vs_qualified_variation: >-
+      do NOT auto-equate context / site / time heterogeneity with a conflict.
+      CONFLICTING requires admissible observations that make genuinely
+      incompatible OVERALL persistence claims (e.g. one qualified refractory-CRC
+      protein cohort says RETAINED, another independent qualified refractory-CRC
+      protein cohort says NEAR_LOSS_OR_MARKED_LOSS) AND no valid context-specific
+      characterization explains it. If the source itself characterises the result
+      as context-dependent / variable, or the variation simply cannot answer
+      overall persistence, that is a GRADED INCONCLUSIVE. Strength is not
+      auto-degraded by a conflict.
+    absolute_note: Direction is about the evidence relative to the Gate question, not the candidate; the Module never flips Direction on desirability grounds.
+
+  "07_allowed_and_forbidden_inference":
+    verbatim_from: gate_contracts.TGT-03.allowed_inference + forbidden_inference
+    allowed:
+      - the target remains available in the actual refractory mCRC patient population
+    forbidden:
+      - baseline malignant-cell coverage (TGT-02) substitutes for demonstrated persistence
+      - surface density (TGT-04) from persistence evidence
+    inference_guard:
+      verbatim_from: gate_contracts.TGT-03.inference_guard
+      text: >-
+        Generic EVGAP-02 CRC linkage does NOT support TGT-03 (v5 section 11.2).
+        TGT-03 requires independent treatment/metastasis-context evidence
+        (refractory / treated / paired pre-post / metastatic / CRLM / resistance
+        context). An EVGAP-02 EvidencePackage contributes here only if its source
+        and context explicitly qualify.
+      rule: >-
+        the Module reproduces this guard verbatim. A generic CRC-linkage or
+        baseline-coverage observation NEVER contributes to a TGT-03 rung,
+        Direction or fatal_review; an EVGAP-02 EvidencePackage contributes ONLY
+        when its source and context are explicitly a qualified treatment /
+        metastasis context.
+    rule: the Module obeys this scientific boundary verbatim and produces no cross-Gate conclusion. A normalized-equality parity test binds this item to the frozen PR D contract.
+
+  "08_fatal_conditions":
+    verbatim_from: gate_contracts.TGT-03.fatal_conditions
+    potential_fatal_signal:
+      - reproducible protein-level near-loss or marked loss of the target under treatment or in metastatic CRC, resulting in loss of meaningful target availability in the intended refractory / metastatic context (transient or minor down-regulation is not sufficient)
+    framing: >-
+      a potential fatal signal that meaningful target availability for this
+      target in refractory / metastatic mCRC is lost. A single clinical-context
+      protein loss observation is a DIRECT-class, NEGATIVE-supporting observation
+      -- NOT yet a NEGATIVE / DIRECT proposal and NOT a reproducible fatal
+      pattern. A transient or minor down-regulation is NOT a fatal input at all
+      (see item 06).
+    machine_detection_criteria:
+      each_contributing_observation_must_be:
+        - protein-level
+        - CRC and malignant-cell attributed
+        - in an explicitly qualified treated / refractory / metastatic clinical persistence context (refractory or prior-treated CRC, metastatic CRC lesion, or paired pre-/post-treatment)
+        - carrying a QUALIFIED clinical-context adequacy status and an auditable clinical-context basis
+        - carrying persistence_pattern == NEAR_LOSS_OR_MARKED_LOSS (NOT TRANSIENT_OR_MINOR_DOWNREGULATION) with an auditable persistence_pattern_basis
+      landscape: a completed, audited persistence-search landscape (item 16)
+      reproducibility_requires_route_a_or_route_b: >-
+        "reproducible" is NOT defined by a numeric context count. It is
+        established by EITHER route:
+      route_a_explicit_reproducibility_qualification: >-
+        one auditable study / analysis explicitly establishing reproducibility
+        across paired / multiple patients / samples / contexts -- the contributing
+        observation carries reproducibility_status == QUALIFIED and an auditable
+        reproducibility_basis, and the source / human normalization explicitly
+        supports a reproducible marked / near loss.
+      route_b_independent_convergence: >-
+        convergent NEAR_LOSS_OR_MARKED_LOSS across AT LEAST TWO independent
+        qualified clinical persistence context identities (distinct auditable
+        context identities). This is a deterministic SUFFICIENT convergence
+        pattern -- it is NOT the word-meaning definition of "reproducible" and NOT
+        a new biological threshold. It is NOT "more than two" / "> 2".
+    explicitly_excluded_from_a_fatal_trigger:
+      - TRANSIENT_OR_MINOR_DOWNREGULATION
+      - transcript-only evidence
+      - resistance-model-only evidence
+      - a different tumor type
+      - treatment-naive primary CRC
+    human_review_reserved:
+      - whether the "marked / near loss" qualification is scientifically justified vs a transient / minor effect
+      - whether the contexts / cohorts are genuinely independent
+      - whether an apparent loss is an assay / platform artifact
+      - whether a reported reproducibility is scientifically convincing
+      - whether meaningful target availability is actually lost
+      - whether the reproducible-loss pattern satisfies the GateSet fatal policy
+    machine_output_is_only_a_potential_pattern: >-
+      the Module may emit at most a machine-local fatal_review with status
+      POTENTIAL_FATAL_PATTERN (see item 12). It NEVER emits
+      PUBLIC_FATAL_SIGNAL_ESTABLISHED, a canonical fatal flag, a KILL, a HOLD or
+      a Decision. PR D's fatal_gate_policy_ref is an independent GateSet-level
+      policy reference; the Candidate-level consequence is decided by human review
+      + that policy (PR B), never by the Module.
+    rule: >-
+      the Module only recognises and reports this evidence pattern. It never
+      performs a Candidate-level KILL. It must NOT auto-declare a fatal signal
+      merely because a fold-change, a percent-positive value or a cohort n crosses
+      some line -- no numeric threshold, no percent-positive cutoff, no H-score
+      cutoff, no down-regulation score. A normalized-equality parity test binds
+      potential_fatal_signal to the frozen PR D contract.
+
+  "09_evidence_source_plan":
+    dominant_evidence_regime_frozen_contract: PUBLIC_HYBRID
+    current_instantiation_regime: PUBLIC_ONLY
+    experimental_sources: >-
+      the frozen contract allows a hybrid path, but INST-CRC-REFRACTORY-ADC-TARGET-v1
+      is PUBLIC_ONLY -- PR E9 designs the current public path only and connects
+      no experiments.
+    source_classes:
+      direct_authority:
+        - a validated protein-level clinical-context measurement (e.g. validated CRC IHC, quantitative proteomics, validated multiplex IF -- an open set, see item 05) in annotated malignant cells in explicitly qualified refractory / prior-treated OR metastatic CRC, from a primary publication / repository record; paired pre-/post-treatment is a high-information DIRECT form
+      indirect_strong:
+        - transcriptomic persistence with the treated / metastatic CRC malignant compartment resolved
+        - persistence demonstrated in a well-validated CRC treatment-resistance model (ceiling INDIRECT_STRONG even if protein is measured -- the context is a model)
+      weak_only:
+        - persistence inferred only from treatment-naive primary CRC expression
+        - treated / metastatic persistence data from a different tumor type
+    source_authority_rules:
+      - transcript evidence and a treatment-resistance model can support persistence, but they CANNOT establish protein-level clinical-context persistence -- neither becomes a DIRECT call
+      - treatment-naive primary CRC expression can never become a persistence claim -- it is admissible only as the frozen WEAK class and never above WEAK
+      - a treated / metastatic persistence result from a different tumor type is WEAK context only and is never CRC persistence
+      - baseline malignant-cell coverage (TGT-02) NEVER substitutes for demonstrated persistence
+      - a persistence result NEVER establishes TGT-04 surface / density
+      - a generic EVGAP-02 / CRC-linkage observation contributes ONLY if its source and context explicitly qualify as a treatment / metastasis context
+      - a weak_only source class can never lift an assessment above INCONCLUSIVE / UNKNOWN
+      - the number of qualifying transcript / model datasets never raises the evidence-class ceiling above INDIRECT_STRONG
+    persistence_search_landscape:
+      declared_mandatory_search_components:
+        - refractory / prior-treated CRC expression search
+        - metastatic CRC lesion expression search (must cover liver / CRLM / lung / peritoneal -- NOT one completion axis per organ)
+        - paired pre-/post-treatment CRC biopsy search
+        - validated CRC treatment-resistance model search
+      mandatory_is_search_space_completeness_not_evidence_prerequisites: >-
+        the four components are the declared_mandatory_search_components so the
+        Module cannot "find one pretty paired study, stop searching metastatic
+        evidence, and cherry-pick a Direction". mandatory search does NOT mean
+        every component must yield evidence, does NOT mean every component must be
+        DIRECT, and is NOT a four-axis score. A component that is
+        searched / exhausted with zero qualifying records still counts as
+        complete. ``public_persistence_search_complete`` must equal ``all`` of the
+        four component search states; a provider contradiction between them is a
+        HARD integrity failure in PR E10.
+      typed_completion_record: >-
+        PR E10 carries a module-local typed ClinicalPersistenceCompletion record
+        for this -- a run-level machine record, NOT a seventh core object:
+        attempted / landscape_as_of / search_scope / sources_searched /
+        public_persistence_search_complete /
+        refractory_prior_treated_search_complete /
+        metastatic_lesion_search_complete / paired_pre_post_search_complete /
+        resistance_model_search_complete / unresolved_items /
+        qualifying_direct_context_ids / qualifying_indirect_context_ids /
+        audit_observation_id. There is NO E6-style two mandatory axes.
+        completion <-> SEARCH_COMPLETION_AUDIT snapshot parity (E6 / E8 gene) is
+        frozen for E10: search_scope / sources_searched / landscape_as_of /
+        per-component completion states / unresolved_items / qualifying context id
+        sets; a missing / drifted / dedup-lost snapshot -> HARD reject.
+    no_universal_threshold: >-
+      no fold-change cutoff, no percent-positive cutoff, no H-score cutoff, no
+      down-regulation score, no ranking, no context-count threshold. Any threshold
+      that has not been through calibration is forbidden in this and every
+      subsequent PR for this Module.
+    connect_provider_in_this_pr: false
+    shared_infrastructure_note: >-
+      literature / repository / atlas / biopsy-series retrieval, entity
+      resolution, the provenance ledger and evidence serialization are shared
+      infrastructure (CURRENT_SYSTEM v5 section 6.5). A future Module reuses them;
+      it does not re-implement them per Gate.
+
+  "10_input_contract":
+    required_inputs:
+      - candidate_id (CAND-L04-nnnnnn) and the candidate's CANONICAL target identity (the single authoritative target -- inherited from the MOD-TGT01 / PR E2 gene; no separate drift-prone target argument)
+      - instantiation_id (INST-CRC-REFRACTORY-ADC-TARGET-v1) plus its context_id (CTX-CRC-REFRACTORY-MCRC) and context_version (1) -- HARD-pinned to the fixed Instantiation (E8 gene)
+      - the frozen TGT-03 gate_contract_ref and evidence_ladder_ref, and the Gate / GateSet version (TGT-03@1.0, ADC_TARGET_GATESET@1.0)
+      - run context (run_id, code_commit, retrieval time window / landscape_as_of, evidence_regime = PUBLIC_ONLY)
+      - the declared persistence search scope for this run
+      - existing evidence_refs for this (candidate, gate), if any
+    forbidden: >-
+      any implicit default scientific context. The Module must fail rather than
+      assume an indication, modality, clinical context or evidence regime not
+      supplied by the Instantiation. There is no second drift-prone target
+      argument. PR E10 HARD-checks that every observation.context_key equals the
+      run's context_key and that the ClinicalPersistenceCompletion.search_scope
+      equals the run's declared persistence_search_scope (E8 gene).
+
+  "11_evidencepackage_output_contract":
+    each_package:
+      - is atomic and Gate-NEUTRAL -- one neutral empirical observation, no grade, no direction, no TGT-03 ceiling, no pass / fail stamped onto it
+      - carries full provenance from the resolved canonical SourceIndex record (SRC-nnnnnnnn, source_type, source_identifier, locator, retrieved_at)
+      - carries candidate_refs and a measurement / claim block
+      - carries interpretation_boundary (observation-level directly_supports / does_not_support / limitations / a neutral observation-level evidence_ceiling)
+      - carries derivation (module_run_id, code_commit)
+      - carries the classification-driving observation fields in study_context (observation_kind, molecular_layer, assay_method, protein_measurement_validation_status, clinical_context + clinical_context_basis, context_adequacy_status + context_adequacy_basis, malignant_cell_attribution + malignant_attribution_basis, persistence_pattern + persistence_pattern_basis, reproducibility_status + reproducibility_basis, context_id / context_ids, context_key, landscape_as_of)
+      - kind / fact-specific study_context -- NEVER promote a non-refractory / non-metastatic / non-CRC / audit observation's source study context to refractory mCRC; the run's scientific context is pinned separately by context_key / the Instantiation (E8 gene)
+      - for a SEARCH_COMPLETION_AUDIT observation, additionally carries a structured snapshot of the ClinicalPersistenceCompletion it certifies (search_scope, sources_searched, landscape_as_of, per-component completion states, unresolved_items, qualifying_direct_context_ids, qualifying_indirect_context_ids) -- and it MUST survive the shared (source_id, claim) dedup, because an attempted completion needs exactly one emitted / reused provenance-bearing matching audit EP (E8 gene)
+    neutral_wording:
+      may_say:
+        - "source reported retained target protein staining in refractory / prior-treated CRC malignant cells"
+        - "paired pre-/post-treatment CRC biopsies showed a marked reduction of target protein in annotated malignant cells"
+        - "metastatic CRC liver lesions retained target protein in annotated malignant cells"
+        - "a validated CRC treatment-resistance model retained target expression"
+        - a literal source persistence / loss claim IS an admissible empirical fact and may be quoted
+      may_not_say:
+        - passes TGT-03 / TGT-03 POSITIVE / TGT-03 NEGATIVE
+        - adequate persistence established / meaningful target availability is lost
+        - the target is fatal / should be killed
+        - any TGT-02 baseline-coverage substitution, or any TGT-04 surface / density conclusion
+        - even when a Gate-relative phrase is the source's own claim, the Module never upgrades it into a TGT-03 Gate conclusion
+    rules:
+      - the Module references an existing EvidencePackage by evidence_id -- it reuses the EXACT canonical package, never copies or re-creates one (PR C / E1 item 11; PR E2 / E8 gene)
+      - on reuse, observation_id is part of the exact-reuse identity parity (a reused EP whose study_context.observation_id names a different observation is a HARD failure), every classification / absence driving field for that observation kind must be present AND equal on the canonical package's study_context, and the reused EP's own provenance source_type / source_identifier / locator must still equal the resolved canonical SourceIndex record -- not just that source_id resolves (PR E8 gene); a missing or drifted field is a HARD identity integrity failure
+      - forward status / superseded_by never appear on evidence.json (PR C -- they live only on the EvidenceIndexEntry)
+    shape_ref: src/contracts/data_layout/evidence_package.schema.json + src/objects/decision_model.py EvidencePackage (PR A)
+
+  "12_assessment_proposal_envelope_contract":
+    the_module_emits: >-
+      a non-canonical, module-local assessment PROPOSAL ENVELOPE. It is NOT a
+      CandidateGateAssessment. Per PR A, a CandidateGateAssessment is the
+      canonical matrix cell and CANONICAL_REVIEW_STATUS is HUMAN_APPROVED --
+      constructing that object with review.status != HUMAN_APPROVED is rejected.
+    the_proposal_envelope_carries:
+      identity_pins_for_deterministic_canonicalisation:
+        - candidate_id (CAND-L04-nnnnnn)
+        - instantiation_id (INST-CRC-REFRACTORY-ADC-TARGET-v1)
+        - context_id (CTX-CRC-REFRACTORY-MCRC)
+        - context_version (1)
+        - gateset_id (ADC_TARGET_GATESET)
+        - gateset_version
+        - gate_id (TGT-03)
+        - gate_version
+      scientific_fields:
+        - proposed_direction + proposed_strength (never a Decision, never a numeric or ranking score)
+        - evidence_refs [{evidence_id, role}] referencing the EvidencePackages above (role in SUPPORTING / CONTRADICTING / CONTEXTUAL)
+        - aggregation_rationale, critical_unknowns, evidence_ceiling
+      machine_record:
+        - the machine acceptance record (item 13)
+    fatal_review:
+      what_it_is: >-
+        a NON-CANONICAL, module-local, machine-generated human-review aid on the
+        run result -- NOT a field of the proposal envelope, NOT a
+        CandidateGateAssessment field, NOT a new core object, NOT a change to the
+        PR A / assessment.schema.json shape. It is where the structured
+        reproducible-loss potential-fatal-pattern signal lives so E10 never has to
+        hide it in free-text rationale or expand a canonical contract.
+      fields:
+        - required (bool)
+        - status (POTENTIAL_FATAL_PATTERN when required; otherwise empty)
+        - evidence_ids ([EP-nnnnnnnn] of the contributing protein-level clinical-context near / marked-loss observations)
+        - context_ids ([the qualified clinical persistence context identities])
+        - persistence_class ([the persistence_pattern per contributing observation -- must be NEAR_LOSS_OR_MARKED_LOSS])
+        - context_qualification_basis_refs ([the disclosed clinical_context_basis + context_adequacy_basis per observation])
+        - persistence_pattern_basis_refs ([the disclosed persistence_pattern_basis per observation])
+        - reproducibility_basis_refs ([the disclosed reproducibility_basis for a route A qualification; empty for a pure route B convergence])
+        - landscape_as_of, persistence_search_scope
+      machine_may_emit: POTENTIAL_FATAL_PATTERN
+      machine_never_emits: PUBLIC_FATAL_SIGNAL_ESTABLISHED / a canonical fatal flag / KILL / HOLD / Decision
+      required_is_true_iff: >-
+        the machine has protein-level CRC malignant-cell-attributed near /
+        marked-loss observations, each in a qualified treated / refractory /
+        metastatic clinical context with a QUALIFIED context adequacy status +
+        auditable basis and an auditable persistence_pattern_basis, on a completed
+        audited persistence landscape, AND reproducibility is established by route
+        A (an auditable explicit reproducibility qualification) OR route B
+        (convergent NEAR_LOSS_OR_MARKED_LOSS across at least two independent
+        qualified clinical context identities). A single loss observation with no
+        route A qualification and no independent convergence gives required = false.
+      only_actionable_on_an_accepted_run: >-
+        the raw detector may compute the candidate pattern internally, but a
+        fatal_review is an actionable handoff ONLY on an accepted run
+        (PR E6 / E8 gene). If the run fails machine acceptance the surfaced
+        fatal_review is empty / not required.
+      human_review_decides: >-
+        whether the marked / near-loss qualification is justified vs a transient /
+        minor effect, whether the contexts are genuinely independent, whether the
+        reported reproducibility is convincing, whether meaningful availability is
+        actually lost, and whether the pattern satisfies the GateSet
+        fatal_gate_policy. Only then can the GateSet fatal_gate_policy / a human
+        Decision act on the Candidate-level consequence. The Module never performs
+        a Candidate-level KILL.
+    the_proposal_envelope_never_carries:
+      - assessment_id / assessment_version (human canonicalisation assigns them)
+      - review.status / review.reviewer / review.reviewed_at (human canonicalisation only)
+      - any TGT-02 baseline-coverage substitution or TGT-04 surface / density conclusion
+      - a fatal flag (the reproducible-loss signal lives in the module-local fatal_review record, not the proposal envelope)
+    rules:
+      - a canonical CandidateGateAssessment (review.status = HUMAN_APPROVED) is constructed only after human approval (item 14), by the review surface, never by the Module
+      - the proposed_direction x proposed_strength combination is checked against the frozen item-06 truth table and the PR A direction x strength matrix
+      - PR E9 only DEFINES this envelope's field list and the fatal_review record's field list; it adds no new core object and no runtime implementation
+    shape_ref: >-
+      src/contracts/data_layout/assessment.schema.json is the canonicalisation
+      TARGET, not a machine-proposal schema. The proposal envelope carries that
+      schema's identity pins and scientific fields for a deterministic
+      canonicalisation and omits assessment_id / assessment_version / review.
+
+  "13_machine_acceptance_criteria":
+    a_proposal_envelope_and_its_packages_are_machine_acceptable_iff:
+      - every EvidencePackage validates against evidence_package.schema.json (shape / ids / nested blocks / date patterns)
+      - the candidate's canonical target identity matches every observation's target_identity; a mismatch is a HARD misbinding failure
+      - every observation.context_key equals the run's context_key, and the ClinicalPersistenceCompletion.search_scope equals the run's declared persistence_search_scope (PR E8 gene); a drift is a HARD integrity failure
+      - every provenance.source_id resolves to a canonical SourceIndex record whose metadata matches, and every evidence_ref.evidence_id resolves to a canonical EvidencePackage (PR C check_* functions; PR E2 gene)
+      - exact canonical EP reuse parity passes -- observation_id parity, no missing / drifted classification-driving field on a reused package, and the reused EP's own source_type / source_identifier / locator still equal the resolved canonical SourceIndex (PR E2 / E8 gene)
+      - the completion <-> SEARCH_COMPLETION_AUDIT snapshot parity passes -- an attempted completion has exactly one normalized matching audit observation AND exactly one emitted / reused provenance-bearing matching audit EP that carries a structured snapshot equal to the typed completion (search_scope, sources_searched, landscape_as_of, per-component completion states, unresolved_items, qualifying context ids); a missing / drifted / dedup-lost snapshot is a HARD integrity failure (PR E6 / E8 gene)
+      - public_persistence_search_complete equals all four declared component search states; a contradiction is a HARD integrity failure
+      - every admissible evidence class used is in item 04's admissible list, and no item-04 not_admissible class is present
+      - transcript-level evidence and a treatment-resistance model never propose above INDIRECT_STRONG; treatment-naive primary CRC never proposes above WEAK and never becomes a persistence claim; a different tumor type never becomes CRC persistence; protein without malignant-cell attribution never reaches DIRECT
+      - DIRECT is not gated on a closed three-assay whitelist -- a protein-level clinical-context measurement with a factual assay_method type and a protein_measurement_validation_status / basis qualifies; validated IHC / quantitative proteomics / validated multiplex IF are examples, not the exhaustive set
+      - every QUALIFIED clinical-context adequacy status carries an auditable clinical_context_basis + context_adequacy_basis, and every NEAR_LOSS_OR_MARKED_LOSS / TRANSIENT_OR_MINOR_DOWNREGULATION persistence_pattern carries an auditable persistence_pattern_basis; a missing / drifted qualification basis is a HARD integrity failure
+      - any route A reproducibility qualification carries reproducibility_status == QUALIFIED and an auditable reproducibility_basis; a route B convergence is auditable as at least two independent qualified clinical context identities
+      - the mandatory persistence-search landscape is complete for the path taken (item 16); the Module did not grade early on one paired biopsy series, one metastatic cohort, or one loss observation
+      - proposed_direction x proposed_strength is exactly the item-06 frozen truth table result for the evidence actually held; WEAK-only public evidence -> INCONCLUSIVE / UNKNOWN (never INCONCLUSIVE / WEAK); INCONCLUSIVE / UNKNOWN carries zero evidence_refs; a graded INCONCLUSIVE carries CONTEXTUAL evidence_refs
+      - a TRANSIENT_OR_MINOR_DOWNREGULATION observation is never scored CONTRADICTING and never contributes to the fatal_review; it is SUPPORTING (retention) or CONTEXTUAL
+      - if the module-local fatal_review record has required = true, its status is POTENTIAL_FATAL_PATTERN (never PUBLIC_FATAL_SIGNAL_ESTABLISHED), every contributing observation is a protein-level clinical-context NEAR_LOSS_OR_MARKED_LOSS observation (no transcript / resistance-model / treatment-naive / different-tumor / transient-minor contributor), the reproducibility route A or B basis is auditable, and it is surfaced only on an accepted run
+      - fatal_review is not a field of the proposal envelope
+      - dedup -- one SRC -> many EP is allowed; the same (source, claim) is not duplicated across packages, and a SEARCH_COMPLETION_AUDIT EP is never the dedup loser for an attempted completion
+      - all required fields present; no numeric or ranking score anywhere; no fold-change / percent-positive / H-score / down-regulation / context-count threshold
+      - no TGT-02 baseline-coverage substitution, no TGT-04 surface / density conclusion, and no PUBLIC_FATAL_SIGNAL_ESTABLISHED / KILL / HOLD / Decision appears anywhere in the proposal or the fatal_review record
+    on_failure: >-
+      the run is rejected with a machine reason and nothing enters the canonical
+      record. A HARD identity / provenance / completion-consistency /
+      classification-qualification integrity failure (candidate <-> target
+      misbinding, a context_key / search_scope drift from the run, a
+      claimed-resolved source missing from the canonical SourceIndex, a
+      canonical-source metadata conflict, an incompatible canonical
+      EvidencePackage, a completion-audit snapshot drift or a dedup-lost audit EP,
+      a missing / drifted qualification basis) rejects the WHOLE run -- it is
+      never degraded to an accepted UNKNOWN (PR E2 / E8 gene). UNKNOWN from a
+      genuinely incomplete public persistence search is NOT an integrity failure.
+
+  "14_human_acceptance_and_review_surface":
+    the_human_sees:
+      - the proposed_direction + proposed_strength and the aggregation_rationale
+      - each EvidencePackage's claim, source and interpretation_boundary (drill-down) -- per-context evidence, assay / molecular layer, protein measurement validation, malignant-cell attribution basis, clinical-context basis, persistence-pattern basis, reproducibility basis
+      - the ladder rung each package maps to, and any critical_unknowns
+      - the ClinicalPersistenceCompletion snapshot -- which mandatory components are complete / incomplete and the qualifying context ids
+      - the module-local fatal_review record (item 12) -- status POTENTIAL_FATAL_PATTERN, the contributing evidence_ids / context_ids / persistence_class / context_qualification_basis_refs / persistence_pattern_basis_refs / reproducibility_basis_refs
+      - the machine acceptance record (item 13 pass / fail detail)
+    human_only_judgements:
+      - whether the aggregated direction / strength is scientifically correct for TGT-03
+      - whether a clinical context is genuinely a qualified refractory / prior-treated / metastatic context and whether the malignant-cell attribution is convincing
+      - whether the paired / pre-post relation is valid
+      - whether the cohorts / context identities are genuinely independent
+      - whether the "marked / near loss" qualification is justified vs a transient / minor effect
+      - whether an apparent loss is an assay / platform artifact
+      - whether a reported reproducibility is scientifically convincing
+      - whether meaningful target availability is actually lost
+      - whether the reproducible-loss pattern satisfies the GateSet fatal policy -- i.e. whether the fatal_review POTENTIAL_FATAL_PATTERN is a real fatal signal
+      - final approval -- on HUMAN_APPROVED the review surface constructs the canonical CandidateGateAssessment (review.status = HUMAN_APPROVED) from the proposal envelope; it enters ASSESSMENTS/<cand>/vNNN.json and the MatrixView rebuilds (PR C). The Module never constructs that object.
+    complexity_note: >-
+      TGT-03's human-only judgement covers context qualification, paired / pre-post
+      validity, context independence, marked-vs-transient loss justification,
+      assay-artifact vs real loss, reproducibility convincingness and
+      fatal-policy satisfaction -- all human calls the Module surfaces but does
+      not make.
+
+  "15_failure_unknown_and_conflict_behavior":
+    retrieval_failure: report a machine failure reason; do not emit a partial proposal envelope as if complete
+    direction_and_strength_follow_the_item_06_frozen_truth_table: >-
+      qualifying clinical-context protein evidence -> POSITIVE / DIRECT (retained)
+      or NEGATIVE / DIRECT (near / marked loss) per the qualified
+      persistence_pattern; qualifying treated / metastatic transcript or
+      resistance-model persistence -> POSITIVE or NEGATIVE at INDIRECT_STRONG;
+      qualifying high-quality but nondirectional evidence -> graded INCONCLUSIVE
+      at that rung.
+    weak_only_treatment_naive_or_different_tumor: >-
+      propose INCONCLUSIVE / UNKNOWN (never INCONCLUSIVE / WEAK). Verbatim from
+      the frozen contract: "Only treatment-naive primary CRC data -> UNKNOWN." The
+      UNKNOWN proposal carries zero evidence_refs.
+    incomplete_persistence_search: >-
+      while the persistence search has started but a mandatory declared component
+      is not complete -> INCONCLUSIVE / UNKNOWN. Do not grade early on one paired
+      biopsy series, one metastatic cohort, or one loss observation -- that is
+      what the ClinicalPersistenceCompletion state is for.
+    conflicting_evidence: >-
+      propose CONFLICTING only with admissible observations that make genuinely
+      incompatible OVERALL persistence claims (retained vs materially impaired) AND
+      no auditable context-specific characterization already resolves them (item
+      06), with non-empty key_supporting_evidence and key_contradicting_evidence.
+      A qualified context / site / time variation is NOT automatically CONFLICTING;
+      if the variation cannot answer overall persistence it is a graded
+      INCONCLUSIVE.
+    transient_minor_downregulation: >-
+      a qualified transient / minor down-regulation that still demonstrates
+      retained expression is SUPPORTING (retention). It never yields NEGATIVE,
+      never contributes to fatal_review, and never establishes TGT-04 density.
+    experiment_required: >-
+      TGT-03 can and should use EXPERIMENT_REQUIRED, but only when the enumerated
+      public persistence source space is completed / exhausted AND the unresolved
+      Gate question requires a NEW clinical-context measurement. Examples --
+      (a) qualifying treated / metastatic transcript persistence exists but no
+      qualified clinical-context protein confirmation -> POSITIVE / INDIRECT_STRONG
+      + critical_unknown "clinical-context malignant-cell-resolved protein
+      confirmation of persistence" = EXPERIMENT_REQUIRED; (b) only treatment-naive
+      primary CRC / different-tumor data exists and the public source space is
+      exhausted -> INCONCLUSIVE / UNKNOWN + critical_unknown "a new treated /
+      refractory / metastatic CRC persistence measurement" = EXPERIMENT_REQUIRED.
+      A paired pre-/post-treatment biopsy is ONE possible experimental form, not
+      the only requirement. While any unresolved public item remains the
+      resolution stays PUBLIC_RESOLVABLE / CURRENTLY_UNRESOLVABLE -- do NOT
+      auto-add EXPERIMENT_REQUIRED (PR E8 precedence). A known public dataset not
+      fetched, or an incomplete public search, is PUBLIC_RESOLVABLE; a source that
+      exists but whose access / annotation currently prevents resolution is
+      CURRENTLY_UNRESOLVABLE.
+    absolute_rules:
+      - UNKNOWN is never silently converted to PASS / HOLD / KILL (CURRENT_SYSTEM v5 section 6.4)
+      - UNKNOWN from an incomplete public persistence search is NOT an integrity failure (PR E2 / E8 gene)
+      - absence of persistence evidence is not a POSITIVE / retained call
+      - a scientific NEGATIVE (materially impaired persistence) is never a fatal flag and never a KILL
+      - baseline malignant-cell coverage (TGT-02) never becomes a persistence claim
+
+  "16_stop_rule":
+    principle: >-
+      the mandatory public persistence-search landscape is completed and audited
+      BEFORE any graded Direction; a single paired biopsy series, a single
+      metastatic cohort or a single loss observation is never a completed
+      population-level persistence answer; the stop is bounded.
+    normal_stop_requires_all_of:
+      - the mandatory public persistence-search landscape is complete (item 09 declared_mandatory_search_components) and audited
+      - the highest available qualifying evidence class is determined
+      - remaining public evidence cannot change Direction or Strength
+    exhaustion_stop:
+      - the enumerated public persistence source space is exhausted
+      - the residual critical_unknown is classified -- PUBLIC_RESOLVABLE / EXPERIMENT_REQUIRED / CURRENTLY_UNRESOLVABLE -- and the run stops
+    potential_fatal_trigger:
+      - a machine-detected reproducible protein-level near / marked-loss pattern (item 08) may stop the chase for weaker transcript / model / treatment-naive proxy evidence, but ONLY AFTER the necessary persistence-search completeness is satisfied
+      - the Module never stops on the first loss observation
+    rule: bounds the "infinite evidence gathering" failure mode without ever treating a single paired series, cohort or loss observation as a completed population-level assessment
+
+  "17_downstream_consumer_and_handoff":
+    the_module_hands_off:
+      - a set of EvidencePackages and one assessment proposal envelope, to the human review surface (item 14)
+      - independently, the module-local fatal_review record (item 12), for human Gate review and the GateSet fatal policy
+    once_human_approved_the_resulting_canonical_CandidateGateAssessment_is_consumed_by:
+      - the MatrixView cell for (this candidate_id, TGT-03) (PR C)
+      - the ADC_TARGET_GATESET decision layer (decision_rule / fatal_gate_policy / required_gate_policy / unknown_policy) which turns the eight TGT assessments into a Candidate-level Decision (PR B)
+      - the next Gate in the fatal-first order (TGT-04) as context only -- never as a substitute for its own surface / density measurement, and TGT-03 never discharges TGT-04
+      - experimental validation, when a critical_unknown is EXPERIMENT_REQUIRED
+    this_module_does_not:
+      - construct a CandidateGateAssessment or emit a HUMAN_APPROVED record
+      - produce a Candidate-level Decision or KILL
+      - emit PUBLIC_FATAL_SIGNAL_ESTABLISHED -- the machine emits at most a fatal_review POTENTIAL_FATAL_PATTERN, and only on an accepted run
+      - make a TGT-02 baseline-coverage substitution or a TGT-04 surface / density conclusion
+      - let generic EVGAP-02 / CRC linkage discharge TGT-03
+      - flip Direction based on candidate desirability
+      - grade a Direction before the mandatory persistence-search landscape is complete
+      - write to any other Gate's evidence index or assessment
+      - modify the Matrix (a rebuildable projection; PR C)
+
+deferred_to_pr_e10_plus:
+  - the new top-level gate_modules/tgt03_treatment_metastatic_persistence/ implementation (providers, adapters, extractor, normalizer, runner, EvidencePackage writer, assessment proposer, the ClinicalPersistenceCompletion typed record, the reproducible-loss fatal_review detector) and the primary_module_version bump to "1.0.0"
+  - connecting any retrieval provider or dataset (GEO / HPA / CPTAC / single-cell / spatial / TMA / paired-biopsy / resistance-model repositories)
+  - the binding / registry reconciliation (src/contracts/crc_adc_target_gateset.yaml + src/objects/crc_adc_target_gateset.py built_module_versions / BUILT_MODULE_VERSIONS, gate_modules/README.md, tests/test_crc_adc_target_gateset.py, tests/test_gate_modules_boundary.py) -- none of which PR E9 touches
+  - the other three TGT primary Modules (TGT-04 -> TGT-06 -> TGT-07)
+
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  implementation_code_in_this_pr: forbidden
+  provider_or_adapter_in_this_pr: forbidden
+  trial_or_dataset_retrieval_in_this_pr: forbidden
+  numeric_or_ranking_scoring: forbidden
+  fold_change_or_percent_positive_or_hscore_or_downregulation_or_context_count_threshold: forbidden
+  cross_gate_baseline_coverage_substitution_or_surface_density_logic_in_this_pr: forbidden
+  new_scientific_ladder_semantics_in_this_pr: forbidden
+  generic_gatemodule_framework_or_base_class_in_this_pr: forbidden
+  modifies_mod_tgt01: forbidden
+  modifies_mod_tgt02: forbidden
+  modifies_mod_tgt05: forbidden
+  modifies_mod_tgt08: forbidden
+  modifies_binding_or_registry_or_existing_tests: forbidden
+  only_allowed_existing_file_mutation: append_to_logs_worklog_md
+  migration_pending: remains

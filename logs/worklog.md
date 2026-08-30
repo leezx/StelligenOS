@@ -5621,3 +5621,70 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   E4、MOD-TGT08@1.0.0 E6、MOD-TGT02@1.0.0 E8）。TGT-03 → 04 → 06 → 07 属后续
   PR，`primary_module_version` 仍 `0.0.0`。`MIGRATION_PENDING` 保持。下一步 PR
   E9 = MOD-TGT03 施工合同（design-only，需各自 go-ahead）。
+
+## 2026-08-30T07:30 EDT — Runtime Migration PR E9：TGT-03 / MOD-TGT03 Construction Contract（分支 task_20260830_runtime-migration-pr-e9，基线 PR E8 收口 @ 94039e5）
+
+- 授权：用户 PR E8 收口后 "go on"。开工前审核方（ChatGPT `AI审核方案`）给
+  **APPROVE-to-proceed，带 4 个必须在 E9 合同里修正的 scoping 点**，冻结 E9 =
+  TGT-03 / MOD-TGT03 Construction Contract（design-only，Module 在 PR E10 才建），
+  给 9 个 scoping 决策 E9-1…E9-8 + (a)–(e) + 3 条 headline conclusion。
+- 4 个 mandatory correction（全部落实）：
+  1. `TRANSIENT_OR_MINOR_DOWNREGULATION` 不能固定成 `CONTEXTUAL` —— 一个 qualified
+     transient / minor down-regulation 只要还证明 expression 在相关 treated /
+     metastatic context remains present，就是 `SUPPORTS_PERSISTENCE`（可贡献
+     `POSITIVE`），永不贡献 `NEGATIVE`、永不进 `fatal_review`、永不建立 TGT-04
+     density；只有对 retention 本身含糊时才 NONDIRECTIONAL / CONTEXTUAL。
+  2. 「reproducible」不是 `len(context_ids) > 2` —— 两条 sufficient route：
+     Route A（一个 auditable study 明确跨 paired / multiple patients / samples /
+     contexts 建立 reproducibility：`reproducibility_status == QUALIFIED` +
+     auditable basis + source / human normalization 明确支持 reproducible marked
+     / near loss）；Route B（convergent `NEAR_LOSS_OR_MARKED_LOSS` 跨 **AT LEAST
+     TWO** independent qualified clinical context identities —— deterministic
+     sufficient convergence，不是「reproducible」的词义定义，不是新阈值，不是
+     「> 2」）。
+  3. DIRECT protein measurement 是 open set（a protein-level clinical-context
+     measurement + a factual `assay_method` type + a
+     `protein_measurement_validation_status` / basis），不是 3-assay closed
+     whitelist —— validated IHC / quantitative proteomics / validated multiplex
+     IF 是 admissible examples；PR E10 不得因为出现另一个可靠 protein-level
+     method 就自动降级。
+  4. EvidencePackage 可以写 empirical persistence / loss fact；禁止的是
+     Gate-relative conclusion（passes TGT-03 / TGT-03 POSITIVE / NEGATIVE /
+     adequate persistence established / meaningful target availability is lost /
+     fatal / should be killed），即使 literal Gate-relative wording 是 source
+     自己的 claim，Module 也永不升级。
+- 新增文件：
+  - `src/contracts/gate_modules/tgt03_treatment_metastatic_persistence.yaml`
+    —— 17 项施工合同（文件名对齐 canonical Gate 名 "Treatment / Metastatic
+    Persistence"）。bidirectional scientific persistence gate；NEGATIVE
+    （materially impaired persistence）可达且是真正 scientific 发现，≠ fatal ≠
+    KILL；`persistence_pattern` upstream-qualified，never computed；typed
+    `ClinicalPersistenceCompletion`（四个 mandatory search component =
+    search-space completeness，不是 four-axis score）；fatal_review Route A /
+    Route B reproducibility；transcript / resistance model 永不 DIRECT；
+    treatment-naive primary CRC 永不 persistence claim；different-tumor 是 WEAK
+    context；no TGT-02 substitution、no TGT-04 conclusion；WEAK-only →
+    INCONCLUSIVE / UNKNOWN；narrow EXPERIMENT_REQUIRED；items 10-17 继承
+    E2/E4/E6/E8 runtime genes（含 E8 的 context binding / exact-reuse
+    identity+provenance / kind-specific study_context / dedup-safe audit EP）。
+  - `docs/gate_modules/TGT-03_Treatment_Metastatic_Persistence.md` —— 17 行表
+    + 3 条 headline blockquote + normalized-observation / completion conceptual
+    shape。
+  - `tests/test_tgt03_module_construction_contract.py` —— **66 tests**（13 类；
+    items 03/05/07/08 normalized-equality parity + item 04 **exact set
+    equality** derived parity vs 冻结 PR D TGT-03；4 个 correction 各自一类；
+    fatal Route A / Route B；source hard locks；runtime-gene inheritance；
+    no-implementation reconciliation —— 包 dir 不存在、binding 仍 0.0.0、
+    binding / registry / 既有 test 未动、只 append worklog；drawing 覆盖 17 项）。
+  - `manifests/runtime_migration_pr_e9_manifest.yaml`、
+    `docs/handoff/2026-08-30-runtime-migration-pr-e9.zh-CN.md`。
+- 既有文件唯一改动：本 worklog append。**不动** binding、registry、任何既有
+  test（留到 PR E10）。
+- 验证：`tests/test_tgt03_module_construction_contract.py` **66 OK**；全量
+  **1274 OK**（E8 收口 1208）；`bash scripts/verify_repository_boundary.sh` 只报
+  既有 untracked 杂项；`git diff --check` clean；YAML 合法。
+- 状态：8 个 primary Module 施工合同已 APPROVE 5 个（含本 PR 待审）；已实现 4 个
+  （TGT-01/05/08/02 @ 1.0.0）。MOD-TGT03 `primary_module_version` 仍 `0.0.0`。
+  TGT-04 → 06 → 07 属后续 PR。`MIGRATION_PENDING` 保持。
+- Next：开 PR、CI 绿后回 `AI审核方案` 贴 E9 review。下一步 PR E10 =
+  MOD-TGT03@1.0.0 实现需各自 go-ahead。
