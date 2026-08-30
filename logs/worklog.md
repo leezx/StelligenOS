@@ -5596,3 +5596,28 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   highest-qualifying-class Strength、binding scope、`MIGRATION_PENDING`、
   MOD-TGT01 / 05 / 08。
 - Next：push、CI 绿后回 `AI审核方案` 贴第三轮复审。
+
+## 2026-08-30T06:15 EDT — Runtime Migration PR E8 第三轮 APPROVE + merge（PR #120 @ 3e48626）
+
+- 审核方（ChatGPT `AI审核方案`）第三轮结论：**APPROVE @ `3e48626`** ——
+  「MOD-TGT02@1.0.0 deterministic implementation 可以 merge」。第二轮 4 个 blocker
+  全部实质关闭（provenance-bearing audit EP dedup bypass、canonical EP reuse
+  identity / provenance parity、WEAK-only rationale premature-experiment 文案、
+  EP `study_context` CRC-context inflation）。本轮修订非常窄：相对 `bab4d4a` 只改
+  `aggregate.py` / `evidence.py` / `module.py`、tests 与 governance 记录，未动
+  E7 contract / drawing / binding science 或其他 Module —— 无 scope creep。
+  exact-head CI `verify (3.11)` / `verify (3.12)` success（unit tests /
+  repository boundary / no-bytecode / working-tree-clean 全通过）。GitHub
+  connector 每轮 `403`，`AI审核方案` 对话为 authoritative。三轮：round 1 = 7
+  blocker，round 2 = 4 blocker，round 3 = APPROVE。
+- Merge：`ca0b4ad`（`Merge pull request #120`）。feature branch 待清理。
+- 独立 docs-only PR `task_20260829_runtime-migration-pr-e8-approval-record`：
+  `logs/chatgpt-review-2026-08-30-runtime-migration-pr-e8.md` +
+  `manifests/runtime_migration_pr_e8_manifest.yaml` → `status: approved` /
+  `chatgpt_review: APPROVE` / `approved_tip: 3e48626` / `merge_commit: ca0b4ad` /
+  `review_rounds: 3` / `test_count_at_approval: 1208` + `review_round_3` block。
+  不改 E8 实现 / 测试 / handoff 内容。
+- 状态：8 个 primary Module 已实现 4 个（MOD-TGT01@1.0.0 E2、MOD-TGT05@1.0.0
+  E4、MOD-TGT08@1.0.0 E6、MOD-TGT02@1.0.0 E8）。TGT-03 → 04 → 06 → 07 属后续
+  PR，`primary_module_version` 仍 `0.0.0`。`MIGRATION_PENDING` 保持。下一步 PR
+  E9 = MOD-TGT03 施工合同（design-only，需各自 go-ahead）。
