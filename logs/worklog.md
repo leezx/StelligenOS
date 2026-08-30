@@ -5230,3 +5230,145 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   MOD-TGT08@1.0.0）。其余五个（TGT-02 → 03 → 04 → 06 → 07）属后续 PR。
   `MIGRATION_PENDING` 保持。真实 provider / adapter 与外部 workspace calibration
   各自需 go-ahead。
+
+## 2026-08-30T01:00 EDT — Runtime Migration PR E7：TGT-02 / MOD-TGT02 Construction Contract（分支 task_20260829_runtime-migration-pr-e7，基线 PR E6 收口 @ 97ad48d）
+
+- 授权：用户在 PR E6 收口后 "go on"；开工前 `AI审核方案` 给出 **APPROVE-to-proceed**，
+  把 E7 冻结为 **TGT-02 / MOD-TGT02 Construction Contract，design-only**（Module 在
+  PR E8 才实现），并给了 9 个 scoping 决策 E7-1…E7-9 + 3 条 headline conclusion
+  （详见 `manifests/runtime_migration_pr_e7_manifest.yaml` +
+  `docs/handoff/2026-08-30-runtime-migration-pr-e7.zh-CN.md`）。
+- 变更定位：`DESIGN_ONLY`（第五层施工合同 + 施工图 + 17 项验收清单 + parity /
+  validation 测试 + manifest / handoff / worklog）。不写实现、不接 provider /
+  adapter、不上网、不产 runtime EvidencePackage·proposal·fatal-detector、不产
+  numeric·ranking score、不产 cohort-size·%-positive·H-score·heterogeneity
+  cutoff、不建 generic GateModule framework / abstract base class、不重构
+  MOD-TGT01 / MOD-TGT05 / MOD-TGT08。MOD-TGT02 `primary_module_version` 仍
+  `0.0.0`；`MIGRATION_PENDING` 保持。
+- 3 条 headline conclusion（审核方原话）：
+  1. **TGT-02 NEGATIVE 可达且是真正的 scientific NEGATIVE**（「malignant cells 对
+     该 target 缺乏足够的 population-level expression coverage」）—— 不是 TGT-08
+     的商业 NEGATIVE，也不是 TGT-05 的 liability 反向解释。
+  2. **NEGATIVE ≠ fatal ≠ KILL**。只有满足 PR D fatal condition 的跨 cohort
+     protein-level pattern 才进 machine-local `fatal_review =
+     POTENTIAL_FATAL_PATTERN`；Module 永不输出 canonical fatal flag / KILL。
+  3. **需要 typed `CrcCohortCoverageCompletion`**（E6-style gene，科学语义不同）：
+     只有 completed / audited CRC coverage search 才能把单个 observation 聚合成
+     cohort-level Gate judgement —— 一个漂亮 cohort 绝不是 population-level 答案。
+- 关键冻结点：Direction 相对 Gate question（POSITIVE / NEGATIVE / CONFLICTING /
+  INCONCLUSIVE）；DIRECT 需 protein + CRC + malignant-cell attributed + adequately
+  powered cohort qualification + completed audited landscape；「rare / highly
+  heterogeneous」**不由 Module 从 %/H-score/n 计算**，来自 auditable upstream
+  qualification（`expression_pattern` + `expression_pattern_basis`）；overall
+  Strength = 最强 qualifying evidence class，**无** E6-style two-axis weaker-
+  ceiling rule；**WEAK-only public landscape → `INCONCLUSIVE/UNKNOWN`，不是
+  `/WEAK`**（TGT-02-specific；`UNKNOWN` 零 evidence_refs）；graded INCONCLUSIVE vs
+  UNKNOWN 严格区分；CONFLICTING 不自动等同 biological heterogeneity（valid audited
+  multi-cohort 定性 RARE_HIGHLY_HETEROGENEOUS → NEGATIVE）；transcript ≠ protein、
+  stroma/immune ≠ malignant、bulk/pan-cancer = WEAK、normal-vs-tumor ≠ TI 的
+  hard locks；「across cohorts」= plural-cohorts 逻辑（at least two independent
+  cohort identities）**不是新阈值**；`EXPERIMENT_REQUIRED` **可以且应该**用，但窄触发
+  （public CRC source space exhausted + 需要新的 malignant-cell-resolved protein /
+  cohort measurement）—— 与 TGT-08 不同；`inference_guard` 逐字 pin（EVGAP-02
+  primarily contributes TGT-02；generic CRC linkage does NOT discharge TGT-03）；
+  items 10-17 继承 E2/E4/E6 runtime genes（含 E6 completion-audit snapshot
+  parity）；HARD identity / provenance / completion-consistency /
+  classification-qualification failure 拒整个 run 不降级 UNKNOWN。
+- 交付：`src/contracts/gate_modules/tgt02_indication_specific_malignant_cell_coverage.yaml`
+  （17 项 checklist）+ `docs/gate_modules/TGT-02_Indication_Specific_Malignant_Cell_Coverage.md`
+  （17-row 表 + 三条 headline blockquote + frozen observation / completion 概念
+  shape）+ `tests/test_tgt02_module_construction_contract.py`（49 tests）+
+  manifest + handoff + 本条 worklog。
+- 验证：`tests/test_tgt02_module_construction_contract.py` **49 OK**；全量 **1102**
+  （E6 approval 基线 1053，E7 +49；1 个既有本机 `test_assetgenos_modules`
+  `__pycache__` 扫描 FAIL，CI 干净 checkout GREEN）；`git diff --check` clean；
+  YAML 结构合法。
+- Next：commit、push `origin/task_20260829_runtime-migration-pr-e7`、开 PR、CI 绿
+  （matrix py3.11 + 3.12）后回 `AI审核方案` 贴 E7 施工合同摘要 vs E7-1…E7-9 复审。
+  APPROVE → merge + 独立 docs-only approval-record PR。PR E8 = MOD-TGT02@1.0.0
+  implementation 需用户 go-ahead。
+
+## 2026-08-30T01:30 EDT — Runtime Migration PR E7 第一轮修订（PR #118 @ 61c2db9 REQUEST_CHANGES）
+
+- 审核方复审 `61c2db9`（exact-HEAD CI `verify 3.11` / `verify 3.12` 均通过）：
+  主体架构全部确认通过、不重开（design-only、17-item template、PR D 03/05/07/08
+  parity + inference_guard 逐字、bidirectional NEGATIVE scientific semantics、
+  NEGATIVE≠fatal≠KILL、typed completion、WEAK-only→UNKNOWN、EXPERIMENT_REQUIRED
+  窄触发、source hard locks、E2/E4/E6 runtime genes、binding 0.0.0、
+  MIGRATION_PENDING）。只剩 4 个窄 blocker。
+- **Blocker 1** —— item 06 `frozen_truth_table.note` 把「qualifying」定义成
+  protein-level / malignant-cell attributed / CRC-specific，与它自己的
+  `qualifying_sc_spatial_or_tma_concordance` 行（sc/spatial 不是 protein-level）
+  自相矛盾，E8 无法判断 sc/spatial 算不算 qualifying。修：加 item 06
+  `qualifying_is_rung_specific` —— qualifying observation 满足**其适用 rung 的**
+  frozen admissibility 且属于 completed landscape；DIRECT 再加 protein-level +
+  CRC + malignant attribution + QUALIFIED cohort adequacy；INDIRECT_STRONG 再加
+  sc/spatial malignant-compartment 或 TMA transcript+protein concordance
+  predicate；sc/spatial 可以是 qualifying INDIRECT_STRONG 而不必 protein-level。
+  truth-table note 引用它。+1 regression。
+- **Blocker 2** —— 「across cohorts」被写成 MORE THAN TWO / `> 2` independent
+  cohort_ids（= 无意的 ≥ 3 阈值），偏离开工前冻结的 plural logic（≥ 2：一个
+  cohort 不是 cross-cohort，两个 independent qualifying cohort 就是 cross-cohort
+  candidate pattern）。全局改成「at least two independent [qualifying] cohort
+  identities」（item 08
+  `across_cohorts_is_plural_cohorts_logic_not_a_new_threshold` /
+  `machine_detection_criteria` / `single_cohort_vs_cross_cohort_pattern`、item 12
+  `fatal_review` fields + `required_is_true_iff`、item 13、drawing）；合同明写
+  「NOT "more than two" / "> 2"」。regression 断言 "at least two"、无 "more than
+  two"、合同里无 "> 2 independent"。
+- **Blocker 3** —— item 08 仍写「a single negative protein cohort **is** DIRECT
+  NEGATIVE evidence」，把 observation class 与 final Gate Direction 混写。修：加
+  item 06 `direction_is_an_aggregate_not_an_observation` —— 单个 observation 永
+  不是 Direction；classifier 只产 Gate-neutral、rung-classed、direction-
+  SUPPORTING observation，aggregate 只在 **completed audited CRC coverage
+  landscape** 上产 proposed Direction × Strength，未完成前 final Assessment 仍
+  `INCONCLUSIVE / UNKNOWN`。item 08 framing + `single_cohort_vs_cross_cohort_pattern`
+  改成「DIRECT-class, NEGATIVE-supporting observation —— NOT yet a NEGATIVE /
+  DIRECT proposal, NOT fatal」。加 3 条 truth-table 行：single DIRECT-class
+  negative cohort + landscape incomplete → `INCONCLUSIVE / UNKNOWN`；completed
+  audited landscape（highest rung DIRECT、material negative、no unresolved
+  incompatible positive）→ `NEGATIVE / DIRECT`；completed landscape 有
+  incompatible positive + negative 且无 qualified heterogeneity pattern →
+  `CONFLICTING / DIRECT`。+1 regression。
+- **Blocker 4** —— item 04 「derived parity」测试只是 superset 检查（每个
+  ladder / evidence_required class ∈ admissible），新的 unfrozen class 可以偷加
+  而测试仍绿。改成 `set(item04.admissible) == set(evidence_required ∪ DIRECT ∪
+  INDIRECT_STRONG ∪ WEAK)`。
+- 未改：PR D、NEGATIVE/fatal 总体架构、completion concept、EXPERIMENT_REQUIRED、
+  source plan、MOD-TGT01/05/08、binding、MIGRATION_PENDING。
+- 验证：`tests/test_tgt02_module_construction_contract.py` **51 OK**（+2）；全量
+  **1104**（1 个既有本机 `__pycache__` 扫描 FAIL，CI 干净 checkout GREEN）；
+  `git diff --check` clean；YAML 合法。
+- Next：push、CI 绿后回 `AI审核方案` 贴第二轮复审（4 个 blocker 已关闭 + regression）。
+
+## 2026-08-30T02:00 EDT — Runtime Migration PR E7 第二轮修订（PR #118 @ 8876533 REQUEST_CHANGES）
+
+- 审核方（ChatGPT `AI审核方案`）第二轮结论：**REQUEST_CHANGES —— 只剩 stale
+  governance-record 同步**。4 个第一轮 blocker 在 machine contract / drawing /
+  tests 里已确认全部关闭；不改 science、scope、architecture。
+- 唯一 blocker：三个被 git 跟踪的治理产物仍以「当前规则」口吻保留第一轮的
+  `> 2` / `MORE THAN TWO` 文案：
+  - **manifest** `scoping_decisions.E7-4`：`MORE THAN TWO independent cohort
+    identities (or one declared multi-cohort analysis with more than two
+    auditable cohort_ids)` → `AT LEAST TWO independent cohort identities (or one
+    declared multi-cohort analysis with at least two auditable cohort_ids)`，并补
+    「plural-cohorts logic（at least two，NOT "more than two" / "> 2"）」注释。
+  - **handoff** `2026-08-30-runtime-migration-pr-e7.zh-CN.md` E7-4 scoping 行：
+    `> 2 independent cohort identities` / `> 2 auditable cohort_ids` → `at least
+    two ...`，同补 not-"> 2" 注释。
+  - **worklog** E7 首版条目：把「across cohorts = plural-cohorts 逻辑（> 2
+    independent cohort identities）」同步成「at least two independent cohort
+    identities」。第一轮修订条目里明确标注「round-1 old bug」的历史文案保留原样。
+  - **test comment**：`test_no_numeric_threshold_or_ranking_score_in_the_contract`
+    里一行 stale 注释 `"> 2 independent cohort identities" is plural-cohorts
+    logic` → `"at least two independent cohort identities"`。**无任何测试断言 /
+    test-science 改动**；blocker-2 regression（断言合同写「NOT more than two /
+    "> 2"」）原样不动。
+- manifest 增 `review_round_2` block、`review_rounds: 2`、`chatgpt_review` 注释更新；
+  `test_count_after_round_2: 1104`（不变 —— 纯治理记录同步）。
+- 未改：machine contract、drawing、所有测试断言 —— 第一轮后即已正确。
+- 验证：`tests/test_tgt02_module_construction_contract.py` **51 OK**；全量 **1104**
+  （1 个既有本机 `__pycache__` 扫描 FAIL，CI 干净 checkout GREEN）；
+  `git diff --check` clean；YAML 合法。
+- Next：push、CI 绿后回 `AI审核方案` 贴第三轮复审（治理记录已同步，机器合同 /
+  drawing / tests 第一轮后即正确，请 re-review）。预期 APPROVE。
