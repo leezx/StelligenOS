@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_e11
-status: pending_review
+status: approved
 scope: tgt04_mod_tgt04_construction_contract_drawing_validation_and_acceptance_checklist_only
 repository_boundary: software_only_external_data
 
@@ -322,15 +322,16 @@ repository_policy:
   only_allowed_existing_file_mutation: append_to_logs_worklog_md
   migration_pending: remains
 
-chatgpt_review: pending
-approved_tip: null
-merge_commit: null
-review_rounds: 2
+chatgpt_review: APPROVE
+approved_tip: 1ad620da8973bce0cbe03d6c547ecd3ee185f0b0
+merge_commit: 499cf3a                                  # Merge pull request #126 from leezx/task_20260831_runtime-migration-pr-e11
+review_rounds: 3
 test_count_before_e11: 1379       # at PR E10 approval
 test_count_at_submission: 1437    # local full suite at first submission (tests/test_tgt04_module_construction_contract.py 58)
 test_count_after_round_1: 1446    # +9 review-round-1 regression tests (tgt04 construction-contract file 67)
 test_count_after_round_2: 1450    # +4 review-round-2 consistency regression tests (tgt04 construction-contract file 71)
-approval_record_pr: null
+test_count_at_approval: 1450      # local full suite at APPROVE @ 1ad620d
+approval_record_pr: task_20260831_runtime-migration-pr-e11-approval-record   # docs-only: this manifest -> approved + logs/chatgpt-review-2026-08-31-runtime-migration-pr-e11.md
 next_authorized_step: null        # PR E12 = MOD-TGT04@1.0.0 implementation -- needs its own go-ahead
 
 review_round_1:
@@ -385,6 +386,36 @@ review_round_2:
     - docs/gate_modules/TGT-04_Tumor_Surface_Availability_Density_Plausibility.md (rows 6 / 11 / 13 + conceptual shape)
     - tests/test_tgt04_module_construction_contract.py (67 -> 71; new ReviewRound2RegressionTests + 2 updated ReviewRound1RegressionTests assertions)
   test_count_after: 1450
+
+review_round_3:
+  verdict: APPROVE
+  reviewer: ChatGPT AI审核方案
+  head_reviewed: 1ad620da8973bce0cbe03d6c547ecd3ee185f0b0
+  ci_confirmed: run 33400505274 -- verify (3.11) + verify (3.12) both success
+  summary: >-
+    round-2's 2 residual consistency blockers both CLOSED -- POSITIVE / NEGATIVE
+    ordinary DIRECT authority on WELL_MATCHED_CRC_MODEL is now symmetric (a
+    model-supported NEGATIVE / DIRECT is an ordinary density assessment only and
+    never enters fatal_review; fatal authority stays strictly CRC malignant-cell
+    evidence); reported_density_value / unit / summary canonical reuse is frozen
+    as true symmetric presence-and-value parity (present on one side only, a
+    value difference or a unit difference is HARD; identical on both or absent on
+    both is compatible -- still empirical identity only, never Direction / fatal
+    / threshold / scoring). Regressions lock the ordinary model Direction / fatal
+    boundary and the raw-density bidirectional parity. No new blocker. 5 legal
+    Direction x Strength pairs unchanged; MOD-TGT04 stays 0.0.0;
+    MIGRATION_PENDING remains.
+  conclusion: >-
+    APPROVE -- PR E11 may merge. Next is PR E12 = MOD-TGT04@1.0.0 deterministic
+    implementation.
+  round_history:
+    - "round 1 @ 41be84a: REQUEST_CHANGES -- 4 narrow construction-contract blockers -> CLOSED"
+    - "round 2 @ e510833: REQUEST_CHANGES -- 4/4 round-1 CLOSED + 2 narrow residual consistency blockers -> CLOSED"
+    - "round 3 @ 1ad620d: APPROVE -- no new blocker"
+  github_review_state: not written -- GitHub connector returned 403 Resource not accessible by integration every round; the AI审核方案 conversation verdict is authoritative
+  merge_commit: 499cf3a
+  primary_modules_contract_approved: 6   # TGT-01 / TGT-02 / TGT-03 / TGT-04 / TGT-05 / TGT-08
+  primary_modules_implemented: 5         # TGT-01 / TGT-02 / TGT-03 / TGT-05 / TGT-08 @ 1.0.0
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt04_module_construction_contract.py' -v
