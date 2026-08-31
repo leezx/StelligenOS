@@ -117,10 +117,25 @@ OBSERVATION_KIND_VALUES: Final[tuple[str, ...]] = (
 _INTEGRATED_KIND: Final[str] = "ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING"
 #: The three kinds that can carry a DIRECT-quality productive-internalization /
 #: trafficking FAILURE observation (item 06 / item 08 machine_detection_criteria).
+#: Also the internalization / trafficking "family" -- one of these in a
+#: disease-relevant context MUST disclose its configuration identity (SINGLE /
+#: IDENTIFIED_MULTI); the IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE state is
+#: available to a family kind ONLY in a NON_CRC_CONTEXT (E14 review round-1 blocker 3).
 _DIRECT_QUALITY_FAILURE_KINDS: Final[tuple[str, ...]] = (
     "ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING",
     "ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY",
     "TRAFFICKING_OR_RECYCLING_ONLY",
+)
+#: The observation kinds for which the IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE
+#: configuration-identity state is ALWAYS a valid normalized factual shape (the
+#: frozen ladder does not require a configuration disclosure for them) -- E13 item
+#: 06 configuration_identity_single_vs_multi.
+_THIRD_STATE_ALWAYS_ALLOWED_KINDS: Final[tuple[str, ...]] = (
+    "CONSTITUTIVE_ENDOCYTOSIS_OR_RECEPTOR_BIOLOGY",
+    "SAME_TARGET_ADC_DELIVERY_PRECEDENT",
+    "RECEPTOR_FAMILY_MEMBERSHIP_INFERENCE",
+    "SURFACE_LOCALIZATION_ONLY_INFERENCE",
+    "SEARCH_COMPLETION_AUDIT",
 )
 #: The frozen INDIRECT_STRONG classes -- all positive addressability support.
 _INDIRECT_STRONG_KINDS: Final[tuple[str, ...]] = (
@@ -458,6 +473,38 @@ class NormalizedInternalizationObservation:
                 )
 
         kind = self.observation_kind
+
+        # --- IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE allowed-kind boundary
+        #     (E14 review round-1 blocker 3). The third state is NOT a generic
+        #     fallback for every observation that merely fell short of DIRECT --
+        #     it is a normalized factual shape invariant. It is valid for the
+        #     five frozen non-configuration ladder kinds, OR for an internalization
+        #     / trafficking family kind ONLY when the context is NON_CRC_CONTEXT
+        #     (a non-CRC antibody-induced internalization observation whose source
+        #     does not disclose the configuration). A family kind in a
+        #     disease-relevant / unresolved / unspecified context MUST disclose a
+        #     SINGLE or IDENTIFIED_MULTI configuration identity.
+        if (
+            not cid
+            and not cids
+            and kind not in _THIRD_STATE_ALWAYS_ALLOWED_KINDS
+            and not (
+                kind in _DIRECT_QUALITY_FAILURE_KINDS
+                and self.surface_context_class == "NON_CRC_CONTEXT"
+            )
+        ):
+            raise ValueError(
+                "IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE is permitted only for a "
+                "CONSTITUTIVE_ENDOCYTOSIS_OR_RECEPTOR_BIOLOGY / "
+                "SAME_TARGET_ADC_DELIVERY_PRECEDENT / "
+                "RECEPTOR_FAMILY_MEMBERSHIP_INFERENCE / "
+                "SURFACE_LOCALIZATION_ONLY_INFERENCE / SEARCH_COMPLETION_AUDIT "
+                "observation, or a NON_CRC_CONTEXT internalization / trafficking "
+                "observation whose source does not disclose the configuration; a "
+                f"{kind!r} observation in surface_context_class "
+                f"{self.surface_context_class!r} must disclose a SINGLE or "
+                "IDENTIFIED_MULTI configuration identity"
+            )
 
         # --- typed-fact coherence (E14-1 tightening / E14-3) ----------------
         # an observation explicitly named INTERNALIZATION_ONLY must not also claim
@@ -1079,10 +1126,17 @@ class AssessmentProposalEnvelope:
 
         roles = {r for _, r in self.evidence_refs}
         d, s = self.proposed_direction, self.proposed_strength
+        # proposal-relative EvidenceRole semantics (E14 review round-1 blocker 2):
+        # a NEGATIVE / DIRECT proposal's DIRECT-quality failure evidence SUPPORTS
+        # the NEGATIVE proposal -- it is not CONTRADICTING. CONTRADICTING is
+        # reserved for the same-configuration failure half of a CONFLICTING pair.
         if d == "POSITIVE" and "SUPPORTING" not in roles:
             raise ValueError("a POSITIVE proposal needs >= 1 SUPPORTING evidence_ref")
-        if d == "NEGATIVE" and "CONTRADICTING" not in roles:
-            raise ValueError("a NEGATIVE proposal needs >= 1 CONTRADICTING evidence_ref")
+        if d == "NEGATIVE" and "SUPPORTING" not in roles:
+            raise ValueError(
+                "a NEGATIVE / DIRECT proposal needs >= 1 SUPPORTING evidence_ref "
+                "(its DIRECT-quality failure evidence supports the NEGATIVE proposal)"
+            )
         if d == "CONFLICTING" and not {"SUPPORTING", "CONTRADICTING"} <= roles:
             raise ValueError(
                 "a CONFLICTING proposal needs >= 1 SUPPORTING and >= 1 CONTRADICTING ref"

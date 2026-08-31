@@ -582,9 +582,11 @@ class RungClassificationTests(unittest.TestCase):
         neg = self._c(_trafficking_only(outcome="FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING"))
         self.assertEqual(neg.evidence_rung, "DIRECT")
         self.assertTrue(neg.qualifying_direct_failure)
+        # a disease-relevant TRAFFICKING_OR_RECYCLING_ONLY observation must
+        # disclose its configuration (E14 review round-1 blocker 3).
         pos = self._c(_trafficking_only(
             outcome="INTERNALIZATION_OBSERVED_LYSOSOMAL_DELIVERY_UNRESOLVED",
-            config_id="", config_ids=()))
+            config_id=CFG_A))
         self.assertEqual(pos.evidence_rung, "INDIRECT_STRONG")
         self.assertTrue(pos.qualifying_indirect)
         self.assertFalse(pos.qualifying_direct_productive)
@@ -734,24 +736,23 @@ class ConfigurationIdentityTests(unittest.TestCase):
         self.assertEqual(res.proposal_envelope.proposed_direction, "NEGATIVE")
 
     def test_direct_quality_observation_in_not_disclosed_state_is_hard(self):
-        bad = _obs(
-            "ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING",
-            crc_specific=True,
-            surface_context_class="CRC_MALIGNANT_CELLS",
-            surface_context_basis="annotated CRC malignant cells",
-            context_adequacy_status="QUALIFIED",
-            context_adequacy_basis="a QUALIFIED disease-relevant context review",
-            assay_method="live-cell imaging + lysosomal co-localization",
-            assay_validation_status="QUALIFIED",
-            assay_validation_basis="orthogonal-assay concordance",
-            internalization_outcome="PRODUCTIVE_INTERNALIZATION_WITH_LYSOSOMAL_DELIVERY",
-            internalization_outcome_basis="the source characterisation",
-        )
-        comp = _completion(qualifying_direct=())
-        res = _run([bad, _audit(comp)], comp)
-        self.assertFalse(res.machine_acceptance.accepted)
-        self.assertTrue(res.hard_integrity_failures)
-        self.assertIsNone(res.proposal_envelope)
+        # a disease-relevant internalization-family observation that does not
+        # disclose its configuration cannot even be constructed (E14 review
+        # round-1 blocker 3 -- the constructor is the normalized-shape authority).
+        with self.assertRaises(ValueError):
+            _obs(
+                "ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING",
+                crc_specific=True,
+                surface_context_class="CRC_MALIGNANT_CELLS",
+                surface_context_basis="annotated CRC malignant cells",
+                context_adequacy_status="QUALIFIED",
+                context_adequacy_basis="a QUALIFIED disease-relevant context review",
+                assay_method="live-cell imaging + lysosomal co-localization",
+                assay_validation_status="QUALIFIED",
+                assay_validation_basis="orthogonal-assay concordance",
+                internalization_outcome="PRODUCTIVE_INTERNALIZATION_WITH_LYSOSOMAL_DELIVERY",
+                internalization_outcome_basis="the source characterisation",
+            )
 
     def test_local_config_id_equal_to_canonical_context_id_is_rejected(self):
         with self.assertRaises(ValueError):
@@ -1155,6 +1156,113 @@ class StudyContextTests(unittest.TestCase):
                  if e.study_context["observation_kind"] == "SEARCH_COMPLETION_AUDIT"][0]
         self.assertEqual(audit.study_context["sample_type"], "search_audit")
         self.assertEqual(audit.study_context["treatment_state"], "not_applicable")
+
+
+# =====================================================================
+# 9. E14 review round-1 regressions (3 narrow runtime blockers)
+# =====================================================================
+
+class ReviewRound1RegressionTests(unittest.TestCase):
+    def _c(self, o):
+        return classify_observation(o, canonical_target_identity=TARGET_A)
+
+    # --- blocker 1: no generic "missed DIRECT -> INDIRECT_STRONG" fallback ---
+    def test_crc_productive_with_unqualified_assay_is_contextual_not_indirect_strong(self):
+        c = self._c(_integrated(config_id=CFG_A, assay_qualified=False,
+                                outcome="PRODUCTIVE_INTERNALIZATION_WITH_LYSOSOMAL_DELIVERY"))
+        self.assertEqual(c.evidence_rung, "")
+        self.assertEqual(c.addressability_implication, "CONTEXTUAL")
+        self.assertFalse(c.is_qualifying)
+
+    def test_crc_productive_with_unqualified_context_is_contextual_not_indirect_strong(self):
+        o = _obs(
+            "ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING",
+            crc_specific=True,
+            surface_context_class="CRC_MALIGNANT_CELLS",
+            surface_context_basis="a CRC line, context adequacy not established",
+            context_adequacy_status="NOT_ESTABLISHED",
+            assay_method="live-cell imaging + lysosomal co-localization",
+            assay_validation_status="QUALIFIED",
+            assay_validation_basis="orthogonal-assay concordance",
+            internalization_outcome="PRODUCTIVE_INTERNALIZATION_WITH_LYSOSOMAL_DELIVERY",
+            internalization_outcome_basis="the source characterisation",
+            internalization_configuration_id=CFG_A,
+            configuration_identity_basis="disclosed configuration",
+        )
+        c = self._c(o)
+        self.assertEqual(c.evidence_rung, "")
+        self.assertFalse(c.is_qualifying)
+
+    def test_non_crc_productive_remains_indirect_strong(self):
+        c = self._c(_integrated(context="NON_CRC_CONTEXT", config_id=CFG_A,
+                                outcome="PRODUCTIVE_INTERNALIZATION_WITH_LYSOSOMAL_DELIVERY"))
+        self.assertEqual(c.evidence_rung, "INDIRECT_STRONG")
+        self.assertTrue(c.qualifying_indirect)
+
+    # --- blocker 2: proposal-relative EvidenceRole mapping ---
+    def test_conflicted_a_plus_clean_productive_b_roles(self):
+        a_prod = _integrated(config_id=CFG_A, outcome="PRODUCTIVE_INTERNALIZATION_WITH_LYSOSOMAL_DELIVERY")
+        a_fail = _integrated(config_id=CFG_A, outcome="FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING")
+        b_prod = _integrated(config_id=CFG_B, outcome="PRODUCTIVE_INTERNALIZATION_WITH_LYSOSOMAL_DELIVERY")
+        res = _accepted_run([a_prod, a_fail, b_prod])
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        self.assertEqual(res.proposal_envelope.proposed_direction, "POSITIVE")
+        role = dict(res.proposal_envelope.evidence_refs)
+        b_id = next(e.evidence_id for e in res.evidence_packages
+                    if e.study_context["internalization_configuration_id"] == CFG_B)
+        self.assertEqual(role[b_id], "SUPPORTING")
+        for e in res.evidence_packages:
+            if e.study_context["internalization_configuration_id"] == CFG_A:
+                self.assertEqual(role[e.evidence_id], "CONTEXTUAL")
+        self.assertNotIn("CONTRADICTING", set(role.values()))
+
+    def test_negative_direct_failure_eps_are_supporting_not_contradicting(self):
+        obs = [
+            _integrated(config_id=CFG_A, outcome="FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING"),
+            _kindful("ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY", config_id=CFG_B),
+        ]
+        res = _accepted_run(obs)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        self.assertEqual(res.proposal_envelope.proposed_direction, "NEGATIVE")
+        roles = {r for _, r in res.proposal_envelope.evidence_refs}
+        self.assertIn("SUPPORTING", roles)
+        self.assertNotIn("CONTRADICTING", roles)
+
+    def test_conflicting_direct_still_carries_contradicting(self):
+        obs = [
+            _integrated(config_id=CFG_A, outcome="PRODUCTIVE_INTERNALIZATION_WITH_LYSOSOMAL_DELIVERY"),
+            _integrated(config_id=CFG_A, outcome="FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING"),
+        ]
+        res = _accepted_run(obs)
+        roles = {r for _, r in res.proposal_envelope.evidence_refs}
+        self.assertLessEqual({"SUPPORTING", "CONTRADICTING"}, roles)
+
+    # --- blocker 3: third-state allowed-kind boundary ---
+    def test_third_state_valid_for_the_five_non_configuration_kinds(self):
+        for kind in ("CONSTITUTIVE_ENDOCYTOSIS_OR_RECEPTOR_BIOLOGY",
+                     "SAME_TARGET_ADC_DELIVERY_PRECEDENT",
+                     "RECEPTOR_FAMILY_MEMBERSHIP_INFERENCE",
+                     "SURFACE_LOCALIZATION_ONLY_INFERENCE"):
+            o = _indirect(kind) if "CONSTITUTIVE" in kind or "SAME_TARGET" in kind else _weak(kind)
+            self.assertEqual(o.configuration_identity_state,
+                             "IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE", kind)
+
+    def test_third_state_valid_for_non_crc_undisclosed_configuration(self):
+        o = _kindful("ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY",
+                     context="NON_CRC_CONTEXT", config_id="",
+                     outcome="INTERNALIZATION_OBSERVED_LYSOSOMAL_DELIVERY_UNRESOLVED")
+        self.assertEqual(o.configuration_identity_state,
+                         "IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE")
+
+    def test_disease_relevant_delivery_unresolved_without_config_is_hard(self):
+        with self.assertRaises(ValueError):
+            _integrated(config_id="",
+                        outcome="INTERNALIZATION_OBSERVED_LYSOSOMAL_DELIVERY_UNRESOLVED")
+
+    def test_trafficking_only_without_config_is_hard(self):
+        with self.assertRaises(ValueError):
+            _kindful("TRAFFICKING_OR_RECYCLING_ONLY", config_id="",
+                     outcome="FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING")
 
 
 if __name__ == "__main__":

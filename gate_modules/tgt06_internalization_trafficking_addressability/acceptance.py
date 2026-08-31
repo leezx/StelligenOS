@@ -372,12 +372,19 @@ def evaluate(
     record("positive_has_supporting_evidence",
            d != "POSITIVE" or "SUPPORTING" in roles,
            "a POSITIVE proposal has no SUPPORTING evidence_ref")
-    record("negative_has_contradicting_evidence",
-           d != "NEGATIVE" or "CONTRADICTING" in roles,
-           "a NEGATIVE proposal has no CONTRADICTING evidence_ref")
+    # proposal-relative role (E14 review round-1 blocker 2B): a NEGATIVE / DIRECT
+    # proposal's DIRECT-quality failure evidence SUPPORTS the NEGATIVE proposal.
+    record("negative_has_supporting_evidence",
+           d != "NEGATIVE" or "SUPPORTING" in roles,
+           "a NEGATIVE / DIRECT proposal has no SUPPORTING evidence_ref")
     record("conflicting_has_supporting_and_contradicting",
            d != "CONFLICTING" or {"SUPPORTING", "CONTRADICTING"} <= roles,
            "a CONFLICTING proposal is missing a SUPPORTING or CONTRADICTING ref")
+    # a CONTRADICTING role only ever appears on the same-configuration failure
+    # half of a CONFLICTING / DIRECT pair.
+    record("contradicting_role_only_on_a_conflicting_direct_proposal",
+           "CONTRADICTING" not in roles or d == "CONFLICTING",
+           "a CONTRADICTING evidence_ref appears on a non-CONFLICTING proposal")
     # different configurations behaving differently is NEVER CONFLICTING --
     # CONFLICTING requires a single configuration identity carrying BOTH a
     # productive DIRECT and a DIRECT-quality failure observation.

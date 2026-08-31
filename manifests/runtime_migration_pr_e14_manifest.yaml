@@ -197,7 +197,67 @@ repository_policy:
 chatgpt_review: PENDING
 approved_tip: null
 merge_commit: null
-review_rounds: 0
+review_rounds: 1
 test_count_at_submission: 1702    # local full suite (unittest discover)
+test_count_after_round_1: 1712    # +10 review round-1 regressions
 approval_record_pr: null
 next_authorized_step: null        # PR E15 = TGT-07 construction contract -- needs its own go-ahead
+
+review_round_1:  # ChatGPT AI审核方案 -- REQUEST_CHANGES, 3 narrow runtime blockers, all CLOSED
+  verdict: REQUEST_CHANGES
+  anchor_head: 0b1907f3444416d855b72c04b4ff4a3d9b8d6a36
+  ci: exact-head run 33438218339 success (python 3.11 + 3.12)
+  blocker_1_is_authority_over_expansion:
+    finding: >-
+      classify.py carried a generic positive fallback (if outcome in
+      {PRODUCTIVE, DELIVERY_UNRESOLVED} -> INDIRECT_STRONG / SUPPORTS) that
+      auto-promoted a disease-relevant PRODUCTIVE observation whose assay /
+      context qualification was NOT_ESTABLISHED to a positive INDIRECT_STRONG,
+      contradicting the classifier's own comment.
+    fix: >-
+      removed the generic fallback; the positive INDIRECT_STRONG rung is now
+      kind / context / outcome specific -- integrated + PRODUCTIVE + disease-relevant
+      but assay / context NOT_ESTABLISHED -> CONTEXTUAL, non-qualifying;
+      integrated + PRODUCTIVE + NON_CRC_CONTEXT -> INDIRECT_STRONG / SUPPORTS;
+      DELIVERY_UNRESOLVED -> INDIRECT_STRONG / SUPPORTS (its frozen lower
+      ceiling); FAILS -> never positive IS. Added regressions.
+  blocker_2_evidence_role_mapping_drift:
+    finding: >-
+      (2A) POSITIVE / DIRECT marked a conflicted-configuration productive EP
+      SUPPORTING; (2B) NEGATIVE / DIRECT marked its DIRECT-quality failure EPs
+      CONTRADICTING and AssessmentProposalEnvelope + acceptance.py enforced
+      "NEGATIVE must contain CONTRADICTING" -- a second role-semantics set.
+    fix: >-
+      froze the proposal-relative EvidenceRole mapping in aggregate.py +
+      contracts.py AssessmentProposalEnvelope + acceptance.py -- POSITIVE / DIRECT:
+      only a CLEAN productive EP -> SUPPORTING, conflicted-config productive and
+      other-config failure -> CONTEXTUAL; NEGATIVE / DIRECT: failure EPs ->
+      SUPPORTING (no CONTRADICTING requirement); CONFLICTING / DIRECT keeps
+      same-config productive SUPPORTING + same-config failure CONTRADICTING;
+      CONTRADICTING now appears only on a CONFLICTING / DIRECT proposal. Does not
+      change the Direction science.
+  blocker_3_third_state_identity_scope_not_enforced:
+    finding: >-
+      the contract froze the three structural configuration-identity states but
+      did not enforce E13's scientific scope for IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE
+      -- it was acting as a generic fallback for any observation that fell short
+      of DIRECT.
+    fix: >-
+      the contract constructor now enforces the allowed-kind boundary -- the
+      third state is valid only for CONSTITUTIVE_ENDOCYTOSIS_OR_RECEPTOR_BIOLOGY
+      / SAME_TARGET_ADC_DELIVERY_PRECEDENT / RECEPTOR_FAMILY_MEMBERSHIP_INFERENCE
+      / SURFACE_LOCALIZATION_ONLY_INFERENCE / SEARCH_COMPLETION_AUDIT, OR an
+      internalization / trafficking family kind in a NON_CRC_CONTEXT. A
+      disease-relevant / unresolved family observation without a disclosed
+      SINGLE / IDENTIFIED_MULTI identity is a HARD ValueError. The now-redundant
+      classify.py HARD branch was removed. Fixed
+      test_trafficking_only_asymmetric_authority to the frozen identity boundary.
+  files_touched: classify.py, contracts.py, aggregate.py, acceptance.py, tests/test_tgt06_module.py, manifest, worklog
+  explicitly_correct_this_round: >-
+    11-file package; treatment_state "not_applicable"; three DIRECT-quality
+    failure kinds unified DIRECT + OPPOSES; ordered 7-step aggregation;
+    configuration projection helper; six legal pairs; v1 no conflict resolver;
+    completion four axes; exact audit identity; no qualifying_indirect_configuration_ids;
+    fatal productive-DIRECT cancellation; Route A; Route B; TGT-06 binding 1.0.0;
+    7/8 built; MIGRATION_PENDING remains; other Modules not refactored; binding
+    reconciliation APPROVE.

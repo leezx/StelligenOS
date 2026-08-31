@@ -39,10 +39,21 @@ Legal pairs (frozen, exactly 6): POSITIVE / DIRECT, POSITIVE / INDIRECT_STRONG,
 NEGATIVE / DIRECT, CONFLICTING / DIRECT, INCONCLUSIVE / DIRECT,
 INCONCLUSIVE / UNKNOWN.
 
-Frozen proposal evidence-role mapping (E14-4): different-configuration failures
-under a clean productive existence proof are CONTEXTUAL, NOT CONTRADICTING -- they
-are configuration-specific information, not a logical disproof of the existence
-proof.
+Frozen proposal-relative EvidenceRole mapping (E14-4 + E14 review round-1
+blocker 2):
+
+  POSITIVE / DIRECT           clean productive EP -> SUPPORTING;
+                              conflicted-configuration productive EP -> CONTEXTUAL;
+                              other-configuration failure -> CONTEXTUAL
+  POSITIVE / INDIRECT_STRONG  positive INDIRECT_STRONG EP -> SUPPORTING
+  NEGATIVE / DIRECT           DIRECT-quality failure EP -> SUPPORTING
+                              (it supports the NEGATIVE proposal; NOT CONTRADICTING)
+  CONFLICTING / DIRECT        same-configuration productive -> SUPPORTING;
+                              same-configuration failure -> CONTRADICTING
+  INCONCLUSIVE / DIRECT       the single DIRECT-quality failure EP -> CONTEXTUAL
+  INCONCLUSIVE / UNKNOWN      zero evidence_refs
+
+This changes proposal evidence-role semantics only, never the Direction science.
 """
 
 from __future__ import annotations
@@ -179,6 +190,14 @@ def aggregate(
 
     # --- step 2: a CLEAN / uncontested productive DIRECT configuration ----
     if clean_productive_ids:
+        # ONLY a productive DIRECT observation that supplies a CLEAN / uncontested
+        # configuration is SUPPORTING; a conflicted-configuration productive
+        # observation is configuration-specific information -> CONTEXTUAL
+        # (E14 review round-1 blocker 2A).
+        clean_productive = [
+            e for e in productive
+            if set(e.configuration_identities) & clean_productive_ids
+        ]
         rationale = (
             "the completed audited internalization-evidence landscape carries at "
             "least one CLEAN / uncontested qualifying productive DIRECT antibody / "
@@ -194,7 +213,7 @@ def aggregate(
         return AggregationOutcome(
             proposed_direction="POSITIVE",
             proposed_strength="DIRECT",
-            evidence_refs=_refs(productive, []),
+            evidence_refs=_refs(clean_productive, []),
             aggregation_rationale=rationale,
             critical_unknowns=tuple(unknowns),
             overall_ceiling="DIRECT",
@@ -252,7 +271,10 @@ def aggregate(
                 "by this Module."
             )
             direction, strength = "NEGATIVE", "DIRECT"
-            refs = _refs([], failures)
+            # proposal-relative role (E14 review round-1 blocker 2B): the
+            # DIRECT-quality failure evidence SUPPORTS the NEGATIVE / DIRECT
+            # proposal -- it is not CONTRADICTING.
+            refs = _refs(failures, [])
         else:
             if public_space_exhausted:
                 unknowns.append((_EXPERIMENT_UNKNOWN, "EXPERIMENT_REQUIRED"))

@@ -11,6 +11,12 @@ TRAFFICKING_OR_RECYCLING_ONLY failure -- is normalised here to
 OPPOSES_ADDRESSABILITY``. ``aggregate`` and ``fatal_review`` consume the
 classified result; they never re-run an assay / context qualification engine.
 
+There is NO generic "missed the DIRECT gate -> INDIRECT_STRONG" fallback
+(E14 review round-1 blocker 1): a positive INDIRECT_STRONG rung is kind / context
+/ outcome specific. A disease-relevant PRODUCTIVE observation whose assay /
+context qualification is NOT_ESTABLISHED is CONTEXTUAL, non-qualifying -- it is
+NOT auto-promoted to INDIRECT_STRONG.
+
 Verbatim mapping -- E14 has no discretion:
 
   ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING (the integrated kind)
@@ -26,13 +32,17 @@ Verbatim mapping -- E14 has no discretion:
                  (lysosomal delivery not confirmed -- NEVER DIRECT)
         - internalization_outcome MIXED_OR_UNRESOLVED / NOT_ESTABLISHED
               -> rung "" , CONTEXTUAL (nondirectional)
-    * a NON_CRC_CONTEXT integrated observation (E14-1 tightening 1):
-        - PRODUCTIVE / DELIVERY_UNRESOLVED -> rung INDIRECT_STRONG, SUPPORTS_ADDRESSABILITY, qualifying_indirect
-        - FAILS -> rung "" , CONTEXTUAL (contextual empirical only -- never OPPOSES at Gate level)
-        - else -> rung "" , CONTEXTUAL
-    * a DIRECT-quality-shaped observation (disease-relevant + assay QUALIFIED +
-      PRODUCTIVE / FAILS outcome) in the IDENTITY_NOT_DISCLOSED state
-        -> HARD rejection (a DIRECT-quality observation must disclose its configuration)
+    * integrated but the DIRECT rung predicates are NOT satisfied (NON_CRC
+      context, or a disease-relevant context whose assay / context qualification
+      is NOT_ESTABLISHED):
+        - DELIVERY_UNRESOLVED -> rung INDIRECT_STRONG, SUPPORTS_ADDRESSABILITY, qualifying_indirect (its frozen lower ceiling)
+        - PRODUCTIVE + NON_CRC_CONTEXT -> rung INDIRECT_STRONG, SUPPORTS_ADDRESSABILITY, qualifying_indirect
+        - PRODUCTIVE + disease-relevant but assay / context NOT_ESTABLISHED -> rung "" , CONTEXTUAL, non-qualifying
+        - FAILS / MIXED / NOT_ESTABLISHED -> rung "" , CONTEXTUAL
+    * a DIRECT-quality-shaped observation in the IDENTITY_NOT_DISCLOSED state can
+      no longer reach classify -- the contract constructor rejects a
+      disease-relevant / unresolved internalization-family observation that does
+      not disclose its configuration (E14 review round-1 blocker 3)
 
   ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY
     * config resolved AND disease-relevant AND assay QUALIFIED AND
@@ -202,73 +212,85 @@ def classify_observation(
             qualifying_indirect=True,
         )
 
-    # 6. DIRECT-quality-capable kinds -----------------------------------
+    # 6. internalization / trafficking family kinds -----------------------
+    # NOTE: the configuration-identity allowed-kind boundary is enforced in the
+    # contract constructor (a disease-relevant / unresolved family observation
+    # without a disclosed configuration cannot be built), so classify never sees
+    # a would-be DIRECT-quality observation in the IDENTITY_NOT_DISCLOSED state.
+    # There is NO generic "missed DIRECT -> INDIRECT_STRONG" fallback (E14 review
+    # round-1 blocker 1): a positive rung is kind / context / outcome specific.
     if kind in _DIRECT_QUALITY_FAILURE_KINDS:
         outcome = observation.internalization_outcome
+        non_crc = observation.surface_context_class == "NON_CRC_CONTEXT"
 
-        # --- IDENTITY_NOT_DISCLOSED + a DIRECT-quality shape -> HARD. A
-        #     DIRECT-quality observation (would-be productive DIRECT or
-        #     DIRECT-quality failure) must disclose its configuration identity.
-        if (
-            not observation.is_configuration_resolved
-            and observation.is_disease_relevant_context
-            and observation.is_assay_qualified
-            and outcome in (_PRODUCTIVE, _FAILS)
-        ):
-            return _reject(
-                observation,
-                "a DIRECT-quality internalization observation "
-                f"({kind}, {outcome}) in a qualified disease-relevant context must "
-                "disclose its antibody / epitope configuration identity (SINGLE or "
-                "IDENTIFIED_MULTI); IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE is a "
-                "HARD integrity failure for DIRECT-quality evidence",
-                severity="HARD",
-            )
-
-        # --- the integrated kind can reach a productive DIRECT ------------
-        if kind == _INTEGRATED_KIND and _meets_direct_predicates_except_outcome(observation):
-            if outcome == _PRODUCTIVE:
-                return _admit(
-                    observation,
-                    rung="DIRECT",
-                    implication="SUPPORTS_ADDRESSABILITY",
-                    qualifying_direct_productive=True,
-                )
-            if outcome == _FAILS:
-                return _admit(
-                    observation,
-                    rung="DIRECT",
-                    implication="OPPOSES_ADDRESSABILITY",
-                    qualifying_direct_failure=True,
-                )
+        # --- the integrated kind: the only productive-DIRECT-capable path ----
+        if kind == _INTEGRATED_KIND:
+            if _meets_direct_predicates_except_outcome(observation):
+                if outcome == _PRODUCTIVE:
+                    return _admit(
+                        observation,
+                        rung="DIRECT",
+                        implication="SUPPORTS_ADDRESSABILITY",
+                        qualifying_direct_productive=True,
+                    )
+                if outcome == _FAILS:
+                    return _admit(
+                        observation,
+                        rung="DIRECT",
+                        implication="OPPOSES_ADDRESSABILITY",
+                        qualifying_direct_failure=True,
+                    )
+                if outcome == _DELIVERY_UNRESOLVED:
+                    # internalization observed, lysosomal delivery NOT confirmed
+                    # -- positive support at the INDIRECT_STRONG ceiling only.
+                    return _admit(
+                        observation,
+                        rung="INDIRECT_STRONG",
+                        implication="SUPPORTS_ADDRESSABILITY",
+                        qualifying_indirect=True,
+                    )
+                # MIXED_OR_UNRESOLVED / NOT_ESTABLISHED -- nondirectional.
+                return _admit(observation, rung="", implication="CONTEXTUAL")
+            # integrated, but the DIRECT rung predicates are NOT satisfied
+            # (NON_CRC context, or a disease-relevant context whose assay /
+            # context qualification is NOT_ESTABLISHED).
             if outcome == _DELIVERY_UNRESOLVED:
-                # internalization observed, lysosomal delivery NOT confirmed --
-                # positive support at INDIRECT_STRONG ceiling only, never DIRECT.
+                # its frozen lower ceiling -- positive INDIRECT_STRONG support.
                 return _admit(
                     observation,
                     rung="INDIRECT_STRONG",
                     implication="SUPPORTS_ADDRESSABILITY",
                     qualifying_indirect=True,
                 )
-            # MIXED_OR_UNRESOLVED / NOT_ESTABLISHED -- nondirectional.
+            if outcome == _PRODUCTIVE and non_crc:
+                # a NON_CRC antibody-induced internalization + lysosomal delivery
+                # observation -- INDIRECT_STRONG, never DIRECT (context is not
+                # disease-relevant).
+                return _admit(
+                    observation,
+                    rung="INDIRECT_STRONG",
+                    implication="SUPPORTS_ADDRESSABILITY",
+                    qualifying_indirect=True,
+                )
+            # a disease-relevant PRODUCTIVE observation whose assay / context
+            # qualification is NOT_ESTABLISHED, a FAILS outcome that did not meet
+            # the DIRECT predicates, MIXED / NOT_ESTABLISHED -- CONTEXTUAL,
+            # non-qualifying.
             return _admit(observation, rung="", implication="CONTEXTUAL")
 
-        # --- the internalization-only / trafficking-only failure branch (b) --
-        if (
-            kind in ("ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY", "TRAFFICKING_OR_RECYCLING_ONLY")
-            and _meets_direct_predicates_except_outcome(observation)
-            and outcome == _FAILS
-        ):
+        # --- the internalization-only / trafficking-only kinds --------------
+        # DIRECT-quality FAILURE branch (b).
+        if _meets_direct_predicates_except_outcome(observation) and outcome == _FAILS:
             return _admit(
                 observation,
                 rung="DIRECT",
                 implication="OPPOSES_ADDRESSABILITY",
                 qualifying_direct_failure=True,
             )
-
-        # --- outcome-aware positive INDIRECT_STRONG (E14-1 tightening 1) -----
-        # a FAILS outcome NEVER becomes a positive INDIRECT_STRONG. Only an
-        # actual internalization / delivery signal grants IS support.
+        # positive direction -- capped at INDIRECT_STRONG (a
+        # TRAFFICKING_OR_RECYCLING_ONLY observation can NEVER synthesize a
+        # positive DIRECT; an _ONLY observation with PRODUCTIVE is a
+        # contract-constructor ValueError). A FAILS outcome is NEVER positive IS.
         if outcome in (_PRODUCTIVE, _DELIVERY_UNRESOLVED):
             return _admit(
                 observation,
@@ -276,10 +298,8 @@ def classify_observation(
                 implication="SUPPORTS_ADDRESSABILITY",
                 qualifying_indirect=True,
             )
-
-        # --- everything else -- contextual empirical evidence only. A non-CRC
-        #     FAILS observation, a CRC observation whose assay is not QUALIFIED,
-        #     a MIXED / NOT_ESTABLISHED outcome: CONTEXTUAL, non-qualifying.
+        # a non-CRC FAILS observation, a disease-relevant FAILS that did not meet
+        # the DIRECT predicates, MIXED / NOT_ESTABLISHED -- CONTEXTUAL.
         return _admit(observation, rung="", implication="CONTEXTUAL")
 
     return _reject(observation, "matches no frozen TGT-06 Evidence-Ladder rung")
