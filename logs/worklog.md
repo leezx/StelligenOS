@@ -6621,3 +6621,42 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 验证：`tests/test_tgt06_module_construction_contract.py` **91 OK**；全量
   **1629 OK**（round-3 前 1626）；`git diff --check` clean；YAML 合法。
 - Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-4 回复。
+
+### PR E13 · ChatGPT `AI审核方案` review round 4 → APPROVE @ `0ab57b9`
+
+- Verdict：**APPROVE**，anchor HEAD `0ab57b9`；exact-head CI run 33432029477
+  Python 3.11 / 3.12 verification 均 success。round-3 的唯一 Route A/B blocker
+  已关闭（Route B 现在同时要求 `>= 2` distinct eligible failure observations 与
+  projected configuration union `>= 2`；单个 `IDENTIFIED_MULTI {A,B}` observation
+  无论 projection cardinality 都不能走 Route B，只能在 `reproducibility_status
+  == QUALIFIED` + basis 时通过 Route A；item 12 与 item 13 同步；ordinary Gate
+  aggregation 明确隔离；regression 已锁）。
+- E13 最终冻结状态：Option A / POSITIVE / INDIRECT_STRONG；exactly 6 legal
+  Direction × Strength pairs；existence-proof ordered aggregation；v1 无 machine
+  conflict resolver；unified `configuration_identity_projection`；four completion
+  axes、无 `qualifying_indirect_configuration_ids`；no cross-observation synthesis
+  of positive DIRECT；design-only；MOD-TGT06 `0.0.0`；`MIGRATION_PENDING` 保持。
+- 四轮：Round 1 —— 4 blockers → CLOSED；Round 2 —— 3 consistency blockers →
+  CLOSED；Round 3 —— 1 Route A/B blocker → CLOSED；Round 4 —— 无新 blocker。
+- GitHub connector 每轮 `403 Resource not accessible by integration`，GitHub
+  formal review state 未回写；`AI审核方案` 对话结论 authoritative。
+
+### PR E13 · merge + 独立审核记录 PR
+
+- PR #130 `task_20260831_runtime-migration-pr-e13` 于 `2026-08-31` 以 `--merge`
+  合入 `main`，merge 提交 `aa57640`。
+- 独立 docs-only PR `task_20260831_runtime-migration-pr-e13-approval-record`
+  （按 PR #95 … #129 先例）补登：
+  - `logs/chatgpt-review-2026-08-31-runtime-migration-pr-e13.md` —— 4 轮完整审核
+    记录（scoping E13-1…E13-8、7 freeze point、3 headline conclusion、round
+    1/2/3/4 往返、merge）。
+  - `manifests/runtime_migration_pr_e13_manifest.yaml` → `status: approved` /
+    `chatgpt_review: APPROVE` / `approved_tip: 0ab57b9…` / `merge_commit:
+    aa57640…` / `review_rounds: 4` / `test_count_at_approval: 1629` /
+    `approval_record_pr` / `review_round_4` block。
+  - 不改 PR E13 的合同、drawing、测试或 handoff 内容。
+- 状态：8 个 primary Module 施工合同已 APPROVE **7 个**（TGT-01/02/03/04/05/08 +
+  TGT-06）；已实现 6 个（TGT-01/02/03/04/05/08 @ 1.0.0）。MOD-TGT06
+  `primary_module_version` 仍 `0.0.0`。`MIGRATION_PENDING` 保持。
+- Next：PR E14 = MOD-TGT06@1.0.0 deterministic implementation，需独立 go-ahead。
+  fatal-first 余下 TGT-07（施工合同 + 实现）。
