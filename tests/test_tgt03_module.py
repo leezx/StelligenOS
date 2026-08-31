@@ -181,7 +181,6 @@ def _protein(
         "METASTATIC_LESION_PROTEIN": "METASTATIC_CRC",
         "PAIRED_PRE_POST_PROTEIN": "PAIRED_PRE_POST",
     }[kind]
-    loss_or_transient = pattern in ("NEAR_LOSS_OR_MARKED_LOSS", "TRANSIENT_OR_MINOR_DOWNREGULATION")
     return NormalizedPersistenceObservation(
         observation_id=observation_id or _next_obs("PROT"),
         target_identity=TARGET_A,
@@ -214,10 +213,10 @@ def _protein(
             "pathologist-annotated malignant epithelium" if attribution == "MALIGNANT" else ""
         ),
         persistence_pattern=pattern,
-        persistence_pattern_basis=("SOURCE_REPORTED" if loss_or_transient else ""),
+        persistence_pattern_basis=("SOURCE_REPORTED" if pattern else ""),
         residual_target_presence_status=residual,
         residual_target_presence_basis=(
-            "source states staining remains present post-treatment" if residual == "PRESENT" else ""
+            "source states whether staining remains present post-treatment" if residual else ""
         ),
         reproducibility_status=reproducibility,
         reproducibility_basis=(
@@ -250,7 +249,6 @@ def _transcript(
     source_id: str | None = None,
 ) -> NormalizedPersistenceObservation:
     layer = "TRANSCRIPT" if kind == "TREATED_METASTATIC_TRANSCRIPT" else "PROTEIN"
-    loss_or_transient = pattern in ("NEAR_LOSS_OR_MARKED_LOSS", "TRANSIENT_OR_MINOR_DOWNREGULATION")
     return NormalizedPersistenceObservation(
         observation_id=observation_id or _next_obs("TX"),
         target_identity=TARGET_A,
@@ -259,7 +257,7 @@ def _transcript(
         observation_kind=kind,
         molecular_layer=layer,
         assay_method="scRNA-seq" if layer == "TRANSCRIPT" else "model IHC",
-        protein_measurement_validation_status="",
+        protein_measurement_validation_status="NOT_ESTABLISHED",
         protein_measurement_validation_basis="",
         crc_specific=crc_specific,
         clinical_context="METASTATIC_CRC" if kind == "TREATED_METASTATIC_TRANSCRIPT" else "RESISTANCE_MODEL",
@@ -271,10 +269,10 @@ def _transcript(
             "resolved to the malignant epithelial cluster" if attribution == "MALIGNANT" else ""
         ),
         persistence_pattern=pattern,
-        persistence_pattern_basis=("SOURCE_REPORTED" if loss_or_transient else ""),
+        persistence_pattern_basis=("SOURCE_REPORTED" if pattern else ""),
         residual_target_presence_status=residual,
         residual_target_presence_basis=(
-            "source states expression remains present" if residual == "PRESENT" else ""
+            "source states whether expression remains present" if residual else ""
         ),
         reproducibility_status="NOT_ESTABLISHED",
         reproducibility_basis="",
@@ -314,7 +312,7 @@ def _weak(
         malignant_cell_attribution="MALIGNANT",
         malignant_attribution_basis="pathologist-annotated malignant epithelium",
         persistence_pattern="RETAINED",
-        persistence_pattern_basis="",
+        persistence_pattern_basis="SOURCE_REPORTED",
         residual_target_presence_status="",
         residual_target_presence_basis="",
         reproducibility_status="NOT_ESTABLISHED",
@@ -380,7 +378,7 @@ def _audit(
         observation_kind="SEARCH_COMPLETION_AUDIT",
         molecular_layer="",
         assay_method="SEARCH_AUDIT",
-        protein_measurement_validation_status="",
+        protein_measurement_validation_status="NOT_ESTABLISHED",
         protein_measurement_validation_basis="",
         crc_specific=True,
         clinical_context="",
@@ -1096,6 +1094,164 @@ class ForbiddenOutputTests(unittest.TestCase):
         res = _run([_protein(pattern="RETAINED"), _audit(comp)], comp)
         self.assertEqual(res.proposal_envelope.context_id, CTX_ID)
         self.assertEqual(res.proposal_envelope.evidence_ceiling, TGT03_EVIDENCE_CEILING)
+
+
+class Round1RegressionTests(unittest.TestCase):
+    """ChatGPT AI审核方案 E10 review round 1 -- 5 runtime correctness /
+    factual-integrity blockers."""
+
+    # --- Blocker 1: INDIRECT_STRONG needs an explicitly qualified context -----
+    def test_transcript_without_a_qualified_metastatic_context_is_not_indirect_strong(self):
+        o = _transcript()
+        object.__setattr__(o, "context_adequacy_status", "NOT_ESTABLISHED")
+        object.__setattr__(o, "context_adequacy_basis", "")
+        object.__setattr__(o, "clinical_context_basis", "")
+        c = classify_observation(o, canonical_target_identity=TARGET_A)
+        self.assertEqual(c.evidence_rung, "")
+        self.assertFalse(c.qualifying_for_indirect)
+
+    def test_transcript_with_blank_clinical_context_is_not_indirect_strong(self):
+        o = _transcript()
+        object.__setattr__(o, "clinical_context", "")
+        c = classify_observation(o, canonical_target_identity=TARGET_A)
+        self.assertEqual(c.evidence_rung, "")
+
+    def test_resistance_model_without_a_qualified_context_is_not_indirect_strong(self):
+        o = _transcript(kind="RESISTANCE_MODEL")
+        object.__setattr__(o, "context_adequacy_status", "NOT_ESTABLISHED")
+        object.__setattr__(o, "context_adequacy_basis", "")
+        object.__setattr__(o, "clinical_context_basis", "")
+        c = classify_observation(o, canonical_target_identity=TARGET_A)
+        self.assertEqual(c.evidence_rung, "")
+
+    # --- Blocker 2: local persistence-context identity authority -------------
+    def test_qualifying_direct_with_no_local_context_id_is_a_hard_run_rejection(self):
+        comp = _completion()
+        o = _protein(pattern="RETAINED", context="")
+        res = _run([o, _audit(comp)], comp)
+        self.assertTrue(res.hard_integrity_failures)
+        self.assertIsNone(res.proposal_envelope)
+
+    def test_qualifying_indirect_with_no_local_context_id_is_a_hard_run_rejection(self):
+        comp = _completion()
+        o = _transcript(pattern="RETAINED", context="")
+        res = _run([o, _audit(comp)], comp)
+        self.assertTrue(res.hard_integrity_failures)
+        self.assertIsNone(res.proposal_envelope)
+
+    def test_local_context_id_equal_to_the_canonical_context_id_is_rejected_at_construction(self):
+        with self.assertRaises(ValueError):
+            _protein(pattern="RETAINED", context=CTX_ID)
+
+    def test_local_context_id_equal_to_the_canonical_context_id_is_a_hard_run_rejection(self):
+        comp = _completion()
+        o = _protein(pattern="RETAINED")
+        object.__setattr__(o, "persistence_context_id", CTX_ID)
+        res = _run([o, _audit(comp)], comp)
+        self.assertTrue(any("namespace collapse" in why for _, why in res.hard_integrity_failures))
+        self.assertIsNone(res.proposal_envelope)
+
+    # --- Blocker 3: every qualified persistence_pattern needs an auditable basis
+    def test_retained_with_an_empty_pattern_basis_is_rejected_at_construction(self):
+        with self.assertRaises(ValueError):
+            NormalizedPersistenceObservation(
+                observation_id="OBS-B3-1", target_identity=TARGET_A, context_key=CONTEXT_KEY,
+                landscape_as_of=AS_OF, observation_kind="REFRACTORY_OR_PRIOR_TREATED_PROTEIN",
+                molecular_layer="PROTEIN", assay_method="validated IHC",
+                protein_measurement_validation_status="QUALIFIED",
+                protein_measurement_validation_basis="validated",
+                crc_specific=True, clinical_context="REFRACTORY_OR_PRIOR_TREATED",
+                clinical_context_basis="b", context_adequacy_status="QUALIFIED",
+                context_adequacy_basis="b", malignant_cell_attribution="MALIGNANT",
+                malignant_attribution_basis="b", persistence_pattern="RETAINED",
+                persistence_pattern_basis="",  # <-- the defect
+                residual_target_presence_status="", residual_target_presence_basis="",
+                reproducibility_status="NOT_ESTABLISHED", reproducibility_basis="",
+                claim="c", source_id="SRC-00000001", source_type="GEO",
+                source_identifier="GSE-1", locator="", retrieved_at=AS_OF,
+                primary_or_repository_source_resolved=True, persistence_context_id="PERSIST_CTX_A",
+            )
+
+    def test_mixed_or_unresolved_with_an_empty_basis_is_rejected_at_construction(self):
+        with self.assertRaises(ValueError):
+            NormalizedPersistenceObservation(
+                observation_id="OBS-B3-2", target_identity=TARGET_A, context_key=CONTEXT_KEY,
+                landscape_as_of=AS_OF, observation_kind="REFRACTORY_OR_PRIOR_TREATED_PROTEIN",
+                molecular_layer="PROTEIN", assay_method="validated IHC",
+                protein_measurement_validation_status="QUALIFIED",
+                protein_measurement_validation_basis="validated",
+                crc_specific=True, clinical_context="REFRACTORY_OR_PRIOR_TREATED",
+                clinical_context_basis="b", context_adequacy_status="QUALIFIED",
+                context_adequacy_basis="b", malignant_cell_attribution="MALIGNANT",
+                malignant_attribution_basis="b", persistence_pattern="MIXED_OR_UNRESOLVED",
+                persistence_pattern_basis="",
+                residual_target_presence_status="", residual_target_presence_basis="",
+                reproducibility_status="NOT_ESTABLISHED", reproducibility_basis="",
+                claim="c", source_id="SRC-00000002", source_type="GEO",
+                source_identifier="GSE-2", locator="", retrieved_at=AS_OF,
+                primary_or_repository_source_resolved=True, persistence_context_id="PERSIST_CTX_A",
+            )
+
+    def test_transient_unresolved_still_needs_a_residual_target_presence_basis(self):
+        with self.assertRaises(ValueError):
+            NormalizedPersistenceObservation(
+                observation_id="OBS-B3-3", target_identity=TARGET_A, context_key=CONTEXT_KEY,
+                landscape_as_of=AS_OF, observation_kind="REFRACTORY_OR_PRIOR_TREATED_PROTEIN",
+                molecular_layer="PROTEIN", assay_method="validated IHC",
+                protein_measurement_validation_status="QUALIFIED",
+                protein_measurement_validation_basis="validated",
+                crc_specific=True, clinical_context="REFRACTORY_OR_PRIOR_TREATED",
+                clinical_context_basis="b", context_adequacy_status="QUALIFIED",
+                context_adequacy_basis="b", malignant_cell_attribution="MALIGNANT",
+                malignant_attribution_basis="b",
+                persistence_pattern="TRANSIENT_OR_MINOR_DOWNREGULATION",
+                persistence_pattern_basis="SOURCE_REPORTED",
+                residual_target_presence_status="UNRESOLVED",
+                residual_target_presence_basis="",  # <-- the defect
+                reproducibility_status="NOT_ESTABLISHED", reproducibility_basis="",
+                claim="c", source_id="SRC-00000003", source_type="GEO",
+                source_identifier="GSE-3", locator="", retrieved_at=AS_OF,
+                primary_or_repository_source_resolved=True, persistence_context_id="PERSIST_CTX_A",
+            )
+
+    # --- Blocker 4: closed validation predicate + non-empty assay_method -----
+    def test_blank_protein_measurement_validation_status_is_not_a_valid_enum_value(self):
+        from gate_modules.tgt03_treatment_metastatic_persistence import (
+            PROTEIN_MEASUREMENT_VALIDATION_STATUS_VALUES,
+        )
+        self.assertEqual(
+            set(PROTEIN_MEASUREMENT_VALIDATION_STATUS_VALUES), {"QUALIFIED", "NOT_ESTABLISHED"}
+        )
+
+    def test_direct_needs_a_non_empty_factual_assay_method(self):
+        o = _protein(pattern="RETAINED")
+        object.__setattr__(o, "assay_method", "")
+        c = classify_observation(o, canonical_target_identity=TARGET_A)
+        self.assertNotEqual(c.evidence_rung, "DIRECT")
+        self.assertEqual(c.persistence_implication, "CONTEXTUAL")
+
+    # --- Blocker 5: EP treatment_state is a kind-specific fact --------------
+    def test_ep_treatment_state_is_kind_specific_not_uniformly_not_applicable(self):
+        comp = _completion(qualifying_direct=("PERSIST_CTX_A",))
+        res = _run(
+            [
+                _protein(kind="REFRACTORY_OR_PRIOR_TREATED_PROTEIN", pattern="RETAINED",
+                         context="PERSIST_CTX_A"),
+                _protein(kind="PAIRED_PRE_POST_PROTEIN", pattern="RETAINED", context="PERSIST_CTX_A",
+                         source_id=_next_src(), observation_id="OBS-B5-PP"),
+                _weak(kind="TREATMENT_NAIVE_PRIMARY", context="PERSIST_CTX_N"),
+                _audit(comp),
+            ],
+            comp,
+        )
+        by_kind = {
+            p.study_context["observation_kind"]: p.study_context["treatment_state"]
+            for p in res.evidence_packages
+        }
+        self.assertEqual(by_kind["REFRACTORY_OR_PRIOR_TREATED_PROTEIN"], "refractory_or_prior_treated")
+        self.assertEqual(by_kind["PAIRED_PRE_POST_PROTEIN"], "paired_pre_post")
+        self.assertEqual(by_kind["TREATMENT_NAIVE_PRIMARY"], "treatment_naive")
+        self.assertEqual(by_kind["SEARCH_COMPLETION_AUDIT"], "not_applicable")
 
 
 if __name__ == "__main__":

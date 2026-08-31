@@ -25,6 +25,7 @@ from .completion import (
     qualifying_set_mismatch,
 )
 from .contracts import (
+    CONTEXT_ID,
     GATE_ID,
     MODULE_ID,
     MODULE_VERSION,
@@ -116,6 +117,35 @@ def run(
             why = f"observation_id {oid!r} appears {n} times -- ambiguous observation identity"
             hard_integrity_failures.append((oid, why))
             rejected_records.append((oid, why))
+
+    # --- local persistence-context identity authority (E10 review round 1
+    #     blocker 2) --------------------------------------------------------
+    # a LOCAL persistence-context identity may never be the canonical
+    # Instantiation context_id; and any observation the Module classifies as
+    # qualifying DIRECT / INDIRECT_STRONG MUST carry at least one auditable local
+    # persistence-context identity (else completion parity has nothing to
+    # reconcile and a graded Direction rests on an anonymous context).
+    for o in observations:
+        for cid in (o.persistence_context_id, *o.persistence_context_ids):
+            if cid.strip() == CONTEXT_ID:
+                why = (
+                    f"observation {o.observation_id} carries a local "
+                    f"persistence_context_id {cid!r} equal to the canonical "
+                    f"Instantiation context_id -- namespace collapse"
+                )
+                hard_integrity_failures.append((o.observation_id, why))
+                rejected_records.append((o.observation_id, why))
+    for c in classified:
+        if not c.admissible or not c.is_qualifying:
+            continue
+        if not c.observation.persistence_context_identities:
+            why = (
+                f"observation {c.observation.observation_id} is classified "
+                f"qualifying {c.evidence_rung} but carries no auditable local "
+                "persistence_context_id / persistence_context_ids"
+            )
+            hard_integrity_failures.append((c.observation.observation_id, why))
+            rejected_records.append((c.observation.observation_id, why))
 
     # Every observation must belong to THIS candidate's scientific context and
     # THIS run's declared persistence search scope -- no implicit default

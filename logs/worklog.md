@@ -5862,3 +5862,50 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   `primary_module_version` = `1.0.0`；`MIGRATION_PENDING` 保持。
 - Next：开 PR、CI 绿后回 `AI审核方案` 贴 E10 review。TGT-04 → TGT-06 → TGT-07 各
   需 go-ahead。
+
+---
+
+## 2026-08-30 — Runtime Migration PR E10 · ChatGPT AI审核方案 review round 1 (REQUEST_CHANGES)
+
+- 审核结果：**REQUEST_CHANGES** @ `35d9564`。主体实现成立（11-file package、无
+  normalizer、PUBLIC_ONLY pure-Python ports、highest-class aggregation、
+  completion / audit gene、TGT-03 dedup deviation、Route A / B fatal-review、
+  binding TGT-03→1.0.0、5/8 built、`MIGRATION_PENDING` 保持、binding reconciliation
+  本身）。**5 个窄 runtime correctness / factual-integrity blocker**，都不重开
+  frozen E9 contract body / Direction truth table / highest-class Strength /
+  four-component completion / Route A/B / ">= 2" 语义 / dedup deviation /
+  EXPERIMENT_REQUIRED precedence / binding 1.0.0 / MIGRATION_PENDING /
+  MOD-TGT01/02/05/08。
+- **Blocker 1 —— INDIRECT_STRONG qualification 过宽**：`classify.py` 对
+  TREATED_METASTATIC_TRANSCRIPT / RESISTANCE_MODEL 只查 crc_specific + (attribution)
+  + persistence_pattern 就给 INDIRECT_STRONG，没要求 treatment / metastasis
+  context 被 qualified。修复：TREATED_METASTATIC_TRANSCRIPT 需
+  `clinical_context == "METASTATIC_CRC"` + `context_adequacy_status == QUALIFIED`；
+  RESISTANCE_MODEL 需 `clinical_context == "RESISTANCE_MODEL"` +
+  `context_adequacy_status == QUALIFIED`。
+- **Blocker 2 —— LOCAL persistence_context_id identity authority 没闭环**：可缺失、
+  可与 canonical `CTX-CRC-REFRACTORY-MCRC` 撞 namespace。修复：`contracts.py`
+  constructor 拒绝任何 local id == canonical；`module.py` 对「local id == canonical」
+  与「qualifying DIRECT/IS 观察无 local persistence context id」各做 whole-run
+  HARD reject。
+- **Blocker 3 —— 只有 loss / transient pattern 要求 auditable basis**：
+  RETAINED / MIXED_OR_UNRESOLVED + basis "" 仍能驱动 Direction；transient branch
+  只在 PRESENT 时要 residual basis。修复：`contracts.py` —— 任何非空
+  `persistence_pattern` 都需非空 `persistence_pattern_basis`；transient 观察
+  PRESENT 与 UNRESOLVED 都需非空 `residual_target_presence_basis`。fixtures 同步。
+- **Blocker 4 —— `protein_measurement_validation_status` 有 "" 非冻结状态 + DIRECT
+  不查 assay_method 非空**：修复：`contracts.py` enum 严格
+  `{QUALIFIED, NOT_ESTABLISHED}`，non-protein / audit 观察用 NOT_ESTABLISHED；
+  `classify.py` DIRECT 增 `assay_method.strip()` 非空要求（仍非 assay whitelist）。
+- **Blocker 5 —— Gate-neutral EP 的 `study_context.treatment_state` 统一写
+  "not_applicable"，把明确 treated / refractory / paired 证据错误改写**：修复：
+  `evidence.py` 加 kind → treatment_state 非膨胀映射（refractory_or_prior_treated /
+  metastatic_context / paired_pre_post / resistance_model / treatment_naive /
+  source_reported / not_applicable）。
+- 新增 `Round1RegressionTests`（13）锁上述五处。
+- 验证：`tests/test_tgt03_module.py` **91 OK**（78 + 13）；全量 **1379 OK**
+  （round-1 提交 1366）；`bash scripts/verify_repository_boundary.sh` 仅报既有
+  untracked 杂项；`git diff --check` clean。
+- 状态：manifest `review_rounds: 1` + `review_round_1` 块已写。binding 仍 1.0.0；
+  `MIGRATION_PENDING` 保持。
+- Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-2 回复。

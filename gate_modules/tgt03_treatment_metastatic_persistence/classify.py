@@ -66,6 +66,10 @@ _KIND_TO_CONTEXT = {
     "REFRACTORY_OR_PRIOR_TREATED_PROTEIN": "REFRACTORY_OR_PRIOR_TREATED",
     "METASTATIC_LESION_PROTEIN": "METASTATIC_CRC",
     "PAIRED_PRE_POST_PROTEIN": "PAIRED_PRE_POST",
+    # INDIRECT_STRONG kinds -- the treatment / metastasis context must be
+    # explicitly qualified too (E10 review round 1, blocker 1).
+    "TREATED_METASTATIC_TRANSCRIPT": "METASTATIC_CRC",
+    "RESISTANCE_MODEL": "RESISTANCE_MODEL",
 }
 
 
@@ -152,6 +156,14 @@ def classify_observation(
             return _admit(observation, rung="", implication="CONTEXTUAL")
         if observation.persistence_pattern == "":
             return _admit(observation, rung="", implication="CONTEXTUAL")
+        # the treatment / metastasis context must be EXPLICITLY qualified -- a
+        # bare crc_specific transcript / model signal is not persistence
+        # (E10 review round 1, blocker 1).
+        if (
+            observation.clinical_context != _KIND_TO_CONTEXT[kind]
+            or not observation.is_context_qualified
+        ):
+            return _admit(observation, rung="", implication="CONTEXTUAL")
         return _admit(
             observation,
             rung="INDIRECT_STRONG",
@@ -169,6 +181,7 @@ def classify_observation(
             return _admit(observation, rung="", implication="CONTEXTUAL")
         if (
             observation.is_protein_layer
+            and observation.assay_method.strip()
             and observation.is_protein_measurement_qualified
             and observation.is_context_qualified
             and observation.clinical_context == _KIND_TO_CONTEXT[kind]
@@ -179,9 +192,11 @@ def classify_observation(
                 implication=implication,
                 qualifying_direct=True,
             )
-        # protein, malignant, CRC -- but the closed validation predicate or the
-        # context adequacy is not QUALIFIED, or the clinical_context does not
-        # match the kind: it does not reach the DIRECT class.
+        # protein, malignant, CRC -- but a missing factual assay_method, or the
+        # closed validation predicate / context adequacy is not QUALIFIED, or the
+        # clinical_context does not match the kind: it does not reach DIRECT
+        # (assay_method non-empty per E10 review round 1, blocker 4 -- still NOT
+        # a closed assay whitelist).
         return _admit(observation, rung="", implication="CONTEXTUAL")
 
     return _reject(observation, "matches no frozen TGT-03 Evidence-Ladder rung")

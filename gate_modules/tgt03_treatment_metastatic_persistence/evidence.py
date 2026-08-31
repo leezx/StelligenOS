@@ -164,32 +164,50 @@ def _measurement_result(item: ClassifiedPersistenceObservation) -> str:
     )
 
 
-def _study_context_facts(o: NormalizedPersistenceObservation) -> tuple[str, str]:
+#: kind -> a NON-inflated normalized treatment_state fact for the neutral EP's
+#: study_context (E9 item 11; E10 review round 1 blocker 5). The Module must not
+#: write clearly treated / refractory / paired-series evidence as
+#: "not_applicable"; it maps only from the observation kind, never up to the
+#: run's refractory mCRC context.
+_KIND_TO_TREATMENT_STATE: dict[str, str] = {
+    "REFRACTORY_OR_PRIOR_TREATED_PROTEIN": "refractory_or_prior_treated",
+    "METASTATIC_LESION_PROTEIN": "metastatic_context",
+    "PAIRED_PRE_POST_PROTEIN": "paired_pre_post",
+    "TREATED_METASTATIC_TRANSCRIPT": "metastatic_context",
+    "RESISTANCE_MODEL": "resistance_model",
+    "TREATMENT_NAIVE_PRIMARY": "treatment_naive",
+    "DIFFERENT_TUMOR_TYPE": "source_reported",
+    "SEARCH_COMPLETION_AUDIT": "not_applicable",
+}
+
+
+def _study_context_facts(o: NormalizedPersistenceObservation) -> tuple[str, str, str]:
     """kind / fact-specific, NON-inflated study context for the neutral EP
     (E9 item 11). The Module never promotes a source study to "refractory
     metastatic colorectal cancer" -- the run's scientific context is pinned
     separately by context_key / the Instantiation; a source EP states only what
-    the source itself is. Returns (indication, sample_type)."""
+    the source itself is. Returns (indication, treatment_state, sample_type)."""
 
     kind = o.observation_kind
+    treatment_state = _KIND_TO_TREATMENT_STATE[kind]
     if kind == "SEARCH_COMPLETION_AUDIT":
-        return "not_applicable", "search_audit"
+        return "not_applicable", treatment_state, "search_audit"
     if kind == "DIFFERENT_TUMOR_TYPE":
-        return "different_tumor_type", "source_reported"
+        return "different_tumor_type", treatment_state, "source_reported"
     if not o.crc_specific:
-        return "not_crc_resolved", "source_reported"
+        return "not_crc_resolved", treatment_state, "source_reported"
     if kind == "TREATMENT_NAIVE_PRIMARY":
-        return "colorectal_cancer", "treatment_naive_primary_crc_tissue"
+        return "colorectal_cancer", treatment_state, "treatment_naive_primary_crc_tissue"
     if kind == "RESISTANCE_MODEL":
-        return "colorectal_cancer", "crc_treatment_resistance_model"
+        return "colorectal_cancer", treatment_state, "crc_treatment_resistance_model"
     if kind == "TREATED_METASTATIC_TRANSCRIPT":
-        return "colorectal_cancer", "treated_or_metastatic_crc_malignant_compartment"
+        return "colorectal_cancer", treatment_state, "treated_or_metastatic_crc_malignant_compartment"
     if kind == "METASTATIC_LESION_PROTEIN":
-        return "colorectal_cancer", "metastatic_crc_lesion_tissue"
+        return "colorectal_cancer", treatment_state, "metastatic_crc_lesion_tissue"
     if kind == "PAIRED_PRE_POST_PROTEIN":
-        return "colorectal_cancer", "paired_pre_post_treatment_crc_biopsy"
+        return "colorectal_cancer", treatment_state, "paired_pre_post_treatment_crc_biopsy"
     # REFRACTORY_OR_PRIOR_TREATED_PROTEIN
-    return "colorectal_cancer", "refractory_or_prior_treated_crc_tissue"
+    return "colorectal_cancer", treatment_state, "refractory_or_prior_treated_crc_tissue"
 
 
 def _as_rejected(
@@ -348,10 +366,10 @@ def build_evidence_packages(
                 f"allocator returned {evidence_id}, which is already an "
                 "existing_evidence_id for this (candidate, gate)"
             )
-        sc_indication, sc_sample_type = _study_context_facts(o)
+        sc_indication, sc_treatment_state, sc_sample_type = _study_context_facts(o)
         study_context = {
             "indication": sc_indication,
-            "treatment_state": "not_applicable",
+            "treatment_state": sc_treatment_state,
             "sample_type": sc_sample_type,
         }
         for key in (*_KEYS_ALWAYS, *_AUDIT_KEYS):

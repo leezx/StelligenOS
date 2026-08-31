@@ -125,11 +125,85 @@ repository_policy:
 chatgpt_review: pending
 approved_tip: null
 merge_commit: null
-review_rounds: 0
+review_rounds: 1
 test_count_before_e10: 1283      # at PR E9 approval
-test_count_at_submission: 1366   # local full suite (tests/test_tgt03_module.py 78 + Tgt03ModuleManifestTests 5 + reconciliation / registry synch)
+test_count_at_submission: 1366   # local full suite at round-1 submission (tests/test_tgt03_module.py 78 + Tgt03ModuleManifestTests 5 + reconciliation / registry synch)
+test_count_after_round_1: 1379   # +13 Round1RegressionTests (tests/test_tgt03_module.py now 91)
 approval_record_pr: null
 next_authorized_step: null       # PR E-series TGT-04 construction contract -- needs its own go-ahead
+
+review_round_1:  # ChatGPT AI审核方案 -- REQUEST_CHANGES @ 35d9564
+  verdict: REQUEST_CHANGES
+  head_reviewed: 35d9564dfbabcff5ac330233c861fa93bcbb238b
+  accepted_with_no_issue: >-
+    the main implementation stands -- 11-file package, no normalizer, PUBLIC_ONLY
+    pure-Python ports, highest-class aggregation, completion / audit gene, the
+    TGT-03 dedup deviation, Route A / Route B fatal-review, binding TGT-03 ->
+    1.0.0, 5 / 8 built, MIGRATION_PENDING kept, and the binding reconciliation
+    itself. 5 narrow runtime correctness / factual-integrity blockers, none
+    reopening the frozen E9 contract body / Direction truth table / highest-class
+    Strength / four-component completion / Route A/B definition / ">= 2"
+    semantics / dedup deviation / EXPERIMENT_REQUIRED precedence / binding 1.0.0 /
+    MIGRATION_PENDING / MOD-TGT01/02/05/08.
+  blockers:
+    - id: 1
+      title: INDIRECT_STRONG qualification was too wide -- no requirement that the treatment / metastasis context is explicitly qualified
+      resolution: >-
+        classify.py -- TREATED_METASTATIC_TRANSCRIPT now additionally requires
+        clinical_context == "METASTATIC_CRC" AND context_adequacy_status ==
+        QUALIFIED; RESISTANCE_MODEL requires clinical_context == "RESISTANCE_MODEL"
+        AND context_adequacy_status == QUALIFIED (auditable bases already enforced
+        by the dataclass when QUALIFIED). A bare crc_specific + malignant + pattern
+        transcript / model signal is now CONTEXTUAL, not INDIRECT_STRONG.
+    - id: 2
+      title: the LOCAL persistence_context_id identity authority was not closed -- it could be missing on a qualifying observation and could collide with the canonical Instantiation context_id
+      resolution: >-
+        contracts.py -- the constructor now rejects any local persistence_context_id
+        / persistence_context_ids entry equal to CTX-CRC-REFRACTORY-MCRC.
+        module.py -- a whole-run HARD reject when a local id equals the canonical
+        context_id, and when any observation classified qualifying DIRECT /
+        INDIRECT_STRONG carries no auditable local persistence_context_id /
+        persistence_context_ids (so completion parity always has something to
+        reconcile and a graded Direction never rests on an anonymous context).
+    - id: 3
+      title: only the loss / transient patterns required an auditable persistence_pattern_basis -- RETAINED / MIXED_OR_UNRESOLVED with an empty basis could still drive Direction, and the transient branch only required a residual basis for PRESENT
+      resolution: >-
+        contracts.py -- EVERY qualified persistence_pattern now requires a
+        non-empty persistence_pattern_basis (SOURCE_REPORTED /
+        HUMAN_REVIEWED_NORMALIZATION), and a TRANSIENT_OR_MINOR_DOWNREGULATION
+        observation requires a non-empty residual_target_presence_basis for BOTH
+        PRESENT and UNRESOLVED. Synthetic fixtures updated.
+    - id: 4
+      title: protein_measurement_validation_status carried an invented "" state (not in the frozen closed enum) and a DIRECT protein observation was not required to carry a non-empty factual assay_method
+      resolution: >-
+        contracts.py -- PROTEIN_MEASUREMENT_VALIDATION_STATUS_VALUES is now
+        STRICTLY {QUALIFIED, NOT_ESTABLISHED}; a non-protein / audit observation
+        carries NOT_ESTABLISHED (no blank state). classify.py -- DIRECT
+        additionally requires a non-empty factual assay_method (still NOT a closed
+        assay whitelist). Fixtures updated.
+    - id: 5
+      title: the Gate-neutral EvidencePackage wrote study_context.treatment_state = "not_applicable" for every observation, including explicitly treated / refractory / paired-series evidence -- a wrong factual rewrite of the source context
+      resolution: >-
+        evidence.py -- a kind -> treatment_state map
+        (REFRACTORY_OR_PRIOR_TREATED -> refractory_or_prior_treated;
+        METASTATIC / TREATED_METASTATIC_TRANSCRIPT -> metastatic_context;
+        PAIRED_PRE_POST -> paired_pre_post; RESISTANCE_MODEL -> resistance_model;
+        TREATMENT_NAIVE_PRIMARY -> treatment_naive; DIFFERENT_TUMOR_TYPE ->
+        source_reported; SEARCH_COMPLETION_AUDIT -> not_applicable). Non-inflating
+        -- it maps only from the observation kind, never up to the run's
+        refractory mCRC context.
+  regressions_added: >-
+    Round1RegressionTests (13) -- transcript / resistance model without a
+    qualified context is not INDIRECT_STRONG; qualifying DIRECT / INDIRECT_STRONG
+    with no local context id is a HARD run rejection; a local id equal to the
+    canonical context_id is rejected at construction and as a HARD run rejection;
+    RETAINED / MIXED_OR_UNRESOLVED / transient-UNRESOLVED with an empty basis are
+    rejected at construction; the validation-status enum is exactly {QUALIFIED,
+    NOT_ESTABLISHED}; DIRECT needs a non-empty assay_method; the EP treatment_state
+    is kind-specific for refractory / paired-pre-post / treatment-naive / audit.
+  github_review_state: >-
+    not written -- the GitHub connector returned 403 Resource not accessible by
+    integration again; the AI审核方案 conversation is authoritative.
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt03_module.py' -v

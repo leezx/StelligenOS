@@ -104,10 +104,12 @@ _CLINICAL_PROTEIN_KINDS: Final[tuple[str, ...]] = (
 MOLECULAR_LAYER_VALUES: Final[tuple[str, ...]] = ("", "PROTEIN", "TRANSCRIPT", "BOTH")
 
 #: The measurement-validation PREDICATE that lets a protein observation drive
-#: DIRECT. CLOSED enum (E9 blocker-3 gene). ``assay_method`` itself stays an OPEN
-#: factual type -- there is no closed assay whitelist.
+#: DIRECT. CLOSED enum (E9 blocker-3 gene) -- STRICTLY {QUALIFIED, NOT_ESTABLISHED}
+#: with no invented blank state; a non-protein / audit observation carries
+#: NOT_ESTABLISHED. ``assay_method`` itself stays an OPEN factual type -- there is
+#: no closed assay whitelist -- but a DIRECT-rung protein observation still needs
+#: a non-empty factual ``assay_method`` (E10 review round 1, blocker 4).
 PROTEIN_MEASUREMENT_VALIDATION_STATUS_VALUES: Final[tuple[str, ...]] = (
-    "",
     "QUALIFIED",
     "NOT_ESTABLISHED",
 )
@@ -156,7 +158,6 @@ PERSISTENCE_PATTERN_VALUES: Final[tuple[str, ...]] = (
 )
 _LOSS_PATTERN = "NEAR_LOSS_OR_MARKED_LOSS"
 _TRANSIENT_PATTERN = "TRANSIENT_OR_MINOR_DOWNREGULATION"
-_BASIS_REQUIRED_PATTERNS: Final[tuple[str, ...]] = (_LOSS_PATTERN, _TRANSIENT_PATTERN)
 
 PERSISTENCE_PATTERN_BASIS_VALUES: Final[tuple[str, ...]] = (
     "",
@@ -385,7 +386,8 @@ class NormalizedPersistenceObservation:
         ) if self.persistence_context_ids else None
         _bool(self.declared_multi_context_analysis, "declared_multi_context_analysis")
 
-        # --- local persistence-context namespace shape (E9 blocker-2 gene) ---
+        # --- local persistence-context namespace shape (E9 blocker-2 gene;
+        #     E10 review round 1 blocker 2) ------------------------------------
         # persistence_context_ids is the auditable context set of ONE declared
         # multi-context analysis -- it is only cross-context when the observation
         # itself declares the analysis.
@@ -404,6 +406,16 @@ class NormalizedPersistenceObservation:
                 raise ValueError(
                     "a declared multi-context analysis carries persistence_context_ids, "
                     "not a single persistence_context_id"
+                )
+        # a LOCAL persistence-context identity may NEVER be the canonical
+        # Instantiation context_id -- collapsing the two namespaces is a HARD
+        # identity failure (surfaced as a whole-run reject in module.py, but a
+        # provider that hands one in at all is malformed).
+        for cid in (self.persistence_context_id, *self.persistence_context_ids):
+            if cid.strip() == CONTEXT_ID:
+                raise ValueError(
+                    "a local persistence_context_id must never be the canonical "
+                    f"Instantiation context_id {CONTEXT_ID!r} (namespace collapse)"
                 )
 
         kind = self.observation_kind
@@ -457,26 +469,32 @@ class NormalizedPersistenceObservation:
                 "a QUALIFIED protein_measurement_validation_status carries a non-empty "
                 "auditable protein_measurement_validation_basis"
             )
-        if self.persistence_pattern in _BASIS_REQUIRED_PATTERNS and not self.persistence_pattern_basis:
+        # EVERY qualified persistence_pattern is an upstream-qualified factual
+        # state and MUST carry an auditable persistence_pattern_basis -- not just
+        # the loss / transient patterns. RETAINED and MIXED_OR_UNRESOLVED drive
+        # Direction (SUPPORTS / a CONFLICTING-vs-graded-INCONCLUSIVE resolver) too
+        # (E10 review round 1, blocker 3).
+        if self.persistence_pattern and not self.persistence_pattern_basis:
             raise ValueError(
-                "a NEAR_LOSS_OR_MARKED_LOSS / TRANSIENT_OR_MINOR_DOWNREGULATION "
-                "persistence_pattern carries a persistence_pattern_basis "
+                "a qualified persistence_pattern carries a persistence_pattern_basis "
                 "(SOURCE_REPORTED / HUMAN_REVIEWED_NORMALIZATION)"
             )
         if self.persistence_pattern_basis and not self.persistence_pattern:
             raise ValueError("a persistence_pattern_basis without a persistence_pattern is drift")
 
-        # --- the transient / minor branch fact (E9 blocker-1 gene) --------
+        # --- the transient / minor branch fact (E9 blocker-1 gene;
+        #     E10 review round 1 blocker 3) ---------------------------------
         if self.persistence_pattern == _TRANSIENT_PATTERN:
             if self.residual_target_presence_status not in ("PRESENT", "UNRESOLVED"):
                 raise ValueError(
                     "a TRANSIENT_OR_MINOR_DOWNREGULATION observation carries "
                     "residual_target_presence_status in {PRESENT, UNRESOLVED}"
                 )
-            if self.residual_target_presence_status == "PRESENT" and not self.residual_target_presence_basis.strip():
+            if not self.residual_target_presence_basis.strip():
                 raise ValueError(
-                    "residual_target_presence_status == PRESENT carries an auditable "
-                    "residual_target_presence_basis"
+                    "a TRANSIENT_OR_MINOR_DOWNREGULATION observation carries an "
+                    "auditable residual_target_presence_basis for BOTH PRESENT and "
+                    "UNRESOLVED"
                 )
         elif self.residual_target_presence_status:
             raise ValueError(
