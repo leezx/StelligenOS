@@ -87,38 +87,52 @@ def run(
         for o in observations
     ]
 
-    emitted, extra_rejections, dropped = build_evidence_packages(
-        classified,
-        module_input=module_input,
-        allocator=evidence_id_allocator,
-        source_resolver=source_resolver,
-        evidence_library=evidence_library,
-    )
+    rejected_records: list[tuple[str, str]] = []
+    hard_integrity_failures: list[tuple[str, str]] = []
 
-    all_rejections = [c for c in classified if not c.admissible] + extra_rejections
-    rejected_records: list[tuple[str, str]] = [
-        (c.observation.observation_id, c.rejection_reason) for c in all_rejections
-    ]
-    rejected_records.extend(dropped)
-    hard_integrity_failures: list[tuple[str, str]] = [
-        (c.observation.observation_id, c.rejection_reason)
-        for c in all_rejections
-        if c.rejection_severity == "HARD"
-    ]
-
-    # --- normalized-input identity gate (E11 item 10; E12-7 precedence) ----
+    # --- normalized-input identity PREFLIGHT (E11 item 10; E12-7 authoritative
+    #     identity precedence; E12 review round 2, blocker 3) ------------------
     # A duplicate observation_id is an ambiguous identity -- the Evidence Library
     # resolves canonical packages BY observation_id, so two normalized records
-    # sharing one id cannot both be trustworthy. HARD, whole run, BEFORE any
-    # semantic dedup.
+    # sharing one id cannot both be trustworthy. It is a HARD whole-run reject
+    # that MUST be decided BEFORE any semantic dedup, source resolution, Evidence
+    # ID allocation or transient EvidencePackage construction. When it fires the
+    # run short-circuits: build_evidence_packages() is never called.
     obs_id_counts: dict[str, int] = {}
     for o in observations:
         obs_id_counts[o.observation_id] = obs_id_counts.get(o.observation_id, 0) + 1
-    for oid, n in obs_id_counts.items():
-        if n > 1:
-            why = f"observation_id {oid!r} appears {n} times -- ambiguous observation identity"
-            hard_integrity_failures.append((oid, why))
-            rejected_records.append((oid, why))
+    duplicate_observation_ids = [oid for oid, n in obs_id_counts.items() if n > 1]
+    for oid in duplicate_observation_ids:
+        why = (
+            f"observation_id {oid!r} appears {obs_id_counts[oid]} times "
+            "-- ambiguous observation identity"
+        )
+        hard_integrity_failures.append((oid, why))
+        rejected_records.append((oid, why))
+
+    if duplicate_observation_ids:
+        emitted: list = []
+        extra_rejections: list = []
+        dropped: list[tuple[str, str]] = []
+    else:
+        emitted, extra_rejections, dropped = build_evidence_packages(
+            classified,
+            module_input=module_input,
+            allocator=evidence_id_allocator,
+            source_resolver=source_resolver,
+            evidence_library=evidence_library,
+        )
+
+    all_rejections = [c for c in classified if not c.admissible] + extra_rejections
+    rejected_records.extend(
+        (c.observation.observation_id, c.rejection_reason) for c in all_rejections
+    )
+    rejected_records.extend(dropped)
+    hard_integrity_failures.extend(
+        (c.observation.observation_id, c.rejection_reason)
+        for c in all_rejections
+        if c.rejection_severity == "HARD"
+    )
 
     # --- local surface-context identity authority (E10 identity-namespace gene;
     #     E11 review round 1) --------------------------------------------------

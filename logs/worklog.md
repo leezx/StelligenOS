@@ -6258,3 +6258,51 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 验证：`tests/test_tgt04_module.py` **77 OK**；全量 **1532 OK**（round-1 前
   1526）；`git diff --check` clean；YAML 合法。
 - Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-2 回复。
+
+### PR E12 · ChatGPT `AI审核方案` review round 2 → REQUEST_CHANGES（round-1 语义基本 CLOSED + 3 窄 residual integrity blocker）
+
+- Verdict：**REQUEST_CHANGES**，anchor HEAD `11528ed`；CI run 33415591565 verify
+  (3.11) + verify (3.12) 均 success。审核方确认 round-1 的 scientific / runtime
+  semantics 基本 CLOSED（typed conflict resolver 现在确实要求
+  `classified.density_implication == CONTEXTUAL`；`NEGLIGIBLE_OR_UNDETECTABLE` 经
+  classifier 映射为 OPPOSES，不能再冒充 resolver）。剩 3 个窄 runtime-integrity
+  residual：
+- **Blocker 1**：`acceptance._scannable_ep_fact_text()` 的 raw-density redaction
+  是 order-dependent。按 value → unit → summary 顺序 `text.replace(raw, " ")`，
+  若 `value == "12000"` 且是 summary 子串，第一步会把 summary 里的 "12000" 也删掉，
+  summary 碎成 `" molecules per cell below assay detection threshold"`，随后
+  `replace(full_summary, ...)` 匹配不到，残留的 `threshold` 被 `_SCORE_RE` 命中。
+  修复：按**长度降序**先删最长的 raw string（sort by len reverse=True），使之
+  order-independent。Regression：value "12000" + summary "12000 molecules per cell
+  below assay detection threshold" → ACCEPTED；Module-authored "density threshold
+  of 5000" 仍 FAIL。
+- **Blocker 2**：`evidence.py` 的 raw-density reuse parity 不再是严格 EXACT
+  opaque-string parity —— 两侧都做了 `str(...).strip()`，导致 canonical int `12000`
+  或带尾空格 `"12000 "` 会误等于 current `"12000"`。修复：对 raw density key ——
+  `key not in study_context → canonical_value = ""`；否则
+  `canonical_value = study_context[key]`，非 str 即 HARD；`current_value =
+  current[key]`（已 contract-validated str）；missing key 与 `""` = 两侧都 absent
+  = compatible；否则 EXACT string 相等，**不 strip、不 str()**。Regression：
+  canonical int 12000 vs "12000" → HARD；canonical "12000 " vs "12000" → HARD；
+  canonical 缺 key + current 全 "" → reuse allowed；identical string → reuse allowed。
+- **Blocker 3**：duplicate `observation_id` 的 authoritative-identity precedence
+  没真正实现 —— run 仍先跑 semantic dedup、resolve source / evidence、消耗
+  Evidence ID、构造 transient EP，之后才记录 duplicate。修复：在 `module.run()`
+  里、`build_evidence_packages()` **之前**做 observation-id preflight；存在
+  duplicate 时 run 短路进入 whole-run HARD rejection（`emitted = []`，不调用
+  `build_evidence_packages()`，不调用 allocator）。Regression：duplicate
+  observation_id → `accepted == False` AND `proposal_envelope is None` AND
+  `allocator.calls == 0` AND `evidence_packages == ()` AND `reused_evidence_ids == ()`。
+- 审核方明确「不要改」：conflict resolver 的 CONTEXTUAL classifier authority；
+  single-tier grading；DIRECT / IS rung boundary；completion direct + indirect set
+  parity；fatal Route A / B + model exclusion；MIGRATION_PENDING；TGT-04 1.0.0 /
+  6-of-8 built；frozen E11 science。
+- 改动文件：`gate_modules/tgt04_.../acceptance.py`（redact longest-first）、
+  `evidence.py`（raw density key EXACT opaque-string parity）、`module.py`
+  （duplicate observation_id preflight）、`tests/test_tgt04_module.py`（77 → **83**：
+  新增 `ReviewRound2RegressionTests` + `test_duplicate_observation_id_is_hard` 收紧为
+  `test_duplicate_observation_id_is_hard_before_any_allocation`）、manifest
+  （`review_rounds: 2` + `review_round_2` block）、本 worklog append。
+- 验证：`tests/test_tgt04_module.py` **83 OK**；全量 **1538 OK**（round-2 前 1532）；
+  `git diff --check` clean；YAML 合法。
+- Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-3 回复。

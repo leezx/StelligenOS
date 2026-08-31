@@ -1014,13 +1014,19 @@ class NamespaceAndDedupTests(unittest.TestCase):
         self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
         self.assertEqual(len(res.evidence_packages), 3)  # a + b + audit
 
-    def test_duplicate_observation_id_is_hard(self):
+    def test_duplicate_observation_id_is_hard_before_any_allocation(self):
         a = _density(observation_id="OBS-DENS-DUP", context="SURF_CTX_A")
         b = _density(observation_id="OBS-DENS-DUP", context="SURF_CTX_B")
         comp = _completion(qualifying_direct=("SURF_CTX_A", "SURF_CTX_B"))
-        res = _run([a, b, _audit(comp)], comp)
+        alloc = FakeAllocator()
+        res = _run([a, b, _audit(comp)], comp, allocator=alloc)
         self.assertFalse(res.machine_acceptance.accepted)
+        self.assertIsNone(res.proposal_envelope)
         self.assertTrue(res.hard_integrity_failures)
+        # authoritative-identity precedence: the run short-circuits BEFORE any
+        # semantic dedup / source resolution / Evidence ID allocation.
+        self.assertEqual(alloc.calls, 0)
+        self.assertEqual(res.evidence_packages, ())
 
     def test_audit_ep_is_never_a_dedup_loser(self):
         d = _density(context="SURF_CTX_A", source_id="SRC-00000888")
@@ -1269,6 +1275,123 @@ class ReviewRound1RegressionTests(unittest.TestCase):
         res = self._run_reuse(o, can)
         self.assertFalse(res.machine_acceptance.accepted)
         self.assertTrue(res.hard_integrity_failures)
+
+
+class ReviewRound2RegressionTests(unittest.TestCase):
+    """PR E12 ChatGPT AI审核方案 review round 2 -- 3 residual integrity blockers
+    (round-1's scientific / runtime semantics were basically closed).
+
+    (1) the raw-density redaction in acceptance._scannable_ep_fact_text() was
+        order-dependent -- a short value that is a substring of the summary could
+        fragment the summary and leave a residual "threshold" to be mis-killed;
+    (2) the raw-density reuse parity was not strict EXACT opaque-string parity
+        (str()/strip() coercion) -- a canonical int 12000 or "12000 " could match
+        a current "12000";
+    (3) the duplicate-observation_id HARD reject did not actually precede
+        semantic dedup / source resolution / Evidence ID allocation.
+    """
+
+    # ---- blocker 1 ---------------------------------------------------------
+    def test_raw_density_redaction_is_order_independent(self):
+        d = _density(
+            context="SURF_CTX_A",
+            plausibility="PLAUSIBLY_ADEQUATE",
+            value="12000",
+            unit="molecules/cell",
+            summary="12000 molecules per cell below assay detection threshold",
+        )
+        comp = _completion(qualifying_direct=("SURF_CTX_A",))
+        res = _run([d, _audit(comp)], comp)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        self.assertEqual(_pair(res), ("POSITIVE", "DIRECT"))
+
+    def test_score_re_still_fires_on_a_real_threshold_conclusion(self):
+        from gate_modules.tgt04_tumor_surface_availability_density_plausibility.acceptance import (
+            _SCORE_RE,
+        )
+        self.assertIsNotNone(_SCORE_RE.search("apply a density threshold of 5000"))
+        self.assertIsNotNone(_SCORE_RE.search("above the clinically effective range"))
+        self.assertIsNone(_SCORE_RE.search("12000 molecules per cell below assay detection limit"))
+
+    # ---- blocker 2 ---------------------------------------------------------
+    def _canonical_with_density(self, o, evidence_id, *, value, unit, summary):
+        keys = (
+            "observation_id", "target_identity", "context_key", "landscape_as_of",
+            "observation_kind", "molecular_layer", "assay_method",
+            "measurement_validation_status", "measurement_validation_basis", "crc_specific",
+            "surface_context_class", "surface_context_basis", "context_adequacy_status",
+            "context_adequacy_basis", "malignant_cell_attribution", "malignant_attribution_basis",
+            "surface_localization_status", "surface_localization_basis",
+            "density_plausibility_status", "density_plausibility_basis",
+            "surface_antigen_level", "surface_antigen_level_basis",
+            "reproducibility_status", "reproducibility_basis",
+            "surface_context_id", "surface_context_ids", "declared_multi_context_analysis",
+        )
+        sc = {k: getattr(o, k) for k in keys}
+        sc["reported_density_value"] = value
+        sc["reported_density_unit"] = unit
+        sc["reported_density_summary"] = summary
+        sc.update(indication="colorectal_cancer", treatment_state="not_applicable",
+                  sample_type="crc_malignant_cell_quantitative_surface_density")
+        return EvidencePackage(
+            evidence_id=evidence_id, schema_version=1, claim=o.claim,
+            measurement={"type": "x", "analyte": o.target_identity, "readout": "r",
+                         "result": "res", "unit": str(unit)},
+            candidate_refs=(CAND,), study_context=sc,
+            provenance={
+                "source_id": o.source_id, "source_type": o.source_type,
+                "source_identifier": o.source_identifier, "locator": o.locator,
+                "retrieved_at": o.retrieved_at,
+            },
+            interpretation_boundary={
+                "directly_supports": ("x",), "does_not_support": ("y",),
+                "limitations": ("z",), "evidence_ceiling": "c",
+            },
+            derivation={"module_run_id": "RUN-E12-TEST", "code_commit": "deadbeef"},
+        )
+
+    def _run_reuse(self, o, canonical):
+        comp = _completion(qualifying_direct=(o.surface_context_id,))
+        return _run([o, _audit(comp)], comp,
+                    library={o.observation_id: canonical}, allocator=FakeAllocator(70))
+
+    def test_canonical_non_string_raw_value_is_hard(self):
+        o = _density(observation_id="OBS-DENS-RR8", context="SURF_CTX_A", value="12000")
+        can = self._canonical_with_density(o, "EP-00009601", value=12000, unit="molecules/cell", summary="")
+        res = self._run_reuse(o, can)
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertTrue(res.hard_integrity_failures)
+
+    def test_canonical_raw_value_with_trailing_space_is_hard(self):
+        o = _density(observation_id="OBS-DENS-RR9", context="SURF_CTX_A", value="12000")
+        can = self._canonical_with_density(o, "EP-00009602", value="12000 ", unit="", summary="")
+        res = self._run_reuse(o, can)
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertTrue(res.hard_integrity_failures)
+
+    def test_canonical_identical_string_raw_facts_are_reused(self):
+        o = _density(observation_id="OBS-DENS-RR10", context="SURF_CTX_A",
+                     value="12000", unit="molecules/cell", summary="~1.2e4 by QIFIKIT")
+        can = self._canonical_with_density(o, "EP-00009603",
+                                           value="12000", unit="molecules/cell", summary="~1.2e4 by QIFIKIT")
+        res = self._run_reuse(o, can)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        self.assertIn("EP-00009603", res.reused_evidence_ids)
+
+    # ---- blocker 3 ---------------------------------------------------------
+    def test_duplicate_observation_id_precedes_allocation_and_dedup(self):
+        a = _density(observation_id="OBS-DENS-P1", context="SURF_CTX_A")
+        b = _density(observation_id="OBS-DENS-P1", context="SURF_CTX_B")
+        comp = _completion(qualifying_direct=("SURF_CTX_A", "SURF_CTX_B"))
+        alloc = FakeAllocator()
+        res = _run([a, b, _audit(comp)], comp, allocator=alloc)
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertIsNone(res.proposal_envelope)
+        self.assertEqual(alloc.calls, 0)
+        self.assertEqual(res.evidence_packages, ())
+        self.assertEqual(res.reused_evidence_ids, ())
+        why = " ".join(r for _, r in res.hard_integrity_failures)
+        self.assertIn("ambiguous observation identity", why)
 
 
 if __name__ == "__main__":

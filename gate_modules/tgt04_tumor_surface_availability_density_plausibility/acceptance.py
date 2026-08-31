@@ -65,8 +65,18 @@ def _scannable_ep_fact_text(emitted: list[EmittedEvidence]) -> str:
         ib = e.package.interpretation_boundary
         text = " ".join(ib["directly_supports"])
         sc = e.package.study_context
-        for key in ("reported_density_value", "reported_density_unit", "reported_density_summary"):
-            raw = str(sc.get(key, "")).strip()
+        # redact LONGEST raw string first so a shorter value / unit that is a
+        # substring of the summary cannot fragment the summary and leave a
+        # residual "threshold" / "range" behind (E12 review round 2, blocker 1).
+        raws = sorted(
+            (
+                str(sc.get(k, "")).strip()
+                for k in ("reported_density_value", "reported_density_unit", "reported_density_summary")
+            ),
+            key=len,
+            reverse=True,
+        )
+        for raw in raws:
             if raw:
                 text = text.replace(raw, " ")
         parts.append(text)

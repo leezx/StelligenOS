@@ -287,7 +287,7 @@ three_headline_invariants:  # frozen at the top of contracts.py
 
 delivers:
   - gate_modules/tgt04_tumor_surface_availability_density_plausibility/ -- 11 files (__init__ / module.yaml / contracts / ports / classify / evidence / aggregate / completion / fatal_review / acceptance / module), the deterministic MOD-TGT04@1.0.0 Gate-specific scientific core
-  - tests/test_tgt04_module.py -- 77 synthetic in-memory tests (71 at submission + 6 review-round-1 regressions) (binding + boundary, rung classification incl. tightening 1, density_direction_mapping, the two-tier / single-tier grading authority incl. 100-INDIRECT_STRONG-zero-DIRECT -> INCONCLUSIVE / UNKNOWN and the typed multi-context conflict resolver, the three completion HARD invariants + strict-empty attempted state, fatal_review Route A / Route B with CRC malignant-cell only + the 1-CRC+1-model / 2-model exclusions + LOW_BUT_PRESENT never fatal, symmetric raw-density presence-and-value reuse parity either direction, the local surface-context namespace + improved dedup, the HARD integrity gate never degraded to an accepted UNKNOWN, the narrow EXPERIMENT_REQUIRED mapping, the accepted-run output surface)
+  - tests/test_tgt04_module.py -- 83 synthetic in-memory tests (71 at submission + 6 review-round-1 + 6 review-round-2 regressions) (binding + boundary, rung classification incl. tightening 1, density_direction_mapping, the two-tier / single-tier grading authority incl. 100-INDIRECT_STRONG-zero-DIRECT -> INCONCLUSIVE / UNKNOWN and the typed multi-context conflict resolver, the three completion HARD invariants + strict-empty attempted state, fatal_review Route A / Route B with CRC malignant-cell only + the 1-CRC+1-model / 2-model exclusions + LOW_BUT_PRESENT never fatal, symmetric raw-density presence-and-value reuse parity either direction, the local surface-context namespace + improved dedup, the HARD integrity gate never degraded to an accepted UNKNOWN, the narrow EXPERIMENT_REQUIRED mapping, the accepted-run output surface)
   - src/contracts/crc_adc_target_gateset.yaml + src/objects/crc_adc_target_gateset.py -- TGT-04 primary_module_version 0.0.0 -> 1.0.0; built_module_versions / BUILT_MODULE_VERSIONS gain TGT-04
   - gate_modules/README.md -- MOD-TGT04 registered as built (PR E12)
   - tests/test_gate_modules_boundary.py -- Tgt04ModuleManifestTests
@@ -318,12 +318,38 @@ repository_policy:
 chatgpt_review: pending
 approved_tip: null
 merge_commit: null
-review_rounds: 1
+review_rounds: 2
 test_count_before_e12: 1450       # at PR E11 approval
 test_count_at_submission: 1526    # local full suite (tests/test_tgt04_module.py 71 + Tgt04ModuleManifestTests 5 + reconciliation / registry synch)
 test_count_after_round_1: 1532    # +6 review-round-1 regression tests (tests/test_tgt04_module.py 77)
+test_count_after_round_2: 1538    # +6 review-round-2 integrity regression tests (tests/test_tgt04_module.py 83)
 approval_record_pr: null
 next_authorized_step: null        # PR = MOD-TGT06 -- needs its own go-ahead
+
+review_round_2:
+  verdict: REQUEST_CHANGES
+  reviewer: ChatGPT AI审核方案
+  head_reviewed: 11528edf27e8bb417a1b2118d958eda1979ff529
+  ci_confirmed: run 33415591565 -- verify (3.11) + verify (3.12) both success
+  summary: >-
+    round-1's scientific / runtime semantics are basically CLOSED (the typed
+    conflict resolver now requires classified.density_implication == CONTEXTUAL;
+    a NEGLIGIBLE_OR_UNDETECTABLE observation maps to OPPOSES and can't
+    impersonate the resolver). 3 residual runtime-integrity blockers.
+  blockers:
+    - "1. the raw-density redaction in acceptance._scannable_ep_fact_text() was order-dependent -- it redacted value -> unit -> summary via text.replace(raw, ' '), so a short value ('12000') that is also a substring of the summary fragmented the summary and left a residual 'threshold' for _SCORE_RE to catch. FIX: redact LONGEST-first (sort the raw strings by descending length before replacing) so it is order-independent. Regression: value '12000' + summary '12000 molecules per cell below assay detection threshold' -> ACCEPTED; a Module-authored 'density threshold of 5000' still FAILS."
+    - "2. the raw-density reuse parity in evidence.py was no longer strict EXACT opaque-string parity -- it did str(...).strip() on both sides, so a canonical int 12000 or a trailing-space '12000 ' wrongly matched a current '12000'. FIX: for the raw density keys -- if key not in study_context -> canonical_value = ''; else canonical_value = study_context[key] and a non-str value is HARD; current_value = current[key] (contract-validated str already); missing key and '' = both absent = compatible; otherwise EXACT string equality, NO strip(), NO str(). Regression: canonical int 12000 vs current '12000' -> HARD; canonical '12000 ' vs current '12000' -> HARD; canonical missing keys + current all '' -> reuse allowed; identical strings -> reuse allowed."
+    - "3. the authoritative-identity precedence for a duplicate observation_id was not actually implemented -- the run still ran semantic dedup, resolved sources / evidence, consumed Evidence IDs and built transient EPs, and only afterwards recorded the duplicate. FIX: an observation-id PREFLIGHT in module.run() BEFORE build_evidence_packages() -- when a duplicate exists the run short-circuits to the whole-run HARD rejection path (emitted = [], no build_evidence_packages() call, no allocator call). Regression: duplicate observation_id -> machine_acceptance.accepted == False AND proposal_envelope is None AND allocator.calls == 0 AND evidence_packages == () AND reused_evidence_ids == ()."
+  do_not_change_confirmed:
+    - the conflict resolver's CONTEXTUAL classifier authority; single-tier grading; DIRECT / IS rung boundaries
+    - completion direct + indirect set parity; fatal Route A / B + model exclusion
+    - MIGRATION_PENDING; TGT-04 1.0.0 / 6-of-8 built; the frozen E11 science
+  files_touched:
+    - gate_modules/tgt04_tumor_surface_availability_density_plausibility/acceptance.py (_scannable_ep_fact_text redacts longest-first)
+    - gate_modules/tgt04_tumor_surface_availability_density_plausibility/evidence.py (raw density keys -- exact opaque-string parity, no strip / str coercion, non-str canonical value HARD)
+    - gate_modules/tgt04_tumor_surface_availability_density_plausibility/module.py (duplicate observation_id preflight BEFORE build_evidence_packages)
+    - tests/test_tgt04_module.py (77 -> 83; new ReviewRound2RegressionTests + tightened test_duplicate_observation_id_is_hard -> test_duplicate_observation_id_is_hard_before_any_allocation)
+  test_count_after: 1538
 
 review_round_1:
   verdict: REQUEST_CHANGES

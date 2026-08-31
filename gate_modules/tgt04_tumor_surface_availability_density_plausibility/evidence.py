@@ -266,13 +266,24 @@ def _reused_package_is_compatible(
     current = {k: getattr(o, k) for k in keys}
     for key in keys:
         # --- the raw density facts have a SYMMETRIC presence-and-value contract
-        #     (E12 review round 1, blocker 3): a canonical package that simply
-        #     omits the key is "absent" -- absent on both sides is COMPATIBLE.
-        #     present on one side only, or a value / unit / summary difference, is
-        #     HARD. The raw string is never coerced to a number.
+        #     (E12 review round 1 blocker 3 + round 2 blocker 2): a canonical
+        #     package that simply omits the key is "absent" -- absent on both
+        #     sides ("" <-> missing key) is COMPATIBLE. Otherwise it is EXACT
+        #     opaque-string parity -- NO strip(), NO str() coercion. A
+        #     present-on-one-side-only, a non-string canonical value, or any
+        #     value / unit / summary difference is HARD.
         if key in _DENSITY_KEYS:
-            canonical_value = str(existing.study_context.get(key, "")).strip()
-            current_value = str(current[key]).strip()
+            if key not in existing.study_context:
+                canonical_value = ""
+            else:
+                canonical_value = existing.study_context[key]
+                if not isinstance(canonical_value, str):
+                    return (
+                        f"raw density field {key!r} on the canonical package is "
+                        f"{type(canonical_value).__name__}, not an opaque factual "
+                        "string -- exact reuse identity parity failure"
+                    )
+            current_value = current[key]  # contract-validated str already
             if bool(canonical_value) != bool(current_value):
                 return (
                     f"raw density field {key!r}: present on one side only "
