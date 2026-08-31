@@ -246,12 +246,13 @@ class BindingParityTests(unittest.TestCase):
 
 #: gate_id -> the primary_module_version once its Module is built. PR D left
 #: every gate at "0.0.0"; Runtime Migration PR E2 built MOD-TGT01, PR E4 built
-#: MOD-TGT05, PR E6 built MOD-TGT08, PR E8 built MOD-TGT02, and PR E10 built
-#: MOD-TGT03.
+#: MOD-TGT05, PR E6 built MOD-TGT08, PR E8 built MOD-TGT02, PR E10 built
+#: MOD-TGT03, and PR E12 built MOD-TGT04.
 _BUILT_MODULE_VERSIONS = {
     "TGT-01": "1.0.0",
     "TGT-02": "1.0.0",
     "TGT-03": "1.0.0",
+    "TGT-04": "1.0.0",
     "TGT-05": "1.0.0",
     "TGT-08": "1.0.0",
 }
@@ -333,8 +334,8 @@ class ModuleBindingSlotTests(unittest.TestCase):
 
 def _spec(**overrides) -> TgtGateSpec:
     base = dict(
-        gate_id="TGT-04",
-        name=TGT_GATE_NAMES["TGT-04"],
+        gate_id="TGT-06",
+        name=TGT_GATE_NAMES["TGT-06"],
         candidate_level="L04",
         gateset_id="ADC_TARGET_GATESET",
         gate_version="1.0",
@@ -346,7 +347,7 @@ def _spec(**overrides) -> TgtGateSpec:
 
 class TgtGateSpecTests(unittest.TestCase):
     def test_valid(self):
-        self.assertEqual(_spec().gate_id, "TGT-04")
+        self.assertEqual(_spec().gate_id, "TGT-06")
 
     def test_rejects(self):
         with self.assertRaises(ValueError):
@@ -360,41 +361,41 @@ class TgtGateSpecTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             _spec(gate_version="2.0")
         with self.assertRaises(ValueError):
-            _spec(dominant_evidence_regime="PUBLIC_PRIMARY")  # TGT-04 is PUBLIC_HYBRID
+            _spec(dominant_evidence_regime="PUBLIC_PRIMARY")  # TGT-06 is PUBLIC_HYBRID
 
 
 class TgtGateContractTests(unittest.TestCase):
     def _contract(self, **overrides) -> TgtGateContract:
         spec = _spec()
         ladder = EvidenceLadder(
-            gate_id="TGT-04",
+            gate_id="TGT-06",
             gate_version="1.0",
             rungs=(
-                LadderRung("DIRECT", ("quantitative surface density",), "establishes density"),
-                LadderRung("INDIRECT_STRONG", ("membranous IHC",), "localization only"),
-                LadderRung("WEAK", ("bulk RNA",), "hypothesis only"),
+                LadderRung("DIRECT", ("receptor-mediated internalization assay",), "establishes internalization"),
+                LadderRung("INDIRECT_STRONG", ("surface residence half-life",), "trafficking proxy only"),
+                LadderRung("WEAK", ("family-level prior",), "hypothesis only"),
             ),
-            evidence_ceiling="quantitative cell-surface antigen density",
+            evidence_ceiling="quantitative receptor-mediated internalization on CRC malignant cells",
         )
         base = dict(
             gate_spec=spec,
-            gate_question="Is the target on the CRC cell surface at adequate density?",
-            evidence_required=("quantitative surface density", "membranous IHC"),
+            gate_question="Does the target internalize after antibody binding on CRC malignant cells?",
+            evidence_required=("receptor-mediated internalization assay", "surface residence half-life"),
             ladder=ladder,
-            allowed_inference=("the antigen is on the cell surface",),
-            forbidden_inference=("surface localization implies adequate density",),
-            unknown_behavior="only localization -> strength stays UNKNOWN",
-            fatal_conditions=("density far below validated ADC targets",),
-            evidence_ladder_ref="external:crc_adc_target_gateset/TGT-04/evidence_ladder@v1",
-            assessment_rule_ref="external:crc_adc_target_gateset/TGT-04/assessment_rule@v1",
-            primary_module_id="MOD-TGT04",
+            allowed_inference=("the target is internalized after binding",),
+            forbidden_inference=("surface residence implies lysosomal delivery",),
+            unknown_behavior="only surface-residence data -> strength stays UNKNOWN",
+            fatal_conditions=("no measurable internalization across validated CRC models",),
+            evidence_ladder_ref="external:crc_adc_target_gateset/TGT-06/evidence_ladder@v1",
+            assessment_rule_ref="external:crc_adc_target_gateset/TGT-06/assessment_rule@v1",
+            primary_module_id="MOD-TGT06",
             primary_module_version="0.0.0",
         )
         base.update(overrides)
         return TgtGateContract(**base)
 
     def test_valid(self):
-        self.assertEqual(self._contract().gate_spec.gate_id, "TGT-04")
+        self.assertEqual(self._contract().gate_spec.gate_id, "TGT-06")
 
     def test_rejects_built_module_version(self):
         with self.assertRaises(ValueError):
@@ -406,7 +407,7 @@ class TgtGateContractTests(unittest.TestCase):
 
     def test_rejects_non_external_refs(self):
         with self.assertRaises(ValueError):
-            self._contract(assessment_rule_ref="crc_adc_target_gateset/TGT-04/rule")
+            self._contract(assessment_rule_ref="crc_adc_target_gateset/TGT-06/rule")
 
     def test_rejects_empty_inference_or_fatal(self):
         with self.assertRaises(ValueError):

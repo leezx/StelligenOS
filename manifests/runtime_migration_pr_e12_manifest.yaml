@@ -1,0 +1,350 @@
+phase: runtime_migration_pr_e12
+status: pending_review
+scope: mod_tgt04_deterministic_scientific_core_implementation_plus_narrow_binding_reconciliation
+repository_boundary: software_only_external_data
+
+# what E12 IS
+implementation_code_added: true            # gate_modules/tgt04_tumor_surface_availability_density_plausibility/
+module_version_built: "1.0.0"              # MOD-TGT04 (was 0.0.0 declared slot)
+standalone_package: true                   # no shared framework / base class; MOD-TGT01 / MOD-TGT02 / MOD-TGT03 / MOD-TGT05 / MOD-TGT08 not refactored
+binding_reconciled: true                   # TGT-04 primary_module_version 0.0.0 -> 1.0.0; built_module_versions / BUILT_MODULE_VERSIONS gain TGT-04
+two_tier_single_tier_grading_authority: true   # only a qualifying DIRECT quantitative antigen-density observation grants a graded Direction; a localization-only completed landscape is INCONCLUSIVE / UNKNOWN; INDIRECT_STRONG never becomes a proposed Strength; NOT the E10-style highest-qualifying-rung rule (E12-4)
+one_typed_completion_state_added: true     # SurfaceAvailabilityCompletion -- a module-local run record, NOT a core object; four FLAT component booleans
+three_hard_completion_invariants_added: true  # completeness consistency, mandatory audit presence + snapshot parity, qualifying DIRECT + INDIRECT surface-context-set parity (the indirect set audit-integrity only)
+machine_local_fatal_review_trigger_added: true  # FatalReviewRecord -- a review TRIGGER (Route A OR Route B, CRC malignant-cell only), never a conclusion / KILL / PUBLIC_FATAL_SIGNAL_ESTABLISHED
+three_separate_typed_density_facts: true   # measurement_validation_status (CLOSED) vs density_plausibility_status vs surface_antigen_level -- never one overloaded field (E11 item 06)
+local_surface_context_namespace: true      # surface_context_id(s) -- LOCAL evidence-context identities, deliberately separate from the canonical Instantiation context_id (E10 identity-namespace gene)
+closed_measurement_validation_predicate: true  # measurement_validation_status in {QUALIFIED, NOT_ESTABLISHED} drives DIRECT; assay_method stays an OPEN factual type
+raw_density_is_an_opaque_factual_string: true  # reported_density_value / _unit / _summary are opaque strings and SYMMETRIC exact-reuse identity keys -- never coerced to a number (E12 tightening 4)
+
+# what E12 IS NOT
+normalizer_added_inside_the_package: false  # surface qualifications are given UPSTREAM by the provider; there is no normalizer.py (E12-1 / E12-2)
+live_provider_or_adapter_added: false       # only a normalized Tgt04SurfaceAvailabilityProviderPort Protocol
+retrieval_added: false                      # no absolute-quantitation flow / QIFIKIT / mass-cytometry / surfaceomics / membranous-IHC / cell-surface-proteomics / subcellular-localization adapter, extractor, normalizer or runner
+network_or_subprocess_io_added: false
+database_or_cache_added: false
+persistence_in_repository_added: false      # all output is an in-memory Tgt04ModuleRunResult
+ids_allocated_from_filesystem: false        # injected EvidenceIdAllocatorPort
+numeric_or_ranking_scoring_added: false     # no antigen-density / molecules-per-cell / ABC / percent-positive / H-score cutoff, no invented ADC-effective density range, no ranking
+numeric_coercion_or_unit_conversion_of_a_raw_density_value: false  # E12 tightening 4 -- no float() / Decimal() / int(), no unit conversion / normalization / cross-assay rescaling
+single_observation_becomes_a_direction: false   # the classifier only rung-classes a direction-SUPPORTING observation; aggregate produces Direction x Strength over a completed audited landscape
+localization_grants_density_grading_authority: false  # a qualifying INDIRECT_STRONG localization observation is CONTEXTUAL; it never lifts the Gate-level Strength above UNKNOWN
+indirect_strong_becomes_a_proposed_strength: false   # legal pairs are exactly POSITIVE/DIRECT, NEGATIVE/DIRECT, CONFLICTING/DIRECT, INCONCLUSIVE/DIRECT, INCONCLUSIVE/UNKNOWN
+well_matched_model_becomes_a_fatal_contributor: false   # a WELL_MATCHED_CRC_MODEL observation may drive an ordinary DIRECT Direction but is NEVER a fatal_review contributor (E12-6)
+density_plausibility_computed_by_the_module: false   # consumed from density_plausibility_status + a typed basis; the fatal branch from surface_antigen_level -- never from a molecules-per-cell / % / ABC value
+reproducibility_basis_free_text_parsed: false   # Route A is reproducibility_status == QUALIFIED + a non-empty auditable basis; the basis text is never parsed (E12-6)
+route_b_is_more_than_two: false             # Route B is >= 2 independent qualified CRC malignant-cell surface-context identities, explicitly NOT "> 2" / ">= 3"
+proposes_a_fatal_flag_or_kill: false        # a TGT-04 NEGATIVE is a Gate-relative scientific density-plausibility judgement; fatal_review is at most POTENTIAL_FATAL_PATTERN
+cross_gate_conclusion_added: false          # no TGT-02 baseline-coverage substitution, no TGT-03 persistence conclusion, no TGT-06 internalization conclusion; the EVGAP-01 lock never discharges the density requirement
+not_established_treated_as_a_conflict_resolver: false   # only a typed declared multi-context density_plausibility_status MIXED_OR_UNRESOLVED characterisation covering all material contexts resolves CONFLICTING to a graded INCONCLUSIVE / DIRECT (E12 tightening 2)
+ontology_or_embedding_inference_added: false   # classification + fatal_review are exact field reads only
+new_scientific_or_ladder_semantics_added: false   # the frozen PR E11 contract + PR D TGT-04 ladder / ceiling / inference / fatal / unknown reproduced verbatim
+constructs_canonical_assessment_or_decision: false
+emits_public_fatal_signal_established: false
+touches_pr_a_contracts: false
+touches_pr_b_contracts: false
+touches_pr_c_contracts: false
+touches_pr_d_tgt04_science: false          # only the primary_module_version slot
+touches_e11_construction_contract_body: false
+mod_tgt01_modified: false
+mod_tgt02_modified: false
+mod_tgt03_modified: false
+mod_tgt05_modified: false
+mod_tgt08_modified: false
+generic_gatemodule_framework_or_base_class_added: false
+new_dependency_added: false                # still only PyYAML
+migration_pending_lifted: false            # six of eight primary Modules built (TGT-01, TGT-02, TGT-03, TGT-04, TGT-05, TGT-08); TGT-06 -> TGT-07 remain
+
+spec_refs:
+  - src/contracts/gate_modules/tgt04_tumor_surface_availability_density_plausibility.yaml (frozen PR E11 construction contract -- implemented verbatim)
+  - docs/gate_modules/TGT-04_Tumor_Surface_Availability_Density_Plausibility.md (the E11 drawing)
+  - src/contracts/crc_adc_target_gateset.yaml gate_contracts.TGT-04 (PR D -- gate_question / ladder / evidence_ceiling / allowed+forbidden inference / fatal_conditions / unknown_behavior / inference_guard inherited verbatim)
+  - gate_modules/tgt03_treatment_metastatic_persistence/ (PR E10 -- the 11-file deterministic-core precedent this package mirrors -- typed completion + 3 HARD invariants, machine-local fatal_review Route A / Route B, LOCAL evidence-context namespace, improved (source_id + claim + all-driving-facts + local-context) dedup, no normalizer)
+  - src/contracts/data_layout/evidence_package.schema.json / assessment.schema.json (PR A shapes the Module produces)
+  - src/contracts/evidence_reference.yaml (PR C reusable-EvidencePackage reference layer + provenance walk)
+
+scoping_decisions:  # ChatGPT AI审核方案, before code, E12-1..E12-8 (APPROVE-to-proceed, with the 4 required implementation tightenings captured below)
+  E12-1: >-
+    real deterministic MOD-TGT04 implementation (like E2 / E4 / E6 / E8 / E10, a
+    full Gate-specific scientific core). 11 files __init__ / module.yaml /
+    contracts / ports / classify / evidence / aggregate / completion /
+    fatal_review / acceptance / module -- completion.py and fatal_review.py are
+    their own small files. module_version 1.0.0; SurfaceAvailabilityCompletion is
+    a frozen dataclass -- a module-local run record, NOT a seventh core object.
+    acceptance.py executes item 13 machine acceptance + item 10 input / binding
+    invariants + item 11 EP integrity + item 12 proposal / fatal-review
+    structural boundary + item 16 completion-before-grade; it is NOT a 17-item
+    YAML parser (items 03-09 science lives in classify / aggregate / completion /
+    fatal; items 14 / 17 are human / downstream). minimal binding update (TGT-04
+    primary_module_version 0.0.0 -> 1.0.0; built_module_versions +
+    BUILT_MODULE_VERSIONS + gate_modules/README.md gain TGT-04; TGT-06 / TGT-07
+    stay 0.0.0); frozen E11 contract body untouched. run() is pure Python -- no
+    network / subprocess / filesystem-derived ids / repository writes / db /
+    cache / retrieval adapter / LLM / numeric coercion of a raw density value.
+    src/ never imports gate_modules/.
+  E12-2: >-
+    one normalized Tgt04SurfaceAvailabilityProviderPort (the package declares its
+    own EvidenceIdAllocatorPort / SourceResolverPort / ExistingEvidenceLibraryPort).
+    NO normalizer inside the package -- the provider outputs NORMALIZED UPSTREAM
+    FACTS: observation_id / target_identity / context_key / landscape_as_of /
+    observation_kind in {QUANTITATIVE_SURFACE_DENSITY, MEMBRANOUS_IHC,
+    SURFACE_PROTEOMICS, SUBCELLULAR_LOCALIZATION, TOPOLOGY_OR_GO_PREDICTION,
+    NON_CRC_SURFACE_EVIDENCE, RNA_SURFACE_PROXY, SEARCH_COMPLETION_AUDIT} /
+    molecular_layer / assay_method (an OPEN factual type) /
+    measurement_validation_status (CLOSED {QUALIFIED, NOT_ESTABLISHED}) + basis /
+    crc_specific / surface_context_class + basis / context_adequacy_status +
+    basis / malignant_cell_attribution + basis / surface_localization_status +
+    basis / density_plausibility_status + a typed basis ({SOURCE_REPORTED,
+    HUMAN_REVIEWED_NORMALIZATION}) / surface_antigen_level + basis /
+    reproducibility_status + basis / LOCAL surface_context_id(s) /
+    declared_multi_context_analysis / the OPAQUE raw reported_density_value /
+    reported_density_unit / reported_density_summary strings / claim / source
+    metadata / retrieved_at + the SEARCH_COMPLETION_AUDIT structured snapshot.
+    the provider NEVER emits a rung / direction / density-implication / fatal
+    trigger. basis hygiene = the E10 rule (QUALIFIED / MALIGNANT / asserted
+    localization / density / antigen-level / QUALIFIED reproducibility all require
+    a basis; a sentinel NOT_ESTABLISHED / UNRESOLVED may have none unless the
+    provider asserts a factual interpretation; a non-empty basis on a
+    NOT_ESTABLISHED state is drift).
+  E12-3: >-
+    deterministic rung classification via a local ClassifiedSurfaceObservation
+    {observation, evidence_rung, density_implication, admissible,
+    rejection_severity, rejection_reason}. DIRECT requires observation_kind ==
+    QUANTITATIVE_SURFACE_DENSITY + molecular_layer includes PROTEIN +
+    measurement_validation_status == QUALIFIED + auditable basis + a non-empty
+    factual assay_method + surface_context_class in {CRC_MALIGNANT_CELLS,
+    WELL_MATCHED_CRC_MODEL} + context_adequacy_status == QUALIFIED + auditable
+    surface_context_basis + context_adequacy_basis + malignant_cell_attribution
+    == MALIGNANT + auditable malignant_attribution_basis (tightening 1) -- plus a
+    factual-coherence HARD guard (a CRC / well-matched-model surface_context_class
+    requires crc_specific == true; crc_specific true itself never grants a rung).
+    INDIRECT_STRONG requires observation_kind in {MEMBRANOUS_IHC,
+    SURFACE_PROTEOMICS} + surface_context_class == CRC_MALIGNANT_CELLS ONLY
+    (never WELL_MATCHED_CRC_MODEL / NON_CRC_MODEL -- the "or well-matched CRC
+    models" ladder permission is DIRECT-only) + context_adequacy_status ==
+    QUALIFIED + auditable bases + malignant_cell_attribution == MALIGNANT +
+    basis + surface_localization_status == SURFACE_LOCALIZED. WEAK --
+    SUBCELLULAR_LOCALIZATION / TOPOLOGY_OR_GO_PREDICTION /
+    NON_CRC_SURFACE_EVIDENCE / RNA_SURFACE_PROXY, even with a pretty membranous
+    IHC on a non-CRC line. RNA_SURFACE_PROXY never becomes a surface-protein or
+    surface-density claim. density_direction_mapping (applied ONLY to a
+    qualifying DIRECT observation, in this order): surface_antigen_level ==
+    NEGLIGIBLE_OR_UNDETECTABLE -> OPPOSES_DENSITY_PLAUSIBILITY; else
+    density_plausibility_status == PLAUSIBLY_ADEQUATE -> SUPPORTS; else
+    density_plausibility_status == NOT_PLAUSIBLY_ADEQUATE -> OPPOSES; else
+    (MIXED_OR_UNRESOLVED / NOT_ESTABLISHED) -> CONTEXTUAL. a qualifying
+    INDIRECT_STRONG localization observation is CONTEXTUAL -- it NEVER carries a
+    directional density_implication. LOW_BUT_PRESENT alone decides nothing.
+    the Module never parses basis prose; a single observation is NEVER a
+    Direction.
+  E12-4: >-
+    deterministic aggregation -- the TGT-04-specific TWO-TIER / SINGLE-TIER
+    grading authority, written DIRECTLY (no generic highest-rung aggregator).
+    precedence -- 0. HARD integrity failure -> no proposal; 1. landscape
+    incomplete -> INCONCLUSIVE / UNKNOWN with zero evidence_refs; 2. complete but
+    audit invalid / missing -> HARD reject; 3. complete AND audited: if NO
+    qualifying DIRECT quantitative antigen-density observation -> INCONCLUSIVE /
+    UNKNOWN with zero evidence_refs (100 qualifying INDIRECT_STRONG + 0 DIRECT is
+    still INCONCLUSIVE / UNKNOWN -- localization never lifts the Strength above
+    UNKNOWN); else overall Strength = DIRECT and grade the Direction OVER THE
+    QUALIFYING DIRECT observations ONLY per the density_direction_mapping:
+    material SUPPORTS + material OPPOSES, no resolver -> CONFLICTING / DIRECT
+    UNLESS a qualifying DIRECT observation has declared_multi_context_analysis ==
+    true AND density_plausibility_status == MIXED_OR_UNRESOLVED AND an auditable
+    density_plausibility_basis AND surface_context_ids covering all material
+    SUPPORTING / OPPOSING surface-context identities -> INCONCLUSIVE / DIRECT
+    (tightening 2 -- NOT_ESTABLISHED is NOT a resolver; never semantic-parse
+    prose); else material OPPOSES only -> NEGATIVE / DIRECT; else material
+    SUPPORTS only -> POSITIVE / DIRECT; else -> INCONCLUSIVE / DIRECT.
+    legal pairs (frozen, exactly 5): POSITIVE / DIRECT, NEGATIVE / DIRECT,
+    CONFLICTING / DIRECT, INCONCLUSIVE / DIRECT, INCONCLUSIVE / UNKNOWN -- no
+    INDIRECT_STRONG proposed Strength, no INCONCLUSIVE / WEAK. a well-matched
+    CRC model DIRECT quantitative observation contributes an ordinary Direction
+    (all at Strength DIRECT) exactly like a CRC-malignant-cell one but NEVER a
+    fatal contribution.
+  E12-5: >-
+    one module-local typed SurfaceAvailabilityCompletion (frozen dataclass in
+    completion.py; NOT a seventh core object) with three HARD invariants.
+    (1) completeness consistency -- public_surface_search_complete MUST equal
+    all(four FLAT component booleans: quantitative_surface_density_search_complete
+    / membranous_ihc_search_complete / surface_proteomics_search_complete /
+    subcellular_localization_search_complete); a contradiction rejects the whole
+    run. a component searched / exhausted with zero qualifying records still
+    counts complete. (2) audit presence + snapshot parity -- an attempted
+    completion MUST be certified by EXACTLY ONE SEARCH_COMPLETION_AUDIT
+    observation whose observation_id == audit_observation_id and whose structured
+    snapshot (search_scope / sources_searched / landscape_as_of / the four
+    per-component states / unresolved_item keys /
+    qualifying_direct_surface_context_ids /
+    qualifying_indirect_surface_context_ids) matches the typed completion
+    field-for-field -- the snapshot field names ARE the typed completion field
+    names; no audit, two audits, drift, or a dedup-lost audit EP is a HARD
+    reject; attempted == False is a frozen strict-empty state (tightening 3).
+    (3) qualifying surface-context-set parity -- qualifying_direct_... /
+    qualifying_indirect_... MUST equal (as sets) the LOCAL surface-context
+    identities of the observations classified qualifying DIRECT / qualifying
+    INDIRECT_STRONG (evaluated ONLY over a completed landscape). the indirect set
+    is audit-integrity reconciliation ONLY -- it never grants grading authority.
+    unresolved_items is a small typed SurfaceUnresolvedItem(description, kind)
+    with kind in {KNOWN_PUBLIC_NOT_YET_RESOLVED -> PUBLIC_RESOLVABLE,
+    ACCESS_OR_ANNOTATION_BLOCKED -> CURRENTLY_UNRESOLVABLE} -- an internal type.
+  E12-6: >-
+    machine-local fatal_review review TRIGGER (FatalReviewRecord fields --
+    required / status / evidence_ids / surface_context_ids / antigen_level_class
+    / context_qualification_basis_refs / measurement_validation_basis_refs /
+    reproducibility_basis_refs / landscape_as_of / surface_search_scope). the
+    detector consumes ALREADY-CLASSIFIED evidence (no second qualification
+    engine) -- an eligible contributor is classified.evidence_rung == DIRECT AND
+    classified.density_implication == OPPOSES_DENSITY_PLAUSIBILITY AND
+    observation.surface_antigen_level == NEGLIGIBLE_OR_UNDETECTABLE AND
+    observation.surface_context_class == CRC_MALIGNANT_CELLS (a
+    WELL_MATCHED_CRC_MODEL observation is explicitly NOT eligible). by
+    construction an eligible contributor inherits quantitative-density kind +
+    measurement_validation_status QUALIFIED + a non-empty assay_method + a
+    QUALIFIED context adequacy + malignant attribution + an auditable
+    surface_antigen_level_basis -- the detector NEVER re-judges these.
+    required = true iff, on a COMPLETED audited landscape, Route A (one eligible
+    contributor with reproducibility_status == QUALIFIED AND a non-empty
+    reproducibility_basis -- the basis text is NEVER parsed) OR Route B (eligible
+    contributors span >= 2 independent qualified CRC MALIGNANT-CELL
+    surface-context identities -- NOT "> 2", NOT ">= 3"; 1 CRC + 1 model, or 2
+    model contexts, do NOT satisfy Route B). status single value
+    POTENTIAL_FATAL_PATTERN; a raw detector may compute internally but a
+    fatal_review is an actionable handoff ONLY on an accepted run; the machine
+    NEVER emits PUBLIC_FATAL_SIGNAL_ESTABLISHED / a canonical fatal flag / KILL /
+    HOLD / Decision. fatal_review is NOT on the proposal envelope. NO numeric /
+    molecules-per-cell / ABC / percent-positive / H-score / context-count
+    threshold; NO invented ADC-effective density range.
+  E12-7: >-
+    Gate-NEUTRAL EvidencePackage per observation (PR A shape) + exact canonical
+    reuse -- an observation already in the Evidence Library is reused as the
+    EXACT canonical object (no allocator call, no re-created body); provenance
+    comes from the resolved canonical SourceIndex record (unresolved id or
+    provider <-> canonical metadata conflict -> HARD reject). the
+    classification-driving reuse parity keys include observation_id /
+    target_identity + context binding / observation_kind / molecular_layer /
+    assay_method / measurement_validation_status + basis / crc_specific /
+    surface_context_class + basis / context_adequacy_status + basis /
+    malignant_cell_attribution + basis / surface_localization_status + basis /
+    density_plausibility_status + basis / surface_antigen_level + basis /
+    reproducibility_status + basis / surface_context_id(s) / context_key /
+    landscape_as_of, plus the audit snapshot fields for a SEARCH_COMPLETION_AUDIT
+    EP, plus -- for a QUANTITATIVE_SURFACE_DENSITY observation -- the raw
+    reported_density_value / reported_density_unit / reported_density_summary as
+    SYMMETRIC presence-and-value parity keys (present on one side only, or a
+    value / unit / summary difference, is a HARD failure; identical on both or
+    absent on both is compatible). a missing OR drifted field -> HARD. TGT-04
+    dedup -- the improved TGT-03 rule (NOT a blind (source_id, claim)).
+    observation_id is the authoritative observation identity (a duplicate
+    observation_id is a HARD run rejection, BEFORE any semantic dedup). a true
+    duplicate is dropped ONLY when source_id AND claim AND every
+    classification-driving fact AND the LOCAL surface-context identity all match;
+    any surface-context difference -> both survive; a SEARCH_COMPLETION_AUDIT EP
+    is never a dedup loser. machine acceptance = the E11 item-13 checklist as
+    executable checks. a HARD identity / provenance / completion-consistency /
+    classification-qualification failure rejects the WHOLE run
+    (proposal_envelope = None) -- NEVER degraded to an accepted UNKNOWN; a
+    genuinely incomplete public surface search -> INCONCLUSIVE / UNKNOWN is NOT
+    an integrity failure. narrow EXPERIMENT_REQUIRED (E8 / E10 precedence) --
+    while any unresolved public item remains, resolution stays PUBLIC_RESOLVABLE
+    / CURRENTLY_UNRESOLVABLE; only once the enumerated public source space is
+    exhausted does a localization-only completed landscape, or a WEAK-only
+    completed landscape, add EXPERIMENT_REQUIRED "a quantitative cell-surface
+    antigen density measurement on CRC malignant cells".
+  E12-8: >-
+    non-canonical AssessmentProposalEnvelope -- identity pins candidate_id /
+    instantiation_id / canonical context_id CTX-CRC-REFRACTORY-MCRC /
+    context_version 1 / gateset_id + version / gate_id + version, STRICTLY
+    separate from the LOCAL surface_context_id namespace (a LOCAL
+    surface_context_id equal to CTX-CRC-REFRACTORY-MCRC is a HARD
+    identity-namespace failure). the envelope carries proposed_direction +
+    proposed_strength (exactly one of the 5 legal pairs), evidence_refs
+    [{evidence_id, role}], aggregation_rationale, critical_unknowns,
+    evidence_ceiling, the machine acceptance record; NO assessment_id /
+    assessment_version / review / fatal flag / Decision / density threshold or
+    range. the Module never constructs a HUMAN_APPROVED CandidateGateAssessment.
+    binding / registry reconciliation is the minimal set -- TGT-04
+    primary_module_version 0.0.0 -> 1.0.0, built_module_versions /
+    BUILT_MODULE_VERSIONS gain TGT-04, gate_modules/README.md registers
+    MOD-TGT04, and the narrowest sync of hard-coded built-roster / package-
+    existence assertions in test_crc_adc_target_gateset.py (sample gate ->
+    TGT-06), test_gate_modules_boundary.py (Tgt04ModuleManifestTests),
+    test_tgt02/03/05/08_module*.py, and test_tgt04_module_construction_contract.py
+    (NoImplementationInPrE11Tests -> ContractIsFrozenAndImplementedInPrE12Tests;
+    all contract / science regression kept). MIGRATION_PENDING REMAINS (six of
+    eight primary Modules built; remaining order TGT-06 -> TGT-07).
+
+four_required_implementation_tightenings:  # ChatGPT AI审核方案 -- frozen in the code
+  - "1. DIRECT must explicitly require malignant-cell attribution -- malignant_cell_attribution == MALIGNANT + a non-empty auditable malignant_attribution_basis, for BOTH CRC_MALIGNANT_CELLS and WELL_MATCHED_CRC_MODEL. Plus a factual-coherence HARD guard: a CRC / well-matched-model surface_context_class requires crc_specific == true (crc_specific true itself never grants a rung)."
+  - "2. add declared_multi_context_analysis; the conflict resolver is fully typed -- SUPPORTS + OPPOSES -> CONFLICTING / DIRECT unless a qualifying DIRECT observation has declared_multi_context_analysis == true AND density_plausibility_status == MIXED_OR_UNRESOLVED AND an auditable density_plausibility_basis AND surface_context_ids covering all material contexts -> INCONCLUSIVE / DIRECT. NOT_ESTABLISHED is NOT a resolver; density_plausibility_basis / claim / reported_density_summary are never semantic-parsed."
+  - "3. SurfaceAvailabilityCompletion.attempted == False is a frozen strict-empty state -- no search_scope / sources_searched / qualifying context ids / audit_observation_id / component or umbrella flags. attempted == true requires search_scope, sources_searched, a valid audit_observation_id, exactly one normalized SEARCH_COMPLETION_AUDIT and exactly one emitted / reused provenance-bearing audit EP (complete OR incomplete). Qualifying-set parity is the final qualifying-set authority ONLY on a completed landscape."
+  - "4. raw density stays an opaque factual string inside the Module -- reported_density_value / reported_density_unit / reported_density_summary are str (empty = absent); NO float() / Decimal() / int(), NO unit conversion / normalization / cross-assay rescaling. The Module does only symmetric exact presence-and-value equality on reuse. Future density-unit normalization belongs to shared preprocessing, not TGT-04 Gate authority."
+
+three_headline_invariants:  # frozen at the top of contracts.py
+  - Surface localization is not antigen density. An INDIRECT_STRONG localization observation supports "the antigen is on the cell surface" but NEVER a Gate-level proposed Strength; a localization-only completed landscape is INCONCLUSIVE / UNKNOWN on the density question.
+  - Quantitative values are evidence, not thresholds. A raw reported_density_value / unit / summary is an opaque factual string and a symmetric exact-reuse identity key -- never coerced to a number, never compared to any threshold / cutoff / invented "clinically effective range". Density plausibility arrives only as an auditable upstream density_plausibility_status.
+  - A single quantitative NEGLIGIBLE_OR_UNDETECTABLE observation is a DIRECT-class OPPOSES observation, NOT yet a NEGATIVE / DIRECT proposal and NOT a reproducible fatal pattern; only a reproducible (Route A / Route B) quantitative NEGLIGIBLE_OR_UNDETECTABLE surface antigen on CRC MALIGNANT CELLS may surface POTENTIAL_FATAL_PATTERN; a well-matched CRC model observation may drive an ordinary DIRECT Direction but is NEVER a fatal contributor; LOW_BUT_PRESENT is never fatal; the Module never decides fatality or ADC efficacy or a KILL.
+
+delivers:
+  - gate_modules/tgt04_tumor_surface_availability_density_plausibility/ -- 11 files (__init__ / module.yaml / contracts / ports / classify / evidence / aggregate / completion / fatal_review / acceptance / module), the deterministic MOD-TGT04@1.0.0 Gate-specific scientific core
+  - tests/test_tgt04_module.py -- 71 synthetic in-memory tests (binding + boundary, rung classification incl. tightening 1, density_direction_mapping, the two-tier / single-tier grading authority incl. 100-INDIRECT_STRONG-zero-DIRECT -> INCONCLUSIVE / UNKNOWN and the typed multi-context conflict resolver, the three completion HARD invariants + strict-empty attempted state, fatal_review Route A / Route B with CRC malignant-cell only + the 1-CRC+1-model / 2-model exclusions + LOW_BUT_PRESENT never fatal, symmetric raw-density presence-and-value reuse parity either direction, the local surface-context namespace + improved dedup, the HARD integrity gate never degraded to an accepted UNKNOWN, the narrow EXPERIMENT_REQUIRED mapping, the accepted-run output surface)
+  - src/contracts/crc_adc_target_gateset.yaml + src/objects/crc_adc_target_gateset.py -- TGT-04 primary_module_version 0.0.0 -> 1.0.0; built_module_versions / BUILT_MODULE_VERSIONS gain TGT-04
+  - gate_modules/README.md -- MOD-TGT04 registered as built (PR E12)
+  - tests/test_gate_modules_boundary.py -- Tgt04ModuleManifestTests
+  - tests/test_tgt04_module_construction_contract.py -- NoImplementationInPrE11Tests -> ContractIsFrozenAndImplementedInPrE12Tests (all E11 contract / science regression kept)
+  - tests/test_crc_adc_target_gateset.py + tests/test_tgt02/03/05/08_module*.py -- narrowest sync of hard-coded built-roster / package-existence assertions
+  - manifests/runtime_migration_pr_e12_manifest.yaml -- this file
+  - docs/handoff/2026-08-31-runtime-migration-pr-e12.zh-CN.md -- the E12 handoff
+
+deferred:
+  - the other two TGT primary Modules (TGT-06 -> TGT-07) and the MIGRATION_PENDING lift once all eight are built
+  - connecting any retrieval provider or dataset (the injected ports stay Protocol-only)
+  - density-unit normalization / cross-assay rescaling (shared scientific preprocessing infrastructure, not TGT-04 Gate authority)
+
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  implementation_code_in_gate_modules: allowed
+  live_retrieval_execution_or_persistence_in_repository: forbidden
+  numeric_or_ranking_scoring: forbidden
+  antigen_density_cutoff_or_molecules_per_cell_or_abc_or_percent_positive_or_hscore_threshold: forbidden
+  invented_clinically_effective_antigen_density_range: forbidden
+  numeric_coercion_or_unit_conversion_of_a_raw_density_value: forbidden
+  generic_gatemodule_framework_or_base_class: forbidden
+  modifies_mod_tgt01_02_03_05_08: forbidden
+  modifies_frozen_e11_construction_contract_body: forbidden
+  migration_pending: remains
+
+chatgpt_review: pending
+approved_tip: null
+merge_commit: null
+review_rounds: 0
+test_count_before_e12: 1450       # at PR E11 approval
+test_count_at_submission: 1526    # local full suite (tests/test_tgt04_module.py 71 + Tgt04ModuleManifestTests 5 + reconciliation / registry synch)
+approval_record_pr: null
+next_authorized_step: null        # PR = MOD-TGT06 -- needs its own go-ahead
+
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt04_module.py' -v
+  - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'
+  - bash scripts/verify_repository_boundary.sh
+  - git diff --check
+
+artifacts:
+  - gate_modules/tgt04_tumor_surface_availability_density_plausibility/
+  - tests/test_tgt04_module.py
+  - src/contracts/crc_adc_target_gateset.yaml
+  - src/objects/crc_adc_target_gateset.py
+  - gate_modules/README.md
+  - tests/test_gate_modules_boundary.py
+  - tests/test_tgt04_module_construction_contract.py
+  - tests/test_crc_adc_target_gateset.py
+  - tests/test_tgt02_module_construction_contract.py
+  - tests/test_tgt03_module.py
+  - tests/test_tgt03_module_construction_contract.py
+  - tests/test_tgt05_module.py
+  - tests/test_tgt05_module_construction_contract.py
+  - tests/test_tgt08_module.py
+  - tests/test_tgt08_module_construction_contract.py
+  - manifests/runtime_migration_pr_e12_manifest.yaml
+  - docs/handoff/2026-08-31-runtime-migration-pr-e12.zh-CN.md

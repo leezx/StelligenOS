@@ -54,10 +54,11 @@ Python 包，把「一个 Gate 的施工合同」翻译成确定性可执行代�
 | [`MOD-TGT01`](./tgt01_adc_modality_precedent/) | TGT-01 ADC Modality Precedent | `ADC_TARGET_GATESET@1.0` | `1.0.0` | built (PR E2) |
 | [`MOD-TGT02`](./tgt02_indication_specific_malignant_cell_coverage/) | TGT-02 Indication-Specific Malignant-Cell Coverage | `ADC_TARGET_GATESET@1.0` | `1.0.0` | built (PR E8) |
 | [`MOD-TGT03`](./tgt03_treatment_metastatic_persistence/) | TGT-03 Treatment / Metastatic Persistence | `ADC_TARGET_GATESET@1.0` | `1.0.0` | built (PR E10) |
+| [`MOD-TGT04`](./tgt04_tumor_surface_availability_density_plausibility/) | TGT-04 Tumor Surface Availability / Density Plausibility | `ADC_TARGET_GATESET@1.0` | `1.0.0` | built (PR E12) |
 | [`MOD-TGT05`](./tgt05_normal_tissue_fatal_liability/) | TGT-05 Normal-Tissue Fatal Liability | `ADC_TARGET_GATESET@1.0` | `1.0.0` | built (PR E4) |
 | [`MOD-TGT08`](./tgt08_target_opportunity_competition_ip_whitespace/) | TGT-08 Target Opportunity / Competition / IP Whitespace | `ADC_TARGET_GATESET@1.0` | `1.0.0` | built (PR E6) |
 
-其余三个 TGT primary Module（TGT-04 → TGT-06 → TGT-07）属
+其余两个 TGT primary Module（TGT-06 → TGT-07）属后续
 PR E-series，`primary_module_version` 仍为 `0.0.0`。
 
 ## MIGRATION_PENDING

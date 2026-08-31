@@ -6115,3 +6115,93 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   仍 `0.0.0`，PR E12 才 bump 到 `1.0.0`。`MIGRATION_PENDING` 保持。剩余
   TGT-06 → TGT-07。
 - Next：PR E12 = MOD-TGT04@1.0.0 deterministic implementation，需各自 go-ahead。
+
+## Runtime Migration PR E12 —— MOD-TGT04@1.0.0 实现
+
+- 授权：用户在 PR E11 收口后 "go ahead"。开工前 ChatGPT `AI审核方案` 给
+  **APPROVE-to-proceed**（E12-1…E12-8）+ **4 个 required implementation
+  tightening**（都不改 E11 science）：
+  1. DIRECT 必须显式要求 `malignant_cell_attribution == MALIGNANT` + auditable
+     basis（对 CRC_MALIGNANT_CELLS 与 WELL_MATCHED_CRC_MODEL 都适用）+
+     factual-coherence HARD guard（CRC / model surface_context_class 要求
+     `crc_specific == true`）；
+  2. 增加 `declared_multi_context_analysis`，conflict resolver 完全 typed
+     （`NOT_ESTABLISHED` 不是 resolver；不 semantic-parse prose）；
+  3. `SurfaceAvailabilityCompletion.attempted == False` 冻结为严格空状态；
+  4. raw density 在 Module 内保持 opaque factual string —— 只做对称 identity
+     parity，绝不 numeric coercion / unit conversion。
+- 实现 `RUNTIME_IMPL_ADD`：`gate_modules/tgt04_tumor_surface_availability_density_plausibility/`
+  11 文件（`__init__` / `module.yaml` / `contracts` / `ports` / `classify` /
+  `evidence` / `aggregate` / `completion` / `fatal_review` / `acceptance` /
+  `module`）。`run()` 纯 Python 只调 injected port。
+  - **contracts.py**：3 条 headline invariant 置顶；`NormalizedSurfaceObservation`
+    （normalized upstream facts；8 个 observation kind；`assay_method` OPEN，
+    `measurement_validation_status` CLOSED；`surface_context_class` /
+    `context_adequacy_status` / `malignant_cell_attribution` /
+    `surface_localization_status` / `density_plausibility_status`（+ typed basis）
+    / `surface_antigen_level` / `reproducibility_status` 各 + basis；LOCAL
+    `surface_context_id(s)` + `declared_multi_context_analysis`；OPAQUE raw
+    `reported_density_value` / `_unit` / `_summary`；basis hygiene 双向一致；
+    factual-coherence guard）；`ClassifiedSurfaceObservation`（qualifying
+    INDIRECT_STRONG 永不带 directional density_implication）；`FatalReviewRecord`
+    （Route A OR Route B）；`AssessmentProposalEnvelope`（canonical context_id pin，
+    5 个 legal pair，无 INDIRECT_STRONG proposed Strength）；`Tgt04ModuleRunResult`；
+    `density_implication()`。
+  - **completion.py**：`SurfaceAvailabilityCompletion`（frozen dataclass，4 个
+    FLAT component boolean）+ 3 个 HARD invariant（completeness consistency /
+    audit presence + snapshot parity（两组 qualifying context set）/ qualifying
+    surface-context-set parity）；`attempted == False` 严格空状态；
+    `SurfaceUnresolvedItem`。
+  - **classify.py**：DIRECT 只给 `QUANTITATIVE_SURFACE_DENSITY` +
+    `measurement_validation_status == QUALIFIED` + 非空 `assay_method` +
+    `{CRC_MALIGNANT_CELLS, WELL_MATCHED_CRC_MODEL}` + QUALIFIED context +
+    `malignant_cell_attribution == MALIGNANT`；INDIRECT_STRONG 只给
+    `MEMBRANOUS_IHC` / `SURFACE_PROTEOMICS` on `CRC_MALIGNANT_CELLS` +
+    `SURFACE_LOCALIZED`（well-matched model localization → CONTEXTUAL）；WEAK 给
+    subcellular / topology / non-CRC / RNA-proxy；density_direction_mapping 严格按序。
+  - **aggregate.py**：**直接写死 TWO-TIER / SINGLE-TIER grading authority** ——
+    无 qualifying DIRECT → INCONCLUSIVE / UNKNOWN（100 INDIRECT_STRONG + 0 DIRECT
+    仍 UNKNOWN）；有 qualifying DIRECT → Strength = DIRECT，只在 qualifying DIRECT
+    集合上定方向；typed multi-context MIXED resolver → INCONCLUSIVE / DIRECT；
+    5 个 legal pair。
+  - **fatal_review.py**：eligible = classified DIRECT + OPPOSES +
+    `NEGLIGIBLE_OR_UNDETECTABLE` + `CRC_MALIGNANT_CELLS`（model 明确不 eligible）；
+    Route A / Route B（`>= 2` CRC malignant-cell surface-context identity）；
+    detector 不重判 classifier authority。
+  - **evidence.py**：Gate-neutral PR A EP + exact canonical reuse；raw density 三
+    字段是对称 presence-and-value parity key；改进 TGT-03 dedup；audit EP 永不
+    dedup loser。
+  - **acceptance.py**：E11 item 13/10/11/12/16 可执行检查；禁止 item-17 跨 Gate /
+    Decision 输出；`proposed_strength == DIRECT` iff 有 qualifying DIRECT；
+    localization 永不授予 grading authority；fatal contributor 全 CRC malignant-cell。
+  - **module.py**：pure `run()`；重复 `observation_id` 在 dedup 之前 HARD；LOCAL
+    id == canonical `context_id` HARD；qualifying 观测无 local id HARD。
+  - **ports.py / module.yaml / __init__.py**：Protocol-only；无 normalizer。
+- binding / registry 协调（最小集）：TGT-04 `primary_module_version`
+  `0.0.0 → 1.0.0`；`built_module_versions` / `BUILT_MODULE_VERSIONS` 加 TGT-04；
+  `gate_modules/README.md` 注册 MOD-TGT04（PR E12）；
+  `tests/test_crc_adc_target_gateset.py` sample gate → TGT-06；
+  `tests/test_gate_modules_boundary.py` 加 `Tgt04ModuleManifestTests`；
+  `tests/test_tgt02/03/05/08_module*.py` 最窄 built-roster 同步；
+  `tests/test_tgt04_module_construction_contract.py` `NoImplementationInPrE11Tests`
+  → `ContractIsFrozenAndImplementedInPrE12Tests`（保留全部 contract / science
+  regression）。`MIGRATION_PENDING` 保持（6 / 8 primary Module 建成）。
+- 新增 `tests/test_tgt04_module.py` —— **71 tests**（binding + boundary、rung
+  分类含 tightening 1、density_direction_mapping、TWO-TIER / SINGLE-TIER grading
+  authority 含 100-IS-零-DIRECT 与 typed multi-context conflict resolver、
+  completion 3 个 HARD invariant + strict-empty attempted、fatal_review Route A /
+  Route B 含 CRC malignant-cell only 与 1-CRC+1-model / 2-model 排除与
+  LOW_BUT_PRESENT 永不 fatal、对称 raw-density reuse parity 双向、LOCAL namespace
+  + 改进 dedup、HARD integrity gate 永不降级为 accepted UNKNOWN、narrow
+  EXPERIMENT_REQUIRED、accepted-run 输出面）。
+- 新增 `manifests/runtime_migration_pr_e12_manifest.yaml`、
+  `docs/handoff/2026-08-31-runtime-migration-pr-e12.zh-CN.md`。
+- 验证：`tests/test_tgt04_module.py` **71 OK**；
+  `tests/test_tgt04_module_construction_contract.py` **71 OK**（迁移后）；全量
+  **1526 OK**（E11 收口 1450）；`bash scripts/verify_repository_boundary.sh` 只报
+  既有 untracked 杂项；`git diff --check` clean；YAML 合法且无
+  list-element-parsed-as-dict；`src/` 不 import `gate_modules/`；包内无
+  `float(reported_density_*)` / `Decimal` / `int` coercion。
+- 状态：8 个 primary Module 施工合同已 APPROVE 6 个（TGT-01/02/03/04/05/08），已
+  实现 **6 个**。TGT-06 → TGT-07 属后续 PR。`MIGRATION_PENDING` 保持。
+- Next：开 PR、CI 绿后回 `AI审核方案` 贴 E12 review 请求。
