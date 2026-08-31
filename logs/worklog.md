@@ -6754,3 +6754,29 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   MIGRATION_PENDING、其它 Module 不重构、binding reconciliation APPROVE。
 - 本地全量 unittest：1712 OK（1702 → +10 regression）。
 - Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-2 回复。
+
+### PR E14 · ChatGPT `AI审核方案` review round 2 → REQUEST_CHANGES（round-1 Blocker 1/2 CLOSED + 1 residual blocker，CLOSED）
+
+- Verdict：**REQUEST_CHANGES**，anchor HEAD `44ad6da`；exact-head CI run
+  33441561489 python 3.11 / 3.12 success。Round-1 的 Blocker 1（classifier
+  authority）与 Blocker 2（EvidenceRole mapping）已判定 CLOSED。
+- Residual blocker —— third-state NON_CRC exception 仍过宽：constructor 的
+  NON_CRC 第三态 exception 用 `_DIRECT_QUALITY_FAILURE_KINDS`（含
+  `TRAFFICKING_OR_RECYCLING_ONLY`），于是 `NON_CRC_CONTEXT` +
+  `TRAFFICKING_OR_RECYCLING_ONLY` + 无 config id 仍被接受。frozen E13 的 exception
+  只覆盖「non-CRC **antibody-induced internalization** observation whose source
+  does not identify the tested configuration」——
+  `TRAFFICKING_OR_RECYCLING_ONLY` 按定义不是 antibody-induced internalization
+  observation。→ 新增
+  `_THIRD_STATE_NON_CRC_EXCEPTION_KINDS = (ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING,
+  ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY)`，NON_CRC exception 改用它。
+  `NON_CRC_CONTEXT` + `TRAFFICKING_OR_RECYCLING_ONLY` 无 disclosed identity →
+  HARD ValueError。加 regression；`NON_CRC ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY`
+  undisclosed-config 路径保持 valid。
+- 触及文件：contracts.py / tests/test_tgt06_module.py / manifest / worklog
+  （one-line authority narrowing + one regression，无重构）。
+- 本轮 ChatGPT 明确 CLOSED、不要改：classifier authority fix、EvidenceRole
+  mapping、completion / fatal / evidence / binding、Direction science / frozen
+  evaluation order、E13 / PR D。
+- 本地全量 unittest：1713 OK（1712 → +1 regression）。
+- Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-3 回复。

@@ -1247,12 +1247,22 @@ class ReviewRound1RegressionTests(unittest.TestCase):
             self.assertEqual(o.configuration_identity_state,
                              "IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE", kind)
 
-    def test_third_state_valid_for_non_crc_undisclosed_configuration(self):
+    def test_third_state_valid_for_non_crc_undisclosed_antibody_induced_internalization(self):
         o = _kindful("ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY",
                      context="NON_CRC_CONTEXT", config_id="",
                      outcome="INTERNALIZATION_OBSERVED_LYSOSOMAL_DELIVERY_UNRESOLVED")
         self.assertEqual(o.configuration_identity_state,
                          "IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE")
+
+    def test_non_crc_trafficking_only_without_config_is_hard(self):
+        # the third-state NON_CRC exception is only for an ANTIBODY-INDUCED
+        # internalization observation -- a TRAFFICKING_OR_RECYCLING_ONLY
+        # observation is not one, so it must still disclose its configuration
+        # (E14 review round-2 residual blocker).
+        with self.assertRaises(ValueError):
+            _kindful("TRAFFICKING_OR_RECYCLING_ONLY", context="NON_CRC_CONTEXT",
+                     config_id="",
+                     outcome="INTERNALIZATION_OBSERVED_LYSOSOMAL_DELIVERY_UNRESOLVED")
 
     def test_disease_relevant_delivery_unresolved_without_config_is_hard(self):
         with self.assertRaises(ValueError):

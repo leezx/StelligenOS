@@ -137,6 +137,16 @@ _THIRD_STATE_ALWAYS_ALLOWED_KINDS: Final[tuple[str, ...]] = (
     "SURFACE_LOCALIZATION_ONLY_INFERENCE",
     "SEARCH_COMPLETION_AUDIT",
 )
+#: The ONLY kinds that also get the third state in a NON_CRC_CONTEXT -- E13's
+#: frozen exception is "a non-CRC ANTIBODY-INDUCED INTERNALIZATION observation
+#: whose source does not identify the tested configuration". A
+#: TRAFFICKING_OR_RECYCLING_ONLY observation is by definition NOT an
+#: antibody-induced internalization observation, so it never gets the exception
+#: (E14 review round-2 residual blocker).
+_THIRD_STATE_NON_CRC_EXCEPTION_KINDS: Final[tuple[str, ...]] = (
+    "ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING",
+    "ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY",
+)
 #: The frozen INDIRECT_STRONG classes -- all positive addressability support.
 _INDIRECT_STRONG_KINDS: Final[tuple[str, ...]] = (
     "CONSTITUTIVE_ENDOCYTOSIS_OR_RECEPTOR_BIOLOGY",
@@ -478,18 +488,20 @@ class NormalizedInternalizationObservation:
         #     (E14 review round-1 blocker 3). The third state is NOT a generic
         #     fallback for every observation that merely fell short of DIRECT --
         #     it is a normalized factual shape invariant. It is valid for the
-        #     five frozen non-configuration ladder kinds, OR for an internalization
-        #     / trafficking family kind ONLY when the context is NON_CRC_CONTEXT
-        #     (a non-CRC antibody-induced internalization observation whose source
-        #     does not disclose the configuration). A family kind in a
-        #     disease-relevant / unresolved / unspecified context MUST disclose a
-        #     SINGLE or IDENTIFIED_MULTI configuration identity.
+        #     five frozen non-configuration ladder kinds, OR for a non-CRC
+        #     ANTIBODY-INDUCED INTERNALIZATION observation (the integrated or the
+        #     internalization-only kind) whose source does not disclose the tested
+        #     configuration. A TRAFFICKING_OR_RECYCLING_ONLY observation is NOT an
+        #     antibody-induced internalization observation, so it never gets the
+        #     exception; and any family kind in a disease-relevant / unresolved /
+        #     unspecified context MUST disclose a SINGLE or IDENTIFIED_MULTI
+        #     configuration identity (E14 review round-1 blocker 3 + round-2 residual).
         if (
             not cid
             and not cids
             and kind not in _THIRD_STATE_ALWAYS_ALLOWED_KINDS
             and not (
-                kind in _DIRECT_QUALITY_FAILURE_KINDS
+                kind in _THIRD_STATE_NON_CRC_EXCEPTION_KINDS
                 and self.surface_context_class == "NON_CRC_CONTEXT"
             )
         ):
@@ -499,8 +511,9 @@ class NormalizedInternalizationObservation:
                 "SAME_TARGET_ADC_DELIVERY_PRECEDENT / "
                 "RECEPTOR_FAMILY_MEMBERSHIP_INFERENCE / "
                 "SURFACE_LOCALIZATION_ONLY_INFERENCE / SEARCH_COMPLETION_AUDIT "
-                "observation, or a NON_CRC_CONTEXT internalization / trafficking "
-                "observation whose source does not disclose the configuration; a "
+                "observation, or a NON_CRC_CONTEXT antibody-induced internalization "
+                "observation (ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING / "
+                "_ONLY) whose source does not disclose the configuration; a "
                 f"{kind!r} observation in surface_context_class "
                 f"{self.surface_context_class!r} must disclose a SINGLE or "
                 "IDENTIFIED_MULTI configuration identity"
