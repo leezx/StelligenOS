@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_e12
-status: pending_review
+status: approved
 scope: mod_tgt04_deterministic_scientific_core_implementation_plus_narrow_binding_reconciliation
 repository_boundary: software_only_external_data
 
@@ -315,16 +315,52 @@ repository_policy:
   modifies_frozen_e11_construction_contract_body: forbidden
   migration_pending: remains
 
-chatgpt_review: pending
-approved_tip: null
-merge_commit: null
-review_rounds: 2
+chatgpt_review: APPROVE
+approved_tip: 14fba32f85cc7f8d05ff447294b98a72123f0014   # review round 3 anchor HEAD
+merge_commit: f09ab3d3822cca2c2a95f055f07eb683919c9be0   # Merge pull request #128 from leezx/task_20260831_runtime-migration-pr-e12
+review_rounds: 3
 test_count_before_e12: 1450       # at PR E11 approval
 test_count_at_submission: 1526    # local full suite (tests/test_tgt04_module.py 71 + Tgt04ModuleManifestTests 5 + reconciliation / registry synch)
 test_count_after_round_1: 1532    # +6 review-round-1 regression tests (tests/test_tgt04_module.py 77)
 test_count_after_round_2: 1538    # +6 review-round-2 integrity regression tests (tests/test_tgt04_module.py 83)
-approval_record_pr: null
-next_authorized_step: null        # PR = MOD-TGT06 -- needs its own go-ahead
+test_count_at_approval: 1538      # unchanged at round 3 (APPROVE, no code change)
+approval_record_pr: task_20260831_runtime-migration-pr-e12-approval-record   # docs-only PR carrying this manifest -> approved + the full ChatGPT review record
+next_authorized_step: null        # PR E13 = TGT-06 construction contract -- needs its own go-ahead
+
+review_round_3:
+  verdict: APPROVE
+  reviewer: ChatGPT AI审核方案
+  head_reviewed: 14fba32f85cc7f8d05ff447294b98a72123f0014
+  ci_confirmed: run 33418240815 -- verify (3.11) + verify (3.12) both success; unit tests + repository boundary + no-bytecode + working-tree checks all pass
+  summary: >-
+    round-2's three residual integrity blockers all CLOSED. raw-density
+    acceptance redaction now processes raw strings longest-first (summary
+    removed whole before any shorter value / unit fragment) -- the "12000
+    molecules per cell below assay detection threshold" regression is accepted
+    POSITIVE / DIRECT. canonical reuse for raw density is now true opaque-string
+    exact parity -- a non-str canonical value is HARD; no str() coercion, no
+    strip() normalization; a missing key and "" both mean absent. duplicate
+    observation_id is now preflighted BEFORE build_evidence_packages() -- on a
+    hit there is no source resolution, no semantic dedup, no EP construction,
+    no Evidence ID allocation (regression locks allocator.calls == 0, no
+    emitted / reused EP, proposal_envelope is None). E12 frozen semantics
+    confirmed consistent -- two-tier evidence / single-tier grading;
+    localization-only -> INCONCLUSIVE / UNKNOWN; DIRECT requires quantitative
+    protein + qualified context + MALIGNANT attribution; well-matched model may
+    drive an ordinary DIRECT Direction but never enters fatal; the conflict
+    resolver only accepts a genuinely classified-CONTEXTUAL typed multi-context
+    characterization; fatal Route A / Route B stays CRC malignant-cell only;
+    raw density is evidence, not a threshold; exact reuse / dedup / completion
+    audit authority all closed; TGT-04 binding = 1.0.0; 6 of 8 primary Modules
+    implemented; MIGRATION_PENDING remains.
+  blockers: []
+  non_blocking_housekeeping: >-
+    PR #128 body still shows 71 / 1526 (submission-time counts); the actual
+    close-out is 83 TGT-04 tests / 1538 full-suite tests. ChatGPT judged this
+    not worth another review round; the correct counts are recorded here and in
+    logs/chatgpt-review-2026-08-31-runtime-migration-pr-e12.md.
+  github_connector: 403 Resource not accessible by integration (every round) -- GitHub formal review state never written; the AI审核方案 conversation is authoritative
+  conclusion: APPROVE -- PR E12 may merge. Next is TGT-06 construction contract / PR E13.
 
 review_round_2:
   verdict: REQUEST_CHANGES
