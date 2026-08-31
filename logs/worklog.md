@@ -6780,3 +6780,50 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   evaluation order、E13 / PR D。
 - 本地全量 unittest：1713 OK（1712 → +1 regression）。
 - Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-3 回复。
+
+### PR E14 · ChatGPT `AI审核方案` review round 3 → APPROVE @ `7b87a58`
+
+- Verdict：**APPROVE**，anchor HEAD `7b87a58`；exact-head CI run 33444465000
+  python 3.11 / 3.12 success。round-2 的唯一 residual blocker 已关闭
+  （`_THIRD_STATE_NON_CRC_EXCEPTION_KINDS` 严格只有
+  `ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING` 与
+  `ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY`；`TRAFFICKING_OR_RECYCLING_ONLY`
+  + `NON_CRC_CONTEXT` + no config 不再进入 third state；regression 已锁；non-CRC
+  antibody-induced internalization 未披露 configuration 的合法路径保留）。round-1
+  的 classifier authority over-expansion 与 proposal-relative EvidenceRole
+  mapping 两个 blocker 保持 CLOSED。
+- E14 最终冻结状态：11-file deterministic core；single classifier authority
+  （三种 DIRECT-quality failure kind → DIRECT + OPPOSES）；hardcoded 7-step
+  `frozen_evaluation_order`；唯一 `configuration_identity_projection`；6 legal
+  pair；v1 无 machine conflict resolver；`InternalizationEvidenceCompletion`
+  四轴 + exact audit identity + UNION-of-projection
+  `qualifying_direct_configuration_ids`（无 `qualifying_indirect` set）；
+  fatal_review global precondition + Route A / Route B；duplicate
+  `observation_id` preflight；无 raw-value parity branch；proposal-relative
+  EvidenceRole mapping；三态 configuration identity + NON_CRC exception 仅两种
+  antibody-induced internalization kind；MOD-TGT06 `1.0.0`；`MIGRATION_PENDING`
+  保持。
+- 三轮：Round 1 —— 3 窄 runtime blocker → CLOSED；Round 2 —— round-1 2/3 CLOSED
+  + 1 residual → CLOSED；Round 3 —— APPROVE，无新 blocker。tests 67 → 78；
+  本地全量 1702 → 1713。
+- GitHub connector 每轮 `403 Resource not accessible by integration`，GitHub
+  formal review state 未回写；`AI审核方案` 对话结论 authoritative。
+
+### PR E14 · merge + 独立审核记录 PR
+
+- PR #132 `task_20260831_runtime-migration-pr-e14` 于 `2026-08-31` 以 `--merge`
+  合入 `main`，merge 提交 `d65a5a7`。
+- 独立 docs-only PR `task_20260831_runtime-migration-pr-e14-approval-record`
+  （按 PR #95 … #131 先例）补登：
+  - `logs/chatgpt-review-2026-08-31-runtime-migration-pr-e14.md` —— 3 轮完整审核
+    记录（scoping E14-1…E14-8、6 required tightenings、frozen EvidenceRole
+    mapping、round 1/2/3 往返、merge）。
+  - `manifests/runtime_migration_pr_e14_manifest.yaml` → `status: approved` /
+    `chatgpt_review: APPROVE` / `approved_tip: 7b87a58…` / `merge_commit:
+    d65a5a7` / `review_rounds: 3` / `test_count_at_approval: 1713` /
+    `approval_record_pr` / `review_round_3` block。
+  - 不改 PR E14 的 package、测试或 handoff 内容。
+- 状态：8 个 primary Module 施工合同已 APPROVE **7 个**；**已实现 7 个**
+  （TGT-01/02/03/04/05/06/08 @ 1.0.0）。`MIGRATION_PENDING` 保持。
+- Next：fatal-first 余下 **TGT-07**：PR E15 = 施工合同（需独立 go-ahead），
+  PR E16 = 实现。8 个 primary Module 全部建成后才解除 `MIGRATION_PENDING`。

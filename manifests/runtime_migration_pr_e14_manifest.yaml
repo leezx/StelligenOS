@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_e14
-status: submitted_for_review
+status: approved
 scope: mod_tgt06_deterministic_scientific_core_implementation_plus_narrow_binding_reconciliation
 repository_boundary: software_only_external_data
 
@@ -194,15 +194,16 @@ repository_policy:
   modifies_mod_tgt08: forbidden
   migration_pending: remains
 
-chatgpt_review: PENDING
-approved_tip: null
-merge_commit: null
-review_rounds: 2
+chatgpt_review: APPROVE
+approved_tip: 7b87a58ada9f696536fc702486d62900de122027   # review round-3 anchor HEAD
+merge_commit: d65a5a7   # Merge pull request #132 from leezx/task_20260831_runtime-migration-pr-e14
+review_rounds: 3
 test_count_at_submission: 1702    # local full suite (unittest discover)
 test_count_after_round_1: 1712    # +10 review round-1 regressions
 test_count_after_round_2: 1713    # +1 review round-2 residual regression
-approval_record_pr: null
-next_authorized_step: null        # PR E15 = TGT-07 construction contract -- needs its own go-ahead
+test_count_at_approval: 1713      # unchanged at round 3 (APPROVE, no code change)
+approval_record_pr: task_20260831_runtime-migration-pr-e14-approval-record   # docs-only PR carrying this manifest -> approved + the full 3-round ChatGPT review record
+next_authorized_step: null        # PR E15 = TGT-07 construction contract -- needs its own go-ahead (last primary Module before MIGRATION_PENDING can lift)
 
 review_round_2:  # ChatGPT AI审核方案 -- REQUEST_CHANGES, 1 residual blocker, CLOSED
   verdict: REQUEST_CHANGES
@@ -293,3 +294,22 @@ review_round_1:  # ChatGPT AI审核方案 -- REQUEST_CHANGES, 3 narrow runtime b
     fatal productive-DIRECT cancellation; Route A; Route B; TGT-06 binding 1.0.0;
     7/8 built; MIGRATION_PENDING remains; other Modules not refactored; binding
     reconciliation APPROVE.
+
+review_round_3:  # ChatGPT AI审核方案 -- APPROVE
+  verdict: APPROVE
+  anchor_head: 7b87a58ada9f696536fc702486d62900de122027
+  ci: exact-head run 33444465000 success (python 3.11 + 3.12)
+  round_2_residual: CLOSED
+  note: >-
+    _THIRD_STATE_NON_CRC_EXCEPTION_KINDS is strictly
+    (ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING,
+    ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY); the constructor uses this narrow
+    tuple so TRAFFICKING_OR_RECYCLING_ONLY + NON_CRC_CONTEXT + no config can no
+    longer enter the third state; the new regression locks it; the non-CRC
+    antibody-induced internalization undisclosed-configuration path is preserved.
+    Round-1's classifier-authority and EvidenceRole-mapping fixes stay CLOSED.
+  merge_commit: d65a5a7   # Merge pull request #132 from leezx/task_20260831_runtime-migration-pr-e14
+  post_merge_state: >-
+    7 of 8 primary Modules implemented (TGT-01/02/03/04/05/06/08 @ 1.0.0);
+    MIGRATION_PENDING remains; the last one is TGT-07 (construction contract ->
+    implementation), which needs its own go-ahead.
