@@ -6660,3 +6660,55 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   `primary_module_version` 仍 `0.0.0`。`MIGRATION_PENDING` 保持。
 - Next：PR E14 = MOD-TGT06@1.0.0 deterministic implementation，需独立 go-ahead。
   fatal-first 余下 TGT-07（施工合同 + 实现）。
+
+## Runtime Migration PR E14 · MOD-TGT06@1.0.0 deterministic implementation
+
+- 分支 `task_20260831_runtime-migration-pr-e14`，基线 `origin/main` @ `aa80865`
+  （PR E13 施工合同四轮 APPROVE 收口 + approval record 之后）。
+- 授权：用户在 PR E13 收口后 "go on"；开工前 ChatGPT `AI审核方案` 给出
+  **APPROVE-to-proceed**，把 E14 冻结为 **MOD-TGT06@1.0.0 deterministic
+  implementation**，与冻结的 E13 contract 一致，并要求写码前再冻结 **6 个
+  required implementation tightenings**（只消除 runtime discretion，不改 E13
+  science）+ frozen proposal evidence-role mapping。见
+  `manifests/runtime_migration_pr_e14_manifest.yaml`
+  `scoping_decisions` / `six_required_implementation_tightenings` /
+  `frozen_proposal_evidence_role_mapping`（逐字）。
+- 交付：
+  - `gate_modules/tgt06_internalization_trafficking_addressability/` —— 11 文件
+    确定性科学核心。`run()` 纯 Python，只调 injected port。`classify.py` 是
+    单一分类权威：三种 DIRECT-quality failure kind 统一 `DIRECT` +
+    `OPPOSES_ADDRESSABILITY`；`aggregate.py` 直接硬编码 7 步
+    `frozen_evaluation_order`（stop-at-first-match）+ 唯一
+    `configuration_identity_projection` helper + 6 legal pair + v1 无 machine
+    conflict resolver + frozen evidence-role mapping；`completion.py`
+    `InternalizationEvidenceCompletion`（4 flat component booleans、3 HARD
+    invariant、`attempted==False` strict-empty、仅
+    `qualifying_direct_configuration_ids`）；`fatal_review.py` global
+    precondition（任一 productive DIRECT 取消）+ Route A / Route B
+    （two-distinct-observations；单个 `IDENTIFIED_MULTI` 不满足 Route B）；
+    `evidence.py` exact reuse + improved TGT-03 dedup + duplicate
+    `observation_id` preflight（在任何 allocation / source resolution /
+    semantic dedup / EP 构造之前）+ 无 raw-value parity branch；`acceptance.py`
+    可执行 item-13 检查，no-numeric-threshold 只扫 Module-owned text。
+  - `tests/test_tgt06_module.py` —— 67 条 synthetic in-memory 测试。
+  - binding 窄修：`src/contracts/crc_adc_target_gateset.yaml`
+    （TGT-06 `primary_module_version` `0.0.0 → 1.0.0`；`built_module_versions`
+    增 TGT-06；`primary_module_binding.rule` 文案）、
+    `src/objects/crc_adc_target_gateset.py`（`BUILT_MODULE_VERSIONS` 增 TGT-06）、
+    `gate_modules/README.md`（MOD-TGT06 行；「其余一个 TGT primary
+    Module（TGT-07）」）。
+  - `tests/test_gate_modules_boundary.py` 新增 `Tgt06ModuleManifestTests`；
+    `test_crc_adc_target_gateset.py` sample gate `TGT-06 → TGT-07` +
+    `_BUILT_MODULE_VERSIONS` 增 TGT-06；`test_tgt02/03/04/05/08` module +
+    construction-contract 测试的 built-roster / allowed-package tuple 同步；
+    `test_tgt06_module_construction_contract.py` 的
+    `NoImplementationInPrE13Tests` → `ContractIsFrozenAndImplementedInPrE14Tests`
+    并指向 E14 后仓库状态。
+  - `manifests/runtime_migration_pr_e14_manifest.yaml` +
+    `docs/handoff/2026-08-31-runtime-migration-pr-e14.zh-CN.md` + 本条 worklog。
+- 未触碰 PR A/B/C 合同、PR D TGT-06 science、其它 Module。`MIGRATION_PENDING`
+  保持（8 个 primary Module 建成 7 个，余 TGT-07）。
+- 本地全量 `python -B -m unittest discover -s tests -p 'test_*.py'`：**1702 OK**
+  （E13 收口 1629 → +73）。
+- Next：commit + push；开 PR；轮询 CI（python 3.11 + 3.12 matrix）；把 E14
+  实现级审核请求提交 ChatGPT `AI审核方案`。

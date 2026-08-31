@@ -508,6 +508,7 @@ class NoImplementationInPrE5Tests(unittest.TestCase):
             "tgt03_treatment_metastatic_persistence",
             "tgt04_tumor_surface_availability_density_plausibility",
             "tgt05_normal_tissue_fatal_liability",
+            "tgt06_internalization_trafficking_addressability",
             "tgt08_target_opportunity_competition_ip_whitespace",
         )
         self.assertTrue(

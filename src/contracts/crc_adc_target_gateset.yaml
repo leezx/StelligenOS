@@ -568,7 +568,8 @@ context_specific_bindings:
       evidence_ladder_ref: external:crc_adc_target_gateset/TGT-06/evidence_ladder@v1
       assessment_rule_ref: external:crc_adc_target_gateset/TGT-06/assessment_rule@v1
       primary_module_id: MOD-TGT06
-      primary_module_version: "0.0.0"
+      # Built in Runtime Migration PR E14 (gate_modules/tgt06_internalization_trafficking_addressability/).
+      primary_module_version: "1.0.0"
     - gate_id: TGT-07
       gate_version: "1.0"
       gateset_id: ADC_TARGET_GATESET
@@ -601,11 +602,11 @@ primary_module_binding:
     by the deterministic id MOD-TGT0n. In PR D every primary_module_version was
     "0.0.0" (declared, not built). Runtime Migration PR E2 built MOD-TGT01 and
     raised its version to "1.0.0"; PR E4 built MOD-TGT05, PR E6 built MOD-TGT08,
-    PR E8 built MOD-TGT02, PR E10 built MOD-TGT03 and PR E12 built MOD-TGT04 and
-    raised their versions to
-    "1.0.0"; the other two (TGT-06, TGT-07) remain
-    "0.0.0" until their
-    own PR E-series builds them. A Module may not choose a different id, and may not
+    PR E8 built MOD-TGT02, PR E10 built MOD-TGT03, PR E12 built MOD-TGT04 and
+    PR E14 built MOD-TGT06 and raised their versions to
+    "1.0.0"; the last one (TGT-07) remains
+    "0.0.0" until its
+    own PR E-series builds it. A Module may not choose a different id, and may not
     modify the Gate id / name / candidate ownership, the gate_question, the
     Evidence Ladder, the evidence ceiling, or the fatal / unknown / conflict
     semantics (v5 section 6.4).
@@ -617,6 +618,7 @@ primary_module_binding:
     TGT-03: "1.0.0"
     TGT-04: "1.0.0"
     TGT-05: "1.0.0"
+    TGT-06: "1.0.0"
     TGT-08: "1.0.0"
 
 repository_policy:

@@ -1,0 +1,203 @@
+phase: runtime_migration_pr_e14
+status: submitted_for_review
+scope: mod_tgt06_deterministic_scientific_core_implementation_plus_narrow_binding_reconciliation
+repository_boundary: software_only_external_data
+
+# what E14 IS
+implementation_code_added: true            # gate_modules/tgt06_internalization_trafficking_addressability/ (11 files)
+module_version_built: "1.0.0"              # MOD-TGT06 (was 0.0.0 declared slot)
+standalone_package: true                   # no shared framework / base class; MOD-TGT01 / MOD-TGT02 / MOD-TGT03 / MOD-TGT04 / MOD-TGT05 / MOD-TGT08 not refactored
+binding_reconciled: true                   # TGT-06 primary_module_version 0.0.0 -> 1.0.0; built_module_versions / BUILT_MODULE_VERSIONS gain TGT-06; README + narrow built-roster tests synced
+highest_qualifying_rung_grading_authority: true   # the TGT-03 precedent, NOT the TGT-04 single-tier exception -- a qualifying INDIRECT_STRONG landscape with no DIRECT is POSITIVE / INDIRECT_STRONG
+existence_proof_frozen_evaluation_order_written_directly: true   # aggregate.py hardcodes the 7-step frozen_evaluation_order, stop-at-first-match (E14-4)
+single_classifier_authority_for_direct_quality_failure: true     # all three eligible kinds -> DIRECT + OPPOSES_ADDRESSABILITY in classify.py; aggregate / fatal_review consume it (E14-3 tightening 2)
+one_configuration_identity_projection_helper: true               # contracts.configuration_identity_projection -- every grouping / CLEAN detection / conflict detection / failure count / Route B / completion set uses it (E14-3)
+three_frozen_configuration_identity_states: true                 # SINGLE / IDENTIFIED_MULTI / IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE; internalization_configuration_ids canonicalised to tuple(sorted(set(...))) (E14-3 tightening 3)
+one_typed_completion_state_added: true     # InternalizationEvidenceCompletion -- a module-local run record, NOT a core object; four FLAT component booleans; only qualifying_direct_configuration_ids (NO qualifying_indirect set)
+three_hard_completion_invariants_added: true  # completeness consistency; exact audit identity (audit_observation_id <-> normalized audit obs <-> emitted / reused audit EP) + snapshot parity; qualifying-DIRECT-configuration-set parity as the UNION of the projection sets (E14-5 tightening 4)
+machine_local_fatal_review_trigger_added: true  # FatalReviewRecord -- a review TRIGGER; global precondition (any qualifying productive DIRECT cancels); Route A (one IDENTIFIED_MULTI, projection >= 2, reproducibility QUALIFIED + basis) OR Route B (>= 2 DISTINCT eligible failure observations AND projected configuration union >= 2); never a conclusion / KILL / PUBLIC_FATAL_SIGNAL_ESTABLISHED
+closed_assay_validation_predicate: true    # assay_validation_status in {QUALIFIED, NOT_ESTABLISHED} drives DIRECT; assay_method stays an OPEN factual type
+outcome_aware_indirect_strong_classification: true   # a FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING outcome is NEVER a positive INDIRECT_STRONG (E14-1 tightening 1)
+treatment_agnostic_study_context: true     # study_context.treatment_state == "not_applicable" for EVERY observation kind; indication / sample_type stay kind-specific factual, never "refractory_mcrc" (E14-2)
+
+# what E14 IS NOT
+normalizer_added_inside_the_package: false  # internalization qualifications are given UPSTREAM by the provider; there is no normalizer.py (E14-1 / E14-2)
+live_provider_or_adapter_added: false       # only a normalized Tgt06InternalizationEvidenceProviderPort Protocol
+retrieval_added: false                      # no live-cell-imaging / pH-sensitive-dye / surface-decay-flow / lysosomal-co-localization / recycling-vs-degradation / same-target-ADC adapter, extractor, normalizer or runner
+network_or_subprocess_io_added: false
+database_or_cache_added: false
+persistence_in_repository_added: false      # all output is an in-memory Tgt06ModuleRunResult
+ids_allocated_from_filesystem: false        # injected EvidenceIdAllocatorPort
+numeric_or_ranking_scoring_added: false     # no internalization-rate / half-life / percent-internalized / lysosomal-colocalization-coefficient cutoff, no invented ADC-effective internalization range, no ranking
+numeric_coercion_of_a_source_reported_internalization_value: false  # no float() / Decimal(); a source-reported numeric assay fact lives inside the neutral claim string only (E14-7 tightening 6)
+dedicated_raw_numeric_field_or_raw_value_reuse_parity_branch_added: false  # there is NO TGT-04-style symmetric raw-value reuse-parity branch (E14-7)
+acceptance_scans_the_source_claim_for_a_threshold: false   # the "no numeric threshold" check scans ONLY Module-owned text (aggregation rationale + critical unknowns + directly_supports), never package.claim (E14-6 tightening 6)
+single_observation_becomes_a_direction: false   # the classifier only rung-classes a direction-SUPPORTING / OPPOSING observation; aggregate produces Direction x Strength over a completed audited landscape
+cross_observation_synthesis_of_a_direct_existence_proof: false   # a productive DIRECT contributor is ALWAYS one integrated ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING observation with a PRODUCTIVE_INTERNALIZATION_WITH_LYSOSOMAL_DELIVERY outcome
+indirect_strong_or_weak_becomes_direct: false   # non-CRC internalization / constitutive endocytosis / same-target-ADC precedent / delivery-unresolved never exceed INDIRECT_STRONG; receptor-family / surface-localization inference never exceed WEAK
+machine_conflict_resolver_added: false      # a same-configuration productive-vs-failure pair is simply CONFLICTING / DIRECT (v1 -- E14-4); the Module never reconciles or characterises it
+inter_configuration_heterogeneity_mapped_to_conflicting: false   # different configurations behaving differently is configuration-specificity, not CONFLICTING
+single_configuration_failure_becomes_a_target_wide_negative_or_a_fatal_signal: false  # exactly one DIRECT-quality failure configuration -> INCONCLUSIVE / DIRECT; a single IDENTIFIED_MULTI observation never satisfies fatal Route B
+reproducibility_basis_free_text_parsed: false   # Route A is reproducibility_status == QUALIFIED + a non-empty auditable basis; the basis text is never parsed (E14-6)
+route_b_is_more_than_two: false             # Route B is >= 2 DISTINCT eligible failure observations AND a projected configuration-identity union of size >= 2, explicitly NOT "> 2" / ">= 3"
+well_matched_crc_model_contributor_is_excluded_from_fatal: false  # unlike TGT-04, a QUALIFIED WELL_MATCHED_CRC_MODEL DIRECT-quality failure IS an eligible fatal contributor (E13 item 08)
+duplicate_observation_id_preflight_runs_after_allocation: false   # a duplicate observation_id is a HARD whole-run reject BEFORE source resolution / Evidence Library / semantic dedup / allocator / EP construction (E14-7); on a hit emitted=[], allocator.calls == 0, the source resolver is never called
+proposes_a_fatal_flag_or_kill: false        # a TGT-06 NEGATIVE is a Gate-relative scientific addressability judgement; fatal_review is at most POTENTIAL_FATAL_PATTERN, and only on an accepted run
+cross_gate_conclusion_added: false          # no TGT-02 baseline-coverage substitution, no TGT-03 persistence conclusion, no TGT-04 surface-availability conclusion; internalization never implies ADC efficacy or adequate payload release
+ontology_or_embedding_inference_added: false   # classification + fatal_review are exact field reads only
+new_scientific_or_ladder_semantics_added: false   # the frozen PR E13 contract + PR D TGT-06 ladder / ceiling / inference / fatal / unknown reproduced verbatim
+constructs_canonical_assessment_or_decision: false
+emits_public_fatal_signal_established: false
+touches_pr_a_contracts: false
+touches_pr_b_contracts: false
+touches_pr_c_contracts: false
+touches_pr_d_tgt06_science: false
+generic_gatemodule_framework_or_base_class_added: false
+new_dependency_added: false                # still only PyYAML
+migration_pending_lifted: false            # seven of eight primary Modules built (TGT-01, TGT-02, TGT-03, TGT-04, TGT-05, TGT-06, TGT-08); TGT-07 remains
+
+spec_refs:
+  - docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md (section 6.4 one Gate -> one primary Evidence Production Module + Module 权责边界; section 6.5 shared infrastructure)
+  - src/contracts/gate_modules/tgt06_internalization_trafficking_addressability.yaml (PR E13 -- the FROZEN 17-item construction contract this implementation satisfies verbatim)
+  - src/contracts/crc_adc_target_gateset.yaml gate_contracts.TGT-06 (frozen gate_question / ladder / evidence_ceiling / allowed+forbidden inference / fatal_conditions / unknown_behavior -- inherited verbatim; TGT-06 has NO inference_guard field)
+  - gate_modules/tgt04_tumor_surface_availability_density_plausibility/ (PR E12 -- the 11-file implementation-PR package pattern reused as the template)
+  - gate_modules/tgt03_treatment_metastatic_persistence/ (PR E10 -- the highest-qualifying-rung grading + typed-completion + machine-local fatal_review + improved dedup precedent)
+  - src/contracts/data_layout/evidence_package.schema.json / assessment.schema.json (PR A shapes the Module produces)
+  - src/contracts/evidence_reference.yaml (PR C reusable-EvidencePackage reference layer + provenance walk)
+
+scoping_decisions:  # ChatGPT AI审核方案, before code, E14-1..E14-8 -- APPROVE-to-proceed with the 6 required implementation tightenings below
+  E14-1: >-
+    real 11-file deterministic gate_modules/tgt06_internalization_trafficking_addressability/
+    core (__init__ / module.yaml / contracts / ports / classify / evidence /
+    aggregate / completion / fatal_review / acceptance / module); module_version
+    1.0.0; minimal binding bump; run() pure injected-port Python; NO normalizer /
+    scorer / threshold / generic_gate_module. After E14: 7/8 primary Modules
+    implemented, TGT-07 remains, MIGRATION_PENDING remains.
+  E14-2: >-
+    one normalized Tgt06InternalizationEvidenceProviderPort; the 8 observation
+    kinds; a CLOSED internalization_outcome enum; the provider emits typed
+    factual states only (never DIRECT / INDIRECT_STRONG / WEAK /
+    SUPPORTS_ADDRESSABILITY / OPPOSES_ADDRESSABILITY / POSITIVE / NEGATIVE /
+    POTENTIAL_FATAL_PATTERN); a SAME_TARGET_ADC_DELIVERY_PRECEDENT kind ITSELF
+    means upstream confirmed a genuine functional success; study_context
+    treatment_state == "not_applicable" for every kind, indication / sample_type
+    kind-specific factual, never inflated to refractory_mcrc.
+  E14-3: >-
+    classify.py -- productive DIRECT / DIRECT-quality failure (branches a & b) /
+    positive INDIRECT_STRONG / WEAK; TRAFFICKING_OR_RECYCLING_ONLY asymmetric
+    authority; no cross-observation synthesis of a positive DIRECT. All
+    DIRECT-quality failure normalised to classifier-owned DIRECT +
+    OPPOSES_ADDRESSABILITY.
+  E14-4: >-
+    aggregate.py writes the frozen 7-step frozen_evaluation_order DIRECTLY +
+    consumes the ONE configuration_identity_projection helper; 6 legal pairs; v1
+    NO machine conflict resolver; the frozen proposal evidence-role mapping.
+  E14-5: >-
+    InternalizationEvidenceCompletion frozen dataclass + 4 flat component
+    booleans + 3 HARD invariants + attempted == False strict-empty +
+    InternalizationUnresolvedItem; NO qualifying_indirect_configuration_ids set.
+  E14-6: >-
+    fatal_review.py -- FatalReviewRecord + global precondition + Route A / Route B
+    (two-distinct-observations; a single IDENTIFIED_MULTI never satisfies Route B)
+    + an ordinary Gate NEGATIVE is NOT a machine POTENTIAL_FATAL_PATTERN.
+  E14-7: >-
+    evidence.py -- exact canonical EP reuse + improved TGT-03 dedup + a duplicate
+    observation_id preflight BEFORE any allocation / resolution / dedup + NO
+    raw-value parity branch + no numeric coercion.
+  E14-8: >-
+    a non-canonical AssessmentProposalEnvelope + acceptance.evaluate(*, emitted,
+    outcome, completion, fatal_review, hard_integrity_failures, module_input) ->
+    (checks, reasons) (executable item-13 checks, NOT a YAML parser) +
+    Tgt06ModuleRunResult + minimal binding / registry reconciliation.
+
+six_required_implementation_tightenings:  # ChatGPT AI审核方案 -- frozen in the code
+  T1_indirect_strong_is_outcome_aware: >-
+    a FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING outcome is NEVER a positive
+    INDIRECT_STRONG; a non-CRC / partial-evidence observation qualifies as
+    positive INDIRECT_STRONG only when the typed outcome
+    (PRODUCTIVE_INTERNALIZATION_WITH_LYSOSOMAL_DELIVERY or
+    INTERNALIZATION_OBSERVED_LYSOSOMAL_DELIVERY_UNRESOLVED) actually establishes
+    internalization support. An ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY
+    observation that also claims
+    PRODUCTIVE_INTERNALIZATION_WITH_LYSOSOMAL_DELIVERY is a HARD typed-fact
+    incoherence (contract-constructor ValueError).
+  T2_single_classifier_authority: >-
+    all DIRECT-quality failure -- an ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING
+    failure, an ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY failure, a
+    TRAFFICKING_OR_RECYCLING_ONLY failure -- is classifier-owned DIRECT +
+    OPPOSES_ADDRESSABILITY; aggregate.py and fatal_review.py consume the
+    classified result and never re-run an assay / context qualification engine.
+  T3_configuration_id_canonicalised_at_the_provider_boundary: >-
+    internalization_configuration_ids for IDENTIFIED_MULTI is a non-empty,
+    de-duplicated, deterministically ordered tuple (tuple(sorted(set(...)))); the
+    three-state validation is enforced in the contract constructor; a local id
+    colliding with the canonical CTX-CRC-REFRACTORY-MCRC is HARD; all runtime
+    identity logic calls only configuration_identity_projection.
+  T4_completion_audit_is_an_exact_identity: >-
+    an attempted completion carries exactly one normalized SEARCH_COMPLETION_AUDIT
+    observation whose observation_id == completion.audit_observation_id AND
+    exactly one emitted / reused provenance-bearing EP for that exact id;
+    field-by-field snapshot parity (search_scope / sources_searched /
+    landscape_as_of / four component flags / unresolved_item keys /
+    qualifying_direct_configuration_ids); on a completed landscape
+    qualifying_direct_configuration_ids == the UNION of the projection sets over
+    every qualifying DIRECT-rung observation (productive or failure).
+  T5_exact_reuse_and_dedup_parity_add_the_identity_fields: >-
+    claim + antibody_identity + epitope_identity_or_region + affinity_context +
+    conjugation_context join the exact reuse / true-dedup parity alongside the
+    typed classification-driving fields (incl. internalization_outcome); a drift
+    on any is a HARD identity integrity failure.
+  T6_neutral_claim_numeric_text_is_not_a_threshold: >-
+    the acceptance "no numeric threshold" check targets Module-owned text only
+    (aggregation_rationale, critical unknowns, directly_supports); it never
+    rejects a source-reported "65% internalized at 4 h" in the neutral claim.
+    The Module forbids a Module-authored numeric internalization comparison /
+    unit-normalization / scoring helper -- there is no such code and no such
+    field.
+
+frozen_proposal_evidence_role_mapping:  # ChatGPT AI审核方案 -- required behavior, no PR E13 contract text change
+  POSITIVE_DIRECT: clean productive EPs -> SUPPORTING; other-configuration failures -> CONTEXTUAL (never CONTRADICTING)
+  CONFLICTING_DIRECT: same-configuration productive -> SUPPORTING; same-configuration failure -> CONTRADICTING
+  INCONCLUSIVE_UNKNOWN: zero evidence_refs
+  key: different-configuration failures under a clean productive existence proof are CONTEXTUAL, not CONTRADICTING -- they are configuration-specific information, not a logical disproof of the existence proof
+
+delivers:
+  - gate_modules/tgt06_internalization_trafficking_addressability/ (11 files -- __init__.py / module.yaml / contracts.py / ports.py / classify.py / evidence.py / aggregate.py / completion.py / fatal_review.py / acceptance.py / module.py)
+  - tests/test_tgt06_module.py (67 synthetic in-memory tests -- binding + boundary, rung classification + T1/T2, frozen_evaluation_order + evidence-role mapping, configuration identity + T3, completion invariants + T4, fatal_review + T2/T6, exact reuse / improved dedup + T5, the duplicate observation_id preflight, no-numeric-threshold + T6, typed-fact coherence + T1, the output surface, and study_context treatment_state)
+  - src/contracts/crc_adc_target_gateset.yaml -- TGT-06 primary_module_version 0.0.0 -> 1.0.0; primary_module_binding.rule text; built_module_versions gain TGT-06
+  - src/objects/crc_adc_target_gateset.py -- BUILT_MODULE_VERSIONS gain TGT-06 + comment
+  - gate_modules/README.md -- MOD-TGT06 registry row; "其余一个 TGT primary Module（TGT-07）"
+  - tests/test_gate_modules_boundary.py -- Tgt06ModuleManifestTests
+  - narrow built-roster test syncs -- test_crc_adc_target_gateset.py (sample gate TGT-06 -> TGT-07; _BUILT_MODULE_VERSIONS gain TGT-06), test_tgt02/03/04/05/08 module + construction-contract tests (TGT-06 -> built; allowed-package tuples gain tgt06)
+  - tests/test_tgt06_module_construction_contract.py -- NoImplementationInPrE13Tests renamed ContractIsFrozenAndImplementedInPrE14Tests and re-pointed at the post-E14 repository state
+  - manifests/runtime_migration_pr_e14_manifest.yaml (this file)
+  - docs/handoff/2026-08-31-runtime-migration-pr-e14.zh-CN.md
+  - logs/worklog.md (append)
+
+deferred:
+  - the last TGT primary Module (TGT-07) construction contract (PR E15) + implementation (PR E16)
+  - connecting any retrieval provider or dataset (live-cell-imaging / pH-sensitive-dye / surface-decay-flow / lysosomal-co-localization / recycling-vs-degradation / same-target-ADC repositories)
+  - lifting MIGRATION_PENDING (only after all eight primary Modules are built)
+
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  implementation_code_in_repository: allowed_as_source_only   # gate_modules/<name>/ is source code; live retrieval / execution / persistence stay outside
+  numeric_or_ranking_scoring: forbidden
+  internalization_rate_or_half_life_or_percent_internalized_or_colocalization_coefficient_threshold: forbidden
+  invented_adc_effective_internalization_rate_range: forbidden
+  modifies_mod_tgt01: forbidden
+  modifies_mod_tgt02: forbidden
+  modifies_mod_tgt03: forbidden
+  modifies_mod_tgt04: forbidden
+  modifies_mod_tgt05: forbidden
+  modifies_mod_tgt08: forbidden
+  migration_pending: remains
+
+chatgpt_review: PENDING
+approved_tip: null
+merge_commit: null
+review_rounds: 0
+test_count_at_submission: 1702    # local full suite (unittest discover)
+approval_record_pr: null
+next_authorized_step: null        # PR E15 = TGT-07 construction contract -- needs its own go-ahead

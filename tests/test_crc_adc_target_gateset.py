@@ -247,13 +247,14 @@ class BindingParityTests(unittest.TestCase):
 #: gate_id -> the primary_module_version once its Module is built. PR D left
 #: every gate at "0.0.0"; Runtime Migration PR E2 built MOD-TGT01, PR E4 built
 #: MOD-TGT05, PR E6 built MOD-TGT08, PR E8 built MOD-TGT02, PR E10 built
-#: MOD-TGT03, and PR E12 built MOD-TGT04.
+#: MOD-TGT03, PR E12 built MOD-TGT04, and PR E14 built MOD-TGT06.
 _BUILT_MODULE_VERSIONS = {
     "TGT-01": "1.0.0",
     "TGT-02": "1.0.0",
     "TGT-03": "1.0.0",
     "TGT-04": "1.0.0",
     "TGT-05": "1.0.0",
+    "TGT-06": "1.0.0",
     "TGT-08": "1.0.0",
 }
 
@@ -334,8 +335,8 @@ class ModuleBindingSlotTests(unittest.TestCase):
 
 def _spec(**overrides) -> TgtGateSpec:
     base = dict(
-        gate_id="TGT-06",
-        name=TGT_GATE_NAMES["TGT-06"],
+        gate_id="TGT-07",
+        name=TGT_GATE_NAMES["TGT-07"],
         candidate_level="L04",
         gateset_id="ADC_TARGET_GATESET",
         gate_version="1.0",
@@ -347,7 +348,7 @@ def _spec(**overrides) -> TgtGateSpec:
 
 class TgtGateSpecTests(unittest.TestCase):
     def test_valid(self):
-        self.assertEqual(_spec().gate_id, "TGT-06")
+        self.assertEqual(_spec().gate_id, "TGT-07")
 
     def test_rejects(self):
         with self.assertRaises(ValueError):
@@ -361,41 +362,41 @@ class TgtGateSpecTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             _spec(gate_version="2.0")
         with self.assertRaises(ValueError):
-            _spec(dominant_evidence_regime="PUBLIC_PRIMARY")  # TGT-06 is PUBLIC_HYBRID
+            _spec(dominant_evidence_regime="PUBLIC_PRIMARY")  # TGT-07 is PUBLIC_HYBRID
 
 
 class TgtGateContractTests(unittest.TestCase):
     def _contract(self, **overrides) -> TgtGateContract:
         spec = _spec()
         ladder = EvidenceLadder(
-            gate_id="TGT-06",
+            gate_id="TGT-07",
             gate_version="1.0",
             rungs=(
-                LadderRung("DIRECT", ("receptor-mediated internalization assay",), "establishes internalization"),
-                LadderRung("INDIRECT_STRONG", ("surface residence half-life",), "trafficking proxy only"),
+                LadderRung("DIRECT", ("quantitative shed-antigen assay",), "establishes the soluble-antigen sink"),
+                LadderRung("INDIRECT_STRONG", ("protease-cleavage-site prediction",), "shedding proxy only"),
                 LadderRung("WEAK", ("family-level prior",), "hypothesis only"),
             ),
-            evidence_ceiling="quantitative receptor-mediated internalization on CRC malignant cells",
+            evidence_ceiling="quantitative shed-antigen levels in CRC patient serum",
         )
         base = dict(
             gate_spec=spec,
-            gate_question="Does the target internalize after antibody binding on CRC malignant cells?",
-            evidence_required=("receptor-mediated internalization assay", "surface residence half-life"),
+            gate_question="Is the target shed into circulation at a level that creates a soluble-antigen sink?",
+            evidence_required=("quantitative shed-antigen assay", "protease-cleavage-site prediction"),
             ladder=ladder,
-            allowed_inference=("the target is internalized after binding",),
-            forbidden_inference=("surface residence implies lysosomal delivery",),
-            unknown_behavior="only surface-residence data -> strength stays UNKNOWN",
-            fatal_conditions=("no measurable internalization across validated CRC models",),
-            evidence_ladder_ref="external:crc_adc_target_gateset/TGT-06/evidence_ladder@v1",
-            assessment_rule_ref="external:crc_adc_target_gateset/TGT-06/assessment_rule@v1",
-            primary_module_id="MOD-TGT06",
+            allowed_inference=("a shed ectodomain is present in circulation",),
+            forbidden_inference=("shedding implies a clinically significant sink",),
+            unknown_behavior="only cleavage-site prediction -> strength stays UNKNOWN",
+            fatal_conditions=("shed-antigen levels far above validated ADC-tolerant sinks",),
+            evidence_ladder_ref="external:crc_adc_target_gateset/TGT-07/evidence_ladder@v1",
+            assessment_rule_ref="external:crc_adc_target_gateset/TGT-07/assessment_rule@v1",
+            primary_module_id="MOD-TGT07",
             primary_module_version="0.0.0",
         )
         base.update(overrides)
         return TgtGateContract(**base)
 
     def test_valid(self):
-        self.assertEqual(self._contract().gate_spec.gate_id, "TGT-06")
+        self.assertEqual(self._contract().gate_spec.gate_id, "TGT-07")
 
     def test_rejects_built_module_version(self):
         with self.assertRaises(ValueError):
@@ -407,7 +408,7 @@ class TgtGateContractTests(unittest.TestCase):
 
     def test_rejects_non_external_refs(self):
         with self.assertRaises(ValueError):
-            self._contract(assessment_rule_ref="crc_adc_target_gateset/TGT-06/rule")
+            self._contract(assessment_rule_ref="crc_adc_target_gateset/TGT-07/rule")
 
     def test_rejects_empty_inference_or_fatal(self):
         with self.assertRaises(ValueError):

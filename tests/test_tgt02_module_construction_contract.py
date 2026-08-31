@@ -536,9 +536,10 @@ class ContractIsFrozenAndImplementedInPrE8Tests(unittest.TestCase):
         self.assertEqual(by_gate["TGT-08"], "1.0.0")
         # PR E10 built MOD-TGT03; the remaining three stay unbuilt.
         self.assertEqual(by_gate["TGT-03"], "1.0.0")
-        # PR E12 built MOD-TGT04; the remaining two stay unbuilt.
+        # PR E12 built MOD-TGT04; PR E14 built MOD-TGT06; TGT-07 stays unbuilt.
         self.assertEqual(by_gate["TGT-04"], "1.0.0")
-        for g in ("TGT-06", "TGT-07"):
+        self.assertEqual(by_gate["TGT-06"], "1.0.0")
+        for g in ("TGT-07",):
             self.assertEqual(by_gate[g], "0.0.0")
 
     def test_deferred_block_named_the_e8_implementation(self):
@@ -556,6 +557,7 @@ class ContractIsFrozenAndImplementedInPrE8Tests(unittest.TestCase):
             "tgt03_treatment_metastatic_persistence",
             "tgt04_tumor_surface_availability_density_plausibility",
             "tgt05_normal_tissue_fatal_liability",
+            "tgt06_internalization_trafficking_addressability",
             "tgt08_target_opportunity_competition_ip_whitespace",
         )
         self.assertTrue(all(any(pkg in p for pkg in allowed) for p in py_files), py_files)
