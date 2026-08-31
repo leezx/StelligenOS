@@ -6306,3 +6306,56 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 验证：`tests/test_tgt04_module.py` **83 OK**；全量 **1538 OK**（round-2 前 1532）；
   `git diff --check` clean；YAML 合法。
 - Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-3 回复。
+
+### PR E12 · ChatGPT `AI审核方案` review round 3 → APPROVE @ `14fba32`
+
+- Verdict：**APPROVE**，anchor HEAD `14fba32`；exact-head CI run 33418240815
+  verify (3.11) + verify (3.12) 均 success，unit tests / repository boundary /
+  no-bytecode / working-tree checks 全通过。round-2 的 3 个 residual integrity
+  blocker 全部 CLOSED：
+  - raw-density acceptance redaction 现在按 raw string 长度降序处理（summary 先
+    整体移除），`"12000 molecules per cell below assay detection threshold"`
+    regression accepted `POSITIVE / DIRECT`。
+  - canonical reuse 对 raw density 是真正的 opaque-string exact parity —— non-str
+    canonical 直接 HARD；不再 `str()` coercion / `strip()` normalization；missing
+    key 与 `""` 才表示双方 absent。integer-vs-string 与 trailing-space drift
+    regression 均在。
+  - duplicate `observation_id` 在 `build_evidence_packages()` 前 preflight；命中后
+    不做 source resolution / semantic dedup / EP construction / Evidence ID
+    allocation（regression 锁 `allocator.calls == 0`、无 emitted / reused EP、
+    `proposal_envelope is None`）。
+- E12 frozen semantics 一致性确认：two-tier evidence / single-tier grading；
+  localization-only → `INCONCLUSIVE / UNKNOWN`；DIRECT 需 quantitative protein +
+  qualified context + MALIGNANT attribution；well-matched model 可 ordinary
+  DIRECT Direction 但永不进 fatal；conflict resolver 只接受 classified-CONTEXTUAL
+  的 typed multi-context characterization；fatal Route A / Route B 仍 CRC
+  malignant-cell only；raw density 是 evidence 不是 threshold；exact reuse /
+  dedup / completion audit authority 均闭合；TGT-04 binding = 1.0.0；6/8 primary
+  Module 已实现；`MIGRATION_PENDING` 保持。
+- 三轮：Round 1 —— 3 blockers → CLOSED；Round 2 —— 3 residual integrity blockers →
+  CLOSED；Round 3 —— 无新 blocker。
+- 非阻断 housekeeping：PR #128 body 仍显示 71 / 1526（提交时数字），实际收口 83
+  TGT-04 test / 1538 full-suite test；审核方判定不值得再开一轮，正确数字记于
+  `logs/chatgpt-review-2026-08-31-runtime-migration-pr-e12.md` 与 manifest。
+- GitHub connector 每轮 `403 Resource not accessible by integration`，GitHub
+  formal review state 未回写；`AI审核方案` 对话结论 authoritative。
+
+### PR E12 · merge + 独立审核记录 PR
+
+- PR #128 `task_20260831_runtime-migration-pr-e12` 于 `2026-08-31` 以 `--merge`
+  合入 `main`，merge 提交 `f09ab3d`。MOD-TGT04 `primary_module_version`
+  `0.0.0` → `1.0.0`。
+- 独立 docs-only PR `task_20260831_runtime-migration-pr-e12-approval-record`
+  （按 PR #95 … #127 先例）补登：
+  - `logs/chatgpt-review-2026-08-31-runtime-migration-pr-e12.md` —— 3 轮完整审核
+    记录（scoping E12-1…E12-8、4 tightening、3 headline invariant、round 1/2/3
+    往返、merge）。
+  - `manifests/runtime_migration_pr_e12_manifest.yaml` → `status: approved` /
+    `chatgpt_review: APPROVE` / `approved_tip: 14fba32…` / `merge_commit:
+    f09ab3d…` / `review_rounds: 3` / `test_count_at_approval: 1538` /
+    `approval_record_pr` / `review_round_3` block。
+  - 不改 PR E12 的实现、测试或 handoff 内容。
+- 状态：8 个 primary Module 已实现 **6 个**（TGT-01/02/03/04/05/08 @ 1.0.0）。
+  `MIGRATION_PENDING` 保持（八个全部建成前不解除；剩余顺序 TGT-06 → TGT-07）。
+- Next：TGT-06 属后续 PR（E13 = TGT-06 construction contract 起），需独立
+  go-ahead。
