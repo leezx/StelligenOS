@@ -5744,3 +5744,34 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   保持。
 - Next：commit + push `task_20260830_runtime-migration-pr-e9`；CI 绿后回
   `AI审核方案` 贴 round-2 回复。
+
+---
+
+## 2026-08-30 — Runtime Migration PR E9 · ChatGPT AI审核方案 review round 2 (REQUEST_CHANGES)
+
+- 审核结果：**REQUEST_CHANGES** @ `1239a2d`（"Worked for 1m 49s"）。round 1 的 3
+  个实质 blocker 全部判定关闭（`residual_target_presence_status` 决定 transient /
+  minor 分支、`persistence_context_id(s)` 与 canonical namespace 分离、
+  `protein_measurement_validation_status` closed enum）。
+- **唯一遗留 blocker（blocker-2 rename 漏改，不涉 science / architecture）**：合同
+  item 11 的 `SEARCH_COMPLETION_AUDIT` structured snapshot 仍写旧字段名
+  `qualifying_direct_context_ids` / `qualifying_indirect_context_ids`。非文案问题
+  —— E10 要实现 completion ↔ `SEARCH_COMPLETION_AUDIT` **exact snapshot
+  parity**，若 E9 冻结旧名会留下两个互相冲突的 machine contract（typed completion
+  用新 namespace，audit snapshot 用旧 namespace）。
+- 修复：item 11 该处改为 `qualifying_direct_persistence_context_ids` /
+  `qualifying_indirect_persistence_context_ids`，并加一句说明 snapshot 字段名
+  与 typed completion 字段名完全一致（同 namespace），E10 parity 无冲突合同。
+  新增 regression `test_audit_snapshot_uses_the_new_persistence_context_id_namespace`
+  —— 断言 item-11 `each_package` 合同含两个新 identifier，且合同全文不含任一
+  旧 identifier。drawing 已是新名；无其他结构改动。
+- 审核方明确「不要再动」：Direction、fatal semantics、Route A / Route B、
+  completion design、EXPERIMENT_REQUIRED、EvidencePackage wording、其他 runtime
+  genes。审核方预期：修掉这一处，下一轮 APPROVE → PR E10。
+- GitHub review state：连接器再次 403，未回写。
+- 验证：`tests/test_tgt03_module_construction_contract.py` **75 OK**（74 + 1）；
+  全量 **1283 OK**（round-1 后 1282）；`git diff --check` clean；合同 + manifest
+  YAML 合法。
+- 状态：manifest `review_rounds: 2`、`review_round_2` 块已写。binding 仍 `0.0.0`；
+  `MIGRATION_PENDING` 保持。
+- Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-3 回复。

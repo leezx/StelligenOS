@@ -333,10 +333,11 @@ repository_policy:
 chatgpt_review: pending
 approved_tip: null
 merge_commit: null
-review_rounds: 1
+review_rounds: 2
 test_count_before_e9: 1208        # at PR E8 approval
 test_count_at_submission: 1274    # local full suite at round-1 submission (tests/test_tgt03_module_construction_contract.py 66)
 test_count_after_round_1: 1282    # +8 tests locking the three round-1 typed-fact freezes (construction-contract file now 74)
+test_count_after_round_2: 1283    # +1 regression -- audit-snapshot uses the new persistence_context_id namespace (construction-contract file now 75)
 approval_record_pr: null
 next_authorized_step: null        # PR E10 = MOD-TGT03@1.0.0 implementation -- needs its own go-ahead
 
@@ -404,6 +405,46 @@ review_round_1:  # ChatGPT AI审核方案 -- REQUEST_CHANGES @ 23e1b7e ("Worked 
   github_review_state: >-
     not written -- the GitHub connector returned 403 Resource not accessible by
     integration again; the AI审核方案 conversation is authoritative.
+
+review_round_2:  # ChatGPT AI审核方案 -- REQUEST_CHANGES @ 1239a2d ("Worked for 1m 49s")
+  verdict: REQUEST_CHANGES
+  head_reviewed: 1239a2d53ae1a0801541340a52f97ed7de11b825
+  round_1_blockers_closed: "3 / 3"
+  round_1_disposition: >-
+    all three round-1 blockers judged closed -- residual_target_presence_status
+    {PRESENT, UNRESOLVED} now deterministically splits the transient / minor
+    SUPPORTING-vs-CONTEXTUAL branch without basis free-text and enters the
+    classification-driving / exact-reuse parity; the local evidence context is
+    renamed to persistence_context_id(s) and explicitly separated from the
+    canonical CTX-CRC-REFRACTORY-MCRC namespace; protein assay semantics are
+    frozen as "assay_method open, validation predicate closed" (QUALIFIED |
+    NOT_ESTABLISHED, DIRECT only accepts QUALIFIED + auditable basis).
+  blockers:
+    - id: 1
+      title: item-11 SEARCH_COMPLETION_AUDIT structured snapshot still listed the OLD completion field names (blocker-2 rename miss)
+      why_it_matters: >-
+        not cosmetic -- E10 implements a completion <-> SEARCH_COMPLETION_AUDIT
+        EXACT snapshot parity; freezing E9 with the old names here would leave two
+        conflicting machine contracts (typed completion = new namespace, audit
+        snapshot = old namespace).
+      resolution: >-
+        renamed the two identifiers in the item-11 SEARCH_COMPLETION_AUDIT
+        snapshot bullet to qualifying_direct_persistence_context_ids /
+        qualifying_indirect_persistence_context_ids and added a clause that the
+        snapshot field names are exactly the typed completion's field names (same
+        namespace) so the E10 parity has no contradictory contract. New
+        regression test_audit_snapshot_uses_the_new_persistence_context_id_namespace
+        asserts the item-11 each_package contract contains both NEW identifiers
+        and the raw contract text contains NEITHER old identifier. Drawing
+        already used the new names; no other structural change.
+  explicit_do_not_touch: >-
+    Direction, fatal semantics, Route A / Route B, completion design,
+    EXPERIMENT_REQUIRED, EvidencePackage wording, other runtime genes.
+  reviewer_expectation: >-
+    "fix this one spot and I expect next round = APPROVE -> PR E10".
+  github_review_state: >-
+    not written -- GitHub connector still 403 Resource not accessible by
+    integration; the AI审核方案 conversation is authoritative.
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt03_module_construction_contract.py' -v

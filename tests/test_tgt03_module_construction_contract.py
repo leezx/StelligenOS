@@ -581,6 +581,21 @@ class RuntimeGeneInheritanceTests(unittest.TestCase):
         checks = _flatten(self.item["13_machine_acceptance_criteria"]["a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"])
         self.assertIn("collapses a persistence_context_id onto the canonical context_id is a hard identity-namespace failure", checks)
 
+    def test_audit_snapshot_uses_the_new_persistence_context_id_namespace(self):
+        # ROUND 2 blocker: the item-11 SEARCH_COMPLETION_AUDIT structured snapshot
+        # must name the SAME fields as the typed completion, so E10's
+        # completion <-> SEARCH_COMPLETION_AUDIT exact snapshot parity has no
+        # contradictory machine contract.
+        pkg_rules = _norm(" ".join(self.item["11_evidencepackage_output_contract"]["each_package"]))
+        self.assertIn("qualifying_direct_persistence_context_ids", pkg_rules)
+        self.assertIn("qualifying_indirect_persistence_context_ids", pkg_rules)
+        self.assertNotIn("qualifying_direct_context_ids,", pkg_rules)
+        self.assertNotIn("qualifying_indirect_context_ids)", pkg_rules)
+        # and nowhere in the whole contract does the old identifier survive
+        raw = CONTRACT.read_text()
+        self.assertNotIn("qualifying_direct_context_ids", raw)
+        self.assertNotIn("qualifying_indirect_context_ids", raw)
+
     def test_canonical_context_id_pin_is_untouched(self):
         # the canonical Instantiation context_id must still be pinned in items 10 and 12.
         i10 = _flatten(self.item["10_input_contract"])
