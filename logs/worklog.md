@@ -5775,3 +5775,28 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 状态：manifest `review_rounds: 2`、`review_round_2` 块已写。binding 仍 `0.0.0`；
   `MIGRATION_PENDING` 保持。
 - Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-3 回复。
+
+---
+
+## 2026-08-30 — Runtime Migration PR E9 · APPROVE + merge + approval record
+
+- ChatGPT `AI审核方案` round 3 = **APPROVE @ `8ba624c`**（"Worked for 1m"）。3 轮
+  收口：Round 1 三个 deterministic contract-shape blocker → CLOSED；Round 2 一个
+  audit-snapshot rename residue → CLOSED；Round 3 无新 blocker。E9 construction
+  contract 冻结，可进入 PR E10 = MOD-TGT03@1.0.0 deterministic implementation。
+- PR #122 已 merge → merge commit `a2d585d`（`Merge pull request #122`）。merge 前
+  把 PR body 的初始测试数字 66 / 1274 更新为 75 / 1283 + 3 轮审核小结（审核方明确
+  这属非阻断 metadata housekeeping，不加轮）。
+- 独立 docs-only approval-record PR：分支
+  `task_20260830_runtime-migration-pr-e9-approval-record`。新增
+  `logs/chatgpt-review-2026-08-30-runtime-migration-pr-e9.md`（3 轮往返完整记录）；
+  `manifests/runtime_migration_pr_e9_manifest.yaml` → `status: approved`、
+  `chatgpt_review: APPROVE`、`approved_tip: 8ba624c…`、`merge_commit: a2d585d…`、
+  `review_rounds: 3`、`test_count_at_approval: 1283`、`review_round_3` 块、
+  `approval_record_pr` 字段。不改 PR E9 的合同正文、drawing、tests。
+- GitHub connector 每轮 403，REQUEST_CHANGES / APPROVE 未回写 GitHub review state；
+  `AI审核方案` 对话结论 authoritative。
+- 状态：8 个 primary Module 施工合同已 APPROVE 6 个（TGT-01/05/08/02/03 + E7 已并）；
+  已实现 4 个（TGT-01/05/08/02 @ 1.0.0）。MOD-TGT03 `primary_module_version` 仍
+  `0.0.0`；`MIGRATION_PENDING` 保持。TGT-04 → 06 → 07 属后续 PR。
+- Next：PR E10 = MOD-TGT03@1.0.0 deterministic implementation，需各自 go-ahead。
