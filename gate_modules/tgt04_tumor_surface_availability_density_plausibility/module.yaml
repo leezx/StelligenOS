@@ -1,0 +1,131 @@
+module:
+  module_id: MOD-TGT04
+  module_name: tgt04_tumor_surface_availability_density_plausibility
+  module_version: "1.0.0"
+  built_in: runtime_migration_pr_e12
+  construction_contract: src/contracts/gate_modules/tgt04_tumor_surface_availability_density_plausibility.yaml
+  construction_drawing: docs/gate_modules/TGT-04_Tumor_Surface_Availability_Density_Plausibility.md
+
+  gate_binding:
+    gate_id: TGT-04
+    gate_version: "1.0"
+    gateset_id: ADC_TARGET_GATESET
+    gateset_version: "1.0"
+    instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v1
+    candidate_level: L04
+    # frozen PR D / gateset regime for TGT-04; the current instantiation runs the
+    # public path only.
+    dominant_evidence_regime: PUBLIC_HYBRID
+    current_instantiation_regime: PUBLIC_ONLY
+
+  the_one_question: >-
+    Is the target present on the cell surface of CRC malignant cells at a density
+    plausibly adequate for ADC payload delivery? (verbatim gate_question
+    inherited from the PR D TGT-04 contract; a bidirectional scientific
+    density-plausibility gate whose NEGATIVE -- materially inadequate / negligible
+    surface antigen -- is a genuine scientific finding, NOT a fatal flag and NOT a
+    KILL; not widened or narrowed)
+
+  purpose: >-
+    Deterministic Gate-specific scientific core for TGT-04. It turns normalized
+    upstream surface-availability facts (quantitative cell-surface antigen
+    density, validated membranous IHC, cell-surface proteomics, subcellular
+    localization, sequence-topology / GO-term prediction, non-CRC surface
+    evidence, RNA surface proxy, audited search-completion records) into atomic
+    Gate-neutral EvidencePackages, maps each to a frozen TGT-04 Evidence-Ladder
+    rung (DIRECT only for a QUANTITATIVE_SURFACE_DENSITY observation with
+    measurement_validation_status == QUALIFIED + a non-empty factual assay_method
+    + a QUALIFIED surface context in {CRC_MALIGNANT_CELLS, WELL_MATCHED_CRC_MODEL}
+    + malignant-cell attribution -- assay_method is an OPEN factual type, there is
+    no closed assay whitelist; INDIRECT_STRONG only for a validated membranous
+    IHC / cell-surface proteomics observation on CRC_MALIGNANT_CELLS, a
+    well-matched CRC model localization observation stays CONTEXTUAL; WEAK for
+    subcellular-localization / topology-prediction / non-CRC / RNA-proxy) and a
+    Module-owned Gate-relative density-implication reading
+    (SUPPORTS_DENSITY_PLAUSIBILITY / OPPOSES_DENSITY_PLAUSIBILITY / CONTEXTUAL)
+    applied only to a qualifying DIRECT observation per the frozen
+    density_direction_mapping (NEGLIGIBLE_OR_UNDETECTABLE -> OPPOSES; else
+    PLAUSIBLY_ADEQUATE -> SUPPORTS; NOT_PLAUSIBLY_ADEQUATE -> OPPOSES; MIXED /
+    NOT_ESTABLISHED -> CONTEXTUAL; LOW_BUT_PRESENT alone decides nothing). It
+    tracks ONE typed completion state (SurfaceAvailabilityCompletion) with three
+    HARD invariants (completeness consistency; mandatory SEARCH_COMPLETION_AUDIT
+    presence + snapshot parity on the surface_context_id namespace; qualifying
+    surface-context-set parity on BOTH the DIRECT and INDIRECT sets, the indirect
+    set being audit-integrity reconciliation only). It aggregates a proposed
+    Direction x Strength via the TGT-04 TWO-TIER / SINGLE-TIER grading authority
+    (only a qualifying DIRECT quantitative antigen-density observation grants a
+    graded Direction; a localization-only completed landscape is INCONCLUSIVE /
+    UNKNOWN; INDIRECT_STRONG never becomes a proposed Strength; the legal pairs
+    are exactly POSITIVE/DIRECT, NEGATIVE/DIRECT, CONFLICTING/DIRECT,
+    INCONCLUSIVE/DIRECT, INCONCLUSIVE/UNKNOWN; a genuinely incompatible
+    adequate-vs-inadequate landscape is CONFLICTING / DIRECT unless a typed
+    declared multi-context density_plausibility_status MIXED_OR_UNRESOLVED
+    characterisation covering all material contexts resolves it to a GRADED
+    INCONCLUSIVE / DIRECT; a single quantitative dataset, a single localization
+    dataset or a single negligible-antigen observation is never a completed
+    answer). It emits a machine-local fatal_review review TRIGGER when eligible
+    DIRECT-class quantitative CRC-MALIGNANT-CELL NEGLIGIBLE_OR_UNDETECTABLE
+    observations satisfy Route A (an auditable explicit reproducibility
+    qualification) OR Route B (>= 2 independent qualified CRC malignant-cell
+    surface-context identities) on a completed audited landscape -- a well-matched
+    CRC model observation is never a fatal contributor -- and emits a
+    non-canonical assessment proposal envelope for the human review surface.
+
+  owns:
+    - input contract validation (no implicit default scientific context; the candidate's target_identity is the single authoritative target; the canonical Instantiation context_id CTX-CRC-REFRACTORY-MCRC + context_version 1 are HARD-pinned and are a SEPARATE namespace from each observation's LOCAL surface_context_id; landscape_as_of is mandatory)
+    - candidate <-> observation target-identity binding (an observation whose target_identity differs from the candidate's canonical target is evidence misbinding and is a HARD rejection)
+    - the eight observation kinds (QUANTITATIVE_SURFACE_DENSITY / MEMBRANOUS_IHC / SURFACE_PROTEOMICS / SUBCELLULAR_LOCALIZATION / TOPOLOGY_OR_GO_PREDICTION / NON_CRC_SURFACE_EVIDENCE / RNA_SURFACE_PROXY / SEARCH_COMPLETION_AUDIT); the provider supplies NORMALIZED UPSTREAM FACTS only -- including the measurement_validation_status / surface_context_class / context_adequacy_status / surface_localization_status / density_plausibility_status / surface_antigen_level / reproducibility_status qualifications and the OPAQUE raw reported_density_value / reported_density_unit / reported_density_summary strings -- and never sets a rung, a direction, a density implication or a fatal trigger; there is NO normalizer inside this package
+    - "frozen TGT-04 Evidence-Ladder rung mapping and the deterministic Gate-relative density-implication reading; a non-QUANTITATIVE_SURFACE_DENSITY observation never reaches DIRECT; a quantitative density observation without measurement_validation_status == QUALIFIED, a non-empty assay_method, malignant-cell attribution and a QUALIFIED CRC / well-matched-model surface context never reaches DIRECT; a well-matched CRC model membranous-IHC / surface-proteomics observation never reaches INDIRECT_STRONG (an INDIRECT_STRONG rung requires surface_context_class == CRC_MALIGNANT_CELLS); a subcellular-localization / topology-prediction / non-CRC / RNA-proxy observation is CONTEXTUAL WEAK and never a surface-density claim; RNA never becomes a surface-protein or surface-density claim"
+    - a factual-coherence guard (a QUALIFIED CRC / well-matched-model surface_context_class can only be asserted for a crc_specific observation; crc_specific true itself never grants a rung)
+    - Gate-NEUTRAL EvidencePackage construction (PR A evidence_package shape); one package per observation; a package never carries "passes TGT-04", "adequate antigen density established", "the antigen density is inadequate for an ADC", "above / below a clinically effective range", "should be killed", or a TGT-02 / TGT-03 / TGT-06 conclusion; an observation already in the Evidence Library is reused as its EXACT canonical package (no allocator call, no new body); provenance comes from the resolved canonical SourceIndex record; the raw reported_density_value / reported_density_unit / reported_density_summary are SYMMETRIC presence-and-value exact-reuse parity keys and are never coerced to a number; the TGT-04 dedup deviation preserves distinct LOCAL surface-context observations that share a (source_id, claim) and never drops a SEARCH_COMPLETION_AUDIT EP
+    - "hard identity / provenance / completion-consistency / classification-qualification integrity gate: a candidate<->target misbinding, a context_key / search_scope drift from the run, a claimed-resolved source missing from the canonical SourceIndex, a canonical-source metadata conflict, an incompatible canonical EvidencePackage (incl. a raw-density presence / value mismatch either direction), a completion whose umbrella flag contradicts its component searches, an attempted completion with no / more than one / a drifted SEARCH_COMPLETION_AUDIT observation, a dedup-lost audit EP, a completion whose qualifying DIRECT or INDIRECT surface-context-id sets disagree with the emitted qualifying evidence, a local surface_context_id equal to the canonical context_id, a qualifying DIRECT / INDIRECT_STRONG observation with no local surface-context identity, or a duplicate observation_id rejects the WHOLE run -- it is never degraded to an accepted UNKNOWN"
+    - one module-local typed SurfaceAvailabilityCompletion (a run record, NOT a seventh core object); the mandatory public surface-availability landscape is complete only when the umbrella flag AND all four declared component searches (quantitative surface density, validated membranous IHC, cell-surface proteomics, subcellular localization) are complete AND certified by exactly one snapshot-consistent SEARCH_COMPLETION_AUDIT observation; the four components are flat booleans, search-space completeness, not a four-axis score and not grading axes; a component searched / exhausted with zero qualifying records still counts complete; attempted == False is a frozen strict-empty state; an incomplete landscape is INCONCLUSIVE / UNKNOWN and is NOT an integrity failure
+    - deterministic Direction x Strength aggregation via the TGT-04 TWO-TIER / SINGLE-TIER grading authority; only a qualifying DIRECT quantitative antigen-density observation grants a graded Direction; a localization-only completed landscape (any number of qualifying INDIRECT_STRONG, zero qualifying DIRECT) is INCONCLUSIVE / UNKNOWN; INDIRECT_STRONG never becomes a proposed Strength; a graded Direction is produced only over a completed audited landscape; NEGATIVE / DIRECT weighs the science against plausibly adequate density and is never a fatal flag / KILL / reproducible fatal pattern on its own
+    - "machine-local fatal_review review TRIGGER (E11 item 08 / 12): required iff eligible DIRECT-class quantitative CRC-MALIGNANT-CELL NEGLIGIBLE_OR_UNDETECTABLE observations (evidence_rung DIRECT + density_implication OPPOSES_DENSITY_PLAUSIBILITY + surface_antigen_level NEGLIGIBLE_OR_UNDETECTABLE + surface_context_class CRC_MALIGNANT_CELLS) meet Route A (reproducibility_status == QUALIFIED + a non-empty auditable reproducibility_basis; the basis text is NEVER parsed) OR Route B (>= 2 independent qualified CRC malignant-cell surface-context identities; NOT '> 2' and NOT '>= 3'; a well-matched CRC model identity does not count), on a completed audited landscape; the detector never re-judges assay_method / measurement validation / context adequacy / malignant attribution (classifier authority); status is at most POTENTIAL_FATAL_PATTERN; NO numeric / molecules-per-cell / ABC / percent-positive / H-score / context-count threshold and NO invented ADC-effective density range; the machine NEVER emits PUBLIC_FATAL_SIGNAL_ESTABLISHED / a canonical fatal flag / KILL / HOLD / Decision, and NEVER decides whether the pattern is a real fatal signal; only an accepted run's trigger is an actionable handoff"
+    - machine acceptance record (E11 item 13) as executable checks
+    - non-canonical assessment proposal envelope (E11 item 12); the TGT-04 ceiling / inference / direction live here, never on the Gate-neutral package; the envelope carries the canonical Instantiation identity pins (incl. context_id CTX-CRC-REFRACTORY-MCRC) and no assessment_id / assessment_version / review, no TGT-02 / TGT-03 / TGT-06 conclusion, no density threshold or range, and no fatal flag
+
+  does_not_own:
+    - live absolute-quantitation flow / QIFIKIT / mass-cytometry / quantitative-surfaceomics / membranous-IHC / cell-surface-proteomics / subcellular-localization repository retrieval; extractors; normalizers; a runner; a dry-run executor
+    - external retrieval / extraction / normalization and the upstream measurement_validation_status / surface_context_class / context_adequacy_status / surface_localization_status / density_plausibility_status / surface_antigen_level / reproducibility_status qualifications and the final critical-unknown resolution kind assignment by the provider (the provider supplies facts; the module does the deterministic mapping)
+    - density-unit normalization / unit conversion / cross-assay rescaling and any numeric coercion of a raw reported_density_value (shared scientific preprocessing infrastructure, not TGT-04 Gate authority)
+    - entity resolution, source registry, provenance ledger, serialization (shared infra, v5 section 6.5)
+    - database, cache, RUNS / ASSESSMENTS / EvidenceIndex persistence
+    - whether a surface context is genuinely a qualified CRC malignant-cell context, whether a well-matched CRC model is genuinely representative, whether the malignant-cell attribution is convincing, whether the surface contexts / models are genuinely independent, whether a "negligible / undetectable" qualification is justified vs the assay's lower detection limit / calibration, whether a low-but-present antigen is genuinely inadequate for a given payload / DAR / bystander context, whether an apparent negligible signal is an assay / epitope-masking artifact, whether a reported reproducibility is scientifically convincing, whether there is truly no targetable surface antigen, and whether the reproducible-negligible-antigen pattern satisfies the GateSet fatal policy
+    - a TGT-02 baseline malignant-cell coverage substitution, a TGT-03 treatment / metastatic persistence conclusion, a TGT-06 internalization conclusion, and letting the EVGAP-01 surface-localization lock discharge the quantitative antigen-density requirement
+    - human approval and canonical CandidateGateAssessment construction
+    - Candidate-level Decision / KILL / HOLD, PUBLIC_FATAL_SIGNAL_ESTABLISHED, MatrixView writes, cross-Gate reasoning
+    - any numeric or ranking score, and any antigen-density / molecules-per-cell / ABC / percent-positive / H-score cutoff or invented "clinically effective antigen-density range"
+
+  ports:
+    - name: Tgt04SurfaceAvailabilityProviderPort
+      role: supplies already-normalized, primary/repository-source-resolved TGT-04 surface-availability observations (each with observation_kind, molecular_layer, an OPEN assay_method fact, a CLOSED measurement_validation_status predicate + basis, surface_context_class + basis, context_adequacy_status + basis, malignant_cell_attribution + basis, surface_localization_status + basis, density_plausibility_status + typed basis, surface_antigen_level + basis, reproducibility_status + basis, LOCAL surface_context_id(s), declared_multi_context_analysis, the OPAQUE raw reported_density_value / reported_density_unit / reported_density_summary strings and facts only) plus the one typed completion contract (SurfaceAvailabilityCompletion)
+    - name: EvidenceIdAllocatorPort
+      role: allocates EP-nnnnnnnn ids for observations not already in the Evidence Library; the Module never derives ids from the filesystem
+    - name: SourceResolverPort
+      role: resolves a provenance.source_id to its canonical SourceIndex record; an unresolved id or a provider observation whose metadata disagrees with the canonical record is a HARD rejection
+    - name: ExistingEvidenceLibraryPort
+      role: read-only lookup by observation_id into the PR C reusable Evidence Library; returns the EXACT canonical EvidencePackage, reused unchanged (no allocator call, no re-created body); an incompatible returned package (missing OR drifted classification-driving field, a raw-density presence / value mismatch either direction, or a drifted audit snapshot) is a hard integrity failure
+
+  boundary_flags:
+    performs_network_io: false
+    spawns_subprocess: false
+    writes_repository: false
+    allocates_ids_from_filesystem: false
+    constructs_canonical_assessment: false
+    produces_decision_or_kill: false
+    emits_public_fatal_signal_established: false
+    baseline_coverage_persistence_or_internalization_logic: false
+    scientific_de_risking_of_other_gates: false
+    ontology_or_embedding_inference: false
+    numeric_or_ranking_scoring: false
+    antigen_density_molecules_per_cell_abc_percent_positive_or_hscore_threshold: false
+    invented_clinically_effective_antigen_density_range: false
+    numeric_coercion_or_unit_conversion_of_a_raw_density_value: false
+    grades_a_direction_before_the_landscape_is_complete: false
+    localization_grants_density_grading_authority: false
+    parses_qualification_basis_free_text: false
+    normalizer_inside_the_package: false
+    modifies_frozen_gate_science: false
+    modifies_mod_tgt01_mod_tgt02_mod_tgt03_mod_tgt05_or_mod_tgt08: false
+    lifts_migration_pending: false

@@ -6115,3 +6115,194 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   仍 `0.0.0`，PR E12 才 bump 到 `1.0.0`。`MIGRATION_PENDING` 保持。剩余
   TGT-06 → TGT-07。
 - Next：PR E12 = MOD-TGT04@1.0.0 deterministic implementation，需各自 go-ahead。
+
+## Runtime Migration PR E12 —— MOD-TGT04@1.0.0 实现
+
+- 授权：用户在 PR E11 收口后 "go ahead"。开工前 ChatGPT `AI审核方案` 给
+  **APPROVE-to-proceed**（E12-1…E12-8）+ **4 个 required implementation
+  tightening**（都不改 E11 science）：
+  1. DIRECT 必须显式要求 `malignant_cell_attribution == MALIGNANT` + auditable
+     basis（对 CRC_MALIGNANT_CELLS 与 WELL_MATCHED_CRC_MODEL 都适用）+
+     factual-coherence HARD guard（CRC / model surface_context_class 要求
+     `crc_specific == true`）；
+  2. 增加 `declared_multi_context_analysis`，conflict resolver 完全 typed
+     （`NOT_ESTABLISHED` 不是 resolver；不 semantic-parse prose）；
+  3. `SurfaceAvailabilityCompletion.attempted == False` 冻结为严格空状态；
+  4. raw density 在 Module 内保持 opaque factual string —— 只做对称 identity
+     parity，绝不 numeric coercion / unit conversion。
+- 实现 `RUNTIME_IMPL_ADD`：`gate_modules/tgt04_tumor_surface_availability_density_plausibility/`
+  11 文件（`__init__` / `module.yaml` / `contracts` / `ports` / `classify` /
+  `evidence` / `aggregate` / `completion` / `fatal_review` / `acceptance` /
+  `module`）。`run()` 纯 Python 只调 injected port。
+  - **contracts.py**：3 条 headline invariant 置顶；`NormalizedSurfaceObservation`
+    （normalized upstream facts；8 个 observation kind；`assay_method` OPEN，
+    `measurement_validation_status` CLOSED；`surface_context_class` /
+    `context_adequacy_status` / `malignant_cell_attribution` /
+    `surface_localization_status` / `density_plausibility_status`（+ typed basis）
+    / `surface_antigen_level` / `reproducibility_status` 各 + basis；LOCAL
+    `surface_context_id(s)` + `declared_multi_context_analysis`；OPAQUE raw
+    `reported_density_value` / `_unit` / `_summary`；basis hygiene 双向一致；
+    factual-coherence guard）；`ClassifiedSurfaceObservation`（qualifying
+    INDIRECT_STRONG 永不带 directional density_implication）；`FatalReviewRecord`
+    （Route A OR Route B）；`AssessmentProposalEnvelope`（canonical context_id pin，
+    5 个 legal pair，无 INDIRECT_STRONG proposed Strength）；`Tgt04ModuleRunResult`；
+    `density_implication()`。
+  - **completion.py**：`SurfaceAvailabilityCompletion`（frozen dataclass，4 个
+    FLAT component boolean）+ 3 个 HARD invariant（completeness consistency /
+    audit presence + snapshot parity（两组 qualifying context set）/ qualifying
+    surface-context-set parity）；`attempted == False` 严格空状态；
+    `SurfaceUnresolvedItem`。
+  - **classify.py**：DIRECT 只给 `QUANTITATIVE_SURFACE_DENSITY` +
+    `measurement_validation_status == QUALIFIED` + 非空 `assay_method` +
+    `{CRC_MALIGNANT_CELLS, WELL_MATCHED_CRC_MODEL}` + QUALIFIED context +
+    `malignant_cell_attribution == MALIGNANT`；INDIRECT_STRONG 只给
+    `MEMBRANOUS_IHC` / `SURFACE_PROTEOMICS` on `CRC_MALIGNANT_CELLS` +
+    `SURFACE_LOCALIZED`（well-matched model localization → CONTEXTUAL）；WEAK 给
+    subcellular / topology / non-CRC / RNA-proxy；density_direction_mapping 严格按序。
+  - **aggregate.py**：**直接写死 TWO-TIER / SINGLE-TIER grading authority** ——
+    无 qualifying DIRECT → INCONCLUSIVE / UNKNOWN（100 INDIRECT_STRONG + 0 DIRECT
+    仍 UNKNOWN）；有 qualifying DIRECT → Strength = DIRECT，只在 qualifying DIRECT
+    集合上定方向；typed multi-context MIXED resolver → INCONCLUSIVE / DIRECT；
+    5 个 legal pair。
+  - **fatal_review.py**：eligible = classified DIRECT + OPPOSES +
+    `NEGLIGIBLE_OR_UNDETECTABLE` + `CRC_MALIGNANT_CELLS`（model 明确不 eligible）；
+    Route A / Route B（`>= 2` CRC malignant-cell surface-context identity）；
+    detector 不重判 classifier authority。
+  - **evidence.py**：Gate-neutral PR A EP + exact canonical reuse；raw density 三
+    字段是对称 presence-and-value parity key；改进 TGT-03 dedup；audit EP 永不
+    dedup loser。
+  - **acceptance.py**：E11 item 13/10/11/12/16 可执行检查；禁止 item-17 跨 Gate /
+    Decision 输出；`proposed_strength == DIRECT` iff 有 qualifying DIRECT；
+    localization 永不授予 grading authority；fatal contributor 全 CRC malignant-cell。
+  - **module.py**：pure `run()`；重复 `observation_id` 在 dedup 之前 HARD；LOCAL
+    id == canonical `context_id` HARD；qualifying 观测无 local id HARD。
+  - **ports.py / module.yaml / __init__.py**：Protocol-only；无 normalizer。
+- binding / registry 协调（最小集）：TGT-04 `primary_module_version`
+  `0.0.0 → 1.0.0`；`built_module_versions` / `BUILT_MODULE_VERSIONS` 加 TGT-04；
+  `gate_modules/README.md` 注册 MOD-TGT04（PR E12）；
+  `tests/test_crc_adc_target_gateset.py` sample gate → TGT-06；
+  `tests/test_gate_modules_boundary.py` 加 `Tgt04ModuleManifestTests`；
+  `tests/test_tgt02/03/05/08_module*.py` 最窄 built-roster 同步；
+  `tests/test_tgt04_module_construction_contract.py` `NoImplementationInPrE11Tests`
+  → `ContractIsFrozenAndImplementedInPrE12Tests`（保留全部 contract / science
+  regression）。`MIGRATION_PENDING` 保持（6 / 8 primary Module 建成）。
+- 新增 `tests/test_tgt04_module.py` —— **71 tests**（binding + boundary、rung
+  分类含 tightening 1、density_direction_mapping、TWO-TIER / SINGLE-TIER grading
+  authority 含 100-IS-零-DIRECT 与 typed multi-context conflict resolver、
+  completion 3 个 HARD invariant + strict-empty attempted、fatal_review Route A /
+  Route B 含 CRC malignant-cell only 与 1-CRC+1-model / 2-model 排除与
+  LOW_BUT_PRESENT 永不 fatal、对称 raw-density reuse parity 双向、LOCAL namespace
+  + 改进 dedup、HARD integrity gate 永不降级为 accepted UNKNOWN、narrow
+  EXPERIMENT_REQUIRED、accepted-run 输出面）。
+- 新增 `manifests/runtime_migration_pr_e12_manifest.yaml`、
+  `docs/handoff/2026-08-31-runtime-migration-pr-e12.zh-CN.md`。
+- 验证：`tests/test_tgt04_module.py` **71 OK**；
+  `tests/test_tgt04_module_construction_contract.py` **71 OK**（迁移后）；全量
+  **1526 OK**（E11 收口 1450）；`bash scripts/verify_repository_boundary.sh` 只报
+  既有 untracked 杂项；`git diff --check` clean；YAML 合法且无
+  list-element-parsed-as-dict；`src/` 不 import `gate_modules/`；包内无
+  `float(reported_density_*)` / `Decimal` / `int` coercion。
+- 状态：8 个 primary Module 施工合同已 APPROVE 6 个（TGT-01/02/03/04/05/08），已
+  实现 **6 个**。TGT-06 → TGT-07 属后续 PR。`MIGRATION_PENDING` 保持。
+- Next：开 PR、CI 绿后回 `AI审核方案` 贴 E12 review 请求。
+
+### PR E12 · ChatGPT `AI审核方案` review round 1 → REQUEST_CHANGES（3 窄 runtime blocker）
+
+- Verdict：**REQUEST_CHANGES**，anchor HEAD `28ddff6`；CI run 33408469633 verify
+  (3.11) + verify (3.12) 均 success。审核方确认主体实现与 E12 scoping 对齐，
+  binding / 6-of-8 built / MIGRATION_PENDING / package boundary 无 blocker；只剩
+  3 个窄 runtime blocker，都不重开 E11 science、不重构 11-file package。
+- **Blocker 1**：合法 raw quantitative fact 被 `acceptance.py` 错杀成 numeric
+  threshold。`evidence.py` 正确把 raw factual `reported_density_value` / `_unit` /
+  `_summary` 放进 Gate-neutral EP 的 `directly_supports`（E11 item 11），但
+  `acceptance.py` 把 `directly_supports` 拼进 scannable，`_SCORE_RE` 会命中
+  `"12000 molecules per cell by QIFIKIT"` → 整轮拒。修复：新增
+  `_scannable_ep_fact_text()` 在扫描前逐 EP 把 verbatim raw `reported_density_*`
+  payload 剔除；`_SCORE_RE` 收窄为 DECISION language（cutoff / threshold /
+  clinically effective range / score= / ranking / fold-change /
+  `above|below <number> molecules|abc|%`）。Regression：raw value/unit/summary
+  含数字 → ACCEPTED；真正的 threshold conclusion 仍被拒。
+- **Blocker 2**：`aggregate.py` 的 typed conflict resolver 可被一个实际 OPPOSES
+  观测冒充。frozen density mapping 里 `surface_antigen_level ==
+  NEGLIGIBLE_OR_UNDETECTABLE → OPPOSES` 优先级更高，所以一个
+  `NEGLIGIBLE_OR_UNDETECTABLE` + `density_plausibility_status ==
+  MIXED_OR_UNRESOLVED` + `declared_multi_context_analysis` 的观测经 classifier 后
+  实际是 OPPOSES，却仍满足 resolver 条件。修复：resolver 额外要求
+  `e.classified.density_implication == CONTEXTUAL`（消费 classifier authority，
+  不从 raw field 重建第二条解释路径）。Regression：multi-context MIXED +
+  `QUANTITATIVELY_PRESENT` → 可 resolve；multi-context MIXED +
+  `NEGLIGIBLE_OR_UNDETECTABLE` → OPPOSES → 不 resolve → 若有 material SUPPORTS 仍
+  `CONFLICTING / DIRECT`。
+- **Blocker 3**：raw-density "absent on both" parity 对 canonical-missing-key 情况
+  实现错。`evidence.py._reused_package_is_compatible()` 先对每个 `_parity_key` 执行
+  `if key not in existing.study_context: return HARD`，而
+  `QUANTITATIVE_SURFACE_DENSITY` 的 `_parity_keys()` 总含三个 raw key，导致
+  current `""` + canonical package 缺这些 key → 误 HARD。修复：对 raw density key
+  用 `existing.study_context.get(key, "")`，按 presence AND value 比较 ——
+  missing key ↔ `""` = 两侧都 absent = compatible；一侧有一侧无 = HARD；
+  value / unit / summary 不同 = HARD。Regression：canonical 缺 raw key + current
+  全 `""` → reuse allowed；canonical 缺 raw key + current 有值 → HARD。
+- 审核方明确「不要改」：DIRECT 显式 MALIGNANT attribution；CRC / model
+  factual-coherence guard；INDIRECT_STRONG 仅 CRC malignant-cell localization；
+  well-matched model ordinary DIRECT Direction + fatal exclusion；100 IS + 0
+  DIRECT → INCONCLUSIVE / UNKNOWN；5 个 legal pair；completion direct + indirect
+  context-set parity；attempted False strict-empty state；Route A / Route B；
+  1 CRC + 1 model 不构成 fatal Route B；duplicate observation_id 在 semantic
+  dedup 前 HARD；raw density 无 numeric coercion；completion / fatal science；
+  其他 Modules。
+- 改动文件：`gate_modules/tgt04_.../acceptance.py`（`_scannable_ep_fact_text` +
+  `_SCORE_RE` 收窄）、`aggregate.py`（resolver 加 classified implication ==
+  CONTEXTUAL）、`evidence.py`（raw density key 对称 presence-and-value parity）、
+  `tests/test_tgt04_module.py`（71 → **77**：新增 `ReviewRound1RegressionTests`）、
+  manifest（`review_rounds: 1` + `review_round_1` block）、本 worklog append。
+- 验证：`tests/test_tgt04_module.py` **77 OK**；全量 **1532 OK**（round-1 前
+  1526）；`git diff --check` clean；YAML 合法。
+- Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-2 回复。
+
+### PR E12 · ChatGPT `AI审核方案` review round 2 → REQUEST_CHANGES（round-1 语义基本 CLOSED + 3 窄 residual integrity blocker）
+
+- Verdict：**REQUEST_CHANGES**，anchor HEAD `11528ed`；CI run 33415591565 verify
+  (3.11) + verify (3.12) 均 success。审核方确认 round-1 的 scientific / runtime
+  semantics 基本 CLOSED（typed conflict resolver 现在确实要求
+  `classified.density_implication == CONTEXTUAL`；`NEGLIGIBLE_OR_UNDETECTABLE` 经
+  classifier 映射为 OPPOSES，不能再冒充 resolver）。剩 3 个窄 runtime-integrity
+  residual：
+- **Blocker 1**：`acceptance._scannable_ep_fact_text()` 的 raw-density redaction
+  是 order-dependent。按 value → unit → summary 顺序 `text.replace(raw, " ")`，
+  若 `value == "12000"` 且是 summary 子串，第一步会把 summary 里的 "12000" 也删掉，
+  summary 碎成 `" molecules per cell below assay detection threshold"`，随后
+  `replace(full_summary, ...)` 匹配不到，残留的 `threshold` 被 `_SCORE_RE` 命中。
+  修复：按**长度降序**先删最长的 raw string（sort by len reverse=True），使之
+  order-independent。Regression：value "12000" + summary "12000 molecules per cell
+  below assay detection threshold" → ACCEPTED；Module-authored "density threshold
+  of 5000" 仍 FAIL。
+- **Blocker 2**：`evidence.py` 的 raw-density reuse parity 不再是严格 EXACT
+  opaque-string parity —— 两侧都做了 `str(...).strip()`，导致 canonical int `12000`
+  或带尾空格 `"12000 "` 会误等于 current `"12000"`。修复：对 raw density key ——
+  `key not in study_context → canonical_value = ""`；否则
+  `canonical_value = study_context[key]`，非 str 即 HARD；`current_value =
+  current[key]`（已 contract-validated str）；missing key 与 `""` = 两侧都 absent
+  = compatible；否则 EXACT string 相等，**不 strip、不 str()**。Regression：
+  canonical int 12000 vs "12000" → HARD；canonical "12000 " vs "12000" → HARD；
+  canonical 缺 key + current 全 "" → reuse allowed；identical string → reuse allowed。
+- **Blocker 3**：duplicate `observation_id` 的 authoritative-identity precedence
+  没真正实现 —— run 仍先跑 semantic dedup、resolve source / evidence、消耗
+  Evidence ID、构造 transient EP，之后才记录 duplicate。修复：在 `module.run()`
+  里、`build_evidence_packages()` **之前**做 observation-id preflight；存在
+  duplicate 时 run 短路进入 whole-run HARD rejection（`emitted = []`，不调用
+  `build_evidence_packages()`，不调用 allocator）。Regression：duplicate
+  observation_id → `accepted == False` AND `proposal_envelope is None` AND
+  `allocator.calls == 0` AND `evidence_packages == ()` AND `reused_evidence_ids == ()`。
+- 审核方明确「不要改」：conflict resolver 的 CONTEXTUAL classifier authority；
+  single-tier grading；DIRECT / IS rung boundary；completion direct + indirect set
+  parity；fatal Route A / B + model exclusion；MIGRATION_PENDING；TGT-04 1.0.0 /
+  6-of-8 built；frozen E11 science。
+- 改动文件：`gate_modules/tgt04_.../acceptance.py`（redact longest-first）、
+  `evidence.py`（raw density key EXACT opaque-string parity）、`module.py`
+  （duplicate observation_id preflight）、`tests/test_tgt04_module.py`（77 → **83**：
+  新增 `ReviewRound2RegressionTests` + `test_duplicate_observation_id_is_hard` 收紧为
+  `test_duplicate_observation_id_is_hard_before_any_allocation`）、manifest
+  （`review_rounds: 2` + `review_round_2` block）、本 worklog append。
+- 验证：`tests/test_tgt04_module.py` **83 OK**；全量 **1538 OK**（round-2 前 1532）；
+  `git diff --check` clean；YAML 合法。
+- Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-3 回复。
