@@ -1,0 +1,230 @@
+phase: runtime_migration_pr_e10
+status: pending_review
+scope: mod_tgt03_deterministic_scientific_core_implementation_plus_narrow_binding_reconciliation
+repository_boundary: software_only_external_data
+
+# what E10 IS
+implementation_code_added: true            # gate_modules/tgt03_treatment_metastatic_persistence/
+module_version_built: "1.0.0"              # MOD-TGT03 (was 0.0.0 declared slot)
+standalone_package: true                   # no shared framework / base class; MOD-TGT01 / MOD-TGT02 / MOD-TGT05 / MOD-TGT08 not refactored
+binding_reconciled: true                   # TGT-03 primary_module_version 0.0.0 -> 1.0.0; built_module_versions gains TGT-03
+one_typed_completion_state_added: true     # ClinicalPersistenceCompletion -- a module-local run record, NOT a core object
+three_hard_completion_invariants_added: true  # completeness consistency, mandatory audit presence + snapshot parity, qualifying persistence-context-set parity
+machine_local_fatal_review_trigger_added: true  # FatalReviewRecord -- a review TRIGGER (Route A OR Route B), never a conclusion / KILL / PUBLIC_FATAL_SIGNAL_ESTABLISHED
+typed_residual_target_presence_status_branch: true  # the TRANSIENT_OR_MINOR_DOWNREGULATION SUPPORTING-vs-CONTEXTUAL branch is decided by a typed field, never free-text parsing (E9 blocker-1 gene)
+local_persistence_context_namespace: true  # persistence_context_id(s) -- LOCAL evidence-context identities, deliberately separate from the canonical Instantiation context_id (E9 blocker-2 gene)
+closed_protein_measurement_validation_predicate: true  # protein_measurement_validation_status in {QUALIFIED, NOT_ESTABLISHED} drives DIRECT; assay_method stays an OPEN factual type (E9 blocker-3 gene)
+
+# what E10 IS NOT
+normalizer_added_inside_the_package: false  # persistence qualifications are given UPSTREAM by the provider; there is no normalizer.py (E10-1 / E10-2)
+live_provider_or_adapter_added: false       # only a normalized Tgt03PersistenceProviderPort Protocol
+retrieval_added: false                      # no GEO / HPA / CPTAC / single-cell / spatial / paired-biopsy / resistance-model adapter, extractor, normalizer or runner
+network_or_subprocess_io_added: false
+database_or_cache_added: false
+persistence_in_repository_added: false      # all output is an in-memory Tgt03ModuleRunResult
+ids_allocated_from_filesystem: false        # injected EvidenceIdAllocatorPort
+numeric_or_ranking_scoring_added: false     # no fold-change / percent-positive / H-score / down-regulation / context-count cutoff, no ranking
+single_observation_becomes_a_direction: false   # the classifier only rung-classes a direction-SUPPORTING observation; aggregate produces Direction x Strength over a completed audited landscape
+weak_only_landscape_becomes_a_grade: false  # a WEAK-only public landscape is INCONCLUSIVE / UNKNOWN, never INCONCLUSIVE / WEAK
+persistence_pattern_computed_by_the_module: false   # consumed from persistence_pattern + persistence_pattern_basis; the residual branch from residual_target_presence_status -- never from a fold-change / % / n
+reproducibility_basis_free_text_parsed: false   # Route A is reproducibility_status == QUALIFIED + a non-empty auditable basis; the basis text is never parsed (E10-6)
+route_b_is_more_than_two: false             # Route B is >= 2 independent qualified persistence-context identities, explicitly NOT "> 2" / ">= 3"
+proposes_a_fatal_flag_or_kill: false        # a TGT-03 NEGATIVE is a Gate-relative scientific persistence judgement; fatal_review is at most POTENTIAL_FATAL_PATTERN
+cross_gate_conclusion_added: false          # no TGT-02 baseline-coverage substitution, no TGT-04 surface / density conclusion; generic EVGAP-02 CRC linkage never discharges TGT-03
+two_axis_weaker_ceiling_rule_added: false   # overall Strength is the HIGHEST qualifying evidence class (there is no E6-style two-axis score); the four mandatory search components are search-space completeness, not a four-axis score
+blind_source_claim_dedup_copied_from_e8: false  # distinct persistence_context_id observations that share a (source_id, claim) both survive; an audit EP is never a dedup loser (E10-7)
+ontology_or_embedding_inference_added: false   # classification + fatal_review are exact field reads only
+new_scientific_or_ladder_semantics_added: false   # the frozen E9 truth table + PR D TGT-03 ladder / ceiling / inference / fatal / unknown reproduced verbatim
+constructs_canonical_assessment_or_decision: false
+emits_public_fatal_signal_established: false
+touches_pr_a_contracts: false
+touches_pr_b_contracts: false
+touches_pr_c_contracts: false
+touches_pr_d_tgt03_science: false          # only the primary_module_version slot
+touches_e9_construction_contract_body: false
+mod_tgt01_modified: false
+mod_tgt02_modified: false
+mod_tgt05_modified: false
+mod_tgt08_modified: false
+generic_gatemodule_framework_or_base_class_added: false
+new_dependency_added: false                # still only PyYAML
+migration_pending_lifted: false            # five of eight primary Modules built (TGT-01, TGT-02, TGT-03, TGT-05, TGT-08)
+
+spec_refs:
+  - src/contracts/gate_modules/tgt03_treatment_metastatic_persistence.yaml (PR E9 -- the frozen 17-item construction contract, implemented verbatim, not re-interpreted)
+  - docs/gate_modules/TGT-03_Treatment_Metastatic_Persistence.md (PR E9 construction drawing)
+  - src/contracts/crc_adc_target_gateset.yaml gate_contracts.TGT-03 (frozen PR D gate_question / Evidence Ladder / evidence_ceiling / allowed+forbidden inference / inference_guard / fatal_conditions / unknown_behavior -- reproduced verbatim)
+  - src/objects/decision_model.py (PR A EvidencePackage shape + DIRECTION / STRENGTH / EVIDENCE_ROLE / CRITICAL_UNKNOWN / SOURCE_TYPE enums)
+  - gate_modules/tgt02_indication_specific_malignant_cell_coverage/ (PR E8 -- the 11-file package template and the E6 / E8 completion-audit snapshot-parity gene, reused not imported) + gate_modules/tgt01_adc_modality_precedent/ (PR E2) + gate_modules/tgt05_normal_tissue_fatal_liability/ (PR E4) + gate_modules/tgt08_target_opportunity_competition_ip_whitespace/ (PR E6 -- standalone-package shape, canonical target identity, Gate-neutral EvidencePackage, exact canonical reuse, classification-driving parity, hard identity / provenance / completion-consistency failure -> reject whole run, non-canonical proposal envelope)
+  - CURRENT_SYSTEM v5 section 6.4 (one Gate -> one primary Module; Module 权责边界) / section 6.5 (shared infrastructure not per Gate) / section 11.2 (EVGAP-02 CRC linkage lock -- generic CRC linkage never discharges TGT-03)
+
+scoping_decisions:  # ChatGPT AI审核方案, before code, E10-1..E10-8 (APPROVE-to-proceed, with the 5 implementation-level tightenings captured below)
+  E10-1: >-
+    real deterministic MOD-TGT03 implementation (like E2 / E4 / E6 / E8, a full Gate-specific scientific core). 11 files __init__ / module.yaml / contracts / ports / classify / evidence / aggregate / completion / fatal_review / acceptance / module -- completion.py and fatal_review.py are their own small files. module_version 1.0.0; ClinicalPersistenceCompletion is a frozen dataclass -- a module-local run record, NOT a seventh core object. acceptance.py executes item 13 machine acceptance + item 10 input / binding invariants + item 11 EP integrity + item 12 proposal / fatal-review structural boundary + item 16 completion-before-grade + forbids item-17 cross-Gate / Decision output; it is NOT a 17-item YAML parser (items 03-09 science lives in classify / aggregate / completion / fatal; items 14 / 17 are human / downstream). minimal binding update (TGT-03 primary_module_version 0.0.0 -> 1.0.0; built_module_versions + BUILT_MODULE_VERSIONS + gate_modules/README.md gain TGT-03; TGT-04 / TGT-06 / TGT-07 stay 0.0.0); frozen E9 contract body untouched. run() is pure Python -- no network / subprocess / filesystem-derived ids / repository writes / db / cache / retrieval adapter / LLM. src/ never imports gate_modules/.
+  E10-2: >-
+    one normalized Tgt03PersistenceProviderPort (the package declares its own EvidenceIdAllocatorPort / SourceResolverPort / ExistingEvidenceLibraryPort). NO normalizer inside the package -- the provider outputs NORMALIZED UPSTREAM FACTS: observation_id / target_identity / context_key / landscape_as_of / observation_kind in {REFRACTORY_OR_PRIOR_TREATED_PROTEIN, METASTATIC_LESION_PROTEIN, PAIRED_PRE_POST_PROTEIN, TREATED_METASTATIC_TRANSCRIPT, RESISTANCE_MODEL, TREATMENT_NAIVE_PRIMARY, DIFFERENT_TUMOR_TYPE, SEARCH_COMPLETION_AUDIT} / molecular_layer / assay_method (an OPEN factual type) / protein_measurement_validation_status (CLOSED {QUALIFIED, NOT_ESTABLISHED}) + basis / crc_specific / clinical_context + basis / context_adequacy_status + basis / malignant_cell_attribution + basis / persistence_pattern + basis / residual_target_presence_status + basis / reproducibility_status + basis / LOCAL persistence_context_id(s) / claim / source metadata / retrieved_at + the SEARCH_COMPLETION_AUDIT structured snapshot. the provider NEVER emits DIRECT / INDIRECT_STRONG / WEAK / SUPPORTS_PERSISTENCE / OPPOSES_PERSISTENCE / CONTEXTUAL / POSITIVE / NEGATIVE / CONFLICTING / INCONCLUSIVE / fatal / POTENTIAL_FATAL_PATTERN -- all Module-derived.
+  E10-3: >-
+    deterministic rung classification via a local ClassifiedPersistenceObservation {observation, evidence_rung, persistence_implication, admissible, rejection_severity, rejection_reason}. DIRECT requires a clinical protein kind (REFRACTORY_OR_PRIOR_TREATED_PROTEIN / METASTATIC_LESION_PROTEIN / PAIRED_PRE_POST_PROTEIN) + molecular_layer includes PROTEIN + protein_measurement_validation_status == QUALIFIED + auditable basis + context_adequacy_status == QUALIFIED + clinical_context_basis + basis + clinical_context matching the kind + malignant_cell_attribution == MALIGNANT + basis. assay_method is NOT a closed whitelist (E9's biggest impl difference vs TGT-02 -- assay vocabulary open, validation predicate closed). INDIRECT_STRONG -- TREATED_METASTATIC_TRANSCRIPT (treated / metastatic malignant compartment resolved) or RESISTANCE_MODEL (well-validated CRC resistance context), even when it measures protein (the ceiling is limited by the CONTEXT, not the measurement layer). WEAK -- TREATMENT_NAIVE_PRIMARY / DIFFERENT_TUMOR_TYPE, even with a pretty protein measurement (no smuggling TGT-02 baseline coverage into persistence). pattern -> implication -- RETAINED -> SUPPORTS_PERSISTENCE; NEAR_LOSS_OR_MARKED_LOSS -> OPPOSES_PERSISTENCE; TRANSIENT_OR_MINOR_DOWNREGULATION + residual_target_presence_status PRESENT -> SUPPORTS_PERSISTENCE; + UNRESOLVED -> CONTEXTUAL; MIXED_OR_UNRESOLVED -> CONTEXTUAL. the Module never parses basis prose; a single observation is NEVER a Direction.
+  E10-4: >-
+    deterministic aggregation with an explicit precedence -- 0. HARD integrity failure -> no proposal; 1. landscape incomplete -> INCONCLUSIVE / UNKNOWN with zero evidence_refs (a legitimate non-error state); 2. complete but audit invalid / missing -> HARD reject; 3. complete AND audited -> evaluate qualifying evidence. Strength = if any qualifying DIRECT: DIRECT; elif any qualifying INDIRECT_STRONG: INDIRECT_STRONG; else UNKNOWN -- NO four-axis score, NO weaker-axis rule. the four mandatory components stay FLAT booleans (refractory_prior_treated / metastatic_lesion / paired_pre_post / resistance_model search complete) -- no dedicated typed sub-record (E9 froze exact field names + the audit snapshot needs per-field parity). conflict rule (narrow) -- material SUPPORTS + material OPPOSES -> CONFLICTING, UNLESS an admissible declared multi-context observation with persistence_context_ids covering the relevant contexts and persistence_pattern == MIXED_OR_UNRESOLVED is an explicit cross-context characterisation -> graded INCONCLUSIVE. never semantic-parse source prose to decide if a conflict is "explained". a WEAK-only completed landscape -> INCONCLUSIVE / UNKNOWN, never INCONCLUSIVE / WEAK.
+  E10-5: >-
+    one module-local typed ClinicalPersistenceCompletion (frozen dataclass in completion.py; NOT a seventh core object) with three HARD invariants. (1) completeness consistency -- public_persistence_search_complete MUST equal all(four flat component booleans); a contradiction rejects the whole run (never a soft UNKNOWN). (2) audit presence + snapshot parity -- an attempted completion MUST be certified by EXACTLY ONE SEARCH_COMPLETION_AUDIT observation whose observation_id == audit_observation_id and whose structured snapshot (search_scope / sources_searched / landscape_as_of / the four per-component states / unresolved_item keys / qualifying_direct_persistence_context_ids / qualifying_indirect_persistence_context_ids) matches the typed completion field-for-field -- the snapshot field names ARE the typed completion's field names; no audit, two audits, drift, or a dedup-lost audit EP is a HARD reject; the snapshot fields also enter the audit EP exact-reuse parity. (3) qualifying persistence-context-set parity -- qualifying_direct_persistence_context_ids / qualifying_indirect_persistence_context_ids MUST equal (as sets) the LOCAL persistence-context identities of the observations classified qualifying DIRECT / qualifying INDIRECT_STRONG (evaluated only over a completed landscape). unresolved_items is a small typed PersistenceUnresolvedItem(description, kind) with kind in {KNOWN_PUBLIC_NOT_YET_RESOLVED -> PUBLIC_RESOLVABLE, ACCESS_OR_ANNOTATION_BLOCKED -> CURRENTLY_UNRESOLVABLE} -- an internal type only.
+  E10-6: >-
+    machine-local fatal_review review TRIGGER (FatalReviewRecord fields -- required / status / evidence_ids / persistence_context_ids / persistence_class / context_qualification_basis_refs / persistence_pattern_basis_refs / reproducibility_basis_refs / landscape_as_of / persistence_search_scope). the detector consumes ALREADY-CLASSIFIED evidence (no second qualification engine) -- an eligible contributor is classified.evidence_rung == DIRECT AND classified.persistence_implication == OPPOSES_PERSISTENCE AND persistence_pattern == NEAR_LOSS_OR_MARKED_LOSS (which by construction inherits protein-level + protein_measurement_validation_status QUALIFIED + CRC + a QUALIFIED context adequacy + malignant attribution + an auditable persistence_pattern_basis). required = true iff, on a COMPLETED audited landscape, Route A (one eligible contributor with reproducibility_status == QUALIFIED AND a non-empty reproducibility_basis -- the basis text is NEVER parsed) OR Route B (eligible contributors span >= 2 independent qualified persistence-context identities -- NOT "> 2" and NOT ">= 3"; genuine independence stays human-only). status single value POTENTIAL_FATAL_PATTERN; a raw detector may compute internally but a fatal_review is an actionable handoff ONLY on an accepted run; the machine NEVER emits PUBLIC_FATAL_SIGNAL_ESTABLISHED / a canonical fatal flag / KILL / HOLD / Decision, and NEVER decides whether the pattern is a real fatal signal. fatal_review is NOT on the proposal envelope. NO numeric / percent-positive / H-score / fold-change / context-count threshold.
+  E10-7: >-
+    Gate-NEUTRAL EvidencePackage per observation (PR A shape) + exact canonical reuse -- an observation already in the Evidence Library is reused as the EXACT canonical object (no allocator call, no re-created body); provenance comes from the resolved canonical SourceIndex record (unresolved id or provider <-> canonical metadata conflict -> HARD reject). the classification-driving reuse parity keys include observation_id / target_identity + context binding / observation_kind / molecular_layer / assay_method / protein_measurement_validation_status + basis / clinical_context + basis / context_adequacy_status + basis / malignant_cell_attribution + basis / persistence_pattern + basis / residual_target_presence_status + basis / reproducibility_status + basis / persistence_context_id(s) / context_key / landscape_as_of, plus the audit snapshot fields for a SEARCH_COMPLETION_AUDIT EP; a missing OR drifted field -> HARD. TGT-03-SPECIFIC DEDUP DEVIATION -- do NOT unconditionally copy the E8 (source_id, claim) dedup. observation_id is the authoritative observation identity (a duplicate is a HARD run rejection). a true duplicate is dropped ONLY when source_id AND claim AND every classification-driving fact AND the LOCAL persistence-context identity all match; any persistence-context difference -> both survive; a SEARCH_COMPLETION_AUDIT EP is never a dedup loser. machine acceptance = the E9 item-13 checklist as executable checks. a HARD identity / provenance / completion-consistency / classification-qualification failure rejects the WHOLE run (proposal_envelope = None) -- NEVER degraded to an accepted UNKNOWN; a genuinely incomplete public persistence search -> INCONCLUSIVE / UNKNOWN is NOT an integrity failure. narrow EXPERIMENT_REQUIRED (E8 precedence) -- while any unresolved public item remains, resolution stays PUBLIC_RESOLVABLE / CURRENTLY_UNRESOLVABLE; only once the enumerated public source space is exhausted does a directional INDIRECT_STRONG with no qualifying DIRECT protein, or a WEAK-only completed landscape, add EXPERIMENT_REQUIRED (clinical-context malignant-cell-resolved protein confirmation).
+  E10-8: >-
+    non-canonical AssessmentProposalEnvelope -- identity pins candidate_id / instantiation_id / canonical context_id CTX-CRC-REFRACTORY-MCRC / context_version 1 / gateset_id + version / gate_id + version, STRICTLY separate from the LOCAL persistence_context_id namespace. the envelope carries no assessment_id / assessment_version / review / fatal flag / Decision. legal Direction x Strength (frozen) -- POSITIVE / DIRECT, POSITIVE / INDIRECT_STRONG, NEGATIVE / DIRECT, NEGATIVE / INDIRECT_STRONG, CONFLICTING / DIRECT, CONFLICTING / INDIRECT_STRONG, INCONCLUSIVE / DIRECT, INCONCLUSIVE / INDIRECT_STRONG, INCONCLUSIVE / UNKNOWN -- no INCONCLUSIVE / WEAK. the Module never constructs a HUMAN_APPROVED CandidateGateAssessment (the review surface does). binding / registry reconciliation is the minimal set -- src/contracts/crc_adc_target_gateset.yaml + src/objects/crc_adc_target_gateset.py (TGT-03 0.0.0 -> 1.0.0, built_module_versions / BUILT_MODULE_VERSIONS gain TGT-03), gate_modules/README.md, tests/test_crc_adc_target_gateset.py, tests/test_gate_modules_boundary.py, tests/test_tgt03_module_construction_contract.py (migrate the "package does not exist / binding 0.0.0 / only four built" assertions to post-implementation reconciliation, like E8), plus the narrowest sync of other tests hard-coding the built roster (tests/test_tgt02/05/08_module*.py). MIGRATION_PENDING REMAINS (it lifts only once all eight primary Modules are built; after E10 remaining order TGT-04 -> TGT-06 -> TGT-07).
+
+five_implementation_tightenings:  # ChatGPT AI审核方案 -- frozen in the code
+  - "1. No normalizer inside the package -- Tgt03PersistenceProviderPort outputs normalized / upstream-qualified facts; the Module only does deterministic classification / aggregation."
+  - "2. The fatal detector consumes already-classified observations (rung == DIRECT + implication == OPPOSES_PERSISTENCE + persistence_pattern == NEAR_LOSS_OR_MARKED_LOSS), not a parallel 'what counts as a qualified protein loss' engine."
+  - "3. Route A never parses reproducibility_basis free text -- reproducibility_status == QUALIFIED + a non-empty auditable basis IS the machine predicate; scientific convincingness is a human judgement."
+  - "4. Do not blind-copy the E8 (source_id, claim) dedup -- distinct persistence_context_id observations must not be dropped just for sharing a source / claim; the local context identity is TGT-03 scientific information."
+  - "5. E10 migrates tests/test_tgt03_module_construction_contract.py (currently asserts the package is absent + binding 0.0.0 + only four built) to a post-implementation reconciliation test, like E8 -- it is not deleted -- plus the narrowest sync of every other test hard-coding the built roster."
+
+three_headline_invariants:  # frozen at the top of contracts.py
+  - Baseline expression is not persistence. Only explicitly qualified treatment / metastasis-context evidence can drive TGT-03.
+  - A single observation is evidence, never a Direction; grading requires the completed and audited persistence landscape, and NEGATIVE remains a scientific persistence judgement -- not fatal and not KILL.
+  - Only reproducible DIRECT-class protein near / marked loss may surface POTENTIAL_FATAL_PATTERN; reproducibility is Route A or Route B, remains human-reviewable, and the Module never decides fatality.
+
+delivers:
+  - gate_modules/tgt03_treatment_metastatic_persistence/ -- the 11-file deterministic Gate-specific scientific core (completion.py + fatal_review.py are their own files; NO normalizer.py)
+  - src/contracts/crc_adc_target_gateset.yaml + src/objects/crc_adc_target_gateset.py -- TGT-03 binding 0.0.0 -> 1.0.0; built_module_versions / BUILT_MODULE_VERSIONS gain TGT-03
+  - gate_modules/README.md -- MOD-TGT03 registered as built (PR E10); the "unbuilt" count drops to three
+  - tests/test_tgt03_module.py -- the synthetic acceptance suite (78 tests)
+  - tests/test_tgt03_module_construction_contract.py -- the E9 contract-vs-repository reconciliation (ContractIsFrozenAndImplementedInPrE10Tests -- package now exists, binding now 1.0.0, contract still frozen)
+  - tests/test_gate_modules_boundary.py -- Tgt03ModuleManifestTests (5 tests)
+  - tests/test_crc_adc_target_gateset.py + tests/test_tgt02_module_construction_contract.py + tests/test_tgt05_module.py + tests/test_tgt05_module_construction_contract.py + tests/test_tgt08_module.py + tests/test_tgt08_module_construction_contract.py -- the narrowest synch of hard-coded built-roster assumptions
+  - manifests/runtime_migration_pr_e10_manifest.yaml -- this file
+  - docs/handoff/2026-08-30-runtime-migration-pr-e10.zh-CN.md -- the E10 handoff
+
+deferred:
+  - live retrieval providers / adapters / datasets (GEO / HPA / CPTAC / single-cell / spatial / paired-biopsy / resistance-model repositories) and an external runner
+  - the other three TGT primary Modules (TGT-04 -> TGT-06 -> TGT-07)
+  - external workspace calibration of any context-adequacy / marked-vs-transient-loss / context-independence / reproducibility normalisation
+  - lifting MIGRATION_PENDING (only once all eight primary Modules are built)
+
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  gate_module_source_code_in_repository: allowed
+  gate_module_live_retrieval_execution_or_persistence_in_repository: forbidden
+  normalizer_inside_the_gate_module_package: forbidden
+  numeric_or_ranking_scoring: forbidden
+  fold_change_or_percent_positive_or_hscore_or_downregulation_or_context_count_threshold: forbidden
+  reproducibility_basis_free_text_parsing: forbidden
+  generic_gatemodule_framework_or_base_class: forbidden
+  modifies_mod_tgt01: forbidden
+  modifies_mod_tgt02: forbidden
+  modifies_mod_tgt05: forbidden
+  modifies_mod_tgt08: forbidden
+  modifies_e9_construction_contract_body: forbidden
+  migration_pending: remains
+
+chatgpt_review: pending
+approved_tip: null
+merge_commit: null
+review_rounds: 1
+test_count_before_e10: 1283      # at PR E9 approval
+test_count_at_submission: 1366   # local full suite at round-1 submission (tests/test_tgt03_module.py 78 + Tgt03ModuleManifestTests 5 + reconciliation / registry synch)
+test_count_after_round_1: 1379   # +13 Round1RegressionTests (tests/test_tgt03_module.py now 91)
+approval_record_pr: null
+next_authorized_step: null       # PR E-series TGT-04 construction contract -- needs its own go-ahead
+
+review_round_1:  # ChatGPT AI审核方案 -- REQUEST_CHANGES @ 35d9564
+  verdict: REQUEST_CHANGES
+  head_reviewed: 35d9564dfbabcff5ac330233c861fa93bcbb238b
+  accepted_with_no_issue: >-
+    the main implementation stands -- 11-file package, no normalizer, PUBLIC_ONLY
+    pure-Python ports, highest-class aggregation, completion / audit gene, the
+    TGT-03 dedup deviation, Route A / Route B fatal-review, binding TGT-03 ->
+    1.0.0, 5 / 8 built, MIGRATION_PENDING kept, and the binding reconciliation
+    itself. 5 narrow runtime correctness / factual-integrity blockers, none
+    reopening the frozen E9 contract body / Direction truth table / highest-class
+    Strength / four-component completion / Route A/B definition / ">= 2"
+    semantics / dedup deviation / EXPERIMENT_REQUIRED precedence / binding 1.0.0 /
+    MIGRATION_PENDING / MOD-TGT01/02/05/08.
+  blockers:
+    - id: 1
+      title: INDIRECT_STRONG qualification was too wide -- no requirement that the treatment / metastasis context is explicitly qualified
+      resolution: >-
+        classify.py -- TREATED_METASTATIC_TRANSCRIPT now additionally requires
+        clinical_context == "METASTATIC_CRC" AND context_adequacy_status ==
+        QUALIFIED; RESISTANCE_MODEL requires clinical_context == "RESISTANCE_MODEL"
+        AND context_adequacy_status == QUALIFIED (auditable bases already enforced
+        by the dataclass when QUALIFIED). A bare crc_specific + malignant + pattern
+        transcript / model signal is now CONTEXTUAL, not INDIRECT_STRONG.
+    - id: 2
+      title: the LOCAL persistence_context_id identity authority was not closed -- it could be missing on a qualifying observation and could collide with the canonical Instantiation context_id
+      resolution: >-
+        contracts.py -- the constructor now rejects any local persistence_context_id
+        / persistence_context_ids entry equal to CTX-CRC-REFRACTORY-MCRC.
+        module.py -- a whole-run HARD reject when a local id equals the canonical
+        context_id, and when any observation classified qualifying DIRECT /
+        INDIRECT_STRONG carries no auditable local persistence_context_id /
+        persistence_context_ids (so completion parity always has something to
+        reconcile and a graded Direction never rests on an anonymous context).
+    - id: 3
+      title: only the loss / transient patterns required an auditable persistence_pattern_basis -- RETAINED / MIXED_OR_UNRESOLVED with an empty basis could still drive Direction, and the transient branch only required a residual basis for PRESENT
+      resolution: >-
+        contracts.py -- EVERY qualified persistence_pattern now requires a
+        non-empty persistence_pattern_basis (SOURCE_REPORTED /
+        HUMAN_REVIEWED_NORMALIZATION), and a TRANSIENT_OR_MINOR_DOWNREGULATION
+        observation requires a non-empty residual_target_presence_basis for BOTH
+        PRESENT and UNRESOLVED. Synthetic fixtures updated.
+    - id: 4
+      title: protein_measurement_validation_status carried an invented "" state (not in the frozen closed enum) and a DIRECT protein observation was not required to carry a non-empty factual assay_method
+      resolution: >-
+        contracts.py -- PROTEIN_MEASUREMENT_VALIDATION_STATUS_VALUES is now
+        STRICTLY {QUALIFIED, NOT_ESTABLISHED}; a non-protein / audit observation
+        carries NOT_ESTABLISHED (no blank state). classify.py -- DIRECT
+        additionally requires a non-empty factual assay_method (still NOT a closed
+        assay whitelist). Fixtures updated.
+    - id: 5
+      title: the Gate-neutral EvidencePackage wrote study_context.treatment_state = "not_applicable" for every observation, including explicitly treated / refractory / paired-series evidence -- a wrong factual rewrite of the source context
+      resolution: >-
+        evidence.py -- a kind -> treatment_state map
+        (REFRACTORY_OR_PRIOR_TREATED -> refractory_or_prior_treated;
+        METASTATIC / TREATED_METASTATIC_TRANSCRIPT -> metastatic_context;
+        PAIRED_PRE_POST -> paired_pre_post; RESISTANCE_MODEL -> resistance_model;
+        TREATMENT_NAIVE_PRIMARY -> treatment_naive; DIFFERENT_TUMOR_TYPE ->
+        source_reported; SEARCH_COMPLETION_AUDIT -> not_applicable). Non-inflating
+        -- it maps only from the observation kind, never up to the run's
+        refractory mCRC context.
+  regressions_added: >-
+    Round1RegressionTests (13) -- transcript / resistance model without a
+    qualified context is not INDIRECT_STRONG; qualifying DIRECT / INDIRECT_STRONG
+    with no local context id is a HARD run rejection; a local id equal to the
+    canonical context_id is rejected at construction and as a HARD run rejection;
+    RETAINED / MIXED_OR_UNRESOLVED / transient-UNRESOLVED with an empty basis are
+    rejected at construction; the validation-status enum is exactly {QUALIFIED,
+    NOT_ESTABLISHED}; DIRECT needs a non-empty assay_method; the EP treatment_state
+    is kind-specific for refractory / paired-pre-post / treatment-naive / audit.
+  github_review_state: >-
+    not written -- the GitHub connector returned 403 Resource not accessible by
+    integration again; the AI审核方案 conversation is authoritative.
+
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt03_module.py' -v
+  - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt03_module_construction_contract.py' -v
+  - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'
+  - bash scripts/verify_repository_boundary.sh
+  - git diff --check
+
+artifacts:
+  - gate_modules/tgt03_treatment_metastatic_persistence/
+  - src/contracts/crc_adc_target_gateset.yaml
+  - src/objects/crc_adc_target_gateset.py
+  - gate_modules/README.md
+  - tests/test_tgt03_module.py
+  - tests/test_tgt03_module_construction_contract.py
+  - tests/test_gate_modules_boundary.py
+  - tests/test_crc_adc_target_gateset.py
+  - tests/test_tgt02_module_construction_contract.py
+  - tests/test_tgt05_module.py
+  - tests/test_tgt05_module_construction_contract.py
+  - tests/test_tgt08_module.py
+  - tests/test_tgt08_module_construction_contract.py
+  - manifests/runtime_migration_pr_e10_manifest.yaml
+  - docs/handoff/2026-08-30-runtime-migration-pr-e10.zh-CN.md

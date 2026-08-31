@@ -80,11 +80,18 @@ UNBUILT_MODULE_VERSION: Final[str] = "0.0.0"
 #: MOD-TGT05 (gate_modules/tgt05_normal_tissue_fatal_liability/); PR E6 built
 #: MOD-TGT08 (gate_modules/tgt08_target_opportunity_competition_ip_whitespace/);
 #: PR E8 built MOD-TGT02
-#: (gate_modules/tgt02_indication_specific_malignant_cell_coverage/).
-#: The other four TGT gates stay at UNBUILT_MODULE_VERSION until their own PR
+#: (gate_modules/tgt02_indication_specific_malignant_cell_coverage/); PR E10 built
+#: MOD-TGT03 (gate_modules/tgt03_treatment_metastatic_persistence/).
+#: The other three TGT gates stay at UNBUILT_MODULE_VERSION until their own PR
 #: E-series.
 BUILT_MODULE_VERSIONS: Final[Mapping[str, str]] = MappingProxyType(
-    {"TGT-01": "1.0.0", "TGT-02": "1.0.0", "TGT-05": "1.0.0", "TGT-08": "1.0.0"}
+    {
+        "TGT-01": "1.0.0",
+        "TGT-02": "1.0.0",
+        "TGT-03": "1.0.0",
+        "TGT-05": "1.0.0",
+        "TGT-08": "1.0.0",
+    }
 )
 
 
