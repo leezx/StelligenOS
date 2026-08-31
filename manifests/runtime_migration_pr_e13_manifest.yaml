@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_e13
-status: pending_review
+status: approved
 scope: tgt06_mod_tgt06_construction_contract_drawing_validation_and_acceptance_checklist_only
 repository_boundary: software_only_external_data
 
@@ -360,17 +360,43 @@ repository_policy:
   only_allowed_existing_file_mutation: append_to_logs_worklog_md
   migration_pending: remains
 
-chatgpt_review: pending
-approved_tip: null
-merge_commit: null
-review_rounds: 3
+chatgpt_review: APPROVE
+approved_tip: 0ab57b934348e6f865bf8d9723de3a40a73d50ba   # review round 4 anchor HEAD
+merge_commit: aa57640cedf86682d789bcd3562da394ce6a0d72   # Merge pull request #130 from leezx/task_20260831_runtime-migration-pr-e13
+review_rounds: 4
 test_count_before_e13: 1538       # at PR E12 approval
 test_count_at_submission: 1611    # local full suite (tests/test_tgt06_module_construction_contract.py 73)
 test_count_after_round_1: 1619    # +8 review-round-1 regression tests (tests/test_tgt06_module_construction_contract.py 81)
 test_count_after_round_2: 1626    # +7 review-round-2 consistency regression tests (tests/test_tgt06_module_construction_contract.py 88)
 test_count_after_round_3: 1629    # +3 review-round-3 Route-A/B consistency regression tests (tests/test_tgt06_module_construction_contract.py 91)
-approval_record_pr: null
+test_count_at_approval: 1629      # local full suite at APPROVE @ 0ab57b9 (round 4 -- no code change)
+approval_record_pr: task_20260831_runtime-migration-pr-e13-approval-record   # docs-only: this manifest -> approved + logs/chatgpt-review-2026-08-31-runtime-migration-pr-e13.md
 next_authorized_step: null        # PR E14 = MOD-TGT06@1.0.0 implementation -- needs its own go-ahead
+
+review_round_4:
+  verdict: APPROVE
+  reviewer: ChatGPT AI审核方案
+  head_reviewed: 0ab57b934348e6f865bf8d9723de3a40a73d50ba
+  ci_confirmed: run 33432029477 -- Python 3.11 / 3.12 verification both success
+  summary: >-
+    round-3's sole Route A/B blocker CLOSED -- fatal Route B now requires BOTH
+    >= 2 distinct eligible failure observations AND a projected
+    configuration-identity union of size >= 2; a single IDENTIFIED_MULTI {A,B}
+    observation cannot use Route B and can establish the fatal pattern only via
+    Route A (reproducibility_status == QUALIFIED + basis). Items 12 and 13 carry
+    the same Route A/B definition (no second fatal semantics). The ordinary Gate
+    aggregation is explicitly isolated -- a single IDENTIFIED_MULTI {A,B} failure
+    observation still projects to two failure configuration identities and can
+    support NEGATIVE / DIRECT; a Gate scientific NEGATIVE is NOT a machine
+    POTENTIAL_FATAL_PATTERN. E13 final frozen state -- Option A / POSITIVE /
+    INDIRECT_STRONG; exactly 6 legal Direction x Strength pairs; existence-proof
+    ordered aggregation; v1 no machine conflict resolver; unified
+    configuration_identity_projection; four completion axes, no
+    qualifying_indirect_configuration_ids; no cross-observation synthesis of
+    positive DIRECT; design-only; MOD-TGT06 = 0.0.0; MIGRATION_PENDING remains.
+  blockers: []
+  github_connector: 403 Resource not accessible by integration (every round) -- GitHub formal review state never written; the AI审核方案 conversation is authoritative
+  conclusion: APPROVE -- PR E13 may merge. Next is PR E14 = MOD-TGT06@1.0.0 deterministic implementation.
 
 review_round_3:
   verdict: REQUEST_CHANGES
