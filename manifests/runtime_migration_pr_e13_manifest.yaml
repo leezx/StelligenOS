@@ -363,12 +363,41 @@ repository_policy:
 chatgpt_review: pending
 approved_tip: null
 merge_commit: null
-review_rounds: 1
+review_rounds: 2
 test_count_before_e13: 1538       # at PR E12 approval
 test_count_at_submission: 1611    # local full suite (tests/test_tgt06_module_construction_contract.py 73)
 test_count_after_round_1: 1619    # +8 review-round-1 regression tests (tests/test_tgt06_module_construction_contract.py 81)
+test_count_after_round_2: 1626    # +7 review-round-2 consistency regression tests (tests/test_tgt06_module_construction_contract.py 88)
 approval_record_pr: null
 next_authorized_step: null        # PR E14 = MOD-TGT06@1.0.0 implementation -- needs its own go-ahead
+
+review_round_2:
+  verdict: REQUEST_CHANGES
+  reviewer: ChatGPT AI审核方案
+  head_reviewed: 8e695ced68cd77ec03a88b66c9b7b3d7e238ff27
+  ci_confirmed: run 33427903006 -- verify (3.11) + verify (3.12) both success
+  summary: >-
+    round-1's 4/4 blockers CLOSED (three-state configuration identity, ordered
+    aggregation precedence, Gate question decoupled from the DIRECT ceiling,
+    TRAFFICKING_OR_RECYCLING_ONLY asymmetric failure authority). 3 narrow
+    consistency construction-contract blockers.
+  blockers:
+    - "1. item 12 fatal_review.required_is_true_iff did not sync the TRAFFICKING_OR_RECYCLING_ONLY contributor kind -- item 08 machine_detection_criteria and item 13 already used {ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING, ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY, TRAFFICKING_OR_RECYCLING_ONLY} (the 3rd negative/failure path only) but item 12 still listed the first two. FIX: item 12 required_is_true_iff uses the exact three-kind contributor set; the test tightened from a Route A/B text check to exact contributor-set parity across item 08 / item 12 / item 13."
+    - "2. the same-configuration conflict still referenced a non-existent typed resolver -- the truth table repeatedly allowed a same-configuration productive-vs-failure pair to be 'resolved by a typed / auditable characterization' while E14 must not semantic-parse prose, but no typed field (conflict_resolution_status / configuration_characterization_status / resolution_basis) exists. FIX (minimal, no architecture expansion): NO machine conflict resolver in v1 -- a single configuration identity carrying BOTH a qualifying productive DIRECT observation AND a qualifying DIRECT-quality failure observation is simply CONFLICTING / DIRECT; the Module never reconciles or characterises the pair; assay / model / context variation for that one configuration is a human-review question. All 'typed / auditable characterization resolves it' language removed from direction_definitions.CONFLICTING, existence_proof_dominance, different_configurations_differ_is_not_a_conflict, the truth-table note, frozen_evaluation_order step 3, and the item-13 aggregation check; the CONFLICTING row key renamed accordingly."
+    - "3. how an IDENTIFIED_MULTI observation's config-id SET enters per-configuration grouping / counting was not locked -- E14 could treat {A,B} as one tuple identity or expand it to A and B, giving different POSITIVE / DIRECT vs CONFLICTING outcomes; same ambiguity for Route B failure counting. FIX: freeze a deterministic helper configuration_identity_projection(observation) -- SINGLE -> {internalization_configuration_id}; IDENTIFIED_MULTI -> set(internalization_configuration_ids); IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE -> {}. ALL grouping, CLEAN / uncontested detection, same-configuration conflict detection, DIRECT-quality failure configuration counting, the >= 2 independent test, Route B convergence (item 08) and completion.qualifying_direct_configuration_ids (item 09) operate over this projection; an IDENTIFIED_MULTI {A,B} observation contributes BOTH A and B."
+  do_not_change_confirmed:
+    - Option A; exactly 6 legal Direction x Strength pairs; POSITIVE / INDIRECT_STRONG; one failure -> INCONCLUSIVE / DIRECT
+    - clean-productive-existence-proof precedence; different configurations differ != conflict; Route A itself multi-configuration; Route B >= 2 not > 2
+    - WELL_MATCHED_CRC_MODEL fatal eligibility; any productive DIRECT cancels the machine fatal trigger; four completion axes; no qualifying_indirect_configuration_ids
+    - TRAFFICKING_OR_RECYCLING_ONLY positive <= IS / negative DIRECT-quality failure; no positive DIRECT synthesis across observations; no dedicated raw-number parity branch
+    - MOD-TGT06 = 0.0.0; MIGRATION_PENDING remains
+  files_touched:
+    - src/contracts/gate_modules/tgt06_internalization_trafficking_addressability.yaml (item 06 direction_definitions.CONFLICTING + existence_proof_dominance + different_configurations_differ_is_not_a_conflict + tgt06_specific_aggregation_truth_table note / new configuration_identity_projection / frozen_evaluation_order step 3 / CONFLICTING row key; item 08 route_b_independent_convergence; item 09 typed_completion_record qualifying_direct_configuration_ids; item 12 fatal_review.required_is_true_iff; item 13 aggregation check)
+    - docs/gate_modules/TGT-06_Internalization_Trafficking_Addressability.md (row 6)
+    - tests/test_tgt06_module_construction_contract.py (81 -> 88; new ReviewRound2RegressionTests + updated key-name / phrasing assertions)
+    - manifests/runtime_migration_pr_e13_manifest.yaml (this block)
+    - logs/worklog.md (append)
+  test_count_after: 1626
 
 review_round_1:
   verdict: REQUEST_CHANGES

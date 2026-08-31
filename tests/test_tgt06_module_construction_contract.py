@@ -302,19 +302,24 @@ class ExistenceProofAndHighestRungGradingTests(unittest.TestCase):
         self.assertIn("a single non-internalizing configuration never establishes target-wide non-internalization", one_fail)
         two_fail = _norm(tt["completed_and_no_productive_direct_and_at_least_two_independent_direct_quality_failure_configurations"])
         self.assertIn("negative / direct", two_fail)
-        self.assertIn("conflicting / direct", _norm(tt["completed_and_no_clean_productive_direct_and_a_same_configuration_has_unresolved_productive_vs_failure_direct_quality_claims"]))
+        self.assertIn("conflicting / direct", _norm(tt["completed_and_no_clean_productive_direct_and_a_configuration_identity_carries_both_a_productive_direct_and_a_direct_quality_failure_observation"]))
         self.assertIn("inconclusive / unknown", _norm(tt["completed_and_weak_only_or_no_qualifying_evidence"]))
         # PR E13 review round-1 gene: a frozen ordered evaluation
         order = _norm(tt["frozen_evaluation_order"])
         self.assertIn("stops at the first match", order)
         self.assertIn("if at least one clean / uncontested productive direct configuration exists -> positive / direct", order)
         self.assertIn("a conflicted configuration a plus a clean productive configuration b is still positive / direct", order)
+        # PR E13 review round-2 gene: one frozen projection helper
+        proj = _norm(tt["configuration_identity_projection"])
+        self.assertIn("single -> {internalization_configuration_id}", proj)
+        self.assertIn("identified_multi -> set(internalization_configuration_ids)", proj)
+        self.assertIn("identity_not_disclosed_or_not_applicable -> {} (the empty set)", proj)
 
     def test_existence_proof_dominance(self):
         d = _norm(self.i06["existence_proof_dominance"])
         self.assertIn("a clean / uncontested positive existence proof dominates heterogeneous configuration failures and a conflicted configuration elsewhere", d)
         self.assertIn("the gate answer is positive / direct -- not negative and not automatically conflicting", d)
-        self.assertIn("if configuration a is itself conflicted (an unresolved productive-vs-failure pair) but a different configuration b is a clean productive direct configuration, the gate answer is still positive / direct", d)
+        self.assertIn("if configuration a is itself conflicted (it carries both a productive direct observation and a direct-quality failure observation) but a different configuration b is a clean productive direct configuration", d)
         self.assertIn("never reverse the target-level addressability conclusion", d)
 
     def test_different_configurations_differ_is_not_a_conflict(self):
@@ -774,14 +779,15 @@ class ReviewRound1RegressionTests(unittest.TestCase):
         self.assertIn("in this exact order and stops at the first match", order)
         # step 2 precedes step 3: a clean productive B beats a conflicted A
         idx_clean = order.index("if at least one clean / uncontested productive direct configuration exists")
-        idx_conflict = order.index("if any single configuration has unresolved productive-vs-failure direct-quality claims")
+        idx_conflict = order.index("else if any configuration identity carries both a qualifying productive direct observation and a qualifying direct-quality failure observation")
         self.assertLess(idx_clean, idx_conflict)
         self.assertIn("a conflicted configuration a plus a clean productive configuration b is still positive / direct", order)
         self.assertIn("a single non-internalizing configuration never establishes target-wide non-internalization", order)
 
     def test_clean_productive_definition(self):
         note = _norm(self.i06["tgt06_specific_aggregation_truth_table"]["note"])
-        self.assertIn('a "clean / uncontested productive direct configuration" is a configuration identity with at least one direct productive observation and no unresolved same-configuration opposing direct-quality failure claim', note)
+        self.assertIn('a "clean / uncontested productive direct configuration" is a configuration identity that appears in at least one direct productive observation\'s projection set and appears in no direct-quality failure observation\'s projection set', note)
+        self.assertIn("there is no machine conflict resolver", note)
 
     # ---- blocker 3 -----------------------------------------------------------
     def test_gate_question_is_not_the_direct_ceiling(self):
@@ -807,6 +813,89 @@ class ReviewRound1RegressionTests(unittest.TestCase):
     def test_positive_direct_still_requires_an_integrated_observation(self):
         t = _norm(self.i06["trafficking_or_recycling_only_authority"])
         self.assertIn("a positive direct contributor must still be an integrated same-configuration internalization + lysosomal delivery observation", t)
+
+
+class ReviewRound2RegressionTests(unittest.TestCase):
+    """PR E13 ChatGPT AI审核方案 review round 2 -- 3 narrow consistency blockers
+    (the 4 round-1 blockers were all CLOSED).
+
+    (1) item 12 fatal_review.required_is_true_iff did not sync the
+        TRAFFICKING_OR_RECYCLING_ONLY contributor kind (item 08 / item 13 had).
+    (2) the same-configuration conflict still referenced a non-existent typed
+        resolver -- now there is NO machine conflict resolver in v1: a single
+        configuration identity carrying both a productive DIRECT and a
+        DIRECT-quality failure observation is simply CONFLICTING / DIRECT.
+    (3) how an IDENTIFIED_MULTI observation's config-id SET enters grouping /
+        counting was not locked -- now the frozen configuration_identity_projection
+        helper is the ONE interpretation everything uses.
+    """
+
+    def setUp(self):
+        self.item = yaml.safe_load(CONTRACT.read_text())["acceptance_checklist"]
+        self.i06 = self.item["06_direction_interpretation"]
+        self.checks = _flatten(
+            self.item["13_machine_acceptance_criteria"][
+                "a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"
+            ]
+        )
+
+    # ---- blocker 1 ---------------------------------------------------------
+    def test_item12_required_iff_uses_the_three_kind_contributor_set(self):
+        r = _norm(self.item["12_assessment_proposal_envelope_contract"]["fatal_review"]["required_is_true_iff"])
+        self.assertIn("observation_kind in {antibody_configuration_internalization_trafficking, antibody_configuration_internalization_only, trafficking_or_recycling_only}", r)
+        self.assertIn("the exact three-kind contributor set of item 08", r)
+        self.assertIn("a trafficking_or_recycling_only observation is eligible only in its negative / failure direction", r)
+
+    def test_item08_item12_item13_share_the_same_contributor_set(self):
+        i08 = _flatten(self.item["08_fatal_conditions"]["machine_detection_criteria"]["each_contributing_observation_must_be"])
+        i12 = _norm(self.item["12_assessment_proposal_envelope_contract"]["fatal_review"]["required_is_true_iff"])
+        wanted = "{antibody_configuration_internalization_trafficking, antibody_configuration_internalization_only, trafficking_or_recycling_only}"
+        self.assertIn(wanted, i08)
+        self.assertIn(wanted, i12)
+        self.assertIn(wanted, self.checks)
+
+    # ---- blocker 2 ---------------------------------------------------------
+    def test_no_machine_conflict_resolver_in_v1(self):
+        dd = _norm(self.i06["direction_definitions"]["CONFLICTING"])
+        self.assertIn("the same antibody / epitope configuration identity carries both a qualifying productive direct observation and a qualifying direct-quality failure observation", dd)
+        self.assertIn("there is no machine conflict resolver in v1", dd)
+        self.assertIn("is a human-review question", dd)
+        d = _norm(self.i06["different_configurations_differ_is_not_a_conflict"])
+        self.assertIn("it never runs a machine conflict resolver to explain away a genuine same-configuration productive-vs-failure pair", d)
+        note = _norm(self.i06["tgt06_specific_aggregation_truth_table"]["note"])
+        self.assertIn("there is no machine conflict resolver -- a same-configuration productive-vs-failure pair is simply conflicting / direct", note)
+        # the resolver-language must be gone
+        self.assertNotIn("typed / auditable characterization", note)
+        self.assertNotIn("no auditable characterization resolves them", dd)
+
+    def test_conflicting_row_key_and_evaluation_step(self):
+        tt = self.i06["tgt06_specific_aggregation_truth_table"]
+        self.assertIn("completed_and_no_clean_productive_direct_and_a_configuration_identity_carries_both_a_productive_direct_and_a_direct_quality_failure_observation", tt)
+        order = _norm(tt["frozen_evaluation_order"])
+        self.assertIn("else if any configuration identity carries both a qualifying productive direct observation and a qualifying direct-quality failure observation -> conflicting / direct (no machine conflict resolver; the module never reconciles it)", order)
+
+    # ---- blocker 3 ---------------------------------------------------------
+    def test_frozen_configuration_identity_projection_helper(self):
+        proj = _norm(self.i06["tgt06_specific_aggregation_truth_table"]["configuration_identity_projection"])
+        self.assertIn("the one deterministic helper every configuration-identity operation uses", proj)
+        self.assertIn("single -> {internalization_configuration_id}", proj)
+        self.assertIn("identified_multi -> set(internalization_configuration_ids)", proj)
+        self.assertIn("identity_not_disclosed_or_not_applicable -> {} (the empty set)", proj)
+        self.assertIn("an identified_multi {a, b} failure observation contributes both a and b to the failure configuration set", proj)
+        self.assertIn("per-configuration grouping, clean / uncontested detection", proj)
+        self.assertIn("route b convergence (item 08), and completion.qualifying_direct_configuration_ids (item 09) -- operate over this projection set", proj)
+
+    def test_route_b_and_completion_use_the_projection(self):
+        rb = _norm(self.item["08_fatal_conditions"]["machine_detection_criteria"]["route_b_independent_convergence"])
+        self.assertIn("the union of the item-06 configuration_identity_projection sets of the eligible direct-quality failure observations has size >= 2", rb)
+        self.assertIn("an identified_multi failure observation with {a, b} alone satisfies this", rb)
+        tc = _norm(self.item["09_evidence_source_plan"]["internalization_search_landscape"]["typed_completion_record"])
+        self.assertIn("it is the union of the item-06 configuration_identity_projection sets of every observation classified qualifying direct-rung", tc)
+        self.assertIn("an identified_multi {a, b} qualifying observation contributes both a and b", tc)
+
+    def test_item13_aggregation_check_uses_the_projection(self):
+        self.assertIn("every configuration test is over the frozen item-06 configuration_identity_projection", self.checks)
+        self.assertIn("there is no machine conflict resolver -- the module never reconciles or characterises the pair", self.checks)
 
 
 class NoImplementationInPrE13Tests(unittest.TestCase):

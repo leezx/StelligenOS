@@ -318,31 +318,35 @@ acceptance_checklist:
     direction_definitions:
       POSITIVE: qualifying evidence supports that the target-antibody complex is addressable for internalizing-payload delivery -- at DIRECT, a qualifying integrated configuration observation with antibody-induced internalization AND lysosomal delivery in a disease-relevant context; at INDIRECT_STRONG, qualifying constitutive-endocytosis / internalizing-receptor biology / non-CRC antibody-induced internalization / successful same-target ADC functional-delivery precedent
       NEGATIVE: qualifying DIRECT-quality evidence across AT LEAST TWO independent qualified antibody / epitope configurations converges on productive-internalization / trafficking failure (surface-static receptor biology) AND no qualifying productive DIRECT configuration exists on the completed landscape
-      CONFLICTING: for the SAME antibody / epitope configuration, qualifying DIRECT-quality observations make genuinely incompatible claims (productive internalization vs productive-internalization failure) and no auditable characterization resolves them
+      CONFLICTING: the SAME antibody / epitope configuration identity carries BOTH a qualifying productive DIRECT observation AND a qualifying DIRECT-quality failure observation, both admissible. The Module does NOT attempt to reconcile them -- there is NO machine conflict resolver in v1 (PR E13 review round-2 gene); assay / model / context variation for that one configuration is a human-review question
       INCONCLUSIVE: qualifying evidence does not resolve the addressability direction -- e.g. exactly one independent DIRECT-quality failure configuration with no qualifying productive DIRECT configuration (a single failure is FORBIDDEN by PR D from establishing target-wide non-internalization), OR only WEAK / no qualifying evidence on a completed landscape (per PR D unknown_behavior)
     existence_proof_dominance: >-
       a CLEAN / uncontested POSITIVE existence proof DOMINATES heterogeneous
       configuration failures AND a conflicted configuration elsewhere. If
       configuration A shows productive antibody-induced internalization with
-      lysosomal delivery in a disease-relevant context (and A has no unresolved
-      same-configuration opposing DIRECT-quality failure claim) AND configurations
+      lysosomal delivery in a disease-relevant context (and A carries NO
+      same-configuration DIRECT-quality failure observation) AND configurations
       B and C fail, the Gate answer is POSITIVE / DIRECT -- NOT NEGATIVE and NOT
       automatically CONFLICTING, because the Gate question ("is there an
       addressable configuration") is already answered yes. Likewise, if
-      configuration A is itself conflicted (an unresolved productive-vs-failure
-      pair) but a DIFFERENT configuration B is a CLEAN productive DIRECT
-      configuration, the Gate answer is still POSITIVE / DIRECT -- B independently
-      supplies the existence proof (frozen_evaluation_order step 2 precedes step
-      3). The B / C failure EvidencePackages, and the A conflict, are retained for
-      binder design / epitope selection / human review / downstream optimization;
-      they never reverse the target-level addressability conclusion.
+      configuration A is itself conflicted (it carries BOTH a productive DIRECT
+      observation and a DIRECT-quality failure observation) but a DIFFERENT
+      configuration B is a CLEAN productive DIRECT configuration (B carries no
+      same-configuration DIRECT-quality failure observation), the Gate answer is
+      still POSITIVE / DIRECT -- B independently supplies the existence proof
+      (frozen_evaluation_order step 2 precedes step 3). The B / C failure
+      EvidencePackages, and the A conflict, are retained for binder design /
+      epitope selection / human review / downstream optimization; they never
+      reverse the target-level addressability conclusion.
     different_configurations_differ_is_not_a_conflict: >-
       different antibody / epitope configurations showing different
       internalization behavior is NOT a CONFLICTING signal -- it is exactly what
       "internalization is configuration-specific" means. CONFLICTING is reserved
-      for genuinely incompatible qualifying DIRECT-quality claims about the SAME
-      configuration with no auditable resolution. This is a HARD lock: the E14
-      aggregator must never map inter-configuration heterogeneity to CONFLICTING.
+      for the SAME configuration identity carrying BOTH a qualifying productive
+      DIRECT observation AND a qualifying DIRECT-quality failure observation. This
+      is a HARD lock -- the E14 aggregator must never map inter-configuration
+      heterogeneity to CONFLICTING, and it never runs a machine conflict resolver
+      to explain away a genuine same-configuration productive-vs-failure pair.
     highest_qualifying_rung_grading_authority: >-
       TGT-06 uses the highest-qualifying-rung grading authority (the TGT-03
       precedent), NOT the TGT-04 single-tier exception. A qualifying
@@ -371,28 +375,50 @@ acceptance_checklist:
         internalization_outcome == FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING
         observation_kind in {ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY,
         TRAFFICKING_OR_RECYCLING_ONLY} -- both map to OPPOSES_ADDRESSABILITY (item
-        06 trafficking_or_recycling_only_authority). Independence is counted over
-        unique internalization_configuration_id. A "CLEAN / uncontested productive DIRECT
-        configuration" is a configuration identity with at least one DIRECT
-        productive observation and NO unresolved same-configuration opposing
-        DIRECT-quality failure claim (a same-configuration productive-vs-failure
-        pair is "resolved" only when a typed / auditable characterization
-        reconciles it -- E14 never semantic-parses prose).
+        06 trafficking_or_recycling_only_authority). Every configuration count,
+        grouping and membership test in this table is over the frozen
+        configuration_identity_projection set (item 06). A "CLEAN / uncontested
+        productive DIRECT configuration" is a configuration identity that appears
+        in at least one DIRECT productive observation's projection set AND appears
+        in NO DIRECT-quality failure observation's projection set. There is NO
+        machine conflict resolver -- a same-configuration productive-vs-failure
+        pair is simply CONFLICTING / DIRECT (PR E13 review round-2 gene); the
+        Module never characterises, reconciles or semantic-parses it.
+      configuration_identity_projection: >-
+        the ONE deterministic helper every configuration-identity operation uses
+        (PR E13 review round-2 gene -- there is no second interpretation).
+        configuration_identities(observation) -> a set of local configuration
+        identity strings: SINGLE -> {internalization_configuration_id};
+        IDENTIFIED_MULTI -> set(internalization_configuration_ids);
+        IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE -> {} (the empty set). ALL of --
+        per-configuration grouping, CLEAN / uncontested detection,
+        same-configuration productive-vs-failure conflict detection,
+        DIRECT-quality failure configuration counting, the >= 2 independent
+        failure test, Route B convergence (item 08), and
+        completion.qualifying_direct_configuration_ids (item 09) -- operate over
+        this projection set, and a configuration identity string appearing in an
+        IDENTIFIED_MULTI observation's set counts individually (an IDENTIFIED_MULTI
+        {A, B} failure observation contributes BOTH A and B to the failure
+        configuration set). An IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE observation
+        (always non-DIRECT-quality) contributes nothing to any configuration count.
       frozen_evaluation_order: >-
         E14 applies these steps in this exact order and STOPS at the first match
-        (PR E13 review round-1 gene). (0) not completed / audit-invalid -> per the
-        item-16 stop rule, NOT this table. (1) group all DIRECT-quality
-        observations (productive and failure) by configuration identity. (2) if at
-        least one CLEAN / uncontested productive DIRECT configuration exists ->
-        POSITIVE / DIRECT (existence-proof dominance -- a conflicted configuration
-        A plus a clean productive configuration B is still POSITIVE / DIRECT,
-        because B independently supplies the existence proof; heterogeneous
-        B / C failures alongside a clean productive A also do not change it).
-        (3) else if any SINGLE configuration has unresolved productive-vs-failure
-        DIRECT-quality claims -> CONFLICTING / DIRECT. (4) else if >= 2 independent
-        DIRECT-quality failure configurations (and no productive DIRECT) ->
-        NEGATIVE / DIRECT (may also satisfy fatal_review, item 08). (5) else if
-        EXACTLY ONE independent DIRECT-quality failure configuration (and no
+        (PR E13 review round-1 gene). Every configuration test uses the frozen
+        configuration_identity_projection. (0) not completed / audit-invalid -> per
+        the item-16 stop rule, NOT this table. (1) group all DIRECT-quality
+        observations (productive and failure) by projected configuration identity.
+        (2) if at least one CLEAN / uncontested productive DIRECT configuration
+        exists -> POSITIVE / DIRECT (existence-proof dominance -- a conflicted
+        configuration A plus a clean productive configuration B is still
+        POSITIVE / DIRECT, because B independently supplies the existence proof;
+        heterogeneous B / C failures alongside a clean productive A also do not
+        change it). (3) else if any configuration identity carries BOTH a
+        qualifying productive DIRECT observation AND a qualifying DIRECT-quality
+        failure observation -> CONFLICTING / DIRECT (no machine conflict resolver;
+        the Module never reconciles it). (4) else if >= 2 independent
+        DIRECT-quality failure configuration identities (and no productive DIRECT)
+        -> NEGATIVE / DIRECT (may also satisfy fatal_review, item 08). (5) else if
+        EXACTLY ONE DIRECT-quality failure configuration identity (and no
         productive DIRECT) -> INCONCLUSIVE / DIRECT (a single non-internalizing
         configuration NEVER establishes target-wide non-internalization -- PR D
         forbidden_inference). (6) else if no DIRECT-rung observation but at least
@@ -400,7 +426,7 @@ acceptance_checklist:
         INDIRECT_STRONG. (7) else (WEAK-only / no qualifying evidence) ->
         INCONCLUSIVE / UNKNOWN, zero evidence_refs.
       completed_and_at_least_one_clean_productive_direct_configuration: POSITIVE / DIRECT (the Gate ceiling -- an addressable configuration exists; existence-proof dominance over heterogeneous failures and over a conflicted configuration elsewhere)
-      completed_and_no_clean_productive_direct_and_a_same_configuration_has_unresolved_productive_vs_failure_direct_quality_claims: CONFLICTING / DIRECT
+      completed_and_no_clean_productive_direct_and_a_configuration_identity_carries_both_a_productive_direct_and_a_direct_quality_failure_observation: CONFLICTING / DIRECT
       completed_and_no_productive_direct_and_at_least_two_independent_direct_quality_failure_configurations: NEGATIVE / DIRECT (configuration-specific failure has escalated to a target-level surface-static / non-productively-internalizing pattern; may also satisfy fatal_review, item 08)
       completed_and_no_productive_direct_and_exactly_one_independent_direct_quality_failure_configuration: INCONCLUSIVE / DIRECT (a single non-internalizing configuration NEVER establishes target-wide non-internalization -- PR D forbidden_inference)
       completed_and_no_direct_rung_observation_and_at_least_one_qualifying_positive_indirect_strong: POSITIVE / INDIRECT_STRONG
@@ -595,13 +621,14 @@ acceptance_checklist:
         independent configurations". E14 never semantic-parses the basis text.
       route_b_independent_convergence: >-
         convergent FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING across AT LEAST
-        TWO independent qualified antibody / epitope configuration identities
-        (distinct auditable internalization_configuration_id, each from a
-        DIRECT-quality failure observation). This is a deterministic SUFFICIENT
-        convergence pattern -- it is NOT the word-meaning definition of
-        "reproducible", NOT a new biological threshold, and NOT "more than two" /
-        "> 2" / ">= 3". Genuine scientific independence of the configurations is a
-        human judgement.
+        TWO independent qualified antibody / epitope configuration identities --
+        i.e. the union of the item-06 configuration_identity_projection sets of
+        the eligible DIRECT-quality failure observations has size >= 2 (an
+        IDENTIFIED_MULTI failure observation with {A, B} alone satisfies this).
+        This is a deterministic SUFFICIENT convergence pattern -- it is NOT the
+        word-meaning definition of "reproducible", NOT a new biological threshold,
+        and NOT "more than two" / "> 2" / ">= 3". Genuine scientific independence
+        of the configurations is a human judgement.
     explicitly_excluded_from_a_fatal_trigger:
       - a single antibody / epitope configuration's productive-internalization failure (PR D -- "a single configuration's failure is not sufficient")
       - any landscape on which a qualifying productive DIRECT configuration exists
@@ -690,9 +717,11 @@ acceptance_checklist:
         receptor_endocytosis_and_inference_search_complete / unresolved_items /
         qualifying_direct_configuration_ids / audit_observation_id. There is
         exactly ONE qualifying configuration set -- qualifying_direct_configuration_ids
-        (the LOCAL antibody / epitope configuration identities of the observations
-        classified qualifying DIRECT-rung, productive or DIRECT-quality failure).
-        There is deliberately NO qualifying_indirect_configuration_ids set.
+        -- and it is the UNION of the item-06 configuration_identity_projection
+        sets of every observation classified qualifying DIRECT-rung (productive or
+        DIRECT-quality failure); an IDENTIFIED_MULTI {A, B} qualifying observation
+        contributes BOTH A and B. There is deliberately NO
+        qualifying_indirect_configuration_ids set.
         completion <-> SEARCH_COMPLETION_AUDIT snapshot parity (E6 / E8 / E10 gene)
         is frozen for E14: the snapshot field names ARE the typed completion field
         names (search_scope / sources_searched / landscape_as_of / per-component
@@ -811,26 +840,30 @@ acceptance_checklist:
       machine_never_emits: PUBLIC_FATAL_SIGNAL_ESTABLISHED / a canonical fatal flag / KILL / HOLD / Decision
       required_is_true_iff: >-
         NO qualifying productive DIRECT configuration exists on the completed
-        audited landscape, AND the machine has DIRECT-class antibody-induced
-        internalization observations (observation_kind in
-        {ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING,
-        ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY}), each in a qualified
+        audited landscape, AND the machine has DIRECT-quality
+        productive-internalization / trafficking FAILURE observations
+        (observation_kind in {ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING,
+        ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY, TRAFFICKING_OR_RECYCLING_ONLY}
+        -- the exact three-kind contributor set of item 08
+        machine_detection_criteria; a TRAFFICKING_OR_RECYCLING_ONLY observation is
+        eligible ONLY in its negative / failure direction per item 06
+        trafficking_or_recycling_only_authority), each in a qualified
         disease-relevant context (surface_context_class in {CRC_MALIGNANT_CELLS,
         WELL_MATCHED_CRC_MODEL} -- a QUALIFIED well-matched CRC model IS eligible
         here, unlike TGT-04) with a QUALIFIED context_adequacy_status + auditable
         basis, each carrying assay_validation_status == QUALIFIED + auditable
         basis and a non-empty factual assay_method, each carrying
         internalization_outcome == FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING
-        + auditable basis, on a completed audited landscape, AND multiple
+        + auditable basis, each in a SINGLE or IDENTIFIED_MULTI configuration
+        identity state, on a completed audited landscape, AND multiple
         independent configurations are established by Route A (one declared
-        multi-configuration analysis with len(unique(internalization_configuration_ids))
-        >= 2 and reproducibility_status == QUALIFIED + auditable basis) OR Route B
-        (convergent FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING across at
-        least two independent qualified antibody / epitope configuration
-        identities). A single configuration's failure -- even with
-        reproducibility_status == QUALIFIED -- gives required = false. A
-        constitutive-endocytosis / receptor-family / surface-localization-only
-        inference observation never contributes.
+        multi-configuration analysis whose item-06 configuration_identity_projection
+        set has size >= 2 and reproducibility_status == QUALIFIED + auditable
+        basis) OR Route B (the union of the eligible failure observations'
+        configuration_identity_projection sets has size >= 2). A single
+        configuration's failure -- even with reproducibility_status == QUALIFIED --
+        gives required = false. A constitutive-endocytosis / receptor-family /
+        surface-localization-only inference observation never contributes.
       only_actionable_on_an_accepted_run: >-
         the raw detector may compute the candidate pattern internally, but a
         fatal_review is an actionable handoff ONLY on an accepted run
@@ -884,7 +917,7 @@ acceptance_checklist:
       - the LOCAL configuration namespace (study_context.internalization_configuration_id / internalization_configuration_ids, completion.qualifying_direct_configuration_ids, fatal_review.configuration_ids) is never the canonical Instantiation context_id (CTX-CRC-REFRACTORY-MCRC); a proposal or record that collapses an internalization_configuration_id onto the canonical context_id is a HARD identity-namespace failure
       - the Gate-level proposed_strength follows the highest-qualifying-rung authority under the item-06 tgt06_specific_aggregation_truth_table -- DIRECT when a qualifying DIRECT-rung observation exists on the completed audited landscape, INDIRECT_STRONG when the highest qualifying rung is a positive INDIRECT_STRONG observation and no DIRECT-rung observation exists, UNKNOWN for a WEAK-only / no-qualifying-evidence landscape; a proposal with proposed_strength == WEAK is a HARD failure
       - proposed_direction x proposed_strength is exactly one of the six legal item-06 pairs (POSITIVE / DIRECT, POSITIVE / INDIRECT_STRONG, NEGATIVE / DIRECT, CONFLICTING / DIRECT, INCONCLUSIVE / DIRECT, INCONCLUSIVE / UNKNOWN); there is NO NEGATIVE / INDIRECT_STRONG, NO CONFLICTING / INDIRECT_STRONG, NO INCONCLUSIVE / INDIRECT_STRONG and NO INCONCLUSIVE / WEAK; INCONCLUSIVE / UNKNOWN carries zero evidence_refs; a graded INCONCLUSIVE / DIRECT carries CONTEXTUAL evidence_refs
-      - the aggregation follows the frozen item-06 tgt06_specific_aggregation_truth_table frozen_evaluation_order exactly, stopping at the first matching step -- (2) at least one CLEAN / uncontested productive DIRECT configuration -> POSITIVE / DIRECT (existence-proof dominance -- a conflicted configuration A plus a clean productive configuration B is still POSITIVE / DIRECT; heterogeneous B / C failures alongside a clean productive A do not change it); (3) else a SINGLE configuration with unresolved productive-vs-failure DIRECT-quality claims -> CONFLICTING / DIRECT; (4) else >= 2 independent DIRECT-quality failure configurations with no productive DIRECT -> NEGATIVE / DIRECT; (5) else exactly one independent DIRECT-quality failure configuration with no productive DIRECT -> INCONCLUSIVE / DIRECT (never NEGATIVE); (6) else no DIRECT-rung observation but a qualifying positive INDIRECT_STRONG -> POSITIVE / INDIRECT_STRONG; (7) else WEAK-only / no qualifying evidence -> INCONCLUSIVE / UNKNOWN. different configurations behaving differently is NEVER mapped to CONFLICTING (CONFLICTING is reserved for an unresolved same-configuration productive-vs-failure pair)
+      - the aggregation follows the frozen item-06 tgt06_specific_aggregation_truth_table frozen_evaluation_order exactly, stopping at the first matching step, and every configuration test is over the frozen item-06 configuration_identity_projection -- (2) at least one CLEAN / uncontested productive DIRECT configuration (a configuration identity in a productive DIRECT observation's projection set and in NO DIRECT-quality failure observation's projection set) -> POSITIVE / DIRECT (existence-proof dominance -- a conflicted configuration A plus a clean productive configuration B is still POSITIVE / DIRECT; heterogeneous B / C failures alongside a clean productive A do not change it); (3) else a configuration identity that carries BOTH a qualifying productive DIRECT observation AND a qualifying DIRECT-quality failure observation -> CONFLICTING / DIRECT (there is NO machine conflict resolver -- the Module never reconciles or characterises the pair); (4) else >= 2 independent DIRECT-quality failure configuration identities with no productive DIRECT -> NEGATIVE / DIRECT; (5) else exactly one DIRECT-quality failure configuration identity with no productive DIRECT -> INCONCLUSIVE / DIRECT (never NEGATIVE); (6) else no DIRECT-rung observation but a qualifying positive INDIRECT_STRONG -> POSITIVE / INDIRECT_STRONG; (7) else WEAK-only / no qualifying evidence -> INCONCLUSIVE / UNKNOWN. different configurations behaving differently is NEVER mapped to CONFLICTING (CONFLICTING is reserved for a single configuration identity carrying both a productive DIRECT and a DIRECT-quality failure observation)
       - the Direction over a qualifying integrated configuration observation follows the frozen item-06 internalization_direction_mapping (internalization_outcome PRODUCTIVE_INTERNALIZATION_WITH_LYSOSOMAL_DELIVERY -> SUPPORTS_ADDRESSABILITY; FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING -> OPPOSES_ADDRESSABILITY; MIXED_OR_UNRESOLVED / NOT_ESTABLISHED -> CONTEXTUAL); an INTERNALIZATION_OBSERVED_LYSOSOMAL_DELIVERY_UNRESOLVED observation is positive support at INDIRECT_STRONG ceiling only and never OPPOSES
       - no numeric decision is taken on a source-reported internalization rate / half-life / percent-internalized / colocalization coefficient -- the raw value may be stored as a factual measurement in the neutral claim but is never compared to a threshold, cutoff or invented range
       - the mandatory internalization-evidence-search landscape is complete for the path taken (item 16); the Module did not grade early on one internalization movie, one trafficking dataset, or one failure observation

@@ -6512,3 +6512,65 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 验证：`tests/test_tgt06_module_construction_contract.py` **81 OK**；全量
   **1619 OK**（round-1 前 1611）；`git diff --check` clean；YAML 合法。
 - Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-2 回复。
+
+### PR E13 · ChatGPT `AI审核方案` review round 2 → REQUEST_CHANGES（round-1 4/4 CLOSED + 3 窄 consistency blocker）
+
+- Verdict：**REQUEST_CHANGES**，anchor HEAD `8e695ced`；CI run 33427903006 verify
+  (3.11) + (3.12) 均 success。审核方确认 round-1 的 4 个 blocker 全部 CLOSED
+  （三态 configuration identity、ordered aggregation precedence、Gate question 与
+  DIRECT ceiling 解耦、TRAFFICKING_OR_RECYCLING_ONLY 的 asymmetric failure
+  authority）。剩 3 个窄 consistency construction-contract blocker，全部在 E13 修。
+- **Blocker 1**：item 12 `fatal_review.required_is_true_iff` 漏同步
+  `TRAFFICKING_OR_RECYCLING_ONLY` —— item 08 machine_detection_criteria 与
+  item 13 已用三-kind contributor set（`{ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING,
+  ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY, TRAFFICKING_OR_RECYCLING_ONLY}`，
+  第三类只负向 eligible），item 12 仍只列前两类。修复：item 12
+  `required_is_true_iff` 用同一三-kind set；测试从「只检 Route A/B 文本」收紧为
+  item 08 / item 12 / item 13 exact contributor-set parity。
+- **Blocker 2**：same-configuration conflict 仍依赖一个不存在的 typed resolver ——
+  truth table 反复允许 same-configuration productive-vs-failure pair 被「typed /
+  auditable characterization」resolve，而 E14 不得 semantic-parse prose，但
+  conceptual shape 无任何 typed field（`conflict_resolution_status` /
+  `configuration_characterization_status` / `resolution_basis` 均不存在）。修复
+  （最小、不扩架构）：v1 **无 machine conflict resolver** —— 同一 configuration
+  identity 同时带 qualifying productive DIRECT observation 与 qualifying
+  DIRECT-quality failure observation 即 `CONFLICTING / DIRECT`；Module 永不
+  reconcile / characterise；assay / model / context variation 交 human review。
+  「typed / auditable characterization resolves it」措辞从
+  direction_definitions.CONFLICTING、existence_proof_dominance、
+  different_configurations_differ_is_not_a_conflict、truth-table note、
+  frozen_evaluation_order step 3、item-13 aggregation check 全部移除；CONFLICTING
+  row key 改名。
+- **Blocker 3**：`IDENTIFIED_MULTI` observation 的 config-id SET 如何进入
+  per-configuration grouping / counting 未锁 —— E14 可把 `{A,B}` 当一个 tuple
+  identity（IDENTIFIED_MULTI productive obs 看起来 "clean" → POSITIVE / DIRECT）
+  或展开成 A、B（A conflicted、B fails → 无 clean A → 不同结果）；Route B failure
+  counting 同样歧义。修复：冻结 deterministic helper
+  `configuration_identity_projection(observation)` —— SINGLE →
+  `{internalization_configuration_id}`；IDENTIFIED_MULTI →
+  `set(internalization_configuration_ids)`；IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE
+  → `{}`。ALL grouping / CLEAN detection / same-configuration conflict detection /
+  DIRECT-quality failure counting / `>= 2` independent test / Route B convergence
+  （item 08）/ `completion.qualifying_direct_configuration_ids`（item 09）都用这
+  一个 projection；IDENTIFIED_MULTI `{A,B}` observation 贡献 **both** A 和 B。
+- 审核方明确「不要改」：Option A；6 legal pairs；POSITIVE/INDIRECT_STRONG；one
+  failure → INCONCLUSIVE/DIRECT；clean-productive-existence-proof precedence；
+  different configs differ ≠ conflict；Route A 本身 multi-configuration；Route B
+  `>= 2` 非 `> 2`；WELL_MATCHED_CRC_MODEL fatal eligibility；any productive DIRECT
+  取消 machine fatal trigger；四轴 completion；无 qualifying_indirect_configuration_ids；
+  TRAFFICKING_OR_RECYCLING_ONLY positive ≤ IS / negative DIRECT-quality failure；
+  no positive DIRECT synthesis across observations；无 dedicated raw-number parity
+  branch；MOD-TGT06 = 0.0.0；MIGRATION_PENDING 保持。
+- 改动文件：`tgt06_internalization_trafficking_addressability.yaml`（item 06
+  direction_definitions.CONFLICTING + existence_proof_dominance +
+  different_configurations_differ_is_not_a_conflict + truth-table note / 新
+  configuration_identity_projection / frozen_evaluation_order step 3 / CONFLICTING
+  row key；item 08 route_b_independent_convergence；item 09 typed_completion_record；
+  item 12 required_is_true_iff；item 13 aggregation check）、
+  `TGT-06_Internalization_Trafficking_Addressability.md`（row 6）、
+  `tests/test_tgt06_module_construction_contract.py`（81 → **88**：新增
+  `ReviewRound2RegressionTests` + key-name / 措辞断言更新）、manifest
+  （`review_rounds: 2` + `review_round_2` block）、本 worklog append。
+- 验证：`tests/test_tgt06_module_construction_contract.py` **88 OK**；全量
+  **1626 OK**（round-2 前 1619）；`git diff --check` clean；YAML 合法。
+- Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-3 回复。
