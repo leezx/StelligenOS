@@ -5937,3 +5937,58 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   TGT-01/02/03/05/08；`MIGRATION_PENDING` 保持。
 - Next：PR E11 = TGT-04 construction contract（fatal-first 顺序余下 TGT-04 →
   TGT-06 → TGT-07），需各自 go-ahead。
+
+---
+
+## 2026-08-31 — Runtime Migration PR E11 · TGT-04 施工合同（build）
+
+- 授权：用户在 PR E10 收口后 "go ahead"。开工前 ChatGPT `AI审核方案` 给
+  **APPROVE-to-proceed**（E11-1…E11-8 正确，4 个关键修正，前两个最重要），冻结为
+  TGT-04 / MOD-TGT04 Construction Contract, design-only。
+- 新增 `src/contracts/gate_modules/tgt04_tumor_surface_availability_density_plausibility.yaml`
+  —— 17 项施工合同：
+  - **修正 1（two-tier / single-tier grading）**：TGT-04 是 two-tier evidence
+    architecture（LOCALIZATION INDIRECT_STRONG / DENSITY DIRECT）但 single-tier
+    grading authority —— 只有 qualifying DIRECT quantitative antigen-density
+    observation grant graded Direction；localization-only completed landscape →
+    `INCONCLUSIVE / UNKNOWN`（INDIRECT_STRONG 永不传递成 Gate Strength）。legal
+    Direction × Strength pairs 恰好 5 个：POSITIVE/DIRECT、NEGATIVE/DIRECT、
+    CONFLICTING/DIRECT、INCONCLUSIVE/DIRECT、INCONCLUSIVE/UNKNOWN。
+  - **修正 2（三个分离 typed field）**：`measurement_validation_status`
+    {QUALIFIED, NOT_ESTABLISHED}（是否有资格进 DIRECT，QUALIFIED ≠ positive
+    density conclusion）；`density_plausibility_status` {PLAUSIBLY_ADEQUATE,
+    NOT_PLAUSIBLY_ADEQUATE, MIXED_OR_UNRESOLVED, NOT_ESTABLISHED}（upstream-qualified
+    interpretation，永不由 Module 算）；`surface_antigen_level`
+    {QUANTITATIVELY_PRESENT, LOW_BUT_PRESENT, NEGLIGIBLE_OR_UNDETECTABLE,
+    MIXED_OR_UNRESOLVED, NOT_ESTABLISHED}（为 fatal path 单独冻结）。
+  - **修正 3**：raw quantitative density value / unit 是 admissible factual
+    evidence；禁止的是 Module 拿它和 ANY threshold / cutoff / invented range 比较。
+  - **修正 4**：fatal Route A / Route B 镜像 TGT-03；local identity 名
+    `surface_context_id(s)`；Route B = convergent NEGLIGIBLE_OR_UNDETECTABLE 跨
+    `>= 2` independent qualified surface_context identity（不是 "> 2"）。
+    LOW_BUT_PRESENT 永不 fatal 永不自动 NEGATIVE。
+  - typed `SurfaceAvailabilityCompletion`（四 search-completion axes，非 evidence
+    prerequisites / 非 grading axes）；observation kinds 8 种；local
+    surface_context_id namespace 与 canonical context_id 两套；items 10-17 继承
+    E2/E4/E6/E8/E10 runtime genes 含五个 E10-review correction（explicitly
+    qualified context for a rung、local context namespace closed、每个 qualified
+    status 有 basis、closed measurement_validation_status enum + 非空 assay_method
+    for DIRECT、kind/fact-specific non-inflated study_context）；improved TGT-03
+    dedup。EVGAP-01 inference_guard 逐字 pin。
+- 新增 `docs/gate_modules/TGT-04_Tumor_Surface_Availability_Density_Plausibility.md`
+  —— 17 行表 + 3 条 headline blockquote + normalized-observation /
+  SurfaceAvailabilityCompletion conceptual shape + "What PR E11 is NOT"。
+- 新增 `tests/test_tgt04_module_construction_contract.py` —— **58 tests**（10 类）。
+- 新增 `manifests/runtime_migration_pr_e11_manifest.yaml`、
+  `docs/handoff/2026-08-31-runtime-migration-pr-e11.zh-CN.md`。
+- 既有文件唯一改动：本 worklog append。**不动** binding / registry / README /
+  built-roster test（留到 PR E12）。
+- 验证：`tests/test_tgt04_module_construction_contract.py` **58 OK**；全量
+  **1437 OK**（E10 收口 1379）；`bash scripts/verify_repository_boundary.sh` 只报
+  既有 untracked 杂项；`git diff --check` clean；YAML 合法且无
+  list-element-parsed-as-dict。
+- 状态：8 个 primary Module 施工合同已 APPROVE 6 个（含本 PR 待审）；已实现 5 个
+  （TGT-01/02/03/05/08 @ 1.0.0）。MOD-TGT04 `primary_module_version` 仍 `0.0.0`。
+  `MIGRATION_PENDING` 保持。TGT-06 → TGT-07 属后续 PR。
+- Next：开 PR、CI 绿后回 `AI审核方案` 贴 E11 review。下一步 PR E12 =
+  MOD-TGT04@1.0.0 实现需各自 go-ahead。
