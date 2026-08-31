@@ -145,18 +145,20 @@ scoping_decisions:  # ChatGPT AI审核方案, before code -- APPROVE-to-proceed 
     CLINICAL_ANTIGEN_SINK_PK_EFFECT + same_target_therapeutic_match_status ==
     QUALIFIED + same_target_therapeutic_ref != "" +
     soluble_antigen_attribution_status == QUALIFIED + analysis_validation_status
-    == QUALIFIED + reproducibility_status == QUALIFIED (a per-observation quality
-    gate on the single clinical finding -- NOT an independent-replication /
-    cross-study convergence requirement) + a documented clinically achievable
-    exposure compromise. TMDD source path -- observation_kind ==
+    == QUALIFIED + sink_materiality_outcome ==
+    MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE + a documented
+    clinically achievable exposure compromise. TMDD source path -- observation_kind ==
     SOLUBLE_ANTIGEN_TMDD_ANALYSIS + tmdd_input_adequacy_status == QUALIFIED +
     analysis_validation_status == QUALIFIED + analysis_method != "" +
     exposure_scenario_class == INTENDED_ADC_EXPOSURE + the model explicitly
     concludes a material clinically achievable exposure compromise. ONE qualifying
     observation on EITHER path is sufficient; the two paths are NOT combined and
-    NOT a convergence pair; there is NO additional reproducibility requirement
-    beyond the clinical path's own per-observation gate. GLOBAL PRECONDITION --
-    NONE. Unlike TGT-06, a POSITIVE / DIRECT does NOT cancel the fatal trigger;
+    NOT a convergence pair; there is NO mandatory reproducibility predicate for
+    the single-observation clinical fatal path in v1 (PR E15 review round-1 --
+    reproducibility_status stays optional factual metadata and is never a fatal
+    or machine-acceptance gate; a reproducibility_status == NOT_ESTABLISHED
+    clinical observation that meets every other clause is still fatal-eligible).
+    GLOBAL PRECONDITION -- NONE. Unlike TGT-06, a POSITIVE / DIRECT does NOT cancel the fatal trigger;
     the TGT-07 fatal signal is a STRICT SUBSET of POSITIVE / DIRECT (a
     MATERIAL_SOLUBLE_SINK_WITHOUT_ESTABLISHED_CLINICAL_EXPOSURE_COMPROMISE DIRECT
     is POSITIVE / DIRECT but NONFATAL). status single value
@@ -265,8 +267,10 @@ scoping_decisions:  # ChatGPT AI审核方案, before code -- APPROVE-to-proceed 
     SOLUBLE_ANTIGEN_TMDD_ANALYSIS + INTENDED_ADC_EXPOSURE). cohort_class
     {CRC_PATIENT_SERUM, HEALTHY_DONOR_SERUM, SAME_TARGET_THERAPEUTIC_PK,
     WELL_MATCHED_MODEL, NON_CRC_CONTEXT, UNRESOLVED} + basis.
-    reproducibility_status {QUALIFIED, NOT_ESTABLISHED} + basis (the clinical
-    fatal-path per-observation gate). LIGHTWEIGHT LOCAL EVIDENCE-CONTEXT -- a
+    reproducibility_status {QUALIFIED, NOT_ESTABLISHED} + basis is OPTIONAL
+    factual metadata ONLY -- carried when an upstream source states it, shown to
+    the human reviewer, and NEVER a mandatory fatal or machine-acceptance
+    predicate (PR E15 review round-1). LIGHTWEIGHT LOCAL EVIDENCE-CONTEXT -- a
     single-string sink_exposure_context_id (a therapeutic format x dose / exposure
     x affinity x patient / model descriptor) + sink_exposure_context_basis,
     REQUIRED on a qualifying DIRECT observation, "" on INDIRECT_STRONG / WEAK /
@@ -312,7 +316,7 @@ seven_required_tightenings:  # ChatGPT AI审核方案 closing summary -- frozen 
   - "1. Option A: positive INDIRECT_STRONG propagates; exactly 6 legal Direction x Strength pairs; there is NO NEGATIVE / INDIRECT_STRONG."
   - "2. A below-detection / below-quantitation-limit soluble-antigen quantitation is CONTEXTUAL -- not a positive INDIRECT_STRONG and not a NEGATIVE; a new CLOSED circulating_soluble_target_status typed enum {QUANTIFIED_PRESENT, BELOW_DETECTION_OR_QUANTITATION_LIMIT, MIXED_OR_UNRESOLVED, NOT_ESTABLISHED} carries this."
   - "3. A canonical NEGATIVE / DIRECT is produced ONLY by a qualified SOLUBLE_ANTIGEN_TMDD_ANALYSIS with exposure_scenario_class == INTENDED_ADC_EXPOSURE and sink_materiality_outcome == NO_MATERIAL_SOLUBLE_SINK; 'some same-target therapeutic did not see a sink' can never directly produce NEGATIVE / DIRECT."
-  - "4. Fatal does NOT use a TGT-06-style Route A / Route B convergence -- one qualifying DIRECT observation whose sink_materiality_outcome == MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE and that satisfies the clinical source path OR the TMDD source path triggers POTENTIAL_FATAL_PATTERN; clinical and TMDD are two alternative source paths, not two convergence routes; no extra reproducibility beyond the clinical path's own per-observation reproducibility_status == QUALIFIED gate (no independent-replication / cross-study convergence requirement); there is NO global cancellation precondition (the fatal signal is a strict subset of POSITIVE / DIRECT)."
+  - "4. Fatal does NOT use a TGT-06-style Route A / Route B convergence -- one qualifying DIRECT observation whose sink_materiality_outcome == MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE and that satisfies the clinical source path OR the TMDD source path triggers POTENTIAL_FATAL_PATTERN; clinical and TMDD are two alternative source paths, not two convergence routes; there is NO mandatory reproducibility predicate for the single-observation clinical fatal path in v1 -- reproducibility_status stays optional factual metadata and is never a fatal or machine-acceptance gate (a reproducibility_status == NOT_ESTABLISHED clinical observation that meets every other clause is still fatal-eligible); there is NO global cancellation precondition (the fatal signal is a strict subset of POSITIVE / DIRECT)."
   - "5. Introduce a lightweight single-string sink_exposure_context_id (with sink_exposure_context_basis), REQUIRED on a qualifying DIRECT observation only; same-context material-vs-no-material only is CONFLICTING; NO TGT-06 declared_multi / IDENTIFIED_MULTI / third-state machinery and NO set-projection helper."
   - "6. TMDD / clinical DIRECT and fatal authority is carried by typed statuses -- tmdd_input_adequacy_status, same_target_therapeutic_match_status, soluble_antigen_attribution_status, analysis_validation_status, exposure_scenario_class -- and E16 must NEVER semantic-parse prose to obtain DIRECT or fatal authority."
   - "7. SolubleAntigenEvidenceCompletion keeps exactly FOUR search-completion axes (soluble_antigen_quantitation_search_complete / sheddase_processing_search_complete / secreted_isoform_search_complete / same_target_pk_pd_or_tmdd_search_complete) and NO qualifying_indirect_evidence_context_ids set; soluble_antigen_quantitation_search_complete is true iff BOTH the CRC-patient and the healthy-donor serum / plasma search subspaces are done; the fourth axis explicitly covers clinical PK / PD and target-mediated-disposition analyses."
@@ -331,7 +335,7 @@ next_after_approval: PR E16 = MOD-TGT07@1.0.0 deterministic implementation (the 
 delivers:
   - src/contracts/gate_modules/tgt07_shedding_soluble_antigen_sink_liability.yaml -- the frozen MOD-TGT07 construction contract with the 17-item acceptance checklist
   - docs/gate_modules/TGT-07_Shedding_Soluble_Antigen_Sink_Liability.md -- the human-readable construction drawing (17-row table + three headline blockquotes + the frozen normalized-observation / SolubleAntigenEvidenceCompletion conceptual shape)
-  - tests/test_tgt07_module_construction_contract.py -- 78 tests (checklist completeness + E1-template reuse; items 03/05/07/08 normalized-equality parity + item 04 EXACT set-equality derived parity + no-inference_guard confirmation; exposure-context / highest-qualifying-rung grading authority + the six-pair legal set + the aggregation truth table + existence-proof dominance + no-cross-observation-synthesis-of-DIRECT; the seven required tightenings + the E16 conceptual shape (eight observation kinds, the CLOSED sink_materiality_outcome + circulating_soluble_target_status enums); the fatal single-predicate / two-source-path rule -- no convergence, no global cancellation precondition; source hard locks; E2/E4/E6/E8/E10/E12/E14 gene inheritance; no-implementation reconciliation -- package dir does not exist, binding still 0.0.0, binding / registry / existing tests untouched, only append worklog; drawing covers all 17 items)
+  - tests/test_tgt07_module_construction_contract.py -- 83 tests (checklist completeness + E1-template reuse; items 03/05/07/08 normalized-equality parity + item 04 EXACT set-equality derived parity + no-inference_guard confirmation; exposure-context / highest-qualifying-rung grading authority + the six-pair legal set + the aggregation truth table + existence-proof dominance + no-cross-observation-synthesis-of-DIRECT; the seven required tightenings + the E16 conceptual shape (eight observation kinds, the CLOSED sink_materiality_outcome + circulating_soluble_target_status enums); the fatal single-predicate / two-source-path rule -- no convergence, no global cancellation precondition; source hard locks; E2/E4/E6/E8/E10/E12/E14 gene inheritance; no-implementation reconciliation -- package dir does not exist, binding still 0.0.0, binding / registry / existing tests untouched, only append worklog; drawing covers all 17 items)
   - manifests/runtime_migration_pr_e15_manifest.yaml -- this file
   - docs/handoff/2026-08-31-runtime-migration-pr-e15.zh-CN.md -- the E15 handoff
 
@@ -364,15 +368,52 @@ repository_policy:
   only_allowed_existing_file_mutation: append_to_logs_worklog_md
   migration_pending: remains
 
-chatgpt_review: PENDING
+chatgpt_review: REQUEST_CHANGES
 approved_tip: null
 merge_commit: null
-review_rounds: 0
+review_rounds: 1
 test_count_before_e15: 1713       # at PR E14 approval
 test_count_at_submission: 1791    # local full suite (tests/test_tgt07_module_construction_contract.py 78)
+test_count_after_round_1: 1796    # +5 review-round-1 regression tests (tests/test_tgt07_module_construction_contract.py 83)
 test_count_at_approval: null
 approval_record_pr: null          # docs-only, created after APPROVE (PR #95 ... #133 precedent)
 next_authorized_step: null        # PR E16 = MOD-TGT07@1.0.0 implementation -- needs its own go-ahead
+
+review_round_1:
+  verdict: REQUEST_CHANGES
+  reviewer: ChatGPT AI审核方案
+  head_reviewed: 11922dc1b91cf27146d97f30ffedfb7e989b358c
+  ci_confirmed: run 33450076820 -- verify (3.11) + verify (3.12) both success
+  summary: >-
+    main contract sound -- design-only boundary; PR D items 03/05/07/08 parity +
+    item 04 exact-set parity; Option A; exactly 6 legal Direction x Strength
+    pairs; no NEGATIVE / INDIRECT_STRONG; below-LOD/LOQ -> CONTEXTUAL; canonical
+    NEGATIVE / DIRECT only from an intended-ADC TMDD; frozen ordered aggregation;
+    same-context only CONFLICTING; v1 no machine conflict resolver; no
+    cross-observation DIRECT synthesis; lightweight single-string
+    sink_exposure_context_id; four completion axes + CRC / healthy dual-subspace
+    quantitation requirement; no qualifying_indirect_evidence_context_ids; no raw
+    numeric threshold / parity branch; proposal-relative EvidenceRole mapping;
+    fatal = one predicate + two alternative source paths; no fatal global
+    cancellation precondition; the 3 headline conclusions -- all judged correct,
+    do not reopen. 1 narrow blocker.
+  blockers:
+    - "1. the clinical fatal source path wrongly added a MANDATORY reproducibility_status == QUALIFIED predicate (propagated into item 08 clinical_source_path, item 12 required_is_true_iff, item 13 machine acceptance, seven_required_tightenings, manifest E15-4, and the tests). This contradicts the pre-code ruling: the frozen PR D fatal condition is a singular authority (\"circulating soluble antigen demonstrated, or quantitatively modelled ... to materially compromise clinically achievable exposure\") -- a clinical observation with QUALIFIED same-target / attribution / analysis-validation qualification that has directly documented MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE is enough to surface machine-local POTENTIAL_FATAL_PATTERN; a second reproducibility gate produces a false negative (a strong single clinical PK observation with reproducibility_status == NOT_ESTABLISHED would give fatal_review.required == false). FIX: remove reproducibility_status == QUALIFIED as a fatal / machine-acceptance prerequisite on the clinical source path; keep reproducibility_status / reproducibility_basis as OPTIONAL factual metadata (carried, shown to the human reviewer, never a gate). Reword the wrongly-frozen \"no extra reproducibility beyond the clinical path's own per-observation reproducibility_status == QUALIFIED gate\" to \"There is NO mandatory reproducibility predicate for the single-observation clinical fatal path in v1\". Regression: qualified clinical sink-effect observation + MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE + reproducibility_status == NOT_ESTABLISHED -> still fatal-eligible; attribution / same-target-match / analysis-validation NOT_ESTABLISHED still block fatal."
+  do_not_change_confirmed:
+    - design-only boundary; PR D items 03/05/07/08 parity + item 04 exact-set parity; no PR D inference_guard
+    - Option A; exactly 6 legal Direction x Strength pairs; no NEGATIVE / INDIRECT_STRONG; below-LOD/LOQ -> CONTEXTUAL
+    - canonical NEGATIVE / DIRECT only from an intended-ADC TMDD; frozen ordered aggregation; same-context only CONFLICTING; v1 no machine conflict resolver; no cross-observation DIRECT synthesis
+    - lightweight single-string sink_exposure_context_id (no declared_multi / IDENTIFIED_MULTI / third-state / set-projection); four completion axes + CRC / healthy dual-subspace quantitation; no qualifying_indirect_evidence_context_ids
+    - no raw numeric threshold / parity branch; proposal-relative EvidenceRole mapping (CONTRADICTING only on CONFLICTING / DIRECT)
+    - fatal = one predicate + two alternative source paths; no fatal global cancellation precondition; the 3 headline conclusions
+    - MOD-TGT07 = 0.0.0; MIGRATION_PENDING remains
+  files_touched:
+    - src/contracts/gate_modules/tgt07_shedding_soluble_antigen_sink_liability.yaml (item 06 upstream_qualified_factual_states; item 08 clinical_source_path + two_source_paths_not_routes; item 12 fatal_review.required_is_true_iff + clinical_attribution_basis_refs; item 13 classification-driving basis list + fatal acceptance check; seven_required_tightenings 4)
+    - docs/gate_modules/TGT-07_Shedding_Soluble_Antigen_Sink_Liability.md (row 8; the normalized-observation conceptual shape)
+    - tests/test_tgt07_module_construction_contract.py (78 -> 83; new ReviewRound1RegressionTests + updated fatal-path / tightening-4 assertions)
+    - manifests/runtime_migration_pr_e15_manifest.yaml (E15-4 scoping decision; seven_required_tightenings 4; this block)
+    - logs/worklog.md (append)
+  test_count_after: 1796
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt07_module_construction_contract.py' -v

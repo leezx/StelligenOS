@@ -22,9 +22,11 @@ Asserts:
   circulating_soluble_target_status enum; (3) a canonical NEGATIVE / DIRECT is
   produced ONLY by a qualified intended-ADC SOLUBLE_ANTIGEN_TMDD_ANALYSIS
   concluding NO_MATERIAL_SOLUBLE_SINK; (4) fatal is ONE predicate + TWO source
-  paths (clinical / TMDD) -- no Route A / Route B convergence, no extra
-  reproducibility beyond the clinical path's own per-observation gate, and NO
-  global cancellation precondition; (5) a lightweight single-string
+  paths (clinical / TMDD) -- no Route A / Route B convergence, NO mandatory
+  reproducibility predicate on the single-observation clinical fatal path
+  (reproducibility_status is optional factual metadata only -- PR E15 review
+  round-1), and NO global cancellation precondition; (5) a lightweight
+  single-string
   sink_exposure_context_id (DIRECT only) -- no declared_multi / IDENTIFIED_MULTI
   / third-state machinery; (6) typed tmdd_input_adequacy_status /
   same_target_therapeutic_match_status / soluble_antigen_attribution_status --
@@ -490,8 +492,11 @@ class FatalReviewAndProposalTests(unittest.TestCase):
         self.assertIn("same_target_therapeutic_match_status == qualified", clinical)
         self.assertIn("same_target_therapeutic_ref != \"\"", clinical)
         self.assertIn("soluble_antigen_attribution_status == qualified", clinical)
-        self.assertIn("reproducibility_status == qualified", clinical)
-        self.assertIn("not an independent-replication / cross-study convergence requirement", clinical)
+        self.assertIn("analysis_validation_status == qualified", clinical)
+        self.assertIn("sink_materiality_outcome == material_soluble_sink_with_clinical_exposure_compromise", clinical)
+        # PR E15 review round-1: NO mandatory reproducibility predicate on the clinical fatal path
+        self.assertNotIn("reproducibility_status == qualified with an auditable reproducibility_basis", clinical)
+        self.assertIn("reproducibility_status is not a prerequisite", clinical)
         tmdd = _flatten(c["tmdd_source_path"])
         self.assertIn("observation_kind == soluble_antigen_tmdd_analysis", tmdd)
         self.assertIn("tmdd_input_adequacy_status == qualified", tmdd)
@@ -500,7 +505,7 @@ class FatalReviewAndProposalTests(unittest.TestCase):
         two = _norm(c["two_source_paths_not_routes"])
         self.assertIn("they are not a route a / route b convergence pair and not combined", two)
         self.assertIn("one qualifying observation on either path is sufficient", two)
-        self.assertIn("no additional reproducibility requirement beyond the clinical path's own per-observation reproducibility_status == qualified gate", two)
+        self.assertIn("no mandatory reproducibility predicate for the single-observation clinical fatal path in v1", two)
 
     def test_item08_exclusions(self):
         excl = _flatten(self.item["08_fatal_conditions"]["explicitly_excluded_from_a_fatal_trigger"])
@@ -714,6 +719,8 @@ class ScopingRulingRegressionTests(unittest.TestCase):
         self.assertIn("a canonical negative / direct is produced only by a qualified soluble_antigen_tmdd_analysis with exposure_scenario_class == intended_adc_exposure", joined)
         self.assertIn("fatal does not use a tgt-06-style route a / route b convergence", joined)
         self.assertIn("clinical and tmdd are two alternative source paths, not two convergence routes", joined)
+        self.assertIn("there is no mandatory reproducibility predicate for the single-observation clinical fatal path in v1", joined)
+        self.assertNotIn("reproducibility_status == qualified gate", joined)
         self.assertIn("there is no global cancellation precondition", joined)
         self.assertIn("introduce a lightweight single-string sink_exposure_context_id", joined)
         self.assertIn("no tgt-06 declared_multi / identified_multi / third-state machinery and no set-projection helper", joined)
@@ -875,6 +882,70 @@ class DrawingTests(unittest.TestCase):
         norm = " ".join(self.text.split()).lower()
         self.assertIn("append to `logs/worklog.md`", norm)
         self.assertIn("does not touch it, the binding, the registry or any existing test", norm)
+
+
+class ReviewRound1RegressionTests(unittest.TestCase):
+    """PR E15 ChatGPT AI审核方案 review round 1 -- 1 narrow blocker.
+
+    The clinical fatal source path had wrongly added a mandatory
+    `reproducibility_status == QUALIFIED` predicate (propagated into item 08 /
+    item 12 / item 13 / seven_required_tightenings / manifest E15-4 / the tests),
+    contradicting the pre-code ruling that the PR D fatal condition is a singular
+    authority. FIX: the single-observation clinical fatal path has NO mandatory
+    reproducibility predicate in v1; `reproducibility_status` /
+    `reproducibility_basis` stay as OPTIONAL factual metadata -- carried, shown
+    to the human reviewer, never a fatal or machine-acceptance gate.
+    """
+
+    def setUp(self):
+        self.doc = yaml.safe_load(CONTRACT.read_text())
+        self.item = self.doc["acceptance_checklist"]
+        self.i06 = self.item["06_direction_interpretation"]
+        self.mdc = self.item["08_fatal_conditions"]["machine_detection_criteria"]
+        self.drawing = DRAWING.read_text()
+
+    def test_clinical_fatal_path_has_no_mandatory_reproducibility_gate(self):
+        clinical = _flatten(self.mdc["clinical_source_path"])
+        self.assertNotIn("reproducibility_status == qualified with an auditable reproducibility_basis", clinical)
+        self.assertIn("reproducibility_status is not a prerequisite", clinical)
+        self.assertIn("still fatal-eligible", clinical)
+        two = _norm(self.mdc["two_source_paths_not_routes"])
+        self.assertIn("no mandatory reproducibility predicate for the single-observation clinical fatal path in v1", two)
+        self.assertIn("reproducibility_status is optional factual metadata, never a fatal or machine-acceptance gate", two)
+
+    def test_item12_required_iff_and_item13_drop_the_reproducibility_predicate(self):
+        r12 = _norm(self.item["12_assessment_proposal_envelope_contract"]["fatal_review"]["required_is_true_iff"])
+        self.assertNotIn("reproducibility_status == qualified + basis", r12)
+        self.assertIn("no mandatory reproducibility predicate for the single-observation clinical fatal path", r12)
+        checks = _flatten(self.item["13_machine_acceptance_criteria"]["a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"])
+        # the clinical fatal check enumeration no longer contains the reproducibility predicate
+        self.assertNotIn("analysis_validation_status == qualified + reproducibility_status == qualified", checks)
+        self.assertIn("no mandatory reproducibility predicate for the single-observation clinical fatal path", checks)
+
+    def test_reproducibility_status_is_optional_factual_metadata(self):
+        s = _norm(self.i06["upstream_qualified_factual_states"])
+        self.assertIn("reproducibility_status in {qualified, not_established} + reproducibility_basis is optional factual metadata only", s)
+        self.assertIn("never a mandatory fatal or machine-acceptance predicate", s)
+        # item 13 basis list no longer treats it as a classification-driving HARD basis
+        checks = _flatten(self.item["13_machine_acceptance_criteria"]["a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"])
+        self.assertIn("reproducibility_status is not a classification-driving status", checks)
+        # drawing conceptual shape says the same
+        norm_d = " ".join(self.drawing.split()).lower()
+        self.assertIn("optional factual metadata only", norm_d)
+
+    def test_other_clinical_qualifiers_still_gate_fatal(self):
+        clinical = _flatten(self.mdc["clinical_source_path"])
+        self.assertIn("same_target_therapeutic_match_status == qualified", clinical)
+        self.assertIn("soluble_antigen_attribution_status == qualified", clinical)
+        self.assertIn("analysis_validation_status == qualified", clinical)
+        excl = _flatten(self.item["08_fatal_conditions"]["explicitly_excluded_from_a_fatal_trigger"])
+        self.assertIn("a same-target therapeutic with an abnormal pk that is not qualified-attributable to soluble antigen", excl)
+
+    def test_tightening_4_no_reproducibility_gate_wording(self):
+        rt4 = _norm(self.doc["seven_required_tightenings"][3])
+        self.assertIn("there is no mandatory reproducibility predicate for the single-observation clinical fatal path in v1", rt4)
+        self.assertNotIn("reproducibility_status == qualified gate", rt4)
+        self.assertIn("a reproducibility_status == not_established clinical observation that meets every other clause is still fatal-eligible", rt4)
 
 
 if __name__ == "__main__":

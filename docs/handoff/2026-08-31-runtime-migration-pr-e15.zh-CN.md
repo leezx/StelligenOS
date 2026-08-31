@@ -40,11 +40,12 @@
    MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE`）满足 clinical
    source path **或** TMDD source path 即触发 `POTENTIAL_FATAL_PATTERN`；
    clinical / TMDD 是两条**可选 source path**，不是两条 convergence route；
-   clinical path 自带 per-observation `reproducibility_status == QUALIFIED`
-   gate（**不是** independent-replication / cross-study convergence 要求），此外
-   无额外 reproducibility 要求；**无 global cancellation precondition**
-   （fatal signal 是 `POSITIVE / DIRECT` 的严格子集，`POSITIVE / DIRECT`
-   不取消 fatal trigger）。
+   **v1 单观测 clinical fatal path 无强制 reproducibility predicate** ——
+   `reproducibility_status` 是可选 factual metadata，永不作 fatal / machine
+   acceptance gate（`reproducibility_status == NOT_ESTABLISHED` 但满足其它所有
+   clause 的 clinical observation 仍 fatal-eligible —— PR E15 review round-1
+   blocker 1）；**无 global cancellation precondition**（fatal signal 是
+   `POSITIVE / DIRECT` 的严格子集，`POSITIVE / DIRECT` 不取消 fatal trigger）。
 5. **引入轻量单串 `sink_exposure_context_id`**（配 `sink_exposure_context_basis`），
    仅 qualifying DIRECT observation 必填；same-context material-vs-no-material
    才 `CONFLICTING`；**无 TGT-06 `declared_multi` / `IDENTIFIED_MULTI` /
@@ -97,8 +98,10 @@
   `same_target_therapeutic_match_status == QUALIFIED` +
   `same_target_therapeutic_ref` + `soluble_antigen_attribution_status ==
   QUALIFIED` + `analysis_validation_status == QUALIFIED` +
-  `reproducibility_status == QUALIFIED` + documented clinically achievable
-  exposure compromise）**或** TMDD source path（`SOLUBLE_ANTIGEN_TMDD_ANALYSIS`
+  `sink_materiality_outcome ==
+  MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE` + documented
+  clinically achievable exposure compromise —— **无强制 `reproducibility_status`
+  predicate**，见 tightening 4）**或** TMDD source path（`SOLUBLE_ANTIGEN_TMDD_ANALYSIS`
   + `tmdd_input_adequacy_status == QUALIFIED` + `analysis_validation_status ==
   QUALIFIED` + `analysis_method != ""` + `exposure_scenario_class ==
   INTENDED_ADC_EXPOSURE` + 模型明确得出 material clinically achievable exposure
@@ -186,7 +189,7 @@
   `SOLUBLE_ANTIGEN_QUANTITATION` / `SHEDDASE_SUBSTRATE_STATUS` /
   `SECRETED_ISOFORM` / `PREDICTED_CLEAVAGE_SITE_INFERENCE` /
   `FAMILY_ANALOGY_SHEDDING_INFERENCE` / `SEARCH_COMPLETION_AUDIT`。
-- `tests/test_tgt07_module_construction_contract.py` —— **78 tests**（11 类；
+- `tests/test_tgt07_module_construction_contract.py` —— **83 tests**（12 类；
   checklist completeness + E1-template reuse；items 03/05/07/08
   normalized-equality parity + item 04 **exact set equality** derived parity +
   no-inference_guard confirmation；exposure-context / highest-qualifying-rung
@@ -203,8 +206,8 @@
 
 ## 五、验证
 
-- `tests/test_tgt07_module_construction_contract.py` **78 OK**；全量
-  **1791 OK**（PR E14 收口 1713）。
+- `tests/test_tgt07_module_construction_contract.py` **83 OK**（提交时 78，
+  review round-1 +5 regression）；全量 **1796 OK**（PR E14 收口 1713）。
 - `bash scripts/verify_repository_boundary.sh` 只报既有 untracked 杂项
   （`AI_RESULT_ACCEPTANCE.md`、`CRC Patient Territory Map.png`、
   `STELLIGEN_CONSTRAINTS.md`、`pipelines/`、`.claude/scheduled_tasks.lock`）。

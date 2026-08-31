@@ -6926,3 +6926,56 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Next：开 PR、CI 绿后回 `AI审核方案` 贴 E15 review 请求。APPROVE 后 PR E16 =
   MOD-TGT07@1.0.0 实现（第八也是最后一个 primary Module；PR E16 解除
   `MIGRATION_PENDING`），需各自 go-ahead。
+
+### PR E15 · ChatGPT `AI审核方案` review round 1 → REQUEST_CHANGES（1 窄 blocker）
+
+- Verdict：**REQUEST_CHANGES**，anchor HEAD `11922dc`；exact-head CI run
+  33450076820 verify (3.11) + (3.12) 均 success。审核方确认主体合同成立并逐条
+  列出「判定正确、不要重开」：design-only boundary；PR D items 03/05/07/08
+  parity + item 04 exact-set parity；Option A；6 legal pair；no
+  `NEGATIVE / INDIRECT_STRONG`；below-LOD/LOQ → CONTEXTUAL；canonical
+  `NEGATIVE / DIRECT` 只从 intended-ADC TMDD；frozen ordered aggregation；
+  same-context only CONFLICTING；v1 no machine conflict resolver；no
+  cross-observation DIRECT synthesis；lightweight single-string
+  `sink_exposure_context_id`；four completion axes + CRC/healthy dual-subspace
+  quantitation；no `qualifying_indirect_evidence_context_ids`；no raw numeric
+  threshold / parity branch；proposal-relative EvidenceRole mapping；fatal = one
+  predicate + two source paths；no fatal global cancellation precondition；3 条
+  headline conclusion。
+- **Blocker 1** —— clinical fatal source path 错误增加了 **mandatory**
+  `reproducibility_status == QUALIFIED` predicate（并已同步进 item 08
+  clinical_source_path、item 12 `required_is_true_iff`、item 13 machine
+  acceptance、`seven_required_tightenings` 4、manifest `E15-4` 与测试）。这与
+  pre-code ruling 矛盾 —— frozen PR D fatal 是单数 authority（"circulating
+  soluble antigen demonstrated, or quantitatively modelled ... to materially
+  compromise clinically achievable exposure"），一个 QUALIFIED same-target /
+  attribution / analysis-validation qualified 且已直接 documented
+  `MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE` 的 clinical
+  observation 就足以 surface machine-local `POTENTIAL_FATAL_PATTERN`；第二层
+  reproducibility gate 会造成 false negative（强单观测 clinical PK observation
+  + `reproducibility_status == NOT_ESTABLISHED` → `fatal_review.required ==
+  false`）。**FIX**：clinical source path 去掉 `reproducibility_status ==
+  QUALIFIED` 作为 fatal / machine-acceptance prerequisite；保留
+  `reproducibility_status` / `reproducibility_basis` 为 **optional factual
+  metadata**（carried、给 human reviewer 看，永不作 gate）。改掉被错误冻结的
+  "no extra reproducibility beyond the clinical path's own per-observation
+  `reproducibility_status == QUALIFIED` gate" → "There is NO mandatory
+  reproducibility predicate for the single-observation clinical fatal path in
+  v1"。加 regression：qualified clinical sink-effect observation +
+  `MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE` +
+  `reproducibility_status == NOT_ESTABLISHED` → 仍 fatal-eligible；
+  attribution / same-target-match / analysis-validation `NOT_ESTABLISHED` 仍
+  block fatal。
+- 触及文件：`tgt07_shedding_soluble_antigen_sink_liability.yaml`（item 06
+  upstream_qualified_factual_states / item 08 clinical_source_path +
+  two_source_paths_not_routes / item 12 fatal_review.required_is_true_iff +
+  clinical_attribution_basis_refs / item 13 basis list + fatal acceptance check
+  / seven_required_tightenings 4）、`TGT-07_....md`（row 8 + conceptual
+  shape）、`test_tgt07_module_construction_contract.py`（78 → 83，新
+  `ReviewRound1RegressionTests` + 更新 fatal-path / tightening-4 断言）、
+  `runtime_migration_pr_e15_manifest.yaml`（E15-4 + tightening 4 + 本 block）、
+  `logs/worklog.md`。E15 science / architecture 其余不动。
+- 本轮 ChatGPT 明确 CLOSED、不要改：见上「判定正确、不要重开」清单 + MOD-TGT07
+  0.0.0 + `MIGRATION_PENDING` 保持。
+- 本地全量 unittest：1796 OK（1791 → +5 regression）。
+- Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-2 回复。

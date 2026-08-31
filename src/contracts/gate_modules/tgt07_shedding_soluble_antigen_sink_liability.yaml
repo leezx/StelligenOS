@@ -523,9 +523,14 @@ acceptance_checklist:
       soluble_antigen_attribution_basis (an abnormal same-target-drug PK is not
       automatically attributable to soluble antigen);
       exposure_scenario_class in {INTENDED_ADC_EXPOSURE,
-      SAME_TARGET_THERAPEUTIC_ANALOGUE, UNRESOLVED} + exposure_scenario_basis;
+      SAME_TARGET_THERAPEUTIC_ANALOGUE, UNRESOLVED} + exposure_scenario_basis.
       reproducibility_status in {QUALIFIED, NOT_ESTABLISHED} +
-      reproducibility_basis (the clinical fatal-path per-observation gate).
+      reproducibility_basis is OPTIONAL factual metadata ONLY -- it is carried
+      when an upstream source states it, it is shown to the human reviewer, and
+      it is NEVER a mandatory fatal or machine-acceptance predicate (PR E15
+      review round-1: there is no mandatory reproducibility gate on the
+      single-observation clinical fatal path in v1; informative factual metadata
+      is not a scientific authority gate).
     sink_materiality_direction_mapping:
       note: >-
         applied ONLY to a qualifying DIRECT observation (DIRECT rung predicate
@@ -666,9 +671,10 @@ acceptance_checklist:
         - same_target_therapeutic_ref != ""
         - soluble_antigen_attribution_status == QUALIFIED with an auditable soluble_antigen_attribution_basis
         - analysis_validation_status == QUALIFIED with an auditable analysis_validation_basis
-        - reproducibility_status == QUALIFIED with an auditable reproducibility_basis (a per-observation quality gate on the single clinical finding -- NOT an independent-replication / cross-study convergence requirement)
+        - sink_materiality_outcome == MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE with an auditable sink_materiality_outcome_basis
         - the source documents a clinically achievable exposure compromise attributable to soluble antigen
         - a non-empty sink_exposure_context_id + sink_exposure_context_basis
+        - reproducibility_status is NOT a prerequisite -- a reproducibility_status == NOT_ESTABLISHED clinical observation that meets every clause above is still fatal-eligible (PR E15 review round-1)
       tmdd_source_path:
         - observation_kind == SOLUBLE_ANTIGEN_TMDD_ANALYSIS
         - tmdd_input_adequacy_status == QUALIFIED with an auditable tmdd_input_adequacy_basis
@@ -681,9 +687,13 @@ acceptance_checklist:
         the clinical source path and the TMDD source path are alternative
         admissible qualified evidence paths for the SAME single fatal predicate.
         They are NOT a Route A / Route B convergence pair and NOT combined -- one
-        qualifying observation on either path is sufficient. There is no
-        additional reproducibility requirement beyond the clinical path's own
-        per-observation reproducibility_status == QUALIFIED gate.
+        qualifying observation on either path is sufficient. There is NO mandatory
+        reproducibility predicate for the single-observation clinical fatal path
+        in v1 -- reproducibility_status is optional factual metadata, never a
+        fatal or machine-acceptance gate (PR E15 review round-1). The frozen PR D
+        fatal condition is a singular authority: "circulating soluble antigen
+        demonstrated, or quantitatively modelled ... to materially compromise
+        clinically achievable exposure".
       landscape: a completed, audited soluble-antigen-evidence-search landscape (item 16)
     explicitly_excluded_from_a_fatal_trigger:
       - a measured circulating soluble-antigen concentration by itself (PR D forbidden_inference -- "a measured circulating soluble-antigen concentration, by itself, establishes a material antigen sink")
@@ -905,7 +915,7 @@ acceptance_checklist:
         - sink_materiality_outcome_class ([the sink_materiality_outcome per contributing observation -- must be MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE])
         - source_path ([CLINICAL or TMDD per contributing observation])
         - analysis_validation_basis_refs ([the disclosed analysis_validation_basis per observation])
-        - clinical_attribution_basis_refs ([the disclosed same_target_therapeutic_match_basis + soluble_antigen_attribution_basis + reproducibility_basis for a clinical-path contributor; empty for a pure TMDD-path contributor])
+        - clinical_attribution_basis_refs ([the disclosed same_target_therapeutic_match_basis + soluble_antigen_attribution_basis for a clinical-path contributor; empty for a pure TMDD-path contributor])
         - tmdd_input_adequacy_basis_refs ([the disclosed tmdd_input_adequacy_basis + exposure_scenario_basis for a TMDD-path contributor; empty for a pure clinical-path contributor])
         - landscape_as_of, soluble_antigen_search_scope
       machine_may_emit: POTENTIAL_FATAL_PATTERN
@@ -922,8 +932,8 @@ acceptance_checklist:
         (observation_kind == CLINICAL_ANTIGEN_SINK_PK_EFFECT,
         same_target_therapeutic_match_status == QUALIFIED + basis,
         same_target_therapeutic_ref != "", soluble_antigen_attribution_status ==
-        QUALIFIED + basis, reproducibility_status == QUALIFIED + basis, a
-        documented clinically achievable exposure compromise) OR the TMDD source
+        QUALIFIED + basis, a documented clinically achievable exposure
+        compromise) OR the TMDD source
         path (observation_kind == SOLUBLE_ANTIGEN_TMDD_ANALYSIS,
         tmdd_input_adequacy_status == QUALIFIED + basis,
         analysis_validation_status == QUALIFIED + basis, analysis_method != "",
@@ -931,10 +941,12 @@ acceptance_checklist:
         explicitly concludes the clinically achievable exposure is materially
         compromised). ONE qualifying observation on EITHER path is sufficient --
         the clinical and TMDD paths are alternative admissible source paths, NOT
-        a convergence pair, and there is NO additional reproducibility
-        requirement beyond the clinical path's own per-observation
-        reproducibility_status == QUALIFIED gate. There is NO global cancellation
-        precondition -- a POSITIVE / DIRECT does NOT clear the fatal signal (the
+        a convergence pair, and there is NO mandatory reproducibility predicate
+        for the single-observation clinical fatal path in v1
+        (reproducibility_status is optional factual metadata, never a fatal or
+        machine-acceptance gate -- PR E15 review round-1). There is NO global
+        cancellation precondition -- a POSITIVE / DIRECT does NOT clear the fatal
+        signal (the
         fatal signal is a strict subset of POSITIVE / DIRECT). A DIRECT
         observation whose sink_materiality_outcome ==
         MATERIAL_SOLUBLE_SINK_WITHOUT_ESTABLISHED_CLINICAL_EXPOSURE_COMPROMISE
@@ -989,7 +1001,7 @@ acceptance_checklist:
       - DIRECT is NEVER synthesized across observations -- a quantitation EP plus a separate model EP does NOT combine into a DIRECT material-sink proof (item 06 no_cross_observation_synthesis_of_direct); a proposal that does so is a HARD failure
       - a canonical NEGATIVE / DIRECT (NO_MATERIAL_SOLUBLE_SINK) is only produced by a SOLUBLE_ANTIGEN_TMDD_ANALYSIS with exposure_scenario_class == INTENDED_ADC_EXPOSURE, tmdd_input_adequacy_status == QUALIFIED + basis and analysis_validation_status == QUALIFIED + basis; a same-target therapeutic with no reported PK sink, a healthy-donor-only quantitation, or a no-material-sink TMDD whose exposure_scenario_class is SAME_TARGET_THERAPEUTIC_ANALOGUE / UNRESOLVED never proposes NEGATIVE / DIRECT
       - a qualifying DIRECT-rung observation carries a non-empty auditable local sink_exposure_context_id + sink_exposure_context_basis; an INDIRECT_STRONG / WEAK / SEARCH_COMPLETION_AUDIT observation carries sink_exposure_context_id == "" and the Module must NOT reject it for lacking one, and must NOT assert "every qualifying INDIRECT_STRONG observation has a sink_exposure_context_id"
-      - every classification-driving qualified status carries an auditable basis -- circulating_soluble_target_status, cohort_class, sink_materiality_outcome, analysis_validation_status, tmdd_input_adequacy_status, same_target_therapeutic_match_status, soluble_antigen_attribution_status, exposure_scenario_class, reproducibility_status (where present); a missing / drifted qualification basis is a HARD integrity failure
+      - every classification-driving qualified status carries an auditable basis -- circulating_soluble_target_status, cohort_class, sink_materiality_outcome, analysis_validation_status, tmdd_input_adequacy_status, same_target_therapeutic_match_status, soluble_antigen_attribution_status, exposure_scenario_class; a missing / drifted qualification basis is a HARD integrity failure. reproducibility_status is NOT a classification-driving status -- it is optional factual metadata and its absence, or a NOT_ESTABLISHED value, is never a machine-acceptance or fatal failure
       - the LOCAL sink-exposure namespace (study_context.sink_exposure_context_id, completion.qualifying_direct_evidence_context_ids, fatal_review.sink_exposure_context_ids) is never the canonical Instantiation context_id (CTX-CRC-REFRACTORY-MCRC); a proposal or record that collapses a sink_exposure_context_id onto the canonical context_id is a HARD identity-namespace failure
       - the Gate-level proposed_strength follows the highest-qualifying-rung authority under the item-06 tgt07_specific_aggregation_truth_table -- DIRECT when a qualifying DIRECT-rung observation exists on the completed audited landscape, INDIRECT_STRONG when the highest qualifying rung is a positive INDIRECT_STRONG observation and no DIRECT-rung observation exists, UNKNOWN for a WEAK-only / below-assay-limit-only / no-qualifying-evidence landscape; a proposal with proposed_strength == WEAK is a HARD failure
       - proposed_direction x proposed_strength is exactly one of the six legal item-06 pairs (POSITIVE / DIRECT, POSITIVE / INDIRECT_STRONG, NEGATIVE / DIRECT, CONFLICTING / DIRECT, INCONCLUSIVE / DIRECT, INCONCLUSIVE / UNKNOWN); there is NO NEGATIVE / INDIRECT_STRONG, NO CONFLICTING / INDIRECT_STRONG, NO INCONCLUSIVE / INDIRECT_STRONG and NO INCONCLUSIVE / WEAK; INCONCLUSIVE / UNKNOWN carries zero evidence_refs; a graded INCONCLUSIVE / DIRECT carries CONTEXTUAL evidence_refs
@@ -998,7 +1010,7 @@ acceptance_checklist:
       - the evidence_refs roles follow the frozen item-12 frozen_proposal_relative_evidence_role_mapping; CONTRADICTING appears ONLY on a CONFLICTING / DIRECT proposal
       - no numeric decision is taken on a source-reported soluble-antigen concentration / turnover / affinity / dose-exposure / sink ratio -- the raw value may be stored as a factual measurement in the neutral claim but is never compared to a threshold, cutoff or invented range
       - the mandatory soluble-antigen-evidence-search landscape is complete for the path taken (item 16); the Module did not grade early on one quantitation, one sheddase record, or one analysis
-      - if the module-local fatal_review record has required = true, its status is POTENTIAL_FATAL_PATTERN (never PUBLIC_FATAL_SIGNAL_ESTABLISHED), at least one contributing observation is a qualifying DIRECT observation (observation_kind in {CLINICAL_ANTIGEN_SINK_PK_EFFECT, SOLUBLE_ANTIGEN_TMDD_ANALYSIS}, sink_materiality_outcome == MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE) satisfying the clinical source path (same_target_therapeutic_match_status == QUALIFIED + same_target_therapeutic_ref + soluble_antigen_attribution_status == QUALIFIED + analysis_validation_status == QUALIFIED + reproducibility_status == QUALIFIED + a documented clinically achievable exposure compromise) OR the TMDD source path (tmdd_input_adequacy_status == QUALIFIED + analysis_validation_status == QUALIFIED + analysis_method != "" + exposure_scenario_class == INTENDED_ADC_EXPOSURE + the model explicitly concludes a material clinically achievable exposure compromise) -- ONE qualifying observation on EITHER path is sufficient, the two paths are NOT a convergence pair, there is NO additional reproducibility requirement beyond the clinical path's own per-observation gate, and there is NO global cancellation precondition; it is surfaced only on an accepted run
+      - if the module-local fatal_review record has required = true, its status is POTENTIAL_FATAL_PATTERN (never PUBLIC_FATAL_SIGNAL_ESTABLISHED), at least one contributing observation is a qualifying DIRECT observation (observation_kind in {CLINICAL_ANTIGEN_SINK_PK_EFFECT, SOLUBLE_ANTIGEN_TMDD_ANALYSIS}, sink_materiality_outcome == MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE) satisfying the clinical source path (same_target_therapeutic_match_status == QUALIFIED + same_target_therapeutic_ref + soluble_antigen_attribution_status == QUALIFIED + analysis_validation_status == QUALIFIED + a documented clinically achievable exposure compromise) OR the TMDD source path (tmdd_input_adequacy_status == QUALIFIED + analysis_validation_status == QUALIFIED + analysis_method != "" + exposure_scenario_class == INTENDED_ADC_EXPOSURE + the model explicitly concludes a material clinically achievable exposure compromise) -- ONE qualifying observation on EITHER path is sufficient, the two paths are NOT a convergence pair, there is NO mandatory reproducibility predicate for the single-observation clinical fatal path (reproducibility_status is optional factual metadata, never a fatal or machine-acceptance gate), and there is NO global cancellation precondition; it is surfaced only on an accepted run
       - fatal_review is not a field of the proposal envelope
       - dedup -- one SRC -> many EP is allowed; a same source_id + same claim + different sink_exposure_context_id keeps both; the same (source_id, claim, all-driving-facts, local-sink-exposure-context) is not duplicated; a SEARCH_COMPLETION_AUDIT EP is never the dedup loser for an attempted completion
       - all required fields present; no numeric or ranking score anywhere; no circulating soluble-antigen concentration / turnover / affinity / dose-exposure / sink-ratio threshold; no invented "material soluble-antigen sink concentration" range
@@ -1193,7 +1205,7 @@ seven_required_tightenings:  # ChatGPT AI审核方案 closing summary -- frozen 
   - "1. Option A: positive INDIRECT_STRONG propagates; exactly 6 legal Direction x Strength pairs; there is NO NEGATIVE / INDIRECT_STRONG."
   - "2. A below-detection / below-quantitation-limit soluble-antigen quantitation is CONTEXTUAL -- not a positive INDIRECT_STRONG and not a NEGATIVE; a new CLOSED circulating_soluble_target_status typed enum {QUANTIFIED_PRESENT, BELOW_DETECTION_OR_QUANTITATION_LIMIT, MIXED_OR_UNRESOLVED, NOT_ESTABLISHED} carries this."
   - "3. A canonical NEGATIVE / DIRECT is produced ONLY by a qualified SOLUBLE_ANTIGEN_TMDD_ANALYSIS with exposure_scenario_class == INTENDED_ADC_EXPOSURE and sink_materiality_outcome == NO_MATERIAL_SOLUBLE_SINK; 'some same-target therapeutic did not see a sink' can never directly produce NEGATIVE / DIRECT."
-  - "4. Fatal does NOT use a TGT-06-style Route A / Route B convergence -- one qualifying DIRECT observation whose sink_materiality_outcome == MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE and that satisfies the clinical source path OR the TMDD source path triggers POTENTIAL_FATAL_PATTERN; clinical and TMDD are two alternative source paths, not two convergence routes; no extra reproducibility beyond the clinical path's own per-observation reproducibility_status == QUALIFIED gate (no independent-replication / cross-study convergence requirement); there is NO global cancellation precondition (the fatal signal is a strict subset of POSITIVE / DIRECT)."
+  - "4. Fatal does NOT use a TGT-06-style Route A / Route B convergence -- one qualifying DIRECT observation whose sink_materiality_outcome == MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE and that satisfies the clinical source path OR the TMDD source path triggers POTENTIAL_FATAL_PATTERN; clinical and TMDD are two alternative source paths, not two convergence routes; there is NO mandatory reproducibility predicate for the single-observation clinical fatal path in v1 -- reproducibility_status stays optional factual metadata and is never a fatal or machine-acceptance gate (a reproducibility_status == NOT_ESTABLISHED clinical observation that meets every other clause is still fatal-eligible); there is NO global cancellation precondition (the fatal signal is a strict subset of POSITIVE / DIRECT)."
   - "5. Introduce a lightweight single-string sink_exposure_context_id (with sink_exposure_context_basis), REQUIRED on a qualifying DIRECT observation only; same-context material-vs-no-material only is CONFLICTING; NO TGT-06 declared_multi / IDENTIFIED_MULTI / third-state machinery and NO set-projection helper."
   - "6. TMDD / clinical DIRECT and fatal authority is carried by typed statuses -- tmdd_input_adequacy_status, same_target_therapeutic_match_status, soluble_antigen_attribution_status, analysis_validation_status, exposure_scenario_class -- and E16 must NEVER semantic-parse prose to obtain DIRECT or fatal authority."
   - "7. SolubleAntigenEvidenceCompletion keeps exactly FOUR search-completion axes (soluble_antigen_quantitation_search_complete / sheddase_processing_search_complete / secreted_isoform_search_complete / same_target_pk_pd_or_tmdd_search_complete) and NO qualifying_indirect_evidence_context_ids set; soluble_antigen_quantitation_search_complete is true iff BOTH the CRC-patient and the healthy-donor serum / plasma search subspaces are done; the fourth axis explicitly covers clinical PK / PD and target-mediated-disposition analyses."
