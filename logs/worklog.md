@@ -6359,3 +6359,74 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   `MIGRATION_PENDING` 保持（八个全部建成前不解除；剩余顺序 TGT-06 → TGT-07）。
 - Next：TGT-06 属后续 PR（E13 = TGT-06 construction contract 起），需独立
   go-ahead。
+
+## Runtime Migration PR E13 · TGT-06 / MOD-TGT06 construction contract（design-only）
+
+- 分支 `task_20260831_runtime-migration-pr-e13`，基线 `origin/main` @ `6ef1892`
+  （PR E12 收口后）。变更定位 `CONTRACT_ADD`，与 E1 / E3 / E5 / E7 / E9 / E11
+  同型 —— 只交施工合同 + drawing + parity / validation tests + 17 项验收清单 +
+  manifest + handoff + worklog append；**不含任何实现**。Module 在 PR E14 才开工。
+- 开工前 ChatGPT `AI审核方案` scoping：**APPROVE-to-proceed**，7 个关键 freeze
+  point + 逐条 E13-1…E13-8 修正 + 3 条 headline conclusion（逐字见
+  `manifests/runtime_migration_pr_e13_manifest.yaml`）。要点：
+  - **E13-3 Option A** —— TGT-06 用 highest-qualifying-rung grading authority
+    （TGT-03 先例），**不是** TGT-04 single-tier。qualifying `INDIRECT_STRONG`
+    addressability landscape → `POSITIVE / INDIRECT_STRONG`。legal Direction ×
+    Strength pair 恰好 **6 个**（`POSITIVE/DIRECT`、`POSITIVE/INDIRECT_STRONG`、
+    `NEGATIVE/DIRECT`、`CONFLICTING/DIRECT`、`INCONCLUSIVE/DIRECT`、
+    `INCONCLUSIVE/UNKNOWN`）。TGT-06 是 existence-proof / configuration-dependent
+    gate —— 专属 aggregation truth table：一个 qualifying productive DIRECT
+    configuration → `POSITIVE / DIRECT`（existence-proof dominance：异质 B/C
+    failure 不改变结论）；exactly one independent DIRECT-quality failure + 无
+    productive DIRECT → `INCONCLUSIVE / DIRECT`（**不是** NEGATIVE —— PR D
+    forbidden_inference）；`>= 2` independent DIRECT-quality failures + 无
+    productive DIRECT → `NEGATIVE / DIRECT`；同一 configuration genuinely
+    incompatible productive-vs-failure claims → `CONFLICTING / DIRECT`；different
+    configurations 表现不同 **永不** map 成 CONFLICTING（HARD lock）。
+    **No cross-observation synthesis of DIRECT** —— EP-A "config A internalizes" +
+    EP-B "config B reaches lysosome" 不合成 DIRECT。
+  - **E13-4 Fatal** —— machine-local `fatal_review`。GLOBAL PRECONDITION：无
+    qualifying productive DIRECT configuration（任一 productive DIRECT 取消
+    target-wide surface-static trigger）。Route A OR Route B，且**都**需要
+    multiple independent configurations —— Route A 本身必须是 declared
+    multi-configuration analysis（`>= 2` unique `internalization_configuration_id`），
+    单 configuration 的 reproducibility 不能绕过 frozen PR D。Route B `>= 2`
+    independent configuration identities，**不是** `> 2` / `>= 3`。
+    `WELL_MATCHED_CRC_MODEL` **可以**进 fatal contributor（与 TGT-04 相反）。
+    status 单值 `POTENTIAL_FATAL_PATTERN`；仅 accepted run actionable。
+    non-internalizing-payload strategies 在 fatal call 之外（逐字 pin）。
+  - **E13-5 InternalizationEvidenceCompletion** —— 4 renamed axes
+    （`antibody_configuration_internalization_search_complete` /
+    `productive_trafficking_search_complete` /
+    `same_target_adc_functional_delivery_search_complete` /
+    `receptor_endocytosis_and_inference_search_complete`）；umbrella ==
+    all(four)；**只有** `qualifying_direct_configuration_ids`，**没有**
+    `qualifying_indirect_configuration_ids`（frozen INDIRECT_STRONG 里 receptor
+    biology / same-target ADC precedent 不天然带 configuration id）。
+  - **E13-2** —— 确认 frozen PR D TGT-06 **无 `inference_guard` 字段**
+    （EVGAP-01 是 TGT-04 专属）。
+  - **E13-8** —— 8 observation kinds
+    （`ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING` /
+    `ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY` / `TRAFFICKING_OR_RECYCLING_ONLY`
+    / `SAME_TARGET_ADC_DELIVERY_PRECEDENT` /
+    `CONSTITUTIVE_ENDOCYTOSIS_OR_RECEPTOR_BIOLOGY` /
+    `RECEPTOR_FAMILY_MEMBERSHIP_INFERENCE` / `SURFACE_LOCALIZATION_ONLY_INFERENCE`
+    / `SEARCH_COMPLETION_AUDIT`）；`internalization_outcome` CLOSED enum
+    （保留 `_OR_TRAFFICKING`）；`declared_multi_configuration_analysis`
+    single-vs-multi identity pattern；**无 raw-value reuse-parity 分支**
+    （source-reported number 进 neutral claim string，Module 永不比 threshold）。
+- 交付：
+  - 新增 `src/contracts/gate_modules/tgt06_internalization_trafficking_addressability.yaml`
+    —— 17 项施工合同。
+  - 新增 `docs/gate_modules/TGT-06_Internalization_Trafficking_Addressability.md`
+    —— 17 行 drawing + 3 条 headline blockquote + conceptual shape。
+  - 新增 `tests/test_tgt06_module_construction_contract.py` —— **73 tests**。
+  - 新增 `manifests/runtime_migration_pr_e13_manifest.yaml`、
+    `docs/handoff/2026-08-31-runtime-migration-pr-e13.zh-CN.md`。
+- 验证：`tests/test_tgt06_module_construction_contract.py` **73 OK**；全量
+  **1611 OK**（E12 收口 1538）；`bash scripts/verify_repository_boundary.sh` 只报
+  既有 untracked 杂项；`git diff --check` clean；YAML 合法且无
+  list-element-parsed-as-dict；`src/` 不 import `gate_modules/`。
+- 状态：8 个 primary Module 施工合同已 APPROVE 7 个（TGT-01/05/08/02/03/04），
+  已实现 **6 个**。TGT-07 属后续 PR。`MIGRATION_PENDING` 保持。
+- Next：开 PR、CI 绿后回 `AI审核方案` 贴 E13 review 请求。

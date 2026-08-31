@@ -1,0 +1,982 @@
+version: "0.1.0"
+name: stelligenos-gate-module-construction-contract-tgt06
+description: >-
+  Runtime Migration PR E13. The frozen construction contract for MOD-TGT06, the
+  single primary Evidence Production Module of Gate TGT-06 (Internalization /
+  Trafficking Addressability) under ADC_TARGET_GATESET@1.0 /
+  INST-CRC-REFRACTORY-ADC-TARGET-v1. This PR delivers the contract + a
+  human-readable construction drawing
+  (docs/gate_modules/TGT-06_Internalization_Trafficking_Addressability.md) +
+  validation / parity tests + a 17-item acceptance checklist ONLY. It ships no
+  implementation. The Module is built in PR E14, and only after this contract is
+  APPROVED (CURRENT_SYSTEM v5 section 6.4). TGT-06 needs its semantics frozen
+  BEFORE any code because it slides very easily into four failure modes: (a)
+  "surface expression / receptor-family membership -> assume the target-antibody
+  complex internalizes", (b) treating internalization as a target-intrinsic
+  constant instead of an antibody x epitope x affinity x conjugation x context
+  dependent, configuration-specific property, (c) letting a single
+  non-internalizing antibody / epitope configuration establish target-wide
+  non-internalization, and (d) synthesizing a DIRECT existence proof by combining
+  "configuration A internalizes" and "configuration B reaches the lysosome" from
+  unrelated observations.
+
+headline_conclusions:  # ChatGPT AI审核方案, frozen verbatim, before code
+  - >-
+    Internalization is configuration-specific, not a target-intrinsic constant.
+    One qualifying disease-relevant antibody / epitope configuration with
+    productive antibody-induced internalization and lysosomal delivery is
+    sufficient DIRECT existence proof for addressability; failure of one
+    configuration is only configuration-level opposing evidence and can never
+    establish target-wide non-internalization.
+  - >-
+    DIRECT productive-addressability authority requires an auditable integrated
+    observation tying antibody-induced internalization and lysosomal delivery to
+    the same antibody / epitope configuration in a disease-relevant context.
+    Surface localization, receptor-family inference, constitutive endocytosis,
+    internalization without confirmed lysosomal delivery, non-CRC internalization
+    and successful same-target ADC precedent remain lower-ceiling evidence and
+    may not be combined across unrelated observations or configurations to
+    synthesize DIRECT.
+  - >-
+    A target-wide surface-static potential fatal pattern requires
+    productive-internalization / trafficking failure across multiple independent
+    qualified antibody / epitope configurations and no qualifying productive
+    DIRECT existence proof in the completed landscape. The machine may surface
+    only POTENTIAL_FATAL_PATTERN; it never decides fatality, ADC efficacy, KILL,
+    HOLD or a Candidate-level Decision.
+
+core_chain: >-
+  qualified disease-relevant context x antibody / epitope configuration identity
+  x assay validation x audited internalization-evidence-search completion ->
+  Gate-neutral empirical internalization / trafficking observations -> frozen
+  rung -> a HIGHEST-QUALIFYING-RUNG grading authority under an EXISTENCE-PROOF
+  aggregation truth table (one qualifying DIRECT productive configuration is
+  POSITIVE / DIRECT; a qualifying INDIRECT_STRONG addressability landscape with
+  no DIRECT is POSITIVE / INDIRECT_STRONG; a single DIRECT-quality failure is
+  INCONCLUSIVE / DIRECT, never NEGATIVE) -> aggregate addressability Direction x
+  Strength -> optional multiple-independent-configuration-failure fatal_review ->
+  human review / GateSet policy. It never becomes: surface expression -> assumed
+  internalization; receptor-family membership -> assumed internalization; one
+  non-internalizing configuration -> target-wide non-internalization; a measured
+  %-internalized value -> an invented ADC-effective internalization rate; a
+  DIRECT existence proof stitched from unrelated observations; a NEGATIVE
+  addressability call -> a KILL.
+
+migration:
+  pr: runtime_migration_pr_e13
+  scope: tgt06_mod_tgt06_construction_contract_drawing_validation_and_acceptance_checklist_only
+  spec_refs:
+    - docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md (section 6.4 one Gate -> one primary Evidence Production Module + Module 权责边界; section 6.5 shared infrastructure; section 16 B group question 23 -> PR E+)
+    - src/contracts/crc_adc_target_gateset.yaml (PR D -- the frozen TGT-06 gate contract, Evidence Ladder, allowed/forbidden inference, unknown behavior and fatal_conditions -- inherited verbatim; TGT-06 has NO inference_guard field)
+    - src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml (PR E1 -- the approved 17-item construction template, reused here)
+    - src/contracts/gate_modules/tgt03_treatment_metastatic_persistence.yaml (PR E9 -- the highest-qualifying-rung grading + typed-completion + machine-local fatal_review Route A / Route B + local-evidence-context namespace precedent this contract mirrors for internalization addressability, and the improved (source_id, claim, all-driving-facts, local-context) dedup rule)
+    - src/contracts/gate_modules/tgt04_tumor_surface_availability_density_plausibility.yaml (PR E11 -- the existence-proof-style DIRECT ceiling, the declared_multi_configuration_analysis single-vs-multi identity pattern, the "raw values are evidence, not thresholds" gene, and the "a single DIRECT-class opposing observation is not yet a Gate NEGATIVE" gene this contract reuses for internalization)
+    - gate_modules/tgt01_adc_modality_precedent/ + gate_modules/tgt02_indication_specific_malignant_cell_coverage/ + gate_modules/tgt03_treatment_metastatic_persistence/ + gate_modules/tgt04_tumor_surface_availability_density_plausibility/ + gate_modules/tgt05_normal_tissue_fatal_liability/ + gate_modules/tgt08_target_opportunity_competition_ip_whitespace/ (PR E2 / E8 / E10 / E12 / E4 / E6 -- the runtime boundary genes this contract freezes for MOD-TGT06 -- an explicitly qualified disease-relevant context for a rung; an auditable local configuration identity that is a separate namespace from the canonical Instantiation context_id; every qualified upstream factual state carries an auditable basis; a CLOSED assay_validation_status enum plus a non-empty factual assay_method for DIRECT; a kind / fact-specific non-inflated study_context)
+    - src/contracts/data_layout/evidence_package.schema.json / assessment.schema.json (PR A shapes the Module must produce)
+    - src/contracts/evidence_reference.yaml (PR C reusable-EvidencePackage reference layer + provenance walk)
+    - src/contracts/gate_contracts.yaml (PR B -- assessment_rule / fatal_gate_policy are GateSet-level refs, not Module logic)
+  boundary: >-
+    design-before-execution. PR E13 delivers the contract, the drawing, the
+    validation / parity tests and the acceptance checklist. It adds NO
+    implementation, NO provider / adapter, NO live-cell-imaging / pH-sensitive-dye
+    / surface-decay-flow / lysosomal-co-localization / recycling-vs-degradation /
+    same-target-ADC retrieval, NO extractor / normalizer / runner / dry-run
+    executor, NO EvidencePackage or proposal runtime, NO fatal detector runtime,
+    NO external data, NO numeric or ranking score, NO internalization-rate /
+    half-life / percent-internalized / lysosomal-colocalization-coefficient
+    threshold, NO invented "ADC-effective internalization rate" range, and NO new
+    scientific ladder semantics. It does NOT create a generic GateModule
+    framework, an abstract base class, or refactor MOD-TGT01 / MOD-TGT02 /
+    MOD-TGT03 / MOD-TGT04 / MOD-TGT05 / MOD-TGT08. The ONLY existing file it may
+    mutate is an append to logs/worklog.md; everything else it delivers is a NEW
+    file. It does NOT touch src/contracts/crc_adc_target_gateset.yaml,
+    src/objects/crc_adc_target_gateset.py, gate_modules/README.md,
+    tests/test_crc_adc_target_gateset.py, tests/test_gate_modules_boundary.py or
+    any built-roster test -- those wait for PR E14. MIGRATION_PENDING remains.
+  next: >-
+    runtime_migration_pr_e14 implements MOD-TGT06 as a deterministic Gate-specific
+    scientific core in gate_modules/tgt06_internalization_trafficking_addressability/
+    and raises the TGT-06 gate_binding primary_module_version from "0.0.0" to
+    "1.0.0". It may start only after this contract is APPROVED.
+  order: >-
+    fatal-first + cheap-first: TGT-01 -> TGT-05 -> TGT-08 -> TGT-02 -> TGT-03 ->
+    TGT-04 -> TGT-06 -> TGT-07. TGT-01 calibrated the Module mechanics; TGT-05 was
+    the first fatal-first liability gate; TGT-08 was the external opportunity gate
+    and the first reachable canonical NEGATIVE; TGT-02 was the first
+    indication-specific malignant-cell coverage gate; TGT-03 was the first
+    treatment / metastatic persistence gate; TGT-04 was the first surface
+    availability / density plausibility gate; TGT-06 is the first
+    internalization / trafficking addressability gate -- an EXISTENCE-PROOF,
+    configuration-dependent gate where one qualifying antibody / epitope
+    configuration is a sufficient DIRECT proof and a target-wide NEGATIVE / fatal
+    needs multiple independent configurations. MIGRATION_PENDING is not lifted
+    until all eight primary Modules are built.
+
+template_provenance:
+  status: RECONSTRUCTED
+  template_basis: >-
+    approved E1 17-item construction template
+    (src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml), already
+    validated by the merged PR E2 / E4 / E6 / E8 / E10 / E12 implementations and
+    reused verbatim in PR E7 / E9 / E11. PR E13 reuses it and does not reinvent
+    the template.
+  blueprint_status: >-
+    Blueprint v1.3 section H2.8 (Gate Module Acceptance Template, 17 items) is
+    referenced by CURRENT_SYSTEM v5 but NOT present in this repository or the
+    File Library.
+  source:
+    - "approved E1 17-item construction template (validated by the merged PR E2 / E4 / E6 / E8 / E10 / E12 implementations and PR E7 / E9 / E11)"
+    - CURRENT_SYSTEM v5 section 6.4 (one Gate -> one primary Module; the Module 权责边界 list)
+    - ADC_TARGET_GATESET@1.0 / TGT-06 frozen contract (src/contracts/crc_adc_target_gateset.yaml, PR D)
+    - runtime migration PR A-E12 contracts (objects / Gate system / Matrix + provenance / CRC GateSet / MOD-TGT01 / MOD-TGT02 / MOD-TGT03 / MOD-TGT04 / MOD-TGT05 / MOD-TGT08)
+  claim:
+    not_claimed_verbatim_from_blueprint: true
+    seventeen_item_template_reused_from_e1: true
+    functionally_complete_and_consistent_with_prior_frozen_decisions: true
+
+kernel_invariant: >-
+  The kernel defines the contract; the Gate Module implements the contract.
+  One-way dependency, exactly like extensions/ and MOD-TGT01 / MOD-TGT02 /
+  MOD-TGT03 / MOD-TGT04 / MOD-TGT05 / MOD-TGT08: a future gate_modules/
+  implementation MAY import kernel objects / Gate identity / contracts; src/ MUST
+  NEVER import gate_modules/. The Module may not modify the Gate id / name /
+  candidate ownership, the gate_question, the Evidence Ladder, the evidence
+  ceiling, or the fatal / unknown / conflict / inference semantics
+  (CURRENT_SYSTEM v5 section 6.4). It may not reason across Gates, lower a
+  measurement requirement, or turn UNKNOWN into PASS / HOLD / KILL. TGT-06-specific:
+  the gate_question is the INTERNALIZATION-AND-TRAFFICKING-ADDRESSABILITY
+  question. Internalization is an antibody x epitope x affinity x conjugation x
+  context dependent property, not a target-intrinsic constant: a DIRECT rung is
+  an EXISTENCE PROOF -- one qualifying disease-relevant antibody / epitope
+  configuration achieving antibody-induced internalization WITH lysosomal
+  delivery -- and a single non-internalizing configuration is FORBIDDEN by the
+  frozen PR D contract from establishing target-wide non-internalization.
+  INDIRECT_STRONG evidence (constitutive endocytosis / established
+  internalizing-receptor biology / non-CRC antibody-induced internalization / a
+  successful same-target ADC functional-delivery precedent) is genuine positive
+  addressability support and DOES propagate to a Gate-level Strength
+  (POSITIVE / INDIRECT_STRONG) -- this is the highest-qualifying-rung grading
+  authority, NOT the TGT-04 single-tier exception. A NEGATIVE addressability call
+  is a Gate-relative scientific assessment; it is not a fatal flag and not a
+  KILL. Productive-internalization / trafficking failure across MULTIPLE
+  INDEPENDENT qualified antibody / epitope configurations, with NO qualifying
+  productive DIRECT existence proof on the completed landscape, is surfaced at
+  most as a machine-local fatal_review = POTENTIAL_FATAL_PATTERN; the GateSet
+  fatal_gate_policy (PR B) decides the Candidate-level consequence. The Module
+  never PASSES and never KILLs the target, and it never decides ADC efficacy or
+  adequate payload release.
+
+# The 17-item Gate Module Acceptance checklist (template reused from the approved
+# PR E1 template -- see template_provenance). Each item the future MOD-TGT06
+# implementation (PR E14) must satisfy before it can be accepted.
+acceptance_checklist:
+
+  "01_gate_identity_and_version":
+    gate_id: TGT-06
+    gate_version: "1.0"
+    gate_name: Internalization / Trafficking Addressability
+    canonical_gateset_id: ADC_TARGET_GATESET
+    gateset_version: "1.0"
+    candidate_level: L04
+    candidate_ownership: ADC_TARGET (L04)
+    instantiation_binding: INST-CRC-REFRACTORY-ADC-TARGET-v1
+    rule: the Module inherits this identity; it does not own, rename or redefine it
+
+  "02_primary_module_identity_and_version":
+    primary_module_id: MOD-TGT06
+    deterministic_id_rule: "Data Layout Spec Appendix A: Module = MOD-<GATE without hyphen>"
+    construction_contract_version: "0.1.0"
+    module_implementation_version: "0.0.0"
+    rule: >-
+      exactly one primary Evidence Production Module per Gate. "0.0.0" means
+      declared, not built (the PR D gate_binding slot). PR E14 builds it and
+      raises the version to >= 1.0; PR E13 does not change the binding version.
+      MOD-TGT06 does not own the Gate identity.
+
+  "03_gate_question":
+    verbatim_from: src/contracts/crc_adc_target_gateset.yaml gate_contracts.TGT-06.gate_question
+    text: >-
+      Upon antibody binding, is the target-antibody complex internalized and
+      trafficked to a compartment compatible with payload release?
+    rule: the Module quotes this verbatim and may not widen or narrow it
+    tgt06_framing:
+      answers: >-
+        whether admissible public evidence provides an EXISTENCE PROOF that at
+        least one tested antibody / epitope configuration against the target
+        achieves antibody-induced internalization WITH lysosomal delivery in a
+        disease-relevant context, on an audited internalization-evidence-search
+        landscape
+      does_not_answer:
+        - whether the target is on the cell surface at all (that is surface localization -- TGT-04 territory) or at an adequate density (that is TGT-04)
+        - whether the target is adequately expressed on CRC malignant cells at the population level (that is TGT-02)
+        - whether the target persists in the refractory / metastatic setting (that is TGT-03)
+        - whether there is a favorable therapeutic index (that is TGT-05)
+        - whether the target is shed / has a soluble-antigen sink (that is TGT-07)
+        - whether the ADC will be efficacious -- internalization does NOT imply adequate payload release or efficacy for a given linker / payload / DAR
+        - how EFFICIENTLY the target internalizes -- efficiency is antibody / epitope / affinity / conjugation / context dependent and configuration-specific, not a target-intrinsic constant the Module reports
+
+  "04_admissible_evidence_classes":
+    verbatim_from: gate_contracts.TGT-06.evidence_required + evidence_ladder.*.admissible_evidence_classes
+    evidence_required_from_pr_d:
+      - antibody-induced internalization assays for the target (live-cell imaging / pH-sensitive dye / surface-decay flow)
+      - lysosomal co-localization or trafficking studies for the target
+      - receptor recycling-versus-degradation data
+      - internalization demonstrated by a successful ADC against the same target
+    admissible:
+      - antibody-induced internalization assays for the target (live-cell imaging / pH-sensitive dye / surface-decay flow)
+      - lysosomal co-localization or trafficking studies for the target
+      - receptor recycling-versus-degradation data
+      - internalization demonstrated by a successful ADC against the same target
+      - existence proof that at least one tested antibody / epitope configuration against the target achieves antibody-induced internalization with lysosomal delivery in a disease-relevant context
+      - constitutive endocytosis or established internalizing-receptor biology for the target
+      - antibody-induced internalization shown for the target with some antibody / epitope configuration in a non-CRC context
+      - functional ADC delivery precedent (a successful same-target ADC) -- supports addressability but does not, by itself, prove the trafficking mechanism
+      - internalization assumed from receptor-family membership
+      - internalization inferred from surface localization alone
+    not_admissible_into_this_gate:
+      - ADC-modality precedent / addressability-of-the-modality evidence (that is TGT-01)
+      - indication-specific malignant-cell coverage (that is TGT-02)
+      - treatment / metastatic persistence evidence (that is TGT-03)
+      - cell-surface antigen density / surface-availability evidence used as an internalization claim (that is TGT-04)
+      - normal-tissue liability / therapeutic-index evidence (that is TGT-05)
+      - shedding / soluble-antigen / sink evidence (that is TGT-07)
+      - competitive landscape / IP-whitespace evidence (that is TGT-08)
+      - any putative universal "ADC-effective internalization rate" / half-life / percent-internalized / lysosomal-colocalization-coefficient range -- no reliable cross-target range exists and none may be introduced as evidence
+
+  "05_evidence_ladder_and_evidence_ceiling":
+    verbatim_from: gate_contracts.TGT-06.evidence_ladder + evidence_ceiling
+    DIRECT:
+      admissible_evidence_classes:
+        - existence proof that at least one tested antibody / epitope configuration against the target achieves antibody-induced internalization with lysosomal delivery in a disease-relevant context
+      ceiling_rule: establishes that the target is addressable by an internalizing-payload ADC via at least one antibody / epitope configuration; internalization efficiency is configuration-specific, not target-intrinsic
+    INDIRECT_STRONG:
+      admissible_evidence_classes:
+        - constitutive endocytosis or established internalizing-receptor biology for the target
+        - antibody-induced internalization shown for the target with some antibody / epitope configuration in a non-CRC context
+        - functional ADC delivery precedent (a successful same-target ADC) -- supports addressability but does not, by itself, prove the trafficking mechanism
+      ceiling_rule: strong support; a demonstrated antibody-induced internalizing configuration in a disease-relevant model is required for DIRECT
+    WEAK:
+      admissible_evidence_classes:
+        - internalization assumed from receptor-family membership
+        - internalization inferred from surface localization alone
+      ceiling_rule: no trafficking claim; hypothesis only
+    evidence_ceiling: antibody-induced internalization with lysosomal delivery for the target via at least one antibody / epitope configuration
+    rule: >-
+      the Module reproduces this mapping exactly; it does not redefine the
+      grades, add rungs, or exceed the ceiling. A normalized-equality parity test
+      binds this item to the frozen PR D contract. Unlike TGT-04, the
+      INDIRECT_STRONG rung here IS a positive addressability authority that
+      propagates to a Gate-level Strength (POSITIVE / INDIRECT_STRONG) -- its
+      ceiling_rule is "strong support; a demonstrated antibody-induced
+      internalizing configuration in a disease-relevant model is required for
+      DIRECT", i.e. it cannot reach the DIRECT existence-proof ceiling, but it is
+      not locked out of grading. Quantity (many strong INDIRECT_STRONG datasets)
+      never raises the evidence-class ceiling to DIRECT.
+    direct_is_an_existence_proof_not_an_efficiency_measurement: >-
+      the PR D DIRECT class is an EXISTENCE PROOF -- "at least one tested
+      antibody / epitope configuration ... achieves antibody-induced
+      internalization with lysosomal delivery in a disease-relevant context". It
+      is satisfied by ONE qualifying integrated configuration observation; it
+      does NOT require a quorum of configurations, a minimum internalization
+      efficiency, or a minimum trafficking rate. Internalization efficiency is
+      configuration-specific and is never a target-intrinsic number the Module
+      reports or thresholds. The disease-relevant context permission is
+      surface_context_class in {CRC_MALIGNANT_CELLS, WELL_MATCHED_CRC_MODEL};
+      "well-matched CRC model" needs a QUALIFIED context_adequacy_status with an
+      auditable basis, never crc_specific alone.
+    quantitative_values_are_evidence_not_thresholds: >-
+      a future MOD-TGT06 EvidencePackage MAY and SHOULD preserve a
+      source-reported numeric assay fact when the source states one (e.g. "65%
+      internalized at 4 h", "surface half-life ~2 h by surface-decay flow") as a
+      factual measurement inside the neutral claim / study_context. What is
+      forbidden is the Module deriving a Direction, a rung or a fatal signal by
+      comparing that value to ANY threshold, cutoff or invented "ADC-effective
+      internalization rate" / "lysosomal colocalization cutoff" -- there is no
+      reliable cross-target universal range. E13/E14 add NO dedicated typed raw
+      numeric decision field for internalization, and therefore NO TGT-04-style
+      symmetric raw-value reuse-parity branch is needed -- ordinary claim +
+      classification-driving field parity is sufficient. The typed classification
+      driver is internalization_outcome (a CLOSED enum), never a number.
+
+  "06_direction_interpretation":
+    strength_direction_rule: >-
+      Strength is orthogonal to Direction (Blueprint v1.3). The Module proposes
+      both; it never merges them and never emits a numeric or ranking score.
+      Direction describes the evidence RELATIVE TO THE GATE QUESTION (is the
+      target-antibody complex internalized and trafficked to a compartment
+      compatible with payload release), not candidate desirability. TGT-06 is a
+      bidirectional scientific addressability gate whose NEGATIVE
+      (productive-internalization / trafficking failure across multiple
+      independent qualified configurations) is a genuine scientific finding,
+      distinct from and stronger than a single configuration's failure.
+    direction_definitions:
+      POSITIVE: qualifying evidence supports that the target-antibody complex is addressable for internalizing-payload delivery -- at DIRECT, a qualifying integrated configuration observation with antibody-induced internalization AND lysosomal delivery in a disease-relevant context; at INDIRECT_STRONG, qualifying constitutive-endocytosis / internalizing-receptor biology / non-CRC antibody-induced internalization / successful same-target ADC functional-delivery precedent
+      NEGATIVE: qualifying DIRECT-quality evidence across AT LEAST TWO independent qualified antibody / epitope configurations converges on productive-internalization / trafficking failure (surface-static receptor biology) AND no qualifying productive DIRECT configuration exists on the completed landscape
+      CONFLICTING: for the SAME antibody / epitope configuration, qualifying DIRECT-quality observations make genuinely incompatible claims (productive internalization vs productive-internalization failure) and no auditable characterization resolves them
+      INCONCLUSIVE: qualifying evidence does not resolve the addressability direction -- e.g. exactly one independent DIRECT-quality failure configuration with no qualifying productive DIRECT configuration (a single failure is FORBIDDEN by PR D from establishing target-wide non-internalization), OR only WEAK / no qualifying evidence on a completed landscape (per PR D unknown_behavior)
+    existence_proof_dominance: >-
+      a POSITIVE existence proof DOMINATES heterogeneous configuration failures.
+      If configuration A shows productive antibody-induced internalization with
+      lysosomal delivery in a disease-relevant context AND configurations B and C
+      fail, the Gate answer is POSITIVE / DIRECT -- NOT NEGATIVE and NOT
+      automatically CONFLICTING, because the Gate question ("is there an
+      addressable configuration") is already answered yes. The B / C failure
+      EvidencePackages are retained for binder design / epitope selection / human
+      review / downstream optimization; they never reverse the target-level
+      addressability conclusion.
+    different_configurations_differ_is_not_a_conflict: >-
+      different antibody / epitope configurations showing different
+      internalization behavior is NOT a CONFLICTING signal -- it is exactly what
+      "internalization is configuration-specific" means. CONFLICTING is reserved
+      for genuinely incompatible qualifying DIRECT-quality claims about the SAME
+      configuration with no auditable resolution. This is a HARD lock: the E14
+      aggregator must never map inter-configuration heterogeneity to CONFLICTING.
+    highest_qualifying_rung_grading_authority: >-
+      TGT-06 uses the highest-qualifying-rung grading authority (the TGT-03
+      precedent), NOT the TGT-04 single-tier exception. A qualifying
+      INDIRECT_STRONG addressability observation, on a completed audited
+      landscape with no qualifying DIRECT configuration observation, DOES grant a
+      graded Strength: POSITIVE / INDIRECT_STRONG. The frozen PR D
+      unknown_behavior locks UNKNOWN only to "No internalization data for any
+      configuration"; all three frozen INDIRECT_STRONG classes are positive
+      addressability support, so a qualifying-INDIRECT_STRONG landscape is never
+      INCONCLUSIVE / INDIRECT_STRONG -- it is POSITIVE / INDIRECT_STRONG.
+    tgt06_specific_aggregation_truth_table:
+      note: >-
+        exactly ONE rule set -- E14 has no discretion. Evaluated only over a
+        completed, audited internalization-evidence landscape (item 16). "DIRECT
+        productive configuration" means an observation classified DIRECT whose
+        internalization_outcome maps to SUPPORTS_ADDRESSABILITY;
+        "DIRECT-quality failure configuration" means an observation that meets
+        every DIRECT rung predicate EXCEPT that its internalization_outcome ==
+        FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING (maps to
+        OPPOSES_ADDRESSABILITY). Independence is counted over unique
+        internalization_configuration_id.
+      completed_and_at_least_one_qualifying_direct_productive_configuration: POSITIVE / DIRECT (the Gate ceiling -- an addressable configuration exists)
+      completed_and_no_direct_and_at_least_one_qualifying_positive_indirect_strong: POSITIVE / INDIRECT_STRONG
+      completed_and_exactly_one_independent_direct_quality_failure_configuration_and_no_productive_direct: INCONCLUSIVE / DIRECT (a single non-internalizing configuration NEVER establishes target-wide non-internalization -- PR D forbidden_inference)
+      completed_and_at_least_two_independent_direct_quality_failure_configurations_and_no_productive_direct: NEGATIVE / DIRECT (configuration-specific failure has escalated to a target-level surface-static / non-productively-internalizing pattern; may also satisfy fatal_review, item 08)
+      same_configuration_genuinely_incompatible_productive_vs_failure_direct_quality_claims_unresolved: CONFLICTING / DIRECT
+      completed_and_weak_only_or_no_qualifying_evidence: INCONCLUSIVE / UNKNOWN (zero evidence_refs)
+    upstream_qualified_factual_states: >-
+      the classification-driving states below are SEPARATE typed upstream facts
+      -- E14 must not overload one field to carry two meanings. Each carries its
+      own auditable basis; a missing or drifted basis for a
+      classification-driving state is a HARD integrity failure.
+      surface_context_class in {CRC_MALIGNANT_CELLS, WELL_MATCHED_CRC_MODEL,
+      NON_CRC_CONTEXT, UNRESOLVED} + surface_context_basis;
+      context_adequacy_status in {QUALIFIED, NOT_ESTABLISHED} +
+      context_adequacy_basis; assay_validation_status in {QUALIFIED,
+      NOT_ESTABLISHED} + assay_validation_basis (this is "does this assay qualify
+      to enter DIRECT" -- QUALIFIED is NOT a positive addressability conclusion);
+      internalization_outcome in {PRODUCTIVE_INTERNALIZATION_WITH_LYSOSOMAL_DELIVERY,
+      INTERNALIZATION_OBSERVED_LYSOSOMAL_DELIVERY_UNRESOLVED,
+      FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING, MIXED_OR_UNRESOLVED,
+      NOT_ESTABLISHED} + internalization_outcome_basis (a CLOSED typed classifier,
+      NEVER computed by the Module from a number); reproducibility_status in
+      {QUALIFIED, NOT_ESTABLISHED} + reproducibility_basis;
+      declared_multi_configuration_analysis (bool) + configuration_identity_basis.
+    internalization_direction_mapping:
+      note: >-
+        applied ONLY to a qualifying integrated antibody / epitope configuration
+        observation (DIRECT rung predicate met). Evaluated in this order.
+      internalization_outcome_productive_internalization_with_lysosomal_delivery: SUPPORTS_ADDRESSABILITY
+      internalization_outcome_fails_productive_internalization_or_trafficking: OPPOSES_ADDRESSABILITY
+      internalization_outcome_mixed_or_unresolved_or_not_established: NONDIRECTIONAL / CONTEXTUAL
+      internalization_observed_lysosomal_delivery_unresolved: >-
+        positive addressability SUPPORT at INDIRECT_STRONG ceiling ONLY -- it is
+        NOT a DIRECT existence proof (lysosomal delivery is not confirmed) and it
+        never contributes an OPPOSES_ADDRESSABILITY direction.
+    indirect_strong_implication:
+      constitutive_endocytosis_or_internalizing_receptor_biology: an INDIRECT_STRONG addressability observation -- supports the allowed inference and DOES grant a Gate-level POSITIVE / INDIRECT_STRONG when no DIRECT configuration exists
+      non_crc_antibody_induced_internalization: an INDIRECT_STRONG addressability observation -- never DIRECT (context is not disease-relevant), but it DOES grant POSITIVE / INDIRECT_STRONG
+      successful_same_target_adc_functional_delivery_precedent: an INDIRECT_STRONG addressability observation -- supports addressability, does not by itself prove the trafficking mechanism, and DOES grant POSITIVE / INDIRECT_STRONG
+      internalization_inferred_from_surface_localization_alone_or_receptor_family_membership: WEAK -- a hypothesis-only context observation that never grants a Gate-level Direction or Strength
+    no_cross_observation_synthesis_of_direct: >-
+      DIRECT is NEVER synthesized by the Module from unrelated observations. An
+      EvidencePackage saying "configuration A is antibody-induced internalized"
+      plus a different EvidencePackage saying "configuration B reaches the
+      lysosome" does NOT combine into a DIRECT existence proof -- even for the
+      same target. A DIRECT rung requires ONE upstream-qualified INTEGRATED
+      configuration observation in which the SAME antibody / epitope
+      configuration is shown antibody-induced internalized AND reaching lysosomal
+      delivery. The provider MAY upstream-normalize multiple assays from the same
+      study into one integrated observation; MOD-TGT06 itself never joins
+      unrelated EvidencePackages / configurations to assemble DIRECT.
+    configuration_identity_single_vs_multi: >-
+      the declared_multi_configuration_analysis flag is the TGT-03 / TGT-04
+      single-vs-multi identity pattern. flag == false -> a single-configuration
+      observation: internalization_configuration_id != "" and
+      internalization_configuration_ids == (). flag == true -> a declared
+      multi-configuration analysis: internalization_configuration_id == "" and
+      len(unique(internalization_configuration_ids)) >= 2. A DIRECT-quality
+      configuration observation MUST carry an auditable configuration identity; a
+      non-CRC antibody-induced internalization observation MUST carry a
+      configuration identity WHEN the source identifies the tested configuration.
+      A constitutive-endocytosis / receptor-biology observation and a
+      successful-same-target-ADC precedent observation do NOT lose INDIRECT_STRONG
+      authority for lack of an antibody / epitope / configuration disclosure --
+      the frozen ladder does not require it. E14 must never assert "every
+      qualifying INDIRECT_STRONG observation has an internalization_configuration_id".
+    legal_direction_strength_pairs:
+      - POSITIVE / DIRECT
+      - POSITIVE / INDIRECT_STRONG
+      - NEGATIVE / DIRECT
+      - CONFLICTING / DIRECT
+      - INCONCLUSIVE / DIRECT
+      - INCONCLUSIVE / UNKNOWN
+    no_other_pairs: >-
+      exactly SIX legal Direction x Strength pairs. There is NO
+      NEGATIVE / INDIRECT_STRONG, NO CONFLICTING / INDIRECT_STRONG, NO
+      INCONCLUSIVE / INDIRECT_STRONG and NO INCONCLUSIVE / WEAK. A qualifying
+      INDIRECT_STRONG addressability landscape maps to POSITIVE / INDIRECT_STRONG
+      (all three frozen INDIRECT_STRONG classes are positive support); a
+      WEAK-only / no-qualifying-evidence landscape maps straight to
+      INCONCLUSIVE / UNKNOWN.
+    inconclusive_direct_is_legal: >-
+      a completed audited landscape with exactly one independent DIRECT-quality
+      failure configuration and no qualifying productive DIRECT configuration ->
+      INCONCLUSIVE / DIRECT, carrying its OPPOSES_ADDRESSABILITY evidence_ref as
+      CONTEXTUAL. This is distinct from INCONCLUSIVE / UNKNOWN (WEAK-only / no
+      qualifying evidence at all). A single non-internalizing configuration is
+      FORBIDDEN by PR D from being a target-wide NEGATIVE.
+    absolute_note: Direction is about the evidence relative to the Gate question, not the candidate; the Module never flips Direction on desirability grounds, and internalization never implies ADC efficacy or adequate payload release.
+
+  "07_allowed_and_forbidden_inference":
+    verbatim_from: gate_contracts.TGT-06.allowed_inference + forbidden_inference
+    allowed:
+      - at least one antibody / epitope configuration can internalize the target-antibody complex (payload-class dependent). Internalization is antibody x epitope x affinity x conjugation x context dependent and is not a target-intrinsic constant
+    forbidden:
+      - surface expression implies internalization
+      - internalization implies efficacy or adequate payload release for a given linker / payload
+      - a single non-internalizing antibody / epitope configuration implies the target is non-internalizing
+    no_inference_guard_field: >-
+      the frozen PR D TGT-06 contract has NO inference_guard field -- its frozen
+      structure is exactly gate_question, evidence_required, evidence_ladder,
+      evidence_ceiling, allowed_inference, forbidden_inference, unknown_behavior
+      and fatal_conditions. The EVGAP-01 surface-localization lock is a TGT-04
+      construct only; TGT-06 has no equivalent external guard, and the Module
+      must not invent one.
+    rule: the Module obeys this scientific boundary verbatim and produces no cross-Gate conclusion. A normalized-equality parity test binds allowed_inference and forbidden_inference to the frozen PR D contract.
+
+  "08_fatal_conditions":
+    verbatim_from: gate_contracts.TGT-06.fatal_conditions
+    potential_fatal_signal:
+      - evidence across multiple independent antibody / epitope configurations that the target-antibody complex fails productive internalization or trafficking, i.e. surface-static receptor biology (a potential fatal for internalizing-payload ADCs; a single configuration's failure is not sufficient, and non-internalizing-payload strategies are outside this gate's fatal call)
+    framing: >-
+      a potential fatal signal that the target is surface-static / non-productively
+      internalizing for an internalizing-payload ADC. A single DIRECT-quality
+      productive-internalization / trafficking failure observation is a
+      DIRECT-class OPPOSES_ADDRESSABILITY observation -- NOT yet a NEGATIVE / DIRECT
+      proposal and NOT a reproducible fatal pattern. Receptor-family-membership
+      inference and surface-localization-only inference are NOT fatal inputs at
+      all.
+    machine_detection_criteria:
+      global_precondition: >-
+        NO qualifying productive DIRECT configuration exists on the completed
+        audited landscape. Any single qualifying DIRECT observation whose
+        internalization_outcome maps to SUPPORTS_ADDRESSABILITY CANCELS the
+        target-wide surface-static machine fatal trigger -- fatal_review.required
+        is false and fatal_review.status is empty. This is a HARD lock.
+      each_contributing_observation_must_be:
+        - a DIRECT-class antibody-induced internalization observation -- observation_kind in {ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING, ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY}. A constitutive-endocytosis / receptor-family-membership / surface-localization-only inference observation is NEVER a fatal contributor
+        - in an explicitly qualified disease-relevant context -- surface_context_class in {CRC_MALIGNANT_CELLS, WELL_MATCHED_CRC_MODEL} with a QUALIFIED context_adequacy_status and an auditable surface_context_basis + context_adequacy_basis. Unlike the TGT-04 fatal path, a QUALIFIED WELL_MATCHED_CRC_MODEL context IS eligible here -- the frozen PR D TGT-06 fatal sentence says "the target-antibody complex fails productive internalization or trafficking" without restricting to CRC malignant cells, and the DIRECT authority itself is "in a disease-relevant context" (item 05)
+        - carrying assay_validation_status == QUALIFIED with an auditable assay_validation_basis and a non-empty factual assay_method
+        - carrying internalization_outcome == FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING (NOT a slow / partial / reduced internalization, NOT INTERNALIZATION_OBSERVED_LYSOSOMAL_DELIVERY_UNRESOLVED) with an auditable internalization_outcome_basis
+      landscape: a completed, audited internalization-evidence-search landscape (item 16)
+      reproducibility_requires_route_a_or_route_b: >-
+        the PR D fatal condition's non-bypassable semantics is "multiple
+        independent antibody / epitope configurations". It is established by
+        EITHER route -- both routes require multiple independent configurations:
+      route_a_declared_multi_configuration_analysis: >-
+        one auditable study / analysis that ITSELF explicitly covers multiple
+        independent antibody / epitope configurations -- the contributing
+        observation carries declared_multi_configuration_analysis == true,
+        len(unique(internalization_configuration_ids)) >= 2,
+        internalization_outcome == FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING,
+        reproducibility_status == QUALIFIED and an auditable reproducibility_basis.
+        A single antibody / epitope configuration with reproducibility_status ==
+        QUALIFIED (biological / technical replicates of ONE configuration) does
+        NOT satisfy Route A -- that would bypass the frozen PR D "multiple
+        independent configurations". E14 never semantic-parses the basis text.
+      route_b_independent_convergence: >-
+        convergent FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING across AT LEAST
+        TWO independent qualified antibody / epitope configuration identities
+        (distinct auditable internalization_configuration_id, each from a
+        DIRECT-quality failure observation). This is a deterministic SUFFICIENT
+        convergence pattern -- it is NOT the word-meaning definition of
+        "reproducible", NOT a new biological threshold, and NOT "more than two" /
+        "> 2" / ">= 3". Genuine scientific independence of the configurations is a
+        human judgement.
+    explicitly_excluded_from_a_fatal_trigger:
+      - a single antibody / epitope configuration's productive-internalization failure (PR D -- "a single configuration's failure is not sufficient")
+      - any landscape on which a qualifying productive DIRECT configuration exists
+      - internalization observed but lysosomal delivery unresolved (INTERNALIZATION_OBSERVED_LYSOSOMAL_DELIVERY_UNRESOLVED)
+      - a slow / partial / reduced internalization characterisation that is not FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING
+      - constitutive-endocytosis / receptor-family-membership / surface-localization-only inference evidence
+      - non-internalizing-payload strategies -- they are outside this gate's fatal call (PR D, verbatim)
+      - any threshold comparison against a putative universal internalization-rate / half-life / percent-internalized range
+    human_review_reserved:
+      - whether the failing antibody / epitope configurations are genuinely independent (distinct antibody / epitope / affinity / conjugation, not relabelled replicates)
+      - whether a "fails productive internalization or trafficking" characterisation is justified vs assay sensitivity / a permissive readout window
+      - whether an apparent internalization failure is an epitope / assay artifact
+      - whether the disease-relevant model is genuinely representative of CRC internalization biology
+      - whether a reported reproducibility is scientifically convincing
+      - whether the surface-static pattern satisfies the GateSet fatal policy, and whether a non-internalizing-payload strategy changes the consequence
+    machine_output_is_only_a_potential_pattern: >-
+      the Module may emit at most a machine-local fatal_review with status
+      POTENTIAL_FATAL_PATTERN (see item 12). It NEVER emits
+      PUBLIC_FATAL_SIGNAL_ESTABLISHED, a canonical fatal flag, a KILL, a HOLD or
+      a Decision. PR D's fatal_gate_policy_ref is an independent GateSet-level
+      policy reference; the Candidate-level consequence is decided by human
+      review + that policy (PR B), never by the Module.
+    rule: >-
+      the Module only recognises and reports this evidence pattern. It never
+      performs a Candidate-level KILL. It must NOT auto-declare a fatal signal
+      because a percent-internalized value, a surface half-life or a
+      lysosomal-colocalization coefficient crosses some line -- no numeric
+      threshold, no internalization-rate cutoff, no invented ADC-effective range.
+      A normalized-equality parity test binds potential_fatal_signal to the
+      frozen PR D contract.
+
+  "09_evidence_source_plan":
+    dominant_evidence_regime_frozen_contract: PUBLIC_HYBRID
+    current_instantiation_regime: PUBLIC_ONLY
+    experimental_sources: >-
+      the frozen contract allows a hybrid path, but INST-CRC-REFRACTORY-ADC-TARGET-v1
+      is PUBLIC_ONLY -- PR E13 designs the current public path only and connects
+      no experiments.
+    source_classes:
+      direct_authority:
+        - an integrated antibody / epitope configuration observation showing antibody-induced internalization AND lysosomal delivery (e.g. live-cell imaging / pH-sensitive dye / surface-decay flow paired with lysosomal co-localization or a recycling-vs-degradation readout) carrying assay_validation_status == QUALIFIED with an auditable basis and a non-empty factual assay_method, on annotated CRC malignant cells OR a QUALIFIED well-matched CRC malignant-cell model, from a primary publication / repository record
+      indirect_strong:
+        - constitutive endocytosis or established internalizing-receptor biology for the target
+        - antibody-induced internalization shown for the target with some antibody / epitope configuration in a NON-CRC context
+        - a functional ADC delivery precedent -- a genuinely SUCCESSFUL same-target ADC (a real functional success signal), not merely the existence of a same-target ADC program
+      weak_only:
+        - internalization assumed from receptor-family membership
+        - internalization inferred from surface localization alone
+    source_authority_rules:
+      - surface localization alone NEVER establishes internalization -- it is admissible only as the frozen WEAK class and never above WEAK
+      - receptor-family membership NEVER establishes internalization -- WEAK only
+      - constitutive endocytosis / established internalizing-receptor biology is INDIRECT_STRONG ceiling -- it supports addressability and grants POSITIVE / INDIRECT_STRONG when no DIRECT configuration exists, but it never reaches the DIRECT existence-proof ceiling
+      - a NON-CRC antibody-induced internalization observation is INDIRECT_STRONG ceiling -- never DIRECT (the context is not disease-relevant); it DOES grant POSITIVE / INDIRECT_STRONG
+      - a functional ADC delivery precedent must be a genuinely SUCCESSFUL same-target ADC (a real functional success signal). "A same-target ADC exists / had a program" (TGT-01 territory) is NOT a TGT-06 delivery precedent; TGT-01 modality precedent never becomes a TGT-06 addressability observation
+      - a DIRECT existence proof requires ONE upstream-qualified INTEGRATED configuration observation (antibody-induced internalization AND lysosomal delivery on the SAME antibody / epitope configuration); "configuration A internalizes" + "configuration B reaches the lysosome" from different observations NEVER synthesize DIRECT (item 06 no_cross_observation_synthesis_of_direct)
+      - antibody-induced internalization observed but lysosomal delivery NOT confirmed is INTERNALIZATION_OBSERVED_LYSOSOMAL_DELIVERY_UNRESOLVED -- positive support at INDIRECT_STRONG ceiling only, never DIRECT
+      - a disease-relevant antibody-induced internalization + lysosomal delivery observation can reach DIRECT only with surface_context_class in {CRC_MALIGNANT_CELLS, WELL_MATCHED_CRC_MODEL}, a QUALIFIED context_adequacy_status and an auditable basis -- never from crc_specific alone
+      - a DIRECT-quality configuration observation and a non-CRC antibody-induced internalization observation (when the source identifies the tested configuration) each carry at least one auditable LOCAL internalization_configuration_id and the DIRECT-quality set is reconciled into the InternalizationEvidenceCompletion (qualifying_direct_configuration_ids) -- audit-integrity reconciliation only. There is NO qualifying_indirect_configuration_ids set -- a constitutive-endocytosis / receptor-biology or same-target-ADC precedent observation does not inherently carry a configuration identity, and forcing one would rewrite the frozen INDIRECT_STRONG evidence class
+      - a weak_only source class can never lift an assessment above INCONCLUSIVE / UNKNOWN
+      - the number of qualifying INDIRECT_STRONG datasets never raises the evidence-class ceiling above INDIRECT_STRONG
+      - TGT-02 baseline coverage, TGT-03 persistence and TGT-04 surface availability / density evidence never contribute to a TGT-06 rung, Direction or fatal_review; internalization never implies efficacy or adequate payload release
+    internalization_search_landscape:
+      declared_mandatory_search_components:
+        - antibody-induced internalization search (live-cell imaging / pH-sensitive dye / surface-decay flow)
+        - productive trafficking search (lysosomal co-localization / trafficking / recycling-versus-degradation)
+        - same-target ADC functional-delivery precedent search (a genuinely successful same-target ADC)
+        - receptor endocytosis and inference search (constitutive endocytosis / established internalizing-receptor biology / receptor-family membership / surface-localization-only inference)
+      mandatory_is_search_completion_axes_not_evidence_prerequisites: >-
+        the four components are the declared_mandatory_search_completion axes so
+        the Module cannot "find one pretty internalization movie, stop searching
+        the other axes, and cherry-pick a Direction". They are NOT evidence
+        prerequisites and NOT grading axes. A component that is
+        searched / exhausted with zero qualifying records still counts as
+        complete. ``public_internalization_search_complete`` must equal ``all`` of
+        the four component search states; a provider contradiction between them is
+        a HARD integrity failure in PR E14.
+      typed_completion_record: >-
+        PR E14 carries a module-local typed InternalizationEvidenceCompletion
+        record for this -- a run-level machine record, NOT a seventh core object:
+        attempted / landscape_as_of / search_scope / sources_searched /
+        public_internalization_search_complete /
+        antibody_configuration_internalization_search_complete /
+        productive_trafficking_search_complete /
+        same_target_adc_functional_delivery_search_complete /
+        receptor_endocytosis_and_inference_search_complete / unresolved_items /
+        qualifying_direct_configuration_ids / audit_observation_id. There is
+        exactly ONE qualifying configuration set -- qualifying_direct_configuration_ids
+        (the LOCAL antibody / epitope configuration identities of the observations
+        classified qualifying DIRECT-rung, productive or DIRECT-quality failure).
+        There is deliberately NO qualifying_indirect_configuration_ids set.
+        completion <-> SEARCH_COMPLETION_AUDIT snapshot parity (E6 / E8 / E10 gene)
+        is frozen for E14: the snapshot field names ARE the typed completion field
+        names (search_scope / sources_searched / landscape_as_of / per-component
+        completion states / unresolved_items / qualifying_direct_configuration_ids);
+        a missing / drifted / dedup-lost snapshot, or a drift in the qualifying
+        configuration set, -> HARD reject.
+    no_universal_threshold: >-
+      no internalization-rate cutoff, no surface half-life threshold, no
+      percent-internalized cutoff, no lysosomal-colocalization-coefficient
+      threshold, no invented "ADC-effective internalization rate" range, no
+      ranking. A source-reported numeric assay fact MAY be preserved as a factual
+      measurement in the neutral claim / study_context. Any threshold that has
+      not been through calibration is forbidden in this and every subsequent PR
+      for this Module.
+    connect_provider_in_this_pr: false
+    shared_infrastructure_note: >-
+      literature / repository / atlas retrieval, entity resolution, the provenance
+      ledger and evidence serialization are shared infrastructure (CURRENT_SYSTEM
+      v5 section 6.5). A future Module reuses them; it does not re-implement them
+      per Gate.
+
+  "10_input_contract":
+    required_inputs:
+      - candidate_id (CAND-L04-nnnnnn) and the candidate's CANONICAL target identity (the single authoritative target -- inherited from the MOD-TGT01 / PR E2 gene; no separate drift-prone target argument)
+      - instantiation_id (INST-CRC-REFRACTORY-ADC-TARGET-v1) plus its context_id (CTX-CRC-REFRACTORY-MCRC) and context_version (1) -- HARD-pinned to the fixed Instantiation (E8 gene). This canonical context_id is a SEPARATE namespace from each observation's LOCAL internalization_configuration_id (E10 identity-namespace gene)
+      - the frozen TGT-06 gate_contract_ref and evidence_ladder_ref, and the Gate / GateSet version (TGT-06@1.0, ADC_TARGET_GATESET@1.0)
+      - run context (run_id, code_commit, retrieval time window / landscape_as_of, evidence_regime = PUBLIC_ONLY)
+      - the declared internalization search scope for this run
+      - existing evidence_refs for this (candidate, gate), if any
+    forbidden: >-
+      any implicit default scientific context. The Module must fail rather than
+      assume an indication, modality, disease-relevant context or evidence regime
+      not supplied by the Instantiation. There is no second drift-prone target
+      argument. PR E14 HARD-checks that every observation.context_key equals the
+      run's context_key and that the InternalizationEvidenceCompletion.search_scope
+      equals the run's declared internalization_search_scope (E8 gene).
+
+  "11_evidencepackage_output_contract":
+    each_package:
+      - is atomic and Gate-NEUTRAL -- one neutral empirical observation, no grade, no direction, no TGT-06 ceiling, no pass / fail stamped onto it
+      - carries full provenance from the resolved canonical SourceIndex record (SRC-nnnnnnnn, source_type, source_identifier, locator, retrieved_at)
+      - carries candidate_refs and a measurement / claim block; a source-reported numeric assay fact (e.g. "65% internalized at 4 h") MAY be quoted in the neutral claim as a factual measurement the Module never compares to a threshold
+      - carries interpretation_boundary (observation-level directly_supports / does_not_support / limitations / a neutral observation-level evidence_ceiling)
+      - carries derivation (module_run_id, code_commit)
+      - carries the classification-driving observation fields in study_context (observation_kind, internalization_outcome + internalization_outcome_basis, assay_method, assay_validation_status + assay_validation_basis, crc_specific, surface_context_class + surface_context_basis, context_adequacy_status + context_adequacy_basis, reproducibility_status + reproducibility_basis, declared_multi_configuration_analysis, internalization_configuration_id / internalization_configuration_ids, configuration_identity_basis, antibody_identity, epitope_identity_or_region, affinity_context, conjugation_context, context_key, landscape_as_of)
+      - internalization_configuration_id / internalization_configuration_ids is a LOCAL evidence-context identity namespace (a declared multi-configuration analysis) and is deliberately NOT the canonical Instantiation context_id (CTX-CRC-REFRACTORY-MCRC); a Module must never collapse an internalization_configuration_id onto the canonical context_id (E10 identity-namespace gene). A qualifying DIRECT-rung observation (productive or DIRECT-quality failure) MUST carry at least one auditable local internalization_configuration_id; a non-CRC antibody-induced internalization observation MUST carry one WHEN the source identifies the tested configuration; a constitutive-endocytosis / receptor-biology or successful-same-target-ADC precedent observation is NOT required to carry one
+      - antibody_identity / epitope_identity_or_region / affinity_context / conjugation_context are OPEN factual strings -- NOT all four are required to be known; requiring all four would over-reject public data
+      - kind / fact-specific study_context -- NEVER promote a non-CRC / receptor-family-inference / surface-localization-only / audit observation's source study context to a disease-relevant integrated internalization observation; the run's scientific context is pinned separately by context_key / the Instantiation (E8 gene)
+      - for a SEARCH_COMPLETION_AUDIT observation, additionally carries a structured snapshot of the InternalizationEvidenceCompletion it certifies (search_scope, sources_searched, landscape_as_of, per-component completion states, unresolved_items, qualifying_direct_configuration_ids) -- the snapshot field names are exactly the typed completion's field names (same namespace), the qualifying configuration set is locked, and it MUST survive the shared (source_id, claim) dedup, because an attempted completion needs exactly one emitted / reused provenance-bearing matching audit EP (E8 gene)
+    neutral_wording:
+      may_say:
+        - "source reported antibody-induced internalization of the target-antibody complex with lysosomal co-localization for the tested antibody on a CRC line"
+        - "source reported ~65% surface signal loss at 4 h by surface-decay flow for the tested antibody"
+        - "constitutive endocytosis of the receptor is established in the literature"
+        - "an antibody-induced internalizing configuration was demonstrated for the target in a non-CRC cell line"
+        - "a same-target ADC achieved a documented functional response in the clinic"
+        - "across the tested antibody panel the target-antibody complex remained surface-static with no lysosomal delivery"
+        - a literal source internalization / trafficking claim IS an admissible empirical fact and may be quoted, including a source-reported numeric value and unit
+      may_not_say:
+        - passes TGT-06 / TGT-06 POSITIVE / TGT-06 NEGATIVE
+        - the target is internalizing / the target is non-internalizing (a target-wide claim)
+        - the internalization rate is above / below an ADC-effective range
+        - the target is fatal / should be killed / the ADC will work
+        - any TGT-02 coverage substitution, any TGT-03 persistence conclusion, or any TGT-04 surface-availability conclusion
+        - even when a Gate-relative phrase is the source's own claim, the Module never upgrades it into a TGT-06 Gate conclusion
+    rules:
+      - the Module references an existing EvidencePackage by evidence_id -- it reuses the EXACT canonical package, never copies or re-creates one (PR C / E1 item 11; PR E2 / E8 / E10 gene)
+      - on reuse, observation_id is part of the exact-reuse identity parity (a reused EP whose study_context.observation_id names a different observation is a HARD failure), every classification / absence driving field for that observation kind must be present AND equal on the canonical package's study_context -- including internalization_outcome for an integrated / failure observation -- and the reused EP's own provenance source_type / source_identifier / locator must still equal the resolved canonical SourceIndex record -- not just that source_id resolves (PR E8 / E10 gene); a missing or drifted field is a HARD identity integrity failure
+      - there is NO dedicated typed raw numeric field for internalization and therefore NO TGT-04-style symmetric raw-value reuse-parity branch -- a source-reported numeric assay fact lives inside the neutral claim string, which is already covered by the ordinary claim + classification-driving field parity
+      - dedup uses the improved TGT-03 rule, NOT a blind (source_id, claim) -- the same source_id + the same claim but a DIFFERENT internalization_configuration_id -> BOTH observations survive (the local configuration affects conflict, fatal Route B and the aggregation truth table); a true duplicate is dropped only when source_id AND claim AND every classification-driving fact AND the LOCAL configuration identity all match; a SEARCH_COMPLETION_AUDIT EP is NEVER a dedup loser
+      - forward status / superseded_by never appear on evidence.json (PR C -- they live only on the EvidenceIndexEntry)
+    shape_ref: src/contracts/data_layout/evidence_package.schema.json + src/objects/decision_model.py EvidencePackage (PR A)
+
+  "12_assessment_proposal_envelope_contract":
+    the_module_emits: >-
+      a non-canonical, module-local assessment PROPOSAL ENVELOPE. It is NOT a
+      CandidateGateAssessment. Per PR A, a CandidateGateAssessment is the
+      canonical matrix cell and CANONICAL_REVIEW_STATUS is HUMAN_APPROVED --
+      constructing that object with review.status != HUMAN_APPROVED is rejected.
+    the_proposal_envelope_carries:
+      identity_pins_for_deterministic_canonicalisation:
+        - candidate_id (CAND-L04-nnnnnn)
+        - instantiation_id (INST-CRC-REFRACTORY-ADC-TARGET-v1)
+        - context_id (CTX-CRC-REFRACTORY-MCRC)
+        - context_version (1)
+        - gateset_id (ADC_TARGET_GATESET)
+        - gateset_version
+        - gate_id (TGT-06)
+        - gate_version
+      scientific_fields:
+        - proposed_direction + proposed_strength (never a Decision, never a numeric or ranking score; exactly one of the six legal item-06 pairs)
+        - evidence_refs [{evidence_id, role}] referencing the EvidencePackages above (role in SUPPORTING / CONTRADICTING / CONTEXTUAL)
+        - aggregation_rationale, critical_unknowns, evidence_ceiling
+      machine_record:
+        - the machine acceptance record (item 13)
+    fatal_review:
+      what_it_is: >-
+        a NON-CANONICAL, module-local, machine-generated human-review aid on the
+        run result -- NOT a field of the proposal envelope, NOT a
+        CandidateGateAssessment field, NOT a new core object, NOT a change to the
+        PR A / assessment.schema.json shape. It is where the structured
+        multiple-independent-configuration-failure potential-fatal-pattern signal
+        lives so E14 never has to hide it in free-text rationale or expand a
+        canonical contract.
+      fields:
+        - required (bool)
+        - status (POTENTIAL_FATAL_PATTERN when required; otherwise empty)
+        - evidence_ids ([EP-nnnnnnnn] of the contributing DIRECT-class antibody-induced internalization FAILURE observations)
+        - configuration_ids ([the qualified LOCAL antibody / epitope configuration identities -- the local evidence-context namespace, never the canonical Instantiation context_id])
+        - internalization_outcome_class ([the internalization_outcome per contributing observation -- must be FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING])
+        - context_qualification_basis_refs ([the disclosed surface_context_basis + context_adequacy_basis per observation])
+        - assay_validation_basis_refs ([the disclosed assay_validation_basis per observation])
+        - reproducibility_basis_refs ([the disclosed reproducibility_basis for a Route A qualification; empty for a pure Route B convergence])
+        - landscape_as_of, internalization_search_scope
+      machine_may_emit: POTENTIAL_FATAL_PATTERN
+      machine_never_emits: PUBLIC_FATAL_SIGNAL_ESTABLISHED / a canonical fatal flag / KILL / HOLD / Decision
+      required_is_true_iff: >-
+        NO qualifying productive DIRECT configuration exists on the completed
+        audited landscape, AND the machine has DIRECT-class antibody-induced
+        internalization observations (observation_kind in
+        {ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING,
+        ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY}), each in a qualified
+        disease-relevant context (surface_context_class in {CRC_MALIGNANT_CELLS,
+        WELL_MATCHED_CRC_MODEL} -- a QUALIFIED well-matched CRC model IS eligible
+        here, unlike TGT-04) with a QUALIFIED context_adequacy_status + auditable
+        basis, each carrying assay_validation_status == QUALIFIED + auditable
+        basis and a non-empty factual assay_method, each carrying
+        internalization_outcome == FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING
+        + auditable basis, on a completed audited landscape, AND multiple
+        independent configurations are established by Route A (one declared
+        multi-configuration analysis with len(unique(internalization_configuration_ids))
+        >= 2 and reproducibility_status == QUALIFIED + auditable basis) OR Route B
+        (convergent FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING across at
+        least two independent qualified antibody / epitope configuration
+        identities). A single configuration's failure -- even with
+        reproducibility_status == QUALIFIED -- gives required = false. A
+        constitutive-endocytosis / receptor-family / surface-localization-only
+        inference observation never contributes.
+      only_actionable_on_an_accepted_run: >-
+        the raw detector may compute the candidate pattern internally, but a
+        fatal_review is an actionable handoff ONLY on an accepted run
+        (PR E6 / E8 / E10 gene). If the run fails machine acceptance the surfaced
+        fatal_review is empty / not required.
+      human_review_decides: >-
+        whether the failing antibody / epitope configurations are genuinely
+        independent, whether "fails productive internalization or trafficking" is
+        justified vs assay sensitivity, whether an apparent failure is an epitope /
+        assay artifact, whether the disease-relevant model is representative,
+        whether the reported reproducibility is convincing, and whether the
+        surface-static pattern satisfies the GateSet fatal_gate_policy (including
+        whether a non-internalizing-payload strategy changes the consequence).
+        Only then can the GateSet fatal_gate_policy / a human Decision act on the
+        Candidate-level consequence. The Module never performs a Candidate-level
+        KILL.
+    the_proposal_envelope_never_carries:
+      - assessment_id / assessment_version (human canonicalisation assigns them)
+      - review.status / review.reviewer / review.reviewed_at (human canonicalisation only)
+      - any TGT-02 coverage substitution, TGT-03 persistence conclusion or TGT-04 surface-availability conclusion
+      - a fatal flag (the multiple-independent-configuration-failure signal lives in the module-local fatal_review record, not the proposal envelope)
+      - any internalization-rate threshold, cutoff or "ADC-effective internalization rate range"
+    rules:
+      - a canonical CandidateGateAssessment (review.status = HUMAN_APPROVED) is constructed only after human approval (item 14), by the review surface, never by the Module
+      - the proposed_direction x proposed_strength combination is checked against the frozen item-06 legal pairs (exactly six) and the PR A direction x strength matrix
+      - PR E13 only DEFINES this envelope's field list and the fatal_review record's field list; it adds no new core object and no runtime implementation
+    shape_ref: >-
+      src/contracts/data_layout/assessment.schema.json is the canonicalisation
+      TARGET, not a machine-proposal schema. The proposal envelope carries that
+      schema's identity pins and scientific fields for a deterministic
+      canonicalisation and omits assessment_id / assessment_version / review.
+
+  "13_machine_acceptance_criteria":
+    a_proposal_envelope_and_its_packages_are_machine_acceptable_iff:
+      - every EvidencePackage validates against evidence_package.schema.json (shape / ids / nested blocks / date patterns)
+      - the candidate's canonical target identity matches every observation's target_identity; a mismatch is a HARD misbinding failure
+      - every observation.context_key equals the run's context_key, and the InternalizationEvidenceCompletion.search_scope equals the run's declared internalization_search_scope (PR E8 gene); a drift is a HARD integrity failure
+      - every provenance.source_id resolves to a canonical SourceIndex record whose metadata matches, and every evidence_ref.evidence_id resolves to a canonical EvidencePackage (PR C check_* functions; PR E2 gene)
+      - exact canonical EP reuse parity passes -- observation_id parity, no missing / drifted classification-driving field on a reused package (including internalization_outcome), and the reused EP's own source_type / source_identifier / locator still equal the resolved canonical SourceIndex (PR E2 / E8 / E10 gene)
+      - the completion <-> SEARCH_COMPLETION_AUDIT snapshot parity passes -- an attempted completion has exactly one normalized matching audit observation AND exactly one emitted / reused provenance-bearing matching audit EP that carries a structured snapshot equal to the typed completion (search_scope, sources_searched, landscape_as_of, per-component completion states, unresolved_items, qualifying_direct_configuration_ids); a missing / drifted / dedup-lost snapshot, or a drift in the qualifying configuration set, is a HARD integrity failure (PR E6 / E8 / E10 gene)
+      - public_internalization_search_complete equals all four declared component search states; a contradiction is a HARD integrity failure
+      - every admissible evidence class used is in item 04's admissible list, and no item-04 not_admissible class is present
+      - internalization inferred from surface localization alone never proposes above WEAK; internalization assumed from receptor-family membership never above WEAK; a non-CRC antibody-induced internalization observation and a constitutive-endocytosis / internalizing-receptor biology observation and a successful same-target ADC functional-delivery precedent never above INDIRECT_STRONG
+      - DIRECT is an EXISTENCE PROOF, not an efficiency measurement and not a closed assay whitelist -- it requires ONE upstream-qualified INTEGRATED configuration observation (antibody-induced internalization AND lysosomal delivery on the SAME antibody / epitope configuration) with a factual assay_method type; the assay_method vocabulary stays OPEN; the assay-validation predicate is CLOSED -- assay_validation_status is in {QUALIFIED, NOT_ESTABLISHED}, DIRECT requires assay_validation_status == QUALIFIED with a non-empty auditable assay_validation_basis AND a non-empty factual assay_method, and NOT_ESTABLISHED can never reach DIRECT
+      - DIRECT is NEVER synthesized across observations -- an EvidencePackage asserting internalization for configuration A plus a different EvidencePackage asserting lysosomal delivery for configuration B does NOT combine into a DIRECT existence proof (item 06 no_cross_observation_synthesis_of_direct); a proposal that does so is a HARD failure
+      - antibody-induced internalization observed but lysosomal delivery NOT confirmed (internalization_outcome == INTERNALIZATION_OBSERVED_LYSOSOMAL_DELIVERY_UNRESOLVED) never reaches DIRECT -- it is positive support at INDIRECT_STRONG ceiling only
+      - a DIRECT rung requires an EXPLICITLY qualified disease-relevant context -- surface_context_class in {CRC_MALIGNANT_CELLS, WELL_MATCHED_CRC_MODEL} with context_adequacy_status == QUALIFIED and an auditable surface_context_basis + context_adequacy_basis; a bare crc_specific == true never reaches a rung (PR E10 round-1 gene)
+      - the single-vs-multi configuration identity is consistent -- declared_multi_configuration_analysis == false requires internalization_configuration_id != "" and internalization_configuration_ids == (); declared_multi_configuration_analysis == true requires internalization_configuration_id == "" and len(unique(internalization_configuration_ids)) >= 2 (PR E10 / E11 gene)
+      - a qualifying DIRECT-rung observation (productive or DIRECT-quality failure) carries at least one auditable local internalization_configuration_id; a non-CRC antibody-induced internalization observation carries one when the source identifies the tested configuration; a constitutive-endocytosis / receptor-biology / successful-same-target-ADC precedent observation is NOT required to carry one, and the Module must NOT reject it for lacking one
+      - every classification-driving qualified status carries an auditable basis -- surface_context_class, context_adequacy_status, assay_validation_status, internalization_outcome, reproducibility_status, configuration_identity (for a multi-configuration analysis); a missing / drifted qualification basis is a HARD integrity failure
+      - the LOCAL configuration namespace (study_context.internalization_configuration_id / internalization_configuration_ids, completion.qualifying_direct_configuration_ids, fatal_review.configuration_ids) is never the canonical Instantiation context_id (CTX-CRC-REFRACTORY-MCRC); a proposal or record that collapses an internalization_configuration_id onto the canonical context_id is a HARD identity-namespace failure
+      - the Gate-level proposed_strength follows the highest-qualifying-rung authority under the item-06 tgt06_specific_aggregation_truth_table -- DIRECT when a qualifying DIRECT-rung observation exists on the completed audited landscape, INDIRECT_STRONG when the highest qualifying rung is a positive INDIRECT_STRONG observation and no DIRECT-rung observation exists, UNKNOWN for a WEAK-only / no-qualifying-evidence landscape; a proposal with proposed_strength == WEAK is a HARD failure
+      - proposed_direction x proposed_strength is exactly one of the six legal item-06 pairs (POSITIVE / DIRECT, POSITIVE / INDIRECT_STRONG, NEGATIVE / DIRECT, CONFLICTING / DIRECT, INCONCLUSIVE / DIRECT, INCONCLUSIVE / UNKNOWN); there is NO NEGATIVE / INDIRECT_STRONG, NO CONFLICTING / INDIRECT_STRONG, NO INCONCLUSIVE / INDIRECT_STRONG and NO INCONCLUSIVE / WEAK; INCONCLUSIVE / UNKNOWN carries zero evidence_refs; a graded INCONCLUSIVE / DIRECT carries CONTEXTUAL evidence_refs
+      - the aggregation follows the frozen item-06 tgt06_specific_aggregation_truth_table exactly -- one qualifying productive DIRECT configuration is POSITIVE / DIRECT (and existence-proof dominance means heterogeneous B / C failures do not change it); exactly one independent DIRECT-quality failure configuration with no productive DIRECT is INCONCLUSIVE / DIRECT (never NEGATIVE); at least two independent DIRECT-quality failure configurations with no productive DIRECT is NEGATIVE / DIRECT; genuinely incompatible productive-vs-failure DIRECT-quality claims about the SAME configuration with no auditable resolution is CONFLICTING / DIRECT; different configurations behaving differently is NEVER mapped to CONFLICTING
+      - the Direction over a qualifying integrated configuration observation follows the frozen item-06 internalization_direction_mapping (internalization_outcome PRODUCTIVE_INTERNALIZATION_WITH_LYSOSOMAL_DELIVERY -> SUPPORTS_ADDRESSABILITY; FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING -> OPPOSES_ADDRESSABILITY; MIXED_OR_UNRESOLVED / NOT_ESTABLISHED -> CONTEXTUAL); an INTERNALIZATION_OBSERVED_LYSOSOMAL_DELIVERY_UNRESOLVED observation is positive support at INDIRECT_STRONG ceiling only and never OPPOSES
+      - no numeric decision is taken on a source-reported internalization rate / half-life / percent-internalized / colocalization coefficient -- the raw value may be stored as a factual measurement in the neutral claim but is never compared to a threshold, cutoff or invented range
+      - the mandatory internalization-evidence-search landscape is complete for the path taken (item 16); the Module did not grade early on one internalization movie, one trafficking dataset, or one failure observation
+      - if the module-local fatal_review record has required = true, its status is POTENTIAL_FATAL_PATTERN (never PUBLIC_FATAL_SIGNAL_ESTABLISHED), NO qualifying productive DIRECT configuration exists on the landscape, every contributing observation is a DIRECT-class antibody-induced internalization FAILURE observation (internalization_outcome == FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING; NO constitutive-endocytosis / receptor-family / surface-localization-only / non-internalizing-payload contributor), multiple independent configurations are established by Route A or Route B (>= 2 independent internalization_configuration_id, never "> 2"), the reproducibility route A or B basis is auditable, and it is surfaced only on an accepted run
+      - fatal_review is not a field of the proposal envelope
+      - dedup -- one SRC -> many EP is allowed; a same source_id + same claim + different internalization_configuration_id keeps both; the same (source_id, claim, all-driving-facts, local-configuration) is not duplicated; a SEARCH_COMPLETION_AUDIT EP is never the dedup loser for an attempted completion
+      - all required fields present; no numeric or ranking score anywhere; no internalization-rate / half-life / percent-internalized / colocalization-coefficient threshold; no invented ADC-effective range
+      - no TGT-02 coverage substitution, no TGT-03 persistence conclusion, no TGT-04 surface-availability conclusion, and no PUBLIC_FATAL_SIGNAL_ESTABLISHED / KILL / HOLD / Decision appears anywhere in the proposal or the fatal_review record
+    on_failure: >-
+      the run is rejected with a machine reason and nothing enters the canonical
+      record. A HARD identity / provenance / completion-consistency /
+      classification-qualification integrity failure (candidate <-> target
+      misbinding, a context_key / search_scope drift from the run, a
+      claimed-resolved source missing from the canonical SourceIndex, a
+      canonical-source metadata conflict, an incompatible canonical
+      EvidencePackage, a completion-audit snapshot drift or a dedup-lost audit
+      EP, a drift in the qualifying configuration set, a
+      declared_multi_configuration_analysis / configuration id inconsistency, a
+      DIRECT rung synthesized across unrelated observations, a DIRECT rung
+      asserted on a NON_CRC_CONTEXT / UNRESOLVED context, a local
+      internalization_configuration_id equal to the canonical context_id, a
+      qualifying DIRECT-rung observation with no local configuration id, a
+      missing / drifted qualification basis) rejects the WHOLE run -- it is never
+      degraded to an accepted UNKNOWN (PR E2 / E8 / E10 / E11 gene). UNKNOWN from a
+      genuinely incomplete public internalization search, or from a completed
+      landscape with only WEAK / no qualifying evidence, is NOT an integrity
+      failure.
+
+  "14_human_acceptance_and_review_surface":
+    the_human_sees:
+      - the proposed_direction + proposed_strength and the aggregation_rationale
+      - each EvidencePackage's claim, source and interpretation_boundary (drill-down) -- per-configuration evidence, assay / readout, assay validation, disease-relevant context basis, internalization_outcome basis, reproducibility basis, configuration identity basis, and any source-reported numeric assay value
+      - the ladder rung each package maps to, and any critical_unknowns
+      - the InternalizationEvidenceCompletion snapshot -- which mandatory components are complete / incomplete and the qualifying DIRECT-rung configuration ids
+      - the module-local fatal_review record (item 12) -- status POTENTIAL_FATAL_PATTERN, the contributing evidence_ids / configuration_ids / internalization_outcome_class / context_qualification_basis_refs / assay_validation_basis_refs / reproducibility_basis_refs
+      - the machine acceptance record (item 13 pass / fail detail)
+    human_only_judgements:
+      - whether the aggregated direction / strength is scientifically correct for TGT-06
+      - whether a claimed DIRECT existence proof is a genuinely integrated single-configuration observation (not a stitched pair)
+      - whether a "productive internalization with lysosomal delivery" characterisation is convincing for the payload class in question (internalization does not imply adequate payload release)
+      - whether the disease-relevant model is genuinely representative of CRC internalization biology
+      - whether the failing antibody / epitope configurations are genuinely independent
+      - whether an apparent internalization failure is an epitope / assay artifact
+      - whether a non-CRC internalizing configuration or a constitutive-endocytosis biology argument is a strong enough addressability signal for the program
+      - whether a reported reproducibility is scientifically convincing
+      - whether the multiple-independent-configuration-failure pattern satisfies the GateSet fatal policy -- i.e. whether the fatal_review POTENTIAL_FATAL_PATTERN is a real fatal signal, and whether a non-internalizing-payload strategy changes the consequence
+      - final approval -- on HUMAN_APPROVED the review surface constructs the canonical CandidateGateAssessment (review.status = HUMAN_APPROVED) from the proposal envelope; it enters ASSESSMENTS/<cand>/vNNN.json and the MatrixView rebuilds (PR C). The Module never constructs that object.
+    complexity_note: >-
+      TGT-06's human-only judgement covers integrated-vs-stitched DIRECT proof,
+      payload-class relevance of a productive-internalization characterisation,
+      model representativeness, configuration independence, artifact vs real
+      internalization failure, INDIRECT_STRONG strength-for-the-program, and
+      fatal-policy satisfaction -- all human calls the Module surfaces but does
+      not make.
+
+  "15_failure_unknown_and_conflict_behavior":
+    retrieval_failure: report a machine failure reason; do not emit a partial proposal envelope as if complete
+    direction_and_strength_follow_the_item_06_truth_table: >-
+      the completed audited landscape is graded by the frozen item-06
+      tgt06_specific_aggregation_truth_table; there is no discretion.
+    weak_only_or_no_qualifying_evidence_completed_landscape: >-
+      only WEAK evidence (internalization assumed from receptor-family membership /
+      inferred from surface localization alone) or no qualifying evidence + the
+      public internalization landscape completed / exhausted -> INCONCLUSIVE /
+      UNKNOWN, ZERO proposal evidence_refs. If the enumerated public source space
+      is exhausted, a critical_unknown "test additional independent
+      antibody / epitope configurations with an antibody-induced internalization +
+      productive lysosomal trafficking readout on a CRC-relevant model" =
+      EXPERIMENT_REQUIRED -- the wording MUST emphasise ADDITIONAL INDEPENDENT
+      CONFIGURATIONS, not merely "one more internalization assay". The
+      EvidencePackages still preserve the WEAK / INDIRECT_STRONG facts for human
+      drill-down. Verbatim from the frozen contract: "No internalization data for
+      any configuration -> UNKNOWN."
+    single_failure_is_never_a_target_wide_negative: >-
+      a completed landscape with exactly one independent DIRECT-quality failure
+      configuration and no qualifying productive DIRECT configuration ->
+      INCONCLUSIVE / DIRECT, never NEGATIVE. PR D forbidden_inference: "a single
+      non-internalizing antibody / epitope configuration implies the target is
+      non-internalizing" is FORBIDDEN.
+    indirect_strong_only_completed_landscape: >-
+      qualifying constitutive-endocytosis / internalizing-receptor biology /
+      non-CRC antibody-induced internalization / successful same-target ADC
+      functional-delivery precedent + the public internalization landscape
+      completed / exhausted + NO qualifying DIRECT configuration observation ->
+      POSITIVE / INDIRECT_STRONG (highest-qualifying-rung authority), carrying the
+      INDIRECT_STRONG evidence_refs. This is NOT INCONCLUSIVE -- all three frozen
+      INDIRECT_STRONG classes are positive addressability support.
+    incomplete_internalization_search: >-
+      while the internalization search has started but a mandatory declared
+      component is not complete -> INCONCLUSIVE / UNKNOWN. Do not grade early on
+      one internalization movie, one trafficking dataset, or one failure
+      observation -- that is what the InternalizationEvidenceCompletion state is
+      for.
+    conflicting_evidence: >-
+      propose CONFLICTING / DIRECT only with qualifying DIRECT-quality
+      observations about the SAME antibody / epitope configuration that make
+      genuinely incompatible claims (productive internalization vs
+      productive-internalization / trafficking failure) AND no auditable
+      characterization already resolves them (item 06), with non-empty
+      key_supporting_evidence and key_contradicting_evidence. Different
+      configurations behaving differently is NOT CONFLICTING -- it is
+      configuration-specificity. A qualified assay / model variation for one
+      configuration that cannot resolve productive-vs-failure is a graded
+      INCONCLUSIVE / DIRECT.
+    experiment_required: >-
+      TGT-06 can and should use EXPERIMENT_REQUIRED, but only when the enumerated
+      public internalization source space is completed / exhausted AND the
+      unresolved addressability question requires NEW experiments across
+      additional independent antibody / epitope configurations. While any
+      unresolved public item remains the resolution stays PUBLIC_RESOLVABLE /
+      CURRENTLY_UNRESOLVABLE -- do NOT auto-add EXPERIMENT_REQUIRED (PR E8 / E10
+      precedence). A known public dataset not fetched, or an incomplete public
+      search, is PUBLIC_RESOLVABLE; a source that exists but whose access /
+      annotation currently prevents resolution is CURRENTLY_UNRESOLVABLE.
+    absolute_rules:
+      - UNKNOWN is never silently converted to PASS / HOLD / KILL (CURRENT_SYSTEM v5 section 6.4)
+      - UNKNOWN from an incomplete public internalization search, or from a completed WEAK-only landscape, is NOT an integrity failure (PR E2 / E8 / E10 gene)
+      - surface expression / receptor-family membership is never upgraded to an internalization claim
+      - a single non-internalizing configuration is never a target-wide NEGATIVE and never a fatal signal
+      - a scientific NEGATIVE (multiple-independent-configuration failure) is never a fatal flag and never a KILL
+      - internalization never implies ADC efficacy or adequate payload release
+
+  "16_stop_rule":
+    principle: >-
+      the mandatory public internalization-evidence-search landscape is completed
+      and audited BEFORE any graded Direction; a single internalization movie, a
+      single trafficking dataset or a single failure observation is never a
+      completed answer; the stop is bounded.
+    normal_stop_requires_all_of:
+      - the mandatory public internalization search landscape is complete (item 09 declared_mandatory_search_components) and audited
+      - the aggregation truth table (item 06) is applied over the completed landscape
+      - remaining public evidence cannot change the Direction or the DIRECT-vs-INDIRECT_STRONG-vs-UNKNOWN Strength
+    exhaustion_stop:
+      - the enumerated public internalization source space is exhausted
+      - the residual critical_unknown is classified -- PUBLIC_RESOLVABLE / EXPERIMENT_REQUIRED / CURRENTLY_UNRESOLVABLE -- and the run stops
+    potential_fatal_trigger:
+      - a machine-detected multiple-independent-configuration productive-internalization / trafficking failure pattern (item 08) may stop the chase for weaker receptor-biology / inference evidence, but ONLY AFTER the necessary internalization-search completeness is satisfied AND only when NO qualifying productive DIRECT configuration exists
+      - the Module never stops on the first configuration-failure observation
+    rule: bounds the "infinite evidence gathering" failure mode without ever treating a single dataset or observation as a completed assessment
+
+  "17_downstream_consumer_and_handoff":
+    the_module_hands_off:
+      - a set of EvidencePackages and one assessment proposal envelope, to the human review surface (item 14)
+      - independently, the module-local fatal_review record (item 12), for human Gate review and the GateSet fatal policy
+    once_human_approved_the_resulting_canonical_CandidateGateAssessment_is_consumed_by:
+      - the MatrixView cell for (this candidate_id, TGT-06) (PR C)
+      - the ADC_TARGET_GATESET decision layer (decision_rule / fatal_gate_policy / required_gate_policy / unknown_policy) which turns the eight TGT assessments into a Candidate-level Decision (PR B)
+      - the next Gate in the fatal-first order (TGT-07) as context only -- never as a substitute for its own shedding / soluble-antigen measurement, and TGT-06 never discharges TGT-07
+      - experimental validation, when a critical_unknown is EXPERIMENT_REQUIRED
+    this_module_does_not:
+      - construct a CandidateGateAssessment or emit a HUMAN_APPROVED record
+      - produce a Candidate-level Decision or KILL
+      - emit PUBLIC_FATAL_SIGNAL_ESTABLISHED -- the machine emits at most a fatal_review POTENTIAL_FATAL_PATTERN, and only on an accepted run
+      - make a TGT-02 coverage substitution, a TGT-03 persistence conclusion or a TGT-04 surface-availability conclusion
+      - let surface expression or receptor-family membership discharge the antibody-induced internalization requirement
+      - synthesize a DIRECT existence proof from unrelated observations or configurations
+      - derive an internalization-rate threshold, cutoff or "ADC-effective range" from a measured value
+      - decide ADC efficacy or adequate payload release
+      - flip Direction based on candidate desirability
+      - grade a Direction before the mandatory internalization-evidence-search landscape is complete
+      - write to any other Gate's evidence index or assessment
+      - modify the Matrix (a rebuildable projection; PR C)
+
+deferred_to_pr_e14_plus:
+  - the new top-level gate_modules/tgt06_internalization_trafficking_addressability/ implementation (providers, adapters, extractor, normalizer, runner, EvidencePackage writer, assessment proposer, the InternalizationEvidenceCompletion typed record, the multiple-independent-configuration-failure fatal_review detector) and the primary_module_version bump to "1.0.0"
+  - connecting any retrieval provider or dataset (live-cell-imaging / pH-sensitive-dye / surface-decay-flow / lysosomal-co-localization / recycling-vs-degradation / same-target-ADC repositories)
+  - the binding / registry reconciliation (src/contracts/crc_adc_target_gateset.yaml + src/objects/crc_adc_target_gateset.py built_module_versions / BUILT_MODULE_VERSIONS, gate_modules/README.md, tests/test_crc_adc_target_gateset.py, tests/test_gate_modules_boundary.py and the other built-roster tests) -- none of which PR E13 touches
+  - the last TGT primary Module (TGT-07)
+
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  implementation_code_in_this_pr: forbidden
+  provider_or_adapter_in_this_pr: forbidden
+  trial_or_dataset_retrieval_in_this_pr: forbidden
+  numeric_or_ranking_scoring: forbidden
+  internalization_rate_or_half_life_or_percent_internalized_or_colocalization_coefficient_threshold: forbidden
+  invented_adc_effective_internalization_rate_range: forbidden
+  cross_gate_coverage_persistence_or_surface_density_logic_in_this_pr: forbidden
+  new_scientific_ladder_semantics_in_this_pr: forbidden
+  generic_gatemodule_framework_or_base_class_in_this_pr: forbidden
+  modifies_mod_tgt01: forbidden
+  modifies_mod_tgt02: forbidden
+  modifies_mod_tgt03: forbidden
+  modifies_mod_tgt04: forbidden
+  modifies_mod_tgt05: forbidden
+  modifies_mod_tgt08: forbidden
+  modifies_binding_or_registry_or_existing_tests: forbidden
+  only_allowed_existing_file_mutation: append_to_logs_worklog_md
+  migration_pending: remains
