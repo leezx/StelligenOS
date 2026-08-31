@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_e9
-status: pending_review
+status: approved
 scope: tgt03_mod_tgt03_construction_contract_drawing_validation_and_acceptance_checklist_only
 repository_boundary: software_only_external_data
 
@@ -330,15 +330,16 @@ repository_policy:
   only_allowed_existing_file_mutation: append_to_logs_worklog_md
   migration_pending: remains
 
-chatgpt_review: pending
-approved_tip: null
-merge_commit: null
-review_rounds: 2
+chatgpt_review: APPROVE
+approved_tip: 8ba624c8b17f5fe0cb2c2584739d7ba630ba3745
+merge_commit: a2d585d752142a581cc904a1229692eaa94a0fe7
+review_rounds: 3
 test_count_before_e9: 1208        # at PR E8 approval
 test_count_at_submission: 1274    # local full suite at round-1 submission (tests/test_tgt03_module_construction_contract.py 66)
 test_count_after_round_1: 1282    # +8 tests locking the three round-1 typed-fact freezes (construction-contract file now 74)
 test_count_after_round_2: 1283    # +1 regression -- audit-snapshot uses the new persistence_context_id namespace (construction-contract file now 75)
-approval_record_pr: null
+test_count_at_approval: 1283      # ChatGPT APPROVE @ 8ba624c (round 3); construction-contract file 75
+approval_record_pr: task_20260830_runtime-migration-pr-e9-approval-record
 next_authorized_step: null        # PR E10 = MOD-TGT03@1.0.0 implementation -- needs its own go-ahead
 
 review_round_1:  # ChatGPT AI审核方案 -- REQUEST_CHANGES @ 23e1b7e ("Worked for 5m 4s")
@@ -445,6 +446,40 @@ review_round_2:  # ChatGPT AI审核方案 -- REQUEST_CHANGES @ 1239a2d ("Worked 
   github_review_state: >-
     not written -- GitHub connector still 403 Resource not accessible by
     integration; the AI审核方案 conversation is authoritative.
+
+review_round_3:  # ChatGPT AI审核方案 -- APPROVE @ 8ba624c ("Worked for 1m")
+  verdict: APPROVE
+  head_reviewed: 8ba624c8b17f5fe0cb2c2584739d7ba630ba3745
+  merge_commit: a2d585d752142a581cc904a1229692eaa94a0fe7
+  no_new_blocker: true
+  confirmation: >-
+    HEAD correct, open, mergeable; exact-head CI run 33345828221 both matrix legs
+    (3.11 / 3.12) unit tests + repository boundary + working-tree-unchanged checks
+    all pass. The round-2 blocker is fully closed -- the item-11
+    SEARCH_COMPLETION_AUDIT snapshot now uses
+    qualifying_direct_persistence_context_ids /
+    qualifying_indirect_persistence_context_ids and states the snapshot field
+    names equal the typed ClinicalPersistenceCompletion's, so E10 faces no
+    conflicting schema; an exact-head search for the old
+    qualifying_direct_context_ids returns 0 matches and the new identifiers are
+    consistent across completion / namespace declaration / audit snapshot /
+    acceptance criteria; the new regression asserts both new identifiers exist and
+    reads the whole contract asserting neither old identifier exists.
+  three_round_closeout: >-
+    Round 1 -- 3 deterministic contract-shape blockers CLOSED; Round 2 -- 1
+    audit-snapshot rename residue CLOSED; Round 3 -- no new blocker. science /
+    Direction / fatal Route A+B / completion / EXPERIMENT_REQUIRED all untouched.
+    The E9 construction contract is frozen; PR E10 (MOD-TGT03@1.0.0 deterministic
+    implementation) may proceed.
+  non_blocking_note: >-
+    the PR body's initial test numbers were still 66 / 1274 vs the current
+    75 / 1283 -- the reviewer treated this as metadata housekeeping and did not
+    add a round; the PR body was updated to 75 / 1283 + a 3-round review summary
+    before merge.
+  github_review_state: >-
+    not written -- GitHub connector returned 403 Resource not accessible by
+    integration for the formal APPROVE anchor as well; the AI审核方案
+    conversation is authoritative.
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt03_module_construction_contract.py' -v
