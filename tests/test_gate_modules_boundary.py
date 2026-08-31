@@ -30,6 +30,7 @@ TGT05 = GATE_MODULES_ROOT / "tgt05_normal_tissue_fatal_liability"
 TGT08 = GATE_MODULES_ROOT / "tgt08_target_opportunity_competition_ip_whitespace"
 TGT03 = GATE_MODULES_ROOT / "tgt03_treatment_metastatic_persistence"
 TGT04 = GATE_MODULES_ROOT / "tgt04_tumor_surface_availability_density_plausibility"
+TGT06 = GATE_MODULES_ROOT / "tgt06_internalization_trafficking_addressability"
 
 DATA_LIKE_SUFFIXES = {
     ".csv", ".tsv", ".parquet", ".feather", ".rds", ".h5", ".h5ad", ".loom",
@@ -431,6 +432,57 @@ class Tgt04ModuleManifestTests(unittest.TestCase):
         readme = " ".join((GATE_MODULES_ROOT / "README.md").read_text().split())
         self.assertIn("MOD-TGT04", readme)
         self.assertIn("tgt04_tumor_surface_availability_density_plausibility", readme)
+
+
+class Tgt06ModuleManifestTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.manifest = yaml.safe_load((TGT06 / "module.yaml").read_text())["module"]
+
+    def test_identity_and_version(self) -> None:
+        self.assertEqual(self.manifest["module_id"], "MOD-TGT06")
+        self.assertEqual(self.manifest["module_version"], "1.0.0")
+        self.assertEqual(self.manifest["built_in"], "runtime_migration_pr_e14")
+        self.assertEqual(self.manifest["gate_binding"]["gate_id"], "TGT-06")
+        self.assertEqual(
+            self.manifest["gate_binding"]["gateset_id"], "ADC_TARGET_GATESET"
+        )
+
+    def test_manifest_version_matches_the_package_constant(self) -> None:
+        from gate_modules.tgt06_internalization_trafficking_addressability import (
+            MODULE_ID,
+            MODULE_VERSION,
+        )
+
+        self.assertEqual(self.manifest["module_id"], MODULE_ID)
+        self.assertEqual(self.manifest["module_version"], MODULE_VERSION)
+
+    def test_manifest_matches_the_crc_gateset_binding(self) -> None:
+        gateset = yaml.safe_load(
+            (REPO_ROOT / "src" / "contracts" / "crc_adc_target_gateset.yaml").read_text()
+        )
+        binding = next(
+            b
+            for b in gateset["context_specific_bindings"]["gate_bindings"]
+            if b["gate_id"] == "TGT-06"
+        )
+        self.assertEqual(binding["primary_module_id"], self.manifest["module_id"])
+        self.assertEqual(
+            binding["primary_module_version"], self.manifest["module_version"]
+        )
+        self.assertEqual(
+            gateset["primary_module_binding"]["built_module_versions"]["TGT-06"],
+            "1.0.0",
+        )
+
+    def test_boundary_flags_are_all_conservative(self) -> None:
+        flags = self.manifest["boundary_flags"]
+        for name, value in flags.items():
+            self.assertFalse(value, name)
+
+    def test_readme_registers_the_built_module(self) -> None:
+        readme = " ".join((GATE_MODULES_ROOT / "README.md").read_text().split())
+        self.assertIn("MOD-TGT06", readme)
+        self.assertIn("tgt06_internalization_trafficking_addressability", readme)
 
 
 if __name__ == "__main__":

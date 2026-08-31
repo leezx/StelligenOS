@@ -6660,3 +6660,123 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   `primary_module_version` 仍 `0.0.0`。`MIGRATION_PENDING` 保持。
 - Next：PR E14 = MOD-TGT06@1.0.0 deterministic implementation，需独立 go-ahead。
   fatal-first 余下 TGT-07（施工合同 + 实现）。
+
+## Runtime Migration PR E14 · MOD-TGT06@1.0.0 deterministic implementation
+
+- 分支 `task_20260831_runtime-migration-pr-e14`，基线 `origin/main` @ `aa80865`
+  （PR E13 施工合同四轮 APPROVE 收口 + approval record 之后）。
+- 授权：用户在 PR E13 收口后 "go on"；开工前 ChatGPT `AI审核方案` 给出
+  **APPROVE-to-proceed**，把 E14 冻结为 **MOD-TGT06@1.0.0 deterministic
+  implementation**，与冻结的 E13 contract 一致，并要求写码前再冻结 **6 个
+  required implementation tightenings**（只消除 runtime discretion，不改 E13
+  science）+ frozen proposal evidence-role mapping。见
+  `manifests/runtime_migration_pr_e14_manifest.yaml`
+  `scoping_decisions` / `six_required_implementation_tightenings` /
+  `frozen_proposal_evidence_role_mapping`（逐字）。
+- 交付：
+  - `gate_modules/tgt06_internalization_trafficking_addressability/` —— 11 文件
+    确定性科学核心。`run()` 纯 Python，只调 injected port。`classify.py` 是
+    单一分类权威：三种 DIRECT-quality failure kind 统一 `DIRECT` +
+    `OPPOSES_ADDRESSABILITY`；`aggregate.py` 直接硬编码 7 步
+    `frozen_evaluation_order`（stop-at-first-match）+ 唯一
+    `configuration_identity_projection` helper + 6 legal pair + v1 无 machine
+    conflict resolver + frozen evidence-role mapping；`completion.py`
+    `InternalizationEvidenceCompletion`（4 flat component booleans、3 HARD
+    invariant、`attempted==False` strict-empty、仅
+    `qualifying_direct_configuration_ids`）；`fatal_review.py` global
+    precondition（任一 productive DIRECT 取消）+ Route A / Route B
+    （two-distinct-observations；单个 `IDENTIFIED_MULTI` 不满足 Route B）；
+    `evidence.py` exact reuse + improved TGT-03 dedup + duplicate
+    `observation_id` preflight（在任何 allocation / source resolution /
+    semantic dedup / EP 构造之前）+ 无 raw-value parity branch；`acceptance.py`
+    可执行 item-13 检查，no-numeric-threshold 只扫 Module-owned text。
+  - `tests/test_tgt06_module.py` —— 67 条 synthetic in-memory 测试。
+  - binding 窄修：`src/contracts/crc_adc_target_gateset.yaml`
+    （TGT-06 `primary_module_version` `0.0.0 → 1.0.0`；`built_module_versions`
+    增 TGT-06；`primary_module_binding.rule` 文案）、
+    `src/objects/crc_adc_target_gateset.py`（`BUILT_MODULE_VERSIONS` 增 TGT-06）、
+    `gate_modules/README.md`（MOD-TGT06 行；「其余一个 TGT primary
+    Module（TGT-07）」）。
+  - `tests/test_gate_modules_boundary.py` 新增 `Tgt06ModuleManifestTests`；
+    `test_crc_adc_target_gateset.py` sample gate `TGT-06 → TGT-07` +
+    `_BUILT_MODULE_VERSIONS` 增 TGT-06；`test_tgt02/03/04/05/08` module +
+    construction-contract 测试的 built-roster / allowed-package tuple 同步；
+    `test_tgt06_module_construction_contract.py` 的
+    `NoImplementationInPrE13Tests` → `ContractIsFrozenAndImplementedInPrE14Tests`
+    并指向 E14 后仓库状态。
+  - `manifests/runtime_migration_pr_e14_manifest.yaml` +
+    `docs/handoff/2026-08-31-runtime-migration-pr-e14.zh-CN.md` + 本条 worklog。
+- 未触碰 PR A/B/C 合同、PR D TGT-06 science、其它 Module。`MIGRATION_PENDING`
+  保持（8 个 primary Module 建成 7 个，余 TGT-07）。
+- 本地全量 `python -B -m unittest discover -s tests -p 'test_*.py'`：**1702 OK**
+  （E13 收口 1629 → +73）。
+- Next：commit + push；开 PR；轮询 CI（python 3.11 + 3.12 matrix）；把 E14
+  实现级审核请求提交 ChatGPT `AI审核方案`。
+
+### PR E14 · ChatGPT `AI审核方案` review round 1 → REQUEST_CHANGES（3 窄 runtime blocker，全部 CLOSED）
+
+- Verdict：**REQUEST_CHANGES**，anchor HEAD `0b1907f`；exact-head CI run
+  33438218339 python 3.11 / 3.12 success。
+- Blocker 1 —— classifier authority over-expansion：classify.py 的 generic
+  positive fallback（outcome ∈ {PRODUCTIVE, DELIVERY_UNRESOLVED} → INDIRECT_STRONG）
+  会把 disease-relevant PRODUCTIVE 但 assay ⁄ context NOT_ESTABLISHED 的
+  observation 自动升成 positive INDIRECT_STRONG。→ 删除 generic fallback，改成
+  kind ⁄ context ⁄ outcome-specific：disease-relevant PRODUCTIVE + assay ⁄ context
+  未 QUALIFIED → CONTEXTUAL non-qualifying；NON_CRC PRODUCTIVE → INDIRECT_STRONG；
+  DELIVERY_UNRESOLVED → INDIRECT_STRONG（frozen lower ceiling）；FAILS 永不
+  positive IS。加 regression。
+- Blocker 2 —— proposal EvidenceRole mapping drift：(2A) POSITIVE ⁄ DIRECT 把
+  conflicted-config productive EP 标 SUPPORTING；(2B) NEGATIVE ⁄ DIRECT 把
+  DIRECT-quality failure EP 标 CONTRADICTING，且 AssessmentProposalEnvelope +
+  acceptance.py 强制「NEGATIVE 必须含 CONTRADICTING」= 第二套 role semantics。
+  → aggregate.py + contracts.py + acceptance.py 三处同步冻结 proposal-relative
+  mapping：POSITIVE ⁄ DIRECT 仅 CLEAN productive → SUPPORTING，conflicted-config
+  productive 与 other-config failure → CONTEXTUAL；NEGATIVE ⁄ DIRECT failure EP →
+  SUPPORTING（不要求 CONTRADICTING）；CONFLICTING ⁄ DIRECT 保留 same-config
+  productive SUPPORTING + same-config failure CONTRADICTING；CONTRADICTING 只
+  出现在 CONFLICTING ⁄ DIRECT。不改 Direction science。
+- Blocker 3 —— IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE allowed-kind boundary 未
+  执行：contract constructor 现在强制第三态只允许
+  CONSTITUTIVE_ENDOCYTOSIS_OR_RECEPTOR_BIOLOGY ⁄ SAME_TARGET_ADC_DELIVERY_PRECEDENT
+  ⁄ RECEPTOR_FAMILY_MEMBERSHIP_INFERENCE ⁄ SURFACE_LOCALIZATION_ONLY_INFERENCE ⁄
+  SEARCH_COMPLETION_AUDIT，或 NON_CRC_CONTEXT 的 internalization ⁄ trafficking
+  family kind。disease-relevant ⁄ unresolved family observation 无 disclosed
+  config → HARD ValueError。删除 classify.py 中已冗余的 HARD 分支。按 frozen
+  identity boundary 修正 test_trafficking_only_asymmetric_authority。
+- 触及文件：classify.py / contracts.py / aggregate.py / acceptance.py /
+  tests/test_tgt06_module.py / manifest / worklog。completion.py /
+  fatal_review.py / evidence.py / binding / PR D+E13 science / 其它 Module 未动。
+- 本轮 ChatGPT 明确判定正确、不要改：11-file package、treatment_state
+  not_applicable、三种 failure kind 统一 DIRECT+OPPOSES、ordered 7-step
+  aggregation、projection helper、six legal pairs、v1 no conflict resolver、
+  completion 四轴、exact audit identity、no qualifying_indirect set、fatal
+  productive-DIRECT cancellation、Route A ⁄ B、TGT-06 binding 1.0.0、7 ⁄ 8 built、
+  MIGRATION_PENDING、其它 Module 不重构、binding reconciliation APPROVE。
+- 本地全量 unittest：1712 OK（1702 → +10 regression）。
+- Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-2 回复。
+
+### PR E14 · ChatGPT `AI审核方案` review round 2 → REQUEST_CHANGES（round-1 Blocker 1/2 CLOSED + 1 residual blocker，CLOSED）
+
+- Verdict：**REQUEST_CHANGES**，anchor HEAD `44ad6da`；exact-head CI run
+  33441561489 python 3.11 / 3.12 success。Round-1 的 Blocker 1（classifier
+  authority）与 Blocker 2（EvidenceRole mapping）已判定 CLOSED。
+- Residual blocker —— third-state NON_CRC exception 仍过宽：constructor 的
+  NON_CRC 第三态 exception 用 `_DIRECT_QUALITY_FAILURE_KINDS`（含
+  `TRAFFICKING_OR_RECYCLING_ONLY`），于是 `NON_CRC_CONTEXT` +
+  `TRAFFICKING_OR_RECYCLING_ONLY` + 无 config id 仍被接受。frozen E13 的 exception
+  只覆盖「non-CRC **antibody-induced internalization** observation whose source
+  does not identify the tested configuration」——
+  `TRAFFICKING_OR_RECYCLING_ONLY` 按定义不是 antibody-induced internalization
+  observation。→ 新增
+  `_THIRD_STATE_NON_CRC_EXCEPTION_KINDS = (ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING,
+  ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY)`，NON_CRC exception 改用它。
+  `NON_CRC_CONTEXT` + `TRAFFICKING_OR_RECYCLING_ONLY` 无 disclosed identity →
+  HARD ValueError。加 regression；`NON_CRC ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY`
+  undisclosed-config 路径保持 valid。
+- 触及文件：contracts.py / tests/test_tgt06_module.py / manifest / worklog
+  （one-line authority narrowing + one regression，无重构）。
+- 本轮 ChatGPT 明确 CLOSED、不要改：classifier authority fix、EvidenceRole
+  mapping、completion / fatal / evidence / binding、Direction science / frozen
+  evaluation order、E13 / PR D。
+- 本地全量 unittest：1713 OK（1712 → +1 regression）。
+- Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-3 回复。

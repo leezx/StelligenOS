@@ -487,13 +487,14 @@ class BindingReconciliationTests(unittest.TestCase):
             dict(BUILT_MODULE_VERSIONS),
             {
                 "TGT-01": "1.0.0", "TGT-02": "1.0.0", "TGT-03": "1.0.0",
-                "TGT-04": "1.0.0", "TGT-05": "1.0.0", "TGT-08": "1.0.0",
+                "TGT-04": "1.0.0", "TGT-05": "1.0.0", "TGT-06": "1.0.0",
+                "TGT-08": "1.0.0",
             },
         )
 
     def test_other_tgt_gates_remain_unbuilt(self) -> None:
         for b in self.gateset["context_specific_bindings"]["gate_bindings"]:
-            if b["gate_id"] in ("TGT-01", "TGT-02", "TGT-03", "TGT-04", "TGT-05", "TGT-08"):
+            if b["gate_id"] in ("TGT-01", "TGT-02", "TGT-03", "TGT-04", "TGT-05", "TGT-06", "TGT-08"):
                 continue
             self.assertEqual(b["primary_module_version"], "0.0.0", b["gate_id"])
 
