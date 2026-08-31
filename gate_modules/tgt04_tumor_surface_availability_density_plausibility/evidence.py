@@ -265,6 +265,27 @@ def _reused_package_is_compatible(
     keys = _parity_keys(o)
     current = {k: getattr(o, k) for k in keys}
     for key in keys:
+        # --- the raw density facts have a SYMMETRIC presence-and-value contract
+        #     (E12 review round 1, blocker 3): a canonical package that simply
+        #     omits the key is "absent" -- absent on both sides is COMPATIBLE.
+        #     present on one side only, or a value / unit / summary difference, is
+        #     HARD. The raw string is never coerced to a number.
+        if key in _DENSITY_KEYS:
+            canonical_value = str(existing.study_context.get(key, "")).strip()
+            current_value = str(current[key]).strip()
+            if bool(canonical_value) != bool(current_value):
+                return (
+                    f"raw density field {key!r}: present on one side only "
+                    f"(canonical {canonical_value!r} vs current {current_value!r}) "
+                    "-- symmetric presence-and-value parity failure"
+                )
+            if canonical_value != current_value:
+                return (
+                    f"raw density field {key!r} = {canonical_value!r} on the canonical "
+                    f"package but {current_value!r} on the current observation "
+                    "(raw-density value / unit / summary drift)"
+                )
+            continue
         if key not in existing.study_context:
             return (
                 f"canonical EvidencePackage is missing the classification-driving "
@@ -274,7 +295,7 @@ def _reused_package_is_compatible(
             return (
                 f"canonical EvidencePackage {key} = {existing.study_context[key]!r} "
                 f"but the current normalized observation has {current[key]!r} "
-                f"(classification-driving / raw-density drift)"
+                f"(classification-driving drift)"
             )
     return ""
 

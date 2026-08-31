@@ -1143,5 +1143,133 @@ class OutputSurfaceTests(unittest.TestCase):
             self.assertNotIn(f, names)
 
 
+class ReviewRound1RegressionTests(unittest.TestCase):
+    """PR E12 ChatGPT AI审核方案 review round 1 -- 3 narrow runtime blockers.
+
+    (1) a raw factual reported_density_* value / unit / summary an EP is
+        sanctioned to preserve must NOT be mis-killed by acceptance.py's numeric
+        / threshold scan;
+    (2) the typed multi-context conflict resolver must ALSO require the
+        observation's CLASSIFIED density_implication == CONTEXTUAL -- an actual
+        OPPOSES observation (surface_antigen_level == NEGLIGIBLE_OR_UNDETECTABLE)
+        may never impersonate the resolver;
+    (3) raw-density exact-reuse parity is SYMMETRIC: a canonical package that
+        omits the raw density keys is "absent" -- absent on both sides is
+        compatible; present on one side only is HARD.
+    """
+
+    # ---- blocker 1 ---------------------------------------------------------
+    def test_raw_density_summary_with_a_number_is_accepted(self):
+        d = _density(
+            context="SURF_CTX_A",
+            plausibility="PLAUSIBLY_ADEQUATE",
+            value="12000",
+            unit="molecules/cell",
+            summary="12000 molecules per cell by QIFIKIT",
+        )
+        comp = _completion(qualifying_direct=("SURF_CTX_A",))
+        res = _run([d, _audit(comp)], comp)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        self.assertEqual(_pair(res), ("POSITIVE", "DIRECT"))
+
+    def test_a_real_threshold_conclusion_would_still_be_rejected(self):
+        # the guard still fires on decision language, not on a raw factual value.
+        from gate_modules.tgt04_tumor_surface_availability_density_plausibility.acceptance import (
+            _SCORE_RE,
+        )
+        self.assertIsNotNone(_SCORE_RE.search("antigen density above the clinically effective range"))
+        self.assertIsNotNone(_SCORE_RE.search("apply a density cutoff of 5000 as a decision rule"))
+        self.assertIsNotNone(_SCORE_RE.search("h-score threshold"))
+        self.assertIsNone(_SCORE_RE.search("source reported ~12000 molecules per cell by QIFIKIT"))
+
+    # ---- blocker 2 ---------------------------------------------------------
+    def test_multi_context_mixed_with_quantitatively_present_may_resolve_conflict(self):
+        a = _density(observation_id="OBS-DENS-RR1", context="SURF_CTX_A", plausibility="PLAUSIBLY_ADEQUATE")
+        b = _density(observation_id="OBS-DENS-RR2", context="SURF_CTX_B",
+                     antigen_level="NEGLIGIBLE_OR_UNDETECTABLE", plausibility="NOT_ESTABLISHED")
+        resolver = _density(
+            observation_id="OBS-DENS-RR3",
+            context="",
+            context_ids=("SURF_CTX_A", "SURF_CTX_B"),
+            declared_multi_context=True,
+            antigen_level="QUANTITATIVELY_PRESENT",
+            plausibility="MIXED_OR_UNRESOLVED",
+        )
+        comp = _completion(qualifying_direct=("SURF_CTX_A", "SURF_CTX_B"))
+        res = _run([a, b, resolver, _audit(comp)], comp)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        self.assertEqual(_pair(res), ("INCONCLUSIVE", "DIRECT"))
+
+    def test_multi_context_mixed_with_negligible_antigen_is_opposes_not_a_resolver(self):
+        a = _density(observation_id="OBS-DENS-RR4", context="SURF_CTX_A", plausibility="PLAUSIBLY_ADEQUATE")
+        # this observation is classified OPPOSES (NEGLIGIBLE_OR_UNDETECTABLE wins
+        # the density mapping) -- it must NOT be treated as the resolver.
+        fake_resolver = _density(
+            observation_id="OBS-DENS-RR5",
+            context="",
+            context_ids=("SURF_CTX_A", "SURF_CTX_B"),
+            declared_multi_context=True,
+            antigen_level="NEGLIGIBLE_OR_UNDETECTABLE",
+            plausibility="MIXED_OR_UNRESOLVED",
+        )
+        comp = _completion(qualifying_direct=("SURF_CTX_A", "SURF_CTX_B"))
+        res = _run([a, fake_resolver, _audit(comp)], comp)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        self.assertEqual(_pair(res), ("CONFLICTING", "DIRECT"))
+
+    # ---- blocker 3 ---------------------------------------------------------
+    def _canonical_no_density_keys(self, o, evidence_id="EP-00009500"):
+        keys = (
+            "observation_id", "target_identity", "context_key", "landscape_as_of",
+            "observation_kind", "molecular_layer", "assay_method",
+            "measurement_validation_status", "measurement_validation_basis", "crc_specific",
+            "surface_context_class", "surface_context_basis", "context_adequacy_status",
+            "context_adequacy_basis", "malignant_cell_attribution", "malignant_attribution_basis",
+            "surface_localization_status", "surface_localization_basis",
+            "density_plausibility_status", "density_plausibility_basis",
+            "surface_antigen_level", "surface_antigen_level_basis",
+            "reproducibility_status", "reproducibility_basis",
+            "surface_context_id", "surface_context_ids", "declared_multi_context_analysis",
+        )
+        sc = {k: getattr(o, k) for k in keys}
+        sc.update(indication="colorectal_cancer", treatment_state="not_applicable",
+                  sample_type="crc_malignant_cell_quantitative_surface_density")
+        return EvidencePackage(
+            evidence_id=evidence_id, schema_version=1, claim=o.claim,
+            measurement={"type": "x", "analyte": o.target_identity, "readout": "r",
+                         "result": "res", "unit": ""},
+            candidate_refs=(CAND,), study_context=sc,
+            provenance={
+                "source_id": o.source_id, "source_type": o.source_type,
+                "source_identifier": o.source_identifier, "locator": o.locator,
+                "retrieved_at": o.retrieved_at,
+            },
+            interpretation_boundary={
+                "directly_supports": ("x",), "does_not_support": ("y",),
+                "limitations": ("z",), "evidence_ceiling": "c",
+            },
+            derivation={"module_run_id": "RUN-E12-TEST", "code_commit": "deadbeef"},
+        )
+
+    def _run_reuse(self, o, canonical):
+        comp = _completion(qualifying_direct=(o.surface_context_id,))
+        return _run([o, _audit(comp)], comp,
+                    library={o.observation_id: canonical}, allocator=FakeAllocator(60))
+
+    def test_canonical_missing_raw_keys_current_all_empty_is_reused(self):
+        o = _density(observation_id="OBS-DENS-RR6", context="SURF_CTX_A")
+        can = self._canonical_no_density_keys(o, evidence_id="EP-00009501")
+        res = self._run_reuse(o, can)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        self.assertIn("EP-00009501", res.reused_evidence_ids)
+
+    def test_canonical_missing_raw_keys_current_value_present_is_hard(self):
+        o = _density(observation_id="OBS-DENS-RR7", context="SURF_CTX_A", value="12000")
+        can = self._canonical_no_density_keys(o, evidence_id="EP-00009502")
+        res = self._run_reuse(o, can)
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertTrue(res.hard_integrity_failures)
+
+
 if __name__ == "__main__":
     unittest.main()

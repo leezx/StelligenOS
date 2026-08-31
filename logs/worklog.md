@@ -6205,3 +6205,56 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 状态：8 个 primary Module 施工合同已 APPROVE 6 个（TGT-01/02/03/04/05/08），已
   实现 **6 个**。TGT-06 → TGT-07 属后续 PR。`MIGRATION_PENDING` 保持。
 - Next：开 PR、CI 绿后回 `AI审核方案` 贴 E12 review 请求。
+
+### PR E12 · ChatGPT `AI审核方案` review round 1 → REQUEST_CHANGES（3 窄 runtime blocker）
+
+- Verdict：**REQUEST_CHANGES**，anchor HEAD `28ddff6`；CI run 33408469633 verify
+  (3.11) + verify (3.12) 均 success。审核方确认主体实现与 E12 scoping 对齐，
+  binding / 6-of-8 built / MIGRATION_PENDING / package boundary 无 blocker；只剩
+  3 个窄 runtime blocker，都不重开 E11 science、不重构 11-file package。
+- **Blocker 1**：合法 raw quantitative fact 被 `acceptance.py` 错杀成 numeric
+  threshold。`evidence.py` 正确把 raw factual `reported_density_value` / `_unit` /
+  `_summary` 放进 Gate-neutral EP 的 `directly_supports`（E11 item 11），但
+  `acceptance.py` 把 `directly_supports` 拼进 scannable，`_SCORE_RE` 会命中
+  `"12000 molecules per cell by QIFIKIT"` → 整轮拒。修复：新增
+  `_scannable_ep_fact_text()` 在扫描前逐 EP 把 verbatim raw `reported_density_*`
+  payload 剔除；`_SCORE_RE` 收窄为 DECISION language（cutoff / threshold /
+  clinically effective range / score= / ranking / fold-change /
+  `above|below <number> molecules|abc|%`）。Regression：raw value/unit/summary
+  含数字 → ACCEPTED；真正的 threshold conclusion 仍被拒。
+- **Blocker 2**：`aggregate.py` 的 typed conflict resolver 可被一个实际 OPPOSES
+  观测冒充。frozen density mapping 里 `surface_antigen_level ==
+  NEGLIGIBLE_OR_UNDETECTABLE → OPPOSES` 优先级更高，所以一个
+  `NEGLIGIBLE_OR_UNDETECTABLE` + `density_plausibility_status ==
+  MIXED_OR_UNRESOLVED` + `declared_multi_context_analysis` 的观测经 classifier 后
+  实际是 OPPOSES，却仍满足 resolver 条件。修复：resolver 额外要求
+  `e.classified.density_implication == CONTEXTUAL`（消费 classifier authority，
+  不从 raw field 重建第二条解释路径）。Regression：multi-context MIXED +
+  `QUANTITATIVELY_PRESENT` → 可 resolve；multi-context MIXED +
+  `NEGLIGIBLE_OR_UNDETECTABLE` → OPPOSES → 不 resolve → 若有 material SUPPORTS 仍
+  `CONFLICTING / DIRECT`。
+- **Blocker 3**：raw-density "absent on both" parity 对 canonical-missing-key 情况
+  实现错。`evidence.py._reused_package_is_compatible()` 先对每个 `_parity_key` 执行
+  `if key not in existing.study_context: return HARD`，而
+  `QUANTITATIVE_SURFACE_DENSITY` 的 `_parity_keys()` 总含三个 raw key，导致
+  current `""` + canonical package 缺这些 key → 误 HARD。修复：对 raw density key
+  用 `existing.study_context.get(key, "")`，按 presence AND value 比较 ——
+  missing key ↔ `""` = 两侧都 absent = compatible；一侧有一侧无 = HARD；
+  value / unit / summary 不同 = HARD。Regression：canonical 缺 raw key + current
+  全 `""` → reuse allowed；canonical 缺 raw key + current 有值 → HARD。
+- 审核方明确「不要改」：DIRECT 显式 MALIGNANT attribution；CRC / model
+  factual-coherence guard；INDIRECT_STRONG 仅 CRC malignant-cell localization；
+  well-matched model ordinary DIRECT Direction + fatal exclusion；100 IS + 0
+  DIRECT → INCONCLUSIVE / UNKNOWN；5 个 legal pair；completion direct + indirect
+  context-set parity；attempted False strict-empty state；Route A / Route B；
+  1 CRC + 1 model 不构成 fatal Route B；duplicate observation_id 在 semantic
+  dedup 前 HARD；raw density 无 numeric coercion；completion / fatal science；
+  其他 Modules。
+- 改动文件：`gate_modules/tgt04_.../acceptance.py`（`_scannable_ep_fact_text` +
+  `_SCORE_RE` 收窄）、`aggregate.py`（resolver 加 classified implication ==
+  CONTEXTUAL）、`evidence.py`（raw density key 对称 presence-and-value parity）、
+  `tests/test_tgt04_module.py`（71 → **77**：新增 `ReviewRound1RegressionTests`）、
+  manifest（`review_rounds: 1` + `review_round_1` block）、本 worklog append。
+- 验证：`tests/test_tgt04_module.py` **77 OK**；全量 **1532 OK**（round-1 前
+  1526）；`git diff --check` clean；YAML 合法。
+- Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-2 回复。

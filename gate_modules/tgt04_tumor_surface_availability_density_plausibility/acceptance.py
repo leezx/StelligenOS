@@ -37,18 +37,39 @@ _F_CROSS_GATE = (
 )
 _F_DECISION_SUBSTR = ("public_fatal_signal_established", "should be killed", "fatal flag")
 _F_DECISION_WORD_RE = re.compile(r"\b(kill|killed|hold|holds|decision|decisions)\b", re.I)
+#: DECISION language only -- a Module-authored numeric cutoff / ranking / effective
+#: range, NOT a raw factual measurement. A verbatim raw ``reported_density_*``
+#: value / unit / summary an EP is SANCTIONED to preserve (E11 item 11) is
+#: stripped from the scanned text first (see ``_scannable_ep_fact_text``), so a
+#: legitimate "12000 molecules per cell by QIFIKIT" factual summary is never a
+#: hit (E12 review round 1, blocker 1).
 _SCORE_RE = re.compile(
-    r"\b\d[\d,.]*\s*(%|-fold|percent|cells|molecules per cell|abc|tpm|fpkm|nmol|contexts|cohorts|cohort)\b"
-    r"|\bh-?score\b|\bscore\s*=|\branking\b|\bcutoff\b|\bthreshold of\b|\bfold[- ]change\b",
+    r"\bh-?score\b|\bscore\s*=|\branking\b|\bcutoff\b|\bthreshold of\b|\bthreshold\b"
+    r"|\bfold[- ]change\b|\bclinically effective range\b"
+    r"|(?:above|below)\s+[\d,.]+\s+(?:molecules|abc|%|percent)"
+    r"|\b\d[\d,.]*\s*(%|percent)\s+(?:cutoff|threshold|effective)\b",
     re.I,
 )
 
 
-def _ep_fact_text(emitted: list[EmittedEvidence]) -> str:
+def _scannable_ep_fact_text(emitted: list[EmittedEvidence]) -> str:
+    """The EP-level factual text scanned for forbidden CONCLUSION / threshold
+    wording. A raw ``reported_density_value`` / ``reported_density_unit`` /
+    ``reported_density_summary`` an EP is SANCTIONED to preserve as a factual
+    measurement (E11 item 11) is removed verbatim first -- it is evidence, not a
+    threshold (E12 review round 1, blocker 1). Anything the Module's own
+    templates wrote stays scannable."""
+
     parts: list[str] = []
     for e in emitted:
         ib = e.package.interpretation_boundary
-        parts.extend(ib["directly_supports"])
+        text = " ".join(ib["directly_supports"])
+        sc = e.package.study_context
+        for key in ("reported_density_value", "reported_density_unit", "reported_density_summary"):
+            raw = str(sc.get(key, "")).strip()
+            if raw:
+                text = text.replace(raw, " ")
+        parts.append(text)
     return " ".join(parts).lower()
 
 
@@ -326,7 +347,7 @@ def evaluate(
     )
 
     # --- output must carry no cross-Gate / Decision conclusion ------
-    facts = _ep_fact_text(emitted)
+    facts = _scannable_ep_fact_text(emitted)
     scannable = " ".join(
         [outcome.aggregation_rationale.lower(), facts]
         + [u.lower() for u, _ in outcome.critical_unknowns]

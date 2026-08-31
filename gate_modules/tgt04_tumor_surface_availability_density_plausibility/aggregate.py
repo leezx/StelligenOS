@@ -188,12 +188,17 @@ def aggregate(
         if e.classified.density_implication == "OPPOSES_DENSITY_PLAUSIBILITY"
     ]
 
-    # explicit typed multi-context characterization resolver (E12 tightening 2):
-    # a qualifying DIRECT observation with declared_multi_context_analysis and
-    # density_plausibility_status == MIXED_OR_UNRESOLVED and an auditable basis
-    # whose surface_context_ids cover the relevant contexts is an explicit
-    # cross-context characterization -> graded INCONCLUSIVE / DIRECT, not
-    # CONFLICTING. NOT_ESTABLISHED is NOT a resolver. Never semantic-parse prose.
+    # explicit typed multi-context characterization resolver (E12 tightening 2 +
+    # E12 review round 1 blocker 2): a qualifying DIRECT observation with
+    # declared_multi_context_analysis and density_plausibility_status ==
+    # MIXED_OR_UNRESOLVED and an auditable typed basis whose surface_context_ids
+    # cover the relevant contexts AND whose CLASSIFIED density_implication is
+    # CONTEXTUAL (it consumes the classifier authority, it does NOT rebuild a
+    # second interpretation path from raw fields). An observation with
+    # surface_antigen_level == NEGLIGIBLE_OR_UNDETECTABLE is classified OPPOSES by
+    # the higher-precedence density mapping -- it is an actual OPPOSES
+    # contributor, never a resolver. NOT_ESTABLISHED is NOT a resolver. Never
+    # semantic-parse prose.
     relevant_contexts: set[str] = set()
     for e in supports + opposes:
         relevant_contexts.update(e.observation.surface_context_identities)
@@ -204,6 +209,7 @@ def aggregate(
             if e.observation.declared_multi_context_analysis
             and e.observation.density_plausibility_status == "MIXED_OR_UNRESOLVED"
             and e.observation.density_plausibility_basis
+            and e.classified.density_implication == "CONTEXTUAL"
             and relevant_contexts
             and relevant_contexts <= set(e.observation.surface_context_identities)
         ),

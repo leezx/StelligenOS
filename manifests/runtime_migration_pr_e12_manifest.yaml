@@ -287,7 +287,7 @@ three_headline_invariants:  # frozen at the top of contracts.py
 
 delivers:
   - gate_modules/tgt04_tumor_surface_availability_density_plausibility/ -- 11 files (__init__ / module.yaml / contracts / ports / classify / evidence / aggregate / completion / fatal_review / acceptance / module), the deterministic MOD-TGT04@1.0.0 Gate-specific scientific core
-  - tests/test_tgt04_module.py -- 71 synthetic in-memory tests (binding + boundary, rung classification incl. tightening 1, density_direction_mapping, the two-tier / single-tier grading authority incl. 100-INDIRECT_STRONG-zero-DIRECT -> INCONCLUSIVE / UNKNOWN and the typed multi-context conflict resolver, the three completion HARD invariants + strict-empty attempted state, fatal_review Route A / Route B with CRC malignant-cell only + the 1-CRC+1-model / 2-model exclusions + LOW_BUT_PRESENT never fatal, symmetric raw-density presence-and-value reuse parity either direction, the local surface-context namespace + improved dedup, the HARD integrity gate never degraded to an accepted UNKNOWN, the narrow EXPERIMENT_REQUIRED mapping, the accepted-run output surface)
+  - tests/test_tgt04_module.py -- 77 synthetic in-memory tests (71 at submission + 6 review-round-1 regressions) (binding + boundary, rung classification incl. tightening 1, density_direction_mapping, the two-tier / single-tier grading authority incl. 100-INDIRECT_STRONG-zero-DIRECT -> INCONCLUSIVE / UNKNOWN and the typed multi-context conflict resolver, the three completion HARD invariants + strict-empty attempted state, fatal_review Route A / Route B with CRC malignant-cell only + the 1-CRC+1-model / 2-model exclusions + LOW_BUT_PRESENT never fatal, symmetric raw-density presence-and-value reuse parity either direction, the local surface-context namespace + improved dedup, the HARD integrity gate never degraded to an accepted UNKNOWN, the narrow EXPERIMENT_REQUIRED mapping, the accepted-run output surface)
   - src/contracts/crc_adc_target_gateset.yaml + src/objects/crc_adc_target_gateset.py -- TGT-04 primary_module_version 0.0.0 -> 1.0.0; built_module_versions / BUILT_MODULE_VERSIONS gain TGT-04
   - gate_modules/README.md -- MOD-TGT04 registered as built (PR E12)
   - tests/test_gate_modules_boundary.py -- Tgt04ModuleManifestTests
@@ -318,11 +318,39 @@ repository_policy:
 chatgpt_review: pending
 approved_tip: null
 merge_commit: null
-review_rounds: 0
+review_rounds: 1
 test_count_before_e12: 1450       # at PR E11 approval
 test_count_at_submission: 1526    # local full suite (tests/test_tgt04_module.py 71 + Tgt04ModuleManifestTests 5 + reconciliation / registry synch)
+test_count_after_round_1: 1532    # +6 review-round-1 regression tests (tests/test_tgt04_module.py 77)
 approval_record_pr: null
 next_authorized_step: null        # PR = MOD-TGT06 -- needs its own go-ahead
+
+review_round_1:
+  verdict: REQUEST_CHANGES
+  reviewer: ChatGPT AI审核方案
+  head_reviewed: 28ddff63de31990d1340ee31a1663df57d4147a8
+  ci_confirmed: run 33408469633 -- verify (3.11) + verify (3.12) both success
+  summary: >-
+    main implementation aligns with the E12 scoping; no binding / 6-of-8 built /
+    MIGRATION_PENDING / package-boundary blocker. 3 narrow runtime blockers -- no
+    E11 science reopened, no 11-file refactor.
+  blockers:
+    - "1. a legitimate raw quantitative fact was mis-killed by acceptance.py as a numeric threshold. evidence.py correctly preserves the raw factual reported_density_value / _unit / _summary in the Gate-neutral EP's directly_supports (E11 item 11), but acceptance.py concatenated directly_supports into the scanned text and _SCORE_RE rejected e.g. '12000 molecules per cell by QIFIKIT'. FIX: _scannable_ep_fact_text() strips each EP's verbatim raw reported_density_* payload before scanning, and _SCORE_RE is narrowed to DECISION language only (cutoff / threshold / clinically effective range / score= / ranking / fold-change / 'above|below <number> molecules|abc|%'). Regression: raw value '12000' + unit 'molecules/cell' + summary '12000 molecules per cell by QIFIKIT' -> ACCEPTED; a real threshold conclusion still rejected."
+    - "2. the typed multi-context conflict resolver in aggregate.py could be impersonated by an actual OPPOSES observation. The frozen density mapping puts surface_antigen_level == NEGLIGIBLE_OR_UNDETECTABLE -> OPPOSES_DENSITY_PLAUSIBILITY at higher precedence, so an observation with NEGLIGIBLE_OR_UNDETECTABLE + density_plausibility_status MIXED_OR_UNRESOLVED + declared_multi_context_analysis was classified OPPOSES yet still satisfied the resolver test. FIX: the resolver now ALSO requires e.classified.density_implication == CONTEXTUAL (it consumes the classifier authority, it does not rebuild a second interpretation path). Regression: multi-context MIXED + QUANTITATIVELY_PRESENT -> may resolve; multi-context MIXED + NEGLIGIBLE_OR_UNDETECTABLE -> OPPOSES -> must NOT resolve -> still CONFLICTING / DIRECT if a material SUPPORTS exists."
+    - "3. raw-density exact-reuse parity was one-directional on a canonical-missing-key: evidence.py._reused_package_is_compatible() ran 'if key not in existing.study_context: return HARD' for every _parity_key, and the QUANTITATIVE_SURFACE_DENSITY keys always include the three raw fields, so current '' + a canonical package omitting those keys wrongly failed. FIX: for the raw density keys use existing.study_context.get(key, '') and compare on presence AND value -- missing key <-> '' = both absent = compatible; present on one side only = HARD; a value / unit / summary difference = HARD. Regression: canonical missing raw keys + current all '' -> reuse allowed; canonical missing raw keys + current value present -> HARD."
+  do_not_change_confirmed:
+    - DIRECT explicit MALIGNANT attribution; the CRC / model factual-coherence guard
+    - INDIRECT_STRONG only CRC malignant-cell localization; well-matched model ordinary DIRECT Direction + fatal exclusion
+    - 100 INDIRECT_STRONG + 0 DIRECT -> INCONCLUSIVE / UNKNOWN; the 5 legal Direction x Strength pairs
+    - completion direct + indirect context-set parity; attempted == False strict-empty state
+    - Route A / Route B; 1 CRC + 1 model not a fatal Route B; duplicate observation_id HARD before semantic dedup
+    - raw density no numeric coercion; completion / fatal science; the other Modules
+  files_touched:
+    - gate_modules/tgt04_tumor_surface_availability_density_plausibility/acceptance.py (_scannable_ep_fact_text + _SCORE_RE narrowed)
+    - gate_modules/tgt04_tumor_surface_availability_density_plausibility/aggregate.py (resolver also requires classified density_implication == CONTEXTUAL)
+    - gate_modules/tgt04_tumor_surface_availability_density_plausibility/evidence.py (symmetric presence-and-value parity for the raw density keys)
+    - tests/test_tgt04_module.py (71 -> 77; new ReviewRound1RegressionTests)
+  test_count_after: 1532
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt04_module.py' -v
