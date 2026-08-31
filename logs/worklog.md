@@ -5937,3 +5937,156 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   TGT-01/02/03/05/08；`MIGRATION_PENDING` 保持。
 - Next：PR E11 = TGT-04 construction contract（fatal-first 顺序余下 TGT-04 →
   TGT-06 → TGT-07），需各自 go-ahead。
+
+---
+
+## 2026-08-31 — Runtime Migration PR E11 · TGT-04 施工合同（build）
+
+- 授权：用户在 PR E10 收口后 "go ahead"。开工前 ChatGPT `AI审核方案` 给
+  **APPROVE-to-proceed**（E11-1…E11-8 正确，4 个关键修正，前两个最重要），冻结为
+  TGT-04 / MOD-TGT04 Construction Contract, design-only。
+- 新增 `src/contracts/gate_modules/tgt04_tumor_surface_availability_density_plausibility.yaml`
+  —— 17 项施工合同：
+  - **修正 1（two-tier / single-tier grading）**：TGT-04 是 two-tier evidence
+    architecture（LOCALIZATION INDIRECT_STRONG / DENSITY DIRECT）但 single-tier
+    grading authority —— 只有 qualifying DIRECT quantitative antigen-density
+    observation grant graded Direction；localization-only completed landscape →
+    `INCONCLUSIVE / UNKNOWN`（INDIRECT_STRONG 永不传递成 Gate Strength）。legal
+    Direction × Strength pairs 恰好 5 个：POSITIVE/DIRECT、NEGATIVE/DIRECT、
+    CONFLICTING/DIRECT、INCONCLUSIVE/DIRECT、INCONCLUSIVE/UNKNOWN。
+  - **修正 2（三个分离 typed field）**：`measurement_validation_status`
+    {QUALIFIED, NOT_ESTABLISHED}（是否有资格进 DIRECT，QUALIFIED ≠ positive
+    density conclusion）；`density_plausibility_status` {PLAUSIBLY_ADEQUATE,
+    NOT_PLAUSIBLY_ADEQUATE, MIXED_OR_UNRESOLVED, NOT_ESTABLISHED}（upstream-qualified
+    interpretation，永不由 Module 算）；`surface_antigen_level`
+    {QUANTITATIVELY_PRESENT, LOW_BUT_PRESENT, NEGLIGIBLE_OR_UNDETECTABLE,
+    MIXED_OR_UNRESOLVED, NOT_ESTABLISHED}（为 fatal path 单独冻结）。
+  - **修正 3**：raw quantitative density value / unit 是 admissible factual
+    evidence；禁止的是 Module 拿它和 ANY threshold / cutoff / invented range 比较。
+  - **修正 4**：fatal Route A / Route B 镜像 TGT-03；local identity 名
+    `surface_context_id(s)`；Route B = convergent NEGLIGIBLE_OR_UNDETECTABLE 跨
+    `>= 2` independent qualified surface_context identity（不是 "> 2"）。
+    LOW_BUT_PRESENT 永不 fatal 永不自动 NEGATIVE。
+  - typed `SurfaceAvailabilityCompletion`（四 search-completion axes，非 evidence
+    prerequisites / 非 grading axes）；observation kinds 8 种；local
+    surface_context_id namespace 与 canonical context_id 两套；items 10-17 继承
+    E2/E4/E6/E8/E10 runtime genes 含五个 E10-review correction（explicitly
+    qualified context for a rung、local context namespace closed、每个 qualified
+    status 有 basis、closed measurement_validation_status enum + 非空 assay_method
+    for DIRECT、kind/fact-specific non-inflated study_context）；improved TGT-03
+    dedup。EVGAP-01 inference_guard 逐字 pin。
+- 新增 `docs/gate_modules/TGT-04_Tumor_Surface_Availability_Density_Plausibility.md`
+  —— 17 行表 + 3 条 headline blockquote + normalized-observation /
+  SurfaceAvailabilityCompletion conceptual shape + "What PR E11 is NOT"。
+- 新增 `tests/test_tgt04_module_construction_contract.py` —— **58 tests**（10 类）。
+- 新增 `manifests/runtime_migration_pr_e11_manifest.yaml`、
+  `docs/handoff/2026-08-31-runtime-migration-pr-e11.zh-CN.md`。
+- 既有文件唯一改动：本 worklog append。**不动** binding / registry / README /
+  built-roster test（留到 PR E12）。
+- 验证：`tests/test_tgt04_module_construction_contract.py` **58 OK**；全量
+  **1437 OK**（E10 收口 1379）；`bash scripts/verify_repository_boundary.sh` 只报
+  既有 untracked 杂项；`git diff --check` clean；YAML 合法且无
+  list-element-parsed-as-dict。
+- 状态：8 个 primary Module 施工合同已 APPROVE 6 个（含本 PR 待审）；已实现 5 个
+  （TGT-01/02/03/05/08 @ 1.0.0）。MOD-TGT04 `primary_module_version` 仍 `0.0.0`。
+  `MIGRATION_PENDING` 保持。TGT-06 → TGT-07 属后续 PR。
+- Next：开 PR、CI 绿后回 `AI审核方案` 贴 E11 review。下一步 PR E12 =
+  MOD-TGT04@1.0.0 实现需各自 go-ahead。
+
+### PR E11 · ChatGPT `AI审核方案` review round 1 → REQUEST_CHANGES（4 窄 blocker）
+
+- Verdict：**REQUEST_CHANGES**，anchor HEAD `41be84a`；CI run 33395454667
+  verify (3.11) + verify (3.12) 均 success。审核方确认主体合同成立（design-only
+  boundary；PR D items 03/05/07/08 parity + item 04 exact-set parity；
+  localization-only → INCONCLUSIVE/UNKNOWN；5 个 legal Direction×Strength pair；
+  三套 density typed fact；raw-value/no-threshold；Route A/B；four-component
+  completion；narrow EXPERIMENT_REQUIRED）。仅剩 4 个窄 construction-contract blocker。
+- **Blocker 1**：INDIRECT_STRONG 的 context authority 被错误扩到
+  `WELL_MATCHED_CRC_MODEL`。Frozen PR D：DIRECT = quantitative density on CRC
+  malignant cells **OR** well-matched CRC models；INDIRECT_STRONG = membranous
+  IHC / surface proteomics on CRC malignant cells **only** —— model 许可只在
+  DIRECT。修复：拆开 item-13 predicate —— DIRECT 允许
+  `{CRC_MALIGNANT_CELLS, WELL_MATCHED_CRC_MODEL}`；INDIRECT_STRONG rung 要求
+  `surface_context_class == CRC_MALIGNANT_CELLS`（+ `malignant_cell_attribution`
+  + auditable basis）；well-matched model localization 观测是 CONTEXTUAL reading，
+  永不成 INDIRECT_STRONG rung。新增 item-06 `rung_context_authority`。
+- **Blocker 2**：fatal machine criteria 也把 well-matched CRC model 错误扩进去了
+  （审核方同时修正了自己开工前 E11-4/E11-6 ruling 里一处过宽表述）。Frozen PR D
+  fatal 句更窄：*"negligible or undetectable cell-surface antigen on CRC
+  malignant cells"*。修复：fatal_review contributor 只能是 **CRC-malignant-cell**
+  quantitative 观测（`surface_context_class == CRC_MALIGNANT_CELLS`）；well-matched
+  CRC model NEGLIGIBLE 观测可贡献普通 DIRECT OPPOSES Direction 但**永不**是 fatal
+  contributor；Route B convergence 要求跨 `>= 2` independent qualified CRC
+  **malignant-cell** surface-context identity。若将来真需给 model proxy fatal
+  authority → 改 Gate contract/version，而非 E12 自行扩权。（items 08/12/13/on_failure）
+- **Blocker 3**：qualifying INDIRECT_STRONG localization 的 local-context /
+  completion authority 被漏掉。E11 scoping 已冻结：任何 qualifying DIRECT **或**
+  INDIRECT_STRONG 观测都要带 auditable local `surface_context_id`。修复：item 13
+  对两者都要求 local id；`SurfaceAvailabilityCompletion` 恢复
+  `qualifying_indirect_surface_context_ids`（与 `qualifying_direct_...` 并列）；
+  SEARCH_COMPLETION_AUDIT snapshot parity 同时锁两组；新增 item-06
+  `qualifying_local_surface_context_identity`。该 indirect set 只是 evidence /
+  audit-integrity，**不是 grading axis**：localization-only + valid indirect set
+  仍然 INCONCLUSIVE/UNKNOWN（item 15）。
+- **Blocker 4**：raw quantitative density 是 canonical empirical fact，但 exact
+  canonical EP reuse parity 未覆盖它。修复：对 `QUANTITATIVE_SURFACE_DENSITY` 观测，
+  raw `reported_density_value` / `reported_density_unit` /
+  `reported_density_summary` 是 present 时的 FACTUAL EXACT-REUSE PARITY 字段 ——
+  reuse 时 drift 即 HARD identity integrity failure（empirical-identity parity，
+  非 classification authority；raw 值仍永不驱动 Direction / fatal signal /
+  threshold 比较）。（items 11/13/on_failure）
+- 审核方明确「不要改」：5 个 legal pair；localization-only → INCONCLUSIVE/UNKNOWN；
+  INDIRECT_STRONG 永不传播 Strength；DIRECT assay vocabulary OPEN；
+  `measurement_validation_status` CLOSED；raw 值允许 / threshold 禁止；
+  LOW_BUT_PRESENT ≠ 自动 NEGATIVE/fatal；Route A OR Route B；Route B `>= 2` 非
+  `> 2`；NEGATIVE ≠ fatal ≠ KILL；four search component = completeness only；
+  EXPERIMENT_REQUIRED precedence；design-only；MOD-TGT04 仍 0.0.0；MIGRATION_PENDING 保持。
+- 改动文件：`src/contracts/gate_modules/tgt04_...yaml`（items 06/08/09/11/13/15）、
+  `docs/gate_modules/TGT-04_...md`（rows 6/8/9/11/12/13/15 + conceptual shape）、
+  `tests/test_tgt04_module_construction_contract.py`（58 → **67**：新增
+  `ReviewRound1RegressionTests` + 6 处断言随合同措辞更新）、manifest（`review_rounds: 1`
+  + `review_round_1` block）、本 worklog append。
+- 验证：`tests/test_tgt04_module_construction_contract.py` **67 OK**；全量
+  **1446 OK**（round-1 前 1437）；YAML 合法且无 list-element-parsed-as-dict；
+  `git diff --check` clean。
+- Next：commit + push `task_20260831_runtime-migration-pr-e11`，CI 绿后回
+  `AI审核方案` 贴 round-2 回复。
+
+### PR E11 · ChatGPT `AI审核方案` review round 2 → REQUEST_CHANGES（4/4 round-1 blocker CLOSED + 2 窄一致性 blocker）
+
+- Verdict：**REQUEST_CHANGES**，anchor HEAD `e510833`；CI run 33398236844 verify
+  (3.11) + verify (3.12) 均 success。审核方判定 round-1 的 4 个 blocker **全部
+  CLOSED**，仅剩 2 个非常窄的 residual contract inconsistency（只改
+  contract/drawing/test/manifest/worklog，无新 scientific decision、不动架构；
+  审核方预期修完下一轮 APPROVE）。
+- **一致性 Blocker 1**：item-06 `direction_definitions` 前后不对称 —— `POSITIVE`
+  写 "CRC malignant cells (or a qualified well-matched CRC malignant-cell model)"，
+  但 `NEGATIVE` 只写 "CRC malignant cells"，而 `density_direction_mapping` 把
+  model + NEGLIGIBLE 映射为 OPPOSES。给 E12 两套冲突 contract。修复：`NEGATIVE`
+  同样加 "(or a qualified well-matched CRC malignant-cell model)"；新增
+  `well_matched_model_ordinary_direction_boundary` —— ordinary graded Direction
+  （POSITIVE/NEGATIVE/CONFLICTING/INCONCLUSIVE，均 Strength DIRECT）可由
+  `CRC_MALIGNANT_CELLS` **或** `WELL_MATCHED_CRC_MODEL` 上的 qualifying DIRECT
+  观测支撑（镜像 frozen DIRECT ladder，POSITIVE/NEGATIVE 对称）；well-matched
+  model 支撑的 `NEGATIVE / DIRECT` 只是 ordinary density assessment，model
+  evidence **永不**进 fatal_review —— fatal authority 仍 CRC malignant-cell only。
+  不扩 fatal 权。
+- **一致性 Blocker 2**：raw `reported_density_*` exact-reuse parity 仍是单向
+  （"no drift WHEN PRESENT on the canonical package"），没挡反方向的 presence
+  asymmetry（canonical absent / current present，或 canonical unit absent /
+  current unit present）。修复：冻结为 **对称 presence-and-value parity** ——
+  present on one side only（任一方向），或 value / unit 不同，即 HARD identity
+  integrity failure；两侧都有且相等、或两侧都无，才 compatible。仍：raw 值 ≠
+  classification authority ≠ threshold ≠ score。（items 11/13/on_failure +
+  drawing rows 11/13 + conceptual shape）
+- 非阻断 housekeeping：PR #126 body 测试数从 58/1437 同步到 71/1450。
+- 改动文件：`src/contracts/gate_modules/tgt04_...yaml`（item 06
+  direction_definitions + items 11/13 raw-density parity + on_failure）、
+  `docs/gate_modules/TGT-04_...md`（rows 6/11/13 + conceptual shape）、
+  `tests/test_tgt04_module_construction_contract.py`（67 → **71**：新增
+  `ReviewRound2RegressionTests` + 2 处 round-1 断言随对称化更新）、manifest
+  （`review_rounds: 2` + `review_round_2` block）、本 worklog append。
+- 验证：`tests/test_tgt04_module_construction_contract.py` **71 OK**；全量
+  **1450 OK**（round-2 前 1446）；YAML 合法且无 list-element-parsed-as-dict；
+  `git diff --check` clean。
+- Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-3 回复。
