@@ -6574,3 +6574,50 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 验证：`tests/test_tgt06_module_construction_contract.py` **88 OK**；全量
   **1626 OK**（round-2 前 1619）；`git diff --check` clean；YAML 合法。
 - Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-3 回复。
+
+### PR E13 · ChatGPT `AI审核方案` review round 3 → REQUEST_CHANGES（round-2 3/3 CLOSED + 1 窄 Route A/B consistency blocker）
+
+- Verdict：**REQUEST_CHANGES**，anchor HEAD `bfe82ba6`；CI run 33429938293 verify
+  (3.11) + (3.12) 均 success。审核方确认 round-2 的 3 个 blocker 全部 CLOSED
+  （item 08/12/13 统一三-kind fatal contributor set；same-configuration conflict
+  冻结为 v1 无 machine resolver；`configuration_identity_projection` 成为
+  aggregation / Route B / completion 的统一 identity helper）。7/7 original freeze
+  point intact。剩 1 个窄 Route A/B consistency blocker。
+- **Blocker**：fatal Route B 允许单个 `IDENTIFIED_MULTI {A,B}` failure observation
+  仅凭 projection cardinality 满足 convergence，绕过 Route A 的
+  `reproducibility_status == QUALIFIED` gate —— "one multi-config observation
+  {A,B}, reproducibility NOT_ESTABLISHED" 会不带 reproducibility 触发 Route B。
+  修复：Route B 现在要求**同时** (1) `>= 2` DISTINCT eligible DIRECT-quality
+  failure **OBSERVATIONS** 且 (2) 它们的 `configuration_identity_projection` set
+  并集 size `>= 2`。逐字锁：「A single IDENTIFIED_MULTI observation, regardless
+  of its projection cardinality, does NOT satisfy Route B」+「A single
+  multi-configuration observation may establish the fatal pattern ONLY through
+  Route A, which additionally requires `reproducibility_status == QUALIFIED` + an
+  auditable `reproducibility_basis`」。ordinary Gate-level aggregation（item 06）
+  **不变** —— 单个 `IDENTIFIED_MULTI {A,B}` failure observation 仍 project 成两个
+  failure configuration identity，仍可支撑 `NEGATIVE / DIRECT`；Gate NEGATIVE
+  scientific assessment ≠ machine `POTENTIAL_FATAL_PATTERN`。item 08
+  route_b_independent_convergence / item 12 required_is_true_iff / item 13 fatal
+  acceptance wording 同步。Regression：1 multi obs {A,B} + reproducibility
+  NOT_ESTABLISHED → NEGATIVE/DIRECT 可，但 `fatal_review.required == false`；
+  1 multi obs {A,B} + reproducibility QUALIFIED → Route A 可触发；2 distinct
+  eligible failure observations，projected union {A,B} → Route B 可触发。
+- 审核方明确「不要改」：三态 identity；projection helper；ordinary aggregation
+  使用 projection；v1 无 conflict resolver；clean-productive existence-proof
+  dominance；Option A；6 legal pairs；Route A 本身 multi-configuration +
+  `reproducibility_status == QUALIFIED`；WELL_MATCHED_CRC_MODEL fatal
+  eligibility；any productive DIRECT 取消 machine fatal trigger；四轴 completion；
+  无 qualifying_indirect_configuration_ids；TRAFFICKING_OR_RECYCLING_ONLY
+  asymmetric authority；no positive DIRECT synthesis across observations；无
+  dedicated raw-number parity branch；MOD-TGT06 = 0.0.0；MIGRATION_PENDING 保持；
+  7/7 original freeze point intact。
+- 改动文件：`tgt06_internalization_trafficking_addressability.yaml`（item 08
+  route_b_independent_convergence；item 12 required_is_true_iff；item 13 fatal
+  acceptance check）、`TGT-06_Internalization_Trafficking_Addressability.md`
+  （row 8 —— Route B + 三-kind fatal contributor set）、
+  `tests/test_tgt06_module_construction_contract.py`（88 → **91**：新增
+  `ReviewRound3RegressionTests` + Route B / item 12 断言更新）、manifest
+  （`review_rounds: 3` + `review_round_3` block）、本 worklog append。
+- 验证：`tests/test_tgt06_module_construction_contract.py` **91 OK**；全量
+  **1629 OK**（round-3 前 1626）；`git diff --check` clean；YAML 合法。
+- Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-4 回复。

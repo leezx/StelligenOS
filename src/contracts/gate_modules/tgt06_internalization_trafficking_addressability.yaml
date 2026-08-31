@@ -620,15 +620,25 @@ acceptance_checklist:
         NOT satisfy Route A -- that would bypass the frozen PR D "multiple
         independent configurations". E14 never semantic-parses the basis text.
       route_b_independent_convergence: >-
-        convergent FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING across AT LEAST
-        TWO independent qualified antibody / epitope configuration identities --
-        i.e. the union of the item-06 configuration_identity_projection sets of
-        the eligible DIRECT-quality failure observations has size >= 2 (an
-        IDENTIFIED_MULTI failure observation with {A, B} alone satisfies this).
-        This is a deterministic SUFFICIENT convergence pattern -- it is NOT the
-        word-meaning definition of "reproducible", NOT a new biological threshold,
-        and NOT "more than two" / "> 2" / ">= 3". Genuine scientific independence
-        of the configurations is a human judgement.
+        convergent FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING that requires
+        BOTH -- (1) AT LEAST TWO DISTINCT eligible DIRECT-quality failure
+        OBSERVATIONS, AND (2) the union of the item-06
+        configuration_identity_projection sets of those eligible failure
+        observations has size >= 2 (PR E13 review round-3 gene). A SINGLE
+        IDENTIFIED_MULTI observation, regardless of its projection cardinality,
+        does NOT satisfy Route B -- a single multi-configuration observation may
+        establish the fatal pattern ONLY through Route A, which additionally
+        requires reproducibility_status == QUALIFIED + an auditable
+        reproducibility_basis. This is a deterministic SUFFICIENT convergence
+        pattern -- it is NOT the word-meaning definition of "reproducible", NOT a
+        new biological threshold, and NOT "more than two" / "> 2" / ">= 3".
+        Genuine scientific independence of the configurations is a human
+        judgement. NOTE -- this Route B restriction is a MACHINE
+        POTENTIAL_FATAL_PATTERN gate only; the ordinary Gate-level aggregation
+        (item 06) is unchanged, so a single IDENTIFIED_MULTI {A, B} failure
+        observation still projects to two failure configuration identities and
+        may still support NEGATIVE / DIRECT. A Gate NEGATIVE scientific
+        assessment is NOT a machine POTENTIAL_FATAL_PATTERN.
     explicitly_excluded_from_a_fatal_trigger:
       - a single antibody / epitope configuration's productive-internalization failure (PR D -- "a single configuration's failure is not sufficient")
       - any landscape on which a qualifying productive DIRECT configuration exists
@@ -856,13 +866,18 @@ acceptance_checklist:
         internalization_outcome == FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING
         + auditable basis, each in a SINGLE or IDENTIFIED_MULTI configuration
         identity state, on a completed audited landscape, AND multiple
-        independent configurations are established by Route A (one declared
-        multi-configuration analysis whose item-06 configuration_identity_projection
-        set has size >= 2 and reproducibility_status == QUALIFIED + auditable
-        basis) OR Route B (the union of the eligible failure observations'
-        configuration_identity_projection sets has size >= 2). A single
-        configuration's failure -- even with reproducibility_status == QUALIFIED --
-        gives required = false. A constitutive-endocytosis / receptor-family /
+        independent configurations are established by Route A (ONE declared
+        multi-configuration analysis observation whose item-06
+        configuration_identity_projection set has size >= 2 AND
+        reproducibility_status == QUALIFIED + an auditable reproducibility_basis)
+        OR Route B (AT LEAST TWO DISTINCT eligible failure observations AND the
+        union of their item-06 configuration_identity_projection sets has size
+        >= 2). A SINGLE IDENTIFIED_MULTI observation, regardless of its
+        projection cardinality, does NOT satisfy Route B -- without
+        reproducibility_status == QUALIFIED it cannot establish the fatal pattern
+        at all (PR E13 review round-3 gene). A single antibody / epitope
+        configuration's failure -- even with reproducibility_status == QUALIFIED
+        -- gives required = false. A constitutive-endocytosis / receptor-family /
         surface-localization-only inference observation never contributes.
       only_actionable_on_an_accepted_run: >-
         the raw detector may compute the candidate pattern internally, but a
@@ -921,7 +936,7 @@ acceptance_checklist:
       - the Direction over a qualifying integrated configuration observation follows the frozen item-06 internalization_direction_mapping (internalization_outcome PRODUCTIVE_INTERNALIZATION_WITH_LYSOSOMAL_DELIVERY -> SUPPORTS_ADDRESSABILITY; FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING -> OPPOSES_ADDRESSABILITY; MIXED_OR_UNRESOLVED / NOT_ESTABLISHED -> CONTEXTUAL); an INTERNALIZATION_OBSERVED_LYSOSOMAL_DELIVERY_UNRESOLVED observation is positive support at INDIRECT_STRONG ceiling only and never OPPOSES
       - no numeric decision is taken on a source-reported internalization rate / half-life / percent-internalized / colocalization coefficient -- the raw value may be stored as a factual measurement in the neutral claim but is never compared to a threshold, cutoff or invented range
       - the mandatory internalization-evidence-search landscape is complete for the path taken (item 16); the Module did not grade early on one internalization movie, one trafficking dataset, or one failure observation
-      - if the module-local fatal_review record has required = true, its status is POTENTIAL_FATAL_PATTERN (never PUBLIC_FATAL_SIGNAL_ESTABLISHED), NO qualifying productive DIRECT configuration exists on the landscape, every contributing observation is a DIRECT-quality productive-internalization / trafficking FAILURE observation (observation_kind in {ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING, ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY, TRAFFICKING_OR_RECYCLING_ONLY}, internalization_outcome == FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING; NO constitutive-endocytosis / receptor-family / surface-localization-only / non-internalizing-payload contributor), multiple independent configurations are established by Route A or Route B (>= 2 independent internalization_configuration_id, never "> 2"), the reproducibility route A or B basis is auditable, and it is surfaced only on an accepted run
+      - if the module-local fatal_review record has required = true, its status is POTENTIAL_FATAL_PATTERN (never PUBLIC_FATAL_SIGNAL_ESTABLISHED), NO qualifying productive DIRECT configuration exists on the landscape, every contributing observation is a DIRECT-quality productive-internalization / trafficking FAILURE observation (observation_kind in {ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING, ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY, TRAFFICKING_OR_RECYCLING_ONLY}, internalization_outcome == FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING; NO constitutive-endocytosis / receptor-family / surface-localization-only / non-internalizing-payload contributor), multiple independent configurations are established by Route A (ONE declared multi-configuration analysis observation with a configuration_identity_projection set of size >= 2 AND reproducibility_status == QUALIFIED + an auditable reproducibility_basis) OR Route B (>= 2 DISTINCT eligible failure observations AND their projected configuration-identity union has size >= 2) -- a SINGLE IDENTIFIED_MULTI observation does NOT satisfy Route B regardless of its projection cardinality, and without reproducibility_status == QUALIFIED cannot make fatal_review.required true at all (PR E13 review round-3 gene); the >= 2 counts are never "> 2"; the Route A or Route B reproducibility / basis is auditable, and it is surfaced only on an accepted run
       - fatal_review is not a field of the proposal envelope
       - dedup -- one SRC -> many EP is allowed; a same source_id + same claim + different internalization_configuration_id keeps both; the same (source_id, claim, all-driving-facts, local-configuration) is not duplicated; a SEARCH_COMPLETION_AUDIT EP is never the dedup loser for an attempted completion
       - all required fields present; no numeric or ranking score anywhere; no internalization-rate / half-life / percent-internalized / colocalization-coefficient threshold; no invented ADC-effective range

@@ -441,7 +441,8 @@ class FatalReviewAndProposalTests(unittest.TestCase):
         self.assertIn("does not satisfy route a", a)
         self.assertIn("bypass the frozen pr d", a)
         b = _norm(crit["route_b_independent_convergence"])
-        self.assertIn("at least two independent qualified antibody / epitope configuration identities", b)
+        self.assertIn("at least two distinct eligible direct-quality failure observations", b)
+        self.assertIn("a single identified_multi observation, regardless of its projection cardinality, does not satisfy route b", b)
         self.assertIn('not "more than two" / "> 2" / ">= 3"', b)
 
     def test_item08_well_matched_model_is_an_eligible_fatal_contributor(self):
@@ -485,7 +486,8 @@ class FatalReviewAndProposalTests(unittest.TestCase):
         self.assertIn("route a", r)
         self.assertIn("route b", r)
         self.assertIn("a qualified well-matched crc model is eligible here, unlike tgt-04", r)
-        self.assertIn("a single configuration's failure -- even with reproducibility_status == qualified -- gives required = false", r)
+        self.assertIn("a single antibody / epitope configuration's failure -- even with reproducibility_status == qualified -- gives required = false", r)
+        self.assertIn("a single identified_multi observation, regardless of its projection cardinality, does not satisfy route b", r)
 
     def test_item12_fatal_review_only_actionable_on_an_accepted_run(self):
         r = _norm(self.item["12_assessment_proposal_envelope_contract"]["fatal_review"]["only_actionable_on_an_accepted_run"])
@@ -887,8 +889,7 @@ class ReviewRound2RegressionTests(unittest.TestCase):
 
     def test_route_b_and_completion_use_the_projection(self):
         rb = _norm(self.item["08_fatal_conditions"]["machine_detection_criteria"]["route_b_independent_convergence"])
-        self.assertIn("the union of the item-06 configuration_identity_projection sets of the eligible direct-quality failure observations has size >= 2", rb)
-        self.assertIn("an identified_multi failure observation with {a, b} alone satisfies this", rb)
+        self.assertIn("the union of the item-06 configuration_identity_projection sets of those eligible failure observations has size >= 2", rb)
         tc = _norm(self.item["09_evidence_source_plan"]["internalization_search_landscape"]["typed_completion_record"])
         self.assertIn("it is the union of the item-06 configuration_identity_projection sets of every observation classified qualifying direct-rung", tc)
         self.assertIn("an identified_multi {a, b} qualifying observation contributes both a and b", tc)
@@ -896,6 +897,51 @@ class ReviewRound2RegressionTests(unittest.TestCase):
     def test_item13_aggregation_check_uses_the_projection(self):
         self.assertIn("every configuration test is over the frozen item-06 configuration_identity_projection", self.checks)
         self.assertIn("there is no machine conflict resolver -- the module never reconciles or characterises the pair", self.checks)
+
+
+class ReviewRound3RegressionTests(unittest.TestCase):
+    """PR E13 ChatGPT AI审核方案 review round 3 -- 1 narrow Route A/B consistency
+    blocker (round-1 4/4 and round-2 3/3 all CLOSED).
+
+    Fatal Route B previously let a single IDENTIFIED_MULTI {A,B} failure
+    observation satisfy the convergence test purely on projection cardinality,
+    bypassing Route A's reproducibility_status == QUALIFIED gate. Now Route B
+    requires BOTH >= 2 DISTINCT eligible failure OBSERVATIONS AND a projected
+    configuration-identity union of size >= 2; a single IDENTIFIED_MULTI
+    observation can establish the fatal pattern ONLY through Route A. The
+    ordinary Gate-level aggregation (item 06) is UNCHANGED -- a single
+    IDENTIFIED_MULTI {A,B} failure observation still projects to two failure
+    configuration identities and may still support NEGATIVE / DIRECT. A Gate
+    NEGATIVE scientific assessment != a machine POTENTIAL_FATAL_PATTERN.
+    """
+
+    def setUp(self):
+        self.item = yaml.safe_load(CONTRACT.read_text())["acceptance_checklist"]
+        self.checks = _flatten(
+            self.item["13_machine_acceptance_criteria"][
+                "a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"
+            ]
+        )
+
+    def test_route_b_requires_two_distinct_eligible_observations(self):
+        rb = _norm(self.item["08_fatal_conditions"]["machine_detection_criteria"]["route_b_independent_convergence"])
+        self.assertIn("at least two distinct eligible direct-quality failure observations", rb)
+        self.assertIn("the union of the item-06 configuration_identity_projection sets of those eligible failure observations has size >= 2", rb)
+        self.assertIn("a single identified_multi observation, regardless of its projection cardinality, does not satisfy route b", rb)
+        self.assertIn("a single multi-configuration observation may establish the fatal pattern only through route a, which additionally requires reproducibility_status == qualified", rb)
+
+    def test_ordinary_negative_is_explicitly_unchanged(self):
+        rb = _norm(self.item["08_fatal_conditions"]["machine_detection_criteria"]["route_b_independent_convergence"])
+        self.assertIn("this route b restriction is a machine potential_fatal_pattern gate only; the ordinary gate-level aggregation (item 06) is unchanged", rb)
+        self.assertIn("a single identified_multi {a, b} failure observation still projects to two failure configuration identities and may still support negative / direct", rb)
+        self.assertIn("a gate negative scientific assessment is not a machine potential_fatal_pattern", rb)
+
+    def test_item12_and_item13_sync_the_route_b_restriction(self):
+        r12 = _norm(self.item["12_assessment_proposal_envelope_contract"]["fatal_review"]["required_is_true_iff"])
+        self.assertIn("route b (at least two distinct eligible failure observations and the union of their item-06 configuration_identity_projection sets has size >= 2)", r12)
+        self.assertIn("a single identified_multi observation, regardless of its projection cardinality, does not satisfy route b", r12)
+        self.assertIn("route b (>= 2 distinct eligible failure observations and their projected configuration-identity union has size >= 2)", self.checks)
+        self.assertIn("a single identified_multi observation does not satisfy route b regardless of its projection cardinality", self.checks)
 
 
 class NoImplementationInPrE13Tests(unittest.TestCase):

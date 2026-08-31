@@ -363,13 +363,41 @@ repository_policy:
 chatgpt_review: pending
 approved_tip: null
 merge_commit: null
-review_rounds: 2
+review_rounds: 3
 test_count_before_e13: 1538       # at PR E12 approval
 test_count_at_submission: 1611    # local full suite (tests/test_tgt06_module_construction_contract.py 73)
 test_count_after_round_1: 1619    # +8 review-round-1 regression tests (tests/test_tgt06_module_construction_contract.py 81)
 test_count_after_round_2: 1626    # +7 review-round-2 consistency regression tests (tests/test_tgt06_module_construction_contract.py 88)
+test_count_after_round_3: 1629    # +3 review-round-3 Route-A/B consistency regression tests (tests/test_tgt06_module_construction_contract.py 91)
 approval_record_pr: null
 next_authorized_step: null        # PR E14 = MOD-TGT06@1.0.0 implementation -- needs its own go-ahead
+
+review_round_3:
+  verdict: REQUEST_CHANGES
+  reviewer: ChatGPT AI审核方案
+  head_reviewed: bfe82ba630991846683da013102e10bab31f2d10
+  ci_confirmed: run 33429938293 -- verify (3.11) + verify (3.12) both success; unit tests + repository boundary + no-bytecode + working-tree checks all pass
+  summary: >-
+    round-2's 3/3 blockers CLOSED (item 08/12/13 unified 3-kind fatal contributor
+    set; same-configuration conflict frozen as v1-no-machine-resolver;
+    configuration_identity_projection is the unified identity helper for
+    aggregation / Route B / completion). 7/7 original freeze points intact. 1
+    narrow Route A/B consistency blocker.
+  blockers:
+    - "1. fatal Route B let a single IDENTIFIED_MULTI {A,B} failure observation satisfy the convergence test purely on projection cardinality, bypassing Route A's reproducibility_status == QUALIFIED gate -- 'one multi-config observation {A,B}, reproducibility NOT_ESTABLISHED' would fire Route B without the reproducibility requirement. FIX: Route B now requires BOTH (1) >= 2 DISTINCT eligible DIRECT-quality failure OBSERVATIONS AND (2) the union of their item-06 configuration_identity_projection sets has size >= 2. Locked verbatim: 'A single IDENTIFIED_MULTI observation, regardless of its projection cardinality, does NOT satisfy Route B' and 'A single multi-configuration observation may establish the fatal pattern ONLY through Route A, which additionally requires reproducibility_status == QUALIFIED + an auditable reproducibility_basis'. The ordinary Gate-level aggregation (item 06) is UNCHANGED -- a single IDENTIFIED_MULTI {A,B} failure observation still projects to two failure configuration identities and may still support NEGATIVE / DIRECT; a Gate NEGATIVE scientific assessment != a machine POTENTIAL_FATAL_PATTERN. Synced in item 08 route_b_independent_convergence, item 12 required_is_true_iff, item 13 fatal acceptance wording. Regression: 1 multi obs {A,B} + reproducibility NOT_ESTABLISHED -> NEGATIVE / DIRECT allowed but fatal_review.required == false; 1 multi obs {A,B} + reproducibility QUALIFIED -> Route A may trigger; 2 distinct eligible failure observations, projected union {A,B} -> Route B may trigger."
+  do_not_change_confirmed:
+    - three-state configuration identity; the configuration_identity_projection helper; ordinary aggregation over the projection
+    - v1 no machine conflict resolver; clean-productive existence-proof dominance; Option A; exactly 6 legal pairs
+    - Route A itself multi-configuration + reproducibility_status == QUALIFIED; WELL_MATCHED_CRC_MODEL fatal eligibility; any productive DIRECT cancels the machine fatal trigger
+    - four completion axes; no qualifying_indirect_configuration_ids; TRAFFICKING_OR_RECYCLING_ONLY asymmetric authority; no positive DIRECT synthesis across observations; no dedicated raw-number parity branch
+    - MOD-TGT06 = 0.0.0; MIGRATION_PENDING remains; 7/7 original freeze points intact
+  files_touched:
+    - src/contracts/gate_modules/tgt06_internalization_trafficking_addressability.yaml (item 08 route_b_independent_convergence; item 12 fatal_review.required_is_true_iff; item 13 fatal acceptance check)
+    - docs/gate_modules/TGT-06_Internalization_Trafficking_Addressability.md (row 8 -- Route B + the 3-kind fatal contributor set)
+    - tests/test_tgt06_module_construction_contract.py (88 -> 91; new ReviewRound3RegressionTests + updated Route B / item 12 assertions)
+    - manifests/runtime_migration_pr_e13_manifest.yaml (this block)
+    - logs/worklog.md (append)
+  test_count_after: 1629
 
 review_round_2:
   verdict: REQUEST_CHANGES
