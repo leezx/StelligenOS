@@ -1,0 +1,388 @@
+phase: runtime_migration_pr_e15
+status: in_review
+scope: tgt07_mod_tgt07_construction_contract_drawing_validation_and_acceptance_checklist_only
+repository_boundary: software_only_external_data
+
+# what E15 IS
+construction_contract_added: true
+construction_drawing_added: true
+seventeen_item_acceptance_checklist: true
+parity_tests_added: true   # items 03/05/07/08 normalized-equality vs the frozen PR D TGT-07 contract; item 04 EXACT set-equality derived parity vs evidence_required + the ladder; confirmed the frozen PR D TGT-07 contract has NO inference_guard field
+
+# what E15 IS NOT
+implementation_code_added: false
+provider_or_adapter_added: false
+trial_or_dataset_retrieval_added: false        # no serum / plasma soluble-antigen / sheddase-substrate / secreted-isoform / clinical-PK / target-mediated-disposition-analysis retrieval
+runner_added: false
+network_or_external_data_added: false
+persistence_added: false
+numeric_or_ranking_scoring_added: false
+soluble_antigen_concentration_or_turnover_or_affinity_or_dose_exposure_or_sink_ratio_threshold_added: false
+invented_material_soluble_antigen_sink_concentration_range_added: false
+new_scientific_or_ladder_semantics_added: false
+generic_gatemodule_framework_or_base_class_added: false
+mod_tgt01_modified: false
+mod_tgt02_modified: false
+mod_tgt03_modified: false
+mod_tgt04_modified: false
+mod_tgt05_modified: false
+mod_tgt06_modified: false
+mod_tgt08_modified: false
+tgt07_primary_module_version_changed: false     # stays 0.0.0; PR E16 bumps it
+binding_or_registry_or_existing_tests_modified: false   # E15 touches NO binding / registry / README / built-roster test -- those wait for E16
+touches_pr_a_contracts: false
+touches_pr_b_contracts: false
+touches_pr_c_contracts: false
+touches_pr_d_tgt07_science: false
+new_dependency_added: false
+migration_pending_lifted: false                 # PR E16 lifts it -- MOD-TGT07 is the eighth and final primary Module
+
+only_allowed_existing_file_mutation: append_to_logs_worklog_md
+
+spec_refs:
+  - docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md (section 6.4 one Gate -> one primary Evidence Production Module + Module 权责边界; section 6.5 shared infrastructure; section 16 B group question 23 -> PR E+)
+  - src/contracts/crc_adc_target_gateset.yaml gate_contracts.TGT-07 (frozen gate_question / ladder / evidence_ceiling / allowed+forbidden inference / fatal_conditions / unknown_behavior -- inherited verbatim, parity-tested; TGT-07 has NO inference_guard field)
+  - src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml (PR E1 -- the approved 17-item construction template, reused)
+  - src/contracts/gate_modules/tgt03_treatment_metastatic_persistence.yaml (PR E9 -- the highest-qualifying-rung grading + typed-completion + machine-local fatal_review + local-evidence-context namespace precedent, and the improved (source_id, claim, all-driving-facts, local-context) dedup rule)
+  - src/contracts/gate_modules/tgt06_internalization_trafficking_addressability.yaml (PR E13 -- the existence-proof-style DIRECT aggregation with a frozen stop-at-first-match evaluation order, the six-pair legal Direction x Strength set, "quantitative values are evidence, not thresholds" with NO dedicated raw-value reuse-parity branch, the machine-local fatal_review that emits at most POTENTIAL_FATAL_PATTERN, the typed completion record carrying ONLY a qualifying-DIRECT evidence-context set, and v1 with NO machine conflict resolver)
+  - gate_modules/tgt01_adc_modality_precedent/ + gate_modules/tgt02_indication_specific_malignant_cell_coverage/ + gate_modules/tgt03_treatment_metastatic_persistence/ + gate_modules/tgt04_tumor_surface_availability_density_plausibility/ + gate_modules/tgt05_normal_tissue_fatal_liability/ + gate_modules/tgt06_internalization_trafficking_addressability/ + gate_modules/tgt08_target_opportunity_competition_ip_whitespace/ (PR E2 / E8 / E10 / E12 / E4 / E14 / E6 -- the runtime boundary genes this contract freezes for MOD-TGT07 -- an explicitly qualified evidence context for a rung; an auditable local sink-exposure-context identity that is a separate namespace from the canonical Instantiation context_id; every qualified upstream factual state carries an auditable basis; CLOSED typed status enums plus a non-empty factual analysis_method for DIRECT; a kind / fact-specific non-inflated study_context; the frozen proposal-relative EvidenceRole mapping)
+  - src/contracts/data_layout/evidence_package.schema.json / assessment.schema.json (PR A shapes the Module must produce)
+  - src/contracts/evidence_reference.yaml (PR C reusable-EvidencePackage reference layer + provenance walk)
+  - src/contracts/gate_contracts.yaml (PR B -- assessment_rule / fatal_gate_policy are GateSet-level refs, not Module logic)
+
+scoping_decisions:  # ChatGPT AI审核方案, before code -- APPROVE-to-proceed with the corrections below
+  E15-1: >-
+    complete construction contract, design-only; files
+    src/contracts/gate_modules/tgt07_shedding_soluble_antigen_sink_liability.yaml +
+    docs/gate_modules/TGT-07_Shedding_Soluble_Antigen_Sink_Liability.md +
+    tests/test_tgt07_module_construction_contract.py + manifest / handoff / worklog
+    append. canonical Gate name "Shedding / Soluble-Antigen / Sink Liability".
+    forbidden -- gate_modules/tgt07.../ runtime, provider / normalizer / adapter,
+    any retrieval, EvidencePackage / proposal / fatal-detector runtime, numeric /
+    ranking score, ANY circulating soluble-antigen concentration / turnover /
+    affinity / dose-exposure / sink-ratio threshold, ANY invented universal
+    "material soluble-antigen sink concentration" range, generic GateModule
+    framework / ABC, new dependency, external data, MOD-TGT01 / MOD-TGT02 /
+    MOD-TGT03 / MOD-TGT04 / MOD-TGT05 / MOD-TGT06 / MOD-TGT08 refactor. MOD-TGT07
+    primary_module_version stays 0.0.0; MIGRATION_PENDING remains (not lifted
+    until all eight primary Modules are built -- TGT-07 is the last; PR E16 lifts
+    it). Module is built in PR E16, only after this contract is APPROVED. E15
+    touches NO binding / registry / README / built-roster test -- those wait for
+    E16. main currently has TGT-01 / TGT-02 / TGT-03 / TGT-04 / TGT-05 / TGT-06 /
+    TGT-08 built (7); TGT-07 not implemented.
+  E15-2: >-
+    17-item template inherited from E1 verbatim (validated by E2 / E4 / E6 / E8 /
+    E10 / E12 / E14 and reused in E7 / E9 / E11 / E13). items 03 / 05 / 07 / 08 do
+    normalized-equality parity against the frozen PR D TGT-07 contract; item 04
+    does an EXACT set-equality derived parity against evidence_required + the
+    union of the ladder admissible_evidence_classes. unknown_behavior and
+    forbidden_inference are pinned verbatim. CONFIRMED -- the frozen PR D TGT-07
+    contract has NO inference_guard field; its frozen structure is exactly
+    gate_question, evidence_required, evidence_ladder, evidence_ceiling,
+    allowed_inference, forbidden_inference, unknown_behavior and fatal_conditions.
+    EVGAP-01 is a TGT-04 construct only; TGT-07 has no equivalent external guard
+    and the Module must not invent one.
+  E15-3: >-
+    Direction x Strength -- OPTION A: highest-qualifying-rung grading authority
+    (the TGT-03 / TGT-06 precedent), NOT the TGT-04 single-tier exception. A
+    qualifying INDIRECT_STRONG soluble-antigen observation (quantified CRC-patient
+    circulating soluble target with circulating_soluble_target_status ==
+    QUANTIFIED_PRESENT, a documented sheddase-substrate status, or a validated
+    secreted isoform) on a completed audited landscape with no qualifying DIRECT
+    sink-exposure context and no canonical intended-ADC no-material-sink TMDD DOES
+    grant POSITIVE / INDIRECT_STRONG (PR D calls the three INDIRECT_STRONG classes
+    "strong support"; unknown_behavior locks UNKNOWN only to "No soluble-antigen
+    data -> UNKNOWN"). Legal Direction x Strength pairs (frozen, EXACTLY SIX) --
+    POSITIVE / DIRECT, POSITIVE / INDIRECT_STRONG, NEGATIVE / DIRECT,
+    CONFLICTING / DIRECT, INCONCLUSIVE / DIRECT, INCONCLUSIVE / UNKNOWN; there is
+    NO NEGATIVE / INDIRECT_STRONG, NO CONFLICTING / INDIRECT_STRONG, NO
+    INCONCLUSIVE / INDIRECT_STRONG, NO INCONCLUSIVE / WEAK. A below-detection /
+    below-quantitation-limit soluble-antigen measurement is a CONTEXTUAL factual
+    observation -- NOT a positive INDIRECT_STRONG and NOT a NEGATIVE (explicit
+    frozen ruling); a completed landscape with only such evidence ->
+    INCONCLUSIVE / UNKNOWN. A canonical NEGATIVE / DIRECT is reachable ONLY from a
+    qualified SOLUBLE_ANTIGEN_TMDD_ANALYSIS whose exposure_scenario_class ==
+    INTENDED_ADC_EXPOSURE with tmdd_input_adequacy_status == QUALIFIED and
+    analysis_validation_status == QUALIFIED, concluding NO_MATERIAL_SOLUBLE_SINK;
+    "some same-target therapeutic did not observe a PK sink" is never a
+    NEGATIVE / DIRECT. TGT-07-specific aggregation truth table (frozen ordered
+    algorithm, stop at first match) -- (0) not completed / audit-invalid -> stop
+    rule; (1) group qualifying DIRECT observations by the single-string
+    sink_exposure_context_id; (2) >= 1 CLEAN material-sink DIRECT sink-exposure
+    context -> POSITIVE / DIRECT (existence-proof dominance: a no-material-sink
+    DIRECT result in a different context is CONTEXTUAL); (3) else the SAME
+    sink_exposure_context_id carries BOTH a material-sink DIRECT and a
+    no-material-sink DIRECT observation -> CONFLICTING / DIRECT (v1 NO machine
+    conflict resolver); (4) else >= 1 qualifying intended-ADC NO_MATERIAL_SOLUBLE_SINK
+    TMDD and no material-sink DIRECT -> NEGATIVE / DIRECT; (5) else a
+    DIRECT-quality analysis with sink_materiality_outcome == MIXED_OR_UNRESOLVED
+    and no canonical NEGATIVE -> INCONCLUSIVE / DIRECT (that DIRECT EP CONTEXTUAL);
+    (6) else no DIRECT-rung observation + >= 1 qualifying positive INDIRECT_STRONG
+    -> POSITIVE / INDIRECT_STRONG; (7) else WEAK-only / below-assay-limit-only /
+    no qualifying evidence -> INCONCLUSIVE / UNKNOWN (zero refs). DIFFERENT
+    SINK-EXPOSURE CONTEXTS DIFFERING IS NEVER MAPPED TO CONFLICTING (HARD lock).
+    NO CROSS-OBSERVATION SYNTHESIS OF DIRECT -- a quantitation EP + a separate
+    model EP do NOT combine into a DIRECT material-sink proof; DIRECT requires ONE
+    upstream-qualified INTEGRATED observation. sink_materiality_direction_mapping
+    -- MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE /
+    MATERIAL_SOLUBLE_SINK_WITHOUT_ESTABLISHED_CLINICAL_EXPOSURE_COMPROMISE ->
+    SUPPORTS_SINK_LIABILITY; NO_MATERIAL_SOLUBLE_SINK -> OPPOSES_SINK_LIABILITY
+    only from a qualified intended-ADC TMDD, otherwise CONTEXTUAL;
+    MIXED_OR_UNRESOLVED / NOT_ESTABLISHED -> NONDIRECTIONAL / CONTEXTUAL.
+  E15-4: >-
+    fatal -- machine-local fatal_review, never a direct KILL. PR D fatal =
+    "circulating soluble antigen demonstrated, or quantitatively modelled from an
+    exposure / affinity / turnover analysis, to materially compromise the
+    clinically achievable exposure of a target-directed antibody" -- singular.
+    NOT a TGT-06-style Route A / Route B convergence. ONE fatal predicate --
+    fatal_review.required is true iff there is >= 1 classified qualifying DIRECT
+    observation whose sink_materiality_outcome ==
+    MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE, carrying a non-empty
+    auditable sink_exposure_context_id + basis and analysis_validation_status ==
+    QUALIFIED + basis + a non-empty factual analysis_method, on a completed
+    audited landscape, AND that observation satisfies EITHER of two admissible
+    SOURCE PATHS. Clinical source path -- observation_kind ==
+    CLINICAL_ANTIGEN_SINK_PK_EFFECT + same_target_therapeutic_match_status ==
+    QUALIFIED + same_target_therapeutic_ref != "" +
+    soluble_antigen_attribution_status == QUALIFIED + analysis_validation_status
+    == QUALIFIED + reproducibility_status == QUALIFIED (a per-observation quality
+    gate on the single clinical finding -- NOT an independent-replication /
+    cross-study convergence requirement) + a documented clinically achievable
+    exposure compromise. TMDD source path -- observation_kind ==
+    SOLUBLE_ANTIGEN_TMDD_ANALYSIS + tmdd_input_adequacy_status == QUALIFIED +
+    analysis_validation_status == QUALIFIED + analysis_method != "" +
+    exposure_scenario_class == INTENDED_ADC_EXPOSURE + the model explicitly
+    concludes a material clinically achievable exposure compromise. ONE qualifying
+    observation on EITHER path is sufficient; the two paths are NOT combined and
+    NOT a convergence pair; there is NO additional reproducibility requirement
+    beyond the clinical path's own per-observation gate. GLOBAL PRECONDITION --
+    NONE. Unlike TGT-06, a POSITIVE / DIRECT does NOT cancel the fatal trigger;
+    the TGT-07 fatal signal is a STRICT SUBSET of POSITIVE / DIRECT (a
+    MATERIAL_SOLUBLE_SINK_WITHOUT_ESTABLISHED_CLINICAL_EXPOSURE_COMPROMISE DIRECT
+    is POSITIVE / DIRECT but NONFATAL). status single value
+    POTENTIAL_FATAL_PATTERN; actionable only on an accepted run; never
+    PUBLIC_FATAL_SIGNAL_ESTABLISHED / a canonical fatal flag / KILL / HOLD /
+    Decision; NOT on the proposal envelope.
+  E15-5: >-
+    typed SolubleAntigenEvidenceCompletion (PR E16 module-local frozen dataclass,
+    NOT a seventh core object; the name is APPROVED). FOUR
+    declared_mandatory_search_components --
+    soluble_antigen_quantitation_search_complete (serum / plasma soluble-antigen
+    measurements) / sheddase_processing_search_complete (documented ADAM / MMP
+    sheddase-substrate processing) / secreted_isoform_search_complete (secreted
+    splice isoforms) / same_target_pk_pd_or_tmdd_search_complete (clinical PK / PD
+    antigen-sink impact AND exposure / affinity / turnover target-mediated-disposition
+    analyses -- the fourth axis explicitly covers PK / PD and TMDD, NOT pure
+    clinical PK impact). They are mandatory search-completion axes, NOT evidence
+    prerequisites and NOT grading axes -- a component searched / exhausted with
+    zero qualifying records still counts complete. FIRST-axis freeze rule --
+    soluble_antigen_quantitation_search_complete is true ONLY when BOTH the
+    CRC-patient serum / plasma subspace AND the healthy-donor serum / plasma
+    subspace have been searched / exhausted (frozen PR D evidence_required is
+    "in CRC patients AND in healthy donors"). public_soluble_antigen_search_complete
+    == all four component search states; a contradiction -> HARD. completion <->
+    SEARCH_COMPLETION_AUDIT snapshot parity (E6 / E8 / E10 / E14 gene) frozen for
+    E16 -- the snapshot field names ARE the typed completion field names. There is
+    EXACTLY ONE qualifying context set -- qualifying_direct_evidence_context_ids
+    (the UNION of the single-string sink_exposure_context_id of every observation
+    classified qualifying DIRECT-rung). There is deliberately NO
+    qualifying_indirect_evidence_context_ids set -- a sheddase-substrate /
+    secreted-isoform / quantitation observation does not inherently carry a
+    sink-exposure context, and forcing one would rewrite the frozen
+    INDIRECT_STRONG evidence class. a missing / drifted / dedup-lost snapshot, or
+    a drift in the qualifying context set, -> HARD reject.
+  E15-6: >-
+    source-plan hard locks (APPROVED + 3 extra). a predicted cleavage site ->
+    WEAK. family analogy -> WEAK. a quantified CRC-patient circulating soluble
+    target without a target-mediated-disposition analysis -> INDIRECT_STRONG
+    ceiling (grants POSITIVE / INDIRECT_STRONG when no DIRECT sink-exposure
+    context exists, never DIRECT). a documented sheddase-substrate status and a
+    validated secreted isoform -> INDIRECT_STRONG (never DIRECT; DO grant
+    POSITIVE / INDIRECT_STRONG). EXTRA HARD LOCK 1 -- a below-detection /
+    below-quantitation-limit soluble-antigen measurement
+    (circulating_soluble_target_status == BELOW_DETECTION_OR_QUANTITATION_LIMIT)
+    is factual CONTEXTUAL, not positive INDIRECT_STRONG and not NEGATIVE. EXTRA
+    HARD LOCK 2 -- a clinical same-target therapeutic with NO reported PK sink
+    does NOT automatically become DIRECT NEGATIVE. EXTRA HARD LOCK 3 --
+    NO_MATERIAL_SOLUBLE_SINK is canonical NEGATIVE authority ONLY from a qualified
+    TMDD analysis whose exposure_scenario_class == INTENDED_ADC_EXPOSURE that
+    addresses the intended ADC exposure scenario. cross-gate -- TGT-01 / TGT-02 /
+    TGT-03 / TGT-04 / TGT-05 / TGT-06 / TGT-08 evidence never contributes to a
+    TGT-07 rung, Direction or fatal_review; a soluble-antigen sink != an efficacy
+    conclusion or a dose recommendation (forbidden_inference (a) verbatim:
+    "a measured circulating soluble-antigen concentration, by itself, establishes
+    a material antigen sink" is FORBIDDEN). PUBLIC_ONLY path.
+  E15-7: >-
+    stop rule + EXPERIMENT_REQUIRED (direction APPROVED). precedence -- 0. a HARD
+    integrity problem -> reject the whole run; 1. the mandatory public
+    soluble-antigen search is incomplete -> INCONCLUSIVE / UNKNOWN with zero
+    evidence_refs; 2. completion claims complete but the audit is invalid -> HARD
+    reject; 3. complete + audited -> grade per the item-06
+    tgt07_specific_aggregation_truth_table. After Option A, distinguish FOUR
+    completed states -- (A) IS-only -> POSITIVE / INDIRECT_STRONG (+
+    EXPERIMENT_REQUIRED "quantify sink materiality with a qualified TMDD analysis
+    or obtain documented same-target PK / PD sink evidence" when the public space
+    is exhausted -- a graded positive answer plus an experiment required to reach
+    DIRECT); (B) WEAK / below-assay-limit / no qualifying evidence ->
+    INCONCLUSIVE / UNKNOWN, zero refs (+ EXPERIMENT_REQUIRED when the public space
+    is exhausted); (C) a DIRECT-quality analysis with MIXED_OR_UNRESOLVED ->
+    INCONCLUSIVE / DIRECT, the DIRECT EP CONTEXTUAL; (D) an unresolved public path
+    remains -> PUBLIC_RESOLVABLE / CURRENTLY_UNRESOLVABLE, do NOT auto-add
+    EXPERIMENT_REQUIRED (E8 / E10 precedence). unresolved item kinds --
+    KNOWN_PUBLIC_NOT_YET_RESOLVED -> PUBLIC_RESOLVABLE;
+    ACCESS_OR_ANNOTATION_BLOCKED -> CURRENTLY_UNRESOLVABLE.
+  E15-8: >-
+    items 10-17 directly inherit the E2 / E4 / E6 / E8 / E10 / E12 / E14 runtime
+    genes, and E15 freezes the E16 normalized-observation conceptual shape now.
+    EIGHT observation kinds -- CLINICAL_ANTIGEN_SINK_PK_EFFECT /
+    SOLUBLE_ANTIGEN_TMDD_ANALYSIS / SOLUBLE_ANTIGEN_QUANTITATION /
+    SHEDDASE_SUBSTRATE_STATUS / SECRETED_ISOFORM /
+    PREDICTED_CLEAVAGE_SITE_INFERENCE / FAMILY_ANALOGY_SHEDDING_INFERENCE /
+    SEARCH_COMPLETION_AUDIT (classify by "documented / modelled materiality vs
+    partial soluble-antigen evidence", NOT by assay type; method type stays in
+    analysis_method, an OPEN vocabulary). sink_materiality_outcome CLOSED enum --
+    MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE /
+    MATERIAL_SOLUBLE_SINK_WITHOUT_ESTABLISHED_CLINICAL_EXPOSURE_COMPROMISE /
+    NO_MATERIAL_SOLUBLE_SINK / MIXED_OR_UNRESOLVED / NOT_ESTABLISHED (the first
+    two enum names renamed per the ruling for precision -- the second means
+    "material sink established, clinically achievable exposure compromise NOT yet
+    established"). NEW typed circulating_soluble_target_status CLOSED enum --
+    QUANTIFIED_PRESENT / BELOW_DETECTION_OR_QUANTITATION_LIMIT /
+    MIXED_OR_UNRESOLVED / NOT_ESTABLISHED + basis (so E16 can deterministically
+    distinguish a measurable soluble target from below LOD;
+    SOLUBLE_ANTIGEN_QUANTITATION + CRC_PATIENT_SERUM + QUANTIFIED_PRESENT ->
+    INDIRECT_STRONG / SUPPORTS; BELOW_DETECTION_OR_QUANTITATION_LIMIT ->
+    CONTEXTUAL; healthy-donor quantitation defaults CONTEXTUAL). NEW typed
+    tmdd_input_adequacy_status {QUALIFIED, NOT_ESTABLISHED} + basis (QUALIFIED iff
+    upstream normalization confirms concentration / turnover / binding affinity /
+    dose-exposure assumptions are all included or explicitly, auditably handled --
+    E16 does NOT semantic-parse prose). NEW typed same_target_therapeutic_match_status
+    {QUALIFIED, NOT_ESTABLISHED} + basis and soluble_antigen_attribution_status
+    {QUALIFIED, NOT_ESTABLISHED} + basis (so "same-target drug has abnormal PK"
+    is not wrongly upgraded to a soluble-antigen sink). NEW typed
+    exposure_scenario_class {INTENDED_ADC_EXPOSURE, SAME_TARGET_THERAPEUTIC_ANALOGUE,
+    UNRESOLVED} + basis (NO_MATERIAL_SOLUBLE_SINK -> NEGATIVE / DIRECT ONLY for
+    SOLUBLE_ANTIGEN_TMDD_ANALYSIS + INTENDED_ADC_EXPOSURE). cohort_class
+    {CRC_PATIENT_SERUM, HEALTHY_DONOR_SERUM, SAME_TARGET_THERAPEUTIC_PK,
+    WELL_MATCHED_MODEL, NON_CRC_CONTEXT, UNRESOLVED} + basis.
+    reproducibility_status {QUALIFIED, NOT_ESTABLISHED} + basis (the clinical
+    fatal-path per-observation gate). LIGHTWEIGHT LOCAL EVIDENCE-CONTEXT -- a
+    single-string sink_exposure_context_id (a therapeutic format x dose / exposure
+    x affinity x patient / model descriptor) + sink_exposure_context_basis,
+    REQUIRED on a qualifying DIRECT observation, "" on INDIRECT_STRONG / WEAK /
+    SEARCH_COMPLETION_AUDIT. NO declared_multi / IDENTIFIED_MULTI / third-state
+    machinery, NO set-projection helper -- TGT-07 has no convergence semantics
+    that would need one. A sink_exposure_context_id == the canonical Instantiation
+    context_id (CTX-CRC-REFRACTORY-MCRC) is a HARD identity-namespace failure. NO
+    DEDICATED RAW-VALUE BRANCH -- E15 / E16 add no dedicated typed raw numeric
+    decision field for soluble antigen and therefore NO TGT-04-style symmetric
+    raw-value reuse-parity branch; a source-reported numeric fact ("serum soluble
+    target 18 ng/mL", "below assay LLOQ", "K_D 2 nM") lives inside the neutral
+    claim string and is covered by ordinary claim + classification-driving field
+    parity. what is FORBIDDEN is the Module comparing that value to any threshold
+    / cutoff / sink ratio / invented "material soluble-antigen sink concentration".
+    Item 12 -- non-canonical proposal envelope (identity pins incl. the canonical
+    context_id; no assessment_id / assessment_version / review / fatal flag /
+    Decision / concentration threshold or range); FROZEN PROPOSAL-RELATIVE
+    EvidenceRole mapping (POSITIVE / DIRECT -- CLEAN material-sink DIRECT ->
+    SUPPORTING, other-context no-material-sink DIRECT -> CONTEXTUAL;
+    NEGATIVE / DIRECT -- the intended-ADC no-material-sink TMDD -> SUPPORTING;
+    CONFLICTING / DIRECT -- same-context material-sink -> SUPPORTING + same-context
+    no-material-sink -> CONTRADICTING; INCONCLUSIVE / DIRECT -- the
+    MIXED_OR_UNRESOLVED analysis -> CONTEXTUAL; POSITIVE / INDIRECT_STRONG --
+    qualifying quantitation / sheddase / isoform -> SUPPORTING;
+    INCONCLUSIVE / UNKNOWN -- zero refs; CONTRADICTING ONLY on a
+    CONFLICTING / DIRECT proposal); fatal_review is a separate module-local record
+    on the run result (required / status POTENTIAL_FATAL_PATTERN / evidence_ids /
+    sink_exposure_context_ids / sink_materiality_outcome_class / source_path /
+    analysis_validation_basis_refs / clinical_attribution_basis_refs /
+    tmdd_input_adequacy_basis_refs / landscape_as_of /
+    soluble_antigen_search_scope), actionable only on an accepted run. Item 13 --
+    machine acceptance = executable checks; proposed_strength follows the
+    highest-qualifying-rung authority under the item-06 truth table (a proposal
+    with proposed_strength == WEAK is a HARD failure); a HARD identity /
+    provenance / completion-consistency / classification-qualification failure
+    rejects the WHOLE run -- never degraded to an accepted UNKNOWN. Item 17 --
+    HUMAN_APPROVED CandidateGateAssessment -> MatrixView / ADC_TARGET_GATESET
+    decision layer, and the module-local fatal_review -> human Gate review /
+    GateSet fatal policy; TGT-07 POSITIVE never discharges any downstream dosing
+    or efficacy judgement.
+
+seven_required_tightenings:  # ChatGPT AI审核方案 closing summary -- frozen verbatim in the contract
+  - "1. Option A: positive INDIRECT_STRONG propagates; exactly 6 legal Direction x Strength pairs; there is NO NEGATIVE / INDIRECT_STRONG."
+  - "2. A below-detection / below-quantitation-limit soluble-antigen quantitation is CONTEXTUAL -- not a positive INDIRECT_STRONG and not a NEGATIVE; a new CLOSED circulating_soluble_target_status typed enum {QUANTIFIED_PRESENT, BELOW_DETECTION_OR_QUANTITATION_LIMIT, MIXED_OR_UNRESOLVED, NOT_ESTABLISHED} carries this."
+  - "3. A canonical NEGATIVE / DIRECT is produced ONLY by a qualified SOLUBLE_ANTIGEN_TMDD_ANALYSIS with exposure_scenario_class == INTENDED_ADC_EXPOSURE and sink_materiality_outcome == NO_MATERIAL_SOLUBLE_SINK; 'some same-target therapeutic did not see a sink' can never directly produce NEGATIVE / DIRECT."
+  - "4. Fatal does NOT use a TGT-06-style Route A / Route B convergence -- one qualifying DIRECT observation whose sink_materiality_outcome == MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE and that satisfies the clinical source path OR the TMDD source path triggers POTENTIAL_FATAL_PATTERN; clinical and TMDD are two alternative source paths, not two convergence routes; no extra reproducibility beyond the clinical path's own per-observation reproducibility_status == QUALIFIED gate (no independent-replication / cross-study convergence requirement); there is NO global cancellation precondition (the fatal signal is a strict subset of POSITIVE / DIRECT)."
+  - "5. Introduce a lightweight single-string sink_exposure_context_id (with sink_exposure_context_basis), REQUIRED on a qualifying DIRECT observation only; same-context material-vs-no-material only is CONFLICTING; NO TGT-06 declared_multi / IDENTIFIED_MULTI / third-state machinery and NO set-projection helper."
+  - "6. TMDD / clinical DIRECT and fatal authority is carried by typed statuses -- tmdd_input_adequacy_status, same_target_therapeutic_match_status, soluble_antigen_attribution_status, analysis_validation_status, exposure_scenario_class -- and E16 must NEVER semantic-parse prose to obtain DIRECT or fatal authority."
+  - "7. SolubleAntigenEvidenceCompletion keeps exactly FOUR search-completion axes (soluble_antigen_quantitation_search_complete / sheddase_processing_search_complete / secreted_isoform_search_complete / same_target_pk_pd_or_tmdd_search_complete) and NO qualifying_indirect_evidence_context_ids set; soluble_antigen_quantitation_search_complete is true iff BOTH the CRC-patient and the healthy-donor serum / plasma search subspaces are done; the fourth axis explicitly covers clinical PK / PD and target-mediated-disposition analyses."
+
+three_headline_conclusions:
+  - A measurable soluble form is not the same thing as a material antigen sink. Quantified circulating soluble target, documented sheddase processing or a validated secreted isoform may support the presence of a soluble-antigen sink-liability class at INDIRECT_STRONG, but materiality requires DIRECT evidence from a documented same-target PK / PD sink effect or a qualified quantitative TMDD analysis; a concentration value, including a low or below-assay-limit value, is never converted by the Module into a universal material-sink threshold.
+  - Soluble-antigen materiality is exposure-context dependent. DIRECT observations are bound to an auditable local sink-exposure context; one clean DIRECT material-sink context is sufficient for POSITIVE / DIRECT, while a canonical NEGATIVE / DIRECT requires a qualified intended-ADC TMDD analysis demonstrating no material soluble sink. Opposite DIRECT conclusions are CONFLICTING only when they refer to the same sink-exposure context; the machine has no conflict resolver in v1.
+  - The TGT-07 potential-fatal signal is a strict subset of POSITIVE / DIRECT, not a convergence rule. One qualifying DIRECT observation may surface POTENTIAL_FATAL_PATTERN when soluble antigen is documented or quantitatively modelled to materially compromise the clinically achievable exposure of a target-directed antibody. Clinical and TMDD evidence are alternative qualified source paths; the machine never decides fatality, KILL, HOLD, therapeutic efficacy or the Candidate-level consequence.
+
+owns_boundary_one_liner:
+  pr_e15_owns: TGT-07 construction contract + 17-item drawing + the exposure-context-dependent sink-liability architecture with a highest-qualifying-rung grading authority (INDIRECT_STRONG propagates to POSITIVE / INDIRECT_STRONG) + the six-pair legal Direction x Strength set + the TGT-07-specific aggregation truth table (one CLEAN material-sink DIRECT sink-exposure context is POSITIVE / DIRECT with existence-proof dominance; a same-context material-vs-no-material pair is CONFLICTING / DIRECT; a qualified intended-ADC no-material-sink TMDD is NEGATIVE / DIRECT; a DIRECT-quality MIXED_OR_UNRESOLVED analysis is INCONCLUSIVE / DIRECT; different sink-exposure contexts differing is never CONFLICTING) + the no-cross-observation-synthesis-of-DIRECT lock + the CLOSED sink_materiality_outcome and circulating_soluble_target_status enums + the lightweight single-string sink_exposure_context_id identity (no declared_multi / third-state machinery) + the below-detection-is-CONTEXTUAL rule + fatal-vs-scientific separation (a single-observation material-clinical-exposure-compromise fatal_review with a clinical source path and a TMDD source path, no convergence, no global cancellation precondition) + typed SolubleAntigenEvidenceCompletion with ONLY a qualifying_direct_evidence_context_ids set and four search axes (the quantitation axis needs both cohort subspaces) + source-plan hard locks (predicted cleavage site / family analogy WEAK only, a same-target drug with no reported sink is not NEGATIVE, canonical NEGATIVE only from a qualified intended-ADC TMDD, no TGT-01..TGT-06 / TGT-08 conclusion) + WEAK / below-assay-limit -> UNKNOWN + narrow EXPERIMENT_REQUIRED + the confirmation that TGT-07 has NO inference_guard field + E2/E4/E6/E8/E10/E12/E14 runtime-gene inheritance + the frozen proposal-relative EvidenceRole mapping + validation / parity tests
+  pr_e15_does_not_own: MOD-TGT07 implementation + live retrieval + the binding / registry reconciliation + soluble-antigen-attribution / TMDD-assumption-adequacy / materiality / reproducibility / integrated-vs-stitched-DIRECT human adjudication + the GateSet fatal decision + KILL + external data + persistence + a generic GateModule framework + lifting MIGRATION_PENDING
+
+next_after_approval: PR E16 = MOD-TGT07@1.0.0 deterministic implementation (the eighth and final primary Module; PR E16 lifts MIGRATION_PENDING)
+
+delivers:
+  - src/contracts/gate_modules/tgt07_shedding_soluble_antigen_sink_liability.yaml -- the frozen MOD-TGT07 construction contract with the 17-item acceptance checklist
+  - docs/gate_modules/TGT-07_Shedding_Soluble_Antigen_Sink_Liability.md -- the human-readable construction drawing (17-row table + three headline blockquotes + the frozen normalized-observation / SolubleAntigenEvidenceCompletion conceptual shape)
+  - tests/test_tgt07_module_construction_contract.py -- 78 tests (checklist completeness + E1-template reuse; items 03/05/07/08 normalized-equality parity + item 04 EXACT set-equality derived parity + no-inference_guard confirmation; exposure-context / highest-qualifying-rung grading authority + the six-pair legal set + the aggregation truth table + existence-proof dominance + no-cross-observation-synthesis-of-DIRECT; the seven required tightenings + the E16 conceptual shape (eight observation kinds, the CLOSED sink_materiality_outcome + circulating_soluble_target_status enums); the fatal single-predicate / two-source-path rule -- no convergence, no global cancellation precondition; source hard locks; E2/E4/E6/E8/E10/E12/E14 gene inheritance; no-implementation reconciliation -- package dir does not exist, binding still 0.0.0, binding / registry / existing tests untouched, only append worklog; drawing covers all 17 items)
+  - manifests/runtime_migration_pr_e15_manifest.yaml -- this file
+  - docs/handoff/2026-08-31-runtime-migration-pr-e15.zh-CN.md -- the E15 handoff
+
+deferred:
+  - the new top-level gate_modules/tgt07_shedding_soluble_antigen_sink_liability/ implementation (providers, adapters, extractor, normalizer, runner, EvidencePackage writer, assessment proposer, the SolubleAntigenEvidenceCompletion typed record, the single-observation material-clinical-exposure-compromise fatal_review detector) and the primary_module_version bump to "1.0.0"
+  - the binding / registry reconciliation (src/contracts/crc_adc_target_gateset.yaml + src/objects/crc_adc_target_gateset.py built_module_versions / BUILT_MODULE_VERSIONS, gate_modules/README.md, tests/test_crc_adc_target_gateset.py, tests/test_gate_modules_boundary.py and the other built-roster tests) -- PR E16
+  - connecting any retrieval provider or dataset
+  - lifting MIGRATION_PENDING -- PR E16, the eighth and final primary Module
+
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  implementation_code_in_this_pr: forbidden
+  provider_or_adapter_in_this_pr: forbidden
+  trial_or_dataset_retrieval_in_this_pr: forbidden
+  numeric_or_ranking_scoring: forbidden
+  soluble_antigen_concentration_or_turnover_or_affinity_or_dose_exposure_or_sink_ratio_threshold: forbidden
+  invented_material_soluble_antigen_sink_concentration_range: forbidden
+  cross_gate_shedding_or_internalization_or_surface_logic_in_this_pr: forbidden
+  new_scientific_ladder_semantics_in_this_pr: forbidden
+  generic_gatemodule_framework_or_base_class_in_this_pr: forbidden
+  modifies_mod_tgt01: forbidden
+  modifies_mod_tgt02: forbidden
+  modifies_mod_tgt03: forbidden
+  modifies_mod_tgt04: forbidden
+  modifies_mod_tgt05: forbidden
+  modifies_mod_tgt06: forbidden
+  modifies_mod_tgt08: forbidden
+  modifies_binding_or_registry_or_existing_tests: forbidden
+  only_allowed_existing_file_mutation: append_to_logs_worklog_md
+  migration_pending: remains
+
+chatgpt_review: PENDING
+approved_tip: null
+merge_commit: null
+review_rounds: 0
+test_count_before_e15: 1713       # at PR E14 approval
+test_count_at_submission: 1791    # local full suite (tests/test_tgt07_module_construction_contract.py 78)
+test_count_at_approval: null
+approval_record_pr: null          # docs-only, created after APPROVE (PR #95 ... #133 precedent)
+next_authorized_step: null        # PR E16 = MOD-TGT07@1.0.0 implementation -- needs its own go-ahead
+
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt07_module_construction_contract.py' -v
+  - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'
+  - bash scripts/verify_repository_boundary.sh
+  - git diff --check
+
+artifacts:
+  - src/contracts/gate_modules/tgt07_shedding_soluble_antigen_sink_liability.yaml
+  - docs/gate_modules/TGT-07_Shedding_Soluble_Antigen_Sink_Liability.md
+  - tests/test_tgt07_module_construction_contract.py
+  - manifests/runtime_migration_pr_e15_manifest.yaml
+  - docs/handoff/2026-08-31-runtime-migration-pr-e15.zh-CN.md
