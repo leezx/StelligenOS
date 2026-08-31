@@ -50,7 +50,7 @@ migration:
     - src/contracts/gate_modules/tgt01_adc_modality_precedent.yaml (PR E1 -- the approved 17-item construction template, reused here)
     - src/contracts/gate_modules/tgt02_indication_specific_malignant_cell_coverage.yaml (PR E7 -- the reachable-scientific-NEGATIVE + typed-completion + machine-local fatal_review + no-two-axis-strength precedent, and the bidirectional-coverage-vs-fatal separation this contract mirrors for persistence)
     - src/contracts/gate_modules/tgt05_normal_tissue_fatal_liability.yaml + tgt08_target_opportunity_competition_ip_whitespace.yaml (PR E3 / E5 -- the fatal-vs-scientific separation precedent)
-    - gate_modules/tgt01_adc_modality_precedent/ + gate_modules/tgt02_indication_specific_malignant_cell_coverage/ + gate_modules/tgt05_normal_tissue_fatal_liability/ + gate_modules/tgt08_target_opportunity_competition_ip_whitespace/ (PR E2 / E8 / E4 / E6 -- the runtime boundary genes this contract freezes for MOD-TGT03: canonical target identity + fixed-Instantiation context pin, observation context_key / completion search_scope HARD binding, Gate-neutral EvidencePackage, exact canonical EP reuse incl. observation_id + canonical-provenance re-check, kind/fact-specific study_context, a SEARCH_COMPLETION_AUDIT EP that cannot be lost to dedup, hard identity/provenance/completion-consistency failure -> whole-run reject, non-canonical proposal envelope, completion-audit snapshot parity)
+    - gate_modules/tgt01_adc_modality_precedent/ + gate_modules/tgt02_indication_specific_malignant_cell_coverage/ + gate_modules/tgt05_normal_tissue_fatal_liability/ + gate_modules/tgt08_target_opportunity_competition_ip_whitespace/ (PR E2 / E8 / E4 / E6 -- the runtime boundary genes this contract freezes for MOD-TGT03 -- canonical target identity + fixed-Instantiation context pin, observation context_key / completion search_scope HARD binding, Gate-neutral EvidencePackage, exact canonical EP reuse incl. observation_id + canonical-provenance re-check, kind/fact-specific study_context, a SEARCH_COMPLETION_AUDIT EP that cannot be lost to dedup, hard identity/provenance/completion-consistency failure -> whole-run reject, non-canonical proposal envelope, completion-audit snapshot parity)
     - src/contracts/data_layout/evidence_package.schema.json / assessment.schema.json (PR A shapes the Module must produce)
     - src/contracts/evidence_reference.yaml (PR C reusable-EvidencePackage reference layer + provenance walk)
     - src/contracts/gate_contracts.yaml (PR B -- assessment_rule / fatal_gate_policy are GateSet-level refs, not Module logic)
@@ -233,6 +233,25 @@ acceptance_checklist:
       quantitative proteomics and validated multiplex IF are ADMISSIBLE EXAMPLES,
       not an exhaustive closed enum; PR E10 must not auto-downgrade another
       reliable protein-level method just because it is not one of the three.
+    protein_measurement_validation_predicate:
+      note: >-
+        the assay vocabulary stays OPEN, but the measurement-validation PREDICATE
+        that lets a protein observation drive DIRECT is CLOSED and frozen here so
+        PR E10 does not have to invent status values (VALIDATED / SUPPORTED / YES
+        / ...) or decide which one means DIRECT. assay_method stays an open
+        factual type; only protein_measurement_validation_status is a closed enum.
+      protein_measurement_validation_status_enum:
+        - QUALIFIED
+        - NOT_ESTABLISHED
+      rules:
+        - "QUALIFIED requires a non-empty auditable protein_measurement_validation_basis"
+        - "DIRECT requires protein_measurement_validation_status == QUALIFIED"
+        - "NOT_ESTABLISHED can never reach DIRECT (it may still be an admissible INDIRECT_STRONG / WEAK-class observation on its own class rules)"
+        - "this is NOT a closed assay whitelist -- a reliable protein-level method outside validated IHC / quantitative proteomics / validated multiplex IF is not auto-downgraded, but it still needs protein_measurement_validation_status == QUALIFIED with an auditable basis to drive DIRECT"
+      binds_downstream: >-
+        protein_measurement_validation_status is a classification-driving
+        study_context field (item 11) and part of the exact-reuse identity parity
+        for a reused EvidencePackage in PR E10.
 
   "06_direction_interpretation":
     strength_direction_rule: >-
@@ -254,20 +273,40 @@ acceptance_checklist:
       cohort n. They must arrive as an auditable upstream qualification
       (persistence_pattern in {RETAINED, NEAR_LOSS_OR_MARKED_LOSS,
       TRANSIENT_OR_MINOR_DOWNREGULATION, MIXED_OR_UNRESOLVED} with
-      persistence_pattern_basis in {SOURCE_REPORTED, HUMAN_REVIEWED_NORMALIZATION}).
-      The Module only consumes the qualified state; a missing or drifted
-      qualification basis for a classification-driving pattern is a HARD
-      integrity failure.
+      persistence_pattern_basis in {SOURCE_REPORTED, HUMAN_REVIEWED_NORMALIZATION}),
+      and -- for a TRANSIENT_OR_MINOR_DOWNREGULATION observation -- an auditable
+      residual_target_presence_status in {PRESENT, UNRESOLVED} with a
+      residual_target_presence_basis. The Module only consumes the qualified
+      state; a missing or drifted qualification basis for a classification-driving
+      pattern is a HARD integrity failure.
+    residual_target_presence_status_is_the_transient_minor_branch_fact: >-
+      the SUPPORTING-vs-CONTEXTUAL split for TRANSIENT_OR_MINOR_DOWNREGULATION is
+      NOT decided by free-text parsing of persistence_pattern_basis prose. It is
+      decided by a single typed upstream factual field:
+      residual_target_presence_status in {PRESENT, UNRESOLVED} plus an auditable
+      residual_target_presence_basis. PRESENT means the qualified observation
+      itself establishes that target expression REMAINS PRESENT in the relevant
+      treated / metastatic context; UNRESOLVED means the observation is itself
+      ambiguous about whether expression is retained. The provider emits only the
+      fact -- never SUPPORTS_PERSISTENCE, never a Direction. This field is a
+      classification-driving study_context field (item 11) and enters PR E10's
+      exact-reuse identity parity for a reused EvidencePackage. No numeric
+      threshold is introduced.
     persistence_pattern_to_support_mapping:
       RETAINED: SUPPORTS_PERSISTENCE
       TRANSIENT_OR_MINOR_DOWNREGULATION: >-
-        SUPPORTS_PERSISTENCE when the qualified observation establishes that
-        expression REMAINS PRESENT in the relevant treated / metastatic context.
-        It can contribute a POSITIVE Direction. It can NEVER contribute a
-        NEGATIVE Direction, NEVER contribute to a fatal_review, and NEVER
-        establish TGT-04 surface / density. Only when the observation is itself
-        ambiguous about retention is it NONDIRECTIONAL / CONTEXTUAL. "Not
-        sufficient for fatal" is NOT the same as "scientifically non-directional".
+        SUPPORTS_PERSISTENCE when the qualified observation carries
+        residual_target_presence_status == PRESENT with an auditable
+        residual_target_presence_basis -- i.e. it establishes that expression
+        REMAINS PRESENT in the relevant treated / metastatic context. It can
+        contribute a POSITIVE Direction. It can NEVER contribute a NEGATIVE
+        Direction, NEVER contribute to a fatal_review, and NEVER establish TGT-04
+        surface / density. When the qualified observation carries
+        residual_target_presence_status == UNRESOLVED -- i.e. it is itself
+        ambiguous about retention -- it is NONDIRECTIONAL / CONTEXTUAL. The
+        SUPPORTING-vs-CONTEXTUAL branch is decided ONLY by this typed field, never
+        by free-text semantic parsing. "Not sufficient for fatal" is NOT the same
+        as "scientifically non-directional".
       NEAR_LOSS_OR_MARKED_LOSS: OPPOSES_PERSISTENCE
       MIXED_OR_UNRESOLVED: NONDIRECTIONAL / CONTEXTUAL
     qualifying_is_rung_specific:
@@ -446,7 +485,7 @@ acceptance_checklist:
       no experiments.
     source_classes:
       direct_authority:
-        - a validated protein-level clinical-context measurement (e.g. validated CRC IHC, quantitative proteomics, validated multiplex IF -- an open set, see item 05) in annotated malignant cells in explicitly qualified refractory / prior-treated OR metastatic CRC, from a primary publication / repository record; paired pre-/post-treatment is a high-information DIRECT form
+        - a validated protein-level clinical-context measurement (e.g. validated CRC IHC, quantitative proteomics, validated multiplex IF -- an open set, see item 05) carrying protein_measurement_validation_status == QUALIFIED with an auditable protein_measurement_validation_basis, in annotated malignant cells in explicitly qualified refractory / prior-treated OR metastatic CRC, from a primary publication / repository record; paired pre-/post-treatment is a high-information DIRECT form
       indirect_strong:
         - transcriptomic persistence with the treated / metastatic CRC malignant compartment resolved
         - persistence demonstrated in a well-validated CRC treatment-resistance model (ceiling INDIRECT_STRONG even if protein is measured -- the context is a model)
@@ -486,12 +525,24 @@ acceptance_checklist:
         refractory_prior_treated_search_complete /
         metastatic_lesion_search_complete / paired_pre_post_search_complete /
         resistance_model_search_complete / unresolved_items /
-        qualifying_direct_context_ids / qualifying_indirect_context_ids /
+        qualifying_direct_persistence_context_ids /
+        qualifying_indirect_persistence_context_ids /
         audit_observation_id. There is NO E6-style two mandatory axes.
         completion <-> SEARCH_COMPLETION_AUDIT snapshot parity (E6 / E8 gene) is
         frozen for E10: search_scope / sources_searched / landscape_as_of /
-        per-component completion states / unresolved_items / qualifying context id
-        sets; a missing / drifted / dedup-lost snapshot -> HARD reject.
+        per-component completion states / unresolved_items / qualifying
+        persistence context id sets; a missing / drifted / dedup-lost snapshot ->
+        HARD reject.
+      persistence_context_id_namespace: >-
+        the completion's qualifying_direct_persistence_context_ids /
+        qualifying_indirect_persistence_context_ids -- and the normalized
+        observation's persistence_context_id / persistence_context_ids (item 11)
+        and the fatal_review's persistence_context_ids (item 12) -- are LOCAL
+        evidence-context identities (a refractory cohort / a metastatic cohort / a
+        paired series / a declared multi-context analysis). They are deliberately
+        a SEPARATE namespace from the canonical Instantiation context_id
+        (CTX-CRC-REFRACTORY-MCRC, item 10) and must never be collapsed onto it
+        (E8 identity-namespace gene).
     no_universal_threshold: >-
       no fold-change cutoff, no percent-positive cutoff, no H-score cutoff, no
       down-regulation score, no ranking, no context-count threshold. Any threshold
@@ -527,7 +578,8 @@ acceptance_checklist:
       - carries candidate_refs and a measurement / claim block
       - carries interpretation_boundary (observation-level directly_supports / does_not_support / limitations / a neutral observation-level evidence_ceiling)
       - carries derivation (module_run_id, code_commit)
-      - carries the classification-driving observation fields in study_context (observation_kind, molecular_layer, assay_method, protein_measurement_validation_status, clinical_context + clinical_context_basis, context_adequacy_status + context_adequacy_basis, malignant_cell_attribution + malignant_attribution_basis, persistence_pattern + persistence_pattern_basis, reproducibility_status + reproducibility_basis, context_id / context_ids, context_key, landscape_as_of)
+      - carries the classification-driving observation fields in study_context (observation_kind, molecular_layer, assay_method, protein_measurement_validation_status + protein_measurement_validation_basis, clinical_context + clinical_context_basis, context_adequacy_status + context_adequacy_basis, malignant_cell_attribution + malignant_attribution_basis, persistence_pattern + persistence_pattern_basis, residual_target_presence_status + residual_target_presence_basis, reproducibility_status + reproducibility_basis, persistence_context_id / persistence_context_ids, context_key, landscape_as_of)
+      - persistence_context_id / persistence_context_ids is a LOCAL evidence-context identity namespace (a declared multi-context analysis) and is deliberately NOT the canonical Instantiation context_id (CTX-CRC-REFRACTORY-MCRC); a Module must never collapse a persistence_context_id onto the canonical context_id (E8 identity-namespace gene)
       - kind / fact-specific study_context -- NEVER promote a non-refractory / non-metastatic / non-CRC / audit observation's source study context to refractory mCRC; the run's scientific context is pinned separately by context_key / the Instantiation (E8 gene)
       - for a SEARCH_COMPLETION_AUDIT observation, additionally carries a structured snapshot of the ClinicalPersistenceCompletion it certifies (search_scope, sources_searched, landscape_as_of, per-component completion states, unresolved_items, qualifying_direct_context_ids, qualifying_indirect_context_ids) -- and it MUST survive the shared (source_id, claim) dedup, because an attempted completion needs exactly one emitted / reused provenance-bearing matching audit EP (E8 gene)
     neutral_wording:
@@ -545,7 +597,7 @@ acceptance_checklist:
         - even when a Gate-relative phrase is the source's own claim, the Module never upgrades it into a TGT-03 Gate conclusion
     rules:
       - the Module references an existing EvidencePackage by evidence_id -- it reuses the EXACT canonical package, never copies or re-creates one (PR C / E1 item 11; PR E2 / E8 gene)
-      - on reuse, observation_id is part of the exact-reuse identity parity (a reused EP whose study_context.observation_id names a different observation is a HARD failure), every classification / absence driving field for that observation kind must be present AND equal on the canonical package's study_context, and the reused EP's own provenance source_type / source_identifier / locator must still equal the resolved canonical SourceIndex record -- not just that source_id resolves (PR E8 gene); a missing or drifted field is a HARD identity integrity failure
+      - on reuse, observation_id is part of the exact-reuse identity parity (a reused EP whose study_context.observation_id names a different observation is a HARD failure), every classification / absence driving field for that observation kind must be present AND equal on the canonical package's study_context -- including protein_measurement_validation_status for a protein observation and residual_target_presence_status for a TRANSIENT_OR_MINOR_DOWNREGULATION observation -- and the reused EP's own provenance source_type / source_identifier / locator must still equal the resolved canonical SourceIndex record -- not just that source_id resolves (PR E8 gene); a missing or drifted field is a HARD identity integrity failure
       - forward status / superseded_by never appear on evidence.json (PR C -- they live only on the EvidenceIndexEntry)
     shape_ref: src/contracts/data_layout/evidence_package.schema.json + src/objects/decision_model.py EvidencePackage (PR A)
 
@@ -583,7 +635,7 @@ acceptance_checklist:
         - required (bool)
         - status (POTENTIAL_FATAL_PATTERN when required; otherwise empty)
         - evidence_ids ([EP-nnnnnnnn] of the contributing protein-level clinical-context near / marked-loss observations)
-        - context_ids ([the qualified clinical persistence context identities])
+        - persistence_context_ids ([the qualified LOCAL clinical persistence context identities -- the local evidence-context namespace, never the canonical Instantiation context_id])
         - persistence_class ([the persistence_pattern per contributing observation -- must be NEAR_LOSS_OR_MARKED_LOSS])
         - context_qualification_basis_refs ([the disclosed clinical_context_basis + context_adequacy_basis per observation])
         - persistence_pattern_basis_refs ([the disclosed persistence_pattern_basis per observation])
@@ -636,11 +688,13 @@ acceptance_checklist:
       - every observation.context_key equals the run's context_key, and the ClinicalPersistenceCompletion.search_scope equals the run's declared persistence_search_scope (PR E8 gene); a drift is a HARD integrity failure
       - every provenance.source_id resolves to a canonical SourceIndex record whose metadata matches, and every evidence_ref.evidence_id resolves to a canonical EvidencePackage (PR C check_* functions; PR E2 gene)
       - exact canonical EP reuse parity passes -- observation_id parity, no missing / drifted classification-driving field on a reused package, and the reused EP's own source_type / source_identifier / locator still equal the resolved canonical SourceIndex (PR E2 / E8 gene)
-      - the completion <-> SEARCH_COMPLETION_AUDIT snapshot parity passes -- an attempted completion has exactly one normalized matching audit observation AND exactly one emitted / reused provenance-bearing matching audit EP that carries a structured snapshot equal to the typed completion (search_scope, sources_searched, landscape_as_of, per-component completion states, unresolved_items, qualifying context ids); a missing / drifted / dedup-lost snapshot is a HARD integrity failure (PR E6 / E8 gene)
+      - the completion <-> SEARCH_COMPLETION_AUDIT snapshot parity passes -- an attempted completion has exactly one normalized matching audit observation AND exactly one emitted / reused provenance-bearing matching audit EP that carries a structured snapshot equal to the typed completion (search_scope, sources_searched, landscape_as_of, per-component completion states, unresolved_items, qualifying persistence context ids); a missing / drifted / dedup-lost snapshot is a HARD integrity failure (PR E6 / E8 gene)
       - public_persistence_search_complete equals all four declared component search states; a contradiction is a HARD integrity failure
       - every admissible evidence class used is in item 04's admissible list, and no item-04 not_admissible class is present
       - transcript-level evidence and a treatment-resistance model never propose above INDIRECT_STRONG; treatment-naive primary CRC never proposes above WEAK and never becomes a persistence claim; a different tumor type never becomes CRC persistence; protein without malignant-cell attribution never reaches DIRECT
-      - DIRECT is not gated on a closed three-assay whitelist -- a protein-level clinical-context measurement with a factual assay_method type and a protein_measurement_validation_status / basis qualifies; validated IHC / quantitative proteomics / validated multiplex IF are examples, not the exhaustive set
+      - DIRECT is not gated on a closed three-assay whitelist -- a protein-level clinical-context measurement with a factual assay_method type qualifies; validated IHC / quantitative proteomics / validated multiplex IF are examples, not the exhaustive set. The assay_method vocabulary stays OPEN; the measurement-validation predicate is CLOSED -- protein_measurement_validation_status is in {QUALIFIED, NOT_ESTABLISHED}, DIRECT requires protein_measurement_validation_status == QUALIFIED with a non-empty auditable protein_measurement_validation_basis, and NOT_ESTABLISHED can never reach DIRECT
+      - a TRANSIENT_OR_MINOR_DOWNREGULATION observation carries residual_target_presence_status in {PRESENT, UNRESOLVED} with an auditable residual_target_presence_basis; residual_target_presence_status == PRESENT routes it to SUPPORTING (retention), == UNRESOLVED routes it to CONTEXTUAL -- deterministically, with no free-text semantic parsing; a missing / drifted residual_target_presence_status or basis on such an observation is a HARD integrity failure, and the field is part of the exact canonical EP reuse parity
+      - the LOCAL persistence-context namespace (study_context.persistence_context_id / persistence_context_ids, completion.qualifying_direct_persistence_context_ids / qualifying_indirect_persistence_context_ids, fatal_review.persistence_context_ids) is never the canonical Instantiation context_id (CTX-CRC-REFRACTORY-MCRC); a proposal or record that collapses a persistence_context_id onto the canonical context_id is a HARD identity-namespace failure
       - every QUALIFIED clinical-context adequacy status carries an auditable clinical_context_basis + context_adequacy_basis, and every NEAR_LOSS_OR_MARKED_LOSS / TRANSIENT_OR_MINOR_DOWNREGULATION persistence_pattern carries an auditable persistence_pattern_basis; a missing / drifted qualification basis is a HARD integrity failure
       - any route A reproducibility qualification carries reproducibility_status == QUALIFIED and an auditable reproducibility_basis; a route B convergence is auditable as at least two independent qualified clinical context identities
       - the mandatory persistence-search landscape is complete for the path taken (item 16); the Module did not grade early on one paired biopsy series, one metastatic cohort, or one loss observation
@@ -668,8 +722,8 @@ acceptance_checklist:
       - the proposed_direction + proposed_strength and the aggregation_rationale
       - each EvidencePackage's claim, source and interpretation_boundary (drill-down) -- per-context evidence, assay / molecular layer, protein measurement validation, malignant-cell attribution basis, clinical-context basis, persistence-pattern basis, reproducibility basis
       - the ladder rung each package maps to, and any critical_unknowns
-      - the ClinicalPersistenceCompletion snapshot -- which mandatory components are complete / incomplete and the qualifying context ids
-      - the module-local fatal_review record (item 12) -- status POTENTIAL_FATAL_PATTERN, the contributing evidence_ids / context_ids / persistence_class / context_qualification_basis_refs / persistence_pattern_basis_refs / reproducibility_basis_refs
+      - the ClinicalPersistenceCompletion snapshot -- which mandatory components are complete / incomplete and the qualifying persistence context ids
+      - the module-local fatal_review record (item 12) -- status POTENTIAL_FATAL_PATTERN, the contributing evidence_ids / persistence_context_ids / persistence_class / context_qualification_basis_refs / persistence_pattern_basis_refs / reproducibility_basis_refs
       - the machine acceptance record (item 13 pass / fail detail)
     human_only_judgements:
       - whether the aggregated direction / strength is scientifically correct for TGT-03
@@ -716,9 +770,13 @@ acceptance_checklist:
       if the variation cannot answer overall persistence it is a graded
       INCONCLUSIVE.
     transient_minor_downregulation: >-
-      a qualified transient / minor down-regulation that still demonstrates
-      retained expression is SUPPORTING (retention). It never yields NEGATIVE,
-      never contributes to fatal_review, and never establishes TGT-04 density.
+      a qualified transient / minor down-regulation with
+      residual_target_presence_status == PRESENT (an auditable
+      residual_target_presence_basis) still demonstrates retained expression and
+      is SUPPORTING (retention); with residual_target_presence_status ==
+      UNRESOLVED it is NONDIRECTIONAL / CONTEXTUAL. Either way it never yields
+      NEGATIVE, never contributes to fatal_review, and never establishes TGT-04
+      density.
     experiment_required: >-
       TGT-03 can and should use EXPERIMENT_REQUIRED, but only when the enumerated
       public persistence source space is completed / exhausted AND the unresolved

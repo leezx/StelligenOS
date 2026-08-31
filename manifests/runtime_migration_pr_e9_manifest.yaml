@@ -333,11 +333,77 @@ repository_policy:
 chatgpt_review: pending
 approved_tip: null
 merge_commit: null
-review_rounds: 0
+review_rounds: 1
 test_count_before_e9: 1208        # at PR E8 approval
-test_count_at_submission: 1274    # local full suite (tests/test_tgt03_module_construction_contract.py 66)
+test_count_at_submission: 1274    # local full suite at round-1 submission (tests/test_tgt03_module_construction_contract.py 66)
+test_count_after_round_1: 1282    # +8 tests locking the three round-1 typed-fact freezes (construction-contract file now 74)
 approval_record_pr: null
 next_authorized_step: null        # PR E10 = MOD-TGT03@1.0.0 implementation -- needs its own go-ahead
+
+review_round_1:  # ChatGPT AI审核方案 -- REQUEST_CHANGES @ 23e1b7e ("Worked for 5m 4s")
+  verdict: REQUEST_CHANGES
+  head_reviewed: 23e1b7eb97f6481ed560c16d6d335f43ffbabba5
+  accepted_with_no_issue: >-
+    PR open / mergeable, HEAD matches, exact-head CI success; PR D parity, the
+    17-item template, item-04 exact-union parity, the inference guard, the
+    design-only boundary, Route A / Route B reproducibility, the open DIRECT
+    assay set, ClinicalPersistenceCompletion, the E8 runtime genes, binding still
+    0.0.0 and MIGRATION_PENDING -- all fine. Only 3 narrow contract-shape
+    blockers; none reopen science -- each compresses one natural-language
+    semantic into a typed fact so PR E10 does not have to invent machine
+    semantics itself.
+  blockers:
+    - id: 1
+      title: the TRANSIENT_OR_MINOR_DOWNREGULATION SUPPORTING-vs-CONTEXTUAL branch had no machine-readable fact
+      resolution: >-
+        added residual_target_presence_status in {PRESENT, UNRESOLVED} + an
+        auditable residual_target_presence_basis as a typed upstream
+        classification-driving study_context field. Frozen mapping:
+        TRANSIENT_OR_MINOR_DOWNREGULATION + PRESENT + auditable basis ->
+        SUPPORTS_PERSISTENCE; + UNRESOLVED -> NONDIRECTIONAL / CONTEXTUAL. The
+        branch is decided ONLY by this field, never by free-text parsing; the
+        provider still emits only the fact; the field enters PR E10's exact
+        canonical EP reuse identity parity; no numeric threshold is introduced.
+        Contract items 06 / 11 / 13 / 15; drawing rows 6 / 11 / 13 + the
+        normalized-observation conceptual shape; 5 new tests.
+    - id: 2
+      title: bare context_id / context_ids collided with the canonical Instantiation context_id (identity namespace)
+      resolution: >-
+        renamed the LOCAL evidence-context namespace only -- the normalized
+        observation's context_id / context_ids -> persistence_context_id /
+        persistence_context_ids; the completion's qualifying_direct_context_ids /
+        qualifying_indirect_context_ids ->
+        qualifying_direct_persistence_context_ids /
+        qualifying_indirect_persistence_context_ids; fatal_review.context_ids ->
+        persistence_context_ids. Canonical context_id (CTX-CRC-REFRACTORY-MCRC,
+        items 10 / 12 identity pins) is unchanged. A new item-09
+        persistence_context_id_namespace note + an item-13 HARD
+        identity-namespace check state they must never be collapsed. Contract
+        items 09 / 11 / 12 / 13 / 14; drawing rows 9 / 11 / 12 / 13 + the
+        conceptual shape + the ClinicalPersistenceCompletion field list; 2 new
+        tests (+ canonical-pin regression test).
+    - id: 3
+      title: protein_measurement_validation_status was DIRECT-driving but its enum / predicate was not frozen
+      resolution: >-
+        froze protein_measurement_validation_status as a CLOSED enum {QUALIFIED,
+        NOT_ESTABLISHED} while assay_method stays an OPEN factual type. Rules --
+        QUALIFIED requires a non-empty auditable
+        protein_measurement_validation_basis; DIRECT requires
+        protein_measurement_validation_status == QUALIFIED; NOT_ESTABLISHED can
+        never reach DIRECT. Still not a closed assay whitelist -- a reliable
+        protein method outside validated IHC / quantitative proteomics /
+        validated multiplex IF is not auto-downgraded, but it still needs
+        QUALIFIED + an auditable basis to drive DIRECT. Contract item 05 (new
+        protein_measurement_validation_predicate block) + items 09 / 11 / 13;
+        drawing rows 5 / 11 / 13 + the conceptual shape; 2 new tests.
+  also_fixed: >-
+    a pre-existing YAML colon-space bug in migration.spec_refs[5] ("... for
+    MOD-TGT03: canonical target identity ...") that silently parsed the list
+    element as a one-key mapping -- reworded to "... for MOD-TGT03 -- canonical
+    target identity ...".
+  github_review_state: >-
+    not written -- the GitHub connector returned 403 Resource not accessible by
+    integration again; the AI审核方案 conversation is authoritative.
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt03_module_construction_contract.py' -v

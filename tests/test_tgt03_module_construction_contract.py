@@ -318,6 +318,38 @@ class Correction1TransientMinorSupportsPersistenceTests(unittest.TestCase):
         checks = _flatten(self.item["13_machine_acceptance_criteria"]["a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"])
         self.assertIn("transient_or_minor_downregulation observation is never scored contradicting and never contributes to the fatal_review", checks)
 
+    def test_residual_target_presence_status_is_the_typed_branch_fact(self):
+        # ROUND 1 Blocker 1: the SUPPORTING-vs-CONTEXTUAL split for a transient /
+        # minor down-regulation is a typed upstream fact, not free-text parsing.
+        i06 = self.item["06_direction_interpretation"]
+        k = _norm(i06["residual_target_presence_status_is_the_transient_minor_branch_fact"])
+        self.assertIn("residual_target_presence_status in {present, unresolved}", k)
+        self.assertIn("auditable residual_target_presence_basis", k)
+        self.assertIn("not decided by free-text parsing", k)
+        self.assertIn("present means the qualified observation itself establishes that target expression remains present", k)
+        self.assertIn("unresolved means the observation is itself ambiguous", k)
+        self.assertIn("the provider emits only the fact -- never supports_persistence, never a direction", k)
+        self.assertIn("exact-reuse identity parity", k)
+        self.assertIn("no numeric threshold is introduced", k)
+
+    def test_transient_minor_mapping_routes_on_the_typed_field(self):
+        m = _norm(self.item["06_direction_interpretation"]["persistence_pattern_to_support_mapping"]["TRANSIENT_OR_MINOR_DOWNREGULATION"])
+        self.assertIn("residual_target_presence_status == present", m)
+        self.assertIn("residual_target_presence_status == unresolved", m)
+        self.assertIn("decided only by this typed field, never by free-text semantic parsing", m)
+
+    def test_item13_transient_minor_branch_is_deterministic_and_hard_on_drift(self):
+        checks = _flatten(self.item["13_machine_acceptance_criteria"]["a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"])
+        self.assertIn("residual_target_presence_status in {present, unresolved}", checks)
+        self.assertIn("residual_target_presence_status == present routes it to supporting (retention), == unresolved routes it to contextual", checks)
+        self.assertIn("no free-text semantic parsing", checks)
+        self.assertIn("part of the exact canonical ep reuse parity", checks)
+
+    def test_upstream_qualification_now_names_the_residual_field(self):
+        p = _norm(self.item["06_direction_interpretation"]["persistence_pattern_is_upstream_qualified"])
+        self.assertIn("residual_target_presence_status in {present, unresolved}", p)
+        self.assertIn("hard integrity failure", p)
+
 
 class Correction2ReproducibleIsTwoRoutesTests(unittest.TestCase):
     def setUp(self):
@@ -383,6 +415,29 @@ class Correction3DirectIsNotAClosedWhitelistTests(unittest.TestCase):
         )
         self.assertIn("direct is not gated on a closed three-assay whitelist", checks)
         self.assertIn("protein_measurement_validation_status", checks)
+
+    def test_protein_measurement_validation_predicate_is_frozen(self):
+        # ROUND 1 Blocker 3: the assay vocabulary stays open, but the
+        # measurement-validation predicate that drives DIRECT is a closed enum.
+        pred = self.i05["protein_measurement_validation_predicate"]
+        self.assertEqual(pred["protein_measurement_validation_status_enum"], ["QUALIFIED", "NOT_ESTABLISHED"])
+        rules = _norm(" ".join(pred["rules"]))
+        self.assertIn("qualified requires a non-empty auditable protein_measurement_validation_basis", rules)
+        self.assertIn("direct requires protein_measurement_validation_status == qualified", rules)
+        self.assertIn("not_established can never reach direct", rules)
+        self.assertIn("not a closed assay whitelist", rules)
+        self.assertIn("assay vocabulary stays open", _norm(pred["note"]))
+        self.assertIn("only protein_measurement_validation_status is a closed enum", _norm(pred["note"]))
+
+    def test_item13_closes_the_validation_predicate_too(self):
+        checks = _flatten(
+            yaml.safe_load(CONTRACT.read_text())["acceptance_checklist"]["13_machine_acceptance_criteria"]
+            ["a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"]
+        )
+        self.assertIn("protein_measurement_validation_status is in {qualified, not_established}", checks)
+        self.assertIn("direct requires protein_measurement_validation_status == qualified", checks)
+        self.assertIn("not_established can never reach direct", checks)
+        self.assertIn("assay_method vocabulary stays open", checks)
 
 
 class Correction4EpMayStateEmpiricalFactTests(unittest.TestCase):
@@ -502,6 +557,36 @@ class RuntimeGeneInheritanceTests(unittest.TestCase):
         self.assertIn("reused ep's own provenance source_type / source_identifier / locator must still equal the resolved canonical sourceindex", i11)
         self.assertIn("must survive the shared (source_id, claim) dedup", i11)
         self.assertIn("kind / fact-specific study_context", i11)
+
+    def test_local_persistence_context_namespace_is_separate_from_canonical(self):
+        # ROUND 1 Blocker 2: the per-observation / completion / fatal_review
+        # evidence-context identity is a LOCAL namespace, never the canonical
+        # Instantiation context_id.
+        i09 = _flatten(self.item["09_evidence_source_plan"])
+        self.assertIn("qualifying_direct_persistence_context_ids", i09)
+        self.assertIn("qualifying_indirect_persistence_context_ids", i09)
+        ns = _norm(self.item["09_evidence_source_plan"]["persistence_search_landscape"]["persistence_context_id_namespace"])
+        self.assertIn("local evidence-context identities", ns)
+        self.assertIn("separate namespace from the canonical instantiation context_id (ctx-crc-refractory-mcrc", ns)
+        self.assertIn("must never be collapsed onto it", ns)
+
+        i11 = _flatten(self.item["11_evidencepackage_output_contract"])
+        self.assertIn("persistence_context_id / persistence_context_ids", i11)
+        self.assertIn("deliberately not the canonical instantiation context_id (ctx-crc-refractory-mcrc)", i11)
+        self.assertIn("never collapse a persistence_context_id onto the canonical context_id", i11)
+
+        fr_fields = _norm(" ".join(self.item["12_assessment_proposal_envelope_contract"]["fatal_review"]["fields"]))
+        self.assertIn("persistence_context_ids", fr_fields)
+
+        checks = _flatten(self.item["13_machine_acceptance_criteria"]["a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"])
+        self.assertIn("collapses a persistence_context_id onto the canonical context_id is a hard identity-namespace failure", checks)
+
+    def test_canonical_context_id_pin_is_untouched(self):
+        # the canonical Instantiation context_id must still be pinned in items 10 and 12.
+        i10 = _flatten(self.item["10_input_contract"])
+        self.assertIn("ctx-crc-refractory-mcrc", i10)
+        pins = _norm(" ".join(self.item["12_assessment_proposal_envelope_contract"]["the_proposal_envelope_carries"]["identity_pins_for_deterministic_canonicalisation"]))
+        self.assertIn("context_id (ctx-crc-refractory-mcrc)", pins)
 
     def test_item13_whole_run_reject_never_degraded_to_unknown(self):
         on_fail = _norm(self.item["13_machine_acceptance_criteria"]["on_failure"])

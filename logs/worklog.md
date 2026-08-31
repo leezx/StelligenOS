@@ -5688,3 +5688,59 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   TGT-04 → 06 → 07 属后续 PR。`MIGRATION_PENDING` 保持。
 - Next：开 PR、CI 绿后回 `AI审核方案` 贴 E9 review。下一步 PR E10 =
   MOD-TGT03@1.0.0 实现需各自 go-ahead。
+
+---
+
+## 2026-08-30 — Runtime Migration PR E9 · ChatGPT AI审核方案 review round 1 (REQUEST_CHANGES)
+
+- 审核结果：**REQUEST_CHANGES** @ `23e1b7e`（"Worked for 5m 4s"）。整体架构全部接受
+  —— PR D parity、17-item template、item-04 exact-union parity、inference guard、
+  design-only boundary、Route A / Route B reproducibility、open DIRECT assay set、
+  `ClinicalPersistenceCompletion`、E8 runtime genes、binding 仍 `0.0.0`、
+  `MIGRATION_PENDING` 均无问题。仅 **3 个窄 contract-shape blocker**，都不是重开
+  science，而是把自然语言语义压成 E10 可无歧义消费的 typed fact。
+- **Blocker 1 —— TRANSIENT_OR_MINOR_DOWNREGULATION 的 SUPPORTING / CONTEXTUAL
+  分支缺机器可读事实**：新增 typed upstream field
+  `residual_target_presence_status ∈ {PRESENT, UNRESOLVED}` +
+  `residual_target_presence_basis`。冻结映射：`TRANSIENT_OR_MINOR_DOWNREGULATION`
+  + `PRESENT` + auditable basis → `SUPPORTS_PERSISTENCE`；+ `UNRESOLVED` →
+  `NONDIRECTIONAL / CONTEXTUAL`。分支只由该字段决定，永不 free-text parsing；
+  provider 仍只出事实；字段进入 E10 exact canonical EP reuse identity parity；
+  不引入 numeric threshold。合同 items 06 / 11 / 13 / 15；drawing 行 6 / 11 / 13
+  + normalized-observation conceptual shape；+5 tests。
+- **Blocker 2 —— 裸 `context_id` / `context_ids` 与 canonical Instantiation
+  `context_id` 撞命名空间**：只重命名 LOCAL evidence-context namespace ——
+  normalized observation `context_id` / `context_ids` →
+  `persistence_context_id` / `persistence_context_ids`；completion
+  `qualifying_direct_context_ids` / `qualifying_indirect_context_ids` →
+  `qualifying_direct_persistence_context_ids` /
+  `qualifying_indirect_persistence_context_ids`；`fatal_review.context_ids` →
+  `persistence_context_ids`。canonical `context_id`（`CTX-CRC-REFRACTORY-MCRC`，
+  items 10 / 12 identity pins）不动。新增 item-09 `persistence_context_id_namespace`
+  说明 + item-13 HARD identity-namespace check：永不 collapse 到 canonical。
+  合同 items 09 / 11 / 12 / 13 / 14；drawing 行 9 / 11 / 12 / 13 + conceptual
+  shape + `ClinicalPersistenceCompletion` 字段表；+2 tests（+1 canonical-pin
+  regression）。
+- **Blocker 3 —— `protein_measurement_validation_status` 是 DIRECT-driving 但
+  enum / predicate 未冻结**：冻结为 CLOSED enum `{QUALIFIED, NOT_ESTABLISHED}`，
+  `assay_method` 仍是 OPEN factual type。规则 —— `QUALIFIED` 需非空 auditable
+  `protein_measurement_validation_basis`；DIRECT 需
+  `protein_measurement_validation_status == QUALIFIED`；`NOT_ESTABLISHED` 永不
+  到 DIRECT。仍非 closed assay whitelist —— 三种以外的可靠 protein method 不
+  auto-downgrade，但仍需 `QUALIFIED` + auditable basis 才驱动 DIRECT。合同 item
+  05（新 `protein_measurement_validation_predicate` 块）+ items 09 / 11 / 13；
+  drawing 行 5 / 11 / 13 + conceptual shape；+2 tests。
+- 顺带修一个既有 YAML colon-space bug：`migration.spec_refs[5]`（"... for
+  MOD-TGT03: canonical target identity ..."）本被 `yaml.safe_load` 误解析成
+  单键 mapping —— 改为 "... for MOD-TGT03 -- canonical target identity ..."。
+- GitHub review state：连接器再次 403 Resource not accessible by integration，
+  `AI审核方案` 对话为准，未回写。
+- 验证：`tests/test_tgt03_module_construction_contract.py` **74 OK**（66 + 8）；
+  全量 **1282 OK**（round-1 提交时 1274）；`bash scripts/verify_repository_boundary.sh`
+  仅报既有 untracked 杂项；`git diff --check` clean；合同 + manifest YAML 合法且
+  无 list-element-parsed-as-dict。
+- 状态：manifest `review_rounds: 1`、`status: pending_review`、`review_round_1`
+  块已写。MOD-TGT03 `primary_module_version` 仍 `0.0.0`；`MIGRATION_PENDING`
+  保持。
+- Next：commit + push `task_20260830_runtime-migration-pr-e9`；CI 绿后回
+  `AI审核方案` 贴 round-2 回复。
