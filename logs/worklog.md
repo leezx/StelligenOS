@@ -5800,3 +5800,65 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   已实现 4 个（TGT-01/05/08/02 @ 1.0.0）。MOD-TGT03 `primary_module_version` 仍
   `0.0.0`；`MIGRATION_PENDING` 保持。TGT-04 → 06 → 07 属后续 PR。
 - Next：PR E10 = MOD-TGT03@1.0.0 deterministic implementation，需各自 go-ahead。
+
+---
+
+## 2026-08-30 — Runtime Migration PR E10 · MOD-TGT03@1.0.0 实现（build）
+
+- 授权：用户在 PR E9 收口后 "go on"。开工前 ChatGPT `AI审核方案` 给
+  **APPROVE-to-proceed**（E10-1…E10-8 正确，5 个实现级收紧），冻结为 MOD-TGT03@1.0.0
+  deterministic implementation。
+- 新增 `gate_modules/tgt03_treatment_metastatic_persistence/`（11 文件确定性核心，
+  严格实现冻结的 E9 施工合同）：
+  - `contracts.py` —— 3 条 headline invariant 顶置；`NormalizedPersistenceObservation`
+    （normalized upstream facts；`assay_method` OPEN，`protein_measurement_validation_status`
+    CLOSED `{QUALIFIED, NOT_ESTABLISHED}`；`residual_target_presence_status`
+    typed branch fact；LOCAL `persistence_context_id(s)`；audit snapshot 字段名 =
+    typed completion 字段名）；`ClassifiedPersistenceObservation`；
+    `FatalReviewRecord`（Route A / Route B，required iff status
+    POTENTIAL_FATAL_PATTERN，Route B 单 context 需 Route A basis）；
+    `AssessmentProposalEnvelope`（canonical context_id pin，legal Direction×Strength，
+    无 INCONCLUSIVE/WEAK）；`Tgt03ModuleRunResult`；`pattern_to_implication`。
+  - `completion.py` —— `ClinicalPersistenceCompletion` + 3 HARD invariant
+    （completeness consistency / audit presence + snapshot parity / qualifying
+    persistence-context-set parity）；`PersistenceUnresolvedItem`。
+  - `classify.py` —— DIRECT 需 clinical protein kind + PROTEIN layer +
+    `protein_measurement_validation_status==QUALIFIED` + `context_adequacy_status==QUALIFIED`
+    + `clinical_context` 匹配 kind + `malignant_cell_attribution==MALIGNANT`；
+    `assay_method` 不做 whitelist；transcript / resistance model 永远
+    INDIRECT_STRONG（即使测蛋白）；treatment-naive / different-tumor 永远 WEAK。
+  - `aggregate.py` —— precedence 0/1/2/3；Strength = 最强 qualifying class
+    （无 two/four-axis）；四 component flat bool；conflict 除非 explicit typed
+    multi-context MIXED characterization → graded INCONCLUSIVE；WEAK-only →
+    INCONCLUSIVE/UNKNOWN；narrow EXPERIMENT_REQUIRED。
+  - `fatal_review.py` —— 消费已分类证据（rung DIRECT + OPPOSES_PERSISTENCE +
+    NEAR_LOSS_OR_MARKED_LOSS）；Route A 永不解析 basis 文字；Route B `>= 2`
+    persistence-context identity（明确不是 "> 2"）。
+  - `evidence.py` —— Gate-neutral PR A EP + exact canonical reuse；**TGT-03
+    dedup deviation** —— 只有 source_id + claim + 所有 driving fact + LOCAL
+    persistence-context identity 全一致才 drop；persistence-context 差异 → 两个
+    都保留；audit EP 永不 dedup loser。
+  - `acceptance.py` —— E9 item 13/10/11/12/16 可执行检查 + 禁 item-17 跨 Gate /
+    Decision。`module.py` —— pure `run()`，只调 injected port。
+  - `ports.py`（`Tgt03PersistenceProviderPort` + 包自声明其余三个）；`module.yaml`；
+    `__init__.py`。**包内无 `normalizer.py`**。
+- binding / registry reconciliation（最小集）：
+  `src/objects/crc_adc_target_gateset.py`（`BUILT_MODULE_VERSIONS` 增 `TGT-03: 1.0.0`）、
+  `src/contracts/crc_adc_target_gateset.yaml`（TGT-03 binding `0.0.0→1.0.0` +
+  `built_module_versions` 增 TGT-03）、`gate_modules/README.md`（MOD-TGT03 注册为
+  built PR E10）。
+- 测试：`tests/test_tgt03_module.py`（78 tests）；
+  `tests/test_tgt03_module_construction_contract.py` 的 `NoImplementationInPrE9Tests`
+  迁成 `ContractIsFrozenAndImplementedInPrE10Tests`（包存在 / binding 1.0.0 /
+  合同仍冻结）；`tests/test_gate_modules_boundary.py` 增 `Tgt03ModuleManifestTests`
+  （5 tests）；最窄同步 `test_crc_adc_target_gateset.py` /
+  `test_tgt02/05/08_module*.py` 的 hard-code built roster（仅同步被 TGT-03
+  unbuilt→built 客观证伪的断言）。
+- 验证：`tests/test_tgt03_module.py` **78 OK**、
+  `tests/test_tgt03_module_construction_contract.py` **75 OK**；全量 **1366 OK**
+  （PR E9 收口 1283）；`bash scripts/verify_repository_boundary.sh` 仅报既有
+  untracked 杂项；`git diff --check` clean；无 bytecode。
+- 状态：8 个 primary Module 实现 5 个（TGT-01/02/03/05/08 @ 1.0.0）。MOD-TGT03
+  `primary_module_version` = `1.0.0`；`MIGRATION_PENDING` 保持。
+- Next：开 PR、CI 绿后回 `AI审核方案` 贴 E10 review。TGT-04 → TGT-06 → TGT-07 各
+  需 go-ahead。

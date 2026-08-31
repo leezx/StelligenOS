@@ -633,7 +633,12 @@ class RuntimeGeneInheritanceTests(unittest.TestCase):
         self.assertIn("tgt-03 never discharges tgt-04", cons)
 
 
-class NoImplementationInPrE9Tests(unittest.TestCase):
+class ContractIsFrozenAndImplementedInPrE10Tests(unittest.TestCase):
+    """The E9 construction contract is design-only and stays frozen. The
+    implementation package it deferred is now built by PR E10, so the repository
+    state -- the package exists and the TGT-03 binding is 1.0.0 -- reconciles
+    with what the contract said would happen."""
+
     def setUp(self):
         self.doc = yaml.safe_load(CONTRACT.read_text())
 
@@ -653,17 +658,21 @@ class NoImplementationInPrE9Tests(unittest.TestCase):
         self.assertEqual(p["only_allowed_existing_file_mutation"], "append_to_logs_worklog_md")
         self.assertEqual(p["migration_pending"], "remains")
 
-    def test_no_tgt03_implementation_package_exists_yet(self):
+    def test_tgt03_implementation_package_now_exists_post_e10(self):
         pkg = ROOT / "gate_modules" / "tgt03_treatment_metastatic_persistence"
-        self.assertFalse(pkg.exists(), "PR E9 is design-only; the package is PR E10")
+        self.assertTrue(pkg.is_dir(), "PR E10 builds the deferred implementation package")
+        for f in ("__init__.py", "module.yaml", "contracts.py", "ports.py",
+                  "classify.py", "evidence.py", "aggregate.py", "completion.py",
+                  "fatal_review.py", "acceptance.py", "module.py"):
+            self.assertTrue((pkg / f).is_file(), f)
 
-    def test_tgt03_binding_is_still_zero_and_the_built_four_are_untouched(self):
+    def test_tgt03_binding_is_now_one_zero_zero_and_the_others_untouched(self):
         gs = yaml.safe_load(CRC_GATESET.read_text())
         by_gate = {
             b["gate_id"]: b["primary_module_version"]
             for b in gs["context_specific_bindings"]["gate_bindings"]
         }
-        self.assertEqual(by_gate["TGT-03"], "0.0.0")
+        self.assertEqual(by_gate["TGT-03"], "1.0.0")
         self.assertEqual(by_gate["TGT-01"], "1.0.0")
         self.assertEqual(by_gate["TGT-02"], "1.0.0")
         self.assertEqual(by_gate["TGT-05"], "1.0.0")
@@ -678,12 +687,13 @@ class NoImplementationInPrE9Tests(unittest.TestCase):
         self.assertIn("1.0.0", joined)
         self.assertIn("binding / registry reconciliation", joined)
 
-    def test_only_the_four_built_packages_plus_no_tgt03_dir(self):
+    def test_only_the_built_per_gate_packages_exist_under_gate_modules(self):
         gm = ROOT / "gate_modules"
         py_files = sorted(str(p.relative_to(ROOT)) for p in gm.rglob("*.py"))
         allowed = (
             "tgt01_adc_modality_precedent",
             "tgt02_indication_specific_malignant_cell_coverage",
+            "tgt03_treatment_metastatic_persistence",
             "tgt05_normal_tissue_fatal_liability",
             "tgt08_target_opportunity_competition_ip_whitespace",
         )

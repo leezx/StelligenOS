@@ -246,10 +246,12 @@ class BindingParityTests(unittest.TestCase):
 
 #: gate_id -> the primary_module_version once its Module is built. PR D left
 #: every gate at "0.0.0"; Runtime Migration PR E2 built MOD-TGT01, PR E4 built
-#: MOD-TGT05, PR E6 built MOD-TGT08, and PR E8 built MOD-TGT02.
+#: MOD-TGT05, PR E6 built MOD-TGT08, PR E8 built MOD-TGT02, and PR E10 built
+#: MOD-TGT03.
 _BUILT_MODULE_VERSIONS = {
     "TGT-01": "1.0.0",
     "TGT-02": "1.0.0",
+    "TGT-03": "1.0.0",
     "TGT-05": "1.0.0",
     "TGT-08": "1.0.0",
 }
