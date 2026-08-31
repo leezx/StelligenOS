@@ -295,20 +295,26 @@ class ExistenceProofAndHighestRungGradingTests(unittest.TestCase):
 
     def test_aggregation_truth_table(self):
         tt = self.i06["tgt06_specific_aggregation_truth_table"]
-        self.assertIn("positive / direct", _norm(tt["completed_and_at_least_one_qualifying_direct_productive_configuration"]))
-        self.assertIn("positive / indirect_strong", _norm(tt["completed_and_no_direct_and_at_least_one_qualifying_positive_indirect_strong"]))
-        one_fail = _norm(tt["completed_and_exactly_one_independent_direct_quality_failure_configuration_and_no_productive_direct"])
+        self.assertIn("positive / direct", _norm(tt["completed_and_at_least_one_clean_productive_direct_configuration"]))
+        self.assertIn("positive / indirect_strong", _norm(tt["completed_and_no_direct_rung_observation_and_at_least_one_qualifying_positive_indirect_strong"]))
+        one_fail = _norm(tt["completed_and_no_productive_direct_and_exactly_one_independent_direct_quality_failure_configuration"])
         self.assertIn("inconclusive / direct", one_fail)
         self.assertIn("a single non-internalizing configuration never establishes target-wide non-internalization", one_fail)
-        two_fail = _norm(tt["completed_and_at_least_two_independent_direct_quality_failure_configurations_and_no_productive_direct"])
+        two_fail = _norm(tt["completed_and_no_productive_direct_and_at_least_two_independent_direct_quality_failure_configurations"])
         self.assertIn("negative / direct", two_fail)
-        self.assertIn("conflicting / direct", _norm(tt["same_configuration_genuinely_incompatible_productive_vs_failure_direct_quality_claims_unresolved"]))
+        self.assertIn("conflicting / direct", _norm(tt["completed_and_no_clean_productive_direct_and_a_same_configuration_has_unresolved_productive_vs_failure_direct_quality_claims"]))
         self.assertIn("inconclusive / unknown", _norm(tt["completed_and_weak_only_or_no_qualifying_evidence"]))
+        # PR E13 review round-1 gene: a frozen ordered evaluation
+        order = _norm(tt["frozen_evaluation_order"])
+        self.assertIn("stops at the first match", order)
+        self.assertIn("if at least one clean / uncontested productive direct configuration exists -> positive / direct", order)
+        self.assertIn("a conflicted configuration a plus a clean productive configuration b is still positive / direct", order)
 
     def test_existence_proof_dominance(self):
         d = _norm(self.i06["existence_proof_dominance"])
-        self.assertIn("a positive existence proof dominates heterogeneous configuration failures", d)
+        self.assertIn("a clean / uncontested positive existence proof dominates heterogeneous configuration failures and a conflicted configuration elsewhere", d)
         self.assertIn("the gate answer is positive / direct -- not negative and not automatically conflicting", d)
+        self.assertIn("if configuration a is itself conflicted (an unresolved productive-vs-failure pair) but a different configuration b is a clean productive direct configuration, the gate answer is still positive / direct", d)
         self.assertIn("never reverse the target-level addressability conclusion", d)
 
     def test_different_configurations_differ_is_not_a_conflict(self):
@@ -350,10 +356,15 @@ class ExistenceProofAndHighestRungGradingTests(unittest.TestCase):
 
     def test_configuration_identity_single_vs_multi(self):
         c = _norm(self.i06["configuration_identity_single_vs_multi"])
-        self.assertIn("declared_multi_configuration_analysis flag is the tgt-03 / tgt-04 single-vs-multi identity pattern", c)
-        self.assertIn("flag == false -> a single-configuration observation", c)
+        self.assertIn("one of exactly three frozen identity states", c)
+        self.assertIn("(1) single --", c)
+        self.assertIn("(2) identified_multi --", c)
+        self.assertIn("(3) identity_not_disclosed_or_not_applicable --", c)
         self.assertIn("len(unique(internalization_configuration_ids)) >= 2", c)
-        self.assertIn("do not lose indirect_strong authority for lack of an antibody / epitope / configuration disclosure", c)
+        self.assertIn("any direct-quality observation", c)
+        self.assertIn("must be single or identified_multi", c)
+        self.assertIn("a direct-quality observation in the identity_not_disclosed_or_not_applicable state is a hard integrity failure", c)
+        self.assertIn("never loses indirect_strong authority for being in the identity_not_disclosed_or_not_applicable state", c)
         self.assertIn('e14 must never assert "every qualifying indirect_strong observation has an internalization_configuration_id"', c)
 
 
@@ -557,9 +568,10 @@ class RuntimeGeneInheritanceTests(unittest.TestCase):
         # local configuration namespace never the canonical context_id
         self.assertIn("the local configuration namespace", checks)
         self.assertIn("collapses an internalization_configuration_id onto the canonical context_id is a hard identity-namespace failure", checks)
-        # single-vs-multi identity consistency
-        self.assertIn("declared_multi_configuration_analysis == false requires internalization_configuration_id != \"\" and internalization_configuration_ids == ()", checks)
-        self.assertIn("declared_multi_configuration_analysis == true requires internalization_configuration_id == \"\" and len(unique(internalization_configuration_ids)) >= 2", checks)
+        # single-vs-multi identity consistency (three frozen states)
+        self.assertIn("the configuration identity is exactly one of the three frozen states", checks)
+        self.assertIn("identity_not_disclosed_or_not_applicable is permitted only for a non-direct-quality observation kind", checks)
+        self.assertIn("any direct-quality observation (productive direct or direct-quality failure) in the identity_not_disclosed_or_not_applicable state is a hard integrity failure", checks)
         # every qualified status carries an auditable basis
         self.assertIn("every classification-driving qualified status carries an auditable basis", checks)
         # closed validation enum + non-empty assay_method for DIRECT
@@ -646,12 +658,13 @@ class ScopingRulingRegressionTests(unittest.TestCase):
     # ---- freeze point 3: one DIRECT failure -> INCONCLUSIVE, not NEGATIVE --
     def test_one_direct_failure_is_inconclusive_not_negative(self):
         tt = self.i06["tgt06_specific_aggregation_truth_table"]
-        self.assertIn("inconclusive / direct", _norm(tt["completed_and_exactly_one_independent_direct_quality_failure_configuration_and_no_productive_direct"]))
-        self.assertIn("pr d forbidden_inference", _norm(tt["completed_and_exactly_one_independent_direct_quality_failure_configuration_and_no_productive_direct"]))
+        row = _norm(tt["completed_and_no_productive_direct_and_exactly_one_independent_direct_quality_failure_configuration"])
+        self.assertIn("inconclusive / direct", row)
+        self.assertIn("pr d forbidden_inference", row)
 
     # ---- freeze point 4: NEGATIVE / fatal need multiple independent configs -
     def test_negative_and_fatal_need_multiple_independent_configurations(self):
-        tt = _norm(self.i06["tgt06_specific_aggregation_truth_table"]["completed_and_at_least_two_independent_direct_quality_failure_configurations_and_no_productive_direct"])
+        tt = _norm(self.i06["tgt06_specific_aggregation_truth_table"]["completed_and_no_productive_direct_and_at_least_two_independent_direct_quality_failure_configurations"])
         self.assertIn("negative / direct", tt)
         neg_def = _norm(self.i06["direction_definitions"]["NEGATIVE"])
         self.assertIn("at least two independent qualified antibody / epitope configurations", neg_def)
@@ -707,6 +720,93 @@ class ScopingRulingRegressionTests(unittest.TestCase):
             self.assertIn(member, d)
         i06 = _norm(self.i06["tgt06_specific_aggregation_truth_table"]["note"])
         self.assertIn("fails_productive_internalization_or_trafficking", i06)
+
+
+class ReviewRound1RegressionTests(unittest.TestCase):
+    """PR E13 ChatGPT AI审核方案 review round 1 -- the 4 narrow construction-contract
+    blockers.
+
+    (1) declared_multi_configuration_analysis identity shape was self-contradictory
+        -- a constitutive-endocytosis / same-target-ADC-precedent / inference /
+        audit / non-CRC-without-disclosed-config observation must be valid with NO
+        configuration id. Now THREE frozen identity states, with
+        IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE permitted only for a
+        non-DIRECT-quality observation kind.
+    (2) the aggregation truth table had no frozen evaluation ORDER -- now a
+        stop-at-first-match ordered algorithm; a clean productive DIRECT
+        configuration dominates a conflicted configuration elsewhere.
+    (3) item 03 tgt06_framing.answers mis-wrote the whole Gate as a DIRECT
+        existence-proof question -- now the Gate question is distinct from the
+        DIRECT ceiling.
+    (4) TRAFFICKING_OR_RECYCLING_ONLY was an observation kind with no failure /
+        fatal authority -- now an ASYMMETRIC authority: positive at most
+        INDIRECT_STRONG, negative a DIRECT-quality failure that participates in
+        the truth table and Route A / Route B fatal.
+    """
+
+    def setUp(self):
+        self.item = yaml.safe_load(CONTRACT.read_text())["acceptance_checklist"]
+        self.i06 = self.item["06_direction_interpretation"]
+        self.checks = _flatten(
+            self.item["13_machine_acceptance_criteria"][
+                "a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"
+            ]
+        )
+
+    # ---- blocker 1 -------------------------------------------------------------
+    def test_three_frozen_configuration_identity_states(self):
+        c = _norm(self.i06["configuration_identity_single_vs_multi"])
+        self.assertIn("(1) single -- declared_multi_configuration_analysis == false and internalization_configuration_id != \"\" and internalization_configuration_ids == () and configuration_identity_basis != \"\"", c)
+        self.assertIn("(2) identified_multi -- declared_multi_configuration_analysis == true and internalization_configuration_id == \"\" and len(unique(internalization_configuration_ids)) >= 2 and configuration_identity_basis != \"\"", c)
+        self.assertIn("(3) identity_not_disclosed_or_not_applicable -- declared_multi_configuration_analysis == false and internalization_configuration_id == \"\" and internalization_configuration_ids == ()", c)
+        self.assertIn("permitted only for a non-direct-quality observation", c)
+        self.assertIn("a constitutive_endocytosis_or_receptor_biology observation, a same_target_adc_delivery_precedent observation", c)
+        self.assertIn("any direct-quality observation", c)
+        self.assertIn("must be single or identified_multi", c)
+
+    def test_receptor_biology_and_precedent_without_config_id_are_valid(self):
+        c = _norm(self.i06["configuration_identity_single_vs_multi"])
+        self.assertIn("a constitutive_endocytosis_or_receptor_biology / same_target_adc_delivery_precedent observation never loses indirect_strong authority for being in the identity_not_disclosed_or_not_applicable state", c)
+
+    # ---- blocker 2 -----------------------------------------------------------
+    def test_frozen_evaluation_order(self):
+        order = _norm(self.i06["tgt06_specific_aggregation_truth_table"]["frozen_evaluation_order"])
+        self.assertIn("in this exact order and stops at the first match", order)
+        # step 2 precedes step 3: a clean productive B beats a conflicted A
+        idx_clean = order.index("if at least one clean / uncontested productive direct configuration exists")
+        idx_conflict = order.index("if any single configuration has unresolved productive-vs-failure direct-quality claims")
+        self.assertLess(idx_clean, idx_conflict)
+        self.assertIn("a conflicted configuration a plus a clean productive configuration b is still positive / direct", order)
+        self.assertIn("a single non-internalizing configuration never establishes target-wide non-internalization", order)
+
+    def test_clean_productive_definition(self):
+        note = _norm(self.i06["tgt06_specific_aggregation_truth_table"]["note"])
+        self.assertIn('a "clean / uncontested productive direct configuration" is a configuration identity with at least one direct productive observation and no unresolved same-configuration opposing direct-quality failure claim', note)
+
+    # ---- blocker 3 -----------------------------------------------------------
+    def test_gate_question_is_not_the_direct_ceiling(self):
+        a = _norm(self.item["03_gate_question"]["tgt06_framing"]["answers"])
+        self.assertIn("whether admissible public evidence supports internalization / trafficking addressability of the target-antibody complex", a)
+        self.assertIn("the gate question is not identical to the direct ceiling", a)
+        self.assertIn("a completed landscape with qualifying indirect_strong addressability evidence and no direct configuration is still a real, graded answer (positive / indirect_strong)", a)
+
+    # ---- blocker 4 -----------------------------------------------------------
+    def test_trafficking_or_recycling_only_asymmetric_authority(self):
+        t = _norm(self.i06["trafficking_or_recycling_only_authority"])
+        self.assertIn("has asymmetric authority", t)
+        self.assertIn("positive direction -- lysosomal trafficking observed but no integrated same-configuration antibody-induced internalization proof -> at most indirect_strong / supporting; it can never synthesize a positive direct", t)
+        self.assertIn("is a direct-quality failure observation (maps to opposes_addressability)", t)
+        self.assertIn("it is an eligible fatal_review contributor (item 08)", t)
+
+    def test_trafficking_or_recycling_only_in_the_fatal_contributor_set(self):
+        crit = _flatten(self.item["08_fatal_conditions"]["machine_detection_criteria"]["each_contributing_observation_must_be"])
+        self.assertIn("observation_kind in {antibody_configuration_internalization_trafficking, antibody_configuration_internalization_only, trafficking_or_recycling_only}", crit)
+        self.assertIn("a trafficking_or_recycling_only observation is eligible only in its negative direction", crit)
+        self.assertIn("observation_kind in {antibody_configuration_internalization_trafficking, antibody_configuration_internalization_only, trafficking_or_recycling_only}", self.checks)
+
+    def test_positive_direct_still_requires_an_integrated_observation(self):
+        t = _norm(self.i06["trafficking_or_recycling_only_authority"])
+        self.assertIn("a positive direct contributor must still be an integrated same-configuration internalization + lysosomal delivery observation", t)
 
 
 class NoImplementationInPrE13Tests(unittest.TestCase):

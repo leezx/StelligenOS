@@ -363,11 +363,46 @@ repository_policy:
 chatgpt_review: pending
 approved_tip: null
 merge_commit: null
-review_rounds: 0
+review_rounds: 1
 test_count_before_e13: 1538       # at PR E12 approval
 test_count_at_submission: 1611    # local full suite (tests/test_tgt06_module_construction_contract.py 73)
+test_count_after_round_1: 1619    # +8 review-round-1 regression tests (tests/test_tgt06_module_construction_contract.py 81)
 approval_record_pr: null
 next_authorized_step: null        # PR E14 = MOD-TGT06@1.0.0 implementation -- needs its own go-ahead
+
+review_round_1:
+  verdict: REQUEST_CHANGES
+  reviewer: ChatGPT AI审核方案
+  head_reviewed: 1a199c2061cef225f25e34594113bf0c0c7f4b87
+  ci_confirmed: run 33425701116 -- verify (3.11) + verify (3.12) both success; unit tests + repository boundary + no-bytecode + working-tree checks all pass
+  summary: >-
+    main contract sound -- design-only boundary clean; PR D items 03/05/07/08
+    parity + item 04 exact-set parity; Option A; 6 legal pairs; existence-proof
+    aggregation; multi-configuration fatal; well-matched model fatal eligibility;
+    productive DIRECT cancels fatal; four completion axes; no indirect
+    configuration set; no-cross-observation synthesis; 8 observation kinds; no
+    dedicated raw-number parity branch -- all per scoping. Frozen PR D TGT-06
+    ladder / fatal supports the main framework. 4 narrow construction-contract
+    blockers, all fixed in E13.
+  blockers:
+    - "1. declared_multi_configuration_analysis identity shape was self-contradictory -- item 06 froze only SINGLE (flag=false + id!=\"\" + ids=()) and IDENTIFIED_MULTI (flag=true + id=\"\" + len(unique(ids))>=2), but E13-8 requires a constitutive-endocytosis / same-target-ADC-precedent / receptor-family-inference / surface-localization-inference / audit / non-CRC-internalization-without-disclosed-config observation to be valid with NO config id (flag=false + id=\"\" + ids=()). FIX: freeze THREE identity states -- SINGLE, IDENTIFIED_MULTI, IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE; the third is permitted ONLY for a non-DIRECT-quality observation kind; any DIRECT-quality observation (productive DIRECT or DIRECT-quality failure) in the third state is a HARD integrity failure. item 13 check updated. Tests lock: receptor biology + no config id -> valid; same-target ADC precedent + no config id -> valid; DIRECT-quality + no config id -> HARD."
+    - "2. the aggregation truth table had no frozen EVALUATION ORDER -- existence-proof dominance vs same-config CONFLICTING was unresolved. FIX: freeze frozen_evaluation_order, a stop-at-first-match ordered algorithm -- (1) group DIRECT-quality observations by configuration identity; (2) >=1 CLEAN / uncontested productive DIRECT configuration -> POSITIVE / DIRECT (a conflicted configuration A plus a clean productive configuration B is still POSITIVE / DIRECT -- B independently supplies the existence proof); (3) else a SINGLE configuration with unresolved productive-vs-failure DIRECT-quality claims -> CONFLICTING / DIRECT; (4) else >=2 independent DIRECT-quality failure configurations + no productive DIRECT -> NEGATIVE / DIRECT; (5) else exactly one -> INCONCLUSIVE / DIRECT; (6) else no DIRECT-rung + qualifying positive INDIRECT_STRONG -> POSITIVE / INDIRECT_STRONG; (7) else -> INCONCLUSIVE / UNKNOWN. 'clean productive' = a configuration identity with a DIRECT productive observation and no unresolved same-configuration opposing DIRECT-quality failure claim. Fatal keeps the conservative hard lock -- any qualifying productive DIRECT cancels the machine target-wide fatal trigger. Regression: A support + A oppose, no other productive config -> CONFLICTING / DIRECT; A support + A oppose + B clean productive -> POSITIVE / DIRECT; A productive + B fail + C fail -> POSITIVE / DIRECT."
+    - "3. item 03 tgt06_framing.answers mis-wrote the whole Gate as a DIRECT existence-proof question ('whether admissible public evidence provides an EXISTENCE PROOF that at least one tested antibody / epitope configuration ... achieves internalization WITH lysosomal delivery'), contradicting E13-3 (no DIRECT + qualifying INDIRECT_STRONG -> POSITIVE / INDIRECT_STRONG). FIX: rewrite answers so the Gate question ('whether admissible public evidence supports internalization / trafficking addressability of the target-antibody complex') is distinct from the DIRECT ceiling; consistent with the PR D ladder (IS = genuine strong support; DIRECT = a demonstrated disease-relevant configuration)."
+    - "4. TRAFFICKING_OR_RECYCLING_ONLY was made an observation kind but had no productive-trafficking-failure / fatal authority -- a real failure (antibody internalizes but the receptor rapidly recycles with no productive lysosomal trafficking) repeated across >=2 independent configurations is exactly PR D's 'fails productive ... trafficking'. FIX: freeze the ASYMMETRIC authority of TRAFFICKING_OR_RECYCLING_ONLY -- positive direction: at most INDIRECT_STRONG / supporting, never synthesizes a positive DIRECT (a positive DIRECT contributor must still be an integrated same-configuration internalization + lysosomal delivery observation); negative direction: a configuration-resolved, disease-relevant, assay_validation_status == QUALIFIED + non-empty assay_method, internalization_outcome == FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING observation IS a DIRECT-quality failure observation that participates in the truth table (1 independent -> INCONCLUSIVE / DIRECT; >=2 -> NEGATIVE / DIRECT) and Route A / Route B fatal, under the same no-productive-DIRECT global precondition. item 08 fatal-contributor observation_kind set and item 13 fatal check updated; item 09 source_authority_rules gains the rule."
+  do_not_change_confirmed:
+    - Option A; exactly 6 legal Direction x Strength pairs; POSITIVE / INDIRECT_STRONG authority; NEGATIVE / INDIRECT_STRONG forbidden
+    - one failure -> INCONCLUSIVE / DIRECT; >= 2 independent failures + no productive DIRECT -> NEGATIVE / DIRECT; different configurations behaving differently is not automatically conflict
+    - Route A itself must be multi-configuration; Route B >= 2 not > 2; WELL_MATCHED_CRC_MODEL can enter TGT-06 fatal; productive DIRECT cancels the machine fatal trigger
+    - four completion axes; no qualifying_indirect_configuration_ids; no cross-observation synthesis of positive DIRECT
+    - internalization_outcome keeps FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING; no dedicated TGT-04 raw-value parity branch; numeric assay values as a neutral factual claim but no threshold
+    - no PR D inference_guard; design-only boundary; MOD-TGT06 = 0.0.0; MIGRATION_PENDING remains
+  files_touched:
+    - src/contracts/gate_modules/tgt06_internalization_trafficking_addressability.yaml (item 03 answers; item 06 configuration_identity_single_vs_multi 3 states + tgt06_specific_aggregation_truth_table frozen_evaluation_order + existence_proof_dominance + trafficking_or_recycling_only_authority; item 08 fatal-contributor kinds; item 09 source_authority_rules; item 13 identity check + aggregation check + fatal check)
+    - docs/gate_modules/TGT-06_Internalization_Trafficking_Addressability.md (rows 3 and 6)
+    - tests/test_tgt06_module_construction_contract.py (73 -> 81; new ReviewRound1RegressionTests + updated key-name / phrasing assertions)
+    - manifests/runtime_migration_pr_e13_manifest.yaml (this block)
+    - logs/worklog.md (append)
+  test_count_after: 1619
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt06_module_construction_contract.py' -v

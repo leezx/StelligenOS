@@ -201,11 +201,17 @@ acceptance_checklist:
     rule: the Module quotes this verbatim and may not widen or narrow it
     tgt06_framing:
       answers: >-
-        whether admissible public evidence provides an EXISTENCE PROOF that at
-        least one tested antibody / epitope configuration against the target
-        achieves antibody-induced internalization WITH lysosomal delivery in a
-        disease-relevant context, on an audited internalization-evidence-search
-        landscape
+        whether admissible public evidence supports internalization / trafficking
+        addressability of the target-antibody complex, on an audited
+        internalization-evidence-search landscape. The Gate question is NOT
+        identical to the DIRECT ceiling -- the DIRECT ceiling requires an
+        auditable EXISTENCE PROOF that at least one disease-relevant
+        antibody / epitope configuration achieves antibody-induced internalization
+        WITH lysosomal delivery, but a completed landscape with qualifying
+        INDIRECT_STRONG addressability evidence and no DIRECT configuration is
+        still a real, graded answer (POSITIVE / INDIRECT_STRONG) per the frozen
+        PR D ladder, where INDIRECT_STRONG is genuine strong support and DIRECT is
+        a demonstrated disease-relevant configuration (PR E13 review round-1 gene)
       does_not_answer:
         - whether the target is on the cell surface at all (that is surface localization -- TGT-04 territory) or at an adequate density (that is TGT-04)
         - whether the target is adequately expressed on CRC malignant cells at the population level (that is TGT-02)
@@ -315,15 +321,21 @@ acceptance_checklist:
       CONFLICTING: for the SAME antibody / epitope configuration, qualifying DIRECT-quality observations make genuinely incompatible claims (productive internalization vs productive-internalization failure) and no auditable characterization resolves them
       INCONCLUSIVE: qualifying evidence does not resolve the addressability direction -- e.g. exactly one independent DIRECT-quality failure configuration with no qualifying productive DIRECT configuration (a single failure is FORBIDDEN by PR D from establishing target-wide non-internalization), OR only WEAK / no qualifying evidence on a completed landscape (per PR D unknown_behavior)
     existence_proof_dominance: >-
-      a POSITIVE existence proof DOMINATES heterogeneous configuration failures.
-      If configuration A shows productive antibody-induced internalization with
-      lysosomal delivery in a disease-relevant context AND configurations B and C
-      fail, the Gate answer is POSITIVE / DIRECT -- NOT NEGATIVE and NOT
+      a CLEAN / uncontested POSITIVE existence proof DOMINATES heterogeneous
+      configuration failures AND a conflicted configuration elsewhere. If
+      configuration A shows productive antibody-induced internalization with
+      lysosomal delivery in a disease-relevant context (and A has no unresolved
+      same-configuration opposing DIRECT-quality failure claim) AND configurations
+      B and C fail, the Gate answer is POSITIVE / DIRECT -- NOT NEGATIVE and NOT
       automatically CONFLICTING, because the Gate question ("is there an
-      addressable configuration") is already answered yes. The B / C failure
-      EvidencePackages are retained for binder design / epitope selection / human
-      review / downstream optimization; they never reverse the target-level
-      addressability conclusion.
+      addressable configuration") is already answered yes. Likewise, if
+      configuration A is itself conflicted (an unresolved productive-vs-failure
+      pair) but a DIFFERENT configuration B is a CLEAN productive DIRECT
+      configuration, the Gate answer is still POSITIVE / DIRECT -- B independently
+      supplies the existence proof (frozen_evaluation_order step 2 precedes step
+      3). The B / C failure EvidencePackages, and the A conflict, are retained for
+      binder design / epitope selection / human review / downstream optimization;
+      they never reverse the target-level addressability conclusion.
     different_configurations_differ_is_not_a_conflict: >-
       different antibody / epitope configurations showing different
       internalization behavior is NOT a CONFLICTING signal -- it is exactly what
@@ -345,18 +357,53 @@ acceptance_checklist:
       note: >-
         exactly ONE rule set -- E14 has no discretion. Evaluated only over a
         completed, audited internalization-evidence landscape (item 16). "DIRECT
-        productive configuration" means an observation classified DIRECT whose
-        internalization_outcome maps to SUPPORTS_ADDRESSABILITY;
-        "DIRECT-quality failure configuration" means an observation that meets
-        every DIRECT rung predicate EXCEPT that its internalization_outcome ==
-        FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING (maps to
-        OPPOSES_ADDRESSABILITY). Independence is counted over unique
-        internalization_configuration_id.
-      completed_and_at_least_one_qualifying_direct_productive_configuration: POSITIVE / DIRECT (the Gate ceiling -- an addressable configuration exists)
-      completed_and_no_direct_and_at_least_one_qualifying_positive_indirect_strong: POSITIVE / INDIRECT_STRONG
-      completed_and_exactly_one_independent_direct_quality_failure_configuration_and_no_productive_direct: INCONCLUSIVE / DIRECT (a single non-internalizing configuration NEVER establishes target-wide non-internalization -- PR D forbidden_inference)
-      completed_and_at_least_two_independent_direct_quality_failure_configurations_and_no_productive_direct: NEGATIVE / DIRECT (configuration-specific failure has escalated to a target-level surface-static / non-productively-internalizing pattern; may also satisfy fatal_review, item 08)
-      same_configuration_genuinely_incompatible_productive_vs_failure_direct_quality_claims_unresolved: CONFLICTING / DIRECT
+        productive configuration" means an observation_kind in
+        {ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING} classified DIRECT
+        whose internalization_outcome ==
+        PRODUCTIVE_INTERNALIZATION_WITH_LYSOSOMAL_DELIVERY (maps to
+        SUPPORTS_ADDRESSABILITY) -- an integrated same-configuration internalization
+        + lysosomal delivery observation. "DIRECT-quality failure configuration"
+        means EITHER (a) an observation that meets every DIRECT rung predicate
+        EXCEPT that its internalization_outcome ==
+        FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING, OR (b) a
+        configuration-resolved (SINGLE / IDENTIFIED_MULTI), disease-relevant,
+        assay_validation_status == QUALIFIED + non-empty assay_method,
+        internalization_outcome == FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING
+        observation_kind in {ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY,
+        TRAFFICKING_OR_RECYCLING_ONLY} -- both map to OPPOSES_ADDRESSABILITY (item
+        06 trafficking_or_recycling_only_authority). Independence is counted over
+        unique internalization_configuration_id. A "CLEAN / uncontested productive DIRECT
+        configuration" is a configuration identity with at least one DIRECT
+        productive observation and NO unresolved same-configuration opposing
+        DIRECT-quality failure claim (a same-configuration productive-vs-failure
+        pair is "resolved" only when a typed / auditable characterization
+        reconciles it -- E14 never semantic-parses prose).
+      frozen_evaluation_order: >-
+        E14 applies these steps in this exact order and STOPS at the first match
+        (PR E13 review round-1 gene). (0) not completed / audit-invalid -> per the
+        item-16 stop rule, NOT this table. (1) group all DIRECT-quality
+        observations (productive and failure) by configuration identity. (2) if at
+        least one CLEAN / uncontested productive DIRECT configuration exists ->
+        POSITIVE / DIRECT (existence-proof dominance -- a conflicted configuration
+        A plus a clean productive configuration B is still POSITIVE / DIRECT,
+        because B independently supplies the existence proof; heterogeneous
+        B / C failures alongside a clean productive A also do not change it).
+        (3) else if any SINGLE configuration has unresolved productive-vs-failure
+        DIRECT-quality claims -> CONFLICTING / DIRECT. (4) else if >= 2 independent
+        DIRECT-quality failure configurations (and no productive DIRECT) ->
+        NEGATIVE / DIRECT (may also satisfy fatal_review, item 08). (5) else if
+        EXACTLY ONE independent DIRECT-quality failure configuration (and no
+        productive DIRECT) -> INCONCLUSIVE / DIRECT (a single non-internalizing
+        configuration NEVER establishes target-wide non-internalization -- PR D
+        forbidden_inference). (6) else if no DIRECT-rung observation but at least
+        one qualifying positive INDIRECT_STRONG observation -> POSITIVE /
+        INDIRECT_STRONG. (7) else (WEAK-only / no qualifying evidence) ->
+        INCONCLUSIVE / UNKNOWN, zero evidence_refs.
+      completed_and_at_least_one_clean_productive_direct_configuration: POSITIVE / DIRECT (the Gate ceiling -- an addressable configuration exists; existence-proof dominance over heterogeneous failures and over a conflicted configuration elsewhere)
+      completed_and_no_clean_productive_direct_and_a_same_configuration_has_unresolved_productive_vs_failure_direct_quality_claims: CONFLICTING / DIRECT
+      completed_and_no_productive_direct_and_at_least_two_independent_direct_quality_failure_configurations: NEGATIVE / DIRECT (configuration-specific failure has escalated to a target-level surface-static / non-productively-internalizing pattern; may also satisfy fatal_review, item 08)
+      completed_and_no_productive_direct_and_exactly_one_independent_direct_quality_failure_configuration: INCONCLUSIVE / DIRECT (a single non-internalizing configuration NEVER establishes target-wide non-internalization -- PR D forbidden_inference)
+      completed_and_no_direct_rung_observation_and_at_least_one_qualifying_positive_indirect_strong: POSITIVE / INDIRECT_STRONG
       completed_and_weak_only_or_no_qualifying_evidence: INCONCLUSIVE / UNKNOWN (zero evidence_refs)
     upstream_qualified_factual_states: >-
       the classification-driving states below are SEPARATE typed upstream facts
@@ -392,6 +439,35 @@ acceptance_checklist:
       non_crc_antibody_induced_internalization: an INDIRECT_STRONG addressability observation -- never DIRECT (context is not disease-relevant), but it DOES grant POSITIVE / INDIRECT_STRONG
       successful_same_target_adc_functional_delivery_precedent: an INDIRECT_STRONG addressability observation -- supports addressability, does not by itself prove the trafficking mechanism, and DOES grant POSITIVE / INDIRECT_STRONG
       internalization_inferred_from_surface_localization_alone_or_receptor_family_membership: WEAK -- a hypothesis-only context observation that never grants a Gate-level Direction or Strength
+    trafficking_or_recycling_only_authority: >-
+      a TRAFFICKING_OR_RECYCLING_ONLY observation (a lysosomal co-localization /
+      trafficking / recycling-versus-degradation readout NOT paired, in the SAME
+      integrated observation, with an antibody-induced internalization proof for
+      the SAME antibody / epitope configuration) has ASYMMETRIC authority
+      (PR E13 review round-1 gene). POSITIVE direction -- lysosomal trafficking
+      observed but no integrated same-configuration antibody-induced
+      internalization proof -> at most INDIRECT_STRONG / supporting; it can NEVER
+      synthesize a positive DIRECT (a positive DIRECT contributor must still be an
+      integrated same-configuration internalization + lysosomal delivery
+      observation -- item 06 no_cross_observation_synthesis_of_direct). NEGATIVE
+      direction -- a configuration-resolved (SINGLE or IDENTIFIED_MULTI identity
+      state), disease-relevant (surface_context_class in {CRC_MALIGNANT_CELLS,
+      WELL_MATCHED_CRC_MODEL} + QUALIFIED context_adequacy_status + auditable
+      basis), assay_validation_status == QUALIFIED + auditable basis + non-empty
+      factual assay_method, internalization_outcome ==
+      FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING + auditable basis
+      TRAFFICKING_OR_RECYCLING_ONLY observation IS a DIRECT-quality failure
+      observation (maps to OPPOSES_ADDRESSABILITY) -- e.g. antibody binds and
+      internalizes but the receptor rapidly recycles with no productive lysosomal
+      trafficking. It therefore participates in the aggregation truth table
+      exactly like an ANTIBODY_CONFIGURATION_INTERNALIZATION_* DIRECT-quality
+      failure: exactly one independent such failure configuration and no
+      productive DIRECT -> INCONCLUSIVE / DIRECT; >= 2 independent such failure
+      configurations and no productive DIRECT -> NEGATIVE / DIRECT; and it is an
+      eligible fatal_review contributor (item 08) subject to the same global
+      precondition (NO qualifying productive DIRECT configuration on the
+      landscape) and the same Route A / Route B multiple-independent-configuration
+      requirement.
     no_cross_observation_synthesis_of_direct: >-
       DIRECT is NEVER synthesized by the Module from unrelated observations. An
       EvidencePackage saying "configuration A is antibody-induced internalized"
@@ -404,20 +480,38 @@ acceptance_checklist:
       study into one integrated observation; MOD-TGT06 itself never joins
       unrelated EvidencePackages / configurations to assemble DIRECT.
     configuration_identity_single_vs_multi: >-
-      the declared_multi_configuration_analysis flag is the TGT-03 / TGT-04
-      single-vs-multi identity pattern. flag == false -> a single-configuration
-      observation: internalization_configuration_id != "" and
-      internalization_configuration_ids == (). flag == true -> a declared
-      multi-configuration analysis: internalization_configuration_id == "" and
-      len(unique(internalization_configuration_ids)) >= 2. A DIRECT-quality
-      configuration observation MUST carry an auditable configuration identity; a
-      non-CRC antibody-induced internalization observation MUST carry a
-      configuration identity WHEN the source identifies the tested configuration.
-      A constitutive-endocytosis / receptor-biology observation and a
-      successful-same-target-ADC precedent observation do NOT lose INDIRECT_STRONG
-      authority for lack of an antibody / epitope / configuration disclosure --
-      the frozen ladder does not require it. E14 must never assert "every
-      qualifying INDIRECT_STRONG observation has an internalization_configuration_id".
+      the declared_multi_configuration_analysis flag drives ONE of exactly THREE
+      frozen identity states (E14 has no discretion -- PR E13 review round-1
+      gene). (1) SINGLE -- declared_multi_configuration_analysis == false AND
+      internalization_configuration_id != "" AND internalization_configuration_ids
+      == () AND configuration_identity_basis != "". (2) IDENTIFIED_MULTI --
+      declared_multi_configuration_analysis == true AND
+      internalization_configuration_id == "" AND
+      len(unique(internalization_configuration_ids)) >= 2 AND
+      configuration_identity_basis != "". (3) IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE
+      -- declared_multi_configuration_analysis == false AND
+      internalization_configuration_id == "" AND
+      internalization_configuration_ids == (). The IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE
+      state is permitted ONLY for a NON-DIRECT-quality observation whose frozen
+      evidence class does not require a disclosed configuration identity -- a
+      CONSTITUTIVE_ENDOCYTOSIS_OR_RECEPTOR_BIOLOGY observation, a
+      SAME_TARGET_ADC_DELIVERY_PRECEDENT observation, a
+      RECEPTOR_FAMILY_MEMBERSHIP_INFERENCE observation, a
+      SURFACE_LOCALIZATION_ONLY_INFERENCE observation, a SEARCH_COMPLETION_AUDIT
+      observation, or an ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY / non-CRC
+      antibody-induced internalization observation WHEN the source does not
+      identify the tested configuration. ANY DIRECT-quality observation
+      (a productive DIRECT configuration observation OR a DIRECT-quality failure
+      observation -- see tgt06_specific_aggregation_truth_table) MUST be SINGLE or
+      IDENTIFIED_MULTI; a DIRECT-quality observation in the
+      IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE state is a HARD integrity failure.
+      A non-CRC antibody-induced internalization observation MUST be SINGLE or
+      IDENTIFIED_MULTI WHEN the source identifies the tested configuration.
+      A CONSTITUTIVE_ENDOCYTOSIS_OR_RECEPTOR_BIOLOGY / SAME_TARGET_ADC_DELIVERY_PRECEDENT
+      observation NEVER loses INDIRECT_STRONG authority for being in the
+      IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE state -- the frozen ladder does not
+      require a configuration disclosure. E14 must never assert "every qualifying
+      INDIRECT_STRONG observation has an internalization_configuration_id".
     legal_direction_strength_pairs:
       - POSITIVE / DIRECT
       - POSITIVE / INDIRECT_STRONG
@@ -479,7 +573,7 @@ acceptance_checklist:
         target-wide surface-static machine fatal trigger -- fatal_review.required
         is false and fatal_review.status is empty. This is a HARD lock.
       each_contributing_observation_must_be:
-        - a DIRECT-class antibody-induced internalization observation -- observation_kind in {ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING, ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY}. A constitutive-endocytosis / receptor-family-membership / surface-localization-only inference observation is NEVER a fatal contributor
+        - a DIRECT-quality productive-internalization / trafficking FAILURE observation -- observation_kind in {ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING, ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY, TRAFFICKING_OR_RECYCLING_ONLY} (a TRAFFICKING_OR_RECYCLING_ONLY observation is eligible ONLY in its NEGATIVE direction per item 06 trafficking_or_recycling_only_authority -- e.g. antibody-induced internalization occurs but the receptor rapidly recycles with no productive lysosomal trafficking). A constitutive-endocytosis / receptor-family-membership / surface-localization-only inference observation is NEVER a fatal contributor
         - in an explicitly qualified disease-relevant context -- surface_context_class in {CRC_MALIGNANT_CELLS, WELL_MATCHED_CRC_MODEL} with a QUALIFIED context_adequacy_status and an auditable surface_context_basis + context_adequacy_basis. Unlike the TGT-04 fatal path, a QUALIFIED WELL_MATCHED_CRC_MODEL context IS eligible here -- the frozen PR D TGT-06 fatal sentence says "the target-antibody complex fails productive internalization or trafficking" without restricting to CRC malignant cells, and the DIRECT authority itself is "in a disease-relevant context" (item 05)
         - carrying assay_validation_status == QUALIFIED with an auditable assay_validation_basis and a non-empty factual assay_method
         - carrying internalization_outcome == FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING (NOT a slow / partial / reduced internalization, NOT INTERNALIZATION_OBSERVED_LYSOSOMAL_DELIVERY_UNRESOLVED) with an auditable internalization_outcome_basis
@@ -564,6 +658,7 @@ acceptance_checklist:
       - a functional ADC delivery precedent must be a genuinely SUCCESSFUL same-target ADC (a real functional success signal). "A same-target ADC exists / had a program" (TGT-01 territory) is NOT a TGT-06 delivery precedent; TGT-01 modality precedent never becomes a TGT-06 addressability observation
       - a DIRECT existence proof requires ONE upstream-qualified INTEGRATED configuration observation (antibody-induced internalization AND lysosomal delivery on the SAME antibody / epitope configuration); "configuration A internalizes" + "configuration B reaches the lysosome" from different observations NEVER synthesize DIRECT (item 06 no_cross_observation_synthesis_of_direct)
       - antibody-induced internalization observed but lysosomal delivery NOT confirmed is INTERNALIZATION_OBSERVED_LYSOSOMAL_DELIVERY_UNRESOLVED -- positive support at INDIRECT_STRONG ceiling only, never DIRECT
+      - a TRAFFICKING_OR_RECYCLING_ONLY observation has ASYMMETRIC authority (item 06 trafficking_or_recycling_only_authority) -- in its POSITIVE direction (lysosomal trafficking observed without an integrated same-configuration antibody-induced internalization proof) it is at most INDIRECT_STRONG / supporting and can NEVER synthesize a positive DIRECT; in its NEGATIVE direction (configuration-resolved + disease-relevant + assay_validation_status == QUALIFIED + non-empty assay_method + internalization_outcome == FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING -- e.g. internalization occurs but the receptor rapidly recycles with no productive lysosomal trafficking) it IS a DIRECT-quality failure observation and participates in the aggregation truth table and Route A / Route B fatal exactly like an ANTIBODY_CONFIGURATION_INTERNALIZATION_* DIRECT-quality failure, subject to the same no-productive-DIRECT global precondition
       - a disease-relevant antibody-induced internalization + lysosomal delivery observation can reach DIRECT only with surface_context_class in {CRC_MALIGNANT_CELLS, WELL_MATCHED_CRC_MODEL}, a QUALIFIED context_adequacy_status and an auditable basis -- never from crc_specific alone
       - a DIRECT-quality configuration observation and a non-CRC antibody-induced internalization observation (when the source identifies the tested configuration) each carry at least one auditable LOCAL internalization_configuration_id and the DIRECT-quality set is reconciled into the InternalizationEvidenceCompletion (qualifying_direct_configuration_ids) -- audit-integrity reconciliation only. There is NO qualifying_indirect_configuration_ids set -- a constitutive-endocytosis / receptor-biology or same-target-ADC precedent observation does not inherently carry a configuration identity, and forcing one would rewrite the frozen INDIRECT_STRONG evidence class
       - a weak_only source class can never lift an assessment above INCONCLUSIVE / UNKNOWN
@@ -783,17 +878,17 @@ acceptance_checklist:
       - DIRECT is NEVER synthesized across observations -- an EvidencePackage asserting internalization for configuration A plus a different EvidencePackage asserting lysosomal delivery for configuration B does NOT combine into a DIRECT existence proof (item 06 no_cross_observation_synthesis_of_direct); a proposal that does so is a HARD failure
       - antibody-induced internalization observed but lysosomal delivery NOT confirmed (internalization_outcome == INTERNALIZATION_OBSERVED_LYSOSOMAL_DELIVERY_UNRESOLVED) never reaches DIRECT -- it is positive support at INDIRECT_STRONG ceiling only
       - a DIRECT rung requires an EXPLICITLY qualified disease-relevant context -- surface_context_class in {CRC_MALIGNANT_CELLS, WELL_MATCHED_CRC_MODEL} with context_adequacy_status == QUALIFIED and an auditable surface_context_basis + context_adequacy_basis; a bare crc_specific == true never reaches a rung (PR E10 round-1 gene)
-      - the single-vs-multi configuration identity is consistent -- declared_multi_configuration_analysis == false requires internalization_configuration_id != "" and internalization_configuration_ids == (); declared_multi_configuration_analysis == true requires internalization_configuration_id == "" and len(unique(internalization_configuration_ids)) >= 2 (PR E10 / E11 gene)
+      - the configuration identity is exactly one of the three frozen states in item-06 configuration_identity_single_vs_multi -- SINGLE (declared_multi_configuration_analysis == false, internalization_configuration_id != "", internalization_configuration_ids == (), configuration_identity_basis != ""), IDENTIFIED_MULTI (declared_multi_configuration_analysis == true, internalization_configuration_id == "", len(unique(internalization_configuration_ids)) >= 2, configuration_identity_basis != ""), or IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE (declared_multi_configuration_analysis == false, internalization_configuration_id == "", internalization_configuration_ids == ()) -- any other combination is a HARD failure; IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE is permitted ONLY for a non-DIRECT-quality observation kind (CONSTITUTIVE_ENDOCYTOSIS_OR_RECEPTOR_BIOLOGY / SAME_TARGET_ADC_DELIVERY_PRECEDENT / RECEPTOR_FAMILY_MEMBERSHIP_INFERENCE / SURFACE_LOCALIZATION_ONLY_INFERENCE / SEARCH_COMPLETION_AUDIT / a non-CRC antibody-induced internalization observation whose source does not identify the tested configuration); ANY DIRECT-quality observation (productive DIRECT or DIRECT-quality failure) in the IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE state is a HARD integrity failure (PR E10 / E11 gene + PR E13 review round-1 gene)
       - a qualifying DIRECT-rung observation (productive or DIRECT-quality failure) carries at least one auditable local internalization_configuration_id; a non-CRC antibody-induced internalization observation carries one when the source identifies the tested configuration; a constitutive-endocytosis / receptor-biology / successful-same-target-ADC precedent observation is NOT required to carry one, and the Module must NOT reject it for lacking one
       - every classification-driving qualified status carries an auditable basis -- surface_context_class, context_adequacy_status, assay_validation_status, internalization_outcome, reproducibility_status, configuration_identity (for a multi-configuration analysis); a missing / drifted qualification basis is a HARD integrity failure
       - the LOCAL configuration namespace (study_context.internalization_configuration_id / internalization_configuration_ids, completion.qualifying_direct_configuration_ids, fatal_review.configuration_ids) is never the canonical Instantiation context_id (CTX-CRC-REFRACTORY-MCRC); a proposal or record that collapses an internalization_configuration_id onto the canonical context_id is a HARD identity-namespace failure
       - the Gate-level proposed_strength follows the highest-qualifying-rung authority under the item-06 tgt06_specific_aggregation_truth_table -- DIRECT when a qualifying DIRECT-rung observation exists on the completed audited landscape, INDIRECT_STRONG when the highest qualifying rung is a positive INDIRECT_STRONG observation and no DIRECT-rung observation exists, UNKNOWN for a WEAK-only / no-qualifying-evidence landscape; a proposal with proposed_strength == WEAK is a HARD failure
       - proposed_direction x proposed_strength is exactly one of the six legal item-06 pairs (POSITIVE / DIRECT, POSITIVE / INDIRECT_STRONG, NEGATIVE / DIRECT, CONFLICTING / DIRECT, INCONCLUSIVE / DIRECT, INCONCLUSIVE / UNKNOWN); there is NO NEGATIVE / INDIRECT_STRONG, NO CONFLICTING / INDIRECT_STRONG, NO INCONCLUSIVE / INDIRECT_STRONG and NO INCONCLUSIVE / WEAK; INCONCLUSIVE / UNKNOWN carries zero evidence_refs; a graded INCONCLUSIVE / DIRECT carries CONTEXTUAL evidence_refs
-      - the aggregation follows the frozen item-06 tgt06_specific_aggregation_truth_table exactly -- one qualifying productive DIRECT configuration is POSITIVE / DIRECT (and existence-proof dominance means heterogeneous B / C failures do not change it); exactly one independent DIRECT-quality failure configuration with no productive DIRECT is INCONCLUSIVE / DIRECT (never NEGATIVE); at least two independent DIRECT-quality failure configurations with no productive DIRECT is NEGATIVE / DIRECT; genuinely incompatible productive-vs-failure DIRECT-quality claims about the SAME configuration with no auditable resolution is CONFLICTING / DIRECT; different configurations behaving differently is NEVER mapped to CONFLICTING
+      - the aggregation follows the frozen item-06 tgt06_specific_aggregation_truth_table frozen_evaluation_order exactly, stopping at the first matching step -- (2) at least one CLEAN / uncontested productive DIRECT configuration -> POSITIVE / DIRECT (existence-proof dominance -- a conflicted configuration A plus a clean productive configuration B is still POSITIVE / DIRECT; heterogeneous B / C failures alongside a clean productive A do not change it); (3) else a SINGLE configuration with unresolved productive-vs-failure DIRECT-quality claims -> CONFLICTING / DIRECT; (4) else >= 2 independent DIRECT-quality failure configurations with no productive DIRECT -> NEGATIVE / DIRECT; (5) else exactly one independent DIRECT-quality failure configuration with no productive DIRECT -> INCONCLUSIVE / DIRECT (never NEGATIVE); (6) else no DIRECT-rung observation but a qualifying positive INDIRECT_STRONG -> POSITIVE / INDIRECT_STRONG; (7) else WEAK-only / no qualifying evidence -> INCONCLUSIVE / UNKNOWN. different configurations behaving differently is NEVER mapped to CONFLICTING (CONFLICTING is reserved for an unresolved same-configuration productive-vs-failure pair)
       - the Direction over a qualifying integrated configuration observation follows the frozen item-06 internalization_direction_mapping (internalization_outcome PRODUCTIVE_INTERNALIZATION_WITH_LYSOSOMAL_DELIVERY -> SUPPORTS_ADDRESSABILITY; FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING -> OPPOSES_ADDRESSABILITY; MIXED_OR_UNRESOLVED / NOT_ESTABLISHED -> CONTEXTUAL); an INTERNALIZATION_OBSERVED_LYSOSOMAL_DELIVERY_UNRESOLVED observation is positive support at INDIRECT_STRONG ceiling only and never OPPOSES
       - no numeric decision is taken on a source-reported internalization rate / half-life / percent-internalized / colocalization coefficient -- the raw value may be stored as a factual measurement in the neutral claim but is never compared to a threshold, cutoff or invented range
       - the mandatory internalization-evidence-search landscape is complete for the path taken (item 16); the Module did not grade early on one internalization movie, one trafficking dataset, or one failure observation
-      - if the module-local fatal_review record has required = true, its status is POTENTIAL_FATAL_PATTERN (never PUBLIC_FATAL_SIGNAL_ESTABLISHED), NO qualifying productive DIRECT configuration exists on the landscape, every contributing observation is a DIRECT-class antibody-induced internalization FAILURE observation (internalization_outcome == FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING; NO constitutive-endocytosis / receptor-family / surface-localization-only / non-internalizing-payload contributor), multiple independent configurations are established by Route A or Route B (>= 2 independent internalization_configuration_id, never "> 2"), the reproducibility route A or B basis is auditable, and it is surfaced only on an accepted run
+      - if the module-local fatal_review record has required = true, its status is POTENTIAL_FATAL_PATTERN (never PUBLIC_FATAL_SIGNAL_ESTABLISHED), NO qualifying productive DIRECT configuration exists on the landscape, every contributing observation is a DIRECT-quality productive-internalization / trafficking FAILURE observation (observation_kind in {ANTIBODY_CONFIGURATION_INTERNALIZATION_TRAFFICKING, ANTIBODY_CONFIGURATION_INTERNALIZATION_ONLY, TRAFFICKING_OR_RECYCLING_ONLY}, internalization_outcome == FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING; NO constitutive-endocytosis / receptor-family / surface-localization-only / non-internalizing-payload contributor), multiple independent configurations are established by Route A or Route B (>= 2 independent internalization_configuration_id, never "> 2"), the reproducibility route A or B basis is auditable, and it is surfaced only on an accepted run
       - fatal_review is not a field of the proposal envelope
       - dedup -- one SRC -> many EP is allowed; a same source_id + same claim + different internalization_configuration_id keeps both; the same (source_id, claim, all-driving-facts, local-configuration) is not duplicated; a SEARCH_COMPLETION_AUDIT EP is never the dedup loser for an attempted completion
       - all required fields present; no numeric or ranking score anywhere; no internalization-rate / half-life / percent-internalized / colocalization-coefficient threshold; no invented ADC-effective range

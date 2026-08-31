@@ -6430,3 +6430,85 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 状态：8 个 primary Module 施工合同已 APPROVE 7 个（TGT-01/05/08/02/03/04），
   已实现 **6 个**。TGT-07 属后续 PR。`MIGRATION_PENDING` 保持。
 - Next：开 PR、CI 绿后回 `AI审核方案` 贴 E13 review 请求。
+
+### PR E13 · ChatGPT `AI审核方案` review round 1 → REQUEST_CHANGES（4 窄 construction-contract blocker）
+
+- Verdict：**REQUEST_CHANGES**，anchor HEAD `1a199c20`；CI run 33425701116 verify
+  (3.11) + (3.12) 均 success。审核方确认主体合同成立（design-only boundary 干净；
+  PR D items 03/05/07/08 parity + item 04 exact-set parity；Option A；6 legal
+  pairs；existence-proof aggregation；multi-configuration fatal；well-matched
+  model fatal eligibility；productive DIRECT cancels fatal；四轴 completion；无
+  indirect configuration set；no-cross-observation synthesis；8 observation kinds；
+  无 dedicated raw-number parity branch），frozen PR D TGT-06 ladder / fatal 也
+  确实支持主框架。剩 4 个窄 construction-contract blocker，全部在 E13 修。
+- **Blocker 1**：`declared_multi_configuration_analysis` identity shape 自相矛盾 ——
+  item 06 只冻结了 SINGLE（flag=false + id!="" + ids=()）与 IDENTIFIED_MULTI
+  （flag=true + id="" + len(unique(ids))>=2），但 E13-8 要求 constitutive
+  endocytosis / same-target-ADC precedent / receptor-family inference /
+  surface-localization inference / audit / non-CRC internalization（source 未披露
+  configuration 时）这些观测在**无 config id**下仍合法。修复：冻结**三个** identity
+  state —— SINGLE / IDENTIFIED_MULTI / IDENTITY_NOT_DISCLOSED_OR_NOT_APPLICABLE；
+  第三种只允许非 DIRECT-quality observation kind；任何 DIRECT-quality observation
+  （productive DIRECT 或 DIRECT-quality failure）处于第三种 state 即 HARD。item 13
+  check 同步。
+- **Blocker 2**：aggregation truth table 无冻结的 evaluation ORDER —— existence-proof
+  dominance 与 same-config CONFLICTING 的交互未定。修复：冻结
+  `frozen_evaluation_order`（stop-at-first-match）：(1) group by configuration
+  identity；(2) ≥1 CLEAN / uncontested productive DIRECT configuration →
+  `POSITIVE / DIRECT`（conflicted A + clean productive B 仍 `POSITIVE / DIRECT`
+  —— B 独立提供 existence proof）；(3) else SINGLE configuration 有未解 productive-
+  vs-failure DIRECT-quality claims → `CONFLICTING / DIRECT`；(4) else ≥2 independent
+  DIRECT-quality failure configs + 无 productive DIRECT → `NEGATIVE / DIRECT`；
+  (5) else exactly one → `INCONCLUSIVE / DIRECT`；(6) else 无 DIRECT-rung + qualifying
+  positive INDIRECT_STRONG → `POSITIVE / INDIRECT_STRONG`；(7) else →
+  `INCONCLUSIVE / UNKNOWN`。"clean productive" = 该 configuration identity 有
+  productive DIRECT observation 且无未解同 configuration opposing DIRECT-quality
+  failure claim。fatal 保持保守 hard lock（任何 qualifying productive DIRECT 取消
+  machine target-wide fatal trigger）。Regression：A support + A oppose，无其它
+  productive config → `CONFLICTING / DIRECT`；A support + A oppose + B clean
+  productive → `POSITIVE / DIRECT`；A productive + B fail + C fail →
+  `POSITIVE / DIRECT`。
+- **Blocker 3**：item 03 `tgt06_framing.answers` 把整个 Gate 错写成 DIRECT
+  existence-proof question，与 E13-3（no DIRECT + qualifying INDIRECT_STRONG →
+  `POSITIVE / INDIRECT_STRONG`）矛盾。修复：重写 answers，让 Gate question
+  （"whether admissible public evidence supports internalization / trafficking
+  addressability of the target-antibody complex"）与 DIRECT ceiling 区分；与 PR D
+  ladder 结构一致（IS = genuine strong support；DIRECT = demonstrated
+  disease-relevant configuration）。
+- **Blocker 4**：`TRAFFICKING_OR_RECYCLING_ONLY` 是 observation kind 却无
+  productive-trafficking-failure / fatal authority —— 真实失败（antibody
+  internalizes 但 receptor rapidly recycles，无 productive lysosomal trafficking）
+  跨 ≥2 independent configurations 重复，正是 PR D 的 "fails productive ...
+  trafficking"。修复：冻结 `trafficking_or_recycling_only_authority`（非对称）——
+  正向至多 INDIRECT_STRONG / supporting，永不合成 positive DIRECT（positive
+  DIRECT contributor 仍须是 integrated same-configuration internalization +
+  lysosomal delivery observation）；负向（configuration-resolved + disease-relevant
+  + `assay_validation_status == QUALIFIED` + 非空 assay_method +
+  `internalization_outcome == FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING`）
+  IS 一个 DIRECT-quality failure observation，参与 truth table（1 independent →
+  `INCONCLUSIVE / DIRECT`；≥2 → `NEGATIVE / DIRECT`）与 Route A / Route B fatal，
+  受同一 no-productive-DIRECT global precondition。item 08 fatal-contributor
+  observation_kind set + item 13 fatal check + item 09 source_authority_rules
+  同步。
+- 审核方明确「不要改」：Option A；6 legal pairs；POSITIVE/INDIRECT_STRONG
+  authority；NEGATIVE/INDIRECT_STRONG 禁止；one failure → INCONCLUSIVE/DIRECT；
+  ≥2 independent failures + no productive DIRECT → NEGATIVE/DIRECT；different
+  configs differing ≠ auto conflict；Route A 本身 multi-configuration；Route B
+  `>= 2` 非 `> 2`；WELL_MATCHED_CRC_MODEL 可进 TGT-06 fatal；productive DIRECT
+  取消 machine fatal trigger；四轴 completion；无 qualifying_indirect_configuration_ids；
+  no cross-observation synthesis of positive DIRECT；internalization_outcome 保留
+  FAILS_PRODUCTIVE_INTERNALIZATION_OR_TRAFFICKING；无 dedicated TGT-04 raw-value
+  parity branch；numeric assay value 作 neutral factual claim 但无 threshold；无
+  PR D inference_guard；design-only boundary；MOD-TGT06 = 0.0.0；
+  MIGRATION_PENDING 保持。
+- 改动文件：`tgt06_internalization_trafficking_addressability.yaml`（item 03 answers；
+  item 06 三 identity state + frozen_evaluation_order + existence_proof_dominance +
+  trafficking_or_recycling_only_authority；item 08 fatal-contributor kinds；item 09
+  source_authority_rules；item 13 identity / aggregation / fatal check）、
+  `TGT-06_Internalization_Trafficking_Addressability.md`（rows 3、6）、
+  `tests/test_tgt06_module_construction_contract.py`（73 → **81**：新增
+  `ReviewRound1RegressionTests` + key-name / 措辞断言更新）、manifest
+  （`review_rounds: 1` + `review_round_1` block）、本 worklog append。
+- 验证：`tests/test_tgt06_module_construction_contract.py` **81 OK**；全量
+  **1619 OK**（round-1 前 1611）；`git diff --check` clean；YAML 合法。
+- Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-2 回复。
