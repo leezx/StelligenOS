@@ -6090,3 +6090,28 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   **1450 OK**（round-2 前 1446）；YAML 合法且无 list-element-parsed-as-dict；
   `git diff --check` clean。
 - Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-3 回复。
+
+### PR E11 · ChatGPT `AI审核方案` review round 3 → APPROVE，PR #126 已 merge
+
+- Verdict：**APPROVE @ `1ad620d`**。「PR #126 @ `1ad620d` 可以 merge，E11
+  construction contract 可以正式冻结。下一步进入 PR E12 = MOD-TGT04@1.0.0
+  deterministic implementation。」审核方确认 round-2 的 2 个 residual consistency
+  blocker 均已关闭（POSITIVE/NEGATIVE 对 `WELL_MATCHED_CRC_MODEL` 的 ordinary
+  DIRECT authority 对称，且 model-supported `NEGATIVE/DIRECT` 只是 ordinary
+  density assessment、永不进 fatal_review、fatal authority 仍严格限定 CRC
+  malignant-cell evidence；`reported_density_value/unit/summary` canonical reuse
+  已冻结为真正对称 presence-and-value parity）。三轮：round 1 = 4 blocker →
+  CLOSED；round 2 = 2 residual → CLOSED；round 3 = 无新 blocker。
+- Merge：PR #126 以 `--merge` 合入 `main`，merge 提交 `499cf3a`。
+- 审核记录 + manifest 补登在独立 docs-only PR
+  `task_20260831_runtime-migration-pr-e11-approval-record`
+  （`logs/chatgpt-review-2026-08-31-runtime-migration-pr-e11.md` 全三轮记录 +
+  `manifests/runtime_migration_pr_e11_manifest.yaml` → `status: approved` /
+  `chatgpt_review: APPROVE` / `approved_tip: 1ad620d` / `merge_commit: 499cf3a` /
+  `review_rounds: 3` / `test_count_at_approval: 1450` / `review_round_3` block /
+  `approval_record_pr`）。不改 PR E11 的合同 / drawing / 测试 / handoff 内容。
+- 状态：8 个 primary Module 施工合同已 APPROVE **6 个**（TGT-01/02/03/04/05/08）；
+  已实现 5 个（TGT-01/02/03/05/08 @ 1.0.0）。MOD-TGT04 `primary_module_version`
+  仍 `0.0.0`，PR E12 才 bump 到 `1.0.0`。`MIGRATION_PENDING` 保持。剩余
+  TGT-06 → TGT-07。
+- Next：PR E12 = MOD-TGT04@1.0.0 deterministic implementation，需各自 go-ahead。
