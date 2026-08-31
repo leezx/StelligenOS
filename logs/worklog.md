@@ -5992,3 +5992,62 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   `MIGRATION_PENDING` 保持。TGT-06 → TGT-07 属后续 PR。
 - Next：开 PR、CI 绿后回 `AI审核方案` 贴 E11 review。下一步 PR E12 =
   MOD-TGT04@1.0.0 实现需各自 go-ahead。
+
+### PR E11 · ChatGPT `AI审核方案` review round 1 → REQUEST_CHANGES（4 窄 blocker）
+
+- Verdict：**REQUEST_CHANGES**，anchor HEAD `41be84a`；CI run 33395454667
+  verify (3.11) + verify (3.12) 均 success。审核方确认主体合同成立（design-only
+  boundary；PR D items 03/05/07/08 parity + item 04 exact-set parity；
+  localization-only → INCONCLUSIVE/UNKNOWN；5 个 legal Direction×Strength pair；
+  三套 density typed fact；raw-value/no-threshold；Route A/B；four-component
+  completion；narrow EXPERIMENT_REQUIRED）。仅剩 4 个窄 construction-contract blocker。
+- **Blocker 1**：INDIRECT_STRONG 的 context authority 被错误扩到
+  `WELL_MATCHED_CRC_MODEL`。Frozen PR D：DIRECT = quantitative density on CRC
+  malignant cells **OR** well-matched CRC models；INDIRECT_STRONG = membranous
+  IHC / surface proteomics on CRC malignant cells **only** —— model 许可只在
+  DIRECT。修复：拆开 item-13 predicate —— DIRECT 允许
+  `{CRC_MALIGNANT_CELLS, WELL_MATCHED_CRC_MODEL}`；INDIRECT_STRONG rung 要求
+  `surface_context_class == CRC_MALIGNANT_CELLS`（+ `malignant_cell_attribution`
+  + auditable basis）；well-matched model localization 观测是 CONTEXTUAL reading，
+  永不成 INDIRECT_STRONG rung。新增 item-06 `rung_context_authority`。
+- **Blocker 2**：fatal machine criteria 也把 well-matched CRC model 错误扩进去了
+  （审核方同时修正了自己开工前 E11-4/E11-6 ruling 里一处过宽表述）。Frozen PR D
+  fatal 句更窄：*"negligible or undetectable cell-surface antigen on CRC
+  malignant cells"*。修复：fatal_review contributor 只能是 **CRC-malignant-cell**
+  quantitative 观测（`surface_context_class == CRC_MALIGNANT_CELLS`）；well-matched
+  CRC model NEGLIGIBLE 观测可贡献普通 DIRECT OPPOSES Direction 但**永不**是 fatal
+  contributor；Route B convergence 要求跨 `>= 2` independent qualified CRC
+  **malignant-cell** surface-context identity。若将来真需给 model proxy fatal
+  authority → 改 Gate contract/version，而非 E12 自行扩权。（items 08/12/13/on_failure）
+- **Blocker 3**：qualifying INDIRECT_STRONG localization 的 local-context /
+  completion authority 被漏掉。E11 scoping 已冻结：任何 qualifying DIRECT **或**
+  INDIRECT_STRONG 观测都要带 auditable local `surface_context_id`。修复：item 13
+  对两者都要求 local id；`SurfaceAvailabilityCompletion` 恢复
+  `qualifying_indirect_surface_context_ids`（与 `qualifying_direct_...` 并列）；
+  SEARCH_COMPLETION_AUDIT snapshot parity 同时锁两组；新增 item-06
+  `qualifying_local_surface_context_identity`。该 indirect set 只是 evidence /
+  audit-integrity，**不是 grading axis**：localization-only + valid indirect set
+  仍然 INCONCLUSIVE/UNKNOWN（item 15）。
+- **Blocker 4**：raw quantitative density 是 canonical empirical fact，但 exact
+  canonical EP reuse parity 未覆盖它。修复：对 `QUANTITATIVE_SURFACE_DENSITY` 观测，
+  raw `reported_density_value` / `reported_density_unit` /
+  `reported_density_summary` 是 present 时的 FACTUAL EXACT-REUSE PARITY 字段 ——
+  reuse 时 drift 即 HARD identity integrity failure（empirical-identity parity，
+  非 classification authority；raw 值仍永不驱动 Direction / fatal signal /
+  threshold 比较）。（items 11/13/on_failure）
+- 审核方明确「不要改」：5 个 legal pair；localization-only → INCONCLUSIVE/UNKNOWN；
+  INDIRECT_STRONG 永不传播 Strength；DIRECT assay vocabulary OPEN；
+  `measurement_validation_status` CLOSED；raw 值允许 / threshold 禁止；
+  LOW_BUT_PRESENT ≠ 自动 NEGATIVE/fatal；Route A OR Route B；Route B `>= 2` 非
+  `> 2`；NEGATIVE ≠ fatal ≠ KILL；four search component = completeness only；
+  EXPERIMENT_REQUIRED precedence；design-only；MOD-TGT04 仍 0.0.0；MIGRATION_PENDING 保持。
+- 改动文件：`src/contracts/gate_modules/tgt04_...yaml`（items 06/08/09/11/13/15）、
+  `docs/gate_modules/TGT-04_...md`（rows 6/8/9/11/12/13/15 + conceptual shape）、
+  `tests/test_tgt04_module_construction_contract.py`（58 → **67**：新增
+  `ReviewRound1RegressionTests` + 6 处断言随合同措辞更新）、manifest（`review_rounds: 1`
+  + `review_round_1` block）、本 worklog append。
+- 验证：`tests/test_tgt04_module_construction_contract.py` **67 OK**；全量
+  **1446 OK**（round-1 前 1437）；YAML 合法且无 list-element-parsed-as-dict；
+  `git diff --check` clean。
+- Next：commit + push `task_20260831_runtime-migration-pr-e11`，CI 绿后回
+  `AI审核方案` 贴 round-2 回复。

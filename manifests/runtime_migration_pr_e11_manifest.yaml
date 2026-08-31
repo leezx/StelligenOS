@@ -291,7 +291,7 @@ next_after_approval: PR E12 = MOD-TGT04@1.0.0 deterministic implementation
 delivers:
   - src/contracts/gate_modules/tgt04_tumor_surface_availability_density_plausibility.yaml -- the frozen MOD-TGT04 construction contract with the 17-item acceptance checklist
   - docs/gate_modules/TGT-04_Tumor_Surface_Availability_Density_Plausibility.md -- the human-readable construction drawing (17-row table + three headline blockquotes + the frozen normalized-observation / SurfaceAvailabilityCompletion conceptual shape)
-  - tests/test_tgt04_module_construction_contract.py -- 58 tests (checklist completeness + E1-template reuse; items 03/05/07/08 normalized-equality parity + item 04 EXACT set-equality derived parity + inference_guard verbatim; two-tier / single-tier grading authority + the five-pair legal set; the four scoping corrections frozen; the fatal Route A / Route B rule + LOW_BUT_PRESENT never fatal; source hard locks; E2/E4/E6/E8/E10 gene inheritance incl. the five E10-review corrections; no implementation; MOD-TGT01/02/03/05/08 and the binding / registry untouched; MOD-TGT04 binding still 0.0.0; MIGRATION_PENDING remains; drawing covers all 17 items)
+  - tests/test_tgt04_module_construction_contract.py -- 67 tests (58 at submission + 9 review-round-1 regressions) (checklist completeness + E1-template reuse; items 03/05/07/08 normalized-equality parity + item 04 EXACT set-equality derived parity + inference_guard verbatim; two-tier / single-tier grading authority + the five-pair legal set; the four scoping corrections frozen; the fatal Route A / Route B rule + LOW_BUT_PRESENT never fatal; source hard locks; E2/E4/E6/E8/E10 gene inheritance incl. the five E10-review corrections; no implementation; MOD-TGT01/02/03/05/08 and the binding / registry untouched; MOD-TGT04 binding still 0.0.0; MIGRATION_PENDING remains; drawing covers all 17 items)
   - manifests/runtime_migration_pr_e11_manifest.yaml -- this file
   - docs/handoff/2026-08-31-runtime-migration-pr-e11.zh-CN.md -- the E11 handoff
 
@@ -325,11 +325,41 @@ repository_policy:
 chatgpt_review: pending
 approved_tip: null
 merge_commit: null
-review_rounds: 0
+review_rounds: 1
 test_count_before_e11: 1379       # at PR E10 approval
-test_count_at_submission: 1437    # local full suite (tests/test_tgt04_module_construction_contract.py 58)
+test_count_at_submission: 1437    # local full suite at first submission (tests/test_tgt04_module_construction_contract.py 58)
+test_count_after_round_1: 1446    # +9 review-round-1 regression tests (tgt04 construction-contract file now 67)
 approval_record_pr: null
 next_authorized_step: null        # PR E12 = MOD-TGT04@1.0.0 implementation -- needs its own go-ahead
+
+review_round_1:
+  verdict: REQUEST_CHANGES
+  reviewer: ChatGPT AI审核方案
+  head_reviewed: 41be84a1b886779abea843f3435b5e8af9ed66b5
+  ci_confirmed: run 33395454667 -- verify (3.11) + verify (3.12) both success
+  summary: >-
+    main contract sound (design-only boundary; PR D items 03/05/07/08 parity +
+    item 04 exact-set parity; localization-only -> INCONCLUSIVE / UNKNOWN; the 5
+    legal Direction x Strength pairs; three density typed facts; raw-value /
+    no-threshold; Route A / B; four-component completion; narrow
+    EXPERIMENT_REQUIRED). 4 narrow construction-contract blockers.
+  blockers:
+    - "1. INDIRECT_STRONG context authority was wrongly widened to WELL_MATCHED_CRC_MODEL. Frozen PR D: DIRECT = quantitative density on CRC malignant cells OR well-matched CRC models; INDIRECT_STRONG = membranous IHC / surface proteomics on CRC malignant cells ONLY -- the model permission is DIRECT-only. FIX: split the item-13 predicate -- DIRECT allows {CRC_MALIGNANT_CELLS, WELL_MATCHED_CRC_MODEL}; an INDIRECT_STRONG localization rung requires surface_context_class == CRC_MALIGNANT_CELLS (+ malignant_cell_attribution + auditable basis); a well-matched model localization observation is a CONTEXTUAL reading, never an INDIRECT_STRONG rung. Added item-06 rung_context_authority."
+    - "2. Fatal machine criteria also wrongly widened well-matched CRC model (ChatGPT corrected its own pre-work E11-4 / E11-6 over-broad phrasing). Frozen PR D fatal sentence is narrower: 'negligible or undetectable cell-surface antigen on CRC malignant cells'. FIX: a fatal_review contributor is a CRC-MALIGNANT-CELL quantitative observation ONLY (surface_context_class == CRC_MALIGNANT_CELLS); a well-matched CRC model NEGLIGIBLE observation may drive an ordinary DIRECT OPPOSES Direction but is NEVER a fatal contributor; Route B convergence is across >= 2 independent qualified CRC MALIGNANT-CELL surface-context identities. Extending fatal authority to a model proxy would need a Gate contract / version change, not a Module decision. (items 08 / 12 / 13 / on_failure)."
+    - "3. Qualifying INDIRECT_STRONG localization lost its local-context / completion authority. E11 scoping froze: any qualifying DIRECT OR INDIRECT_STRONG observation must carry an auditable local surface_context_id. FIX: item 13 now requires a local surface_context_id for BOTH; SurfaceAvailabilityCompletion restores qualifying_indirect_surface_context_ids alongside qualifying_direct_surface_context_ids; SEARCH_COMPLETION_AUDIT snapshot parity locks BOTH sets; item 06 qualifying_local_surface_context_identity. The indirect set is evidence / audit-integrity only -- it is NOT a grading axis and localization-only + a valid indirect set is still INCONCLUSIVE / UNKNOWN (item 15)."
+    - "4. Raw quantitative density is a canonical empirical fact but exact-reuse parity did not cover it. FIX: for a QUANTITATIVE_SURFACE_DENSITY observation the raw reported_density_value / reported_density_unit / reported_density_summary are FACTUAL EXACT-REUSE PARITY fields when present -- a drift on canonical EP reuse is a HARD identity integrity failure (empirical-identity parity, not classification authority; the value still never drives a Direction / fatal signal / threshold comparison). (items 11 / 13 / on_failure)."
+  do_not_change_confirmed:
+    - legal pairs exactly 5; localization-only -> INCONCLUSIVE / UNKNOWN; INDIRECT_STRONG never propagates Strength
+    - DIRECT assay vocabulary stays OPEN; measurement_validation_status stays CLOSED
+    - raw values allowed, thresholds forbidden; LOW_BUT_PRESENT != automatic NEGATIVE / fatal
+    - Route A OR Route B; Route B >= 2 not > 2; NEGATIVE != fatal != KILL
+    - four search components = completeness only; EXPERIMENT_REQUIRED precedence
+    - design-only scope; MOD-TGT04 stays 0.0.0; MIGRATION_PENDING remains
+  files_touched:
+    - src/contracts/gate_modules/tgt04_tumor_surface_availability_density_plausibility.yaml (items 06 / 08 / 09 / 11 / 13 / 15)
+    - docs/gate_modules/TGT-04_Tumor_Surface_Availability_Density_Plausibility.md (rows 6 / 8 / 9 / 11 / 12 / 13 / 15 + conceptual shape)
+    - tests/test_tgt04_module_construction_contract.py (58 -> 67; new ReviewRound1RegressionTests + 6 updated assertions)
+  test_count_after: 1446
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt04_module_construction_contract.py' -v

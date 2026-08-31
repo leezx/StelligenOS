@@ -373,7 +373,8 @@ class FatalReviewAndProposalTests(unittest.TestCase):
         self.assertIn("reproducibility_status == qualified", a)
         self.assertIn("auditable reproducibility_basis", a)
         b = _norm(crit["route_b_independent_convergence"])
-        self.assertIn("at least two independent qualified crc surface-context identities", b)
+        self.assertIn("at least two independent qualified crc malignant-cell surface-context identities", b)
+        self.assertIn("a well-matched crc model identity does not count toward the convergence", b)
         self.assertIn('not "more than two" / "> 2"', b)
 
     def test_item08_fatal_contributor_is_negligible_not_low_but_present(self):
@@ -411,7 +412,8 @@ class FatalReviewAndProposalTests(unittest.TestCase):
         r = _norm(fr["required_is_true_iff"])
         self.assertIn("route a", r)
         self.assertIn("route b", r)
-        self.assertIn("a low_but_present observation never contributes", r)
+        self.assertIn("each on crc malignant cells only", r)
+        self.assertIn("a low_but_present observation, and a well-matched crc model observation, never contribute", r)
 
     def test_item12_fatal_review_only_actionable_on_an_accepted_run(self):
         r = _norm(self.item["12_assessment_proposal_envelope_contract"]["fatal_review"]["only_actionable_on_an_accepted_run"])
@@ -448,10 +450,11 @@ class CompletionAndSourcePlanTests(unittest.TestCase):
         tc = _norm(self.i09["surface_search_landscape"]["typed_completion_record"])
         self.assertIn("surfaceavailabilitycompletion", tc)
         self.assertIn("not a seventh core object", tc)
-        self.assertIn("qualifying_direct_surface_context_ids", tc)
-        self.assertIn("only direct quantitative density observations produce a qualifying surface-context set", tc)
-        self.assertIn("snapshot field names are the typed completion field names", tc)
-        self.assertIn("dedup-lost snapshot -> hard reject", tc)
+        self.assertIn("qualifying_direct_surface_context_ids / qualifying_indirect_surface_context_ids", tc)
+        self.assertIn("only direct quantitative density observations grant density-question grading authority", tc)
+        self.assertIn("adding qualifying_indirect_surface_context_ids does not make indirect_strong propagate to a gate-level strength", tc)
+        self.assertIn("the snapshot field names are the typed completion field names", tc)
+        self.assertIn("dedup-lost snapshot, or a drift in either qualifying surface-context set, -> hard reject", tc)
 
     def test_source_authority_hard_locks(self):
         rules = _norm(" ".join(self.i09["source_authority_rules"]))
@@ -488,12 +491,14 @@ class RuntimeGeneInheritanceTests(unittest.TestCase):
     def test_item13_five_e10_review_genes(self):
         checks = _flatten(self.item["13_machine_acceptance_criteria"]["a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"])
         # (a) explicitly qualified surface context for a rung
-        self.assertIn("a direct / indirect_strong rung requires an explicitly qualified surface context", checks)
+        self.assertIn("a direct rung requires an explicitly qualified surface context", checks)
+        self.assertIn("an indirect_strong localization rung is narrower", checks)
+        self.assertIn("it requires surface_context_class == crc_malignant_cells", checks)
         self.assertIn("a bare crc_specific == true never reaches a rung", checks)
         # (b) local surface-context namespace + a qualifying observation carries one
         self.assertIn("the local surface-context namespace", checks)
         self.assertIn("collapses a surface_context_id onto the canonical context_id is a hard identity-namespace failure", checks)
-        self.assertIn("any observation classified qualifying direct carries at least one auditable local surface_context_id", checks)
+        self.assertIn("any observation classified qualifying direct or qualifying indirect_strong carries at least one auditable local surface_context_id", checks)
         # (c) every qualified status carries an auditable basis
         self.assertIn("every classification-driving qualified status carries an auditable basis", checks)
         # (d) closed validation enum + non-empty assay_method for DIRECT
@@ -513,7 +518,9 @@ class RuntimeGeneInheritanceTests(unittest.TestCase):
         on_fail = _norm(self.item["13_machine_acceptance_criteria"]["on_failure"])
         self.assertIn("rejects the whole run -- it is never degraded to an accepted unknown", on_fail)
         self.assertIn("a local surface_context_id equal to the canonical context_id", on_fail)
-        self.assertIn("a qualifying observation with no local surface_context_id", on_fail)
+        self.assertIn("a qualifying direct or qualifying indirect_strong observation with no local surface_context_id", on_fail)
+        self.assertIn("an indirect_strong rung asserted on a well_matched_crc_model / non_crc_model context", on_fail)
+        self.assertIn("a well-matched crc model observation used as a fatal_review contributor", on_fail)
 
     def test_item15_localization_only_and_experiment_required_are_narrow(self):
         i15 = self.item["15_failure_unknown_and_conflict_behavior"]
@@ -542,6 +549,108 @@ class RuntimeGeneInheritanceTests(unittest.TestCase):
         self.assertIn("derive an antigen-density threshold, cutoff or \"clinically effective range\" from a measured value", never)
         cons = _flatten(i17["once_human_approved_the_resulting_canonical_CandidateGateAssessment_is_consumed_by"])
         self.assertIn("tgt-04 never discharges tgt-06", cons)
+
+
+class ReviewRound1RegressionTests(unittest.TestCase):
+    """PR E11 ChatGPT AI审核方案 review round 1 -- the 4 narrow blockers.
+
+    (1) the "or well-matched CRC models" ladder permission is DIRECT-only -- an
+        INDIRECT_STRONG localization rung requires surface_context_class ==
+        CRC_MALIGNANT_CELLS;
+    (2) a fatal_review contributor is a CRC-malignant-cell quantitative
+        observation ONLY -- a well-matched CRC model observation may drive an
+        ordinary Direction but is never a fatal contributor, and Route B
+        convergence is across CRC malignant-cell surface-context identities;
+    (3) BOTH a qualifying DIRECT and a qualifying INDIRECT_STRONG observation
+        carry an auditable local surface_context_id, and the
+        SurfaceAvailabilityCompletion carries qualifying_indirect_surface_context_ids
+        as an audit-integrity set (never a grading axis -- localization-only +
+        a valid indirect set is still INCONCLUSIVE / UNKNOWN);
+    (4) for a QUANTITATIVE_SURFACE_DENSITY observation the raw
+        reported_density_value / _unit / _summary are factual exact-reuse parity
+        fields when present -- a drift on reuse is a HARD identity failure.
+    """
+
+    def setUp(self):
+        self.item = yaml.safe_load(CONTRACT.read_text())["acceptance_checklist"]
+        self.checks = _flatten(
+            self.item["13_machine_acceptance_criteria"][
+                "a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"
+            ]
+        )
+
+    # ---- blocker 1 ---------------------------------------------------------
+    def test_indirect_strong_rung_context_is_crc_malignant_cells_only(self):
+        checks = self.checks
+        self.assertIn("an indirect_strong localization rung is narrower than direct on context", checks)
+        self.assertIn("it requires surface_context_class == crc_malignant_cells (never well_matched_crc_model, never non_crc_model)", checks)
+        self.assertIn('the "or well-matched crc models" permission exists only in the direct quantitative-density class', checks)
+        self.assertIn("a well-matched crc model membranous-ihc / surface-proteomics observation is a contextual localization reading, never an indirect_strong rung", checks)
+        rca = _norm(self.item["06_direction_interpretation"]["rung_context_authority"])
+        self.assertIn('the "or well-matched crc models" permission in the frozen pr d ladder is direct-only', rca)
+        self.assertIn("may qualify only on surface_context_class == crc_malignant_cells", rca)
+
+    def test_well_matched_model_quantitative_density_still_reaches_direct(self):
+        rules = _norm(" ".join(self.item["09_evidence_source_plan"]["source_authority_rules"]))
+        self.assertIn("a quantitative antigen-density measurement in a well-matched crc model can reach direct", rules)
+        self.assertIn("a membranous-ihc / cell-surface-proteomics localization observation in a well-matched crc model never reaches indirect_strong", rules)
+
+    # ---- blocker 2 ---------------------------------------------------------
+    def test_fatal_contributor_is_crc_malignant_cell_only(self):
+        crit = _flatten(self.item["08_fatal_conditions"]["machine_detection_criteria"]["each_contributing_observation_must_be"])
+        self.assertIn("on crc malignant cells only -- not a well-matched crc model and not any model proxy", crit)
+        self.assertIn("it does not extend fatal authority", crit)
+        self.assertIn("surface_context_class == crc_malignant_cells", crit)
+        excl = _flatten(self.item["08_fatal_conditions"]["explicitly_excluded_from_a_fatal_trigger"])
+        self.assertIn("a well-matched crc model quantitative negligible_or_undetectable observation", excl)
+        self.assertIn("it may drive an ordinary direct opposes direction but is never a fatal_review contributor", excl)
+
+    def test_fatal_review_required_iff_excludes_the_model_proxy(self):
+        r = _norm(self.item["12_assessment_proposal_envelope_contract"]["fatal_review"]["required_is_true_iff"])
+        self.assertIn("each on crc malignant cells only", r)
+        self.assertIn("not a well-matched crc model", r)
+        self.assertIn("across at least two independent qualified crc malignant-cell surface-context identities", r)
+        c13 = self.checks
+        self.assertIn("every contributing observation is a direct-class quantitative crc-malignant-cell negligible_or_undetectable observation", c13)
+        self.assertIn("no well-matched crc model / localization / rna / non-crc / low-but-present contributor", c13)
+
+    # ---- blocker 3 ---------------------------------------------------------
+    def test_both_direct_and_indirect_strong_qualifying_obs_carry_a_local_id(self):
+        i11 = _flatten(self.item["11_evidencepackage_output_contract"])
+        self.assertIn("both a qualifying direct quantitative density observation and a qualifying indirect_strong localization observation must carry at least one auditable local surface_context_id", i11)
+        self.assertIn("any observation classified qualifying direct or qualifying indirect_strong carries at least one auditable local surface_context_id", self.checks)
+        i06 = _norm(self.item["06_direction_interpretation"]["qualifying_local_surface_context_identity"])
+        self.assertIn("this is evidence / audit-integrity identity, not a grading axis", i06)
+        self.assertIn("a localization-only completed landscape (even with a valid indirect surface-context set) still maps to inconclusive / unknown", i06)
+
+    def test_completion_carries_qualifying_indirect_surface_context_ids(self):
+        tc = _norm(self.item["09_evidence_source_plan"]["surface_search_landscape"]["typed_completion_record"])
+        self.assertIn("qualifying_direct_surface_context_ids / qualifying_indirect_surface_context_ids", tc)
+        self.assertIn("this is evidence / audit-integrity reconciliation, not a grading axis", tc)
+        self.assertIn("both qualifying context id sets -- direct and indirect", tc)
+        each = _flatten(self.item["11_evidencepackage_output_contract"]["each_package"])
+        self.assertIn("qualifying_direct_surface_context_ids, qualifying_indirect_surface_context_ids", each)
+        namespace = self.checks
+        self.assertIn("completion.qualifying_indirect_surface_context_ids", namespace)
+
+    def test_localization_only_with_valid_indirect_set_is_still_unknown(self):
+        loc = _norm(self.item["15_failure_unknown_and_conflict_behavior"]["localization_only_completed_landscape"])
+        self.assertIn("even when a non-empty valid qualifying_indirect_surface_context_ids set is reconciled", loc)
+        self.assertIn("the indirect set is audit-integrity only, it never lifts the strength above unknown", loc)
+
+    # ---- blocker 4 ---------------------------------------------------------
+    def test_raw_density_value_is_an_exact_reuse_parity_field(self):
+        i11 = _flatten(self.item["11_evidencepackage_output_contract"])
+        self.assertIn("the raw factual reported_density_value / reported_density_unit / reported_density_summary are factual exact-reuse parity fields when present", i11)
+        self.assertIn("a reused ep whose stored raw density value, unit or summary differs from the canonical package's is a hard identity integrity failure", i11)
+        self.assertIn("this is empirical-identity parity of a canonical observation, not classification authority", i11)
+        self.assertIn("no drifted reported_density_value / reported_density_unit / reported_density_summary on a reused quantitative_surface_density package when present", self.checks)
+
+    def test_raw_density_drift_is_hard_but_not_a_scoring_event(self):
+        checks = self.checks
+        self.assertIn("a drift in the stored reported_density_value / reported_density_unit / reported_density_summary (when present on the canonical package) is a hard identity integrity failure, not a scoring event", checks)
+        on_fail = _norm(self.item["13_machine_acceptance_criteria"]["on_failure"])
+        self.assertIn("a drifted reused reported_density_value / reported_density_unit / reported_density_summary", on_fail)
 
 
 class NoImplementationInPrE11Tests(unittest.TestCase):

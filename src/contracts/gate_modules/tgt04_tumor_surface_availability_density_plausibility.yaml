@@ -344,6 +344,28 @@ acceptance_checklist:
         does NOT produce a NEGATIVE Gate Direction -- the density question is
         still not quantitatively answered. It is a CONTEXTUAL localization
         observation.
+    rung_context_authority: >-
+      the "or well-matched CRC models" permission in the frozen PR D ladder is
+      DIRECT-only. A DIRECT quantitative antigen-density observation may qualify
+      on surface_context_class == CRC_MALIGNANT_CELLS OR WELL_MATCHED_CRC_MODEL.
+      An INDIRECT_STRONG membranous-IHC / cell-surface-proteomics localization
+      observation may qualify ONLY on surface_context_class == CRC_MALIGNANT_CELLS
+      (with malignant_cell_attribution + auditable basis); a well-matched CRC
+      model localization observation is a CONTEXTUAL localization reading, never
+      an INDIRECT_STRONG rung. A well-matched CRC model quantitative
+      NEGLIGIBLE_OR_UNDETECTABLE observation may still contribute an ordinary
+      DIRECT OPPOSES_DENSITY_PLAUSIBILITY Direction, but it is NEVER a
+      fatal_review contributor -- the frozen PR D fatal sentence is "on CRC
+      malignant cells" only (PR E11 review round-1 gene).
+    qualifying_local_surface_context_identity: >-
+      BOTH a qualifying DIRECT quantitative antigen-density observation AND a
+      qualifying INDIRECT_STRONG localization observation must carry at least one
+      auditable LOCAL surface_context_id -- this is evidence / audit-integrity
+      identity, NOT a grading axis. Adding an indirect qualifying set does NOT
+      make INDIRECT_STRONG propagate to a Gate-level Strength: a localization-only
+      completed landscape (even with a valid indirect surface-context set) still
+      maps to INCONCLUSIVE / UNKNOWN per tgt04_specific_strength_rule (PR E11
+      review round-1 gene).
     legal_direction_strength_pairs:
       - POSITIVE / DIRECT
       - NEGATIVE / DIRECT
@@ -413,8 +435,8 @@ acceptance_checklist:
     machine_detection_criteria:
       each_contributing_observation_must_be:
         - a DIRECT-class quantitative cell-surface antigen density observation
-        - on CRC malignant cells OR a QUALIFIED well-matched CRC malignant-cell model (per the frozen DIRECT ladder)
-        - in an explicitly qualified CRC surface context (surface_context_class in {CRC_MALIGNANT_CELLS, WELL_MATCHED_CRC_MODEL}) with a QUALIFIED context_adequacy_status and an auditable surface_context_basis + context_adequacy_basis
+        - on CRC MALIGNANT CELLS ONLY -- NOT a well-matched CRC model and NOT any model proxy. The frozen PR D fatal sentence is "negligible or undetectable cell-surface antigen on CRC malignant cells"; the DIRECT ladder's "or well-matched CRC models" permission is for ordinary Direction grading only, it does NOT extend fatal authority. A well-matched CRC model NEGLIGIBLE_OR_UNDETECTABLE observation may contribute an ordinary DIRECT OPPOSES_DENSITY_PLAUSIBILITY Direction but is NEVER a fatal_review contributor; extending fatal authority to a model proxy would require a Gate contract / version change, not a Module decision (PR E11 review round-1 gene)
+        - in an explicitly qualified CRC surface context (surface_context_class == CRC_MALIGNANT_CELLS) with a QUALIFIED context_adequacy_status and an auditable surface_context_basis + context_adequacy_basis, plus an explicit malignant_cell_attribution + auditable malignant_attribution_basis
         - carrying measurement_validation_status == QUALIFIED with an auditable measurement_validation_basis and a non-empty factual assay_method
         - carrying surface_antigen_level == NEGLIGIBLE_OR_UNDETECTABLE (NOT LOW_BUT_PRESENT, NOT QUANTITATIVELY_PRESENT) with an auditable surface_antigen_level_basis
       landscape: a completed, audited surface-availability-search landscape (item 16)
@@ -430,14 +452,16 @@ acceptance_checklist:
         negligible / undetectable surface antigen.
       route_b_independent_convergence: >-
         convergent NEGLIGIBLE_OR_UNDETECTABLE across AT LEAST TWO independent
-        qualified CRC surface-context identities (distinct auditable
-        surface_context identities). This is a deterministic SUFFICIENT
-        convergence pattern -- it is NOT the word-meaning definition of
-        "reproducible" and NOT a new biological threshold. It is NOT "more than
-        two" / "> 2".
+        qualified CRC MALIGNANT-CELL surface-context identities (distinct
+        auditable surface_context identities, each surface_context_class ==
+        CRC_MALIGNANT_CELLS -- a well-matched CRC model identity does NOT count
+        toward the convergence). This is a deterministic SUFFICIENT convergence
+        pattern -- it is NOT the word-meaning definition of "reproducible" and
+        NOT a new biological threshold. It is NOT "more than two" / "> 2".
     explicitly_excluded_from_a_fatal_trigger:
       - LOW_BUT_PRESENT surface antigen
       - a merely NOT_PLAUSIBLY_ADEQUATE density_plausibility_status without surface_antigen_level == NEGLIGIBLE_OR_UNDETECTABLE
+      - a well-matched CRC model quantitative NEGLIGIBLE_OR_UNDETECTABLE observation (surface_context_class == WELL_MATCHED_CRC_MODEL) -- it may drive an ordinary DIRECT OPPOSES Direction but is never a fatal_review contributor
       - localization-only evidence (membranous IHC / surface proteomics / prediction)
       - RNA / bulk surface-proxy evidence
       - non-CRC surface evidence
@@ -487,7 +511,8 @@ acceptance_checklist:
       - surface LOCALIZATION (membranous IHC / cell-surface proteomics) NEVER discharges the quantitative antigen-density requirement -- its ceiling is INDIRECT_STRONG and it never lifts the Gate-level Strength above UNKNOWN
       - topology / signal-peptide / GO-term surface prediction is WEAK only
       - surface evidence from non-CRC cell lines only is WEAK only and is never CRC surface density
-      - a quantitative antigen-density measurement in a well-matched CRC model can reach DIRECT (PR D allows "or well-matched CRC models"), but only with surface_context_class == WELL_MATCHED_CRC_MODEL, a QUALIFIED context_adequacy_status and an auditable basis -- never from crc_specific alone
+      - a quantitative antigen-density measurement in a well-matched CRC model can reach DIRECT (PR D allows "or well-matched CRC models"), but only with surface_context_class == WELL_MATCHED_CRC_MODEL, a QUALIFIED context_adequacy_status and an auditable basis -- never from crc_specific alone. The "or well-matched CRC models" permission is DIRECT-only -- a membranous-IHC / cell-surface-proteomics localization observation in a well-matched CRC model NEVER reaches INDIRECT_STRONG (INDIRECT_STRONG requires surface_context_class == CRC_MALIGNANT_CELLS), and a well-matched CRC model observation is NEVER a fatal_review contributor
+      - a qualifying DIRECT quantitative density observation and a qualifying INDIRECT_STRONG localization observation each carry at least one auditable LOCAL surface_context_id and are each reconciled into the SurfaceAvailabilityCompletion (qualifying_direct_surface_context_ids / qualifying_indirect_surface_context_ids respectively) -- audit-integrity reconciliation only; the indirect set never grants density-question grading authority
       - the EVGAP-01 surface-localization lock contributes surface-localization evidence ONLY, never antigen density
       - a weak_only source class can never lift an assessment above INCONCLUSIVE / UNKNOWN
       - the number of qualifying localization datasets never raises the evidence-class ceiling above INDIRECT_STRONG and never grants density-question grading authority
@@ -515,15 +540,23 @@ acceptance_checklist:
         quantitative_surface_density_search_complete /
         membranous_ihc_search_complete / surface_proteomics_search_complete /
         subcellular_localization_search_complete / unresolved_items /
-        qualifying_direct_surface_context_ids / audit_observation_id. There is NO
-        E6-style two mandatory axes and NO localization-tier qualifying context
-        set -- only DIRECT quantitative density observations produce a qualifying
-        surface-context set, because only they grant grading authority.
-        completion <-> SEARCH_COMPLETION_AUDIT snapshot parity (E6 / E8 / E10
-        gene) is frozen for E12: the snapshot field names ARE the typed
-        completion field names (search_scope / sources_searched / landscape_as_of
-        / per-component completion states / unresolved_items / qualifying context
-        id set); a missing / drifted / dedup-lost snapshot -> HARD reject.
+        qualifying_direct_surface_context_ids /
+        qualifying_indirect_surface_context_ids / audit_observation_id. There is
+        NO E6-style two mandatory axes. BOTH a qualifying DIRECT quantitative
+        density observation AND a qualifying INDIRECT_STRONG localization
+        observation produce a LOCAL surface-context set here -- this is
+        evidence / audit-integrity reconciliation, NOT a grading axis: only
+        DIRECT quantitative density observations grant density-question grading
+        authority, and adding qualifying_indirect_surface_context_ids does NOT
+        make INDIRECT_STRONG propagate to a Gate-level Strength (a
+        localization-only completed landscape with a valid indirect set is still
+        INCONCLUSIVE / UNKNOWN). completion <-> SEARCH_COMPLETION_AUDIT snapshot
+        parity (E6 / E8 / E10 gene) is frozen for E12: the snapshot field names
+        ARE the typed completion field names (search_scope / sources_searched /
+        landscape_as_of / per-component completion states / unresolved_items /
+        BOTH qualifying context id sets -- direct and indirect); a missing /
+        drifted / dedup-lost snapshot, or a drift in either qualifying
+        surface-context set, -> HARD reject.
     no_universal_threshold: >-
       no antigen-density cutoff, no molecules-per-cell threshold, no ABC
       threshold, no percent-positive cutoff, no H-score cutoff, no invented
@@ -562,9 +595,9 @@ acceptance_checklist:
       - carries interpretation_boundary (observation-level directly_supports / does_not_support / limitations / a neutral observation-level evidence_ceiling)
       - carries derivation (module_run_id, code_commit)
       - carries the classification-driving observation fields in study_context (observation_kind, molecular_layer, assay_method, measurement_validation_status + measurement_validation_basis, crc_specific, surface_context_class + surface_context_basis, context_adequacy_status + context_adequacy_basis, malignant_cell_attribution + malignant_attribution_basis, surface_localization_status + surface_localization_basis, density_plausibility_status + density_plausibility_basis, surface_antigen_level + surface_antigen_level_basis, reproducibility_status + reproducibility_basis, surface_context_id / surface_context_ids, context_key, landscape_as_of)
-      - surface_context_id / surface_context_ids is a LOCAL evidence-context identity namespace (a declared multi-context analysis) and is deliberately NOT the canonical Instantiation context_id (CTX-CRC-REFRACTORY-MCRC); a Module must never collapse a surface_context_id onto the canonical context_id (E10 identity-namespace gene)
+      - surface_context_id / surface_context_ids is a LOCAL evidence-context identity namespace (a declared multi-context analysis) and is deliberately NOT the canonical Instantiation context_id (CTX-CRC-REFRACTORY-MCRC); a Module must never collapse a surface_context_id onto the canonical context_id (E10 identity-namespace gene). BOTH a qualifying DIRECT quantitative density observation AND a qualifying INDIRECT_STRONG localization observation MUST carry at least one auditable local surface_context_id (PR E11 review round-1 gene)
       - kind / fact-specific study_context -- NEVER promote a non-CRC / prediction / RNA-proxy / audit observation's source study context to a CRC malignant-cell surface density measurement; the run's scientific context is pinned separately by context_key / the Instantiation (E8 gene)
-      - for a SEARCH_COMPLETION_AUDIT observation, additionally carries a structured snapshot of the SurfaceAvailabilityCompletion it certifies (search_scope, sources_searched, landscape_as_of, per-component completion states, unresolved_items, qualifying_direct_surface_context_ids) -- the snapshot field names are exactly the typed completion's field names (same namespace), and it MUST survive the shared (source_id, claim) dedup, because an attempted completion needs exactly one emitted / reused provenance-bearing matching audit EP (E8 gene)
+      - for a SEARCH_COMPLETION_AUDIT observation, additionally carries a structured snapshot of the SurfaceAvailabilityCompletion it certifies (search_scope, sources_searched, landscape_as_of, per-component completion states, unresolved_items, qualifying_direct_surface_context_ids, qualifying_indirect_surface_context_ids) -- the snapshot field names are exactly the typed completion's field names (same namespace), both qualifying surface-context sets are locked, and it MUST survive the shared (source_id, claim) dedup, because an attempted completion needs exactly one emitted / reused provenance-bearing matching audit EP (E8 gene)
     neutral_wording:
       may_say:
         - "source reported ~12000 target molecules per cell on CRC malignant cells by QIFIKIT"
@@ -582,6 +615,7 @@ acceptance_checklist:
     rules:
       - the Module references an existing EvidencePackage by evidence_id -- it reuses the EXACT canonical package, never copies or re-creates one (PR C / E1 item 11; PR E2 / E8 / E10 gene)
       - on reuse, observation_id is part of the exact-reuse identity parity (a reused EP whose study_context.observation_id names a different observation is a HARD failure), every classification / absence driving field for that observation kind must be present AND equal on the canonical package's study_context -- including measurement_validation_status for a quantitative-density observation and surface_localization_status for a localization observation -- and the reused EP's own provenance source_type / source_identifier / locator must still equal the resolved canonical SourceIndex record -- not just that source_id resolves (PR E8 / E10 gene); a missing or drifted field is a HARD identity integrity failure
+      - for a QUANTITATIVE_SURFACE_DENSITY observation the raw factual reported_density_value / reported_density_unit / reported_density_summary are FACTUAL EXACT-REUSE PARITY fields WHEN PRESENT -- a reused EP whose stored raw density value, unit or summary differs from the canonical package's is a HARD identity integrity failure. This is empirical-identity parity of a canonical observation, NOT classification authority -- the raw value / unit still never drives a Direction, a fatal signal or any threshold / cutoff / range comparison (PR E11 review round-1 gene)
       - dedup uses the improved TGT-03 rule, NOT a blind (source_id, claim) -- the same source_id + the same claim but a DIFFERENT surface_context_id -> BOTH observations survive (the local context affects conflict, fatal Route B and the population interpretation); a true duplicate is dropped only when source_id AND claim AND every classification-driving fact AND the LOCAL surface-context identity all match; a SEARCH_COMPLETION_AUDIT EP is NEVER a dedup loser
       - forward status / superseded_by never appear on evidence.json (PR C -- they live only on the EvidenceIndexEntry)
     shape_ref: src/contracts/data_layout/evidence_package.schema.json + src/objects/decision_model.py EvidencePackage (PR A)
@@ -631,18 +665,22 @@ acceptance_checklist:
       machine_never_emits: PUBLIC_FATAL_SIGNAL_ESTABLISHED / a canonical fatal flag / KILL / HOLD / Decision
       required_is_true_iff: >-
         the machine has DIRECT-class quantitative cell-surface antigen density
-        observations, each on CRC malignant cells or a QUALIFIED well-matched CRC
-        malignant-cell model, each in a qualified CRC surface context with a
-        QUALIFIED context_adequacy_status + auditable basis, each carrying
+        observations, each on CRC MALIGNANT CELLS ONLY (NOT a well-matched CRC
+        model -- a model proxy may drive an ordinary Direction but never a
+        fatal_review contribution), each in a qualified CRC surface context
+        (surface_context_class == CRC_MALIGNANT_CELLS) with a QUALIFIED
+        context_adequacy_status + auditable basis and an explicit
+        malignant_cell_attribution + auditable basis, each carrying
         measurement_validation_status == QUALIFIED + auditable basis and a
         non-empty factual assay_method, each carrying surface_antigen_level ==
         NEGLIGIBLE_OR_UNDETECTABLE + auditable basis, on a completed audited
         surface landscape, AND reproducibility is established by route A (an
         auditable explicit reproducibility qualification) OR route B (convergent
         NEGLIGIBLE_OR_UNDETECTABLE across at least two independent qualified CRC
-        surface-context identities). A single negligible observation with no route
-        A qualification and no independent convergence gives required = false. A
-        LOW_BUT_PRESENT observation never contributes.
+        MALIGNANT-CELL surface-context identities). A single negligible
+        observation with no route A qualification and no independent convergence
+        gives required = false. A LOW_BUT_PRESENT observation, and a well-matched
+        CRC model observation, never contribute.
       only_actionable_on_an_accepted_run: >-
         the raw detector may compute the candidate pattern internally, but a
         fatal_review is an actionable handoff ONLY on an accepted run
@@ -680,21 +718,22 @@ acceptance_checklist:
       - the candidate's canonical target identity matches every observation's target_identity; a mismatch is a HARD misbinding failure
       - every observation.context_key equals the run's context_key, and the SurfaceAvailabilityCompletion.search_scope equals the run's declared surface_search_scope (PR E8 gene); a drift is a HARD integrity failure
       - every provenance.source_id resolves to a canonical SourceIndex record whose metadata matches, and every evidence_ref.evidence_id resolves to a canonical EvidencePackage (PR C check_* functions; PR E2 gene)
-      - exact canonical EP reuse parity passes -- observation_id parity, no missing / drifted classification-driving field on a reused package, and the reused EP's own source_type / source_identifier / locator still equal the resolved canonical SourceIndex (PR E2 / E8 / E10 gene)
-      - the completion <-> SEARCH_COMPLETION_AUDIT snapshot parity passes -- an attempted completion has exactly one normalized matching audit observation AND exactly one emitted / reused provenance-bearing matching audit EP that carries a structured snapshot equal to the typed completion (search_scope, sources_searched, landscape_as_of, per-component completion states, unresolved_items, qualifying_direct_surface_context_ids); a missing / drifted / dedup-lost snapshot is a HARD integrity failure (PR E6 / E8 / E10 gene)
+      - exact canonical EP reuse parity passes -- observation_id parity, no missing / drifted classification-driving field on a reused package, no drifted reported_density_value / reported_density_unit / reported_density_summary on a reused QUANTITATIVE_SURFACE_DENSITY package when present on the canonical package, and the reused EP's own source_type / source_identifier / locator still equal the resolved canonical SourceIndex (PR E2 / E8 / E10 / E11 gene)
+      - the completion <-> SEARCH_COMPLETION_AUDIT snapshot parity passes -- an attempted completion has exactly one normalized matching audit observation AND exactly one emitted / reused provenance-bearing matching audit EP that carries a structured snapshot equal to the typed completion (search_scope, sources_searched, landscape_as_of, per-component completion states, unresolved_items, qualifying_direct_surface_context_ids, qualifying_indirect_surface_context_ids); a missing / drifted / dedup-lost snapshot, or a drift in either qualifying surface-context set, is a HARD integrity failure (PR E6 / E8 / E10 gene)
       - public_surface_search_complete equals all four declared component search states; a contradiction is a HARD integrity failure
       - every admissible evidence class used is in item 04's admissible list, and no item-04 not_admissible class is present
       - RNA / bulk surface-proxy evidence never proposes above WEAK and never becomes a surface-protein or surface-density claim; topology / signal-peptide / GO-term prediction never above WEAK; non-CRC surface evidence never above WEAK; localization (membranous IHC / surface proteomics) never above INDIRECT_STRONG and never grants the Gate density-question grading authority
       - DIRECT is not gated on a closed assay whitelist -- a quantitative cell-surface antigen density measurement with a factual assay_method type qualifies; absolute-quantitation flow / QIFIKIT / mass cytometry / quantitative surfaceomics are examples, not the exhaustive set. The assay_method vocabulary stays OPEN; the measurement-validation predicate is CLOSED -- measurement_validation_status is in {QUALIFIED, NOT_ESTABLISHED}, DIRECT requires measurement_validation_status == QUALIFIED with a non-empty auditable measurement_validation_basis AND a non-empty factual assay_method, and NOT_ESTABLISHED can never reach DIRECT
-      - a DIRECT / INDIRECT_STRONG rung requires an EXPLICITLY qualified surface context -- surface_context_class in {CRC_MALIGNANT_CELLS, WELL_MATCHED_CRC_MODEL} with context_adequacy_status == QUALIFIED and an auditable surface_context_basis + context_adequacy_basis; a bare crc_specific == true never reaches a rung (PR E10 round-1 gene)
+      - a DIRECT rung requires an EXPLICITLY qualified surface context -- surface_context_class in {CRC_MALIGNANT_CELLS, WELL_MATCHED_CRC_MODEL} with context_adequacy_status == QUALIFIED and an auditable surface_context_basis + context_adequacy_basis; a bare crc_specific == true never reaches a rung (PR E10 round-1 gene)
+      - an INDIRECT_STRONG localization rung is NARROWER than DIRECT on context -- it requires surface_context_class == CRC_MALIGNANT_CELLS (NEVER WELL_MATCHED_CRC_MODEL, NEVER NON_CRC_MODEL) with context_adequacy_status == QUALIFIED and an auditable surface_context_basis + context_adequacy_basis, plus an explicit malignant_cell_attribution with an auditable malignant_attribution_basis. The frozen PR D INDIRECT_STRONG class is "validated membranous IHC / cell-surface proteomics on CRC malignant cells" only; the "or well-matched CRC models" permission exists ONLY in the DIRECT quantitative-density class. A well-matched CRC model membranous-IHC / surface-proteomics observation is a CONTEXTUAL localization reading, NEVER an INDIRECT_STRONG rung. Qualifying clinical CRC localization keeps malignant-cell attribution + auditable basis; it is never substituted by crc_specific == true or a model label (PR E11 review round-1 gene)
       - every classification-driving qualified status carries an auditable basis -- surface_context_class, context_adequacy_status, surface_localization_status, measurement_validation_status, density_plausibility_status, surface_antigen_level, reproducibility_status; a missing / drifted qualification basis is a HARD integrity failure
-      - the LOCAL surface-context namespace (study_context.surface_context_id / surface_context_ids, completion.qualifying_direct_surface_context_ids, fatal_review.surface_context_ids) is never the canonical Instantiation context_id (CTX-CRC-REFRACTORY-MCRC); a proposal or record that collapses a surface_context_id onto the canonical context_id is a HARD identity-namespace failure; any observation classified qualifying DIRECT carries at least one auditable local surface_context_id (PR E10 round-1 gene)
+      - the LOCAL surface-context namespace (study_context.surface_context_id / surface_context_ids, completion.qualifying_direct_surface_context_ids, completion.qualifying_indirect_surface_context_ids, fatal_review.surface_context_ids) is never the canonical Instantiation context_id (CTX-CRC-REFRACTORY-MCRC); a proposal or record that collapses a surface_context_id onto the canonical context_id is a HARD identity-namespace failure; any observation classified qualifying DIRECT OR qualifying INDIRECT_STRONG carries at least one auditable local surface_context_id, and a qualifying observation with none is a HARD integrity failure (PR E10 round-1 + PR E11 review round-1 gene)
       - the Gate-level proposed_strength is DIRECT iff a qualifying DIRECT quantitative antigen-density observation exists on the completed audited landscape, else UNKNOWN -- there is NO highest-qualifying-rung propagation from INDIRECT_STRONG localization; a proposal with proposed_strength == INDIRECT_STRONG or WEAK is a HARD failure
       - proposed_direction x proposed_strength is exactly one of the five legal item-06 pairs (POSITIVE / DIRECT, NEGATIVE / DIRECT, CONFLICTING / DIRECT, INCONCLUSIVE / DIRECT, INCONCLUSIVE / UNKNOWN); INCONCLUSIVE / UNKNOWN carries zero evidence_refs; a graded INCONCLUSIVE / DIRECT carries CONTEXTUAL evidence_refs
       - the Direction over a qualifying DIRECT quantitative observation follows the frozen item-06 density_direction_mapping (surface_antigen_level NEGLIGIBLE_OR_UNDETECTABLE -> OPPOSES; else density_plausibility_status PLAUSIBLY_ADEQUATE -> SUPPORTS; NOT_PLAUSIBLY_ADEQUATE -> OPPOSES; MIXED_OR_UNRESOLVED / NOT_ESTABLISHED -> CONTEXTUAL); a LOW_BUT_PRESENT observation is never scored CONTRADICTING on the antigen-level fact alone and never contributes to the fatal_review
-      - no numeric decision is taken on a reported_density_value / reported_density_unit -- the raw value may be stored as a factual measurement but is never compared to a threshold, cutoff or invented range
+      - no numeric decision is taken on a reported_density_value / reported_density_unit -- the raw value may be stored as a factual measurement but is never compared to a threshold, cutoff or invented range; separately, on canonical EP reuse a drift in the stored reported_density_value / reported_density_unit / reported_density_summary (when present on the canonical package) is a HARD identity integrity failure, not a scoring event
       - the mandatory surface-availability-search landscape is complete for the path taken (item 16); the Module did not grade early on one quantitative dataset, one localization dataset, or one negligible-antigen observation
-      - if the module-local fatal_review record has required = true, its status is POTENTIAL_FATAL_PATTERN (never PUBLIC_FATAL_SIGNAL_ESTABLISHED), every contributing observation is a DIRECT-class quantitative CRC-malignant-cell (or QUALIFIED well-matched CRC model) NEGLIGIBLE_OR_UNDETECTABLE observation (no localization / RNA / non-CRC / low-but-present contributor), the reproducibility route A or B basis is auditable, and it is surfaced only on an accepted run
+      - if the module-local fatal_review record has required = true, its status is POTENTIAL_FATAL_PATTERN (never PUBLIC_FATAL_SIGNAL_ESTABLISHED), every contributing observation is a DIRECT-class quantitative CRC-MALIGNANT-CELL NEGLIGIBLE_OR_UNDETECTABLE observation (surface_context_class == CRC_MALIGNANT_CELLS; NO well-matched CRC model / localization / RNA / non-CRC / low-but-present contributor), the reproducibility route A or B basis is auditable, and it is surfaced only on an accepted run
       - fatal_review is not a field of the proposal envelope
       - dedup -- one SRC -> many EP is allowed; a same source_id + same claim + different surface_context_id keeps both; the same (source_id, claim, all-driving-facts, local-context) is not duplicated; a SEARCH_COMPLETION_AUDIT EP is never the dedup loser for an attempted completion
       - all required fields present; no numeric or ranking score anywhere; no antigen-density / molecules-per-cell / ABC / percent-positive / H-score threshold; no invented ADC-effective range
@@ -707,10 +746,15 @@ acceptance_checklist:
       claimed-resolved source missing from the canonical SourceIndex, a
       canonical-source metadata conflict, an incompatible canonical
       EvidencePackage, a completion-audit snapshot drift or a dedup-lost audit
-      EP, a local surface_context_id equal to the canonical context_id, a
-      qualifying observation with no local surface_context_id, a missing /
-      drifted qualification basis) rejects the WHOLE run -- it is never degraded
-      to an accepted UNKNOWN (PR E2 / E8 / E10 gene). UNKNOWN from a genuinely
+      EP, a drift in either qualifying surface-context set, a drifted reused
+      reported_density_value / reported_density_unit / reported_density_summary, a
+      local surface_context_id equal to the canonical context_id, a qualifying
+      DIRECT or qualifying INDIRECT_STRONG observation with no local
+      surface_context_id, an INDIRECT_STRONG rung asserted on a
+      WELL_MATCHED_CRC_MODEL / NON_CRC_MODEL context, a well-matched CRC model
+      observation used as a fatal_review contributor, a missing / drifted
+      qualification basis) rejects the WHOLE run -- it is never degraded to an
+      accepted UNKNOWN (PR E2 / E8 / E10 / E11 gene). UNKNOWN from a genuinely
       incomplete public surface search, or from a completed landscape with no
       qualifying DIRECT quantitative density evidence, is NOT an integrity
       failure.
@@ -720,7 +764,7 @@ acceptance_checklist:
       - the proposed_direction + proposed_strength and the aggregation_rationale
       - each EvidencePackage's claim, source and interpretation_boundary (drill-down) -- per-context evidence, assay / molecular layer, measurement validation, malignant-cell attribution basis, surface-context basis, surface-localization basis, density-plausibility basis, surface-antigen-level basis, reproducibility basis, and any raw reported density value / unit
       - the ladder rung each package maps to, and any critical_unknowns
-      - the SurfaceAvailabilityCompletion snapshot -- which mandatory components are complete / incomplete and the qualifying DIRECT surface-context ids
+      - the SurfaceAvailabilityCompletion snapshot -- which mandatory components are complete / incomplete and the qualifying DIRECT and qualifying INDIRECT_STRONG surface-context ids (the indirect set is audit-integrity only, not a grading axis)
       - the module-local fatal_review record (item 12) -- status POTENTIAL_FATAL_PATTERN, the contributing evidence_ids / surface_context_ids / antigen_level_class / context_qualification_basis_refs / measurement_validation_basis_refs / reproducibility_basis_refs
       - the machine acceptance record (item 13 pass / fail detail)
     human_only_judgements:
@@ -756,10 +800,13 @@ acceptance_checklist:
       NO qualifying DIRECT quantitative density evidence -> INCONCLUSIVE /
       UNKNOWN, ZERO proposal evidence_refs, and a critical_unknown
       "a quantitative cell-surface antigen density measurement on CRC malignant
-      cells" = EXPERIMENT_REQUIRED. The EvidencePackages still preserve the
-      localization facts for human drill-down. Verbatim from the frozen contract:
-      "Only localization or RNA evidence available -> strength stays UNKNOWN on
-      the density question; it is not upgraded."
+      cells" = EXPERIMENT_REQUIRED -- and this holds even when a non-empty valid
+      qualifying_indirect_surface_context_ids set is reconciled into the
+      SurfaceAvailabilityCompletion (the indirect set is audit-integrity only, it
+      never lifts the Strength above UNKNOWN). The EvidencePackages still preserve
+      the localization facts for human drill-down. Verbatim from the frozen
+      contract: "Only localization or RNA evidence available -> strength stays
+      UNKNOWN on the density question; it is not upgraded."
     rna_or_prediction_only: >-
       propose INCONCLUSIVE / UNKNOWN (never a surface claim). RNA / bulk
       expression, topology / signal-peptide / GO-term prediction and non-CRC-only
