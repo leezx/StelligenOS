@@ -5909,3 +5909,31 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 状态：manifest `review_rounds: 1` + `review_round_1` 块已写。binding 仍 1.0.0；
   `MIGRATION_PENDING` 保持。
 - Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-2 回复。
+
+---
+
+## 2026-08-31 — Runtime Migration PR E10 · APPROVE + merge + approval record
+
+- ChatGPT `AI审核方案` round 2 = **APPROVE @ `6445ae5`**。5 个 round-1 runtime
+  correctness blocker 全部实质关闭；13 个新 regression 覆盖对应错误路径；无新
+  substantive blocker；frozen semantics 确认未被破坏（NEGATIVE ≠ fatal ≠ KILL、
+  Route A/B、Route B `>= 2` 非 `> 2`、highest-class Strength、四 component =
+  completeness、incomplete → accepted UNKNOWN、WEAK-only → UNKNOWN、TGT-03 dedup
+  保留不同 persistence contexts、fatal trigger 仅 accepted run、
+  `MIGRATION_PENDING` 保持、5/8 built）。
+- PR #124 已 merge → merge commit `551a938`（`Merge pull request #124`）。merge
+  前把 PR body 测试数字 78/1366 更新为 91/1379 + 2 轮审核小结。
+- 独立 docs-only approval-record PR：分支
+  `task_20260830_runtime-migration-pr-e10-approval-record`。新增
+  `logs/chatgpt-review-2026-08-31-runtime-migration-pr-e10.md`（2 轮往返完整记录）；
+  `manifests/runtime_migration_pr_e10_manifest.yaml` → `status: approved`、
+  `chatgpt_review: APPROVE`、`approved_tip: 6445ae5…`、`merge_commit: 551a938…`、
+  `review_rounds: 2`、`test_count_at_approval: 1379`、`review_round_2` 块、
+  `approval_record_pr` 字段。不改 PR E10 的实现、测试、handoff。
+- GitHub connector 每轮 403，REQUEST_CHANGES / APPROVE 未回写 GitHub review state；
+  `AI审核方案` 对话结论 authoritative。
+- 状态：8 个 primary Module 已实现 5 个（TGT-01/02/03/05/08 @ 1.0.0）。MOD-TGT03
+  `primary_module_version` = `1.0.0`；`BUILT_MODULE_VERSIONS` =
+  TGT-01/02/03/05/08；`MIGRATION_PENDING` 保持。
+- Next：PR E11 = TGT-04 construction contract（fatal-first 顺序余下 TGT-04 →
+  TGT-06 → TGT-07），需各自 go-ahead。
