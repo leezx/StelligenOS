@@ -641,16 +641,70 @@ class ReviewRound1RegressionTests(unittest.TestCase):
     # ---- blocker 4 ---------------------------------------------------------
     def test_raw_density_value_is_an_exact_reuse_parity_field(self):
         i11 = _flatten(self.item["11_evidencepackage_output_contract"])
-        self.assertIn("the raw factual reported_density_value / reported_density_unit / reported_density_summary are factual exact-reuse parity fields when present", i11)
-        self.assertIn("a reused ep whose stored raw density value, unit or summary differs from the canonical package's is a hard identity integrity failure", i11)
-        self.assertIn("this is empirical-identity parity of a canonical observation, not classification authority", i11)
-        self.assertIn("no drifted reported_density_value / reported_density_unit / reported_density_summary on a reused quantitative_surface_density package when present", self.checks)
+        self.assertIn("the raw factual reported_density_value / reported_density_unit / reported_density_summary must have exact presence-and-value parity", i11)
+        self.assertIn("this is symmetric empirical-identity parity of a canonical observation, not classification authority", i11)
+        self.assertIn("the raw value / unit still never drives a direction, a fatal signal, a score or any threshold / cutoff / range comparison", i11)
+        self.assertIn("exact presence-and-value parity of reported_density_value / reported_density_unit / reported_density_summary on a reused quantitative_surface_density package", self.checks)
 
     def test_raw_density_drift_is_hard_but_not_a_scoring_event(self):
         checks = self.checks
-        self.assertIn("a drift in the stored reported_density_value / reported_density_unit / reported_density_summary (when present on the canonical package) is a hard identity integrity failure, not a scoring event", checks)
+        self.assertIn("on canonical ep reuse any presence asymmetry or value / unit difference in the stored reported_density_value / reported_density_unit / reported_density_summary between the current observation and the canonical package is a hard identity integrity failure, not a scoring event", checks)
         on_fail = _norm(self.item["13_machine_acceptance_criteria"]["on_failure"])
-        self.assertIn("a drifted reused reported_density_value / reported_density_unit / reported_density_summary", on_fail)
+        self.assertIn("a presence asymmetry or value / unit difference in a reused reported_density_value / reported_density_unit / reported_density_summary", on_fail)
+
+
+class ReviewRound2RegressionTests(unittest.TestCase):
+    """PR E11 ChatGPT AI审核方案 review round 2 -- 2 narrow residual consistency blockers
+    (the 4 round-1 blockers were all CLOSED).
+
+    (1) item-06 direction_definitions was asymmetric: POSITIVE allowed a qualified
+        well-matched CRC model, NEGATIVE did not -- but density_direction_mapping
+        maps a model NEGLIGIBLE observation to OPPOSES. NEGATIVE now also allows a
+        qualified well-matched CRC model (ordinary Direction only; model evidence
+        never contributes to fatal_review -- fatal authority stays CRC
+        malignant-cell only).
+    (2) the raw reported_density_* exact-reuse parity was a one-way "when present
+        on the canonical package" check. It is now SYMMETRIC presence-and-value
+        parity: present on one side only, or a value / unit difference, is a HARD
+        identity failure; identical on both or absent on both is compatible.
+    """
+
+    def setUp(self):
+        self.item = yaml.safe_load(CONTRACT.read_text())["acceptance_checklist"]
+        self.checks = _flatten(
+            self.item["13_machine_acceptance_criteria"][
+                "a_proposal_envelope_and_its_packages_are_machine_acceptable_iff"
+            ]
+        )
+
+    # ---- consistency blocker 1 ------------------------------------------------
+    def test_negative_direction_definition_is_symmetric_on_the_model(self):
+        dd = self.item["06_direction_interpretation"]["direction_definitions"]
+        pos = _norm(dd["POSITIVE"])
+        neg = _norm(dd["NEGATIVE"])
+        self.assertIn("or a qualified well-matched crc malignant-cell model", pos)
+        self.assertIn("or a qualified well-matched crc malignant-cell model", neg)
+
+    def test_well_matched_model_ordinary_direction_boundary(self):
+        b = _norm(self.item["06_direction_interpretation"]["direction_definitions"]["well_matched_model_ordinary_direction_boundary"])
+        self.assertIn("an ordinary graded direction", b)
+        self.assertIn("crc_malignant_cells or well_matched_crc_model", b)
+        self.assertIn("a negative / direct supported by a well-matched crc model observation is an ordinary density assessment only", b)
+        self.assertIn("never contributes to a fatal_review", b)
+        self.assertIn("fatal authority stays crc malignant-cell only", b)
+
+    # ---- consistency blocker 2 ---------------------------------------------------
+    def test_raw_density_parity_is_symmetric_presence_and_value(self):
+        i11 = _flatten(self.item["11_evidencepackage_output_contract"])
+        self.assertIn("must have exact presence-and-value parity between the current normalized observation and the canonical reused evidencepackage", i11)
+        self.assertIn("present on one side only (canonical absent / current present, or canonical present / current absent) is a hard identity integrity failure", i11)
+        self.assertIn("different values or different units is a hard identity integrity failure", i11)
+        self.assertIn("identical on both, or absent on both, is compatible reuse", i11)
+
+    def test_item13_raw_density_parity_symmetric_and_on_failure(self):
+        self.assertIn("present on one side only -- canonical absent / current present or canonical present / current absent -- is a hard failure; a value or unit difference is a hard failure; identical on both or absent on both is compatible", self.checks)
+        on_fail = _norm(self.item["13_machine_acceptance_criteria"]["on_failure"])
+        self.assertIn("a presence asymmetry or value / unit difference in a reused reported_density_value / reported_density_unit / reported_density_summary", on_fail)
 
 
 class NoImplementationInPrE11Tests(unittest.TestCase):

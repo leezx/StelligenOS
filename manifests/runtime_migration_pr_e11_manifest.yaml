@@ -291,7 +291,7 @@ next_after_approval: PR E12 = MOD-TGT04@1.0.0 deterministic implementation
 delivers:
   - src/contracts/gate_modules/tgt04_tumor_surface_availability_density_plausibility.yaml -- the frozen MOD-TGT04 construction contract with the 17-item acceptance checklist
   - docs/gate_modules/TGT-04_Tumor_Surface_Availability_Density_Plausibility.md -- the human-readable construction drawing (17-row table + three headline blockquotes + the frozen normalized-observation / SurfaceAvailabilityCompletion conceptual shape)
-  - tests/test_tgt04_module_construction_contract.py -- 67 tests (58 at submission + 9 review-round-1 regressions) (checklist completeness + E1-template reuse; items 03/05/07/08 normalized-equality parity + item 04 EXACT set-equality derived parity + inference_guard verbatim; two-tier / single-tier grading authority + the five-pair legal set; the four scoping corrections frozen; the fatal Route A / Route B rule + LOW_BUT_PRESENT never fatal; source hard locks; E2/E4/E6/E8/E10 gene inheritance incl. the five E10-review corrections; no implementation; MOD-TGT01/02/03/05/08 and the binding / registry untouched; MOD-TGT04 binding still 0.0.0; MIGRATION_PENDING remains; drawing covers all 17 items)
+  - tests/test_tgt04_module_construction_contract.py -- 71 tests (58 at submission + 9 review-round-1 + 4 review-round-2 regressions) (checklist completeness + E1-template reuse; items 03/05/07/08 normalized-equality parity + item 04 EXACT set-equality derived parity + inference_guard verbatim; two-tier / single-tier grading authority + the five-pair legal set; the four scoping corrections frozen; the fatal Route A / Route B rule + LOW_BUT_PRESENT never fatal; source hard locks; E2/E4/E6/E8/E10 gene inheritance incl. the five E10-review corrections; no implementation; MOD-TGT01/02/03/05/08 and the binding / registry untouched; MOD-TGT04 binding still 0.0.0; MIGRATION_PENDING remains; drawing covers all 17 items)
   - manifests/runtime_migration_pr_e11_manifest.yaml -- this file
   - docs/handoff/2026-08-31-runtime-migration-pr-e11.zh-CN.md -- the E11 handoff
 
@@ -325,10 +325,11 @@ repository_policy:
 chatgpt_review: pending
 approved_tip: null
 merge_commit: null
-review_rounds: 1
+review_rounds: 2
 test_count_before_e11: 1379       # at PR E10 approval
 test_count_at_submission: 1437    # local full suite at first submission (tests/test_tgt04_module_construction_contract.py 58)
-test_count_after_round_1: 1446    # +9 review-round-1 regression tests (tgt04 construction-contract file now 67)
+test_count_after_round_1: 1446    # +9 review-round-1 regression tests (tgt04 construction-contract file 67)
+test_count_after_round_2: 1450    # +4 review-round-2 consistency regression tests (tgt04 construction-contract file 71)
 approval_record_pr: null
 next_authorized_step: null        # PR E12 = MOD-TGT04@1.0.0 implementation -- needs its own go-ahead
 
@@ -360,6 +361,30 @@ review_round_1:
     - docs/gate_modules/TGT-04_Tumor_Surface_Availability_Density_Plausibility.md (rows 6 / 8 / 9 / 11 / 12 / 13 / 15 + conceptual shape)
     - tests/test_tgt04_module_construction_contract.py (58 -> 67; new ReviewRound1RegressionTests + 6 updated assertions)
   test_count_after: 1446
+
+review_round_2:
+  verdict: REQUEST_CHANGES
+  reviewer: ChatGPT AI审核方案
+  head_reviewed: e510833b4cc9d00e6d68530a53a52f8f41e0e810
+  ci_confirmed: run 33398236844 -- verify (3.11) + verify (3.12) both success
+  summary: >-
+    4/4 round-1 blockers CLOSED. 2 narrow residual contract inconsistencies --
+    contract / drawing / test / manifest / worklog only, no new scientific
+    decision, no architecture change. Reviewer expects APPROVE next round.
+  blockers:
+    - "1. item-06 direction_definitions asymmetry -- POSITIVE allowed 'CRC malignant cells (or a qualified well-matched CRC model)' but NEGATIVE said 'CRC malignant cells' only, while density_direction_mapping maps a model NEGLIGIBLE observation to OPPOSES. FIX: NEGATIVE now also allows '(or a qualified well-matched CRC model)'; new key well_matched_model_ordinary_direction_boundary -- an ordinary graded Direction (POSITIVE / NEGATIVE / CONFLICTING / INCONCLUSIVE, all at Strength DIRECT) may be supported by a qualifying DIRECT observation on CRC_MALIGNANT_CELLS OR WELL_MATCHED_CRC_MODEL (mirrors the frozen DIRECT ladder, keeps POSITIVE/NEGATIVE symmetric); a NEGATIVE / DIRECT on a well-matched model is an ordinary density assessment ONLY and model evidence NEVER contributes to fatal_review -- fatal authority stays CRC malignant-cell only. Does not expand fatal authority."
+    - "2. raw reported_density_* exact-reuse parity was one-way ('no drift WHEN PRESENT on the canonical package') -- it did not block the reverse asymmetry (canonical absent / current present, or canonical unit absent / current unit present). FIX: frozen as SYMMETRIC presence-and-value parity -- present on one side only (either direction), or a value / unit difference, is a HARD identity integrity failure; identical on both or absent on both is compatible reuse. Still: raw value != classification authority != threshold != score. (items 11 / 13 / on_failure + drawing rows 11 / 13 + conceptual shape)"
+  round_1_blockers_closed: 4
+  do_not_change_confirmed:
+    - 5 legal pairs; localization-only -> INCONCLUSIVE / UNKNOWN; INDIRECT_STRONG never propagates Strength
+    - LOW_BUT_PRESENT != automatic NEGATIVE / fatal; Route A OR Route B; Route B >= 2
+    - four-component completeness; EXPERIMENT_REQUIRED precedence; MOD-TGT04 = 0.0.0; MIGRATION_PENDING remains
+  non_blocking_housekeeping: PR #126 body test numbers synced 58/1437 -> 71/1450
+  files_touched:
+    - src/contracts/gate_modules/tgt04_tumor_surface_availability_density_plausibility.yaml (item 06 direction_definitions + items 11 / 13 raw-density parity + on_failure)
+    - docs/gate_modules/TGT-04_Tumor_Surface_Availability_Density_Plausibility.md (rows 6 / 11 / 13 + conceptual shape)
+    - tests/test_tgt04_module_construction_contract.py (67 -> 71; new ReviewRound2RegressionTests + 2 updated ReviewRound1RegressionTests assertions)
+  test_count_after: 1450
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt04_module_construction_contract.py' -v

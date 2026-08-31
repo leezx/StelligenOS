@@ -6051,3 +6051,42 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   `git diff --check` clean。
 - Next：commit + push `task_20260831_runtime-migration-pr-e11`，CI 绿后回
   `AI审核方案` 贴 round-2 回复。
+
+### PR E11 · ChatGPT `AI审核方案` review round 2 → REQUEST_CHANGES（4/4 round-1 blocker CLOSED + 2 窄一致性 blocker）
+
+- Verdict：**REQUEST_CHANGES**，anchor HEAD `e510833`；CI run 33398236844 verify
+  (3.11) + verify (3.12) 均 success。审核方判定 round-1 的 4 个 blocker **全部
+  CLOSED**，仅剩 2 个非常窄的 residual contract inconsistency（只改
+  contract/drawing/test/manifest/worklog，无新 scientific decision、不动架构；
+  审核方预期修完下一轮 APPROVE）。
+- **一致性 Blocker 1**：item-06 `direction_definitions` 前后不对称 —— `POSITIVE`
+  写 "CRC malignant cells (or a qualified well-matched CRC malignant-cell model)"，
+  但 `NEGATIVE` 只写 "CRC malignant cells"，而 `density_direction_mapping` 把
+  model + NEGLIGIBLE 映射为 OPPOSES。给 E12 两套冲突 contract。修复：`NEGATIVE`
+  同样加 "(or a qualified well-matched CRC malignant-cell model)"；新增
+  `well_matched_model_ordinary_direction_boundary` —— ordinary graded Direction
+  （POSITIVE/NEGATIVE/CONFLICTING/INCONCLUSIVE，均 Strength DIRECT）可由
+  `CRC_MALIGNANT_CELLS` **或** `WELL_MATCHED_CRC_MODEL` 上的 qualifying DIRECT
+  观测支撑（镜像 frozen DIRECT ladder，POSITIVE/NEGATIVE 对称）；well-matched
+  model 支撑的 `NEGATIVE / DIRECT` 只是 ordinary density assessment，model
+  evidence **永不**进 fatal_review —— fatal authority 仍 CRC malignant-cell only。
+  不扩 fatal 权。
+- **一致性 Blocker 2**：raw `reported_density_*` exact-reuse parity 仍是单向
+  （"no drift WHEN PRESENT on the canonical package"），没挡反方向的 presence
+  asymmetry（canonical absent / current present，或 canonical unit absent /
+  current unit present）。修复：冻结为 **对称 presence-and-value parity** ——
+  present on one side only（任一方向），或 value / unit 不同，即 HARD identity
+  integrity failure；两侧都有且相等、或两侧都无，才 compatible。仍：raw 值 ≠
+  classification authority ≠ threshold ≠ score。（items 11/13/on_failure +
+  drawing rows 11/13 + conceptual shape）
+- 非阻断 housekeeping：PR #126 body 测试数从 58/1437 同步到 71/1450。
+- 改动文件：`src/contracts/gate_modules/tgt04_...yaml`（item 06
+  direction_definitions + items 11/13 raw-density parity + on_failure）、
+  `docs/gate_modules/TGT-04_...md`（rows 6/11/13 + conceptual shape）、
+  `tests/test_tgt04_module_construction_contract.py`（67 → **71**：新增
+  `ReviewRound2RegressionTests` + 2 处 round-1 断言随对称化更新）、manifest
+  （`review_rounds: 2` + `review_round_2` block）、本 worklog append。
+- 验证：`tests/test_tgt04_module_construction_contract.py` **71 OK**；全量
+  **1450 OK**（round-2 前 1446）；YAML 合法且无 list-element-parsed-as-dict；
+  `git diff --check` clean。
+- Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-3 回复。
