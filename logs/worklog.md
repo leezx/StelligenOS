@@ -7117,3 +7117,62 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   `logs/worklog.md`。E16 其它科学 / 架构不动。
 - 本地全量 unittest：1900 OK（1895 → +5 regression）。
 - Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-2 回复。
+
+### PR E16 · ChatGPT `AI审核方案` implementation review round 2 → APPROVE + merge
+
+- Round-2 回复已贴入 `AI审核方案`（tab `1534876319`）：确认 round-1 三个 blocker
+  在同一 PR #136 上全部关闭，修订 HEAD `798c734`，exact-head CI run 33509346532
+  verify (3.11) + (3.12) 均 success。
+- Verdict：**APPROVE @ `798c734`**。审核方逐条确认：Blocker 1（fatal authority
+  —— `documents_clinical_exposure_compromise` 已从 observation contract /
+  evidence parity / fatal_review / acceptance / module.yaml / tests 移除，
+  fatal narrowing 只按 typed `sink_materiality_outcome` + `observation_kind`
+  + TMDD 的 `exposure_scenario_class`）、Blocker 2（acceptance 现在区分「kind
+  是否有资格携带 local exposure context」与「是否达到 DIRECT」，CONTEXTUAL
+  clinical / TMDD 保留 factual context 不再整轮 reject）、Blocker 3（live
+  `contract.zh-CN.md` §3.4.3 + §6 不再自相矛盾；legacy contracts 降格为
+  retained compatibility snapshots；closeout regression 覆盖 README +
+  architecture + contract）—— **全部 CLOSED**。round-1 → round-2 只有一个 commit、
+  约 10 文件，`classify.py` / `aggregate.py` / `completion.py` / binding
+  science 及其它已 CLOSED 逻辑未重新触碰。无新 blocker；T1–T7、EvidenceRole
+  mapping、completion / audit、reuse / dedup、duplicate-id preflight、8/8
+  migration invariant 均保持。
+- 非阻断 housekeeping：PR #136 body 的旧测试计数（`91 OK` / `1895 OK`）merge
+  前已更新为 `96` / `1900`。GitHub connector 仍 `403`；`AI审核方案` 结论
+  authoritative。
+- Merge：PR #136 于 `2026-09-01` 以 `gh pr merge 136 --merge --delete-branch=false`
+  合入 `main`，merge 提交 `004dbed`。
+- 状态：**八个 primary Module 施工合同全部 APPROVE 且八个全部实现 @ `1.0.0`
+  （TGT-01/02/03/04/05/06/07/08）**；每个 `gate_binding.primary_module_version
+  == "1.0.0"`；**`MIGRATION_PENDING` 已解除** —— PR A–E16 Blueprint-v1.3
+  Candidate × Gate × Evidence runtime-conformance migration 与八个 primary
+  Module 的 migration 均 COMPLETE。`migration.deferred` 未删除 —— 其余
+  StelligenOS deferred work（quantitative ladder calibration、epitope-layer
+  分析、external evaluators、下游 Candidate level、FTO）保留。
+- Next：独立 docs-only approval-record PR
+  （`task_20260901_runtime-migration-pr-e16-approval-record`）补登审核记录 +
+  manifest → approved。**PR E16 是本轮 runtime migration 的最后一个
+  implementation PR，没有 PR E17。**
+
+### PR E16 · approval-record（docs-only）
+
+- 分支 `task_20260901_runtime-migration-pr-e16-approval-record`，按 PR #95 …
+  #135 先例。
+- 新增 `logs/chatgpt-review-2026-09-01-runtime-migration-pr-e16.md`：scoping
+  决策（E16-1…E16-8 + T1–T7）+ 2 轮完整往返（Round 1 REQUEST_CHANGES / 3 窄
+  blocker → 全部 CLOSED；Round 2 APPROVE @ `798c734`）+ merge（`004dbed`）+
+  收官状态。
+- `manifests/runtime_migration_pr_e16_manifest.yaml` → `status: approved` /
+  `chatgpt_review: APPROVE` / `approved_tip: 798c734…` /
+  `merge_commit: 004dbed…` / `review_rounds: 2` / `test_count_at_approval: 1900`
+  / `approval_record_pr` / `next_authorized_step: null`（NONE —— 没有 PR E17）
+  + 完整 `review_round_2` block。不改 PR E16 的实现代码、测试、handoff 或
+  binding；`seven_required_implementation_tightenings` 的 pre-code 逐字文本
+  保持不动（round-1 blocker 1 的更正由 `review_round_1` / `review_round_2`
+  block 承载）。
+- 状态：**Runtime Migration PR A–E16 全序列（PR A/B/C/D + E1…E16）完成。**
+  八个 primary Evidence Production Module（MOD-TGT01…MOD-TGT08）全部建成 @
+  `1.0.0`，`MIGRATION_PENDING` 已解除，runtime conformance = COMPLETE。没有
+  PR E17。后续任何 deferred work（quantitative ladder calibration、epitope-
+  layer 及更下游分析、external evaluators、下游 Candidate level、FTO 任务）
+  需另行 explicit go-ahead。
