@@ -988,7 +988,8 @@ class ContractIsFrozenAndImplementedInPrE14Tests(unittest.TestCase):
             for b in gs["context_specific_bindings"]["gate_bindings"]
         }
         self.assertEqual(by_gate["TGT-06"], "1.0.0")
-        self.assertEqual(by_gate["TGT-07"], "0.0.0")
+        # PR E16 built MOD-TGT07 -- its binding is now "1.0.0" too.
+        self.assertEqual(by_gate["TGT-07"], "1.0.0")
         for g in ("TGT-01", "TGT-02", "TGT-03", "TGT-04", "TGT-05", "TGT-08"):
             self.assertEqual(by_gate[g], "1.0.0")
         self.assertEqual(
@@ -1016,6 +1017,7 @@ class ContractIsFrozenAndImplementedInPrE14Tests(unittest.TestCase):
             "tgt04_tumor_surface_availability_density_plausibility",
             "tgt05_normal_tissue_fatal_liability",
             "tgt06_internalization_trafficking_addressability",
+            "tgt07_shedding_soluble_antigen_sink_liability",
             "tgt08_target_opportunity_competition_ip_whitespace",
         )
         self.assertTrue(all(any(pkg in p for pkg in allowed) for p in py_files), py_files)

@@ -7017,3 +7017,59 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Next：**PR E16 = MOD-TGT07@1.0.0** deterministic implementation —— 第八也是
   最后一个 primary Module，PR E16 解除 `MIGRATION_PENDING`；需另行 go-ahead 且
   先做 pre-code scoping。
+
+## Runtime Migration PR E16 · MOD-TGT07 / MOD-TGT07@1.0.0 实现 + runtime conformance 收口
+
+- Action：实现第八也是最后一个 primary Evidence Production Module（MOD-TGT07），
+  按冻结的 PR E15 施工合同；解除 `MIGRATION_PENDING`。
+- 分支 `task_20260901_runtime-migration-pr-e16`，基线 `origin/main` @ `a706a47`。
+- 授权：用户 "go on" + ChatGPT `AI审核方案` 开工前 scoping **APPROVE-to-proceed**，
+  E16-1…E16-8 修正 + **7 个 required implementation tightenings**：T1 DIRECT
+  qualification 按 observation kind 分开（classify.py 唯一 authority；clinical 需
+  same-target match + soluble-antigen attribution + analysis validation QUALIFIED；
+  TMDD 需 TMDD input adequacy + analysis validation QUALIFIED；无 generic
+  predicate）；T2 `MIXED_OR_UNRESOLVED` → DIRECT-rung CONTEXTUAL，`NOT_ESTABLISHED`
+  永不 DIRECT；T3 aggregate / fatal 消费 classified 结果、永不重判 typed status；
+  T4 quantitation completion 加 CRC-patient + healthy-donor 两个 typed subspace
+  audit fact，汇总轴 == strict AND，snapshot 逐字段 parity 带这两个 fact；
+  T5 fatal detector 只做 fatal-specific narrowing、typed `sink_materiality_outcome`
+  是 exposure-compromise authority、禁止 prose parsing、raw-candidate → acceptance
+  → surface 顺序；T6 exact reuse / dedup 不 normalize factual string、
+  duplicate-observation-ID 在所有 side-effect port call 前 HARD short-circuit；
+  T7 `MIGRATION_PENDING` lift 有 machine closeout invariant（8/8 binding `1.0.0`
+  + 8 个 package manifest 匹配）。
+- 交付：
+  - 新增 `gate_modules/tgt07_shedding_soluble_antigen_sink_liability/` 11 文件
+    确定性核心（`__init__.py` / `module.yaml` / `contracts.py` / `ports.py` /
+    `classify.py` / `evidence.py` / `aggregate.py` / `completion.py` /
+    `fatal_review.py` / `acceptance.py` / `module.py`）。`module_version` 1.0.0。
+  - 新增 `tests/test_tgt07_module.py` —— **91 tests**。
+  - binding / registry 窄修：`src/contracts/crc_adc_target_gateset.yaml`
+    （TGT-07 `primary_module_version` `0.0.0 → 1.0.0` + 注释、
+    `primary_module_binding.rule` 措辞、`built_module_versions` 加 TGT-07、
+    `migration.deferred.per_gate_primary_modules` → completed / 8-of-8）、
+    `src/objects/crc_adc_target_gateset.py`（`BUILT_MODULE_VERSIONS` 加 TGT-07 +
+    docstring）。
+  - runtime conformance 收口：`gate_modules/README.md`（MOD-TGT07 行 + Runtime
+    conformance COMPLETE 段）、`README.md` / `architecture.md` /
+    `docs/architecture/contract.zh-CN.md`（live `MIGRATION_PENDING` → runtime
+    conformance COMPLETE；历史 snapshot / archived approval record 不动）。
+  - 测试同步：`tests/test_gate_modules_boundary.py`（`Tgt07ModuleManifestTests`
+    + `MigrationCloseoutInvariantTests` + `TGT07` path const）、
+    `tests/test_crc_adc_target_gateset.py`（`_BUILT_MODULE_VERSIONS` +
+    `TgtGateContractTests` 翻转）、`test_tgt02…08_module*.py` 的 built-roster /
+    allowed-package tuple 最窄同步、`test_tgt07_module_construction_contract.py`
+    `ContractIsFrozenAndDeferredToPrE16Tests` → `ContractIsFrozenAndImplementedInPrE16Tests`。
+  - 新增 `manifests/runtime_migration_pr_e16_manifest.yaml`、
+    `docs/handoff/2026-09-01-runtime-migration-pr-e16.zh-CN.md`。
+- 验证：`tests/test_tgt07_module.py` **91 OK**；全量 **1895 OK**（PR E15 收口
+  1796；+91 test_tgt07_module +8 test_gate_modules_boundary）；
+  `bash scripts/verify_repository_boundary.sh` 只报既有 untracked 杂项；
+  `git diff --check` clean；YAML 合法；`src/` 不 import `gate_modules/`。
+- 状态：**8 个 primary Module 施工合同全部 APPROVE、8 个全部实现**
+  （TGT-01…TGT-08 @ `1.0.0`）。**`MIGRATION_PENDING` 已解除**；runtime conformance
+  = COMPLETE for the PR A–E16 Candidate × Gate × Evidence migration。其它 deferred
+  work（quantitative ladder calibration、epitope-layer 分析、external
+  evaluators、下游 Candidate level、FTO 任务）仍在后续。
+- Next：开 PR、CI 绿后回 `AI审核方案` 贴 implementation-level review 请求。
+  这是本轮 runtime migration 的最后一个 implementation PR，没有 PR E17。

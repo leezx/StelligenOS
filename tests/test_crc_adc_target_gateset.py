@@ -247,7 +247,8 @@ class BindingParityTests(unittest.TestCase):
 #: gate_id -> the primary_module_version once its Module is built. PR D left
 #: every gate at "0.0.0"; Runtime Migration PR E2 built MOD-TGT01, PR E4 built
 #: MOD-TGT05, PR E6 built MOD-TGT08, PR E8 built MOD-TGT02, PR E10 built
-#: MOD-TGT03, PR E12 built MOD-TGT04, and PR E14 built MOD-TGT06.
+#: MOD-TGT03, PR E12 built MOD-TGT04, PR E14 built MOD-TGT06 and PR E16 built
+#: MOD-TGT07 -- all eight primary Modules are now built.
 _BUILT_MODULE_VERSIONS = {
     "TGT-01": "1.0.0",
     "TGT-02": "1.0.0",
@@ -255,6 +256,7 @@ _BUILT_MODULE_VERSIONS = {
     "TGT-04": "1.0.0",
     "TGT-05": "1.0.0",
     "TGT-06": "1.0.0",
+    "TGT-07": "1.0.0",
     "TGT-08": "1.0.0",
 }
 
@@ -390,7 +392,8 @@ class TgtGateContractTests(unittest.TestCase):
             evidence_ladder_ref="external:crc_adc_target_gateset/TGT-07/evidence_ladder@v1",
             assessment_rule_ref="external:crc_adc_target_gateset/TGT-07/assessment_rule@v1",
             primary_module_id="MOD-TGT07",
-            primary_module_version="0.0.0",
+            # PR E16 built MOD-TGT07 -- its binding is now "1.0.0".
+            primary_module_version="1.0.0",
         )
         base.update(overrides)
         return TgtGateContract(**base)
@@ -398,9 +401,10 @@ class TgtGateContractTests(unittest.TestCase):
     def test_valid(self):
         self.assertEqual(self._contract().gate_spec.gate_id, "TGT-07")
 
-    def test_rejects_built_module_version(self):
+    def test_rejects_unbuilt_module_version(self):
+        # TGT-07 is now built; its binding may not regress to the unbuilt slot.
         with self.assertRaises(ValueError):
-            self._contract(primary_module_version="1.0.0")
+            self._contract(primary_module_version="0.0.0")
 
     def test_rejects_wrong_module_id(self):
         with self.assertRaises(ValueError):

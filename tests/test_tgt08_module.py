@@ -488,15 +488,14 @@ class BindingReconciliationTests(unittest.TestCase):
             {
                 "TGT-01": "1.0.0", "TGT-02": "1.0.0", "TGT-03": "1.0.0",
                 "TGT-04": "1.0.0", "TGT-05": "1.0.0", "TGT-06": "1.0.0",
-                "TGT-08": "1.0.0",
+                "TGT-07": "1.0.0", "TGT-08": "1.0.0",
             },
         )
 
-    def test_other_tgt_gates_remain_unbuilt(self) -> None:
+    def test_all_tgt_gate_bindings_are_built(self) -> None:
+        # PR E16 built MOD-TGT07 -- all eight primary Module bindings are "1.0.0".
         for b in self.gateset["context_specific_bindings"]["gate_bindings"]:
-            if b["gate_id"] in ("TGT-01", "TGT-02", "TGT-03", "TGT-04", "TGT-05", "TGT-06", "TGT-08"):
-                continue
-            self.assertEqual(b["primary_module_version"], "0.0.0", b["gate_id"])
+            self.assertEqual(b["primary_module_version"], "1.0.0", b["gate_id"])
 
     def test_migration_pending_remains(self) -> None:
         self.assertIn(

@@ -144,11 +144,17 @@ Current runtime contracts:
   GateInputEnvelope / GateModelOutput@2.1.0  （score/confidence/status）
 
 Runtime conformance:
-  MIGRATION_PENDING
+  COMPLETE for the Blueprint-v1.3 Candidate x Gate x Evidence runtime migration
+  (PR A-E16). The eight primary Evidence Production Modules (TGT-01..TGT-08 @
+  1.0.0) are built; PR E16 built MOD-TGT07 and lifted MIGRATION_PENDING. Other
+  deferred work (quantitative ladder calibration, epitope-layer analyses,
+  external evaluators, downstream Candidate levels, FTO tasks) remains.
 
 Rule:
-  在后续 runtime migration PR（顺序见 CURRENT_SYSTEM v5-draft §16 B 组问题 23，
-  PR A–E）合并之前，repository runtime 不得声称已实现 Blueprint v1.3 conformance。
+  The PR A-E16 runtime migration (order: CURRENT_SYSTEM v5-draft §16 B group
+  question 23) is merged; the repository runtime now implements the Blueprint
+  v1.3 Candidate x Gate x Evidence runtime conformance. This closeout does NOT
+  claim every deferred StelligenOS capability is finished.
 ```
 
 `src/contracts/core_objects.yaml` 当前仍登记 8 个 **legacy object type**。它们到

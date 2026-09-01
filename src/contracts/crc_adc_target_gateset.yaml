@@ -46,12 +46,15 @@ migration:
     construction drawings, not to a migration contract.
   deferred:
     per_gate_primary_modules: >-
-      PR E+. PR D freezes only the "one Gate -> one primary Evidence Production
-      Module" binding slot: each gate_binding record declares the deterministic
-      primary_module_id (MOD-TGT0n, per Data Layout Spec Appendix A) with
-      primary_module_version "0.0.0" (declared, not built). No Module code and
-      no Module contract is created here. TGT-01..TGT-08 primary Modules are
-      PR E+ (v5 section 16 question 23).
+      completed / 8-of-8 built. PR D froze only the "one Gate -> one primary
+      Evidence Production Module" binding slot (each gate_binding record declared
+      the deterministic primary_module_id MOD-TGT0n with primary_module_version
+      "0.0.0"). Runtime Migration PR E2 / E4 / E6 / E8 / E10 / E12 / E14 / E16
+      built MOD-TGT01 / MOD-TGT05 / MOD-TGT08 / MOD-TGT02 / MOD-TGT03 /
+      MOD-TGT04 / MOD-TGT06 / MOD-TGT07 and raised every primary_module_version
+      to "1.0.0". All eight primary Modules are built; the PR A-E16
+      Candidate x Gate x Evidence runtime-conformance migration and the
+      eight-primary-Module migration are complete (v5 section 16 question 23).
     quantitative_ladder_calibration: PR E+ (per-Gate Module construction drawings)
     epitope_layer_and_beyond: "PR E+"
     assessment_and_decision_evaluators: not_in_this_repo
@@ -581,7 +584,8 @@ context_specific_bindings:
       evidence_ladder_ref: external:crc_adc_target_gateset/TGT-07/evidence_ladder@v1
       assessment_rule_ref: external:crc_adc_target_gateset/TGT-07/assessment_rule@v1
       primary_module_id: MOD-TGT07
-      primary_module_version: "0.0.0"
+      # Built in Runtime Migration PR E16 (gate_modules/tgt07_shedding_soluble_antigen_sink_liability/).
+      primary_module_version: "1.0.0"
     - gate_id: TGT-08
       gate_version: "1.0"
       gateset_id: ADC_TARGET_GATESET
@@ -602,11 +606,10 @@ primary_module_binding:
     by the deterministic id MOD-TGT0n. In PR D every primary_module_version was
     "0.0.0" (declared, not built). Runtime Migration PR E2 built MOD-TGT01 and
     raised its version to "1.0.0"; PR E4 built MOD-TGT05, PR E6 built MOD-TGT08,
-    PR E8 built MOD-TGT02, PR E10 built MOD-TGT03, PR E12 built MOD-TGT04 and
-    PR E14 built MOD-TGT06 and raised their versions to
-    "1.0.0"; the last one (TGT-07) remains
-    "0.0.0" until its
-    own PR E-series builds it. A Module may not choose a different id, and may not
+    PR E8 built MOD-TGT02, PR E10 built MOD-TGT03, PR E12 built MOD-TGT04,
+    PR E14 built MOD-TGT06 and PR E16 built MOD-TGT07 and raised their versions
+    to "1.0.0". All eight primary Evidence Production Modules are now built.
+    A Module may not choose a different id, and may not
     modify the Gate id / name / candidate ownership, the gate_question, the
     Evidence Ladder, the evidence ceiling, or the fatal / unknown / conflict
     semantics (v5 section 6.4).
@@ -619,6 +622,7 @@ primary_module_binding:
     TGT-04: "1.0.0"
     TGT-05: "1.0.0"
     TGT-06: "1.0.0"
+    TGT-07: "1.0.0"
     TGT-08: "1.0.0"
 
 repository_policy:

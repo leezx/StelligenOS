@@ -479,16 +479,16 @@ class BindingAndBoundaryTests(unittest.TestCase):
             for b in gs["context_specific_bindings"]["gate_bindings"]
         }
         self.assertEqual(by_gate["TGT-06"], "1.0.0")
-        self.assertEqual(by_gate["TGT-07"], "0.0.0")
+        # PR E16 built MOD-TGT07 -- its binding is now "1.0.0" too.
+        self.assertEqual(by_gate["TGT-07"], "1.0.0")
         self.assertEqual(
             gs["primary_module_binding"]["built_module_versions"]["TGT-06"], "1.0.0"
         )
         self.assertIn("per_gate_primary_modules", gs["migration"]["deferred"])
 
     def test_other_modules_untouched(self):
-        for g in ("TGT-01", "TGT-02", "TGT-03", "TGT-04", "TGT-05", "TGT-08"):
+        for g in ("TGT-01", "TGT-02", "TGT-03", "TGT-04", "TGT-05", "TGT-07", "TGT-08"):
             self.assertEqual(BUILT_MODULE_VERSIONS[g], "1.0.0")
-        self.assertNotIn("TGT-07", BUILT_MODULE_VERSIONS)
 
     def test_package_has_the_eleven_expected_files(self):
         for f in ("__init__.py", "module.yaml", "contracts.py", "ports.py",

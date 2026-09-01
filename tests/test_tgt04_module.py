@@ -508,10 +508,9 @@ class BindingAndBoundaryTests(unittest.TestCase):
         self.assertEqual(binding["primary_module_id"], "MOD-TGT04")
 
     def test_other_modules_untouched(self):
-        for g in ("TGT-01", "TGT-02", "TGT-03", "TGT-05", "TGT-06", "TGT-08"):
+        # PR E16 built MOD-TGT07 -- all eight primary Modules are now built.
+        for g in ("TGT-01", "TGT-02", "TGT-03", "TGT-05", "TGT-06", "TGT-07", "TGT-08"):
             self.assertEqual(BUILT_MODULE_VERSIONS[g], "1.0.0")
-        for g in ("TGT-07",):
-            self.assertNotIn(g, BUILT_MODULE_VERSIONS)
 
     def test_package_has_the_eleven_expected_files(self):
         for f in ("__init__.py", "module.yaml", "contracts.py", "ports.py",

@@ -509,6 +509,7 @@ class NoImplementationInPrE5Tests(unittest.TestCase):
             "tgt04_tumor_surface_availability_density_plausibility",
             "tgt05_normal_tissue_fatal_liability",
             "tgt06_internalization_trafficking_addressability",
+            "tgt07_shedding_soluble_antigen_sink_liability",
             "tgt08_target_opportunity_competition_ip_whitespace",
         )
         self.assertTrue(
