@@ -342,14 +342,22 @@ def evaluate(
     )
 
     # --- sink-exposure namespace + bases (E15 item 13) -------------------
-    ctx_on_wrong_rung = [
+    # E15 only requires: a qualifying DIRECT observation MUST carry a context, and
+    # an INDIRECT_STRONG / WEAK / SEARCH_COMPLETION_AUDIT observation MUST NOT. A
+    # CLINICAL_ANTIGEN_SINK_PK_EFFECT / SOLUBLE_ANTIGEN_TMDD_ANALYSIS observation
+    # that the classifier judged CONTEXTUAL (e.g. same-target match / TMDD input
+    # adequacy NOT_ESTABLISHED) may still keep its real factual local exposure
+    # context -- "did not reach DIRECT" is not "illegal input" (E16 review round-1
+    # blocker 2). The constructor already forbids a non-DIRECT-authority kind from
+    # carrying a context.
+    ctx_on_wrong_kind = [
         e for e in admissible
         if e.observation.sink_exposure_context_id.strip()
-        and not e.classified.is_qualifying_direct
+        and e.observation.observation_kind not in _DIRECT_AUTHORITY_KINDS
     ]
     record(
-        "only_a_qualifying_direct_rung_observation_carries_a_sink_exposure_context",
-        not ctx_on_wrong_rung,
+        "only_a_direct_authority_kind_carries_a_sink_exposure_context",
+        not ctx_on_wrong_kind,
         "an INDIRECT_STRONG / WEAK / SEARCH_COMPLETION_AUDIT observation carries a "
         "non-empty sink_exposure_context_id",
     )
@@ -578,7 +586,6 @@ def evaluate(
             and all(
                 e.classified.qualifying_direct_material_sink
                 and e.observation.sink_materiality_outcome == _MATERIAL_WITH_COMPROMISE
-                and e.observation.documents_clinical_exposure_compromise
                 and (
                     e.observation.observation_kind == "CLINICAL_ANTIGEN_SINK_PK_EFFECT"
                     or (

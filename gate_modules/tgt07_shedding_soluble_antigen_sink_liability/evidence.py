@@ -91,7 +91,6 @@ _KEYS_ALWAYS: tuple[str, ...] = (
     "soluble_antigen_attribution_basis",
     "exposure_scenario_class",
     "exposure_scenario_basis",
-    "documents_clinical_exposure_compromise",
     "reproducibility_status",
     "reproducibility_basis",
     "sink_exposure_context_id",

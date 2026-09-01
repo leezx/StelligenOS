@@ -165,7 +165,6 @@ def _obs(**kw) -> NormalizedSolubleAntigenObservation:
         soluble_antigen_attribution_basis="",
         exposure_scenario_class="",
         exposure_scenario_basis="",
-        documents_clinical_exposure_compromise=False,
         reproducibility_status="NOT_ESTABLISHED",
         reproducibility_basis="",
         sink_exposure_context_id="",
@@ -212,7 +211,6 @@ def _clinical(
     match=True,
     attribution=True,
     validation=True,
-    compromise=True,
     ctx=SINKCTX_A,
     **kw,
 ):
@@ -231,7 +229,6 @@ def _clinical(
     if validation:
         kw.setdefault("analysis_validation_status", "QUALIFIED")
         kw.setdefault("analysis_validation_basis", "analysis validated")
-    kw.setdefault("documents_clinical_exposure_compromise", compromise)
     if ctx:
         kw.setdefault("sink_exposure_context_id", ctx)
         kw.setdefault("sink_exposure_context_basis", "format x dose x affinity x cohort")
@@ -244,7 +241,6 @@ def _tmdd(
     scenario="INTENDED_ADC_EXPOSURE",
     tmdd_ok=True,
     validation=True,
-    compromise=True,
     ctx=SINKCTX_A,
     **kw,
 ):
@@ -262,7 +258,6 @@ def _tmdd(
     if validation:
         kw.setdefault("analysis_validation_status", "QUALIFIED")
         kw.setdefault("analysis_validation_basis", "analysis validated")
-    kw.setdefault("documents_clinical_exposure_compromise", compromise)
     if ctx:
         kw.setdefault("sink_exposure_context_id", ctx)
         kw.setdefault("sink_exposure_context_basis", "intended ADC exposure scenario")
@@ -514,12 +509,12 @@ class ClassifyClinicalDirectTests(unittest.TestCase):
         self.assertEqual(c.sink_liability_implication, "CONTEXTUAL")
 
     def test_clinical_no_material_sink_is_never_a_canonical_direct_negative(self):
-        c = self._c(_clinical(outcome="NO_MATERIAL_SOLUBLE_SINK", compromise=False))
+        c = self._c(_clinical(outcome="NO_MATERIAL_SOLUBLE_SINK"))
         self.assertEqual(c.evidence_rung, "")
         self.assertFalse(c.is_qualifying_direct)
 
     def test_clinical_not_established_outcome_is_not_direct(self):
-        c = self._c(_clinical(outcome="NOT_ESTABLISHED", compromise=False))
+        c = self._c(_clinical(outcome="NOT_ESTABLISHED"))
         self.assertFalse(c.is_qualifying_direct)
 
     def test_clinical_missing_sink_exposure_context_is_not_direct(self):
@@ -541,13 +536,13 @@ class ClassifyTmddDirectTests(unittest.TestCase):
         self.assertTrue(c.qualifying_direct_material_sink)
 
     def test_no_material_intended_exposure_qualified_is_direct_opposes(self):
-        c = self._c(_tmdd(outcome="NO_MATERIAL_SOLUBLE_SINK", compromise=False))
+        c = self._c(_tmdd(outcome="NO_MATERIAL_SOLUBLE_SINK"))
         self.assertEqual(c.evidence_rung, "DIRECT")
         self.assertTrue(c.qualifying_direct_no_material_sink)
         self.assertEqual(c.sink_liability_implication, "OPPOSES_SINK_LIABILITY")
 
     def test_no_material_analogue_scenario_is_contextual_not_direct_negative(self):
-        c = self._c(_tmdd(outcome="NO_MATERIAL_SOLUBLE_SINK", scenario="SAME_TARGET_THERAPEUTIC_ANALOGUE", compromise=False))
+        c = self._c(_tmdd(outcome="NO_MATERIAL_SOLUBLE_SINK", scenario="SAME_TARGET_THERAPEUTIC_ANALOGUE"))
         self.assertEqual(c.evidence_rung, "")
         self.assertFalse(c.is_qualifying_direct)
 
@@ -557,7 +552,7 @@ class ClassifyTmddDirectTests(unittest.TestCase):
         self.assertTrue(c.qualifying_direct_mixed)
 
     def test_not_established_tmdd_outcome_is_not_direct(self):
-        c = self._c(_tmdd(outcome="NOT_ESTABLISHED", compromise=False))
+        c = self._c(_tmdd(outcome="NOT_ESTABLISHED"))
         self.assertFalse(c.is_qualifying_direct)
 
 
@@ -618,11 +613,11 @@ class DirectionMappingTests(unittest.TestCase):
             self.assertEqual(sink_materiality_direction(_tmdd(outcome=outcome)), "SUPPORTS_SINK_LIABILITY")
 
     def test_no_material_intended_adc_tmdd_opposes(self):
-        o = _tmdd(outcome="NO_MATERIAL_SOLUBLE_SINK", compromise=False)
+        o = _tmdd(outcome="NO_MATERIAL_SOLUBLE_SINK")
         self.assertEqual(sink_materiality_direction(o), "OPPOSES_SINK_LIABILITY")
 
     def test_no_material_analogue_is_contextual(self):
-        o = _tmdd(outcome="NO_MATERIAL_SOLUBLE_SINK", scenario="SAME_TARGET_THERAPEUTIC_ANALOGUE", compromise=False)
+        o = _tmdd(outcome="NO_MATERIAL_SOLUBLE_SINK", scenario="SAME_TARGET_THERAPEUTIC_ANALOGUE")
         self.assertEqual(sink_materiality_direction(o), "CONTEXTUAL")
 
     def test_mixed_and_not_established_are_contextual(self):
@@ -647,7 +642,7 @@ class AggregationTruthTableTests(unittest.TestCase):
     def test_clean_material_sink_dominates_other_context_no_material(self):
         obs, comp = _std_landscape(
             _clinical(ctx=SINKCTX_A),
-            _tmdd(outcome="NO_MATERIAL_SOLUBLE_SINK", compromise=False, ctx=SINKCTX_B),
+            _tmdd(outcome="NO_MATERIAL_SOLUBLE_SINK", ctx=SINKCTX_B),
             qualifying_ctx=(SINKCTX_A, SINKCTX_B),
         )
         res, _, _ = _run(obs, comp)
@@ -660,7 +655,7 @@ class AggregationTruthTableTests(unittest.TestCase):
     def test_same_context_material_and_no_material_is_conflicting_direct(self):
         obs, comp = _std_landscape(
             _clinical(ctx=SINKCTX_A),
-            _tmdd(outcome="NO_MATERIAL_SOLUBLE_SINK", compromise=False, ctx=SINKCTX_A),
+            _tmdd(outcome="NO_MATERIAL_SOLUBLE_SINK", ctx=SINKCTX_A),
             qualifying_ctx=(SINKCTX_A,),
         )
         res, _, _ = _run(obs, comp)
@@ -671,7 +666,7 @@ class AggregationTruthTableTests(unittest.TestCase):
 
     def test_intended_adc_no_material_tmdd_only_is_negative_direct(self):
         obs, comp = _std_landscape(
-            _tmdd(outcome="NO_MATERIAL_SOLUBLE_SINK", compromise=False, ctx=SINKCTX_A),
+            _tmdd(outcome="NO_MATERIAL_SOLUBLE_SINK", ctx=SINKCTX_A),
             qualifying_ctx=(SINKCTX_A,),
         )
         res, _, _ = _run(obs, comp)
@@ -711,7 +706,7 @@ class AggregationTruthTableTests(unittest.TestCase):
     def test_different_contexts_differing_is_never_conflicting(self):
         obs, comp = _std_landscape(
             _clinical(ctx=SINKCTX_A),
-            _tmdd(outcome="MATERIAL_SOLUBLE_SINK_WITHOUT_ESTABLISHED_CLINICAL_EXPOSURE_COMPROMISE", compromise=False, ctx=SINKCTX_B),
+            _tmdd(outcome="MATERIAL_SOLUBLE_SINK_WITHOUT_ESTABLISHED_CLINICAL_EXPOSURE_COMPROMISE", ctx=SINKCTX_B),
             qualifying_ctx=(SINKCTX_A, SINKCTX_B),
         )
         res, _, _ = _run(obs, comp)
@@ -924,7 +919,7 @@ class FatalReviewTests(unittest.TestCase):
     def test_material_without_established_compromise_is_positive_direct_but_not_fatal(self):
         obs, comp = _std_landscape(
             _clinical(outcome="MATERIAL_SOLUBLE_SINK_WITHOUT_ESTABLISHED_CLINICAL_EXPOSURE_COMPROMISE",
-                      compromise=False, ctx=SINKCTX_A),
+                      ctx=SINKCTX_A),
             qualifying_ctx=(SINKCTX_A,),
         )
         res, _, _ = _run(obs, comp)
@@ -965,6 +960,61 @@ class FatalReviewTests(unittest.TestCase):
     def test_incomplete_landscape_has_no_fatal_trigger(self):
         res, _, _ = _run([_clinical(ctx=SINKCTX_A)], _completion(complete=False))
         self.assertFalse(res.fatal_review.required)
+
+    def test_the_typed_outcome_alone_is_the_fatal_authority_no_second_boolean(self):
+        # E16 review round-1 blocker 1: MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE
+        # is itself the sole machine authority -- there is no second
+        # documents_clinical_exposure_compromise gate.
+        fields = set(NormalizedSolubleAntigenObservation.__dataclass_fields__)
+        self.assertNotIn("documents_clinical_exposure_compromise", fields)
+        obs, comp = _std_landscape(_clinical(ctx=SINKCTX_A), qualifying_ctx=(SINKCTX_A,))
+        res, _, _ = _run(obs, comp)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        self.assertTrue(res.fatal_review.required)
+
+
+class ContextualDirectAuthorityObservationTests(unittest.TestCase):
+    """E16 review round-1 blocker 2: a CLINICAL_ANTIGEN_SINK_PK_EFFECT /
+    SOLUBLE_ANTIGEN_TMDD_ANALYSIS observation the classifier judged CONTEXTUAL
+    (e.g. same-target match / TMDD input adequacy NOT_ESTABLISHED) may keep its
+    real factual local sink_exposure_context_id -- it is NOT an illegal input."""
+
+    def _direction(self, res):
+        env = res.proposal_envelope
+        self.assertIsNotNone(env, res.machine_acceptance.reasons)
+        return (env.proposed_direction, env.proposed_strength)
+
+    def test_contextual_clinical_with_factual_sink_context_is_accepted(self):
+        obs, comp = _std_landscape(
+            _clinical(ctx=SINKCTX_A, match=False), _sheddase(),
+        )
+        res, _, _ = _run(obs, comp)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        self.assertFalse(res.hard_integrity_failures)
+        self.assertFalse(res.fatal_review.required)
+        # the sheddase observation still drives the graded answer.
+        self.assertEqual(self._direction(res), ("POSITIVE", "INDIRECT_STRONG"))
+
+    def test_contextual_tmdd_with_factual_sink_context_is_accepted(self):
+        obs, comp = _std_landscape(
+            _tmdd(ctx=SINKCTX_A, tmdd_ok=False), _sheddase(),
+        )
+        res, _, _ = _run(obs, comp)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        self.assertFalse(res.fatal_review.required)
+        self.assertEqual(self._direction(res), ("POSITIVE", "INDIRECT_STRONG"))
+
+    def test_contextual_clinical_alone_with_factual_sink_context_is_inconclusive_unknown(self):
+        obs, comp = _std_landscape(_clinical(ctx=SINKCTX_A, attribution=False))
+        res, _, _ = _run(obs, comp)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        self.assertEqual(self._direction(res), ("INCONCLUSIVE", "UNKNOWN"))
+
+    def test_an_indirect_strong_observation_still_may_not_carry_a_sink_context(self):
+        # the constructor forbids it; the acceptance kind-check backs it up.
+        with self.assertRaises(ValueError):
+            _sheddase(sink_exposure_context_id=SINKCTX_A,
+                      sink_exposure_context_basis="not allowed here")
 
 
 # =====================================================================

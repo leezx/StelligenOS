@@ -132,13 +132,14 @@ Candidate 生命周期是一系列逐层收敛的搜索空间；上一级 Candid
 #### 3.4.3 Runtime Conformance 与 legacy → target migration crosswalk
 
 **本契约的 3.4.1 / 3.4.2 是 architecture specification 的规范目标；它已变，
-但 runtime implementation 未变。** 两者关系：
+且 PR A–E16 runtime layer 已完成（见下 Runtime conformance）。** 两者关系：
 
 ```text
 Target architecture:
   Blueprint v1.3 six-object model + Instantiation binding layer
 
-Current runtime contracts:
+Retained legacy-compatibility snapshots (frozen legacy -- compatibility
+references, NOT the current runtime):
   core_objects@1.1                          （8 legacy object types）
   gate_system@0.1.0 / topology@0.2.0        （45 legacy gates, FROZEN_LEGACY）
   GateInputEnvelope / GateModelOutput@2.1.0  （score/confidence/status）
@@ -170,14 +171,16 @@ Rule:
 8. `Asset` —— `NOMINATE` / `COMMIT` 后的对外商业/交易表述，非新 Candidate Level
 
 `Biomarker`（L12）、`Endpoint`（L2）及 `Epitope` / `Linker` / `Payload` /
-`ADC Lead` / `Clinical Regimen` 是 `core_objects@1.1` **尚缺、migration 时须新增**
-的 Candidate Type，不是上表 8 对象的 crosswalk。
+`ADC Lead` / `Clinical Regimen` 是 `core_objects@1.1` 未登记、**仍属 deferred
+downstream work** 的 Candidate Type，不是上表 8 对象的 crosswalk；它们不属于
+PR A–E16 runtime migration 的范围。
 
 架构方向（8 对象折叠为泛化 `Candidate` + `candidate_type` + `level`；旧 45-Gate
 冻结为 legacy、新建 canonical GateSet lineage）已由 Blueprint v1.3 决定，登记在
 `CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md` 第 16 节 **A 组**；
-尚待实现设计的 blocker 在同节 **B 组**。本契约的决策层模型（3.4.1 / 3.4.2）
-是规范目标，其代码落地属独立实现任务。
+同节 **B 组** 的 PR A–E16 runtime blockers 已关闭（PR A–E16 已合并），剩余
+deferred work 另行推进。本契约的决策层模型（3.4.1 / 3.4.2）的 runtime 落地由
+PR A–E16 完成。
 
 #### 3.4.4 ClinicalHypothesis 递进锁定
 
@@ -227,7 +230,7 @@ Phase 1:
 - 决策层规范来源（外部 Blueprint）：`StelligenOS-产品形态-Blueprint v1.3`、`StelligenOS_Candidate_Levels_and_GateSets_Blueprint.v0.1`
 - 能力说明：`docs/architecture/capabilities.zh-CN.md`
 - 生命周期说明：`docs/architecture/lifecycle.zh-CN.md`
-- 核心对象清单（当前实现登记，待 crosswalk）：`src/contracts/core_objects.yaml`
+- 核心对象清单（legacy-compatibility snapshot / crosswalk reference）：`src/contracts/core_objects.yaml`
 - 运行 Prompt：`prompts/system/STELLIGENOS_MIGRATION_MASTER_PROMPT.zh-CN.md`
 
 ## 7. 尚未进入内核的扩展

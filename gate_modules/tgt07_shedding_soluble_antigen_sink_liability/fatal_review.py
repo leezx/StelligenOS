@@ -24,11 +24,16 @@ satisfies EITHER admissible SOURCE PATH:
 
   * Clinical source path -- ``observation_kind == CLINICAL_ANTIGEN_SINK_PK_EFFECT``
     (its clinical qualification -- same-target match, soluble-antigen attribution,
-    analysis validation -- is guaranteed by ``classify.qualifying_direct_material_sink``)
-    AND ``documents_clinical_exposure_compromise``.
+    analysis validation -- is guaranteed by ``classify.qualifying_direct_material_sink``).
   * TMDD source path -- ``observation_kind == SOLUBLE_ANTIGEN_TMDD_ANALYSIS`` AND
     ``exposure_scenario_class == INTENDED_ADC_EXPOSURE`` (its TMDD qualification is
-    guaranteed by the classifier) AND ``documents_clinical_exposure_compromise``.
+    guaranteed by the classifier).
+
+The CLOSED typed ``sink_materiality_outcome ==
+MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE`` is itself the sole
+machine authority for "a documented / modelled clinically achievable exposure
+compromise" (E16 review round-1 blocker 1). There is NO second boolean and NO
+claim / basis parse.
 
 ONE qualifying observation on EITHER path is sufficient. The two paths are NOT
 combined and NOT a convergence pair; there is NO mandatory reproducibility
@@ -52,8 +57,6 @@ def _fatal_source_path(e: EmittedEvidence) -> str:
 
     o = e.observation
     if o.sink_materiality_outcome != _MATERIAL_WITH_COMPROMISE:
-        return ""
-    if not o.documents_clinical_exposure_compromise:
         return ""
     if o.observation_kind == "CLINICAL_ANTIGEN_SINK_PK_EFFECT":
         return "CLINICAL"

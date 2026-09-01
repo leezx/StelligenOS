@@ -219,15 +219,48 @@ repository_policy:
   only_binding_registry_and_runtime_conformance_docs_reconciled: true
   migration_pending: lifted
 
-chatgpt_review: PENDING
+chatgpt_review: REQUEST_CHANGES
 approved_tip: null
 merge_commit: null
-review_rounds: 0
+review_rounds: 1
 test_count_before_e16: 1796       # at PR E15 approval-record merge
 test_count_at_submission: 1895    # +91 tests/test_tgt07_module.py + 8 tests/test_gate_modules_boundary.py (Tgt07ModuleManifestTests + MigrationCloseoutInvariantTests)
+test_count_after_round_1: 1900    # +5 review-round-1 regressions (ContextualDirectAuthorityObservationTests + the typed-outcome-is-the-sole-fatal-authority check + the contract.zh-CN.md closeout assertions)
 test_count_at_approval: null
 approval_record_pr: null          # docs-only, created after APPROVE (PR #95 ... #135 precedent)
 next_authorized_step: null        # the runtime migration's last implementation PR -- no PR E17
+
+review_round_1:
+  verdict: REQUEST_CHANGES
+  reviewer: ChatGPT AI审核方案
+  head_reviewed: ef9109cf4198997b1e2d641b55f422b25d867bf2
+  ci_confirmed: run 33506279674 -- verify (3.11) + verify (3.12) both success
+  judged_correct_do_not_reopen: >-
+    kind-specific DIRECT classifier; MIXED vs NOT_ESTABLISHED; the frozen 7-step
+    aggregate; the EvidenceRole mapping; dual-subspace completion; no
+    qualifying_indirect_evidence_context_ids set; exact audit parity; no
+    reproducibility fatal gate; no fatal global cancellation precondition;
+    raw-candidate -> acceptance -> surfaced fatal; exact reuse / dedup;
+    duplicate-observation-id preflight; no raw-value branch; treatment_state ==
+    not_applicable; TGT-07 binding 1.0.0; the 8/8 built machine invariant; other
+    deferred work preserved; historical snapshots untouched;
+    crc_adc_target_gateset.yaml migration.deferred handling.
+  blockers:
+    - "1. documents_clinical_exposure_compromise was a SECOND fatal authority alongside the CLOSED typed sink_materiality_outcome == MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE (which is itself the sole machine authority for a documented / modelled clinically achievable exposure compromise, per T5). FIX: removed the field from contracts.py / evidence.py parity / fatal_review.py / acceptance.py / module.yaml / tests; fatal narrowing keys off the typed outcome + observation_kind (+ exposure_scenario_class == INTENDED_ADC_EXPOSURE for the TMDD path) only. Regression: qualified clinical DIRECT + WITH_CLINICAL_EXPOSURE_COMPROMISE -> fatal true, no second flag; the field no longer exists on the dataclass."
+    - "2. acceptance.py wrongly rejected the whole run when a CONTEXTUAL CLINICAL / TMDD observation carried a real sink_exposure_context_id -- turning 'did not reach DIRECT' into 'illegal input'. E15 only requires: qualifying DIRECT -> context REQUIRED; INDIRECT_STRONG / WEAK / SEARCH_COMPLETION_AUDIT -> ''. FIX: the acceptance check now keys off observation_kind (only a non-DIRECT-authority kind may not carry a context) rather than the final qualifying-DIRECT status; the constructor already forbids a non-DIRECT-authority kind from carrying one. New ContextualDirectAuthorityObservationTests: a contextual clinical / TMDD observation with a factual sink context is an accepted run, not DIRECT, not fatal."
+    - "3. docs/architecture/contract.zh-CN.md section 3.4.3 simultaneously said 'runtime implementation unchanged / migration pending' AND 'Runtime conformance: COMPLETE'. FIX (live doc only, not the frozen v5 expert-review doc or historical snapshots): '但 runtime implementation 未变' -> 'PR A-E16 runtime layer 已完成'; the legacy contracts block relabelled as 'Retained legacy-compatibility snapshots ... NOT the current runtime'; '尚缺、migration 时须新增' Candidate Types -> '仍属 deferred downstream work'; the B-group blockers marked closed; the Source-of-Truth line -> 'legacy-compatibility snapshot / crosswalk reference'. MigrationCloseoutInvariantTests.test_migration_pending_is_lifted_in_the_live_docs extended to README.md + contract.zh-CN.md and forbids the stale phrases."
+  files_touched:
+    - gate_modules/tgt07_shedding_soluble_antigen_sink_liability/contracts.py (drop documents_clinical_exposure_compromise field + its validation)
+    - gate_modules/tgt07_shedding_soluble_antigen_sink_liability/fatal_review.py (drop the second-boolean check; docstring)
+    - gate_modules/tgt07_shedding_soluble_antigen_sink_liability/evidence.py (drop the field from the reuse / dedup parity keys)
+    - gate_modules/tgt07_shedding_soluble_antigen_sink_liability/acceptance.py (fatal-contributor check; the sink-exposure-context check keyed off observation_kind not qualifying-DIRECT status)
+    - gate_modules/tgt07_shedding_soluble_antigen_sink_liability/module.yaml (drop the field mentions)
+    - docs/architecture/contract.zh-CN.md (section 3.4.3 + Source-of-Truth closeout wording)
+    - tests/test_tgt07_module.py (drop the compromise helper param; ContextualDirectAuthorityObservationTests; the typed-outcome-is-sole-fatal-authority check) -- 96 tests
+    - tests/test_gate_modules_boundary.py (MigrationCloseoutInvariantTests live-doc assertions)
+    - manifests/runtime_migration_pr_e16_manifest.yaml (this block)
+    - logs/worklog.md (append)
+  test_count_after: 1900
 
 tests:
   - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt07_module.py' -v

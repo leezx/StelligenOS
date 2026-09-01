@@ -7073,3 +7073,47 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   evaluators、下游 Candidate level、FTO 任务）仍在后续。
 - Next：开 PR、CI 绿后回 `AI审核方案` 贴 implementation-level review 请求。
   这是本轮 runtime migration 的最后一个 implementation PR，没有 PR E17。
+
+### PR E16 · ChatGPT `AI审核方案` implementation review round 1 → REQUEST_CHANGES（3 窄 blocker）
+
+- Verdict：**REQUEST_CHANGES**，anchor HEAD `ef9109c`；exact-head CI run
+  33506279674 verify (3.11) + (3.12) 均 success。审核方逐条列出「判定正确、不要
+  重开」：kind-specific DIRECT classifier、MIXED vs NOT_ESTABLISHED、frozen 7-step
+  aggregate、EvidenceRole mapping、dual-subspace completion、no
+  qualifying_indirect_evidence_context_ids set、exact audit parity、no
+  reproducibility fatal gate、no fatal global cancellation、raw-candidate →
+  acceptance → surfaced fatal、exact reuse/dedup、duplicate-observation-id
+  preflight、no raw-value branch、treatment_state == not_applicable、TGT-07
+  binding 1.0.0、8/8 built machine invariant、其它 deferred work preserved、
+  historical snapshots untouched、`crc_adc_target_gateset.yaml`
+  `migration.deferred` 处理。
+- **Blocker 1** —— `documents_clinical_exposure_compromise` 成了第二套 fatal
+  authority（与冻结的 T5 冲突：CLOSED typed `sink_materiality_outcome ==
+  MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE` 本身就是 machine
+  authority）。**FIX**：从 `contracts.py` / `evidence.py` parity / `fatal_review.py`
+  / `acceptance.py` / `module.yaml` / tests 全部移除该 bool；fatal narrowing 只
+  keys off typed outcome + observation_kind（+ TMDD path 的
+  `exposure_scenario_class == INTENDED_ADC_EXPOSURE`）。
+- **Blocker 2** —— `acceptance.py` 错误地整轮 reject 一个携带真实
+  `sink_exposure_context_id` 的 CONTEXTUAL CLINICAL / TMDD observation（把「没到
+  DIRECT」错误升级成「输入非法」）。E15 只要求 qualifying DIRECT → context
+  REQUIRED、INDIRECT_STRONG / WEAK / SEARCH_COMPLETION_AUDIT → ""。**FIX**：
+  acceptance check 改成 keys off `observation_kind`（只有 non-DIRECT-authority
+  kind 不得携带 context），constructor 已强制这一点；新增
+  `ContextualDirectAuthorityObservationTests`。
+- **Blocker 3** —— `docs/architecture/contract.zh-CN.md` §3.4.3 同时写「runtime
+  implementation 未变 / migration pending」和「Runtime conformance: COMPLETE」。
+  **FIX**（只改 live doc，不动 frozen v5 expert-review doc / historical
+  snapshots）：「但 runtime implementation 未变」→「PR A–E16 runtime layer 已
+  完成」；legacy contracts block 标注为 retained legacy-compatibility snapshots；
+  「尚缺、migration 时须新增」Candidate Types →「仍属 deferred downstream
+  work」；B 组 blockers 标为已关闭；Source-of-Truth 行 → legacy-compatibility
+  snapshot / crosswalk reference。`MigrationCloseoutInvariantTests` 扩展到
+  README.md + contract.zh-CN.md 并禁止 stale phrase。
+- 触及文件：`contracts.py` / `fatal_review.py` / `evidence.py` / `acceptance.py`
+  / `module.yaml`、`docs/architecture/contract.zh-CN.md`、
+  `tests/test_tgt07_module.py`（96 tests）、`tests/test_gate_modules_boundary.py`、
+  `manifests/runtime_migration_pr_e16_manifest.yaml`（`review_round_1` block）、
+  `logs/worklog.md`。E16 其它科学 / 架构不动。
+- 本地全量 unittest：1900 OK（1895 → +5 regression）。
+- Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-2 回复。

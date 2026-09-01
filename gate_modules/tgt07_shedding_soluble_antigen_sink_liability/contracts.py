@@ -342,7 +342,6 @@ class NormalizedSolubleAntigenObservation:
     soluble_antigen_attribution_basis: str
     exposure_scenario_class: str
     exposure_scenario_basis: str
-    documents_clinical_exposure_compromise: bool
     reproducibility_status: str
     reproducibility_basis: str
     sink_exposure_context_id: str
@@ -447,10 +446,6 @@ class NormalizedSolubleAntigenObservation:
             "exposure_scenario_class",
         )
         _text(self.exposure_scenario_basis, "exposure_scenario_basis", allow_empty=True)
-        _bool(
-            self.documents_clinical_exposure_compromise,
-            "documents_clinical_exposure_compromise",
-        )
         _choice(
             self.reproducibility_status,
             REPRODUCIBILITY_STATUS_VALUES,

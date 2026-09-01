@@ -592,6 +592,19 @@ class MigrationCloseoutInvariantTests(unittest.TestCase):
         self.assertIn("Runtime conformance: **COMPLETE**", readme)
         arch = (REPO_ROOT / "architecture.md").read_text()
         self.assertIn("runtime conformance 已 COMPLETE", arch)
+        top_readme = (REPO_ROOT / "README.md").read_text()
+        self.assertIn("runtime conformance = **COMPLETE**", top_readme)
+        # E16 review round-1 blocker 3: the live architecture contract may not
+        # keep an active closeout section that still says runtime implementation
+        # is unchanged or conformance is pending.
+        contract = (REPO_ROOT / "docs" / "architecture" / "contract.zh-CN.md").read_text()
+        self.assertIn(
+            "COMPLETE for the Blueprint-v1.3 Candidate x Gate x Evidence runtime migration",
+            contract,
+        )
+        self.assertNotIn("但 runtime implementation 未变", contract)
+        self.assertNotIn("runtime conformance:\n  MIGRATION_PENDING", contract)
+        self.assertNotIn("尚缺、migration 时须新增", contract)
 
 
 if __name__ == "__main__":
