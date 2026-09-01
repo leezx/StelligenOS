@@ -6827,3 +6827,155 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   （TGT-01/02/03/04/05/06/08 @ 1.0.0）。`MIGRATION_PENDING` 保持。
 - Next：fatal-first 余下 **TGT-07**：PR E15 = 施工合同（需独立 go-ahead），
   PR E16 = 实现。8 个 primary Module 全部建成后才解除 `MIGRATION_PENDING`。
+
+## Runtime Migration PR E15 · TGT-07 / MOD-TGT07 construction contract（design-only）
+
+- 分支 `task_20260831_runtime-migration-pr-e15`，基线 `origin/main` @ `bbfb1f1`
+  （PR E14 收口后）。变更定位 `CONTRACT_ADD`，与 E1 / E3 / E5 / E7 / E9 / E11 /
+  E13 同型 —— 只交施工合同 + drawing + parity / validation tests + 17 项验收清单
+  + manifest + handoff + worklog append；**不含任何实现**。Module 在 PR E16 才
+  开工（TGT-07 是第八也是最后一个 primary Module，PR E16 解除
+  `MIGRATION_PENDING`）。
+- 开工前 ChatGPT `AI审核方案` scoping：**APPROVE-to-proceed**，7 个 required
+  tightening + 逐条 E15-1…E15-8 修正 + 3 条 headline conclusion（逐字见
+  `manifests/runtime_migration_pr_e15_manifest.yaml`）。要点：
+  - **E15-3 Option A** —— TGT-07 用 highest-qualifying-rung grading authority
+    （TGT-03 / TGT-06 先例），**不是** TGT-04 single-tier。qualifying
+    `INDIRECT_STRONG` soluble-antigen landscape → `POSITIVE / INDIRECT_STRONG`。
+    legal Direction × Strength pair 恰好 **6 个**（`POSITIVE/DIRECT`、
+    `POSITIVE/INDIRECT_STRONG`、`NEGATIVE/DIRECT`、`CONFLICTING/DIRECT`、
+    `INCONCLUSIVE/DIRECT`、`INCONCLUSIVE/UNKNOWN`）。TGT-07 专属
+    exposure-context aggregation truth table（stop-at-first-match）：一个 CLEAN
+    material-sink DIRECT sink-exposure context → `POSITIVE / DIRECT`
+    （existence-proof dominance：另一 context 的 no-material-sink DIRECT 作
+    CONTEXTUAL）；同一 `sink_exposure_context_id` 同时有 material-sink DIRECT +
+    no-material-sink DIRECT → `CONFLICTING / DIRECT`（v1 无 machine conflict
+    resolver）；qualified intended-ADC `NO_MATERIAL_SOLUBLE_SINK` TMDD + 无
+    material-sink DIRECT → `NEGATIVE / DIRECT`；DIRECT-quality
+    `MIXED_OR_UNRESOLVED` analysis → `INCONCLUSIVE / DIRECT`；different
+    sink-exposure contexts 表现不同 **永不** map 成 CONFLICTING（HARD lock）。
+    **below-detection / below-quantitation-limit** soluble-antigen measurement
+    是 `CONTEXTUAL` —— 既非 positive `INDIRECT_STRONG` 也非 `NEGATIVE`
+    （明确 frozen ruling）。**canonical `NEGATIVE / DIRECT` 只从 qualified
+    `SOLUBLE_ANTIGEN_TMDD_ANALYSIS` + `exposure_scenario_class ==
+    INTENDED_ADC_EXPOSURE` + `NO_MATERIAL_SOLUBLE_SINK`**；"某 same-target
+    therapeutic 没看到 sink" 永不 `NEGATIVE / DIRECT`。**No cross-observation
+    synthesis of DIRECT** —— quantitation EP + 另一个 model EP 不合成 DIRECT。
+  - **E15-4 Fatal** —— machine-local `fatal_review`。**一个 fatal predicate +
+    两条 admissible source path（clinical / TMDD），不是 Route A / Route B
+    convergence**。`required` 为真当且仅当 ≥ 1 qualifying DIRECT observation
+    （`sink_materiality_outcome ==
+    MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE`）满足 clinical
+    source path（`CLINICAL_ANTIGEN_SINK_PK_EFFECT` +
+    `same_target_therapeutic_match_status == QUALIFIED` +
+    `same_target_therapeutic_ref` + `soluble_antigen_attribution_status ==
+    QUALIFIED` + `analysis_validation_status == QUALIFIED` +
+    `reproducibility_status == QUALIFIED` + documented clinically achievable
+    exposure compromise）**或** TMDD source path（`SOLUBLE_ANTIGEN_TMDD_ANALYSIS`
+    + `tmdd_input_adequacy_status == QUALIFIED` + `analysis_validation_status ==
+    QUALIFIED` + `analysis_method != ""` + `exposure_scenario_class ==
+    INTENDED_ADC_EXPOSURE` + 模型明确得出 material compromise）。任一 path 上的
+    一个 observation 即足够；clinical path 自带 per-observation
+    `reproducibility_status == QUALIFIED` gate（**不是** cross-study
+    convergence 要求），此外无额外 reproducibility 要求。**无 global
+    cancellation precondition** —— `POSITIVE / DIRECT` **不**取消 fatal
+    trigger；fatal signal 是 `POSITIVE / DIRECT` 的严格子集
+    （`MATERIAL_SOLUBLE_SINK_WITHOUT_ESTABLISHED_CLINICAL_EXPOSURE_COMPROMISE`
+    DIRECT 是 `POSITIVE / DIRECT` 但 NONFATAL）。status 单值
+    `POTENTIAL_FATAL_PATTERN`；仅 accepted run actionable。
+  - **E15-5 SolubleAntigenEvidenceCompletion** —— 4 axes
+    （`soluble_antigen_quantitation_search_complete` /
+    `sheddase_processing_search_complete` /
+    `secreted_isoform_search_complete` /
+    `same_target_pk_pd_or_tmdd_search_complete`）；umbrella
+    `public_soluble_antigen_search_complete == all(four)`；**只有**
+    `qualifying_direct_evidence_context_ids`，**没有**
+    `qualifying_indirect_evidence_context_ids`。第一轴为真当且仅当 CRC-patient
+    与 healthy-donor 两个 serum / plasma search subspace 都完成。第 4 轴明确
+    覆盖 clinical PK / PD 与 TMDD。
+  - **E15-2** —— 确认 frozen PR D TGT-07 **无 `inference_guard` 字段**
+    （EVGAP-01 是 TGT-04 专属）。
+  - **E15-8** —— 8 observation kinds
+    （`CLINICAL_ANTIGEN_SINK_PK_EFFECT` / `SOLUBLE_ANTIGEN_TMDD_ANALYSIS` /
+    `SOLUBLE_ANTIGEN_QUANTITATION` / `SHEDDASE_SUBSTRATE_STATUS` /
+    `SECRETED_ISOFORM` / `PREDICTED_CLEAVAGE_SITE_INFERENCE` /
+    `FAMILY_ANALOGY_SHEDDING_INFERENCE` / `SEARCH_COMPLETION_AUDIT`）；
+    `sink_materiality_outcome` CLOSED enum（前两个 enum 名改精确）；新
+    `circulating_soluble_target_status` / `tmdd_input_adequacy_status` /
+    `same_target_therapeutic_match_status` / `soluble_antigen_attribution_status`
+    / `exposure_scenario_class` typed status（各带 basis）；轻量单串
+    `sink_exposure_context_id`（DIRECT 必填，其它 `""`；无 `declared_multi` /
+    `IDENTIFIED_MULTI` / 第三态 / set-projection helper）；**无 raw-value
+    reuse-parity 分支**；frozen proposal-relative EvidenceRole mapping
+    （CONTRADICTING 仅 `CONFLICTING / DIRECT`）。
+- 交付：
+  - 新增 `src/contracts/gate_modules/tgt07_shedding_soluble_antigen_sink_liability.yaml`
+    —— 17 项施工合同。
+  - 新增 `docs/gate_modules/TGT-07_Shedding_Soluble_Antigen_Sink_Liability.md`
+    —— 17 行 drawing + 3 条 headline blockquote + conceptual shape。
+  - 新增 `tests/test_tgt07_module_construction_contract.py` —— **78 tests**。
+  - 新增 `manifests/runtime_migration_pr_e15_manifest.yaml`、
+    `docs/handoff/2026-08-31-runtime-migration-pr-e15.zh-CN.md`。
+- 验证：`tests/test_tgt07_module_construction_contract.py` **78 OK**；全量
+  **1791 OK**（E14 收口 1713）；`bash scripts/verify_repository_boundary.sh` 只报
+  既有 untracked 杂项；`git diff --check` clean；YAML 合法且无
+  list-element-parsed-as-dict；`src/` 不 import `gate_modules/`。
+- 状态：8 个 primary Module 施工合同已 APPROVE 7 个（TGT-01/05/08/02/03/04/06），
+  已实现 **7 个**。MOD-TGT07 `primary_module_version` 仍 `0.0.0`。
+  `MIGRATION_PENDING` 保持。
+- Next：开 PR、CI 绿后回 `AI审核方案` 贴 E15 review 请求。APPROVE 后 PR E16 =
+  MOD-TGT07@1.0.0 实现（第八也是最后一个 primary Module；PR E16 解除
+  `MIGRATION_PENDING`），需各自 go-ahead。
+
+### PR E15 · ChatGPT `AI审核方案` review round 1 → REQUEST_CHANGES（1 窄 blocker）
+
+- Verdict：**REQUEST_CHANGES**，anchor HEAD `11922dc`；exact-head CI run
+  33450076820 verify (3.11) + (3.12) 均 success。审核方确认主体合同成立并逐条
+  列出「判定正确、不要重开」：design-only boundary；PR D items 03/05/07/08
+  parity + item 04 exact-set parity；Option A；6 legal pair；no
+  `NEGATIVE / INDIRECT_STRONG`；below-LOD/LOQ → CONTEXTUAL；canonical
+  `NEGATIVE / DIRECT` 只从 intended-ADC TMDD；frozen ordered aggregation；
+  same-context only CONFLICTING；v1 no machine conflict resolver；no
+  cross-observation DIRECT synthesis；lightweight single-string
+  `sink_exposure_context_id`；four completion axes + CRC/healthy dual-subspace
+  quantitation；no `qualifying_indirect_evidence_context_ids`；no raw numeric
+  threshold / parity branch；proposal-relative EvidenceRole mapping；fatal = one
+  predicate + two source paths；no fatal global cancellation precondition；3 条
+  headline conclusion。
+- **Blocker 1** —— clinical fatal source path 错误增加了 **mandatory**
+  `reproducibility_status == QUALIFIED` predicate（并已同步进 item 08
+  clinical_source_path、item 12 `required_is_true_iff`、item 13 machine
+  acceptance、`seven_required_tightenings` 4、manifest `E15-4` 与测试）。这与
+  pre-code ruling 矛盾 —— frozen PR D fatal 是单数 authority（"circulating
+  soluble antigen demonstrated, or quantitatively modelled ... to materially
+  compromise clinically achievable exposure"），一个 QUALIFIED same-target /
+  attribution / analysis-validation qualified 且已直接 documented
+  `MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE` 的 clinical
+  observation 就足以 surface machine-local `POTENTIAL_FATAL_PATTERN`；第二层
+  reproducibility gate 会造成 false negative（强单观测 clinical PK observation
+  + `reproducibility_status == NOT_ESTABLISHED` → `fatal_review.required ==
+  false`）。**FIX**：clinical source path 去掉 `reproducibility_status ==
+  QUALIFIED` 作为 fatal / machine-acceptance prerequisite；保留
+  `reproducibility_status` / `reproducibility_basis` 为 **optional factual
+  metadata**（carried、给 human reviewer 看，永不作 gate）。改掉被错误冻结的
+  "no extra reproducibility beyond the clinical path's own per-observation
+  `reproducibility_status == QUALIFIED` gate" → "There is NO mandatory
+  reproducibility predicate for the single-observation clinical fatal path in
+  v1"。加 regression：qualified clinical sink-effect observation +
+  `MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE` +
+  `reproducibility_status == NOT_ESTABLISHED` → 仍 fatal-eligible；
+  attribution / same-target-match / analysis-validation `NOT_ESTABLISHED` 仍
+  block fatal。
+- 触及文件：`tgt07_shedding_soluble_antigen_sink_liability.yaml`（item 06
+  upstream_qualified_factual_states / item 08 clinical_source_path +
+  two_source_paths_not_routes / item 12 fatal_review.required_is_true_iff +
+  clinical_attribution_basis_refs / item 13 basis list + fatal acceptance check
+  / seven_required_tightenings 4）、`TGT-07_....md`（row 8 + conceptual
+  shape）、`test_tgt07_module_construction_contract.py`（78 → 83，新
+  `ReviewRound1RegressionTests` + 更新 fatal-path / tightening-4 断言）、
+  `runtime_migration_pr_e15_manifest.yaml`（E15-4 + tightening 4 + 本 block）、
+  `logs/worklog.md`。E15 science / architecture 其余不动。
+- 本轮 ChatGPT 明确 CLOSED、不要改：见上「判定正确、不要重开」清单 + MOD-TGT07
+  0.0.0 + `MIGRATION_PENDING` 保持。
+- 本地全量 unittest：1796 OK（1791 → +5 regression）。
+- Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-2 回复。
