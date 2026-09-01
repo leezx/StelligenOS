@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_e15
-status: in_review
+status: approved
 scope: tgt07_mod_tgt07_construction_contract_drawing_validation_and_acceptance_checklist_only
 repository_boundary: software_only_external_data
 
@@ -368,16 +368,50 @@ repository_policy:
   only_allowed_existing_file_mutation: append_to_logs_worklog_md
   migration_pending: remains
 
-chatgpt_review: REQUEST_CHANGES
-approved_tip: null
-merge_commit: null
-review_rounds: 1
+chatgpt_review: APPROVE
+approved_tip: 3747f8ef285319d464c9236110a915bb3dc1342e   # review round-1 revision anchor HEAD
+merge_commit: 7684d27             # Merge pull request #134 from leezx/task_20260831_runtime-migration-pr-e15
+review_rounds: 2
 test_count_before_e15: 1713       # at PR E14 approval
 test_count_at_submission: 1791    # local full suite (tests/test_tgt07_module_construction_contract.py 78)
 test_count_after_round_1: 1796    # +5 review-round-1 regression tests (tests/test_tgt07_module_construction_contract.py 83)
-test_count_at_approval: null
-approval_record_pr: null          # docs-only, created after APPROVE (PR #95 ... #133 precedent)
-next_authorized_step: null        # PR E16 = MOD-TGT07@1.0.0 implementation -- needs its own go-ahead
+test_count_at_approval: 1796      # unchanged at round 2 (APPROVE, no code change)
+approval_record_pr: task_20260831_runtime-migration-pr-e15-approval-record   # docs-only PR carrying this manifest -> approved + the full 2-round ChatGPT review record
+next_authorized_step: null        # PR E16 = MOD-TGT07@1.0.0 implementation -- needs its own go-ahead (the eighth and final primary Module; PR E16 lifts MIGRATION_PENDING)
+
+review_round_2:
+  verdict: APPROVE
+  reviewer: ChatGPT AI审核方案
+  head_reviewed: 3747f8ef285319d464c9236110a915bb3dc1342e
+  ci_confirmed: run 33451531965 -- verify (3.11) + verify (3.12) both success
+  round_1_blocker: CLOSED
+  note: >-
+    the clinical fatal source path no longer carries a mandatory
+    reproducibility_status == QUALIFIED predicate; a reproducibility_status ==
+    NOT_ESTABLISHED clinical observation that satisfies every other clause
+    (attribution / same-target-match / analysis-validation QUALIFIED +
+    MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE + basis + a documented
+    clinically achievable exposure compromise) is still fatal-eligible;
+    reproducibility_status / reproducibility_basis are optional factual metadata,
+    never classification-driving, fatal or machine-acceptance predicates; item 12
+    required_is_true_iff, item 13 acceptance and seven_required_tightenings 4 are
+    synced to "no mandatory reproducibility predicate"; ReviewRound1RegressionTests
+    locks the fix and confirms same_target_therapeutic_match_status /
+    soluble_antigen_attribution_status / analysis_validation_status remain real
+    clinical qualification gates. No previously-passed E15 science / architecture
+    was reopened; the E15 construction contract is frozen.
+  non_blocking_housekeeping: >-
+    GitHub PR #134 description still carried the stale "clinical path's own
+    reproducibility_status == QUALIFIED gate" wording while the in-repo contract /
+    manifest / tests were already correct; the PR body was updated before merge.
+    Did not affect the APPROVE.
+  merge_commit: 7684d27   # Merge pull request #134 from leezx/task_20260831_runtime-migration-pr-e15
+  post_merge_state: >-
+    all 8 primary Module construction contracts APPROVED (TGT-01..TGT-08); 7 of 8
+    primary Modules implemented (TGT-01/02/03/04/05/06/08 @ 1.0.0); MOD-TGT07
+    primary_module_version still 0.0.0; MIGRATION_PENDING remains; the last one is
+    TGT-07 (PR E16 = MOD-TGT07@1.0.0 implementation), which needs its own
+    go-ahead and lifts MIGRATION_PENDING.
 
 review_round_1:
   verdict: REQUEST_CHANGES
