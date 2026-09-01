@@ -1,5 +1,5 @@
 phase: runtime_migration_pr_e16
-status: in_review
+status: approved
 scope: mod_tgt07_deterministic_scientific_core_implementation_plus_binding_reconciliation_and_runtime_conformance_closeout
 repository_boundary: software_only_external_data
 
@@ -219,16 +219,68 @@ repository_policy:
   only_binding_registry_and_runtime_conformance_docs_reconciled: true
   migration_pending: lifted
 
-chatgpt_review: REQUEST_CHANGES
-approved_tip: null
-merge_commit: null
-review_rounds: 1
+chatgpt_review: APPROVE
+approved_tip: 798c734217aa526da21f8ae596eb9db71c06a8ee   # review round-1 revision anchor HEAD
+merge_commit: 004dbed4d4e7bd47c584bf66b6e9f5d301a1bff5   # Merge pull request #136 from leezx/task_20260901_runtime-migration-pr-e16
+review_rounds: 2
 test_count_before_e16: 1796       # at PR E15 approval-record merge
 test_count_at_submission: 1895    # +91 tests/test_tgt07_module.py + 8 tests/test_gate_modules_boundary.py (Tgt07ModuleManifestTests + MigrationCloseoutInvariantTests)
 test_count_after_round_1: 1900    # +5 review-round-1 regressions (ContextualDirectAuthorityObservationTests + the typed-outcome-is-the-sole-fatal-authority check + the contract.zh-CN.md closeout assertions)
-test_count_at_approval: null
-approval_record_pr: null          # docs-only, created after APPROVE (PR #95 ... #135 precedent)
-next_authorized_step: null        # the runtime migration's last implementation PR -- no PR E17
+test_count_at_approval: 1900      # unchanged at round 2 (APPROVE, no code change)
+approval_record_pr: task_20260901_runtime-migration-pr-e16-approval-record   # docs-only PR carrying this manifest -> approved + the full 2-round ChatGPT review record
+next_authorized_step: null        # NONE -- PR E16 is the last implementation PR of the PR A-E16 runtime migration; there is no PR E17. Any further StelligenOS deferred work (quantitative ladder calibration, epitope-layer analyses, external evaluators, downstream Candidate levels, FTO) needs its own explicit go-ahead.
+
+review_round_2:
+  verdict: APPROVE
+  reviewer: ChatGPT AI审核方案
+  head_reviewed: 798c734217aa526da21f8ae596eb9db71c06a8ee
+  ci_confirmed: run 33509346532 -- verify (3.11) + verify (3.12) both success (Unit tests + Repository boundary + working-tree cleanliness steps included)
+  round_1_blockers: ALL CLOSED
+  note: >-
+    Blocker 1 (fatal authority) CLOSED -- documents_clinical_exposure_compromise
+    removed from the observation contract; fatal_review.py now consumes only the
+    classifier-confirmed qualifying material-sink DIRECT and narrows off the
+    single CLOSED sink_materiality_outcome ==
+    MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE + the clinical /
+    intended-ADC TMDD source path; no second boolean, no claim / basis semantic
+    parse, no reproducibility gate, no global cancellation; the field is gone
+    from the observation dataclass and acceptance's fatal-contributor recheck.
+    Blocker 2 (contextual CLINICAL / TMDD exposure context) CLOSED -- acceptance
+    now separates "is this observation kind entitled to carry a local exposure
+    context" from "did this observation reach DIRECT"; a CONTEXTUAL clinical /
+    TMDD observation may keep a factual context and the run is no longer
+    rejected. Blocker 3 (live architecture contract) CLOSED -- no longer
+    simultaneously "runtime implementation unchanged" and "runtime COMPLETE";
+    legacy contracts demoted to retained compatibility snapshots, A-E16 runtime
+    blockers marked closed, uncovered Candidate Types filed under deferred
+    downstream work, the Source-of-Truth core_objects.yaml line relabelled
+    legacy-compatibility / crosswalk reference; the closeout regression now
+    covers top README + architecture + contract and forbids the three stale
+    active-state phrases. round-1 -> round-2 is a single commit across ~10 files;
+    classify.py / aggregate.py / completion.py / the GateSet binding science and
+    the other CLOSED module logic were not re-touched; module.yaml fatal
+    ownership is consistent with the final authority (classifier = single
+    scientific qualification authority, fatal detector only narrows). No new
+    implementation blocker; the previously CLOSED T1-T7, EvidenceRole mapping,
+    completion / audit, reuse / dedup, duplicate-observation-id preflight and the
+    8/8 migration invariant all still hold.
+  non_blocking_housekeeping: >-
+    GitHub PR #136 description still carried the stale "91 OK / 1895 OK" test
+    counts while the actual figures were 96 / 1900; the PR body was updated
+    before merge. Did not affect the APPROVE.
+  github_connector: >-
+    still returns 403 "Resource not accessible by integration" on the formal
+    APPROVE submission anchored at exact HEAD 798c734; the APPROVE in the
+    AI审核方案 conversation is the authoritative review conclusion for this round.
+  merge_commit: 004dbed4d4e7bd47c584bf66b6e9f5d301a1bff5   # Merge pull request #136 from leezx/task_20260901_runtime-migration-pr-e16
+  post_merge_state: >-
+    all 8 primary Module construction contracts APPROVED (TGT-01..TGT-08) AND all
+    8 primary Modules implemented @ 1.0.0 (TGT-01/02/03/04/05/06/07/08); every
+    gate_binding.primary_module_version == "1.0.0"; MIGRATION_PENDING is lifted --
+    the PR A-E16 Blueprint-v1.3 Candidate x Gate x Evidence runtime-conformance
+    migration and the eight-primary-Module migration are COMPLETE. The runtime
+    migration's implementation sequence ends here; there is no PR E17.
+    migration.deferred is NOT deleted -- other StelligenOS deferred work remains.
 
 review_round_1:
   verdict: REQUEST_CHANGES
