@@ -31,6 +31,7 @@ TGT08 = GATE_MODULES_ROOT / "tgt08_target_opportunity_competition_ip_whitespace"
 TGT03 = GATE_MODULES_ROOT / "tgt03_treatment_metastatic_persistence"
 TGT04 = GATE_MODULES_ROOT / "tgt04_tumor_surface_availability_density_plausibility"
 TGT06 = GATE_MODULES_ROOT / "tgt06_internalization_trafficking_addressability"
+TGT07 = GATE_MODULES_ROOT / "tgt07_shedding_soluble_antigen_sink_liability"
 
 DATA_LIKE_SUFFIXES = {
     ".csv", ".tsv", ".parquet", ".feather", ".rds", ".h5", ".h5ad", ".loom",
@@ -483,6 +484,127 @@ class Tgt06ModuleManifestTests(unittest.TestCase):
         readme = " ".join((GATE_MODULES_ROOT / "README.md").read_text().split())
         self.assertIn("MOD-TGT06", readme)
         self.assertIn("tgt06_internalization_trafficking_addressability", readme)
+
+
+class Tgt07ModuleManifestTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.manifest = yaml.safe_load((TGT07 / "module.yaml").read_text())["module"]
+
+    def test_identity_and_version(self) -> None:
+        self.assertEqual(self.manifest["module_id"], "MOD-TGT07")
+        self.assertEqual(self.manifest["module_version"], "1.0.0")
+        self.assertEqual(self.manifest["built_in"], "runtime_migration_pr_e16")
+        self.assertEqual(self.manifest["gate_binding"]["gate_id"], "TGT-07")
+        self.assertEqual(
+            self.manifest["gate_binding"]["gateset_id"], "ADC_TARGET_GATESET"
+        )
+
+    def test_manifest_version_matches_the_package_constant(self) -> None:
+        from gate_modules.tgt07_shedding_soluble_antigen_sink_liability import (
+            MODULE_ID,
+            MODULE_VERSION,
+        )
+
+        self.assertEqual(self.manifest["module_id"], MODULE_ID)
+        self.assertEqual(self.manifest["module_version"], MODULE_VERSION)
+
+    def test_manifest_matches_the_crc_gateset_binding(self) -> None:
+        gateset = yaml.safe_load(
+            (REPO_ROOT / "src" / "contracts" / "crc_adc_target_gateset.yaml").read_text()
+        )
+        binding = next(
+            b
+            for b in gateset["context_specific_bindings"]["gate_bindings"]
+            if b["gate_id"] == "TGT-07"
+        )
+        self.assertEqual(binding["primary_module_id"], self.manifest["module_id"])
+        self.assertEqual(
+            binding["primary_module_version"], self.manifest["module_version"]
+        )
+        self.assertEqual(
+            gateset["primary_module_binding"]["built_module_versions"]["TGT-07"],
+            "1.0.0",
+        )
+
+    def test_boundary_flags_are_conservative_except_the_migration_closeout(self) -> None:
+        flags = self.manifest["boundary_flags"]
+        for name, value in flags.items():
+            if name == "lifts_migration_pending":
+                # TGT-07 is the eighth and final primary Module -- PR E16 lifts
+                # MIGRATION_PENDING as part of the runtime-conformance closeout.
+                self.assertTrue(value, name)
+            else:
+                self.assertFalse(value, name)
+
+    def test_readme_registers_the_built_module(self) -> None:
+        readme = " ".join((GATE_MODULES_ROOT / "README.md").read_text().split())
+        self.assertIn("MOD-TGT07", readme)
+        self.assertIn("tgt07_shedding_soluble_antigen_sink_liability", readme)
+
+
+class MigrationCloseoutInvariantTests(unittest.TestCase):
+    """E16 tightening 7: a machine closeout invariant. The runtime-conformance
+    migration is complete iff all eight primary Module bindings are "1.0.0" AND
+    every primary-module package manifest exists with matching identity."""
+
+    _PACKAGES = {
+        "TGT-01": "tgt01_adc_modality_precedent",
+        "TGT-02": "tgt02_indication_specific_malignant_cell_coverage",
+        "TGT-03": "tgt03_treatment_metastatic_persistence",
+        "TGT-04": "tgt04_tumor_surface_availability_density_plausibility",
+        "TGT-05": "tgt05_normal_tissue_fatal_liability",
+        "TGT-06": "tgt06_internalization_trafficking_addressability",
+        "TGT-07": "tgt07_shedding_soluble_antigen_sink_liability",
+        "TGT-08": "tgt08_target_opportunity_competition_ip_whitespace",
+    }
+
+    def test_all_eight_bindings_are_one_zero_zero(self) -> None:
+        from src.objects.crc_adc_target_gateset import BUILT_MODULE_VERSIONS
+
+        gateset = yaml.safe_load(
+            (REPO_ROOT / "src" / "contracts" / "crc_adc_target_gateset.yaml").read_text()
+        )
+        by_gate = {
+            b["gate_id"]: b["primary_module_version"]
+            for b in gateset["context_specific_bindings"]["gate_bindings"]
+        }
+        built = gateset["primary_module_binding"]["built_module_versions"]
+        for gate_id in self._PACKAGES:
+            self.assertEqual(by_gate[gate_id], "1.0.0", gate_id)
+            self.assertEqual(built[gate_id], "1.0.0", gate_id)
+            self.assertEqual(BUILT_MODULE_VERSIONS[gate_id], "1.0.0", gate_id)
+        self.assertEqual(set(built), set(self._PACKAGES))
+        self.assertEqual(set(dict(BUILT_MODULE_VERSIONS)), set(self._PACKAGES))
+
+    def test_all_eight_package_manifests_exist_and_match_their_bindings(self) -> None:
+        for gate_id, pkg_name in self._PACKAGES.items():
+            manifest_path = GATE_MODULES_ROOT / pkg_name / "module.yaml"
+            self.assertTrue(manifest_path.is_file(), pkg_name)
+            manifest = yaml.safe_load(manifest_path.read_text())["module"]
+            self.assertEqual(
+                manifest["module_id"], "MOD-" + gate_id.replace("-", ""), gate_id
+            )
+            self.assertEqual(manifest["module_version"], "1.0.0", gate_id)
+            self.assertEqual(manifest["gate_binding"]["gate_id"], gate_id, gate_id)
+
+    def test_migration_pending_is_lifted_in_the_live_docs(self) -> None:
+        readme = (GATE_MODULES_ROOT / "README.md").read_text()
+        self.assertIn("Runtime conformance: **COMPLETE**", readme)
+        arch = (REPO_ROOT / "architecture.md").read_text()
+        self.assertIn("runtime conformance 已 COMPLETE", arch)
+        top_readme = (REPO_ROOT / "README.md").read_text()
+        self.assertIn("runtime conformance = **COMPLETE**", top_readme)
+        # E16 review round-1 blocker 3: the live architecture contract may not
+        # keep an active closeout section that still says runtime implementation
+        # is unchanged or conformance is pending.
+        contract = (REPO_ROOT / "docs" / "architecture" / "contract.zh-CN.md").read_text()
+        self.assertIn(
+            "COMPLETE for the Blueprint-v1.3 Candidate x Gate x Evidence runtime migration",
+            contract,
+        )
+        self.assertNotIn("但 runtime implementation 未变", contract)
+        self.assertNotIn("runtime conformance:\n  MIGRATION_PENDING", contract)
+        self.assertNotIn("尚缺、migration 时须新增", contract)
 
 
 if __name__ == "__main__":

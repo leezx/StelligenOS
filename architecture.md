@@ -28,6 +28,11 @@ StelligenOS 已定义为 biotechnology asset operating system 的实现仓库。
 以规范路径上的 Current Design Architecture 文档为准。`v5` 依据 Blueprint v1.3
 把 Candidate × Gate × Evidence 六对象决策模型、Candidate Levels L0–L14 与
 canonical GateSet registry 提升为架构主干。这是 **architecture-specification**
-批准：`core_objects.yaml`、`gate_system.yaml`、`src/` 仍为 legacy，runtime
-conformance 为 `MIGRATION_PENDING`，须按 v5 文档第 16 节 B 组的 PR A–E 顺序
-逐步施工。
+批准：`core_objects.yaml`、`gate_system.yaml` 仍为 legacy 快照，但按 v5 文档
+第 16 节 B 组的 PR A–E16 顺序施工的 **runtime conformance 已 COMPLETE** —— PR
+A–E16 的 Candidate × Gate × Evidence runtime migration 与八个 primary Evidence
+Production Module（TGT-01…TGT-08 @ `1.0.0`）migration 已收口（PR E16 建成
+MOD-TGT07 并解除 `MIGRATION_PENDING`）。此收口只覆盖 PR A–E16 runtime
+conformance 与八 primary Module migration；其它 deferred work（quantitative
+ladder calibration、epitope-layer 分析、external evaluators、下游 Candidate
+level、FTO 任务）仍在后续。

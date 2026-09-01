@@ -57,12 +57,18 @@ Python 包，把「一个 Gate 的施工合同」翻译成确定性可执行代�
 | [`MOD-TGT04`](./tgt04_tumor_surface_availability_density_plausibility/) | TGT-04 Tumor Surface Availability / Density Plausibility | `ADC_TARGET_GATESET@1.0` | `1.0.0` | built (PR E12) |
 | [`MOD-TGT05`](./tgt05_normal_tissue_fatal_liability/) | TGT-05 Normal-Tissue Fatal Liability | `ADC_TARGET_GATESET@1.0` | `1.0.0` | built (PR E4) |
 | [`MOD-TGT06`](./tgt06_internalization_trafficking_addressability/) | TGT-06 Internalization / Trafficking Addressability | `ADC_TARGET_GATESET@1.0` | `1.0.0` | built (PR E14) |
+| [`MOD-TGT07`](./tgt07_shedding_soluble_antigen_sink_liability/) | TGT-07 Shedding / Soluble-Antigen / Sink Liability | `ADC_TARGET_GATESET@1.0` | `1.0.0` | built (PR E16) |
 | [`MOD-TGT08`](./tgt08_target_opportunity_competition_ip_whitespace/) | TGT-08 Target Opportunity / Competition / IP Whitespace | `ADC_TARGET_GATESET@1.0` | `1.0.0` | built (PR E6) |
 
-其余一个 TGT primary Module（TGT-07）属后续
-PR E-series，`primary_module_version` 仍为 `0.0.0`。
+全部 8 个 TGT primary Module（TGT-01…TGT-08）已建成，`primary_module_version`
+均为 `1.0.0`。
 
-## MIGRATION_PENDING
+## Runtime conformance
 
-一个 TGT-01 Module 做完远不能宣称 8-Gate runtime migration 完成。全部 8 个
-primary Module 完成前，`MIGRATION_PENDING` 保持。
+Runtime conformance: **COMPLETE** for the Blueprint-v1.3 Candidate × Gate ×
+Evidence runtime migration (PR A–E16). PR E16 built MOD-TGT07 -- the eighth and
+final primary Module -- and lifted `MIGRATION_PENDING`. This closeout declares
+only the PR A–E16 runtime-conformance migration and the eight-primary-Module
+migration complete; other StelligenOS deferred work (quantitative ladder
+calibration, epitope-layer-and-beyond analyses, external evaluators, downstream
+Candidate levels, FTO tasks) remains.

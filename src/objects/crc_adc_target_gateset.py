@@ -84,9 +84,10 @@ UNBUILT_MODULE_VERSION: Final[str] = "0.0.0"
 #: MOD-TGT03 (gate_modules/tgt03_treatment_metastatic_persistence/); PR E12 built
 #: MOD-TGT04 (gate_modules/tgt04_tumor_surface_availability_density_plausibility/);
 #: PR E14 built MOD-TGT06
-#: (gate_modules/tgt06_internalization_trafficking_addressability/).
-#: The last TGT gate (TGT-07) stays at UNBUILT_MODULE_VERSION until its own PR
-#: E-series.
+#: (gate_modules/tgt06_internalization_trafficking_addressability/); PR E16 built
+#: MOD-TGT07 (gate_modules/tgt07_shedding_soluble_antigen_sink_liability/).
+#: All eight primary Evidence Production Modules are now built -- the PR A-E16
+#: Candidate x Gate x Evidence runtime-conformance migration is complete.
 BUILT_MODULE_VERSIONS: Final[Mapping[str, str]] = MappingProxyType(
     {
         "TGT-01": "1.0.0",
@@ -95,6 +96,7 @@ BUILT_MODULE_VERSIONS: Final[Mapping[str, str]] = MappingProxyType(
         "TGT-04": "1.0.0",
         "TGT-05": "1.0.0",
         "TGT-06": "1.0.0",
+        "TGT-07": "1.0.0",
         "TGT-08": "1.0.0",
     }
 )

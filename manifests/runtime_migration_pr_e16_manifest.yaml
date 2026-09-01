@@ -1,0 +1,281 @@
+phase: runtime_migration_pr_e16
+status: in_review
+scope: mod_tgt07_deterministic_scientific_core_implementation_plus_binding_reconciliation_and_runtime_conformance_closeout
+repository_boundary: software_only_external_data
+
+# what E16 IS
+implementation_code_added: true            # gate_modules/tgt07_shedding_soluble_antigen_sink_liability/ (11 files)
+module_version_built: "1.0.0"              # MOD-TGT07 (was 0.0.0 declared slot)
+standalone_package: true                   # no shared framework / base class; MOD-TGT01..MOD-TGT06 / MOD-TGT08 not refactored
+binding_reconciled: true                   # TGT-07 primary_module_version 0.0.0 -> 1.0.0; built_module_versions / BUILT_MODULE_VERSIONS gain TGT-07; README + narrow built-roster tests synced
+migration_conformance_closed_out: true     # TGT-07 is the eighth and final primary Module -- E16 lifts MIGRATION_PENDING, declaring the PR A-E16 Candidate x Gate x Evidence runtime-conformance migration and the eight-primary-Module migration complete; other StelligenOS deferred work remains
+single_classifier_scientific_qualification_authority: true   # classify.py alone decides whether an observation is a qualifying DIRECT observation, kind-specific (clinical: same-target match + soluble-antigen attribution + analysis validation QUALIFIED; TMDD: TMDD input adequacy + analysis validation QUALIFIED); aggregate / fatal_review consume the classified result (E16 tightening 1 / 3)
+mixed_is_direct_quality_contextual_not_established_is_never_direct: true   # a MIXED_OR_UNRESOLVED DIRECT-quality analysis is an evidence_rung DIRECT CONTEXTUAL observation; a NOT_ESTABLISHED sink_materiality_outcome is never a qualifying DIRECT-rung observation (E16 tightening 2)
+frozen_evaluation_order_written_directly: true   # aggregate.py hardcodes the frozen tgt07_specific_aggregation_truth_table.frozen_evaluation_order, stop-at-first-match, every context test over the single-string sink_exposure_context_id
+one_typed_completion_state_added: true     # SolubleAntigenEvidenceCompletion -- a module-local run record, NOT a core object; four FLAT component axes; only qualifying_direct_evidence_context_ids (NO qualifying_indirect set)
+dual_quantitation_subspace_audit_facts_added: true   # crc_patient_quantitation_subspace_search_complete + healthy_donor_quantitation_subspace_search_complete typed facts; soluble_antigen_quantitation_search_complete == strict AND of the two; the SEARCH_COMPLETION_AUDIT snapshot carries both with exact parity (E16 tightening 4)
+three_hard_completion_invariants_added: true  # completeness consistency (incl. the quantitation-axis strict AND); exact audit identity (audit_observation_id <-> normalized audit obs <-> emitted / reused audit EP) + snapshot parity; qualifying-DIRECT-context-set parity as the UNION of the single-string sink_exposure_context_id
+machine_local_fatal_review_trigger_added: true  # FatalReviewRecord -- a review TRIGGER; ONE predicate (a classified qualifying DIRECT observation whose sink_materiality_outcome == MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE) + TWO alternative source paths (clinical / intended-ADC TMDD); ONE observation on EITHER path is sufficient; NO reproducibility prerequisite; NO global cancellation precondition; never a conclusion / KILL / PUBLIC_FATAL_SIGNAL_ESTABLISHED
+lightweight_single_string_sink_exposure_context: true   # sink_exposure_context_id -- required on a qualifying DIRECT observation, empty on every other kind, NEVER the canonical Instantiation context_id; NO declared_multi / IDENTIFIED_MULTI / third-state machinery, NO set-projection helper
+reproducibility_status_is_optional_factual_metadata_only: true   # carried when an upstream source states it, shown to the human reviewer, NEVER a classification / fatal / machine-acceptance predicate (E15 review round-1; E16 tightening 5)
+raw_candidate_then_acceptance_then_surface_order: true   # module.py computes the raw fatal candidate, acceptance validates it, and the fatal_review is surfaced ONLY on an accepted run (E16 tightening 5 -- no accepted<->fatal circularity)
+treatment_agnostic_study_context: true     # study_context.treatment_state == "not_applicable" for EVERY observation kind; indication / sample_type stay kind-specific factual, never "refractory_mcrc" (E16-2)
+migration_closeout_invariant_regression_added: true   # tests assert all eight bindings are "1.0.0" AND all eight package manifests exist with matching identity, else migration-complete fails (E16 tightening 7)
+
+# what E16 IS NOT
+normalizer_added_inside_the_package: false  # soluble-antigen qualifications are given UPSTREAM by the provider; there is no normalizer.py
+live_provider_or_adapter_added: false       # only a normalized Tgt07SolubleAntigenEvidenceProviderPort Protocol
+retrieval_added: false                      # no serum / plasma soluble-antigen / sheddase-substrate / secreted-isoform / clinical-PK / PD / TMDD adapter, extractor, normalizer or runner
+network_or_subprocess_io_added: false
+database_or_cache_added: false
+persistence_in_repository_added: false      # all output is an in-memory Tgt07ModuleRunResult
+ids_allocated_from_filesystem: false        # injected EvidenceIdAllocatorPort
+numeric_or_ranking_scoring_added: false     # no concentration / turnover / affinity / dose-exposure / sink-ratio cutoff, no invented "material soluble-antigen sink concentration" range, no ranking
+numeric_coercion_of_a_source_reported_soluble_antigen_value: false  # no float() / Decimal(); a source-reported numeric fact lives inside the neutral claim string only
+dedicated_raw_numeric_field_or_raw_value_reuse_parity_branch_added: false  # there is NO TGT-04-style symmetric raw-value reuse-parity branch
+acceptance_scans_the_source_claim_for_a_threshold: false   # the "no numeric threshold" check scans ONLY Module-owned text (aggregation rationale + critical unknowns + directly_supports), never package.claim
+generic_direct_qualification_predicate: false   # DIRECT qualification is kind-specific in classify.py; there is no shared "kind in {clinical, TMDD} + context + validation + method + outcome" fallback (E16 tightening 1)
+aggregate_or_fatal_re_judges_a_typed_status: false   # aggregate.py / fatal_review.py consume the classified result; same_target_therapeutic_match_status / soluble_antigen_attribution_status / tmdd_input_adequacy_status / analysis_validation_status are classifier authority (E16 tightening 3)
+fatal_detector_re_qualifies_direct: false   # fatal_review.py does only fatal-specific narrowing; it never re-copies the clinical / TMDD DIRECT qualification and never semantic-parses claim / basis (E16 tightening 5)
+single_observation_becomes_a_direction: false   # the classifier only rung-classes a direction-SUPPORTING / OPPOSING observation; aggregate produces Direction x Strength over a completed audited landscape
+cross_observation_synthesis_of_a_direct_proof: false   # a DIRECT contributor is ALWAYS one upstream-qualified integrated CLINICAL_ANTIGEN_SINK_PK_EFFECT or SOLUBLE_ANTIGEN_TMDD_ANALYSIS observation
+indirect_strong_or_weak_becomes_direct: false   # a quantified CRC-patient soluble target, a documented sheddase-substrate status and a validated secreted isoform never exceed INDIRECT_STRONG; predicted-cleavage-site / family-analogy inference never exceed WEAK
+below_detection_or_healthy_donor_only_becomes_positive: false   # a BELOW_DETECTION_OR_QUANTITATION_LIMIT measurement and a healthy-donor-only quantitation are CONTEXTUAL only -- never a positive INDIRECT_STRONG and never a NEGATIVE
+same_target_no_reported_sink_becomes_a_canonical_negative: false   # a canonical NEGATIVE / DIRECT is authoritative ONLY from a qualified SOLUBLE_ANTIGEN_TMDD_ANALYSIS at INTENDED_ADC_EXPOSURE concluding NO_MATERIAL_SOLUBLE_SINK
+machine_conflict_resolver_added: false      # a same-sink-exposure-context material-vs-no-material DIRECT pair is simply CONFLICTING / DIRECT (v1); the Module never reconciles or characterises it
+different_contexts_differing_mapped_to_conflicting: false   # different sink-exposure contexts behaving differently is exposure-context-specificity, not CONFLICTING (HARD lock)
+global_cancellation_precondition_on_the_fatal_signal: false  # unlike TGT-06, a POSITIVE / DIRECT does NOT clear the trigger -- the TGT-07 fatal signal is a strict subset of POSITIVE / DIRECT
+mandatory_reproducibility_predicate_on_the_clinical_fatal_path: false   # a reproducibility_status == NOT_ESTABLISHED clinical material-with-compromise observation that meets every other clause is still fatal-eligible (E15 review round-1)
+reproducibility_basis_free_text_parsed: false
+string_normalization_in_reuse_or_dedup_parity: false   # EXACT string presence-and-value equality; "A" and "A " are NOT the same factual representation (E16 tightening 6)
+duplicate_observation_id_preflight_runs_after_allocation: false   # a duplicate observation_id is a HARD whole-run reject BEFORE source resolution / Evidence Library / semantic dedup / allocator / EP construction; on a hit emitted=[], allocator.calls == 0, the source resolver is never called
+proposes_a_fatal_flag_or_kill: false        # a TGT-07 NEGATIVE is a Gate-relative scientific judgement; fatal_review is at most POTENTIAL_FATAL_PATTERN, and only on an accepted run
+cross_gate_conclusion_added: false          # no TGT-01/02/03/04/05/06/08 conclusion; a soluble-antigen sink never implies an efficacy conclusion or a dose recommendation
+ontology_or_embedding_inference_added: false   # classification + fatal_review are exact field reads only
+new_scientific_or_ladder_semantics_added: false   # the frozen PR E15 contract + PR D TGT-07 ladder / ceiling / inference / fatal / unknown reproduced verbatim
+constructs_canonical_assessment_or_decision: false
+emits_public_fatal_signal_established: false
+touches_pr_a_contracts: false
+touches_pr_b_contracts: false
+touches_pr_c_contracts: false
+touches_pr_d_tgt07_science: false
+touches_pr_e15_contract_or_drawing: false   # the frozen E15 contract / drawing body is unchanged
+generic_gatemodule_framework_or_base_class_added: false
+new_dependency_added: false                # still only PyYAML
+non_runtime_conformance_deferred_work_touched: false   # quantitative ladder calibration, epitope-layer analyses, external evaluators, downstream Candidate levels, FTO tasks are untouched
+migration_pending_lifted: true             # TGT-07 is the eighth and final primary Module -- runtime conformance is COMPLETE for the PR A-E16 Candidate x Gate x Evidence migration
+
+spec_refs:
+  - docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md (section 6.4 one Gate -> one primary Evidence Production Module + Module 权责边界; section 6.5 shared infrastructure; section 16 B group question 23 -> PR A-E16)
+  - src/contracts/gate_modules/tgt07_shedding_soluble_antigen_sink_liability.yaml (PR E15 -- the FROZEN 17-item construction contract this implementation satisfies verbatim)
+  - src/contracts/crc_adc_target_gateset.yaml gate_contracts.TGT-07 (frozen gate_question / ladder / evidence_ceiling / allowed+forbidden inference / fatal_conditions / unknown_behavior -- inherited verbatim; TGT-07 has NO inference_guard field)
+  - gate_modules/tgt06_internalization_trafficking_addressability/ (PR E14 -- the 11-file implementation-PR package pattern reused as the template)
+  - gate_modules/tgt04_tumor_surface_availability_density_plausibility/ (PR E12 -- the duplicate observation_id preflight-before-side-effects gene)
+  - src/contracts/data_layout/evidence_package.schema.json / assessment.schema.json (PR A shapes the Module produces)
+  - src/contracts/evidence_reference.yaml (PR C reusable-EvidencePackage reference layer + provenance walk)
+
+scoping_decisions:  # ChatGPT AI审核方案, before code, E16-1..E16-8 -- APPROVE-to-proceed with the 7 required implementation tightenings below
+  E16-1: >-
+    real 11-file deterministic gate_modules/tgt07_shedding_soluble_antigen_sink_liability/
+    core; module_version 1.0.0; minimal binding bump; run() pure injected-port
+    Python; NO normalizer / scorer / threshold / generic_gate_module. MIGRATION_PENDING
+    lifts IN THIS PR (TGT-07 is the eighth and final primary Module); the closeout
+    declares ONLY the PR A-E16 Candidate x Gate x Evidence runtime-conformance
+    migration and the eight-primary-Module migration complete -- other deferred
+    StelligenOS work (quantitative calibration, epitope-layer-and-beyond, external
+    evaluators, downstream Candidate levels, FTO) remains, and migration.deferred
+    is NOT deleted (its per_gate_primary_modules key is marked completed / 8-of-8).
+  E16-2: >-
+    one normalized Tgt07SolubleAntigenEvidenceProviderPort; the 8 observation
+    kinds; the CLOSED sink_materiality_outcome / circulating_soluble_target_status
+    / cohort_class / exposure_scenario_class enums + the {QUALIFIED, NOT_ESTABLISHED}
+    typed predicates; the provider emits typed factual states only (never a rung /
+    Direction / sink-liability implication / fatal trigger); a SHEDDASE_SUBSTRATE_STATUS
+    / SECRETED_ISOFORM kind ITSELF is the documented / validated authority;
+    study_context treatment_state == "not_applicable" for every kind;
+    reproducibility_status stays optional factual metadata (canonical: QUALIFIED ->
+    non-empty basis, NOT_ESTABLISHED -> empty basis).
+  E16-3: >-
+    classify.py -- kind-specific DIRECT qualification (clinical: same-target match
+    + soluble-antigen attribution + analysis validation QUALIFIED; TMDD: TMDD
+    input adequacy + analysis validation QUALIFIED). MATERIAL_* -> DIRECT /
+    SUPPORTS; MIXED_OR_UNRESOLVED -> DIRECT / CONTEXTUAL; a clinical
+    NO_MATERIAL_SOLUBLE_SINK -> CONTEXTUAL non-qualifying (never a canonical DIRECT
+    negative); NOT_ESTABLISHED -> not DIRECT. TMDD NO_MATERIAL + INTENDED_ADC_EXPOSURE
+    -> DIRECT / OPPOSES (the only canonical NEGATIVE authority); TMDD NO_MATERIAL +
+    analogue / unresolved -> CONTEXTUAL. INDIRECT_STRONG for CRC-patient-serum
+    QUANTIFIED_PRESENT quantitation, sheddase-substrate status, secreted isoform;
+    below-detection / healthy-donor-only quantitation -> CONTEXTUAL; predicted
+    cleavage / family analogy -> WEAK. No cross-observation synthesis of DIRECT.
+  E16-4: >-
+    aggregate.py writes the frozen tgt07_specific_aggregation_truth_table.frozen_evaluation_order
+    DIRECTLY (steps 0-7, stop-at-first-match), grouping over the single-string
+    sink_exposure_context_id; NO configuration_identity_projection helper, NO
+    SINGLE / IDENTIFIED_MULTI / third state. It CONSUMES the classified result and
+    never re-judges a typed status. 6 legal Direction x Strength pairs; v1 NO
+    machine conflict resolver; different contexts differing is NEVER CONFLICTING.
+    The frozen proposal-relative EvidenceRole mapping.
+  E16-5: >-
+    SolubleAntigenEvidenceCompletion frozen dataclass + 4 flat component axes +
+    the two typed quantitation subspace audit facts + the strict AND +
+    3 HARD invariants + attempted == False strict-empty + SolubleAntigenUnresolvedItem;
+    NO qualifying_indirect_evidence_context_ids set; the SEARCH_COMPLETION_AUDIT
+    snapshot carries the two subspace facts with exact parity.
+  E16-6: >-
+    fatal_review.py -- FatalReviewRecord + ONE predicate + TWO alternative source
+    paths (clinical / intended-ADC TMDD) + NO reproducibility prerequisite + NO
+    global cancellation precondition; a MATERIAL_WITHOUT-established-compromise
+    DIRECT is POSITIVE / DIRECT but NONFATAL; the detector does only
+    fatal-specific narrowing over the already-classified evidence. module.py runs
+    raw-candidate -> acceptance -> surface (accepted-run only).
+  E16-7: >-
+    evidence.py -- exact canonical EP reuse + improved TGT-03 dedup keyed on the
+    single-string sink_exposure_context_id + EXACT string equality (no .strip() /
+    lowercase / whitespace normalization) + a duplicate observation_id preflight
+    BEFORE any allocation / resolution / dedup + NO raw-value parity branch + no
+    numeric coercion.
+  E16-8: >-
+    a non-canonical AssessmentProposalEnvelope + acceptance.evaluate(*, emitted,
+    outcome, completion, fatal_review, hard_integrity_failures, module_input) ->
+    (checks, reasons) (executable item-13 scientific / integrity checks, NOT a
+    YAML parser; the runtime never parses src/contracts/gate_modules/tgt07...yaml)
+    + Tgt07ModuleRunResult + minimal binding / registry reconciliation + the
+    runtime-conformance closeout (README / architecture.md / docs/architecture/
+    contract.zh-CN.md live MIGRATION_PENDING -> runtime conformance COMPLETE;
+    historical version snapshots / archived approval records unchanged).
+
+seven_required_implementation_tightenings:  # ChatGPT AI审核方案 -- frozen in the code
+  T1_direct_qualification_split_by_observation_kind: >-
+    DIRECT qualification lives in classify.py alone and is kind-specific -- there
+    is NO generic "kind in {clinical, TMDD} + sink context + analysis validation +
+    method + materiality outcome" predicate. Clinical DIRECT requires
+    same_target_therapeutic_match_status == QUALIFIED + basis + a non-empty ref,
+    soluble_antigen_attribution_status == QUALIFIED + basis, and
+    analysis_validation_status == QUALIFIED + basis + a non-empty analysis_method.
+    TMDD DIRECT requires tmdd_input_adequacy_status == QUALIFIED + basis and
+    analysis_validation_status == QUALIFIED + basis + a non-empty analysis_method.
+  T2_mixed_is_direct_quality_contextual_not_established_is_not_direct: >-
+    a MIXED_OR_UNRESOLVED sink_materiality_outcome on a DIRECT-authority kind is a
+    DIRECT-quality CONTEXTUAL analysis (evidence_rung DIRECT, qualifying_direct_mixed).
+    A NOT_ESTABLISHED sink_materiality_outcome is NEVER a qualifying DIRECT-rung
+    observation.
+  T3_aggregate_and_fatal_consume_classifier_authority: >-
+    aggregate.py and fatal_review.py never re-implement DIRECT science; classify.py
+    is the sole scientific qualification authority. aggregate.py consumes the
+    classified DIRECT + SUPPORTS_SINK_LIABILITY / DIRECT + OPPOSES_SINK_LIABILITY /
+    DIRECT + CONTEXTUAL(mixed) / INDIRECT_STRONG + SUPPORTS roles and runs the
+    frozen order over sink_exposure_context_id.
+  T4_quantitation_dual_subspace_executable_typed_facts: >-
+    the completion adds crc_patient_quantitation_subspace_search_complete and
+    healthy_donor_quantitation_subspace_search_complete typed facts (not a 5th /
+    6th axis); soluble_antigen_quantitation_search_complete MUST equal their
+    strict AND; the SEARCH_COMPLETION_AUDIT snapshot carries both with exact parity.
+  T5_fatal_detector_is_not_a_second_direct_qualification_engine: >-
+    fatal_review.py does only fatal-specific narrowing (kind + sink_materiality_outcome
+    == MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE +
+    documents_clinical_exposure_compromise + the intended-ADC-exposure narrowing
+    for the TMDD path); the typed sink_materiality_outcome / exposure_scenario_class
+    are the exposure-compromise authority -- no prose parsing. module.py runs the
+    raw fatal candidate through acceptance BEFORE surfacing it.
+  T6_exact_reuse_and_dedup_strings: >-
+    claim / sink_exposure_context_id / basis strings use EXACT string
+    presence-and-value equality for reuse / dedup parity -- no .strip() /
+    lowercasing / whitespace normalization. The duplicate observation_id preflight
+    HARD short-circuits before every side-effect / injected-port call.
+  T7_migration_closeout_machine_invariant: >-
+    a final regression asserts all eight built_module_versions keys are {TGT-01..TGT-08}
+    at "1.0.0", every gate_binding primary_module_version is "1.0.0", and all
+    eight primary-module package manifests exist with matching module_id /
+    version / gate_id -- only then may the live architecture docs stop saying
+    MIGRATION_PENDING. migration.deferred is not deleted; other deferred work stays.
+
+frozen_proposal_relative_evidence_role_mapping: >-
+  E15 item 12, reproduced in aggregate.py + AssessmentProposalEnvelope.
+  POSITIVE / DIRECT -- a CLEAN material-sink DIRECT is SUPPORTING; an other-context
+  no-material-sink DIRECT is CONTEXTUAL; conflicted-context evidence is CONTEXTUAL.
+  POSITIVE / INDIRECT_STRONG -- a qualifying quantified-CRC-patient /
+  sheddase-substrate / secreted-isoform observation is SUPPORTING.
+  NEGATIVE / DIRECT -- the intended-ADC no-material-sink TMDD is SUPPORTING.
+  CONFLICTING / DIRECT -- the same-context material-sink DIRECT is SUPPORTING and
+  the same-context no-material-sink DIRECT is CONTRADICTING.
+  INCONCLUSIVE / DIRECT -- the DIRECT-quality MIXED_OR_UNRESOLVED analysis is
+  CONTEXTUAL. INCONCLUSIVE / UNKNOWN -- zero evidence_refs. CONTRADICTING appears
+  ONLY on a CONFLICTING / DIRECT proposal.
+
+repository_policy:
+  instances_external_only: true
+  persistence_in_repository: forbidden
+  network_or_subprocess_io: forbidden
+  numeric_or_ranking_scoring: forbidden
+  soluble_antigen_concentration_or_turnover_or_affinity_or_dose_exposure_or_sink_ratio_threshold: forbidden
+  invented_material_soluble_antigen_sink_concentration_range: forbidden
+  reproducibility_status_as_a_classification_or_fatal_or_acceptance_gate: forbidden
+  machine_conflict_resolver: forbidden
+  global_cancellation_precondition_on_the_fatal_signal: forbidden
+  cross_gate_conclusion: forbidden
+  generic_gatemodule_framework_or_base_class: forbidden
+  modifies_mod_tgt01_through_mod_tgt06_or_mod_tgt08: forbidden
+  modifies_pr_a_b_c_contracts_or_pr_d_tgt07_science_or_the_e15_contract: forbidden
+  only_binding_registry_and_runtime_conformance_docs_reconciled: true
+  migration_pending: lifted
+
+chatgpt_review: REQUEST_CHANGES
+approved_tip: null
+merge_commit: null
+review_rounds: 1
+test_count_before_e16: 1796       # at PR E15 approval-record merge
+test_count_at_submission: 1895    # +91 tests/test_tgt07_module.py + 8 tests/test_gate_modules_boundary.py (Tgt07ModuleManifestTests + MigrationCloseoutInvariantTests)
+test_count_after_round_1: 1900    # +5 review-round-1 regressions (ContextualDirectAuthorityObservationTests + the typed-outcome-is-the-sole-fatal-authority check + the contract.zh-CN.md closeout assertions)
+test_count_at_approval: null
+approval_record_pr: null          # docs-only, created after APPROVE (PR #95 ... #135 precedent)
+next_authorized_step: null        # the runtime migration's last implementation PR -- no PR E17
+
+review_round_1:
+  verdict: REQUEST_CHANGES
+  reviewer: ChatGPT AI审核方案
+  head_reviewed: ef9109cf4198997b1e2d641b55f422b25d867bf2
+  ci_confirmed: run 33506279674 -- verify (3.11) + verify (3.12) both success
+  judged_correct_do_not_reopen: >-
+    kind-specific DIRECT classifier; MIXED vs NOT_ESTABLISHED; the frozen 7-step
+    aggregate; the EvidenceRole mapping; dual-subspace completion; no
+    qualifying_indirect_evidence_context_ids set; exact audit parity; no
+    reproducibility fatal gate; no fatal global cancellation precondition;
+    raw-candidate -> acceptance -> surfaced fatal; exact reuse / dedup;
+    duplicate-observation-id preflight; no raw-value branch; treatment_state ==
+    not_applicable; TGT-07 binding 1.0.0; the 8/8 built machine invariant; other
+    deferred work preserved; historical snapshots untouched;
+    crc_adc_target_gateset.yaml migration.deferred handling.
+  blockers:
+    - "1. documents_clinical_exposure_compromise was a SECOND fatal authority alongside the CLOSED typed sink_materiality_outcome == MATERIAL_SOLUBLE_SINK_WITH_CLINICAL_EXPOSURE_COMPROMISE (which is itself the sole machine authority for a documented / modelled clinically achievable exposure compromise, per T5). FIX: removed the field from contracts.py / evidence.py parity / fatal_review.py / acceptance.py / module.yaml / tests; fatal narrowing keys off the typed outcome + observation_kind (+ exposure_scenario_class == INTENDED_ADC_EXPOSURE for the TMDD path) only. Regression: qualified clinical DIRECT + WITH_CLINICAL_EXPOSURE_COMPROMISE -> fatal true, no second flag; the field no longer exists on the dataclass."
+    - "2. acceptance.py wrongly rejected the whole run when a CONTEXTUAL CLINICAL / TMDD observation carried a real sink_exposure_context_id -- turning 'did not reach DIRECT' into 'illegal input'. E15 only requires: qualifying DIRECT -> context REQUIRED; INDIRECT_STRONG / WEAK / SEARCH_COMPLETION_AUDIT -> ''. FIX: the acceptance check now keys off observation_kind (only a non-DIRECT-authority kind may not carry a context) rather than the final qualifying-DIRECT status; the constructor already forbids a non-DIRECT-authority kind from carrying one. New ContextualDirectAuthorityObservationTests: a contextual clinical / TMDD observation with a factual sink context is an accepted run, not DIRECT, not fatal."
+    - "3. docs/architecture/contract.zh-CN.md section 3.4.3 simultaneously said 'runtime implementation unchanged / migration pending' AND 'Runtime conformance: COMPLETE'. FIX (live doc only, not the frozen v5 expert-review doc or historical snapshots): '但 runtime implementation 未变' -> 'PR A-E16 runtime layer 已完成'; the legacy contracts block relabelled as 'Retained legacy-compatibility snapshots ... NOT the current runtime'; '尚缺、migration 时须新增' Candidate Types -> '仍属 deferred downstream work'; the B-group blockers marked closed; the Source-of-Truth line -> 'legacy-compatibility snapshot / crosswalk reference'. MigrationCloseoutInvariantTests.test_migration_pending_is_lifted_in_the_live_docs extended to README.md + contract.zh-CN.md and forbids the stale phrases."
+  files_touched:
+    - gate_modules/tgt07_shedding_soluble_antigen_sink_liability/contracts.py (drop documents_clinical_exposure_compromise field + its validation)
+    - gate_modules/tgt07_shedding_soluble_antigen_sink_liability/fatal_review.py (drop the second-boolean check; docstring)
+    - gate_modules/tgt07_shedding_soluble_antigen_sink_liability/evidence.py (drop the field from the reuse / dedup parity keys)
+    - gate_modules/tgt07_shedding_soluble_antigen_sink_liability/acceptance.py (fatal-contributor check; the sink-exposure-context check keyed off observation_kind not qualifying-DIRECT status)
+    - gate_modules/tgt07_shedding_soluble_antigen_sink_liability/module.yaml (drop the field mentions)
+    - docs/architecture/contract.zh-CN.md (section 3.4.3 + Source-of-Truth closeout wording)
+    - tests/test_tgt07_module.py (drop the compromise helper param; ContextualDirectAuthorityObservationTests; the typed-outcome-is-sole-fatal-authority check) -- 96 tests
+    - tests/test_gate_modules_boundary.py (MigrationCloseoutInvariantTests live-doc assertions)
+    - manifests/runtime_migration_pr_e16_manifest.yaml (this block)
+    - logs/worklog.md (append)
+  test_count_after: 1900
+
+tests:
+  - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_tgt07_module.py' -v
+  - PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py'
+  - bash scripts/verify_repository_boundary.sh
+  - git diff --check
+
+artifacts:
+  - gate_modules/tgt07_shedding_soluble_antigen_sink_liability/ (11 files)
+  - tests/test_tgt07_module.py
+  - src/contracts/crc_adc_target_gateset.yaml (TGT-07 binding 0.0.0 -> 1.0.0; built_module_versions; primary_module_binding.rule; migration.deferred.per_gate_primary_modules -> completed)
+  - src/objects/crc_adc_target_gateset.py (BUILT_MODULE_VERSIONS gains TGT-07; docstring)
+  - gate_modules/README.md (MOD-TGT07 row; runtime-conformance COMPLETE section)
+  - README.md / architecture.md / docs/architecture/contract.zh-CN.md (live MIGRATION_PENDING -> runtime conformance COMPLETE)
+  - tests/test_gate_modules_boundary.py (Tgt07ModuleManifestTests + MigrationCloseoutInvariantTests + TGT07 path const)
+  - tests/test_crc_adc_target_gateset.py + tests/test_tgt02..08 module / module_construction_contract tests (narrow built-roster / allowed-package sync)
+  - manifests/runtime_migration_pr_e16_manifest.yaml
+  - docs/handoff/2026-09-01-runtime-migration-pr-e16.zh-CN.md

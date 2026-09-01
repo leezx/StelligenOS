@@ -784,11 +784,12 @@ class ScopingRulingRegressionTests(unittest.TestCase):
             self.assertIn(member, d)
 
 
-class ContractIsFrozenAndDeferredToPrE16Tests(unittest.TestCase):
-    """The E15 construction contract is design-only. The implementation it
-    defers is built by PR E16 -- the eighth and final primary Module -- which
-    also lifts MIGRATION_PENDING. Until then MOD-TGT07 stays 0.0.0 and there is
-    no gate_modules/tgt07.../ package."""
+class ContractIsFrozenAndImplementedInPrE16Tests(unittest.TestCase):
+    """The E15 construction contract is design-only and remains frozen. Runtime
+    Migration PR E16 built the implementation it deferred -- MOD-TGT07, the
+    eighth and final primary Module -- raised the binding to 1.0.0 and lifted
+    MIGRATION_PENDING (the PR A-E16 Candidate x Gate x Evidence
+    runtime-conformance migration is complete)."""
 
     def setUp(self):
         self.doc = yaml.safe_load(CONTRACT.read_text())
@@ -808,23 +809,34 @@ class ContractIsFrozenAndDeferredToPrE16Tests(unittest.TestCase):
         self.assertEqual(p["only_allowed_existing_file_mutation"], "append_to_logs_worklog_md")
         self.assertEqual(p["migration_pending"], "remains")
 
-    def test_tgt07_implementation_package_does_not_exist_yet(self):
+    def test_tgt07_implementation_package_exists(self):
         pkg = ROOT / "gate_modules" / "tgt07_shedding_soluble_antigen_sink_liability"
-        self.assertFalse(pkg.exists(), "PR E15 ships no implementation package; PR E16 builds it")
+        self.assertTrue(pkg.is_dir(), "PR E16 builds the MOD-TGT07 implementation package")
+        for f in ("__init__.py", "module.yaml", "contracts.py", "ports.py",
+                  "classify.py", "evidence.py", "aggregate.py", "completion.py",
+                  "fatal_review.py", "acceptance.py", "module.py"):
+            self.assertTrue((pkg / f).is_file(), f)
 
-    def test_tgt07_binding_is_still_unbuilt_and_others_are_one_zero_zero(self):
+    def test_tgt07_binding_is_now_one_zero_zero_and_all_eight_are_built(self):
         gs = yaml.safe_load(CRC_GATESET.read_text())
         by_gate = {
             b["gate_id"]: b["primary_module_version"]
             for b in gs["context_specific_bindings"]["gate_bindings"]
         }
-        self.assertEqual(by_gate["TGT-07"], "0.0.0")
-        for g in ("TGT-01", "TGT-02", "TGT-03", "TGT-04", "TGT-05", "TGT-06", "TGT-08"):
+        for g in ("TGT-01", "TGT-02", "TGT-03", "TGT-04", "TGT-05", "TGT-06",
+                  "TGT-07", "TGT-08"):
             self.assertEqual(by_gate[g], "1.0.0")
+        self.assertEqual(
+            gs["primary_module_binding"]["built_module_versions"]["TGT-07"], "1.0.0"
+        )
 
-    def test_migration_pending_still_remains(self):
+    def test_migration_conformance_is_closed_out(self):
         gs = yaml.safe_load(CRC_GATESET.read_text())
+        # the deferred record is kept, marked completed / 8-of-8 built.
         self.assertIn("per_gate_primary_modules", gs["migration"]["deferred"])
+        self.assertIn(
+            "completed", gs["migration"]["deferred"]["per_gate_primary_modules"].lower()
+        )
 
     def test_deferred_block_names_the_e16_implementation(self):
         joined = " ".join(self.doc["deferred_to_pr_e16_plus"]).lower()
@@ -844,6 +856,7 @@ class ContractIsFrozenAndDeferredToPrE16Tests(unittest.TestCase):
             "tgt04_tumor_surface_availability_density_plausibility",
             "tgt05_normal_tissue_fatal_liability",
             "tgt06_internalization_trafficking_addressability",
+            "tgt07_shedding_soluble_antigen_sink_liability",
             "tgt08_target_opportunity_competition_ip_whitespace",
         )
         self.assertTrue(all(any(pkg in p for pkg in allowed) for p in py_files), py_files)
