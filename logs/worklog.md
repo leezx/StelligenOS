@@ -6979,3 +6979,41 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   0.0.0 + `MIGRATION_PENDING` 保持。
 - 本地全量 unittest：1796 OK（1791 → +5 regression）。
 - Next：commit + push；CI 绿后回 `AI审核方案` 贴 round-2 回复。
+
+### PR E15 · ChatGPT `AI审核方案` review round 2 → APPROVE + merge
+
+- Verdict：**APPROVE @ `3747f8e`**（round-1 修订 anchor HEAD）；exact-head CI run
+  33451531965 verify (3.11) + (3.12) 均 success。审核方确认 round-1 唯一 blocker
+  **已完整关闭**：clinical fatal source path 已删除 mandatory
+  `reproducibility_status == QUALIFIED`；合同明确 `reproducibility_status ==
+  NOT_ESTABLISHED` 的 clinical observation 只要其余 attribution / validation /
+  material-compromise 条件全成立仍 fatal-eligible；`reproducibility_status` 降为
+  optional factual metadata（非 classification-driving / fatal /
+  machine-acceptance predicate）；item 12 `required_is_true_iff`、item 13
+  acceptance、`seven_required_tightenings` 4 均已同步成「no mandatory
+  reproducibility predicate」；`ReviewRound1RegressionTests` 锁住修复并确认
+  `same_target_therapeutic_match_status` / `soluble_antigen_attribution_status` /
+  `analysis_validation_status` 等真正需要的 clinical qualification gate 仍在。
+  此前通过的 E15 science / architecture 未被重开，E15 construction contract 正式
+  冻结。
+- 非阻断 housekeeping（merge 前已处理）：GitHub PR #134 description 仍留旧的
+  「clinical path's own `reproducibility_status == QUALIFIED` gate」措辞，仓库内
+  contract / manifest / tests 已是正确新语义 —— merge 前用 `gh pr edit 134
+  --body-file` 更新了 PR body（tightening 4 措辞 + test count 78→83 / 1791→1796
+  + 新增 Review 小节），不影响 APPROVE。
+- Merge：`gh pr merge 134 --merge --delete-branch=false`，merge 提交 `7684d27`
+  （`Merge pull request #134 from leezx/task_20260831_runtime-migration-pr-e15`）。
+- 独立 docs-only PR `task_20260831_runtime-migration-pr-e15-approval-record` 补登：
+  - 新增 `logs/chatgpt-review-2026-08-31-runtime-migration-pr-e15.md` —— 2 轮
+    完整往返 + scoping 决策 + merge 记录。
+  - `manifests/runtime_migration_pr_e15_manifest.yaml` → `status: approved` /
+    `chatgpt_review: APPROVE` / `approved_tip: 3747f8e…` / `merge_commit:
+    7684d27` / `review_rounds: 2` / `test_count_at_approval: 1796` /
+    `approval_record_pr` / 新增 `review_round_2` block。
+  - 不改 PR E15 的合同、drawing、测试或 handoff 内容。
+- 状态：**8 个 primary Module 施工合同已全部 APPROVE（TGT-01…TGT-08）**；已实现
+  **7 个**（TGT-01/02/03/04/05/06/08 @ 1.0.0）。MOD-TGT07 `primary_module_version`
+  仍 `0.0.0`。`MIGRATION_PENDING` 保持。
+- Next：**PR E16 = MOD-TGT07@1.0.0** deterministic implementation —— 第八也是
+  最后一个 primary Module，PR E16 解除 `MIGRATION_PENDING`；需另行 go-ahead 且
+  先做 pre-code scoping。
