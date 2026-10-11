@@ -13,3 +13,17 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
+
+# 论文构建产物必须留在仓库外部工作区。
+manuscript/**/*.aux
+manuscript/**/*.bbl
+manuscript/**/*.bcf
+manuscript/**/*.blg
+manuscript/**/*.fdb_latexmk
+manuscript/**/*.fls
+manuscript/**/*.log
+manuscript/**/*.out
+manuscript/**/*.pdf
+manuscript/**/*.run.xml
+manuscript/**/*.synctex.gz
+manuscript/**/*.docx

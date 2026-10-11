@@ -27,6 +27,7 @@ allowed_top_level=(
   "fixtures"
   "logs"
   "manifests"
+  "manuscript"
   "prompts"
   "scripts"
   "requirements.txt"
