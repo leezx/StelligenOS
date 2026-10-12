@@ -7215,3 +7215,10 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 阶段边界：Figure spine 属 Phase 4 内容，当前为 Phase 0 且 Phase 0 PR 尚未创建。因此本次
   **另起分支与 PR**，不并入 Phase 0 PR——把 Phase 4 产物塞进 Phase 0 的批准里，与
   INC-2026-001 根因同类（把一种授权当作另一种）。本 PR 不请求任何 Phase 放行。
+
+## 2026-10-12 EDT — 推送与 PR 创建
+
+- 推送 `task_20261011_stelligenos_manuscript_phase0` 与 `task_20261012_figure6_governance_result`（此前两分支均未推送）。
+- 创建 PR #140（Phase 0，base `main`）：请求就范围合规、证据契约自洽性与对外宣称边界审核；获明确 `APPROVE` 前不进入 Phase 1 research。
+- 创建 PR #141（Figure 6 result，base `task_20261011_stelligenos_manuscript_phase0`）：stacked PR，diff 只含 2 个文件；**不请求 Phase 放行**。
+- 两个 PR 分开的理由同前：Figure spine 属 Phase 4 内容，不得借用 Phase 0 的批准。
