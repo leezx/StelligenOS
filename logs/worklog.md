@@ -7188,3 +7188,30 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 新增论文目录说明、论文总纲与证据契约、handoff；更新根 README 入口及 boundary allowlist。明确：仓库只保存源文件和审计材料，PDF/DOCX 在仓库外构建。
 - 当前状态：待验证、提交、推送、创建 Phase 0 PR；获得 ChatGPT 明确 `APPROVE` 前不得进入 Phase 1 research。
 - 验证完成：PaperSpine intake gate PASS；config JSON 合法；`git diff --check` PASS；全量 unittest 1900 tests OK。boundary checker 仍因任务前既有 7 个未跟踪项按预期失败，但 `manuscript` 已不在违规列表，证明本次 allowlist 变更生效。
+
+## 2026-10-12 EDT — Figure 6 governance-boundary result（持续更新草稿）
+
+- 负责人指令：把治理边界这部分工作写成**非投稿形式**的 result，放入 `manuscript/Figures/`，
+  命名 `FigureN.XXX.result.md`，按 result 体例写（为什么做、做了什么、什么结果、引用证据、
+  结论、讨论），后续持续更新。
+- 图号无法从现有材料推断：`manuscript/Figures/` 为空，`MANUSCRIPT_CHARTER.zh-CN.md` §6 只定
+  章节结构，没有图号规划。据此就 Figure spine 作外部规划咨询（明确声明为咨询，非 PR 审核、
+  不构成 Phase 放行）。
+- 咨询结论：6 张主图 + 4–5 张 Extended Data。主线为「为什么需要该抽象 → 抽象是什么 → 如何
+  实现 → 是否符合契约 → 能否串成可追溯决策链 → 在哪里实际失败」。Fig. 1–4 现可做；Fig. 5
+  （CRC ADC 受控案例）条件性，需 provenance 与证据状态核实后才能定为 Evaluation Figure；
+  Fig. 6 现可做。
+- 治理材料定位：**Evaluation 中的 negative governance case study**，与 Discussion /
+  Limitations 交叉引用，而非仅作 Limitations 附注。原判断「只是 limitation 证据」偏保守，
+  但不得反向抬高为安全能力的成功证明。
+- 新增 `manuscript/Figures/Figure6.governance_boundary.result.md`。关键事实边界：关联仓库的
+  分离**方案**已获批准，**不等于**远端操作已执行；本图状态标注为
+  `approved separation design / execution pending verification`，不得绘制为
+  "completed and validated separation"。
+- 披露纪律：本仓库为 public。该 result 只写脱敏层级——不含序列、候选标识、集群路径、
+  per-candidate 指标或事件的精确定位信息（blob 标识、行号、内容摘要留在仓库外的受控内部
+  登记）。为记录一次披露而发布定位器会扩大该披露。
+- 验证：用关联仓库的序列扫描器对该文件扫描 `clean` / exit=0；定位器与敏感标记 grep 无命中。
+- 阶段边界：Figure spine 属 Phase 4 内容，当前为 Phase 0 且 Phase 0 PR 尚未创建。因此本次
+  **另起分支与 PR**，不并入 Phase 0 PR——把 Phase 4 产物塞进 Phase 0 的批准里，与
+  INC-2026-001 根因同类（把一种授权当作另一种）。本 PR 不请求任何 Phase 放行。
