@@ -1,6 +1,6 @@
 task_id: task_20261012_o2_aidd_tools_install
 phase: external_tool_installation_contract
-status: revision_after_review_round_1
+status: approved_execution_in_progress
 execution_host: o2.hms.harvard.edu
 repository_data_boundary: metadata_only
 
@@ -128,3 +128,35 @@ sources:
   - https://github.com/HannesStark/boltzgen
   - https://github.com/chaidiscovery/chai-lab
   - https://github.com/jwohlwend/boltz
+
+review:
+  round_1: REQUEST_CHANGES
+  round_1_blockers:
+    - peak_storage_preflight_not_executable
+    - gpu_runtime_and_model_canary_statuses_ambiguous
+  round_2: APPROVE
+  approved_tip: d411a326ab698eef66f4b766485fa8d0a8c042e2
+
+execution_observations:
+  - timestamp: 2026-10-12T10:15:41-04:00
+    action: remove_confirmed_redownloadable_caches
+    removed_paths:
+      - /home/zhl595/.cache/pip
+      - /home/zhl595/software/rfantibody_cache/uv
+      - /home/zhl595/software/boltzgen_cache/huggingface
+    measured_sizes_before_removal:
+      pip_cache_gib: 18.0
+      rfantibody_uv_cache_gib: 6.6
+      boltzgen_duplicate_huggingface_cache_mib: 382
+    preserved_paths_verified:
+      - /home/zhl595/software/RFantibody/.venv
+      - /home/zhl595/software/BoltzGen/.venv
+      - /home/zhl595/software/boltzgen_cache/models
+    quota_after_removal: pending_server_refresh
+    last_quota_snapshot:
+      timestamp: 2026-10-12T10:12:26-04:00
+      used_gib: 97.74
+      limit_gib: 100.0
+    next_step_gate: >-
+      Do not begin another installation until quota-v2 returns a post-removal snapshot
+      and the approved peak-storage preflight passes.

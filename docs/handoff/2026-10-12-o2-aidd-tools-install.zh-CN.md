@@ -58,6 +58,7 @@
 
 ## 下一步与门禁
 
-- PR #139 已提交并指向 `main`，等待 ChatGPT 审核。
-- ChatGPT 必须对当前 PR 明确给出 `APPROVE` 后，才执行 Chai-1/Boltz-2 安装和 GPU canary。
-- `APPROVE_WITH_NONBLOCKING_COMMENTS` 不视为放行。
+- PR #139 round 1 为 `REQUEST_CHANGES`；空间峰值门禁和 GPU 状态语义两项阻断已在 commit `d411a32` 修正。
+- Round 2 对 `d411a326ab698eef66f4b766485fa8d0a8c042e2` 明确给出 `APPROVE`，允许按契约执行有限安装与 canary。
+- `2026-10-12 10:15 EDT` 按负责人明确确认，删除三个可重新下载缓存：`/home/zhl595/.cache/pip`（18 GiB）、`/home/zhl595/software/rfantibody_cache/uv`（6.6 GiB）、`/home/zhl595/software/boltzgen_cache/huggingface`（382 MiB）。三个路径均已确认不存在；RFantibody/BoltzGen 正式 `.venv` 和 BoltzGen 主模型缓存均确认存在。
+- 删除后的 `quota-v2` 尚未刷新，仍返回 10:12:26 的删除前快照 `97.74/100 GiB`。在获得时间戳晚于删除动作的新 quota 快照且峰值空间预检通过之前，不启动 Chai-1/Boltz-2 安装。
