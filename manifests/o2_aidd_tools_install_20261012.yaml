@@ -167,3 +167,68 @@ execution_observations:
     next_step_gate: >-
       Do not begin another installation until quota-v2 returns a post-removal snapshot
       and the approved peak-storage preflight passes.
+  - timestamp: 2026-10-12T10:42:01-04:00
+    action: reuse_existing_chai1_and_complete_l40s_canary
+    tool: Chai-1
+    package:
+      environment: /home/zhl595/venvs/germinal
+      name: chai_lab
+      version: 0.6.1
+      cli_help: pass
+      run_inference_import: pass
+    artifacts:
+      path: /home/zhl595/venvs/germinal/lib/python3.10/site-packages/downloads
+      observed_size_gib: 6.6
+      components_present:
+        - esm/traced_sdpa_esm2_t36_3B_UR50D_fp16.pt
+        - models_v2/trunk.pt
+        - models_v2/diffusion_module.pt
+        - models_v2/confidence_head.pt
+        - models_v2/token_embedder.pt
+        - models_v2/feature_embedding.pt
+        - models_v2/bond_loss_input_proj.pt
+        - conformers_v1.apkl
+      sha256_recorded: true
+    slurm:
+      job_id: 56033980
+      node: compute-g-17-169
+      state: COMPLETED
+      exit_code: "0:0"
+      queue_time: "00:04:38"
+      elapsed: "00:01:22"
+      batch_max_rss_kib: 17689124
+      resources: 1x_l40s_4cpu_32g_30min
+    gpu_runtime:
+      gpu: NVIDIA L40S
+      memory_mib: 46068
+      torch: 2.6.0+cu124
+      cuda_available: true
+      cuda_tensor_operation: pass
+      status: GPU_RUNTIME_PASS
+    model_canary:
+      input: synthetic_nonproduction_76aa_ubiquitin
+      msa_server: disabled
+      trunk_recycles: 1
+      diffusion_timesteps: 20
+      samples: 1
+      seed: 20261012
+      model_wall_seconds: 69.142
+      output_cif_bytes: 52317
+      output_scores_npz_bytes: 1863
+      status: MODEL_CANARY_PASS
+    interpretation: >-
+      This validates only execution of the pinned Chai-1 installation on an O2 L40S.
+      It is not a production benchmark, scientific result, or binder-design roster PASS.
+  - timestamp: 2026-10-12T10:42:01-04:00
+    action: boltz2_storage_gate_check
+    tool: Boltz-2
+    status: blocked_by_storage_snapshot
+    quota_snapshot:
+      timestamp: 2026-10-12T10:12:26-04:00
+      used_gib: 97.74
+      limit_gib: 100.0
+    reason: >-
+      quota-v2 still returns a pre-deletion snapshot. The approved contract requires a
+      post-deletion server snapshot before peak-storage preflight; inferred subtraction
+      from deleted cache sizes is not accepted as a substitute.
+    files_created: false

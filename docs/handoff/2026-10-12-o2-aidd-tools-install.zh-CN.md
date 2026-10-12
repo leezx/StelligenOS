@@ -63,3 +63,16 @@
 - `2026-10-12 10:15 EDT` 按负责人明确确认，删除三个可重新下载缓存：`/home/zhl595/.cache/pip`（18 GiB）、`/home/zhl595/software/rfantibody_cache/uv`（6.6 GiB）、`/home/zhl595/software/boltzgen_cache/huggingface`（382 MiB）。三个路径均已确认不存在；RFantibody/BoltzGen 正式 `.venv` 和 BoltzGen 主模型缓存均确认存在。
 - `owner_authorized_contract_deviation`：上述三个缓存目录并非本任务创建的临时文件；为执行删除而进行的新 Duo 登录也越过了 `d411a32` 将再次认证列为 stop condition 的限制。两类操作均由负责人在执行前另行明确授权。本记录是事后如实披露，不表示先前 ChatGPT `APPROVE` 已覆盖这些例外，也不修改原限制；后续再次发生例外须先取得对应门禁批准。
 - 删除后的 `quota-v2` 尚未刷新，仍返回 10:12:26 的删除前快照 `97.74/100 GiB`。在获得时间戳晚于删除动作的新 quota 快照且峰值空间预检通过之前，不启动 Chai-1/Boltz-2 安装。
+
+## Chai-1 既有安装复用与 GPU 验收
+
+- `2026-10-12 10:26 EDT`：确认 `/home/zhl595/venvs/germinal` 已安装官方 `chai_lab 0.6.1`；CLI、`chai_lab.chai1.run_inference` 均可用。为避免重复环境与模型，不再按原计划创建 `/home/zhl595/software/Chai-1/.venv`。
+- Chai 默认下载目录 `/home/zhl595/venvs/germinal/lib/python3.10/site-packages/downloads` 已存在约 `6.6 GiB` 官方 artifacts，包含 ESM、`models_v2` 和 conformers；组件均为非零文件并已记录 SHA-256。
+- Slurm 作业 `56033980` 在 `compute-g-17-169` 使用 1×NVIDIA L40S（46,068 MiB）、4 CPU、32 GiB；排队 `00:04:38`，运行 `00:01:22`，batch MaxRSS `17,689,124 KiB`，exit `0:0`。
+- CUDA 验收：`torch 2.6.0+cu124`、`cuda_available=True`、GPU tensor 求和通过，故状态为 `GPU_RUNTIME_PASS`。
+- 模型验收：对 76 aa ubiquitin 运行官方 `chai-lab fold`，关闭 MSA server，1 recycle、20 diffusion timesteps、1 sample、seed `20261012`；模型用时 `69.142 s`，生成非空 `pred.model_idx_0.cif`（52,317 B）和 `scores.model_idx_0.npz`（1,863 B），故状态为 `MODEL_CANARY_PASS`。
+- 该 canary 只证明当前固定版本和 artifacts 能在 O2 L40S 上执行，不是科学 benchmark、生产设计或 binder roster PASS。
+
+## Boltz-2 当前门禁
+
+截至 `2026-10-12 10:42 EDT`，`quota-v2` 仍返回 `2026-10-12 10:12:26` 的删除前快照。虽然已删除约 25 GiB 可重下载缓存，但契约要求新的服务端配额快照，不允许仅凭减法推算安全余量。因此 Boltz-2 状态为 `blocked_by_storage_snapshot`；尚未创建环境、缓存或模型文件。已有 15 分钟 heartbeat 只复用 O2 会话 `44681`，配额刷新并通过完整峰值预算后再继续。
