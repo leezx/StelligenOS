@@ -198,6 +198,14 @@ execution_observations:
       elapsed: "00:01:22"
       batch_max_rss_kib: 17689124
       resources: 1x_l40s_4cpu_32g_30min
+      authorization_class: unapproved_execution_parameter_deviation
+      deviation_disclosure: >-
+        The approved canary contract specified a 15-minute limit, but this job was
+        submitted with a 30-minute limit. It actually ran for 82 seconds and no
+        concurrent or production job was run, but the requested limit still exceeded
+        the approved parameter. This retrospective disclosure is not authorization or
+        ratification. All later canaries must use 15 minutes; an overrun is recorded as
+        MODEL_CANARY_PENDING rather than extending the limit.
     gpu_runtime:
       gpu: NVIDIA L40S
       memory_mib: 46068
@@ -231,4 +239,23 @@ execution_observations:
       quota-v2 still returns a pre-deletion snapshot. The approved contract requires a
       post-deletion server snapshot before peak-storage preflight; inferred subtraction
       from deleted cache sizes is not accepted as a substitute.
+    files_created: false
+  - timestamp: 2026-10-12T10:47:02-04:00
+    action: boltz2_post_deletion_storage_preflight
+    tool: Boltz-2
+    quota_snapshot:
+      timestamp: 2026-10-12T10:42:17-04:00
+      used_gib: 80.20
+      limit_gib: 100.0
+      remaining_gib: 19.80
+    package_environment_step_estimate:
+      final_environment_gib: 9.0
+      temporary_download_and_unpack_gib: 4.0
+      persistent_package_cache_gib: 0.0
+      model_artifacts_gib: 0.0
+      estimated_peak_increment_gib: 13.0
+      estimated_peak_remaining_gib: 6.8
+      cache_policy: no_persistent_download_cache
+    storage_gate: pass
+    execution_gate: paused_pending_review_of_chai1_parameter_deviation
     files_created: false
