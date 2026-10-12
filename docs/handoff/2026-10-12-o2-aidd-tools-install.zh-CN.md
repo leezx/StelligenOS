@@ -81,4 +81,4 @@
 
 ## Chai-1 canary 资源参数偏差
 
-已批准契约规定 canary 为 15 分钟，作业 `56033980` 实际申请 30 分钟。实际运行仅 `00:01:22`，没有导致额外模型运行、并发 GPU 作业或生产任务，但申请上限仍超出已批准参数。该事实记录为 `unapproved_execution_parameter_deviation`：没有负责人对这一具体变化的预先授权，也不以事后披露追认它。后续 BoltzGen/Boltz-2 canary 必须恢复 15 分钟上限；若 15 分钟不足，只能记录 `MODEL_CANARY_PENDING`，不得自行延长。
+已批准契约规定 canary 为 15 分钟，作业 `56033980` 实际申请 30 分钟；契约还规定先完成 BoltzGen canary，再进行 Chai-1，但实际先完成 Chai-1。作业实际运行仅 `00:01:22`，没有导致额外模型运行、并发 GPU 作业或生产任务，但资源上限与执行顺序都偏离已批准契约。两项事实统一记录为 `unapproved_execution_contract_deviation`：没有负责人对这些具体变化的预先授权，也不以事后披露追认它们。后续 BoltzGen/Boltz-2 canary 必须恢复 15 分钟上限；若 15 分钟不足，只能记录 `MODEL_CANARY_PENDING`，不得自行延长。继续 Boltz-2 安装前，先按原顺序要求补做 BoltzGen canary。

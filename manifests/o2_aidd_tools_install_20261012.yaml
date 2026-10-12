@@ -198,14 +198,17 @@ execution_observations:
       elapsed: "00:01:22"
       batch_max_rss_kib: 17689124
       resources: 1x_l40s_4cpu_32g_30min
-      authorization_class: unapproved_execution_parameter_deviation
+      authorization_class: unapproved_execution_contract_deviation
       deviation_disclosure: >-
         The approved canary contract specified a 15-minute limit, but this job was
-        submitted with a 30-minute limit. It actually ran for 82 seconds and no
-        concurrent or production job was run, but the requested limit still exceeded
-        the approved parameter. This retrospective disclosure is not authorization or
-        ratification. All later canaries must use 15 minutes; an overrun is recorded as
-        MODEL_CANARY_PENDING rather than extending the limit.
+        submitted with a 30-minute limit. The approved sequence also required the
+        BoltzGen canary before Chai-1, but Chai-1 was run first. The job actually ran
+        for 82 seconds and no concurrent or production job was run, but both the limit
+        and execution order departed from the approved contract. This retrospective
+        disclosure is not authorization or ratification. The BoltzGen canary must be
+        completed before Boltz-2 installation, and all later canaries must use 15
+        minutes; an overrun is recorded as MODEL_CANARY_PENDING rather than extending
+        the limit.
     gpu_runtime:
       gpu: NVIDIA L40S
       memory_mib: 46068
