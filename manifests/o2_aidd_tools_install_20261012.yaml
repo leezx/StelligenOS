@@ -1,6 +1,6 @@
 task_id: task_20261012_o2_aidd_tools_install
 phase: external_tool_installation_contract
-status: awaiting_chatgpt_review
+status: revision_after_review_round_1
 execution_host: o2.hms.harvard.edu
 repository_data_boundary: metadata_only
 
@@ -47,6 +47,30 @@ constraints:
   - do_not_download_esmfold2_until_storage_is_expanded
   - preserve_at_least_5_gib_home_quota_headroom
 
+storage_preflight:
+  required_before_each_environment_install_or_weight_download:
+    - reread_current_home_quota
+    - estimate_incremental_environment_size
+    - estimate_model_and_artifact_size
+    - estimate_peak_temporary_download_and_unpack_size
+    - estimate_package_manager_and_framework_cache_growth
+  start_rule: >-
+    Start a step only when the estimated peak usage for the entire step, not merely
+    its final installed size, leaves at least 5 GiB of home quota free. If any
+    component cannot be estimated or the projected headroom is below 5 GiB, stop
+    before the step begins and record it as blocked_by_storage.
+  cache_locations:
+    uv: /home/zhl595/software/aidd_shared_cache/uv
+    pip: /home/zhl595/software/aidd_shared_cache/pip
+    huggingface: /home/zhl595/software/aidd_shared_cache/huggingface
+    torch: /home/zhl595/software/aidd_shared_cache/torch
+    temporary_downloads: /home/zhl595/software/aidd_shared_cache/tmp
+  deduplication_rules:
+    - reuse_model_artifacts_only_after_content_hash_match
+    - do_not_copy_a_weight_when_a_verified_shared_artifact_can_be_referenced
+    - clean_only_task_created_re_downloadable_temporary_files
+    - never_delete_or_mutate_existing_user_environments_or_files_to_make_space
+
 pre_install_observations:
   home_quota_gib:
     used: 89.52
@@ -67,17 +91,31 @@ acceptance:
     - model_files_have_finite_nonzero_sizes
     - sha256_or_upstream_content_hashes_recorded
     - cache_location_is_external_to_repository
-  gpu_canary:
+  gpu_runtime_smoke:
     resources: 1x_l40s_4cpu_32g_15min
     checks:
       - nvidia_smi
       - torch_cuda_available
       - cuda_tensor_operation
       - package_import_on_compute_node
-      - minimal_non_production_example_if_storage_and_runtime_allow
+    pass_status: GPU_RUNTIME_PASS
+  model_canary:
+    resources: 1x_l40s_4cpu_32g_15min
+    required_check: >-
+      Complete one official minimal non-production model example on GPU and record
+      the exit code, wall-clock runtime, and expected output completeness.
+    pass_status: MODEL_CANARY_PASS
+    pending_status: MODEL_CANARY_PENDING
+    pending_rule: >-
+      If model artifacts are missing, storage preflight blocks the download, or the
+      15-minute allocation is insufficient, record MODEL_CANARY_PENDING. Do not
+      describe the model as GPU-validated or fully usable.
   completion_rule: >-
-    Installation is usable only after package, artifact, and GPU-canary checks pass.
-    This does not constitute a binder-design roster PASS or authorize a production run.
+    A package may be recorded as installed after package and artifact checks pass.
+    GPU_RUNTIME_PASS certifies only the CUDA runtime and imports. The model is
+    GPU-validated and usable for later gated evaluation only after MODEL_CANARY_PASS.
+    MODEL_CANARY_PENDING is not a pass. None of these statuses constitutes a
+    binder-design roster PASS or authorizes a production run.
 
 stop_conditions:
   - home_quota_remaining_below_5_gib

@@ -29,17 +29,20 @@
 
 ## 审核后计划
 
-1. 先完成 BoltzGen 单作业 L40S GPU canary；不运行真实靶点。
-2. 在不修改 Germinal/BoltzGen 既有环境的前提下安装 Chai-1 独立环境；复用已有 Chai 权重（如内容哈希一致）或在 quota 允许时建立单一共享缓存。
-3. 安装 Boltz-2 独立环境；若 BoltzGen 缓存中的 Boltz-2 权重与官方 Boltz-2 内容一致，则复用/链接而不复制。
-4. 每个工具依次做 import、CLI、权重完整性和一个 L40S 非生产 canary；始终只允许一个 GPU 作业。
-5. 任何时刻预计 home 剩余空间低于 `5 GiB` 即停止，不用删除用户文件换空间。
+1. 每次创建环境或下载权重前，重新读取 quota，并分别估计环境、模型、包管理器/框架缓存、临时下载和解包的新增峰值；只有整个步骤峰值后仍剩至少 `5 GiB` 才能开始。无法估计或预计不足即停止，不先下载再观察。
+2. 固定共享缓存：`/home/zhl595/software/aidd_shared_cache/{uv,pip,huggingface,torch,tmp}`。模型只有内容哈希一致才复用；不得为了腾空间删除或修改任何既有用户环境/文件，只能清理本任务创建且可重新下载的临时文件。
+3. 先完成 BoltzGen 单作业 L40S 验收；不运行真实靶点。CUDA、tensor 与 compute-node import 通过只记为 `GPU_RUNTIME_PASS`；必须实际完成一次官方最小非生产模型运行，并记录 exit code、耗时和输出完整性，才记为 `MODEL_CANARY_PASS`。
+4. 如果 15 分钟不足、权重缺失或空间门禁阻止下载，只记为 `MODEL_CANARY_PENDING`，不得声称模型已通过 GPU 验证或完整可用。
+5. 在不修改 Germinal/BoltzGen 既有环境的前提下安装 Chai-1 独立环境；复用已有 Chai 权重（仅限内容哈希一致）或在 quota 允许时建立单一共享缓存。
+6. 安装 Boltz-2 独立环境；若 BoltzGen 缓存中的 Boltz-2 权重与官方 Boltz-2 内容一致，则复用/链接而不复制。
+7. 每个工具依次做 package/artifact、`GPU_RUNTIME_PASS` 和 `MODEL_CANARY_PASS` 验收；始终只允许一个 GPU 作业。
 
 ## 验证与风险
 
 - 安装契约：`manifests/o2_aidd_tools_install_20261012.yaml`
 - 尚待验证：BoltzGen GPU；Chai-1/Boltz-2 package、权重及 GPU。
 - 主要风险：home 配额只剩约 `10.48 GiB`；Chai-1 和 Boltz-2 的完整独立权重可能无法同时落盘。优先去重，不能保证在现有 quota 下完成全部模型下载。
+- 状态语义：package/artifact 通过可记“已安装”；`GPU_RUNTIME_PASS` 仅证明 CUDA runtime；只有 `MODEL_CANARY_PASS` 才能记“模型已在 GPU 上验证可用”。`MODEL_CANARY_PENDING` 不是通过。
 - 流程偏差：BoltzGen 安装在发现本仓库全局 PR 门禁前已经开始。该偏差已如实留痕；没有执行生产设计。其余外部安装暂停到本 PR 获得明确 `APPROVE`。
 
 ## 明确未改动
