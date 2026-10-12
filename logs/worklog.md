@@ -7188,3 +7188,102 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 新增论文目录说明、论文总纲与证据契约、handoff；更新根 README 入口及 boundary allowlist。明确：仓库只保存源文件和审计材料，PDF/DOCX 在仓库外构建。
 - 当前状态：待验证、提交、推送、创建 Phase 0 PR；获得 ChatGPT 明确 `APPROVE` 前不得进入 Phase 1 research。
 - 验证完成：PaperSpine intake gate PASS；config JSON 合法；`git diff --check` PASS；全量 unittest 1900 tests OK。boundary checker 仍因任务前既有 7 个未跟踪项按预期失败，但 `manuscript` 已不在违规列表，证明本次 allowlist 变更生效。
+
+## 2026-10-12 EDT — Figure 6 governance-boundary result（持续更新草稿）
+
+- 负责人指令：把治理边界这部分工作写成**非投稿形式**的 result，放入 `manuscript/Figures/`，
+  命名 `FigureN.XXX.result.md`，按 result 体例写（为什么做、做了什么、什么结果、引用证据、
+  结论、讨论），后续持续更新。
+- 图号无法从现有材料推断：`manuscript/Figures/` 为空，`MANUSCRIPT_CHARTER.zh-CN.md` §6 只定
+  章节结构，没有图号规划。据此就 Figure spine 作外部规划咨询（明确声明为咨询，非 PR 审核、
+  不构成 Phase 放行）。
+- 咨询结论：6 张主图 + 4–5 张 Extended Data。主线为「为什么需要该抽象 → 抽象是什么 → 如何
+  实现 → 是否符合契约 → 能否串成可追溯决策链 → 在哪里实际失败」。Fig. 1–4 现可做；Fig. 5
+  （CRC ADC 受控案例）条件性，需 provenance 与证据状态核实后才能定为 Evaluation Figure；
+  Fig. 6 现可做。
+- 治理材料定位：**Evaluation 中的 negative governance case study**，与 Discussion /
+  Limitations 交叉引用，而非仅作 Limitations 附注。原判断「只是 limitation 证据」偏保守，
+  但不得反向抬高为安全能力的成功证明。
+- 新增 `manuscript/Figures/Figure6.governance_boundary.result.md`。关键事实边界：关联仓库的
+  分离**方案**已获批准，**不等于**远端操作已执行；本图状态标注为
+  `approved separation design / execution pending verification`，不得绘制为
+  "completed and validated separation"。
+- 披露纪律：本仓库为 public。该 result 只写脱敏层级——不含序列、候选标识、集群路径、
+  per-candidate 指标或事件的精确定位信息（blob 标识、行号、内容摘要留在仓库外的受控内部
+  登记）。为记录一次披露而发布定位器会扩大该披露。
+- 验证：用关联仓库的序列扫描器对该文件扫描 `clean` / exit=0；定位器与敏感标记 grep 无命中。
+- 阶段边界：Figure spine 属 Phase 4 内容，当前为 Phase 0 且 Phase 0 PR 尚未创建。因此本次
+  **另起分支与 PR**，不并入 Phase 0 PR——把 Phase 4 产物塞进 Phase 0 的批准里，与
+  INC-2026-001 根因同类（把一种授权当作另一种）。本 PR 不请求任何 Phase 放行。
+
+## 2026-10-12 EDT — 推送与 PR 创建
+
+- 推送 `task_20261011_stelligenos_manuscript_phase0` 与 `task_20261012_figure6_governance_result`（此前两分支均未推送）。
+- 创建 PR #140（Phase 0，base `main`）：请求就范围合规、证据契约自洽性与对外宣称边界审核；获明确 `APPROVE` 前不进入 Phase 1 research。
+- 创建 PR #141（Figure 6 result，base `task_20261011_stelligenos_manuscript_phase0`）：stacked PR，diff 只含 2 个文件；**不请求 Phase 放行**。
+- 两个 PR 分开的理由同前：Figure spine 属 Phase 4 内容，不得借用 Phase 0 的批准。
+
+## 2026-10-12 EDT — review-task 三级审核与 PR #141 修订一
+
+- 按负责人指令，`review-task` 技能自此作为默认审核工具：每个里程碑完成后、依赖工作开始前
+  触发；L1 工程正确性与 L2 方法学有效性由 AI 判定，**L3 科学验收只能由人类签署**。
+- L1/L2 交由**独立 agent** 执行（非实施方），审核产物在仓库外：
+  `DATA/2.PROJECTS/_reviews/2026-10-12-separation-and-manuscript/`。
+- 结果：**L1 FAIL / L2 FAIL**。全部技术性主张独立复现通过（25 文件集合可由 spec 独立重建、
+  23/25 blob 逐字节一致、hook 探针拦截、48/48、扫描器与门禁 clean、1900 tests OK、
+  溯源存活）；失败项全部在**记录**与**执行顺序**，不在产物本身。
+- PR #141 治理审核（固定入口）同轮返回 `REQUEST_CHANGES`，2 项阻断。两处审核的发现合并为
+  一次最小修订，避免分轮修改同一文件再引入新问题。
+- 本次修订关闭的问题：证据层级 E2/E3 → **E0–E3**（方案获批属 E0，不因经审核而升级为实现
+  验证）；阻断计数改用**公开可复核**的六轮 14 项，私有归档中的更高计数标注为公开侧不可
+  复核；「边界重设计」改为设计语态；事实状态改为逐项记录（旧仓库已 private、新仓库仍
+  private）；「公开可查」与「独立核验」两处措辞更正。
+- 独立审核发现而治理审核未发现的关键一项：原文引用的计数只存在于**私有** `Worklog.md`，
+  公开侧无从追溯。一个引用了读者无法追溯之证据的可审计性论证本身不可审计——该错误由独立
+  审核发现，非作者自查。
+- 仍待负责人决策（已写入 L3，AI 不得代签）：是否执行 Task 4（新仓库转 public）或记录
+  「两侧保持私有」的审慎修订；Figure 6 是否保留为主图；Tasks 2/3/5 的逐项授权缺少仓库内
+  留痕。
+
+## 2026-10-12 EDT — L1/L2 修复轮
+
+按负责人指令修复 L1/L2 全部可由 agent 关闭的发现；L3 仍待负责人签署。
+
+**新仓库 `AIDD_ADC_governance`（PR #1，该仓库 PR 门禁首次行使）**：五处「本仓库为 public」
+更正为实际 PRIVATE，并保留关键规则——内容自现在起按公开披露处理，不等转为 public
+（INC-2026-001 的材料正是在 private 期间进入的）；事件登记「Repository separation |
+Planned」更正为部分执行；新增完成 handoff，内含授权留痕、计划偏差、rulesets 403 的正确
+记法（不适用，非检查通过）、以及本 PR 自身审核状态记为 `deferred — no channel available`。
+
+**旧仓库 `AIDD_ADC_design`**：`AGENTS.md` 可见性段由「将在分离完成时转为 private」更正为
+已于 2026-10-12T18:13:10Z 转换并核验；两处「本仓库为 public」改为「曾为 public」；
+Worklog 由「Task 2–6 全部暂停」更正为逐项状态与授权来源。
+
+**受控内部登记（仓库外）**：补记两侧时间戳、转换前后核验输出、rulesets 403、授权留痕；
+明确 `first_public_disclosure_at` 与全部司法辖区字段不变、仍未决。
+
+**本仓库**：Phase 0 handoff 的「PR：待创建」更正为 #140 已 APPROVE 及其批准边界；
+Figure 6 新增「归属边界」一节（事件无任何 StelligenOS 组件参与，本图证据化的是共享治理
+模型，并承认这依赖「治理模型同源」前提），并把主图/Extended Data 归属、charter 缺少
+Phase 0 期间创建后续 Phase 产物的条款、StelligenOS 未部署序列扫描器三项列为未决。
+
+**不自行扩张范围的两项**：不在本轮为 StelligenOS 安装扫描器（需独立 PR）；不自行修改
+charter（需独立 PR）。
+
+## 2026-10-12 EDT — L1/L2 复核与第二轮修复
+
+独立复核：14 项发现关闭 12 项，无回归（治理仓库初始提交仍为 25 文件、`main` 仍 `24d80f5`、
+48/48、扫描器与门禁 clean、CI 绿、两仓库仍 private；StelligenOS boundary 7 项清单逐字节
+一致、Figure 6 扫描 clean 且无定位器）。
+
+本轮修复复核指出的新引入缺陷：旧仓库 `AGENTS.md` 误把执行前写就的计划 handoff 标为「执行
+与核验记录」；「转 private 不收回」一句重复；溯源计数未标时点。另修 Figure 6「讨论」一节
+与新增 E0–E3 表及归属边界自相矛盾的表述。
+
+两项复核认定仍开放的，按其性质分别处理：`main` 记录过时（修复需合并，而无审核通道）→
+记录为**`main` 不具权威性**；公开侧先于私有治理登记承载事件叙述 → 记录为**待负责人决定**。
+两项均无法由 agent 单方关闭，故记录而非假装关闭。
+
+复核对三项「未做」的判断：均可作为**延期**成立，但**均不可作为稳态**。Task 4 不由 agent
+执行是正确的（agent 执行会复现根因），但两仓库同时 private 期间没有可运行的门禁，未审核
+的 PR 会累积，因此需要一个决定期限，且「保持私有」必须是**被选择**的，不能是**漂移成**的。

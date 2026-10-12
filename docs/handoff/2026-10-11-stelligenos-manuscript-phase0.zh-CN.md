@@ -4,7 +4,7 @@
 
 - 任务编号 / 分支：`task_20261011_stelligenos_manuscript_phase0`
 - 基线：`main` / `origin/main` @ `1c8ba22`
-- PR：待创建
+- PR：[#140](https://github.com/leezx/StelligenOS/pull/140)，已获固定入口 `APPROVE`（0 阻断）。批准范围仅限 framing、PaperSpine intake、E0–E5 证据契约、论文初始结构与仓库边界适配；**不自动放行 Phase 1 research**
 - Commit：待提交
 - 时间：2026-10-11 17:18 EDT
 - 当前门禁：Phase 0，等待 PR 审核；不得开始 PaperSpine research。
