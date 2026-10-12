@@ -140,6 +140,13 @@ review:
 execution_observations:
   - timestamp: 2026-10-12T10:15:41-04:00
     action: remove_confirmed_redownloadable_caches
+    authorization_class: owner_authorized_contract_deviation
+    deviation_disclosure: >-
+      The owner explicitly authorized the three cache deletions and additional Duo
+      login after approval of d411a32. These actions exceeded the approved rules that
+      limited cleanup to task-created temporary files and treated Duo reauthentication
+      as a stop condition. This is a retrospective disclosure, not a claim that the
+      earlier ChatGPT approval covered these actions.
     removed_paths:
       - /home/zhl595/.cache/pip
       - /home/zhl595/software/rfantibody_cache/uv

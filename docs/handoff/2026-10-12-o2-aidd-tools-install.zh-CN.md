@@ -61,4 +61,5 @@
 - PR #139 round 1 为 `REQUEST_CHANGES`；空间峰值门禁和 GPU 状态语义两项阻断已在 commit `d411a32` 修正。
 - Round 2 对 `d411a326ab698eef66f4b766485fa8d0a8c042e2` 明确给出 `APPROVE`，允许按契约执行有限安装与 canary。
 - `2026-10-12 10:15 EDT` 按负责人明确确认，删除三个可重新下载缓存：`/home/zhl595/.cache/pip`（18 GiB）、`/home/zhl595/software/rfantibody_cache/uv`（6.6 GiB）、`/home/zhl595/software/boltzgen_cache/huggingface`（382 MiB）。三个路径均已确认不存在；RFantibody/BoltzGen 正式 `.venv` 和 BoltzGen 主模型缓存均确认存在。
+- `owner_authorized_contract_deviation`：上述三个缓存目录并非本任务创建的临时文件；为执行删除而进行的新 Duo 登录也越过了 `d411a32` 将再次认证列为 stop condition 的限制。两类操作均由负责人在执行前另行明确授权。本记录是事后如实披露，不表示先前 ChatGPT `APPROVE` 已覆盖这些例外，也不修改原限制；后续再次发生例外须先取得对应门禁批准。
 - 删除后的 `quota-v2` 尚未刷新，仍返回 10:12:26 的删除前快照 `97.74/100 GiB`。在获得时间戳晚于删除动作的新 quota 快照且峰值空间预检通过之前，不启动 Chai-1/Boltz-2 安装。
