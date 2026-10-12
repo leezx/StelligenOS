@@ -7176,3 +7176,15 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   PR E17。后续任何 deferred work（quantitative ladder calibration、epitope-
   layer 及更下游分析、external evaluators、下游 Candidate level、FTO 任务）
   需另行 explicit go-ahead。
+## 2026-10-11 17:18 EDT — StelligenOS manuscript Phase 0 intake and framing
+
+- 收到负责人指令：把整个 StelligenOS 创业项目按论文格式写入 `manuscript/`，以论文作为持续工作的锚点。
+- 读取并遵循 `paper-spine` skill、`AGENTS.md`、`ChatGPT-Codex-talk.md` 与 Phase Gate 协议；把首个交付冻结为 Phase 0（framing and evidence contract），不提前进入研究或正文。
+- 只读检查：确认 `main == origin/main @ 1c8ba22`；确认 `manuscript/` 为空；发现任务前已有未跟踪文件与目录，保持原样。
+- 运行 `bash scripts/verify_repository_boundary.sh`：失败，报告 `manuscript` 以及任务前既有 `.DS_Store`、`Stelligen-Assets.xmind`、`pipelines`、`STELLIGEN_CONSTRAINTS.md`、`CRC Patient Territory Map.png`、`AI_RESULT_ACCEPTANCE.md`、`.claude/scheduled_tasks.lock`。据此决定仅把 `manuscript` 纳入允许顶层，并不处理其它既有项。
+- 创建分支 `task_20261011_stelligenos_manuscript_phase0`；首次因 `.git` sandbox 权限失败，获批准后重试成功。
+- PaperSpine intake 两次交互启动失败：GUI launcher 报 AppleScript `-2741`；keyboard UI 报 `termios` `TypeError`。改用同一官方 `intake_wizard.py --no-interactive` 参数接口成功生成配置；配置为 build-from-materials / journal / pro / English main text + Chinese package / 40 citations / local-first。因仓库禁止生成物，随后显式设置 `word_output: none`，并把常见 LaTeX/PDF/DOCX 产物加入 `.gitignore`。
+- 运行 `progress_check.py paper_rewriting_output --markdown --write`：intake `DONE`，下一阶段为 `research`；按 PR 门禁停止，不创建 research 占位产物。
+- 新增论文目录说明、论文总纲与证据契约、handoff；更新根 README 入口及 boundary allowlist。明确：仓库只保存源文件和审计材料，PDF/DOCX 在仓库外构建。
+- 当前状态：待验证、提交、推送、创建 Phase 0 PR；获得 ChatGPT 明确 `APPROVE` 前不得进入 Phase 1 research。
+- 验证完成：PaperSpine intake gate PASS；config JSON 合法；`git diff --check` PASS；全量 unittest 1900 tests OK。boundary checker 仍因任务前既有 7 个未跟踪项按预期失败，但 `manuscript` 已不在违规列表，证明本次 allowlist 变更生效。

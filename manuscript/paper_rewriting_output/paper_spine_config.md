@@ -1,0 +1,20 @@
+# PaperSpine Config
+
+- **workflow**: build_from_materials
+- **scene**: journal
+- **tier**: pro
+- **output_language**: en
+- **target_name**: StelligenOS: a biotechnology asset operating system (target journal TBD)
+- **materials_dir**: /Volumes/Stelligen_SSD/Stelligen/StelligenOS
+- **draft_path**:
+- **user_motivation**: 把整个 StelligenOS 创业项目写成一篇可审计、可持续迭代的论文，使系统架构、设计选择、证据边界和后续验证共享同一个学术锚点。
+- **official_urls**:
+- **reference_mode**: local_first
+- **reference_paths**: /Volumes/Stelligen_SSD/Stelligen/StelligenOS
+- **citation_target_count**: 40
+- **special_requirements**: Phase-gated; contribution-first; no fabricated validation; distinguish implemented architecture from empirical efficacy; repository remains data-free.
+- **word_output**: none
+- **translation_package**: zh
+- **humanize_tier**: medium
+- **detection_platform**: general
+- **ui_language**: zh

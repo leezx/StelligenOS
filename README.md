@@ -52,6 +52,7 @@ git diff --check
 ## 关键入口
 
 - `architecture.md`
+- `manuscript/README.md`（论文锚点；只保存源文件与审计材料，生成物仍在仓库外）
 - `docs/architecture/contract.zh-CN.md`
 - `docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md`
 - `docs/architecture/sponsor-strategy.zh-CN.md`
