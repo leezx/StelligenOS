@@ -13,10 +13,27 @@
 看到系统**失败**的样子。
 
 Figure 6 处理的正是这个缺口。它不展示 StelligenOS 的能力，而展示一次在真实运行中发生、
-有完整审计轨迹的治理失效，以及系统对该失效的架构响应。对 systems paper 而言，一个被
-记录下来的 failure mode 与随之而来的边界修订，其方法学价值高于又一张成功路径图。
+有完整审计轨迹的治理失效，以及对该失效的架构响应。对 systems paper 而言，一个被记录
+下来的 failure mode 与随之而来的边界修订，其方法学价值高于又一张成功路径图。
 
-本图同时服务于 `MANUSCRIPT_CHARTER.zh-CN.md` §3 的第 3 条允许主张（治理可追溯性），
+### 归属边界：这是谁的失效
+
+必须先把归属写清楚，否则本图会被读成一项它并不支持的主张。
+
+**INC-2026-001 发生在关联仓库 `AIDD_ADC_design`，不在 StelligenOS。** 事件中没有任何
+StelligenOS 组件参与：不涉及六对象模型、GateSet、Evidence Production Module 或内核的
+任何代码路径。该仓库在其自身的契约下运作。
+
+因此本图**不能**用来说明 StelligenOS 的软件存在缺陷，也不能说明它更健壮。它所证据化的
+对象是**两个项目共享的治理模型**——同一套 PR 门禁、同一套证据等级、同一条外部审核通道、
+同一类「公开可审核」与「必须保密」之间的张力。失效发生在这套治理模型的边界设计上，而
+那套模型正是本文主张的设计性质之一。
+
+这是本图在构念效度上最薄弱的一环，必须显式承认：**用关联项目的事件为本系统的治理设计
+提供证据，依赖「两者治理模型同源」这一前提**。该前提成立与否是编辑判断，不是数据能够
+裁定的问题（见「下一步」中关于主图/Extended Data 归属的未决项）。
+
+本图服务于 `MANUSCRIPT_CHARTER.zh-CN.md` §3 的第 3 条允许主张（治理可追溯性），
 并为 §4 的禁止主张提供自我约束的证据：系统自己记录了它做不到什么。
 
 ## 做了什么
@@ -223,6 +240,17 @@ Evaluation 看上去更干净，但也就取消了读者判断系统边界的能
    not tested）、workflow demonstration（demonstrated / incomplete / illustrative only）、
    biological or clinical validation（not independently established）。
 4. Technical Gate 通道确定前，相关状态保持 `not yet independently verified`。
+5. **未决（编辑判断）：本图作为主图还是 Extended Data。** 独立审核与此前的 figure spine
+   咨询各自独立提出同一保留：事件属关联项目，无 StelligenOS 组件参与。保留为主图依赖
+   「两项目治理模型同源」这一前提；若该前提在定稿时不被接受，应降为 Extended Data，并在
+   Figure 4 中保留一个精简的 failure panel。本 result 不替负责人作此决定。
+6. **未决（契约）：charter 没有「Phase 0 期间创建后续 Phase 产物」的条款。** 本文件属
+   Figure spine（Phase 4）材料，而当前为 Phase 0 且 research 未放行。它以独立 PR 交付、
+   不请求任何 Phase 放行，但这一安排目前**无契约依据**。应另起 PR 为 charter 补一条
+   「规划性产物可在不放行对应 Phase 的前提下先行记录」的条款，或把本文件挂起至 Phase 4。
+7. **已知控制缺口：StelligenOS 本身没有安装序列扫描器。** 本 result 的脱敏核验是借用
+   关联仓库的扫描器**手动**执行的，那不是本仓库已部署的控制。StelligenOS 是 public 仓库，
+   该缺口应另起 PR 处理，不在本 PR 范围内扩张。
 
 ## 更新记录
 
@@ -238,3 +266,10 @@ Evaluation 看上去更干净，但也就取消了读者判断系统边界的能
   private、新仓库仍为 private 的中间状态。
   (4) 「全部为公开可查」更正为需相应访问权限；「独立核验」更正为交叉核对元数据，避免与
   E5 混淆。
+- 2026-10-12（修订二）：按 `review-task` 独立 L1/L2 审核的发现，补三项边界声明。
+  (1) 新增「归属边界」一节：事件发生在关联仓库，**无任何 StelligenOS 组件参与**；本图
+  证据化的对象是两项目**共享的治理模型**，并显式承认这依赖「治理模型同源」这一前提。
+  (2) 把主图/Extended Data 的归属、charter 缺少「Phase 0 期间创建后续 Phase 产物」条款
+  这两项列为未决编辑与契约问题，不自行裁定。
+  (3) 记录已知控制缺口：StelligenOS 本身未部署序列扫描器，本文件的脱敏核验是借用关联
+  仓库扫描器手动执行的，不是本仓库已部署的控制。

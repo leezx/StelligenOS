@@ -7244,3 +7244,28 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 仍待负责人决策（已写入 L3，AI 不得代签）：是否执行 Task 4（新仓库转 public）或记录
   「两侧保持私有」的审慎修订；Figure 6 是否保留为主图；Tasks 2/3/5 的逐项授权缺少仓库内
   留痕。
+
+## 2026-10-12 EDT — L1/L2 修复轮
+
+按负责人指令修复 L1/L2 全部可由 agent 关闭的发现；L3 仍待负责人签署。
+
+**新仓库 `AIDD_ADC_governance`（PR #1，该仓库 PR 门禁首次行使）**：五处「本仓库为 public」
+更正为实际 PRIVATE，并保留关键规则——内容自现在起按公开披露处理，不等转为 public
+（INC-2026-001 的材料正是在 private 期间进入的）；事件登记「Repository separation |
+Planned」更正为部分执行；新增完成 handoff，内含授权留痕、计划偏差、rulesets 403 的正确
+记法（不适用，非检查通过）、以及本 PR 自身审核状态记为 `deferred — no channel available`。
+
+**旧仓库 `AIDD_ADC_design`**：`AGENTS.md` 可见性段由「将在分离完成时转为 private」更正为
+已于 2026-10-12T18:13:10Z 转换并核验；两处「本仓库为 public」改为「曾为 public」；
+Worklog 由「Task 2–6 全部暂停」更正为逐项状态与授权来源。
+
+**受控内部登记（仓库外）**：补记两侧时间戳、转换前后核验输出、rulesets 403、授权留痕；
+明确 `first_public_disclosure_at` 与全部司法辖区字段不变、仍未决。
+
+**本仓库**：Phase 0 handoff 的「PR：待创建」更正为 #140 已 APPROVE 及其批准边界；
+Figure 6 新增「归属边界」一节（事件无任何 StelligenOS 组件参与，本图证据化的是共享治理
+模型，并承认这依赖「治理模型同源」前提），并把主图/Extended Data 归属、charter 缺少
+Phase 0 期间创建后续 Phase 产物的条款、StelligenOS 未部署序列扫描器三项列为未决。
+
+**不自行扩张范围的两项**：不在本轮为 StelligenOS 安装扫描器（需独立 PR）；不自行修改
+charter（需独立 PR）。
