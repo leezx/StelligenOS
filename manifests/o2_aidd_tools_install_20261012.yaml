@@ -262,3 +262,45 @@ execution_observations:
     storage_gate: pass
     execution_gate: paused_pending_review_of_chai1_parameter_deviation
     files_created: false
+  - timestamp: 2026-10-12T11:10:58-04:00
+    action: complete_boltzgen_l40s_canary
+    tool: BoltzGen
+    package:
+      environment: /home/zhl595/software/BoltzGen/.venv
+      version: 0.3.2
+      pinned_commit: a07fea1153111ef453aaea7a15697ee05de9291f
+    slurm:
+      job_id: 56035855
+      node: compute-g-17-169
+      state: COMPLETED
+      exit_code: "0:0"
+      queue_time: "00:06:32"
+      elapsed: "00:01:59"
+      batch_max_rss_kib: 11853748
+      resources: 1x_l40s_4cpu_32g_15min
+    gpu_runtime:
+      gpu: NVIDIA L40S
+      memory_mib: 46068
+      torch: 2.14.1+cu130
+      cuda_available: true
+      cuda_tensor_operation: pass
+      status: GPU_RUNTIME_PASS
+    model_canary:
+      design_spec: example/vanilla_protein/1g13prot.yaml
+      protocol: protein-anything
+      num_designs: 1
+      diffusion_batch_size: 1
+      steps:
+        - design
+      esmfold2: disabled
+      model_step_seconds: 86.7
+      failed_examples: 0
+      output_design_cif_bytes: 187850
+      output_design_npz_bytes: 2829
+      output_complete: true
+      status: MODEL_CANARY_PASS
+    interpretation: >-
+      This validates only the pinned BoltzGen environment, CUDA runtime, and official
+      minimal design step on one O2 L40S. It is not a full pipeline validation,
+      scientific benchmark, binder result, production authorization, or roster PASS.
+    next_gate: paused_pending_metadata_review_before_boltz2_install

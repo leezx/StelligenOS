@@ -82,3 +82,12 @@
 ## Chai-1 canary 资源参数偏差
 
 已批准契约规定 canary 为 15 分钟，作业 `56033980` 实际申请 30 分钟；契约还规定先完成 BoltzGen canary，再进行 Chai-1，但实际先完成 Chai-1。作业实际运行仅 `00:01:22`，没有导致额外模型运行、并发 GPU 作业或生产任务，但资源上限与执行顺序都偏离已批准契约。两项事实统一记录为 `unapproved_execution_contract_deviation`：没有负责人对这些具体变化的预先授权，也不以事后披露追认它们。后续 BoltzGen/Boltz-2 canary 必须恢复 15 分钟上限；若 15 分钟不足，只能记录 `MODEL_CANARY_PENDING`，不得自行延长。继续 Boltz-2 安装前，先按原顺序要求补做 BoltzGen canary。
+
+## BoltzGen GPU 验收
+
+- PR #139 对偏差记录 head `8458c91` 明确 `APPROVE` 后，提交作业 `56035855`；资源严格为 1×NVIDIA L40S、4 CPU、32 GiB、15 分钟，且当时无其他个人 GPU 作业。
+- 运行范围仅为官方 `example/vanilla_protein/1g13prot.yaml`、`protein-anything`、1 个 design、1 个 diffusion batch、`--steps design`；不执行 inverse folding、folding、affinity、analysis/filtering 或 ESMFold2。
+- 作业在 `compute-g-17-169` 完成，exit `0:0`；排队 `00:06:32`，运行 `00:01:59`，batch MaxRSS `11,853,748 KiB`。
+- CUDA 验收：NVIDIA L40S 46,068 MiB、`torch 2.14.1+cu130`、`cuda_available=True`、GPU tensor 求和通过，状态为 `GPU_RUNTIME_PASS`。
+- 模型验收：official design step 用时 `86.7 s`、failed examples=0；生成非空配置、steps manifest、输入可视化 CIF、设计 CIF（187,850 B）及 NPZ（2,829 B），状态为 `MODEL_CANARY_PASS`。
+- 该结果只证明 pinned BoltzGen 环境及已有 artifacts 能在 O2 L40S 执行最小生成步骤，不是完整管线验证、科学 benchmark、binder 证据或生产放行。Boltz-2 必须等本轮 metadata 获得新 `APPROVE` 后再安装。
