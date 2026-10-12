@@ -7176,3 +7176,9 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   PR E17。后续任何 deferred work（quantitative ladder calibration、epitope-
   layer 及更下游分析、external evaluators、下游 Candidate level、FTO 任务）
   需另行 explicit go-ahead。
+### 2026-10-12 · O2 AIDD 工具安装契约（BoltzGen / Chai-1 / Boltz-2）
+
+- `2026-10-11 22:42–23:16 EDT`：复用既有 O2 SSH 会话，在 `/home/zhl595/software/BoltzGen` 安装 BoltzGen `0.3.2`（commit `a07fea1153111ef453aaea7a15697ee05de9291f`），创建 Python 3.12 `.venv`，运行 import、CLI 和官方 YAML preflight；下载核心模型到 `/home/zhl595/software/boltzgen_cache/models`，约 `7.9 GiB`。计算主要 blob SHA-256；删除 preflight 生成的可重复 `1g13prot.cif`，确认上游 repo clean。登录节点无 GPU，GPU canary 未执行。O2 home `89.52/100 GiB`，因此停止下载约 `33 GiB` 的 ESMFold2。
+- `2026-10-12 09:21 EDT`：确认原 O2 SSH 进程仍存在于本机 `ttys009`，但 Mac 锁屏使自动化暂时无法接管；没有创建新 SSH 或触发 Duo。
+- `2026-10-12 09:22 EDT`：读取 `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md` 与 `ChatGPT-Codex-talk.md`，识别 Chai-1/Boltz-2 属于必须先走 PR 审核的新增外部运行；原 checkout 有用户未跟踪文件，因此建立隔离 worktree 和分支 `task_20261012_o2_aidd_tools_install`，不触碰原工作区。
+- `2026-10-12 09:22–09:30 EDT`：核查官方来源：Chai-1 官方仓库为 `chaidiscovery/chai-lab`、公开 PyPI 版本 `0.6.1`；Boltz-2 官方仓库为 `jwohlwend/boltz`、package `2.2.1`；未找到 Chai Discovery 官方公开可安装的 Chai-2/Chai-3。新增安装契约 manifest 与 handoff；仓库仅记录元数据，不含模型、缓存或运行结果。

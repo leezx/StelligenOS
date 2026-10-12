@@ -1,0 +1,92 @@
+task_id: task_20261012_o2_aidd_tools_install
+phase: external_tool_installation_contract
+status: awaiting_chatgpt_review
+execution_host: o2.hms.harvard.edu
+repository_data_boundary: metadata_only
+
+scope:
+  completed_before_contract:
+    - tool: BoltzGen
+      external_repo: https://github.com/HannesStark/boltzgen
+      external_path: /home/zhl595/software/BoltzGen
+      pinned_commit: a07fea1153111ef453aaea7a15697ee05de9291f
+      environment: /home/zhl595/software/BoltzGen/.venv
+      cache: /home/zhl595/software/boltzgen_cache/models
+      observed_version: 0.3.2
+      observed_cache_size_gib: 7.9
+      status: cpu_preflight_passed_gpu_canary_pending
+      exception_note: >-
+        Installation began before the StelligenOS repository gate was discovered in the
+        active workspace. It is recorded here transparently; no production design run was made.
+  proposed_after_approval:
+    - tool: Chai-1
+      official_repo: https://github.com/chaidiscovery/chai-lab
+      preferred_release: chai_lab==0.6.1
+      external_path: /home/zhl595/software/Chai-1
+      isolated_environment: /home/zhl595/software/Chai-1/.venv
+      shared_download_dir: /home/zhl595/software/chai_cache/downloads
+    - tool: Boltz-2
+      official_repo: https://github.com/jwohlwend/boltz
+      preferred_release: boltz==2.2.1
+      external_path: /home/zhl595/software/Boltz-2
+      isolated_environment: /home/zhl595/software/Boltz-2/.venv
+      shared_cache: /home/zhl595/software/boltz_cache
+  availability_check_only:
+    - tool: Chai-2
+      status: no_official_public_installable_release_identified
+    - tool: Chai-3
+      status: no_official_public_installable_release_identified
+
+constraints:
+  - reuse_the_existing_persistent_o2_ssh_session
+  - do_not_trigger_repeated_duo_logins
+  - one_gpu_canary_job_at_a_time
+  - do_not_run_production_designs_or_real_targets
+  - do_not_lower_model_or_filter_thresholds
+  - do_not_store_weights_caches_inputs_or_outputs_in_this_repository
+  - do_not_download_esmfold2_until_storage_is_expanded
+  - preserve_at_least_5_gib_home_quota_headroom
+
+pre_install_observations:
+  home_quota_gib:
+    used: 89.52
+    limit: 100.0
+    remaining: 10.48
+  boltzgen_environment_size_gib: 7.3
+  boltzgen_model_cache_size_gib: 7.9
+  o2_recommended_gpu: l40s_48gb
+  o2_driver_observed_previously: 580.178.04
+
+acceptance:
+  package_layer:
+    - isolated_python_environment_created
+    - pinned_version_and_source_commit_recorded
+    - import_and_cli_help_pass
+    - dependency_versions_recorded
+  artifact_layer:
+    - model_files_have_finite_nonzero_sizes
+    - sha256_or_upstream_content_hashes_recorded
+    - cache_location_is_external_to_repository
+  gpu_canary:
+    resources: 1x_l40s_4cpu_32g_15min
+    checks:
+      - nvidia_smi
+      - torch_cuda_available
+      - cuda_tensor_operation
+      - package_import_on_compute_node
+      - minimal_non_production_example_if_storage_and_runtime_allow
+  completion_rule: >-
+    Installation is usable only after package, artifact, and GPU-canary checks pass.
+    This does not constitute a binder-design roster PASS or authorize a production run.
+
+stop_conditions:
+  - home_quota_remaining_below_5_gib
+  - no_official_source_or_license
+  - dependency_conflict_requires_mutating_an_existing_environment
+  - gpu_canary_fails_twice_for_the_same_reason
+  - persistent_ssh_session_is_unavailable_and_duo_reauthentication_is_required
+
+sources:
+  - https://github.com/HannesStark/boltzgen
+  - https://github.com/chaidiscovery/chai-lab
+  - https://github.com/jwohlwend/boltz
