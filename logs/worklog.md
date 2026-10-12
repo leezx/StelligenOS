@@ -7222,3 +7222,25 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 创建 PR #140（Phase 0，base `main`）：请求就范围合规、证据契约自洽性与对外宣称边界审核；获明确 `APPROVE` 前不进入 Phase 1 research。
 - 创建 PR #141（Figure 6 result，base `task_20261011_stelligenos_manuscript_phase0`）：stacked PR，diff 只含 2 个文件；**不请求 Phase 放行**。
 - 两个 PR 分开的理由同前：Figure spine 属 Phase 4 内容，不得借用 Phase 0 的批准。
+
+## 2026-10-12 EDT — review-task 三级审核与 PR #141 修订一
+
+- 按负责人指令，`review-task` 技能自此作为默认审核工具：每个里程碑完成后、依赖工作开始前
+  触发；L1 工程正确性与 L2 方法学有效性由 AI 判定，**L3 科学验收只能由人类签署**。
+- L1/L2 交由**独立 agent** 执行（非实施方），审核产物在仓库外：
+  `DATA/2.PROJECTS/_reviews/2026-10-12-separation-and-manuscript/`。
+- 结果：**L1 FAIL / L2 FAIL**。全部技术性主张独立复现通过（25 文件集合可由 spec 独立重建、
+  23/25 blob 逐字节一致、hook 探针拦截、48/48、扫描器与门禁 clean、1900 tests OK、
+  溯源存活）；失败项全部在**记录**与**执行顺序**，不在产物本身。
+- PR #141 治理审核（固定入口）同轮返回 `REQUEST_CHANGES`，2 项阻断。两处审核的发现合并为
+  一次最小修订，避免分轮修改同一文件再引入新问题。
+- 本次修订关闭的问题：证据层级 E2/E3 → **E0–E3**（方案获批属 E0，不因经审核而升级为实现
+  验证）；阻断计数改用**公开可复核**的六轮 14 项，私有归档中的更高计数标注为公开侧不可
+  复核；「边界重设计」改为设计语态；事实状态改为逐项记录（旧仓库已 private、新仓库仍
+  private）；「公开可查」与「独立核验」两处措辞更正。
+- 独立审核发现而治理审核未发现的关键一项：原文引用的计数只存在于**私有** `Worklog.md`，
+  公开侧无从追溯。一个引用了读者无法追溯之证据的可审计性论证本身不可审计——该错误由独立
+  审核发现，非作者自查。
+- 仍待负责人决策（已写入 L3，AI 不得代签）：是否执行 Task 4（新仓库转 public）或记录
+  「两侧保持私有」的审慎修订；Figure 6 是否保留为主图；Tasks 2/3/5 的逐项授权缺少仓库内
+  留痕。
