@@ -4,8 +4,8 @@
 
 - 任务编号：`task_20261012_o2_aidd_tools_install`
 - 分支：`task_20261012_o2_aidd_tools_install`
-- PR：待创建
-- Commit：待提交
+- PR：https://github.com/leezx/StelligenOS/pull/139
+- Contract commit：`e7a2342`
 - 时间：`2026-10-12 09:22 EDT`
 
 ## 当前 Phase 目标
@@ -55,6 +55,6 @@
 
 ## 下一步与门禁
 
-- 提交并创建指向 `main` 的 PR。
+- PR #139 已提交并指向 `main`，等待 ChatGPT 审核。
 - ChatGPT 必须对当前 PR 明确给出 `APPROVE` 后，才执行 Chai-1/Boltz-2 安装和 GPU canary。
 - `APPROVE_WITH_NONBLOCKING_COMMENTS` 不视为放行。

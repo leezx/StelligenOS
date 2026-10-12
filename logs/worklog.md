@@ -7182,3 +7182,5 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - `2026-10-12 09:21 EDT`：确认原 O2 SSH 进程仍存在于本机 `ttys009`，但 Mac 锁屏使自动化暂时无法接管；没有创建新 SSH 或触发 Duo。
 - `2026-10-12 09:22 EDT`：读取 `docs/protocols/CHATGPT_CODEX_PHASE_GATE_PROTOCOL.zh-CN.md` 与 `ChatGPT-Codex-talk.md`，识别 Chai-1/Boltz-2 属于必须先走 PR 审核的新增外部运行；原 checkout 有用户未跟踪文件，因此建立隔离 worktree 和分支 `task_20261012_o2_aidd_tools_install`，不触碰原工作区。
 - `2026-10-12 09:22–09:30 EDT`：核查官方来源：Chai-1 官方仓库为 `chaidiscovery/chai-lab`、公开 PyPI 版本 `0.6.1`；Boltz-2 官方仓库为 `jwohlwend/boltz`、package `2.2.1`；未找到 Chai Discovery 官方公开可安装的 Chai-2/Chai-3。新增安装契约 manifest 与 handoff；仓库仅记录元数据，不含模型、缓存或运行结果。
+- `2026-10-12 09:30 EDT`：运行 `git diff --check` 与 `scripts/verify_repository_boundary.sh`；首次检查发现两个新增文件 EOF 多余空行，最小修正后通过。仅显式暂存 3 个相关文件，commit `e7a2342` 并推送分支。
+- `2026-10-12 09:31 EDT`：创建 PR #139。首次 `gh pr create` 的 body 含未安全引用的 Markdown 反引号，shell 尝试执行三个文件路径并返回 `Permission denied`；没有文件被执行或修改。立即用纯文本安全引用更新 PR body，并用 `gh pr view` 验证描述正确。PR：https://github.com/leezx/StelligenOS/pull/139。
