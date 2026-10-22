@@ -7188,3 +7188,7 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 
 - 提交前 `git status --short` 显示仅本任务三文件；显式 `git add --` 这三文件，`git diff --cached --check` 通过，提交 `19475d8`。`bash scripts/verify_repository_boundary.sh` 输出 `Repository boundary check passed.`；未运行科学数据或改动现行 contract/runtime。
 - 将 `task_20261022_tgt05_decision_model_rfc` 推送至 `origin`，通过 `gh pr create --base main --head ... --body-file /tmp/tgt05-decision-rfc-pr-body.md` 建立 [PR #142](https://github.com/leezx/StelligenOS/pull/142)。`gh pr view` 确认 `OPEN`、base `1c8ba227...`、初版 head `19475d897...`、无 reviewDecision。PR 正文列出科学/对象/外部策略审阅问题与无数据声明；更新本 handoff。等待 GPT/ChatGPT 明确 `APPROVE`，不进入依赖 Phase。
+
+## 2026-10-22 15:32 EDT — 提交固定 ChatGPT 对话审核
+
+- 将包含 PR URL、base、当前 tip `7d40496`、Phase 范围和六项科学/契约审阅问题的审核指令，发送到历史记录明确的 `Biotech ideas → AI审核方案` 固定 ChatGPT 对话。该对话以前承接 PR A–E16 的审核；本次要求只对 PR #142 当前 diff 给 `APPROVE / REQUEST_CHANGES / REJECT_PHASE`。等待回复；未声称审核通过。`wait_threads` 对 ChatGPT 对话不能可靠等待（返回“Could not determine whether Codex thread exists”），后续通过已定位对话或 `read_thread` 查验。

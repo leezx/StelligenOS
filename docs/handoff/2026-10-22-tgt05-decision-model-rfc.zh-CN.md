@@ -3,7 +3,7 @@
 - 时间：2026-10-22 15:31 EDT
 - 任务分支：`task_20261022_tgt05_decision_model_rfc`
 - Base：`main` @ `1c8ba22`
-- PR：[StelligenOS #142](https://github.com/leezx/StelligenOS/pull/142)，`OPEN`，未收到审核结论
+- PR：[StelligenOS #142](https://github.com/leezx/StelligenOS/pull/142)，`OPEN`；当前 tip `7d40496`（审计元数据提交）
 - 初版 code commit：`19475d897eefdf51661dbb48aa05817c2f5aa109`；PR base：`1c8ba2274cbdbdd0c7193e2f5a5b3a440952730c`
 - 目标：将 webReport Gate 设计中的 TGT-05 决策模型 v1.0 纳入 StelligenOS canonical 迁移计划，先审定科学与对象边界。
 
@@ -25,3 +25,5 @@
 ## 审阅要点与下一步
 
 请审核：版本迁移是否应为 `TGT-05@2.0` / `ADC_TARGET_GATESET@2.0`；单个归因充分的 ADC 临床事件何时可触发 KILL 审议；Decision Record 的对象归属；外部决策策略的 canonical 所有者及版本。GPT/ChatGPT 对本 PR 明确 `APPROVE` 前，不修改运行契约、不做依赖运行；`APPROVE` 后仍由人类决定 merge 和下一 Phase。
+
+2026-10-22 15:32 EDT：已将 PR #142 @ `7d40496` 提交至固定的 `Biotech ideas → AI审核方案` ChatGPT 对话，要求基于 GitHub current PR 输出 `APPROVE / REQUEST_CHANGES / REJECT_PHASE`。审核回复待收。
