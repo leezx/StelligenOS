@@ -2,7 +2,7 @@ policy_id: external:gateset/ADC_TARGET_GATESET/required_gate_policy@v2
 policy_version: v2
 owner_gateset_id: ADC_TARGET_GATESET
 owner_gateset_version: "2.0"
-status: CONTRACT_ONLY_PENDING_REVIEW
+status: DECLARATIVE_POLICY_SOURCE
 human_choice: >-
   On 2026-10-22 the responsible human selected conservative all-Gate clearance:
   all eight Gates need sufficiently strong HUMAN_APPROVED evidence and no

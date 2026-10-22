@@ -1,6 +1,6 @@
 version: "2.0.0"
 name: stelligenos-gate-module-construction-contract-tgt05-v2
-status: CONTRACT_ONLY_PENDING_REVIEW
+status: CONTRACT_ONLY_INACTIVE
 source:
   rfc_merge_commit: 004fc44c02fbea9511274427904792b255141521
   gate_contract: src/contracts/crc_adc_target_gateset_v2.yaml

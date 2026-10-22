@@ -1,6 +1,6 @@
 version: "2.0"
 name: stelligenos-crc-adc-target-gateset-v2
-status: CONTRACT_ONLY_PENDING_REVIEW
+status: CONTRACT_ONLY_INACTIVE
 normative_source:
   rfc_merge_commit: 004fc44c02fbea9511274427904792b255141521
   rfc_path: docs/architecture/TGT05_DECISION_MODEL_V1_MIGRATION_RFC.zh-CN.md

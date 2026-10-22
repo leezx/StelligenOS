@@ -2,7 +2,7 @@ policy_id: external:gateset/ADC_TARGET_GATESET/unknown_policy@v2
 policy_version: v2
 owner_gateset_id: ADC_TARGET_GATESET
 owner_gateset_version: "2.0"
-status: CONTRACT_ONLY_PENDING_REVIEW
+status: DECLARATIVE_POLICY_SOURCE
 scope: >-
   Distinguish an unmeasured Gate or bounded scientific uncertainty from
   acquisition, identity and source-integrity failures. Never turn absent

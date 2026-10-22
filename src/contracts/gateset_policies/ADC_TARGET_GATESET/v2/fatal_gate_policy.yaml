@@ -2,7 +2,7 @@ policy_id: external:gateset/ADC_TARGET_GATESET/fatal_gate_policy@v2
 policy_version: v2
 owner_gateset_id: ADC_TARGET_GATESET
 owner_gateset_version: "2.0"
-status: CONTRACT_ONLY_PENDING_REVIEW
+status: DECLARATIVE_POLICY_SOURCE
 source:
   rfc_merge_commit: 004fc44c02fbea9511274427904792b255141521
   tgt05_contract: src/contracts/crc_adc_target_gateset_v2.yaml#gate_contracts.TGT-05.potential_fatal_review

@@ -2,7 +2,7 @@ policy_id: external:gateset/ADC_TARGET_GATESET/decision_rule@v2
 policy_version: v2
 owner_gateset_id: ADC_TARGET_GATESET
 owner_gateset_version: "2.0"
-status: CONTRACT_ONLY_PENDING_REVIEW
+status: DECLARATIVE_POLICY_SOURCE
 scope: >-
   L04 CRC ADC-target GateSet v2 Decision contract for the M0 development-entry
   question. Only the versioned GateSet may construct canonical Decisions; this
