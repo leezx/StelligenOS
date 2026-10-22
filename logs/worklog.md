@@ -7176,3 +7176,10 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
   PR E17。后续任何 deferred work（quantitative ladder calibration、epitope-
   layer 及更下游分析、external evaluators、下游 Candidate level、FTO 任务）
   需另行 explicit go-ahead。
+
+## 2026-10-22 15:31 EDT — TGT-05 决策模型 canonical 迁移 RFC
+
+- 人类要求依据 `PR/webReport_Stelligen/gates/M0/TGT-05-Normal-Tissue ADC Toxicity/design-v1.0.md` 的「TGT-05 决策模型 v1.0」推进，并明确选择同步修改 StelligenOS canonical 契约。先检查本仓库 `AGENTS.md`、PR Phase 协议、`ChatGPT-Codex-talk.md`、现行 CRC ADC GateSet、MOD-TGT05 施工合同/模块与测试；读取了 webReport 项目 Charter、Gate 设计和 WorkLog。命令包括 `rg`、`sed`、`git status --short`、`git remote -v`；旧主工作区有预存无关改动，未触碰。
+- 结论：现行 `TGT-05@1.0` 是单向 liability detector；Module 不产生 canonical Decision，`EvidencePackage` 保持 Gate-neutral，GateSet 决策策略只有 `external:` 引用。新设计的 E1/E2/E3、正常细胞丢失后果及 GO/HOLD/KILL 不能原地覆盖旧等级和策略，也不能把 Open Targets 跨模态信号当 ADC 正常组织杀伤。
+- 用 Codex 管理的独立工作树从 remote 默认分支 `1c8ba22` 建 `task_20261022_tgt05_decision_model_rfc`。新增 `docs/architecture/TGT05_DECISION_MODEL_V1_MIGRATION_RFC.zh-CN.md`：提出独立版本 lineage、审议记录与 EP/Decision 归属、临床归因/膜可及性/细胞丢失判定、假设病例验收和依赖 PR 顺序。本阶段是**设计提案**，未改变 frozen YAML、运行代码或外部数据。webReport 来源设计仍无 Git remote，正式实施须锁定其提交版本。
+- 检查：`git diff --check` 通过；尚无真实数据运行或靶点 GO/HOLD/KILL 结论。待该 RFC PR 获 GPT/ChatGPT `APPROVE` 与人类放行后，才进入 canonical 契约实施；不能把 RFC 文本当作自动获得下一阶段授权。
