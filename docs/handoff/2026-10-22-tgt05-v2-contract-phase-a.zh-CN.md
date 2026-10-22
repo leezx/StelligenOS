@@ -5,7 +5,7 @@
 - Base：`main` @ `004fc44c02fbea9511274427904792b255141521`（RFC PR #142 merge commit）
 - 科学来源：`docs/architecture/TGT05_DECISION_MODEL_V1_SOURCE_SNAPSHOT.md`，SHA256 `2e41525f65c6f7e4e9ec909bd8f110623f6ce62f54d5c82448c37aa80224674c`
 - PR：[StelligenOS #143](https://github.com/leezx/StelligenOS/pull/143)，当前 `DRAFT/OPEN`。
-- Policy body commit：`d3f3689e47ee087716d46c0489a550259369815a`；registry commit、最终 PR tip 和审核结论待补充。
+- 初版 policy body commit：`d3f3689e47ee087716d46c0489a550259369815a`；修正后的 policy body source commit：`a940d9eb7f2cab772556c4d6bbeb25b425e590d8`。最终 registry commit、PR tip 和审核结论待补充。
 
 ## 本阶段目标与边界
 
@@ -32,3 +32,5 @@
 body commit `d3f3689e47ee087716d46c0489a550259369815a` 已推送，随后创建 Draft PR #143。新 `src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/registry.yaml` 对四个 ref pin body 路径、SHA256、Git commit、review PR 与 `PENDING_CHATGPT_REVIEW` 状态。用 `git show <body-commit>:<path>` 独立重算四个 SHA256，均与 registry 一致；resolver 合同要求 `APPROVED`，所以当前 registry 不能被用于 Candidate 决策。registry 测试已加入，定向 11 项通过，禁写字节码的全量 1911 项通过；`git diff --check` 和仓库边界脚本通过。待把 registry/handoff/worklog 提交推送、核对 CI 和 exact HEAD 后，将 PR 标为 ready 并送固定 ChatGPT 会话审核。
 
 送审前追加对象形状复核发现 v2 Gate YAML 缺少 frozen `Gate`/`EvidenceLadder` 的部分规范字段；现已补齐并让测试实际构造这两个对象。其余六个可作科学 fatal 的 Gate 精确继承 v1 `fatal_conditions`，保留 TGT-08 非科学 KILL 边界。此修订使 `fatal_gate_policy.yaml` hash 变化；须在最终 registry commit 更新，不能沿用上一段的初版 manifest 值。
+
+修正提交为 `a940d9eb7f2cab772556c4d6bbeb25b425e590d8`；registry 已更新 source Git commit 与 fatal policy SHA256 `fd1f366de6196a77dc4aff82a0daf5286f9c1a9e56dc91aec19e0d9829c97e20`，其余三个 body hash 不变。待推送并由 CI/ChatGPT exact-head 核验。

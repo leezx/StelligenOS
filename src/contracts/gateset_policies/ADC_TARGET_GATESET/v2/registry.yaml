@@ -6,7 +6,7 @@ status: CONTRACT_ONLY_PENDING_REVIEW
 review_pr: https://github.com/leezx/StelligenOS/pull/143
 approval_status: PENDING_CHATGPT_REVIEW
 approval_evidence: null
-source_git_commit: d3f3689e47ee087716d46c0489a550259369815a
+source_git_commit: a940d9eb7f2cab772556c4d6bbeb25b425e590d8
 source_git_release: null
 policy_bodies:
   - logical_ref: external:gateset/ADC_TARGET_GATESET/decision_rule@v2
@@ -16,7 +16,7 @@ policy_bodies:
   - logical_ref: external:gateset/ADC_TARGET_GATESET/fatal_gate_policy@v2
     policy_version: v2
     canonical_relative_path: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/fatal_gate_policy.yaml
-    sha256: 817dabda7b4849823dbdfa2c4ac202e7651b7e47329cec628ccedf1190c5d349
+    sha256: fd1f366de6196a77dc4aff82a0daf5286f9c1a9e56dc91aec19e0d9829c97e20
   - logical_ref: external:gateset/ADC_TARGET_GATESET/required_gate_policy@v2
     policy_version: v2
     canonical_relative_path: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/required_gate_policy.yaml

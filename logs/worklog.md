@@ -7226,3 +7226,8 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Draft PR 送审前重新检查 `src/objects/gate_model.py` 的 frozen `Gate`/`EvidenceLadder` 构造字段，发现首版 v2 YAML 只有方向科学表，未把 Gate 的 `evidence_required`、external refs、三阶 `admissible_evidence_classes`/`ceiling_rule` 等规范形状完整落地。原静态检查不足以发现此缺口。
 - 在 v2 TGT-05 Gate contract 补齐 canonical Gate 字段、三阶 EvidenceLadder 对应表、evidence ceiling、allowed/forbidden inference、unknown/fatal 条件；定向测试实际构造 frozen `Gate` 和 `EvidenceLadder` 并与 binding 对齐，12 项通过。另将六个其余科学 Gate 的 fatal route 明确指向各自 frozen v1 `fatal_conditions`，要求精确继承及人工审议，不让实施者自行补写条件。
 - 这些是 Phase A PR 内尚未送 ChatGPT 审核前的合同修正；四个 body 中 `fatal_gate_policy.yaml` 的 SHA256 已变化，必须先提交修正，再更新 registry 的 `source_git_commit` 和该 hash。v2 仍未激活或用于 Candidate 判断。
+
+## 2026-10-22 19:36 EDT — 冻结修正后的 policy body 来源
+
+- `git status --short` 只显示上述五个本任务文件；显式暂存、`git diff --cached --check` 后提交 `a940d9eb7f2cab772556c4d6bbeb25b425e590d8`。这个 commit 中四个 policy body 均可用 `git show <commit>:<path>` 读取。
+- 将 registry 的 `source_git_commit` 从初版 `d3f3689` 改为 `a940d9e`，并把变更的 `fatal_gate_policy.yaml` SHA256 改为 `fd1f366de6196a77dc4aff82a0daf5286f9c1a9e56dc91aec19e0d9829c97e20`；其余 body SHA256 未变。同步更新 registry test 和 handoff，待校验后推送同一 Draft PR #143。

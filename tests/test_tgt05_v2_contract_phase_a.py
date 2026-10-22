@@ -185,7 +185,7 @@ class V2PolicyContractTests(unittest.TestCase):
         self.assertEqual(registry["owner_gateset_version"], gs["gateset_version"])
         self.assertEqual(registry["review_pr"], "https://github.com/leezx/StelligenOS/pull/143")
         self.assertEqual(registry["source_git_commit"],
-                         "d3f3689e47ee087716d46c0489a550259369815a")
+                         "a940d9eb7f2cab772556c4d6bbeb25b425e590d8")
         refs = [item["logical_ref"] for item in registry["policy_bodies"]]
         self.assertEqual(len(refs), len(set(refs)))
         self.assertEqual(set(refs), {gs[f"{name}_ref"] for name in
