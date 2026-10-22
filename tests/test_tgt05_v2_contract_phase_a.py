@@ -52,6 +52,7 @@ class V2LineageTests(unittest.TestCase):
         self.assertEqual(self.v2["instantiation"]["instantiation_id"],
                          "INST-CRC-REFRACTORY-ADC-TARGET-v2")
         self.assertEqual(self.v2["instantiation"]["status"], "HOLD")
+        self.assertEqual(self.v2["instantiation"]["evidence_regime"], "PUBLIC_PLUS_EXPERIMENTAL")
         self.assertEqual(self.v2["roster"][4]["planned_module_version"], "2.0.0")
         self.assertEqual(self.v2["roster"][4]["primary_module_version"], "0.0.0")
 

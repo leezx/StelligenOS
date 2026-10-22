@@ -13,6 +13,8 @@
 
 用户于本阶段选择保守全门槛：八 Gate 均有足够的 `HUMAN_APPROVED` assessment、无重大未解风险才允许 Candidate GO。策略明确逐 Gate Direction/Strength，TGT-07 的 GO 阴性需要 qualified intended-ADC TMDD，TGT-05 阴性需要限定范围的经质控膜蛋白/候选抗体证据；这意味着多数 public-only 靶点可能保持 HOLD/MORE_EVIDENCE，不能把缺证据填成 GO。
 
+v2 Instantiation 的 `evidence_regime` 因此为 schema 允许的 `PUBLIC_PLUS_EXPERIMENTAL`；v1 的 `PUBLIC_ONLY` 不变。该配置仅声明未来可接纳合格实验来源，不授权 Phase A 采集或运行实验数据。
+
 ## 已起草工件
 
 - `src/contracts/crc_adc_target_gateset_v2.yaml`：v2 身份、八成员、TGT-05 ladder、inactive Instantiation 和 schema-parity bindings。

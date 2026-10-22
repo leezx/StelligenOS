@@ -7231,3 +7231,7 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 
 - `git status --short` 只显示上述五个本任务文件；显式暂存、`git diff --cached --check` 后提交 `a940d9eb7f2cab772556c4d6bbeb25b425e590d8`。这个 commit 中四个 policy body 均可用 `git show <commit>:<path>` 读取。
 - 将 registry 的 `source_git_commit` 从初版 `d3f3689` 改为 `a940d9e`，并把变更的 `fatal_gate_policy.yaml` SHA256 改为 `fd1f366de6196a77dc4aff82a0daf5286f9c1a9e56dc91aec19e0d9829c97e20`；其余 body SHA256 未变。同步更新 registry test 和 handoff，待校验后推送同一 Draft PR #143。
+
+## 2026-10-22 19:37 EDT — v2 evidence regime 与 GO 证据要求对齐
+
+- 复核 `Instantiation` schema 的 `PUBLIC_ONLY / PUBLIC_PLUS_EXPERIMENTAL / DEVELOPMENT` 后，发现 v2 沿用 v1 `PUBLIC_ONLY` 与保守全门槛 GO 所需的合格实验及 intended-ADC TMDD 来源不一致。将 v2 Instantiation 改为 `PUBLIC_PLUS_EXPERIMENTAL` 并加定向断言；v1 配置和数据均未动。此改动只改变 Phase A 声明，未采集或运行实验数据。继续在同一 Draft PR #143 交付并审核。

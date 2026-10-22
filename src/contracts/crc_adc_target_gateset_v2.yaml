@@ -50,7 +50,7 @@ instantiation:
   modality: ADC
   gateset_id: ADC_TARGET_GATESET
   gateset_version: "2.0"
-  evidence_regime: PUBLIC_ONLY
+  evidence_regime: PUBLIC_PLUS_EXPERIMENTAL
   status: HOLD
   version: 2
   created_at: "2026-10-22"
