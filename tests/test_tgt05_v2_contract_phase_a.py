@@ -178,6 +178,7 @@ class V2PolicyContractTests(unittest.TestCase):
             self.assertEqual(body["policy_version"], "v2")
             self.assertEqual(body["owner_gateset_id"], "ADC_TARGET_GATESET")
             self.assertEqual(body["owner_gateset_version"], "2.0")
+            self.assertEqual(body["status"], "DECLARATIVE_POLICY_SOURCE")
 
     def test_registry_resolves_exact_refs_paths_hashes_and_review_gate(self):
         registry = load(POLICIES / "registry.yaml")
@@ -186,7 +187,8 @@ class V2PolicyContractTests(unittest.TestCase):
         self.assertEqual(registry["owner_gateset_version"], gs["gateset_version"])
         self.assertEqual(registry["review_pr"], "https://github.com/leezx/StelligenOS/pull/143")
         self.assertEqual(registry["source_git_commit"],
-                         "a940d9eb7f2cab772556c4d6bbeb25b425e590d8")
+                         "5abe4fb38a9f3b5c35654c5f9bad0017f7e7c67c")
+        self.assertEqual(registry["status"], "VERSIONED_SOURCE")
         refs = [item["logical_ref"] for item in registry["policy_bodies"]]
         self.assertEqual(len(refs), len(set(refs)))
         self.assertEqual(set(refs), {gs[f"{name}_ref"] for name in

@@ -7235,3 +7235,8 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 ## 2026-10-22 19:37 EDT — v2 evidence regime 与 GO 证据要求对齐
 
 - 复核 `Instantiation` schema 的 `PUBLIC_ONLY / PUBLIC_PLUS_EXPERIMENTAL / DEVELOPMENT` 后，发现 v2 沿用 v1 `PUBLIC_ONLY` 与保守全门槛 GO 所需的合格实验及 intended-ADC TMDD 来源不一致。将 v2 Instantiation 改为 `PUBLIC_PLUS_EXPERIMENTAL` 并加定向断言；v1 配置和数据均未动。此改动只改变 Phase A 声明，未采集或运行实验数据。继续在同一 Draft PR #143 交付并审核。
+
+## 2026-10-22 19:38 EDT — 审核状态与 policy body 源状态拆分
+
+- 送审前复核发现四个 policy body 内的 `CONTRACT_ONLY_PENDING_REVIEW` 在 PR 获批后会变成错误的历史状态。将四个 body 的 `status` 固定为 `DECLARATIVE_POLICY_SOURCE`，v2 Gate/Module 声明标为 `CONTRACT_ONLY_INACTIVE`，registry 的 `status` 为 `VERSIONED_SOURCE`，单独的 `approval_status` 仍为 `PENDING_CHATGPT_REVIEW` 且 resolver 要求 `APPROVED`。这只是状态字段职责拆分，未改变科学判定表。
+- 显式暂存六个 body/声明文件，`git diff --cached --check` 后提交 `5abe4fb38a9f3b5c35654c5f9bad0017f7e7c67c`。用其作为四 policy 的共同源 Git commit，重新计算并更新 registry 四个 SHA256，更新校验测试与 handoff；未使用过时 hash。待同 PR 推送和审核。

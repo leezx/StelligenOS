@@ -2,29 +2,29 @@ registry_id: ADC_TARGET_GATESET/v2
 registry_version: v2
 owner_gateset_id: ADC_TARGET_GATESET
 owner_gateset_version: "2.0"
-status: CONTRACT_ONLY_PENDING_REVIEW
+status: VERSIONED_SOURCE
 review_pr: https://github.com/leezx/StelligenOS/pull/143
 approval_status: PENDING_CHATGPT_REVIEW
 approval_evidence: null
-source_git_commit: a940d9eb7f2cab772556c4d6bbeb25b425e590d8
+source_git_commit: 5abe4fb38a9f3b5c35654c5f9bad0017f7e7c67c
 source_git_release: null
 policy_bodies:
   - logical_ref: external:gateset/ADC_TARGET_GATESET/decision_rule@v2
     policy_version: v2
     canonical_relative_path: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/decision_rule.yaml
-    sha256: d22d3d240b118b01bb512e2e9f65014f7de19fc10948c99d8b710651ac0dc45c
+    sha256: 39048139602e1f64bab1939542684a6652fa68f23e7946c8108cd50f086de314
   - logical_ref: external:gateset/ADC_TARGET_GATESET/fatal_gate_policy@v2
     policy_version: v2
     canonical_relative_path: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/fatal_gate_policy.yaml
-    sha256: fd1f366de6196a77dc4aff82a0daf5286f9c1a9e56dc91aec19e0d9829c97e20
+    sha256: 35513fc4a13ead421fd5f05fb2a93734cf758377c18f7bdb65fc99b2d28b96a7
   - logical_ref: external:gateset/ADC_TARGET_GATESET/required_gate_policy@v2
     policy_version: v2
     canonical_relative_path: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/required_gate_policy.yaml
-    sha256: f6e244a21d2ddc9366c7076fc7576cefa104791ee59b033e1216a826bdc2ec21
+    sha256: 2518fe10b3fcc3b0497cffc943d36ba904eecfbd9df040dd7a80a46ccd41038d
   - logical_ref: external:gateset/ADC_TARGET_GATESET/unknown_policy@v2
     policy_version: v2
     canonical_relative_path: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/unknown_policy.yaml
-    sha256: e409976c17520fd955811c9041e7d515eec718c1969b247c1ab8a31cd29a8596
+    sha256: ae4cf67224bae4273388e050502c77abe824386ebf44fa6f77acf7312bbc6af2
 resolver_contract:
   base: repository root of the exact reviewed Git revision
   lookup: exact logical_ref key only; no dynamic discovery

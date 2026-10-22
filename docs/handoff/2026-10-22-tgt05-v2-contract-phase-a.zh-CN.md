@@ -35,4 +35,4 @@ body commit `d3f3689e47ee087716d46c0489a550259369815a` 已推送，随后创建 
 
 送审前追加对象形状复核发现 v2 Gate YAML 缺少 frozen `Gate`/`EvidenceLadder` 的部分规范字段；现已补齐并让测试实际构造这两个对象。其余六个可作科学 fatal 的 Gate 精确继承 v1 `fatal_conditions`，保留 TGT-08 非科学 KILL 边界。此修订使 `fatal_gate_policy.yaml` hash 变化；须在最终 registry commit 更新，不能沿用上一段的初版 manifest 值。
 
-修正提交为 `a940d9eb7f2cab772556c4d6bbeb25b425e590d8`；registry 已更新 source Git commit 与 fatal policy SHA256 `fd1f366de6196a77dc4aff82a0daf5286f9c1a9e56dc91aec19e0d9829c97e20`，其余三个 body hash 不变。待推送并由 CI/ChatGPT exact-head 核验。
+对象字段修正提交为 `a940d9eb7f2cab772556c4d6bbeb25b425e590d8`。后续发现 policy body 的 `status` 若写“待审”会在批准后变为陈旧状态，故 `5abe4fb38a9f3b5c35654c5f9bad0017f7e7c67c` 将 body 状态改成固定的 `DECLARATIVE_POLICY_SOURCE`，Gate/Module 声明改为 `CONTRACT_ONLY_INACTIVE`；审核状态只由 registry 的 `approval_status` 管理。registry 已更新 source Git commit 与四个 body SHA256。此设计无需在批准后为修正文案而改动已审核的政策 body；仍须最终 CI 和 ChatGPT exact-head 核验。
