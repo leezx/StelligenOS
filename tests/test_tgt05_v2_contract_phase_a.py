@@ -8,7 +8,7 @@ from pathlib import Path
 import yaml
 
 from src.objects.decision_model import Instantiation
-from src.objects.gate_model import GateSet, GateSetMember
+from src.objects.gate_model import EvidenceLadder, Gate, GateSet, GateSetMember, LadderRung
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -107,6 +107,37 @@ class V2LineageTests(unittest.TestCase):
         self.assertIn("RNA or ordinary IHC negative", gate["direction_rules"]["negative_forbidden"])
         self.assertIn("never automatic KILL", gate["potential_fatal_review"]["unresolved"])
 
+    def test_tgt05_builds_canonical_gate_and_evidence_ladder(self):
+        g = self.v2["gate_contracts"]["TGT-05"]
+        binding = self.v2["context_specific_bindings"]["gate_bindings"][4]
+        gate = Gate(
+            gate_id=g["gate_id"], gate_version=g["gate_version"],
+            gateset_id=g["gateset_id"], candidate_level=g["candidate_level"],
+            gate_question=g["gate_question"],
+            dominant_evidence_regime=g["dominant_evidence_regime"],
+            evidence_required=tuple(g["evidence_required"]),
+            evidence_ladder_ref=g["evidence_ladder_ref"],
+            assessment_rule_ref=g["assessment_rule_ref"],
+            primary_module_id=g["primary_module_id"],
+            primary_module_version=g["primary_module_version"],
+            fatal_conditions=tuple(g["fatal_conditions"]),
+        )
+        ladder = EvidenceLadder(
+            gate_id=g["gate_id"], gate_version=g["gate_version"],
+            rungs=tuple(LadderRung(
+                grade,
+                tuple(g["canonical_evidence_ladder_rungs"][grade]["admissible_evidence_classes"]),
+                g["canonical_evidence_ladder_rungs"][grade]["ceiling_rule"])
+                for grade in ("DIRECT", "INDIRECT_STRONG", "WEAK")),
+            evidence_ceiling=g["evidence_ceiling"],
+        )
+        self.assertEqual(gate.gate_version, "2.0")
+        self.assertEqual(ladder.gate_version, "2.0")
+        for field in ("gate_id", "gate_version", "gateset_id", "candidate_level",
+                      "dominant_evidence_regime", "evidence_ladder_ref", "assessment_rule_ref",
+                      "primary_module_id", "primary_module_version"):
+            self.assertEqual(getattr(gate, field), binding[field])
+
 
 class V2ReviewContractTests(unittest.TestCase):
     def test_seventeen_item_module_contract_and_noncanonical_record(self):
@@ -196,6 +227,13 @@ class V2PolicyContractTests(unittest.TestCase):
         self.assertTrue(fatal["decision_boundary"]["no_automatic_fatal"])
         self.assertEqual(fatal["eligible_routes"]["TGT-08"],
                          "NO_SCIENTIFIC_KILL; commercial or IP concern belongs to sponsor review")
+        for n in (1, 2, 3, 4, 6, 7):
+            gid = f"TGT-{n:02}"
+            route = fatal["eligible_routes"][gid]
+            self.assertEqual(route["condition_source"],
+                             f"src/contracts/crc_adc_target_gateset.yaml#gate_contracts.{gid}.fatal_conditions")
+            self.assertTrue(route["inherit_exact_condition"])
+            self.assertTrue(load(V1)["gate_contracts"][gid]["fatal_conditions"])
         self.assertIn("no_canonical_Decision_on_hard_reject", unknown["prohibitions"])
         self.assertIn("no_policy_fallback_to_v1", unknown["prohibitions"])
 

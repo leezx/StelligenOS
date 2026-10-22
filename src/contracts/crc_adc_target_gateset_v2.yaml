@@ -62,10 +62,22 @@ gate_contracts:
   TGT-05:
     gate_id: TGT-05
     gate_version: "2.0"
+    gateset_id: ADC_TARGET_GATESET
+    candidate_level: L04
+    dominant_evidence_regime: PUBLIC_HYBRID
     gate_question: >-
       In the intended ADC program, would killing normal human cells that
       express this target create a material, potentially unacceptable
       normal-organ liability?
+    evidence_required:
+      - same-target ADC clinical safety and mechanism-attribution sweep with dated source scope
+      - normal-human cell-type-specific surface-antigen measurement or qualified candidate-antibody binding
+      - cell-loss functional consequence and clinically relevant exposure review
+      - explicit coverage, assay sensitivity and unresolved normal-cell gaps
+    evidence_ladder_ref: external:crc_adc_target_gateset/TGT-05/evidence_ladder@v2
+    assessment_rule_ref: external:crc_adc_target_gateset/TGT-05/assessment_rule@v2
+    primary_module_id: MOD-TGT05
+    primary_module_version: "0.0.0"
     evidence_domains:
       E1: same-target ADC clinical attribution or human-relevant target-dependent normal-cell functional evidence
       E2: validated cell-type-specific normal-human membrane antigen evidence
@@ -93,6 +105,46 @@ gate_contracts:
           - total-protein IHC without verified membrane localization
           - RNA-only expression hypothesis
         ceiling: hypothesis or attribution-pending alert; cannot establish liability or safety
+    canonical_evidence_ladder_rungs:
+      DIRECT:
+        admissible_evidence_classes:
+          - qualified same-target ADC clinical normal-organ toxicity with target, organ/cell and exposure attribution
+          - human-relevant target-dependent normal-cell ADC killing with relevant exposure and serious cell-loss consequence
+          - qualified candidate-antibody normal-human-tissue binding negative with sufficient sensitivity and coverage plus clinical sweep
+        ceiling_rule: product- and coverage-bounded direct liability or bounded non-detection, never target-wide safety or fatality
+      INDIRECT_STRONG:
+        admissible_evidence_classes:
+          - validated normal-human specific cell-surface binding without functional killing
+          - validated normal-human cell-type-specific membrane-antigen localization or surface proteomics
+          - sensitivity-audited comprehensive key-normal-cell surface-protein non-detection plus clinical sweep
+        ceiling_rule: accessible-antigen or bounded non-detection signal, not ADC cell killing or therapeutic window
+      WEAK:
+        admissible_evidence_classes:
+          - serious same-target ADC adverse event with unresolved target attribution
+          - total-protein IHC without verified membrane localization
+          - normal-human RNA-only expression hypothesis
+        ceiling_rule: hypothesis or attribution-pending signal only; cannot establish liability or safety
+    evidence_ceiling: >-
+      Qualified E1 clinical or functional evidence can reach DIRECT; validated
+      normal-human membrane protein reaches INDIRECT_STRONG; RNA-only,
+      ordinary IHC and unassigned adverse events remain INCONCLUSIVE/WEAK.
+    allowed_inference:
+      - product/context-bounded target-mediated normal-organ liability class and observed severity
+      - bounded qualified surface-protein or candidate-antibody non-detection with explicit detection limits
+    forbidden_inference:
+      - no database record or RNA/IHC-negative result proves safety or warrants GO
+      - normal-cell membrane expression alone establishes intolerable cell loss
+      - a single ADC construct proves target-intrinsic fatality
+      - non-ADC pharmacology or Open Targets supporting evidence proves ADC killing
+      - the Gate or Module emits a Candidate-level Decision
+    unknown_behavior: >-
+      Incomplete critical normal-human-cell coverage without qualified positive
+      or negative authority yields INCONCLUSIVE/UNKNOWN; attribution-pending AE,
+      ordinary IHC and RNA-only hypotheses are INCONCLUSIVE/WEAK. Identity,
+      provenance or source-integrity failure rejects the round.
+    fatal_conditions:
+      - human-adjudicated program/context-specific clinical route meeting every qualifier in potential_fatal_review.clinical_route
+      - human-adjudicated program/context-specific functional route meeting every qualifier in potential_fatal_review.functional_route
     direction_rules:
       positive_direct: POSITIVE/DIRECT when all DIRECT positive qualifiers are reviewed
       positive_indirect_strong: POSITIVE/INDIRECT_STRONG when all matching qualifiers are reviewed

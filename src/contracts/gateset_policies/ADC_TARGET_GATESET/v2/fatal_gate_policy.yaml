@@ -18,10 +18,22 @@ input_requirements:
   - reviewer_reads_pinned_EvidencePackages_and_records_route_basis_in_triggered_by_reason
   - decision_review_is_HUMAN_APPROVED
 eligible_routes:
-  TGT-01: retained_v1_gate_fatal_condition_requires_human_target_attribution_and_independent_programs
-  TGT-02: retained_v1_gate_fatal_condition_requires_human_adjudication_of_reproducible_malignant_cell_absence_or_rare_heterogeneity
-  TGT-03: retained_v1_gate_fatal_condition_requires_human_adjudication_of_reproducible_contextual_target_loss
-  TGT-04: retained_v1_gate_fatal_condition_requires_human_adjudication_of_reproducible_negligible_surface_antigen
+  TGT-01:
+    condition_source: src/contracts/crc_adc_target_gateset.yaml#gate_contracts.TGT-01.fatal_conditions
+    inherit_exact_condition: true
+    human_review: target-attributable consistent pattern across at least two independent same-target ADC programs
+  TGT-02:
+    condition_source: src/contracts/crc_adc_target_gateset.yaml#gate_contracts.TGT-02.fatal_conditions
+    inherit_exact_condition: true
+    human_review: reproducible absent or rare highly heterogeneous CRC malignant-cell protein coverage across cohorts
+  TGT-03:
+    condition_source: src/contracts/crc_adc_target_gateset.yaml#gate_contracts.TGT-03.fatal_conditions
+    inherit_exact_condition: true
+    human_review: reproducible material protein-level target loss in the intended treated or metastatic CRC context
+  TGT-04:
+    condition_source: src/contracts/crc_adc_target_gateset.yaml#gate_contracts.TGT-04.fatal_conditions
+    inherit_exact_condition: true
+    human_review: reproducible negligible malignant-cell surface antigen, not a universal density cutoff
   TGT-05:
     route: CLINICAL_OR_FUNCTIONAL
     clinical_required:
@@ -37,8 +49,14 @@ eligible_routes:
       - clinically_relevant_exposure_and_program_context
       - CRITICAL_or_explicitly_unacceptable_cell_loss_consequence
     scope: program/context-specific only; one construct never means target-intrinsic fatal
-  TGT-06: retained_v1_gate_fatal_condition_requires_human_review_across_independent_antibody_epitope_configurations
-  TGT-07: retained_v1_gate_fatal_condition_requires_human_review_of_material_clinically_relevant_exposure_compromise
+  TGT-06:
+    condition_source: src/contracts/crc_adc_target_gateset.yaml#gate_contracts.TGT-06.fatal_conditions
+    inherit_exact_condition: true
+    human_review: failure of productive trafficking across independent antibody/epitope configurations for an internalizing-payload ADC
+  TGT-07:
+    condition_source: src/contracts/crc_adc_target_gateset.yaml#gate_contracts.TGT-07.fatal_conditions
+    inherit_exact_condition: true
+    human_review: material clinically achievable exposure compromise in the intended ADC context
   TGT-08: NO_SCIENTIFIC_KILL; commercial or IP concern belongs to sponsor review
 decision_boundary:
   permitted: KILL only after a route above is explicitly adjudicated by a human and recorded in canonical Decision.triggered_by.reason

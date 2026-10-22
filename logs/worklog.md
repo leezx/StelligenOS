@@ -7220,3 +7220,9 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 提交前 `git status --short` 仅本阶段工件；显式 `git add --` 11 文件，`git diff --cached --check` 通过，提交 `d3f3689e47ee087716d46c0489a550259369815a` 并推送 `task_20261022_tgt05_v2_contract_phase_a`。使用正文文件 `/tmp/tgt05-v2-phase-a-pr-body.md` 建 [Draft PR #143](https://github.com/leezx/StelligenOS/pull/143)，base `004fc44c...`，已附加到本任务。
 - 从 body commit 逐个计算四个 policy YAML 的 SHA256，新增 `registry.yaml` pin exact logical ref、路径、SHA256、body commit、PR #143 和 `PENDING_CHATGPT_REVIEW`；`resolver_contract` 要求后续 `APPROVED` 才可使用，且禁止 hash 漂移、路径逃逸和 v1 fallback。用 `git show d3f3689:<path>` 对四个历史 body 字节独立复核，均与 manifest SHA256 一致。
 - 扩展定向测试到 11 项，检查 registry/ref/hash/review gate；`PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -q` 重新运行全量 **1911 tests OK**。无 `__pycache__`，`git diff --check` 与仓库边界脚本通过。PR 仍为 Draft，尚未请求/取得 ChatGPT Phase A 审核；不激活 v2 或运行数据。
+
+## 2026-10-22 19:35 EDT — 复核发现 v2 Gate 对象字段缺口并修正
+
+- Draft PR 送审前重新检查 `src/objects/gate_model.py` 的 frozen `Gate`/`EvidenceLadder` 构造字段，发现首版 v2 YAML 只有方向科学表，未把 Gate 的 `evidence_required`、external refs、三阶 `admissible_evidence_classes`/`ceiling_rule` 等规范形状完整落地。原静态检查不足以发现此缺口。
+- 在 v2 TGT-05 Gate contract 补齐 canonical Gate 字段、三阶 EvidenceLadder 对应表、evidence ceiling、allowed/forbidden inference、unknown/fatal 条件；定向测试实际构造 frozen `Gate` 和 `EvidenceLadder` 并与 binding 对齐，12 项通过。另将六个其余科学 Gate 的 fatal route 明确指向各自 frozen v1 `fatal_conditions`，要求精确继承及人工审议，不让实施者自行补写条件。
+- 这些是 Phase A PR 内尚未送 ChatGPT 审核前的合同修正；四个 body 中 `fatal_gate_policy.yaml` 的 SHA256 已变化，必须先提交修正，再更新 registry 的 `source_git_commit` 和该 hash。v2 仍未激活或用于 Candidate 判断。

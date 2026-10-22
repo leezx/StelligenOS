@@ -30,3 +30,5 @@
 ## Registry 与 PR 更新（2026-10-22 19:34 EDT）
 
 body commit `d3f3689e47ee087716d46c0489a550259369815a` 已推送，随后创建 Draft PR #143。新 `src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/registry.yaml` 对四个 ref pin body 路径、SHA256、Git commit、review PR 与 `PENDING_CHATGPT_REVIEW` 状态。用 `git show <body-commit>:<path>` 独立重算四个 SHA256，均与 registry 一致；resolver 合同要求 `APPROVED`，所以当前 registry 不能被用于 Candidate 决策。registry 测试已加入，定向 11 项通过，禁写字节码的全量 1911 项通过；`git diff --check` 和仓库边界脚本通过。待把 registry/handoff/worklog 提交推送、核对 CI 和 exact HEAD 后，将 PR 标为 ready 并送固定 ChatGPT 会话审核。
+
+送审前追加对象形状复核发现 v2 Gate YAML 缺少 frozen `Gate`/`EvidenceLadder` 的部分规范字段；现已补齐并让测试实际构造这两个对象。其余六个可作科学 fatal 的 Gate 精确继承 v1 `fatal_conditions`，保留 TGT-08 非科学 KILL 边界。此修订使 `fatal_gate_policy.yaml` hash 变化；须在最终 registry commit 更新，不能沿用上一段的初版 manifest 值。
