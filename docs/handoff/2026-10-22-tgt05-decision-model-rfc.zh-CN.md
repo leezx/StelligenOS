@@ -3,7 +3,8 @@
 - 时间：2026-10-22 15:31 EDT
 - 任务分支：`task_20261022_tgt05_decision_model_rfc`
 - Base：`main` @ `1c8ba22`
-- PR/提交：创建后更新
+- PR：[StelligenOS #142](https://github.com/leezx/StelligenOS/pull/142)，`OPEN`，未收到审核结论
+- 初版 code commit：`19475d897eefdf51661dbb48aa05817c2f5aa109`；PR base：`1c8ba2274cbdbdd0c7193e2f5a5b3a440952730c`
 - 目标：将 webReport Gate 设计中的 TGT-05 决策模型 v1.0 纳入 StelligenOS canonical 迁移计划，先审定科学与对象边界。
 
 ## 本阶段交付
@@ -18,6 +19,7 @@
 
 - `git status --short`：仅本 RFC、handoff 和 `logs/worklog.md` 属本任务；旧主工作区改动留在原工作区。
 - `git diff --check`：通过。
+- `bash scripts/verify_repository_boundary.sh`：`Repository boundary check passed.`
 - 数据边界：只有小型文档；无数据、缓存、运行结果。
 
 ## 审阅要点与下一步

@@ -7183,3 +7183,8 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 结论：现行 `TGT-05@1.0` 是单向 liability detector；Module 不产生 canonical Decision，`EvidencePackage` 保持 Gate-neutral，GateSet 决策策略只有 `external:` 引用。新设计的 E1/E2/E3、正常细胞丢失后果及 GO/HOLD/KILL 不能原地覆盖旧等级和策略，也不能把 Open Targets 跨模态信号当 ADC 正常组织杀伤。
 - 用 Codex 管理的独立工作树从 remote 默认分支 `1c8ba22` 建 `task_20261022_tgt05_decision_model_rfc`。新增 `docs/architecture/TGT05_DECISION_MODEL_V1_MIGRATION_RFC.zh-CN.md`：提出独立版本 lineage、审议记录与 EP/Decision 归属、临床归因/膜可及性/细胞丢失判定、假设病例验收和依赖 PR 顺序。本阶段是**设计提案**，未改变 frozen YAML、运行代码或外部数据。webReport 来源设计仍无 Git remote，正式实施须锁定其提交版本。
 - 检查：`git diff --check` 通过；尚无真实数据运行或靶点 GO/HOLD/KILL 结论。待该 RFC PR 获 GPT/ChatGPT `APPROVE` 与人类放行后，才进入 canonical 契约实施；不能把 RFC 文本当作自动获得下一阶段授权。
+
+## 2026-10-22 15:31 EDT — RFC PR #142 创建
+
+- 提交前 `git status --short` 显示仅本任务三文件；显式 `git add --` 这三文件，`git diff --cached --check` 通过，提交 `19475d8`。`bash scripts/verify_repository_boundary.sh` 输出 `Repository boundary check passed.`；未运行科学数据或改动现行 contract/runtime。
+- 将 `task_20261022_tgt05_decision_model_rfc` 推送至 `origin`，通过 `gh pr create --base main --head ... --body-file /tmp/tgt05-decision-rfc-pr-body.md` 建立 [PR #142](https://github.com/leezx/StelligenOS/pull/142)。`gh pr view` 确认 `OPEN`、base `1c8ba227...`、初版 head `19475d897...`、无 reviewDecision。PR 正文列出科学/对象/外部策略审阅问题与无数据声明；更新本 handoff。等待 GPT/ChatGPT 明确 `APPROVE`，不进入依赖 Phase。
