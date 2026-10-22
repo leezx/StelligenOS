@@ -35,3 +35,9 @@
 用户明确选择 v2 GateSet policy bodies 放在 StelligenOS 版本化契约目录，并授权把 TGT-05 决策模型章节的逐字快照提交公开 PR。RFC 同 PR 修订：冻结 v2 Gate/Module/GateSet/Instantiation lineage 和八成员版本；E1/E2/E3 与 canonical Direction/Strength 的映射及上限；`Tgt05DecisionRecord` 的非 canonical 人审地位；临床和功能 KILL route 的 program/context 限制；四个 policy ref、Git registry 路径、binding 一致性与审批权。新增 `docs/architecture/TGT05_DECISION_MODEL_V1_SOURCE_SNAPSHOT.md`，10,410 bytes，SHA256 `2e41525f65c6f7e4e9ec909bd8f110623f6ce62f54d5c82448c37aa80224674c`；与本地 design 从唯一章节标题起至 EOF 的字节完全相同，完整 design SHA256 `e4e5198a0021256fdb1cee3f516cd1e941d8c72c3c3fcb90b7c5e3dd9c4a2603`。本 PR 仍是 RFC，不创建 policy body、Module 或真实靶点结果；policy body 属 Phase A 契约 PR，须本轮审核明确 `APPROVE` 后才启动。
 
 验证：`python3` 字节比对和 SHA256 通过；`git diff --check` 通过；`bash scripts/verify_repository_boundary.sh` 输出 `Repository boundary check passed.`。推送后须以 GitHub exact HEAD 更新本交接和审核记录，并把同一 PR 送回固定会话复审。
+
+## Round 2 结果与交接（2026-10-22 19:02 EDT）
+
+- PR #142 已推送 round-1 修订代码 HEAD `82d95dc982ff8a4fea5fbb1287de7dfe51c8e5df`，base `1c8ba2274cbdbdd0c7193e2f5a5b3a440952730c`。GitHub 状态 `OPEN`、`MERGEABLE/CLEAN`；CI run `39868630714` 的 `verify (3.11)` 与 `verify (3.12)` 均 success。
+- 固定 ChatGPT 审核会话对上述 exact HEAD 明确 **APPROVE**，六项 `REQUEST_CHANGES` 全部 **CLOSED**，详细审核结论见 `logs/chatgpt-review-2026-10-22-tgt05-decision-model-rfc.md`。GitHub formal review 接口仍返回 403，以会话文字为准。
+- 此后只追加审核记录、handoff 与 worklog，属于 metadata commit，不修改已审核的 RFC 或来源快照。最终 PR tip 须在 metadata commit 推送后核对。人类负责人仍需决定 merge 和是否启动 Phase A；未经该决定，不做 policy bodies、Module v2 或外部数据运行。
