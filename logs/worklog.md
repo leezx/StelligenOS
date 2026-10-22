@@ -7192,3 +7192,11 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 ## 2026-10-22 15:32 EDT — 提交固定 ChatGPT 对话审核
 
 - 将包含 PR URL、base、当前 tip `7d40496`、Phase 范围和六项科学/契约审阅问题的审核指令，发送到历史记录明确的 `Biotech ideas → AI审核方案` 固定 ChatGPT 对话。该对话以前承接 PR A–E16 的审核；本次要求只对 PR #142 当前 diff 给 `APPROVE / REQUEST_CHANGES / REJECT_PHASE`。等待回复；未声称审核通过。`wait_threads` 对 ChatGPT 对话不能可靠等待（返回“Could not determine whether Codex thread exists”），后续通过已定位对话或 `read_thread` 查验。
+
+## 2026-10-22 18:58 EDT — PR #142 round 1 REQUEST_CHANGES 修订
+
+- 固定 `Biotech ideas → AI审核方案` 会话对 PR #142 @ `e712adfa771f359fa85413334d209ec200fdcf8a` 给出 `REQUEST_CHANGES`。GitHub review integration 返回 403；六项反馈记录于 `logs/chatgpt-review-2026-10-22-tgt05-decision-model-rfc.md`。仅按反馈修改同一个 PR；未进入依赖 Phase。
+- 用户回复：v2 policy bodies 放在 StelligenOS 版本化契约目录；允许把 TGT-05 决策模型章节逐字快照放入公开 PR。先读取现行 GateSet、GateSet binding schema、Decision/Assessment schema，核对 v1 仍可显式执行和历史审计、v2 不能混用 assessment 版本。`rg`/`sed` 查询显示 v1 GateSet 有四个 policy refs，binding 只有前三个；v2 RFC 因此冻结 binding 三引用与 GateSet 同名引用逐字一致，不增加 frozen schema 字段。
+- 修订 RFC：固定 `TGT-05@2.0`、`MOD-TGT05@2.0.0`、`ADC_TARGET_GATESET@2.0` 及 v2 Instantiation/八 Gate binding；定义 E1/E2/E3 到 Direction/Strength 的条件、ceiling、unknown/conflict；把 Decision Record 固定为非 canonical 人审材料，限制单项目 KILL 于 program/context-specific 临床或功能 route；固定四个 policy logical refs、`src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/` Git source registry、版本/hash/审批权与 Phase A 验收。现行运行契约和 Module 未改。
+- 从 webReport design 唯一 `# TGT-05 决策模型 v1.0` 标题到 EOF 复制逐字快照，`python3` 验证字节相同、10,410 bytes；快照 SHA256 `2e41525f65c6f7e4e9ec909bd8f110623f6ce62f54d5c82448c37aa80224674c`，完整本地 design SHA256 `e4e5198a0021256fdb1cee3f516cd1e941d8c72c3c3fcb90b7c5e3dd9c4a2603`。`python` 不在 PATH，改用 `python3` 成功；无数据下载或真实靶点结果。
+- `git diff --check` 通过；`bash scripts/verify_repository_boundary.sh` 为 `Repository boundary check passed.`。更新本 worklog、handoff 与 review log；待显式暂存、提交、推送同一 PR 并再送固定会话审核。此时没有 `APPROVE`。
