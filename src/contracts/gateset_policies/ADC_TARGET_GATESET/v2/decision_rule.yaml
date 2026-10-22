@@ -1,0 +1,74 @@
+policy_id: external:gateset/ADC_TARGET_GATESET/decision_rule@v2
+policy_version: v2
+owner_gateset_id: ADC_TARGET_GATESET
+owner_gateset_version: "2.0"
+status: CONTRACT_ONLY_PENDING_REVIEW
+scope: >-
+  L04 CRC ADC-target GateSet v2 Decision contract for the M0 development-entry
+  question. Only the versioned GateSet may construct canonical Decisions; this
+  is a declarative policy, not a decision engine or a Candidate result.
+policy_refs:
+  fatal_gate_policy_ref: external:gateset/ADC_TARGET_GATESET/fatal_gate_policy@v2
+  required_gate_policy_ref: external:gateset/ADC_TARGET_GATESET/required_gate_policy@v2
+  unknown_policy_ref: external:gateset/ADC_TARGET_GATESET/unknown_policy@v2
+input_contract:
+  - same_candidate_and_INST-CRC-REFRACTORY-ADC-TARGET-v2_for_every_pinned_assessment
+  - exact_ADC_TARGET_GATESET@2.0_eight_member_snapshot
+  - every_non_NOT_EVALUATED_pin_refers_to_HUMAN_APPROVED_assessment_and_its_EvidencePackages
+  - each_pin_matches_gate_id_gate_version_assessment_id_version_and_cell
+  - policy_registry_resolves_all_four_v2_refs_with_exact_content_hash_and_APPROVED_status
+  - Tgt05DecisionRecord.recommendation_is_not_a_policy_input
+ordered_truth_table:
+  - order: 0
+    when: hard_reject_or_policy_registry_failure_or_mixed_lineage
+    result: NO_CANONICAL_DECISION
+    source: unknown_policy@v2.hard_reject
+  - order: 1
+    when: no_approved_assessment_exists_to_anchor_triggered_by
+    result: NO_CANONICAL_DECISION
+    source: unknown_policy@v2.no_decision
+  - order: 2
+    when: at_least_one_qualified_fatal_route_human_adjudicated_and_pinned
+    result: KILL
+    source: fatal_gate_policy@v2
+    note: early KILL may retain NOT_EVALUATED for unrelated Gates; no automatic fatal inference
+  - order: 3
+    when: unresolved_material_liability_or_qualified_conflict_or_unresolvable_critical_unknown
+    result: HOLD
+    source: unknown_policy@v2.hold
+  - order: 4
+    when: missing_required_gate_or_resolvable_critical_unknown_without_material_risk
+    result: MORE_EVIDENCE
+    source: unknown_policy@v2.more_evidence
+  - order: 5
+    when: all_eight_gate_cells_meet_required_gate_policy@v2_and_no_critical_unknown
+    result: GO
+    source: required_gate_policy@v2.required_for_GO
+  - order: 6
+    when: one_or_more_approved_cells_are_qualified_but_unfavorable_for_development_and_no_human_qualified_fatal_route
+    result: HOLD
+    source: required_gate_policy@v2.required_for_GO
+    note: includes TGT-08 opportunity opposition; sponsor axis is not scientific KILL
+  - order: 7
+    when: no_above_row_matches
+    result: NO_CANONICAL_DECISION
+    note: policy coverage failure; do not invent a default GO or HOLD
+decision_output:
+  allowed_this_policy: [GO, HOLD, MORE_EVIDENCE, KILL]
+  forbidden_this_policy: [CONDITIONAL_GO, NOMINATE, COMMIT]
+  review_status: HUMAN_APPROVED
+  decision_rule_ref: external:gateset/ADC_TARGET_GATESET/decision_rule@v2
+  assessment_snapshot: all eight Gate IDs; each exact approved pin or literal NOT_EVALUATED
+  triggered_by:
+    - every entry must pin an approved assessment also present in the snapshot
+    - at least one entry for every canonical Decision
+    - reason records the matched policy row, Gate-specific evidence/uncertainty and program/context limits
+    - KILL reason records clinical or functional route and alternative-explanation adjudication when TGT-05 is causal
+    - GO reason names the eight qualifying approved cells and their residual bounded limitations
+    - HOLD_or_MORE_EVIDENCE reason names the controlling risk, missing Gate or experiment that could change the result
+  immutability: Decision is immutable and may be superseded only by a new Decision with backward supersedes_decision_id
+no_exceptions:
+  - no_candidate_GO_from_TGT-05_reviewer_GO_alone
+  - no_candidate_KILL_from_TGT-05_POSITIVE/DIRECT_alone
+  - no_candidate_GO_from_RNA_absence_or_Open_Targets_silence
+  - no_v1_policy_fallback_or_cross_lineage_assessment_mix

@@ -1,0 +1,53 @@
+status: SYNTHETIC_CONTRACT_CASES_ONLY
+scope: No real ADCdb target, normal-tissue measurement or Candidate result is represented here.
+cases:
+  - id: source_integrity_failure
+    input: missing primary provenance for a TGT-05 EP
+    expected: NO_CANONICAL_DECISION
+    governing_row: 0
+  - id: no_approved_assessment
+    input: eight Gate cells NOT_EVALUATED
+    expected: NO_CANONICAL_DECISION
+    governing_row: 1
+  - id: confirmed_program_specific_clinical_route
+    input: TGT-05 POSITIVE/DIRECT HUMAN_APPROVED with complete clinical attribution, exposure, organ/cell, alternatives and human GateSet adjudication; other Gates NOT_EVALUATED
+    expected: KILL
+    governing_row: 2
+    limitation: current program/context only, never target-intrinsic fatal
+  - id: single_adc_event_attribution_pending
+    input: TGT-05 INCONCLUSIVE/WEAK for a serious same-target ADC event with target attribution unresolved
+    expected: HOLD
+    governing_row: 3
+  - id: human_membrane_expression_unknown_consequence
+    input: TGT-05 POSITIVE/INDIRECT_STRONG with normal-cell surface antigen but cell-loss consequence unresolved
+    expected: HOLD
+    governing_row: 3
+  - id: only_normal_tissue_rna
+    input: TGT-05 INCONCLUSIVE/WEAK from RNA-only hypothesis and all other required Gates absent
+    expected: MORE_EVIDENCE
+    governing_row: 4
+  - id: only_total_protein_ihc
+    input: TGT-05 INCONCLUSIVE/WEAK from ordinary IHC without membrane localization and all other required Gates absent
+    expected: MORE_EVIDENCE
+    governing_row: 4
+  - id: bounded_tgt05_negative_but_other_gates_missing
+    input: TGT-05 NEGATIVE/INDIRECT_STRONG from audited surface-protein non-detection plus complete clinical sweep; other Gates absent
+    expected: MORE_EVIDENCE
+    governing_row: 4
+  - id: eight_qualified_favorable_cells
+    input: all eight HUMAN_APPROVED cells satisfy required_gate_policy@v2 with empty critical_unknowns and no fatal route
+    expected: GO
+    governing_row: 5
+    limitation: entry to next development stage, not a safety or therapeutic-window proof
+  - id: opportunity_unfavorable_no_fatal
+    input: TGT-08 NEGATIVE/DIRECT with otherwise qualified cells and no scientific fatal route
+    expected: HOLD
+    governing_row: 6
+  - id: mixed_v1_v2_assessments
+    input: TGT-05@1.0 assessment pinned under ADC_TARGET_GATESET@2.0
+    expected: NO_CANONICAL_DECISION
+    governing_row: 0
+  - id: normal_tissue_unknown_from_unmeasured_critical_cell
+    input: TGT-05 INCONCLUSIVE/UNKNOWN because a critical normal cell was not measured
+    expected: MORE_EVIDENCE
+    governing_row: 4

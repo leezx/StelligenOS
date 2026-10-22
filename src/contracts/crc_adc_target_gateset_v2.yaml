@@ -1,0 +1,169 @@
+version: "2.0"
+name: stelligenos-crc-adc-target-gateset-v2
+status: CONTRACT_ONLY_PENDING_REVIEW
+normative_source:
+  rfc_merge_commit: 004fc44c02fbea9511274427904792b255141521
+  rfc_path: docs/architecture/TGT05_DECISION_MODEL_V1_MIGRATION_RFC.zh-CN.md
+  source_snapshot_path: docs/architecture/TGT05_DECISION_MODEL_V1_SOURCE_SNAPSHOT.md
+  source_snapshot_sha256: 2e41525f65c6f7e4e9ec909bd8f110623f6ce62f54d5c82448c37aa80224674c
+  retained_v1_contract: src/contracts/crc_adc_target_gateset.yaml
+scope: >-
+  Phase A declares the versioned GateSet, TGT-05 scientific contract and CRC
+  binding. MOD-TGT05@2.0.0 is not built here. No Candidate assessment or
+  Decision may be produced from this declaration until Phase B approval and
+  explicit activation. The v1 lineage remains independently executable.
+
+roster:
+  - { gate_id: TGT-01, gate_version: "1.0", primary_module_id: MOD-TGT01, primary_module_version: "1.0.0" }
+  - { gate_id: TGT-02, gate_version: "1.0", primary_module_id: MOD-TGT02, primary_module_version: "1.0.0" }
+  - { gate_id: TGT-03, gate_version: "1.0", primary_module_id: MOD-TGT03, primary_module_version: "1.0.0" }
+  - { gate_id: TGT-04, gate_version: "1.0", primary_module_id: MOD-TGT04, primary_module_version: "1.0.0" }
+  - { gate_id: TGT-05, gate_version: "2.0", primary_module_id: MOD-TGT05, primary_module_version: "0.0.0", planned_module_version: "2.0.0" }
+  - { gate_id: TGT-06, gate_version: "1.0", primary_module_id: MOD-TGT06, primary_module_version: "1.0.0" }
+  - { gate_id: TGT-07, gate_version: "1.0", primary_module_id: MOD-TGT07, primary_module_version: "1.0.0" }
+  - { gate_id: TGT-08, gate_version: "1.0", primary_module_id: MOD-TGT08, primary_module_version: "1.0.0" }
+
+gateset:
+  gateset_id: ADC_TARGET_GATESET
+  gateset_version: "2.0"
+  candidate_level: L04
+  members:
+    - { gate_id: TGT-01, gate_version: "1.0" }
+    - { gate_id: TGT-02, gate_version: "1.0" }
+    - { gate_id: TGT-03, gate_version: "1.0" }
+    - { gate_id: TGT-04, gate_version: "1.0" }
+    - { gate_id: TGT-05, gate_version: "2.0" }
+    - { gate_id: TGT-06, gate_version: "1.0" }
+    - { gate_id: TGT-07, gate_version: "1.0" }
+    - { gate_id: TGT-08, gate_version: "1.0" }
+  decision_rule_ref: external:gateset/ADC_TARGET_GATESET/decision_rule@v2
+  fatal_gate_policy_ref: external:gateset/ADC_TARGET_GATESET/fatal_gate_policy@v2
+  required_gate_policy_ref: external:gateset/ADC_TARGET_GATESET/required_gate_policy@v2
+  unknown_policy_ref: external:gateset/ADC_TARGET_GATESET/unknown_policy@v2
+
+instantiation:
+  instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2
+  candidate_type: ADC_TARGET
+  candidate_level: L04
+  context_id: CTX-CRC-REFRACTORY-MCRC
+  context_version: 1
+  modality: ADC
+  gateset_id: ADC_TARGET_GATESET
+  gateset_version: "2.0"
+  evidence_regime: PUBLIC_ONLY
+  status: HOLD
+  version: 2
+  created_at: "2026-10-22"
+  activation_condition: >-
+    Separate Phase B PR approves and binds MOD-TGT05@2.0.0, and the reviewed
+    v2 policy registry has APPROVED status. No silent upgrade from v1.
+
+gate_contracts:
+  TGT-05:
+    gate_id: TGT-05
+    gate_version: "2.0"
+    gate_question: >-
+      In the intended ADC program, would killing normal human cells that
+      express this target create a material, potentially unacceptable
+      normal-organ liability?
+    evidence_domains:
+      E1: same-target ADC clinical attribution or human-relevant target-dependent normal-cell functional evidence
+      E2: validated cell-type-specific normal-human membrane antigen evidence
+      E3: normal-human RNA used only to locate cells for follow-up
+      SUPPORTING: Open Targets safety, human genetics, mouse phenotypes and non-ADC pharmacology
+    direction_is: evidence relative to the normal-organ liability question, never Candidate desirability
+    evidence_ladder:
+      DIRECT:
+        positive:
+          - qualified same-target ADC severe normal-organ event with target-mediated, organ/cell and exposure attribution
+          - human-relevant normal-cell surface accessibility plus target-dependent ADC killing at clinically relevant exposure and serious functional consequence
+        negative:
+          - qualified candidate-antibody normal-human-tissue binding negative with sufficient organ/cell coverage, sensitivity and physiological relevance plus complete clinical sweep
+        ceiling: applies only to the studied product, model and covered normal cells; no target-wide safety or fatality claim
+      INDIRECT_STRONG:
+        positive:
+          - specific normal-human cell-surface binding without demonstrated killing
+          - validated membrane-antigen localization or surface proteomics with cell identity and method QC
+        negative:
+          - comprehensive, sensitivity-audited key-normal-cell surface-protein non-detection plus complete clinical sweep with no confirmed liability
+        ceiling: accessible-antigen or bounded non-detection signal; neither ADC killing nor therapeutic window established
+      WEAK:
+        inconclusive:
+          - serious same-target ADC adverse event with unresolved target attribution
+          - total-protein IHC without verified membrane localization
+          - RNA-only expression hypothesis
+        ceiling: hypothesis or attribution-pending alert; cannot establish liability or safety
+    direction_rules:
+      positive_direct: POSITIVE/DIRECT when all DIRECT positive qualifiers are reviewed
+      positive_indirect_strong: POSITIVE/INDIRECT_STRONG when all matching qualifiers are reviewed
+      negative_direct: NEGATIVE/DIRECT only for the bounded qualified candidate-antibody experiment
+      negative_indirect_strong: NEGATIVE/INDIRECT_STRONG only for the bounded audited surface-protein sweep
+      weak: INCONCLUSIVE/WEAK; no weak-only POSITIVE or NEGATIVE
+      unknown: INCONCLUSIVE/UNKNOWN for incomplete coverage without a qualifying observation
+      conflicting: >-
+        CONFLICTING requires admissible opposing target-attribution material
+        on the same event with supporting and contradicting EP refs; unrelated
+        organs or one silent trial are not a conflict.
+      positive_precedence: >-
+        An undisputed DIRECT liability remains POSITIVE despite coverage gaps
+        elsewhere; record those gaps in critical_unknowns.
+      negative_forbidden:
+        - no safety event found
+        - RNA or ordinary IHC negative
+        - generic atlas blank
+        - absence of reported toxicity in one ADC program
+    inference_limits:
+      - NONE_DOCUMENTED is not safe and requires dated search scope
+      - E3 and SUPPORTING never occupy a positive or negative ladder authority on their own
+      - normal-cell membrane expression alone cannot establish intolerable cell loss
+      - one ADC construct cannot establish target-intrinsic fatality
+      - this Gate and its Module never emit a Candidate-level Decision
+    potential_fatal_review:
+      clinical_route: >-
+        Same-target identity, serious material normal-organ toxicity,
+        qualified target-mediated and normal-cell attribution, relevant
+        exposure/dose, and explicit linker/payload/off-target/product-specific
+        alternative-explanation review are all required.
+      functional_route: >-
+        Human-relevant surface accessibility, target-dependent binding/uptake
+        and killing at relevant exposure, and CRITICAL or otherwise unacceptable
+        cell-loss consequence in the intended context are all required.
+      unresolved: HOLD review, never automatic KILL
+      scope: program/context-specific human recommendation, never target-intrinsic fatality from one product
+    review_record_schema: src/contracts/gate_modules/tgt05_decision_record_v2.schema.json
+    module_construction_contract: src/contracts/gate_modules/tgt05_normal_tissue_adc_toxicity_v2.yaml
+
+context_specific_bindings:
+  gateset_binding:
+    gateset_id: ADC_TARGET_GATESET
+    gateset_version: "2.0"
+    instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2
+    gates:
+      - { gate_id: TGT-01, gate_version: "1.0" }
+      - { gate_id: TGT-02, gate_version: "1.0" }
+      - { gate_id: TGT-03, gate_version: "1.0" }
+      - { gate_id: TGT-04, gate_version: "1.0" }
+      - { gate_id: TGT-05, gate_version: "2.0" }
+      - { gate_id: TGT-06, gate_version: "1.0" }
+      - { gate_id: TGT-07, gate_version: "1.0" }
+      - { gate_id: TGT-08, gate_version: "1.0" }
+    decision_rule_ref: external:gateset/ADC_TARGET_GATESET/decision_rule@v2
+    fatal_gate_policy_ref: external:gateset/ADC_TARGET_GATESET/fatal_gate_policy@v2
+    required_gate_policy_ref: external:gateset/ADC_TARGET_GATESET/required_gate_policy@v2
+  gate_bindings:
+    - { gate_id: TGT-01, gate_version: "1.0", gateset_id: ADC_TARGET_GATESET, gateset_version: "2.0", instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2, candidate_level: L04, dominant_evidence_regime: PUBLIC_PRIMARY, gate_contract_ref: "external:crc_adc_target_gateset/TGT-01/gate_contract@v1", evidence_ladder_ref: "external:crc_adc_target_gateset/TGT-01/evidence_ladder@v1", assessment_rule_ref: "external:crc_adc_target_gateset/TGT-01/assessment_rule@v1", primary_module_id: MOD-TGT01, primary_module_version: "1.0.0" }
+    - { gate_id: TGT-02, gate_version: "1.0", gateset_id: ADC_TARGET_GATESET, gateset_version: "2.0", instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2, candidate_level: L04, dominant_evidence_regime: PUBLIC_HYBRID, gate_contract_ref: "external:crc_adc_target_gateset/TGT-02/gate_contract@v1", evidence_ladder_ref: "external:crc_adc_target_gateset/TGT-02/evidence_ladder@v1", assessment_rule_ref: "external:crc_adc_target_gateset/TGT-02/assessment_rule@v1", primary_module_id: MOD-TGT02, primary_module_version: "1.0.0" }
+    - { gate_id: TGT-03, gate_version: "1.0", gateset_id: ADC_TARGET_GATESET, gateset_version: "2.0", instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2, candidate_level: L04, dominant_evidence_regime: PUBLIC_HYBRID, gate_contract_ref: "external:crc_adc_target_gateset/TGT-03/gate_contract@v1", evidence_ladder_ref: "external:crc_adc_target_gateset/TGT-03/evidence_ladder@v1", assessment_rule_ref: "external:crc_adc_target_gateset/TGT-03/assessment_rule@v1", primary_module_id: MOD-TGT03, primary_module_version: "1.0.0" }
+    - { gate_id: TGT-04, gate_version: "1.0", gateset_id: ADC_TARGET_GATESET, gateset_version: "2.0", instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2, candidate_level: L04, dominant_evidence_regime: PUBLIC_HYBRID, gate_contract_ref: "external:crc_adc_target_gateset/TGT-04/gate_contract@v1", evidence_ladder_ref: "external:crc_adc_target_gateset/TGT-04/evidence_ladder@v1", assessment_rule_ref: "external:crc_adc_target_gateset/TGT-04/assessment_rule@v1", primary_module_id: MOD-TGT04, primary_module_version: "1.0.0" }
+    - { gate_id: TGT-05, gate_version: "2.0", gateset_id: ADC_TARGET_GATESET, gateset_version: "2.0", instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2, candidate_level: L04, dominant_evidence_regime: PUBLIC_HYBRID, gate_contract_ref: "external:crc_adc_target_gateset/TGT-05/gate_contract@v2", evidence_ladder_ref: "external:crc_adc_target_gateset/TGT-05/evidence_ladder@v2", assessment_rule_ref: "external:crc_adc_target_gateset/TGT-05/assessment_rule@v2", primary_module_id: MOD-TGT05, primary_module_version: "0.0.0" }
+    - { gate_id: TGT-06, gate_version: "1.0", gateset_id: ADC_TARGET_GATESET, gateset_version: "2.0", instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2, candidate_level: L04, dominant_evidence_regime: PUBLIC_HYBRID, gate_contract_ref: "external:crc_adc_target_gateset/TGT-06/gate_contract@v1", evidence_ladder_ref: "external:crc_adc_target_gateset/TGT-06/evidence_ladder@v1", assessment_rule_ref: "external:crc_adc_target_gateset/TGT-06/assessment_rule@v1", primary_module_id: MOD-TGT06, primary_module_version: "1.0.0" }
+    - { gate_id: TGT-07, gate_version: "1.0", gateset_id: ADC_TARGET_GATESET, gateset_version: "2.0", instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2, candidate_level: L04, dominant_evidence_regime: PUBLIC_HYBRID, gate_contract_ref: "external:crc_adc_target_gateset/TGT-07/gate_contract@v1", evidence_ladder_ref: "external:crc_adc_target_gateset/TGT-07/evidence_ladder@v1", assessment_rule_ref: "external:crc_adc_target_gateset/TGT-07/assessment_rule@v1", primary_module_id: MOD-TGT07, primary_module_version: "1.0.0" }
+    - { gate_id: TGT-08, gate_version: "1.0", gateset_id: ADC_TARGET_GATESET, gateset_version: "2.0", instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2, candidate_level: L04, dominant_evidence_regime: PUBLIC_PRIMARY, gate_contract_ref: "external:crc_adc_target_gateset/TGT-08/gate_contract@v1", evidence_ladder_ref: "external:crc_adc_target_gateset/TGT-08/evidence_ladder@v1", assessment_rule_ref: "external:crc_adc_target_gateset/TGT-08/assessment_rule@v1", primary_module_id: MOD-TGT08, primary_module_version: "1.0.0" }
+
+lineage_invariants:
+  - v1_contract_and_module_remain_unchanged_and_explicitly_executable
+  - v2_instantiation_is_HOLD_until_separately_approved_phase_b_activation
+  - no_implicit_v1_to_v2_upgrade_or_policy_fallback
+  - one_decision_snapshot_matches_exactly_one_versioned_instantiation_and_eight_gate_member_versions
+  - v2_binding_three_policy_refs_equal_the_same_named_gateset_refs
+  - no_tgt05_reviewer_recommendation_is_a_gate_assessment_or_a_gateset_policy_input

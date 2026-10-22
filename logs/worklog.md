@@ -7206,3 +7206,11 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 提交前 `git status --short` 只显示本任务 RFC、逐字快照、handoff、review log、worklog；显式 `git add --` 五文件、`git diff --cached --check` 通过，提交 `82d95dc982ff8a4fea5fbb1287de7dfe51c8e5df` 并推送同一 PR #142。`gh pr view` 核对 base `1c8ba227...`、head `82d95dc...`、`OPEN`，无误。
 - 在固定 `Biotech ideas → AI审核方案` ChatGPT 会话提交该 exact HEAD 第二轮复审。审核方逐项关闭六个 blocker 并明确给出 **APPROVE**，CI run `39868630714` 中 Python 3.11/3.12 均 success；`gh pr view` 同步显示 `MERGEABLE/CLEAN`。GitHub formal review 接口为 403，会话 verdict 是有效审核证据。审核方限定通过范围为 RFC Phase，不包括 Phase A policy bodies、runtime 或真实数据。
 - 按全程留痕要求只追加 approval 结果至本 worklog、handoff 与 review log，后续作为 metadata commit 推送，不更动经审核的 RFC 或快照。人类负责人未决定 merge/下一 Phase，故不启动依赖实施或外部运行。
+
+## 2026-10-22 19:32 EDT — RFC 合并与 Phase A 契约起草
+
+- 用户在 PR #142 `APPROVE` 及“合并和启动下一阶段由人类决定”交接后回复“继续”。核对 GitHub exact tip `8b97a04760d6c5156813a17cfecb439675dbd12c`、`OPEN/MERGEABLE/CLEAN`、CI Python 3.11/3.12 成功；固定会话已把 `APPROVE` 延续到该 tip。执行 `gh pr merge 142 --merge --match-head-commit 8b97a047...`，GitHub 确认 `MERGED`、merge commit `004fc44c02fbea9511274427904792b255141521`。fetch `origin/main` 后在干净独立工作树创建 `task_20261022_tgt05_v2_contract_phase_a`。
+- 按 review-task Quick 阶段门和已批准 RFC 核对来源快照、现行 v1 GateSet/Module、`GateSet`/`Instantiation` 对象、binding/assessment/decision schema 和七个其余 Gate 的 frozen Direction/Strength。用户明确选择**保守全门槛 GO**：八 Gate 足够证据且全经人工批准、无重大未解风险。没有把 Open Targets/RNA/IHC 空白当正常组织安全证据。
+- 新增 v2 GateSet/TGT-05 契约声明、inactive v2 Instantiation 与 bindings、17 项 MOD-TGT05@2.0.0 施工合同、non-canonical `Tgt05DecisionRecord` schema、四个 GateSet policy bodies、synthetic acceptance cases 和定向测试；原 v1 两个文件保持字节 SHA256 `558db82f...` / `529b7975...`。四个政策目前是 Phase A PR 待审合同，不是已激活的运行规则。未下载/处理 DATA，未评价真实靶点。
+- 定向测试最初 5、扩展至 10 项通过。第一次 `python3 -m unittest discover -s tests -q` 跑 1910 项出现 4 项缓存卫生失败，原因是测试本身生成 `__pycache__`（26 个目录）；清理后用 `PYTHONDONTWRITEBYTECODE=1` 重跑同一 1910 项，全部通过。`git diff --check` 和仓库边界脚本通过。发现 `requirements.txt` 只有 PyYAML，不引入 jsonschema 运行依赖；schema 结构和关键条件由现有 Python 标准库及定向测试核对。
+- 生成 `docs/handoff/2026-10-22-tgt05-v2-contract-phase-a.zh-CN.md`。下一步先提交 policy body 所在的 code commit，再用该 commit 和 body SHA256 生成 registry，避免 manifest 自引用 Git commit；然后再次验证、建 PR 并提交 ChatGPT 审核。未获得 Phase A `APPROVE` 前不进入 Phase B。

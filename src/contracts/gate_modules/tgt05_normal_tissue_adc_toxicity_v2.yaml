@@ -1,0 +1,98 @@
+version: "2.0.0"
+name: stelligenos-gate-module-construction-contract-tgt05-v2
+status: CONTRACT_ONLY_PENDING_REVIEW
+source:
+  rfc_merge_commit: 004fc44c02fbea9511274427904792b255141521
+  gate_contract: src/contracts/crc_adc_target_gateset_v2.yaml
+  review_record_schema: src/contracts/gate_modules/tgt05_decision_record_v2.schema.json
+  retained_v1_module_contract: src/contracts/gate_modules/tgt05_normal_tissue_fatal_liability.yaml
+boundary: >-
+  Phase A freezes the MOD-TGT05@2.0.0 construction contract. It does not build
+  the Module, reviewer UI, provider, data collector, decision engine or any
+  Candidate artifact. Phase B must implement only after this PR is approved.
+kernel_invariant: >-
+  src/ defines contracts and never imports gate_modules/. Module output is
+  Gate-neutral EvidencePackages plus a non-canonical assessment proposal;
+  HUMAN_APPROVED CandidateGateAssessment is constructed only by human review.
+  Tgt05DecisionRecord is non-canonical and cannot be a GateSet policy input.
+
+acceptance_checklist:
+  "01_gate_identity_and_version":
+    gate_id: TGT-05
+    gate_version: "2.0"
+    gateset_id: ADC_TARGET_GATESET
+    gateset_version: "2.0"
+    instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2
+    candidate_level: L04
+  "02_primary_module_identity_and_version":
+    primary_module_id: MOD-TGT05
+    planned_module_version: "2.0.0"
+    phase_a_binding_version: "0.0.0"
+    phase_b_rule: raise binding to 2.0.0 only when implementation passes separate PR review
+  "03_gate_question":
+    source: src/contracts/crc_adc_target_gateset_v2.yaml#gate_contracts.TGT-05.gate_question
+    rule: quote exactly; no Module-owned scientific redefinition
+  "04_admissible_evidence_classes":
+    E1: qualified same-target ADC clinical attribution or human-relevant normal-cell functional evidence
+    E2: validated normal-human cell-type-specific membrane-antigen evidence
+    E3: normal-human RNA cell-finding context only
+    SUPPORTING: Open Targets, human genetics, animal phenotypes and non-ADC pharmacology; no ladder authority alone
+  "05_evidence_ladder_and_evidence_ceiling":
+    source: src/contracts/crc_adc_target_gateset_v2.yaml#gate_contracts.TGT-05.evidence_ladder
+    rule: DIRECT/INDIRECT_STRONG/WEAK are orthogonal to E1/E2/E3 and retain bounded inference
+  "06_direction_interpretation":
+    source: src/contracts/crc_adc_target_gateset_v2.yaml#gate_contracts.TGT-05.direction_rules
+    rule: >-
+      POSITIVE indicates liability evidence; qualified NEGATIVE indicates only
+      bounded non-detection. WEAK-only is INCONCLUSIVE. UNKNOWN is not a rung.
+      Never invert Direction to mean Candidate desirability.
+  "07_allowed_and_forbidden_inference":
+    allowed: bounded liability, bounded qualified non-detection and explicit uncertainty
+    forbidden:
+      - RNA/ordinary IHC negative to safety or GO
+      - surface expression alone to intolerable cell loss
+      - one product event to target-intrinsic fatality
+      - Supporting sources to ADC target-mediated killing
+      - Module proposal to Candidate-level Decision
+  "08_fatal_conditions":
+    source: src/contracts/crc_adc_target_gateset_v2.yaml#gate_contracts.TGT-05.potential_fatal_review
+    rule: clinical or functional route only invites human review; never automatic KILL
+  "09_evidence_source_plan":
+    primary: original clinical reports and target-attribution materials, validated human normal-cell binding/function and membrane-protein measurements
+    contextual: normal-human RNA for cell prioritization
+    supporting: Open Targets four classes with source, mechanism and organ provenance
+    negative_search: record search date/scope, assay coverage and sensitivity; no empty-database inference
+  "10_input_contract":
+    keys: canonical target/HGNC/ADCdb identity, program/context, observation kind, organ/cell, method, exposure, construct and provenance
+    failure: missing source, target mismatch, identity conflict or source-integrity failure rejects the round
+  "11_evidencepackage_output_contract":
+    schema: src/contracts/data_layout/evidence_package.schema.json
+    rule: one atomic Gate-neutral observation per EP; no Gate grade, GO/HOLD/KILL or reviewer conclusion in EP
+    reuse: exact canonical EP reuse requires source and classification-driving-field parity
+  "12_assessment_proposal_envelope_contract":
+    output: non-canonical Direction/Strength proposal with EP refs, coverage audit, critical_unknowns and rationale
+    forbidden: HUMAN_APPROVED status, canonical Assessment or Candidate Decision from Module
+  "13_machine_acceptance_criteria":
+    - deterministic E1/E2/E3 classification and bounded ladder ceiling
+    - source and target identity parity before any proposal
+    - qualified negative requires coverage, sensitivity and clinical sweep
+    - positive DIRECT remains positive despite unrelated coverage gaps
+    - same-event contradiction retains supporting and contradicting EP refs
+    - incomplete coverage never becomes safety or GO
+  "14_human_acceptance_and_review_surface":
+    record_schema: src/contracts/gate_modules/tgt05_decision_record_v2.schema.json
+    chain: EP -> non-canonical Tgt05DecisionRecord -> human-authored HUMAN_APPROVED Assessment -> GateSet policy -> Decision
+    rule: GO/HOLD/KILL reviewer recommendation cannot be stored in Assessment or consumed directly by GateSet
+  "15_failure_unknown_and_conflict_behavior":
+    not_measured: INCONCLUSIVE/UNKNOWN with critical_unknowns
+    search_failed_or_identity_conflict: hard reject, not ordinary HOLD
+    unresolved_clinical_attribution: INCONCLUSIVE/WEAK plus explicit HOLD review trigger
+    same_event_qualified_disagreement: CONFLICTING with both EP roles
+  "16_stop_rule":
+    hard_failure: stop entire round on provenance, identity, source integrity or EP reuse drift
+    fatal_sweep: inspect severe clinical/functional signals before any GO recommendation
+    missing_critical_coverage: do not propose GO
+  "17_downstream_consumer_and_handoff":
+    policy_owner: ADC_TARGET_GATESET@2.0
+    policy_registry: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/registry.yaml
+    rule: no Module-to-Decision path; Phase B implementation and activation require separate approved PR

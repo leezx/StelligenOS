@@ -1,0 +1,67 @@
+policy_id: external:gateset/ADC_TARGET_GATESET/required_gate_policy@v2
+policy_version: v2
+owner_gateset_id: ADC_TARGET_GATESET
+owner_gateset_version: "2.0"
+status: CONTRACT_ONLY_PENDING_REVIEW
+human_choice: >-
+  On 2026-10-22 the responsible human selected conservative all-Gate clearance:
+  all eight Gates need sufficiently strong HUMAN_APPROVED evidence and no
+  material unresolved risk before Candidate GO. This policy makes that choice
+  explicit without treating missing evidence as safety.
+required_for_GO:
+  assessment_snapshot: exact eight Gate IDs and versions from ADC_TARGET_GATESET@2.0
+  instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2
+  review_status: HUMAN_APPROVED
+  review_scope: all eight pinned assessments
+  critical_unknowns: empty in all eight approved assessments
+  not_evaluated: forbidden
+  not_applicable: forbidden
+  conflicting_or_inconclusive: forbidden
+  gate_cells:
+    TGT-01:
+      direction: POSITIVE
+      allowed_strengths: [DIRECT, INDIRECT_STRONG]
+      basis: ADC modality precedent for target or immediate lineage; no-precedent-found is UNKNOWN
+    TGT-02:
+      direction: POSITIVE
+      allowed_strengths: [DIRECT]
+      basis: qualifying protein cohort evidence of malignant-cell coverage in refractory mCRC
+    TGT-03:
+      direction: POSITIVE
+      allowed_strengths: [DIRECT]
+      basis: qualifying clinical-context protein persistence in treated/refractory/metastatic CRC
+    TGT-04:
+      direction: POSITIVE
+      allowed_strengths: [DIRECT]
+      basis: qualifying quantitative malignant-cell surface-density plausibility; localization alone is insufficient
+    TGT-05:
+      direction: NEGATIVE
+      allowed_strengths: [DIRECT, INDIRECT_STRONG]
+      basis: bounded qualified normal-human negative binding or audited surface-protein sweep plus complete clinical sweep
+      caveat: NEGATIVE is bounded non-detection, not safety or therapeutic window
+    TGT-06:
+      direction: POSITIVE
+      allowed_strengths: [DIRECT, INDIRECT_STRONG]
+      basis: qualified productive delivery or strongly supported internalization/trafficking addressability
+    TGT-07:
+      direction: NEGATIVE
+      allowed_strengths: [DIRECT]
+      basis: qualified intended-ADC TMDD analysis finding no material soluble sink on a completed landscape
+      caveat: absent PK reports, below-assay-limit findings and unquantified shedding are not NEGATIVE
+    TGT-08:
+      direction: POSITIVE
+      allowed_strengths: [DIRECT, INDIRECT_STRONG]
+      basis: completed target-specific competitive and composition-IP axes support differentiated opportunity
+source_authority:
+  TGT-01_to_04_and_06_to_08: src/contracts/crc_adc_target_gateset.yaml#gate_contracts
+  TGT-05: src/contracts/crc_adc_target_gateset_v2.yaml#gate_contracts.TGT-05
+no_override:
+  - no_unapproved_assessment_or_module_proposal_can_fill_a_required_cell
+  - no_tgt05_reviewer_GO_shortcut
+  - no_substitution_of_supporting_Open_Targets_or_RNA_for_surface_negative
+  - no_GO_with_material_unresolved_normal_tissue_or_sink_liability
+  - no_sponsor_opportunity_signal_can_cancel_a_scientific_fatal_route
+consequence: >-
+  Public-only records that cannot supply these cells remain HOLD or
+  MORE_EVIDENCE. The policy does not imply that all ADCdb targets have enough
+  evidence to receive GO at M0.
