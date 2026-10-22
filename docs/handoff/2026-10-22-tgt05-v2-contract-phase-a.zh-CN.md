@@ -5,7 +5,7 @@
 - Base：`main` @ `004fc44c02fbea9511274427904792b255141521`（RFC PR #142 merge commit）
 - 科学来源：`docs/architecture/TGT05_DECISION_MODEL_V1_SOURCE_SNAPSHOT.md`，SHA256 `2e41525f65c6f7e4e9ec909bd8f110623f6ce62f54d5c82448c37aa80224674c`
 - PR：[StelligenOS #143](https://github.com/leezx/StelligenOS/pull/143)，当前 `DRAFT/OPEN`。
-- 初版 policy body commit：`d3f3689e47ee087716d46c0489a550259369815a`；修正后的 policy body source commit：`a940d9eb7f2cab772556c4d6bbeb25b425e590d8`。最终 registry commit、PR tip 和审核结论待补充。
+- 稳定 policy body source commit：`5abe4fb38a9f3b5c35654c5f9bad0017f7e7c67c`；registry commit：`e9413c1b714d6468ce1f983a3c7d81d442ff1a0f`。审核结论待补充。
 
 ## 本阶段目标与边界
 
@@ -20,12 +20,12 @@ v2 Instantiation 的 `evidence_regime` 因此为 schema 允许的 `PUBLIC_PLUS_E
 - `src/contracts/crc_adc_target_gateset_v2.yaml`：v2 身份、八成员、TGT-05 ladder、inactive Instantiation 和 schema-parity bindings。
 - `src/contracts/gate_modules/tgt05_normal_tissue_adc_toxicity_v2.yaml`：17 项 Module 施工合同，不含实现。
 - `src/contracts/gate_modules/tgt05_decision_record_v2.schema.json`：非 canonical 人审记录的字段与 GO/KILL 边界。
-- `src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/`：四个声明式政策与 synthetic acceptance cases；registry 将在 body commit 后 pin 精确 SHA256 与 source Git commit。
+- `src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/`：四个声明式政策与 synthetic acceptance cases；registry 已 pin 精确 SHA256 与 source Git commit，审核状态仍为 `PENDING_CHATGPT_REVIEW`。
 - `tests/test_tgt05_v2_contract_phase_a.py`：来源、版本、binding、政策和人审边界验证。
 
 ## 验证与审核状态
 
-- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -q`：1910 tests，OK。第一次未禁止字节码的运行触发 4 项仓库缓存卫生测试失败；清理 26 个 `__pycache__` 后按无字节码模式重跑通过，当前缓存数为 0。
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -q`：最终 1912 tests，OK。第一次未禁止字节码的运行触发 4 项仓库缓存卫生测试失败；清理 26 个 `__pycache__` 后按无字节码模式重跑通过。
 - `git diff --check` 通过；`bash scripts/verify_repository_boundary.sh` 输出 `Repository boundary check passed.`。
 - 上述初版检查时尚无 PR 或 ChatGPT `APPROVE`；不得进入 Phase B 或外部运行。后续进度见下节。
 
@@ -36,3 +36,7 @@ body commit `d3f3689e47ee087716d46c0489a550259369815a` 已推送，随后创建 
 送审前追加对象形状复核发现 v2 Gate YAML 缺少 frozen `Gate`/`EvidenceLadder` 的部分规范字段；现已补齐并让测试实际构造这两个对象。其余六个可作科学 fatal 的 Gate 精确继承 v1 `fatal_conditions`，保留 TGT-08 非科学 KILL 边界。此修订使 `fatal_gate_policy.yaml` hash 变化；须在最终 registry commit 更新，不能沿用上一段的初版 manifest 值。
 
 对象字段修正提交为 `a940d9eb7f2cab772556c4d6bbeb25b425e590d8`。后续发现 policy body 的 `status` 若写“待审”会在批准后变为陈旧状态，故 `5abe4fb38a9f3b5c35654c5f9bad0017f7e7c67c` 将 body 状态改成固定的 `DECLARATIVE_POLICY_SOURCE`，Gate/Module 声明改为 `CONTRACT_ONLY_INACTIVE`；审核状态只由 registry 的 `approval_status` 管理。registry 已更新 source Git commit 与四个 body SHA256。此设计无需在批准后为修正文案而改动已审核的政策 body；仍须最终 CI 和 ChatGPT exact-head 核验。
+
+## 送审前最终核对（2026-10-22 19:39 EDT）
+
+registry 和状态修正已在 `e9413c1b714d6468ce1f983a3c7d81d442ff1a0f` 提交并推送。四个 policy body 哈希均从 `5abe4fb38a9f3b5c35654c5f9bad0017f7e7c67c` 的 Git 对象复算并匹配 registry。禁写字节码的全量 1912 项测试通过，`scripts/verify_repository_boundary.sh` 通过。本 PR 仍无 ChatGPT `APPROVE`；Phase B 和外部数据运行禁止启动。

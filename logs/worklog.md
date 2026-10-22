@@ -7240,3 +7240,8 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 
 - 送审前复核发现四个 policy body 内的 `CONTRACT_ONLY_PENDING_REVIEW` 在 PR 获批后会变成错误的历史状态。将四个 body 的 `status` 固定为 `DECLARATIVE_POLICY_SOURCE`，v2 Gate/Module 声明标为 `CONTRACT_ONLY_INACTIVE`，registry 的 `status` 为 `VERSIONED_SOURCE`，单独的 `approval_status` 仍为 `PENDING_CHATGPT_REVIEW` 且 resolver 要求 `APPROVED`。这只是状态字段职责拆分，未改变科学判定表。
 - 显式暂存六个 body/声明文件，`git diff --cached --check` 后提交 `5abe4fb38a9f3b5c35654c5f9bad0017f7e7c67c`。用其作为四 policy 的共同源 Git commit，重新计算并更新 registry 四个 SHA256，更新校验测试与 handoff；未使用过时 hash。待同 PR 推送和审核。
+
+## 2026-10-22 19:39 EDT — PR #143 送审前验证
+
+- `git status --short` 只显示 registry、测试、handoff、worklog 四个本任务文件；`git diff --check` 通过。显式 `git add --` 四个文件并执行 `git diff --cached --check`，提交 `e9413c1b714d6468ce1f983a3c7d81d442ff1a0f`，推送同一分支及 Draft PR #143。
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -q`：1912 tests，OK；`bash scripts/verify_repository_boundary.sh`：通过。`git diff origin/main --stat` 确认仅 12 个 Phase A 契约、测试和审计文件。随后更新 handoff 的最终验证及提交引用；待补充 PR 送审状态和审核结论。
