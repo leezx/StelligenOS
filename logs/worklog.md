@@ -7214,3 +7214,9 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 新增 v2 GateSet/TGT-05 契约声明、inactive v2 Instantiation 与 bindings、17 项 MOD-TGT05@2.0.0 施工合同、non-canonical `Tgt05DecisionRecord` schema、四个 GateSet policy bodies、synthetic acceptance cases 和定向测试；原 v1 两个文件保持字节 SHA256 `558db82f...` / `529b7975...`。四个政策目前是 Phase A PR 待审合同，不是已激活的运行规则。未下载/处理 DATA，未评价真实靶点。
 - 定向测试最初 5、扩展至 10 项通过。第一次 `python3 -m unittest discover -s tests -q` 跑 1910 项出现 4 项缓存卫生失败，原因是测试本身生成 `__pycache__`（26 个目录）；清理后用 `PYTHONDONTWRITEBYTECODE=1` 重跑同一 1910 项，全部通过。`git diff --check` 和仓库边界脚本通过。发现 `requirements.txt` 只有 PyYAML，不引入 jsonschema 运行依赖；schema 结构和关键条件由现有 Python 标准库及定向测试核对。
 - 生成 `docs/handoff/2026-10-22-tgt05-v2-contract-phase-a.zh-CN.md`。下一步先提交 policy body 所在的 code commit，再用该 commit 和 body SHA256 生成 registry，避免 manifest 自引用 Git commit；然后再次验证、建 PR 并提交 ChatGPT 审核。未获得 Phase A `APPROVE` 前不进入 Phase B。
+
+## 2026-10-22 19:34 EDT — Phase A body commit、Draft PR 与 registry
+
+- 提交前 `git status --short` 仅本阶段工件；显式 `git add --` 11 文件，`git diff --cached --check` 通过，提交 `d3f3689e47ee087716d46c0489a550259369815a` 并推送 `task_20261022_tgt05_v2_contract_phase_a`。使用正文文件 `/tmp/tgt05-v2-phase-a-pr-body.md` 建 [Draft PR #143](https://github.com/leezx/StelligenOS/pull/143)，base `004fc44c...`，已附加到本任务。
+- 从 body commit 逐个计算四个 policy YAML 的 SHA256，新增 `registry.yaml` pin exact logical ref、路径、SHA256、body commit、PR #143 和 `PENDING_CHATGPT_REVIEW`；`resolver_contract` 要求后续 `APPROVED` 才可使用，且禁止 hash 漂移、路径逃逸和 v1 fallback。用 `git show d3f3689:<path>` 对四个历史 body 字节独立复核，均与 manifest SHA256 一致。
+- 扩展定向测试到 11 项，检查 registry/ref/hash/review gate；`PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -q` 重新运行全量 **1911 tests OK**。无 `__pycache__`，`git diff --check` 与仓库边界脚本通过。PR 仍为 Draft，尚未请求/取得 ChatGPT Phase A 审核；不激活 v2 或运行数据。

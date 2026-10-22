@@ -147,6 +147,31 @@ class V2PolicyContractTests(unittest.TestCase):
             self.assertEqual(body["owner_gateset_id"], "ADC_TARGET_GATESET")
             self.assertEqual(body["owner_gateset_version"], "2.0")
 
+    def test_registry_resolves_exact_refs_paths_hashes_and_review_gate(self):
+        registry = load(POLICIES / "registry.yaml")
+        gs = load(V2)["gateset"]
+        self.assertEqual(registry["owner_gateset_id"], gs["gateset_id"])
+        self.assertEqual(registry["owner_gateset_version"], gs["gateset_version"])
+        self.assertEqual(registry["review_pr"], "https://github.com/leezx/StelligenOS/pull/143")
+        self.assertEqual(registry["source_git_commit"],
+                         "d3f3689e47ee087716d46c0489a550259369815a")
+        refs = [item["logical_ref"] for item in registry["policy_bodies"]]
+        self.assertEqual(len(refs), len(set(refs)))
+        self.assertEqual(set(refs), {gs[f"{name}_ref"] for name in
+                                     ("decision_rule", "fatal_gate_policy", "required_gate_policy", "unknown_policy")})
+        for item in registry["policy_bodies"]:
+            path = ROOT / item["canonical_relative_path"]
+            self.assertEqual(path.parent.resolve(), POLICIES.resolve())
+            self.assertEqual(item["policy_version"], "v2")
+            self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), item["sha256"])
+            self.assertEqual(load(path)["policy_id"], item["logical_ref"])
+        self.assertEqual(registry["resolver_contract"]["require_approval_status"], "APPROVED")
+        self.assertIn(registry["approval_status"], {"PENDING_CHATGPT_REVIEW", "APPROVED"})
+        if registry["approval_status"] == "APPROVED":
+            self.assertTrue(registry["approval_evidence"])
+        else:
+            self.assertEqual(load(V2)["instantiation"]["status"], "HOLD")
+
     def test_decision_precedence_and_strict_go(self):
         decision = load(POLICIES / "decision_rule.yaml")
         table = decision["ordered_truth_table"]

@@ -1,0 +1,43 @@
+registry_id: ADC_TARGET_GATESET/v2
+registry_version: v2
+owner_gateset_id: ADC_TARGET_GATESET
+owner_gateset_version: "2.0"
+status: CONTRACT_ONLY_PENDING_REVIEW
+review_pr: https://github.com/leezx/StelligenOS/pull/143
+approval_status: PENDING_CHATGPT_REVIEW
+approval_evidence: null
+source_git_commit: d3f3689e47ee087716d46c0489a550259369815a
+source_git_release: null
+policy_bodies:
+  - logical_ref: external:gateset/ADC_TARGET_GATESET/decision_rule@v2
+    policy_version: v2
+    canonical_relative_path: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/decision_rule.yaml
+    sha256: d22d3d240b118b01bb512e2e9f65014f7de19fc10948c99d8b710651ac0dc45c
+  - logical_ref: external:gateset/ADC_TARGET_GATESET/fatal_gate_policy@v2
+    policy_version: v2
+    canonical_relative_path: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/fatal_gate_policy.yaml
+    sha256: 817dabda7b4849823dbdfa2c4ac202e7651b7e47329cec628ccedf1190c5d349
+  - logical_ref: external:gateset/ADC_TARGET_GATESET/required_gate_policy@v2
+    policy_version: v2
+    canonical_relative_path: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/required_gate_policy.yaml
+    sha256: f6e244a21d2ddc9366c7076fc7576cefa104791ee59b033e1216a826bdc2ec21
+  - logical_ref: external:gateset/ADC_TARGET_GATESET/unknown_policy@v2
+    policy_version: v2
+    canonical_relative_path: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/unknown_policy.yaml
+    sha256: e409976c17520fd955811c9041e7d515eec718c1969b247c1ab8a31cd29a8596
+resolver_contract:
+  base: repository root of the exact reviewed Git revision
+  lookup: exact logical_ref key only; no dynamic discovery
+  verify: policy_version, owner, path under this registry directory, body SHA256 and approval_status
+  require_approval_status: APPROVED
+  reject_on:
+    - missing_or_duplicate_ref
+    - wrong_GateSet_version_or_policy_version
+    - path_escape_or_missing_body
+    - content_hash_mismatch
+    - approval_missing_or_not_APPROVED
+    - fallback_to_v1_or_other_registry
+  execution_boundary: >-
+    This is a versioned source registry, not a decision engine. No v2 Candidate
+    Decision is permitted while approval_status is PENDING_CHATGPT_REVIEW or
+    the Phase B Module remains unbuilt and the Instantiation is HOLD.

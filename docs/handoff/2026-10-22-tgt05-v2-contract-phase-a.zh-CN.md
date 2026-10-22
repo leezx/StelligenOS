@@ -4,7 +4,8 @@
 - 分支：`task_20261022_tgt05_v2_contract_phase_a`
 - Base：`main` @ `004fc44c02fbea9511274427904792b255141521`（RFC PR #142 merge commit）
 - 科学来源：`docs/architecture/TGT05_DECISION_MODEL_V1_SOURCE_SNAPSHOT.md`，SHA256 `2e41525f65c6f7e4e9ec909bd8f110623f6ce62f54d5c82448c37aa80224674c`
-- 状态：Phase A 实施中；PR URL、body commit、registry commit 和审核结论待补充。
+- PR：[StelligenOS #143](https://github.com/leezx/StelligenOS/pull/143)，当前 `DRAFT/OPEN`。
+- Policy body commit：`d3f3689e47ee087716d46c0489a550259369815a`；registry commit、最终 PR tip 和审核结论待补充。
 
 ## 本阶段目标与边界
 
@@ -24,4 +25,8 @@
 
 - `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -q`：1910 tests，OK。第一次未禁止字节码的运行触发 4 项仓库缓存卫生测试失败；清理 26 个 `__pycache__` 后按无字节码模式重跑通过，当前缓存数为 0。
 - `git diff --check` 通过；`bash scripts/verify_repository_boundary.sh` 输出 `Repository boundary check passed.`。
-- 本阶段尚无 PR 或 ChatGPT `APPROVE`；不得进入 Phase B 或外部运行。后续需提交 body commit、生成 hash registry、复核测试、创建 PR 并送固定会话审核。
+- 上述初版检查时尚无 PR 或 ChatGPT `APPROVE`；不得进入 Phase B 或外部运行。后续进度见下节。
+
+## Registry 与 PR 更新（2026-10-22 19:34 EDT）
+
+body commit `d3f3689e47ee087716d46c0489a550259369815a` 已推送，随后创建 Draft PR #143。新 `src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/registry.yaml` 对四个 ref pin body 路径、SHA256、Git commit、review PR 与 `PENDING_CHATGPT_REVIEW` 状态。用 `git show <body-commit>:<path>` 独立重算四个 SHA256，均与 registry 一致；resolver 合同要求 `APPROVED`，所以当前 registry 不能被用于 Candidate 决策。registry 测试已加入，定向 11 项通过，禁写字节码的全量 1911 项通过；`git diff --check` 和仓库边界脚本通过。待把 registry/handoff/worklog 提交推送、核对 CI 和 exact HEAD 后，将 PR 标为 ready 并送固定 ChatGPT 会话审核。
