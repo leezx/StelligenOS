@@ -26,65 +26,22 @@
 - 完成后检查 `dpkg --audit`、`python3-venv` 安装状态、剩余可升级项、UFW 状态、网络服务状态和 reboot-required 标记。
 - 不将凭据、原始主机输出或个人文件写入仓库；只记录必要的脱敏摘要。
 
-## 负责人本机执行命令
+## 负责人本机执行脚本
 
-Codex SSH 终端面板未在负责人界面中显示，因此负责人选择在自己的可见终端执行。按顺序运行，每一步先检查结果再继续：
-
-```bash
-sudo apt-get update
-sudo apt-get -s upgrade | tee /tmp/ubuntu-upgrade-plan.txt
-grep -E '^(Remv |The following packages will be REMOVED:)' /tmp/ubuntu-upgrade-plan.txt
-```
-
-若最后一条命令有任何输出，停止，不运行升级。若没有移除项：
+本次准备将 `scripts/ubuntu_baseline_setup.sh` 复制到 Ubuntu 用户的 home 目录；只上传文件，不在 SSH 上运行脚本。复制完成后，负责人可在 Ubuntu 的可见终端中自行检查并运行：
 
 ```bash
-sudo apt-get upgrade
+chmod u+x ~/ubuntu_baseline_setup.sh
+~/ubuntu_baseline_setup.sh
 ```
 
-出现确认提示后输入 `Y`。遇到配置文件替换提示，保留当前本地版本；若提示需要改网络/防火墙配置或重启，停止并汇报，不自动重启。升级结束后先查重启标志：
+脚本要求交互式终端，在 APT 模拟计划后分别等待负责人确认；模拟失败或计划包含移除项即停止。升级保留现有 dpkg 配置文件，不自动重启、不运行 `full-upgrade` 或 `autoremove`。若系统标记需重启，脚本停止后续安装且不会重启。运行时如遇网络/防火墙组件或配置异常，应停止并汇报。
 
-```bash
-if [ -e /var/run/reboot-required ]; then
-  echo 'STOP: reboot required; do not continue or reboot automatically'
-  cat /var/run/reboot-required.pkgs 2>/dev/null || true
-else
-  echo 'No reboot required'
-fi
-```
-
-只有显示 `No reboot required` 才继续模拟和安装 venv：
-
-```bash
-sudo apt-get -s install python3-venv | tee /tmp/python3-venv-plan.txt
-grep -E '^(Remv |The following packages will be REMOVED:)' /tmp/python3-venv-plan.txt
-```
-
-若有移除项停止；否则运行：
-
-```bash
-sudo apt-get install python3-venv
-```
-
-安装完成后核验并执行只读检查：
-
-```bash
-dpkg --audit
-dpkg-query -W -f='${Status}\n' python3-venv
-python3 -m venv --help >/dev/null && echo 'venv module available'
-apt list --upgradable
-sudo ufw status verbose
-systemctl is-active NetworkManager.service systemd-networkd.service systemd-networkd-wait-online.service || true
-systemctl --no-pager --full status systemd-networkd-wait-online.service || true
-sudo sh -c 'for f in /etc/netplan/*.yaml; do [ -f "$f" ] || continue; echo "--- $f"; sed -E "/(password|psk|passphrase|private-key|client-key|identity):/s/:.*/: [REDACTED]/I" "$f"; done'
-if [ -e /var/run/reboot-required ]; then echo 'Reboot required (do not reboot automatically)'; else echo 'No reboot required'; fi
-```
-
-Netplan YAML 可能包含 Wi-Fi 密码或证书信息；不要把未脱敏配置原文贴到聊天或仓库。认证时只在本机终端输入 sudo 密码。
+APT 计划仅保存在 Ubuntu 本机的临时目录。Netplan 检查只列文件路径，不输出 YAML 内容，避免泄露多行证书、私钥或 Wi-Fi 凭据。不要把 APT 日志、配置原文或凭据贴到聊天/仓库；只回传脱敏摘要。认证时只在本机终端输入 sudo 密码。
 
 ## 当前状态
 
 - Base：`main` at `6f91d8be0b6ae1db914e0e7a0d74757537760825`。
 - Branch：`task_20261023_ubuntu_baseline_setup`。
-- PR：[PR #148](https://github.com/leezx/StelligenOS/pull/148)，base `main`；branch `task_20261023_ubuntu_baseline_setup`。独立 GPT reviewer 对 exact HEAD `cf8e1b220b0c87839499534a97cd5e0bdf1223ac` 明确 `APPROVE`，范围及停止条件如上；GitHub 正式 review API 返回 `403 Resource not accessible by integration`，所以平台 review event 未创建。PR 在本次更新前仍为该获批 HEAD；本次添加本机执行命令与状态记录会产生新 HEAD，须再次审查文档后再视为当前 PR 放行。尚未运行任何 apt/安装命令。
-- 当前执行状态：未执行 APT 更新/安装。负责人在本机可见终端按上方顺序运行；若遇到停止条件，先停止并汇报。完成后只需回传脱敏摘要（升级包数、`python3-venv` 状态、UFW/网络服务状态、是否需重启），由 Codex 在本 PR 更新留痕并复审。
+- PR：[PR #148](https://github.com/leezx/StelligenOS/pull/148)，base `main`；branch `task_20261023_ubuntu_baseline_setup`。早期 HEAD 曾获 GPT `APPROVE`；对包含本机命令的 HEAD `917b22855209b170151091b01c48062660a02609` 的复审为 `REQUEST_CHANGES`，问题和修复记录见 worklog。新增脚本后的最终 HEAD 尚待独立 GPT 复审；只有明确 `APPROVE` 后才上传到 Ubuntu home。GitHub 正式 review API 曾返回 `403 Resource not accessible by integration`，平台 review event 需在复审时重新尝试。尚未运行任何 apt/安装命令。
+- 当前执行状态：未执行 APT 更新/安装。脚本需先经过本 PR exact HEAD 独立审核，再上传到 Ubuntu home；负责人在本机可见终端自行检查/运行。完成后只需回传脱敏摘要（升级包数、`python3-venv` 状态、UFW/网络服务状态、是否需重启），由 Codex 在本 PR 更新留痕并复审。
