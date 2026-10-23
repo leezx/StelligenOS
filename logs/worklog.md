@@ -7330,3 +7330,11 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 同 PR 提交并推送修订 `a364727e6da3edc48ce66bc103e66c5d7791c9a1`；本地全量 1948 tests OK、repository boundary 与 diff 检查通过。GitHub Actions run `39949078070` Python 3.11/3.12 均 SUCCESS；向原 ChatGPT 会话提交只审 6 项 finding 及必要回归的 Round 2 请求。
 - ChatGPT 直接核对 PR delta、冻结科学合同、对抗测试和 CI，给出 L1 `APPROVE`、L2 `PASS / APPROVE`、整体 B1 `APPROVE`，5 P1 + 1 P2 全部 `RESOLVED`，blocker 0。摘要见 `logs/chatgpt-review-2026-10-23-tgt05-phase-b1-round2.md`。批准仅未绑定模块，不含自动合并、B2、激活或真实数据。
 - 新增 round 2 审核记录并更新 handoff/worklog 以符合每步留痕。此 metadata-only 提交改变 exact HEAD 后须再审；未进行合并或依赖阶段工作。
+
+## 2026-10-23 16:48 EDT — Ubuntu miniPC 性能评估 PR 准备
+
+- 负责人提出测试 miniPC 性能并判断任务上限。此前基线 PR #148 的 SSH 终端正在等待 sudo 认证；为避免混合两项任务，发送 Ctrl-C 取消 sudo 提示并正常退出 SSH。未收到/读取密码，未在主机执行更新或安装。
+- 读取分阶段 PR 审核协议；创建独立 managed worktree，fetch `origin` 后从 `origin/main` 创建 `task_20261023_ubuntu_performance_check`。本任务不复用基线 setup PR #148。
+- 设计短时、无安装、无配置变更的评估：读取硬件信息；Python 标准库 CPU 单/多 worker 短测；内存上限 2 GiB（可用内存至少 4 GiB 且无明显 swap 压力才执行）；`/tmp` 临时顺序 I/O 上限 256 MiB（可用空间至少 2 GiB）；不做外网测速。记录温度/负载停止条件，测试临时文件后清理。
+- 新增 `docs/handoff/2026-10-23-ubuntu-performance-benchmark.zh-CN.md`；主机基准尚未运行。按全局 PR 门禁，需先创建独立 PR 并取得 GPT/ChatGPT 对 exact HEAD 的 `APPROVE`。
+- 16:49 EDT：提交前已执行 `git status --short` 与 `git diff --check`。尝试仓库推荐的 `scripts/git_sync.sh`；脚本在 `git fetch origin <new-branch>` 因远端尚无该新分支而失败，未暂存、提交或推送任何内容。改用显式文件暂存与首次分支推送。
