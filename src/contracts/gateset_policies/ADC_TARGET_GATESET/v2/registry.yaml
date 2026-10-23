@@ -6,21 +6,21 @@ status: VERSIONED_SOURCE
 review_pr: https://github.com/leezx/StelligenOS/pull/143
 approval_status: PENDING_CHATGPT_REVIEW
 approval_evidence: null
-source_git_commit: 5abe4fb38a9f3b5c35654c5f9bad0017f7e7c67c
+source_git_commit: 4a485eef4594696344c333c7a1dfe6813f473a43
 source_git_release: null
 policy_bodies:
   - logical_ref: external:gateset/ADC_TARGET_GATESET/decision_rule@v2
     policy_version: v2
     canonical_relative_path: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/decision_rule.yaml
-    sha256: 39048139602e1f64bab1939542684a6652fa68f23e7946c8108cd50f086de314
+    sha256: ab5362046dcffda9a7925ac147ec5609c93dfc068c8c035eee01de66e888f456
   - logical_ref: external:gateset/ADC_TARGET_GATESET/fatal_gate_policy@v2
     policy_version: v2
     canonical_relative_path: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/fatal_gate_policy.yaml
-    sha256: 35513fc4a13ead421fd5f05fb2a93734cf758377c18f7bdb65fc99b2d28b96a7
+    sha256: 53627b608edb256255772cc60bf962c5146f9ca51b916d47e9f732d9900fce20
   - logical_ref: external:gateset/ADC_TARGET_GATESET/required_gate_policy@v2
     policy_version: v2
     canonical_relative_path: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/required_gate_policy.yaml
-    sha256: 2518fe10b3fcc3b0497cffc943d36ba904eecfbd9df040dd7a80a46ccd41038d
+    sha256: 70d765d586086c1dae626e67e22990e84a28309783378e6c351adbc9927f7c7c
   - logical_ref: external:gateset/ADC_TARGET_GATESET/unknown_policy@v2
     policy_version: v2
     canonical_relative_path: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/unknown_policy.yaml

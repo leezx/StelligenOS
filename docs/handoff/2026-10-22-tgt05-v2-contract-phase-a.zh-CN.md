@@ -46,3 +46,5 @@ registry 和状态修正已在 `e9413c1b714d6468ce1f983a3c7d81d442ff1a0f` 提交
 用户要求更换已达到长度上限的旧会话；新 [Biotech ideas 审核会话](https://chatgpt.com/g/g-p-68c041b4df6881918a83a55e2dd7ac70-biotech-ideas/c/6adaebc8-4738-83ea-8a87-894771eda8d6) 对 exact HEAD `3103d12e1fa686b83f3c4e3b54944e32c989580d` 给出 L1/L2 `REQUEST_CHANGES`。三项 blocker 详见 `logs/chatgpt-review-2026-10-23-tgt05-phase-a-round1.md`。同一 PR 内修订：显式增加 TGT-07@2.0 阴性 DIRECT 科学授权及对 RFC roster 的后续修正，v2 binding 的 MOD-TGT07 改为未构建的 `0.0.0`；三种 hard failure 不再生成可审议 TGT-05 Decision Record；新增稳定 record ID 和外部推荐差异审计 schema/政策义务，决策输入仍只有人工批准的八 Gate assessments。
 
 修订只限契约、测试及审计。新增 `jsonschema` 作为契约测试依赖，测试对三个失败状态和推荐差异分别做真实 schema 校验。旧 v1 合同与 Module 保持不变。`INST-CRC-REFRACTORY-ADC-TARGET-v2` 仍为 `HOLD`；Phase B 现须另行审核并实现 MOD-TGT05@2.0.0 和 MOD-TGT07@2.0.0，随后方可考虑激活。策略 body 变动需更新 registry 的四项 hash 和源 Git commit。完成提交、CI 和新会话复审前，本修订不获批准，也不产生 Candidate 决策或外部数据运行授权。
+
+修订 policy source commit 为 `4a485eef4594696344c333c7a1dfe6813f473a43`；registry 从该 Git 对象逐个复算四项 SHA256，均与当前工作区 body 字节一致。仓库外 venv 安装 `requirements.txt` 后，全量 `1915` tests 通过；repository boundary、`git diff --check` 和新审计 JSON Schema 语法检查通过。下一步推送同一 PR，等待 CI 并请新会话对新 exact HEAD 复审。

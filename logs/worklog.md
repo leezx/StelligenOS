@@ -7259,3 +7259,8 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 
 - 新 `Biotech ideas → PR审核请求修改` 会话对 exact HEAD `3103d12...` 给出 L1/L2 `REQUEST_CHANGES`：B1 TGT-07@1.0 ladder 未授权 GO 所需 NEGATIVE/DIRECT；B2 三种完整性失败被 schema 错误映射为 HOLD；B3 reviewer record 到获批 Assessment/Decision 的差异审计链缺失。保存摘要于 `logs/chatgpt-review-2026-10-23-tgt05-phase-a-round1.md`；没有 ChatGPT `APPROVE`，不进入 Phase B 或外部运行。
 - 读取 frozen TGT-07 ladder、已有 MOD-TGT07@1.0.0 的负向 DIRECT 行为、RFC 和现行政策后，决定在同 PR 显式提议 TGT-07@2.0 科学契约及 RFC roster 后续修正，GateSet v2 第七成员与 binding 改为 v2、Module 留 `0.0.0` 未构建；v1 字节不动。收紧 TGT-05 schema，仅 `MEASURED/NOT_MEASURED` 可成记录，失败状态改为链外 hard reject；新增稳定 record ID/外部 hash 审计 schema 和 divergence policy obligation，不把建议变为决策输入。新增 JSON Schema 真实校验测试，requirements 增 `jsonschema`。使用仓库外 `/tmp/stelligenos-pr143-venv` 安装依赖，第一次定向测试 15 项中仅 registry 旧 hash 失败，待 policy body 提交后更新 registry。`git diff --check` 与 repository boundary 已通过。
+
+## 2026-10-23 01:24 EDT — 策略内容锁定与本地复核
+
+- 显式暂存 13 个相关契约/测试/审计文件，`git diff --cached --check` 通过，提交 `4a485eef4594696344c333c7a1dfe6813f473a43`。该提交是新的 policy body source；registry 更新为该 commit，并重算 decision/fatal/required/unknown 四项 SHA256。独立用 `git show <source-commit>:<path>` 校验四个 Git blob 的 SHA256 与当前文件字节完全一致。
+- 在仓库外 `/tmp/stelligenos-pr143-venv` 中按更新 requirements 安装依赖；`PYTHONDONTWRITEBYTECODE=1 ... unittest discover -s tests -q` 全量 1915 tests 通过。`bash scripts/verify_repository_boundary.sh`、`git diff --check`、新增 JSON Schema 的 JSON 语法检查均通过。registry 仍 `PENDING_CHATGPT_REVIEW`；待提交/推送与 CI 复审。第一次全量测试仅因 registry 尚未更新出现一个预期旧 hash 失败，更新后重跑全通过。
