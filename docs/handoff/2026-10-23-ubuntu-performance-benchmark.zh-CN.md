@@ -8,9 +8,9 @@
 
 - 读取 CPU 型号/拓扑、内存与 swap、根盘和磁盘型号/空间、GPU/加速设备、系统负载与温度（若系统已有传感器工具）。
 - 不安装软件、不升级软件、不改系统/网络/防火墙配置、不重启、不跑外网测速。
-- CPU：用 Python 标准库 `hashlib.sha256` 反复处理固定的 1 MiB 字节块；worker 数依次为 1、2、4、8（不超过在线逻辑 CPU 数），每档 2 秒，记录所有 worker 完成的总 MiB/s。初始化/进程启动时间单独记录，不计入算法吞吐量。总 CPU 时间上限为 30 核秒。
+- CPU：Python 标准库构造固定块 `bytes(range(256)) * 4096`（恰好 1 MiB），用 `multiprocessing` 的 `spawn` 进程 worker 反复计算 `hashlib.sha256(block).digest()`。worker 数依次为 1、2、4、8，并过滤掉大于在线逻辑 CPU 数的档位；所有进程通过 barrier 统一开始，按 `time.monotonic()` 的共同 2 秒窗口计数。总吞吐量定义为 `所有 worker 的 hash 次数 × 1 MiB / 2 秒`；进程启动时间单独记为准备时间，不计入分数。目标机 8 CPU 时总 CPU 时间上限为 30 核秒。
 - 内存：先读 `/proc/meminfo` 的 `MemAvailable` 和 swap 使用；仅在 `MemAvailable >= 4 GiB`、swap 未增长且负载正常时执行。申请大小为 `min(256 MiB, MemAvailable/16)`，最低 128 MiB；对 4 KiB 页逐页写入，再顺序读回校验，最多 5 遍或 5 秒即停止。记录有效触碰吞吐量，不将其称为裸 DRAM 带宽；前后比较 swap 与 OOM 计数，变化则停止。
-- 磁盘：确认 `/tmp` 所在分区至少有 2 GiB 可用后，用 `dd` 以 4 MiB 块写入至多 256 MiB，并用 `oflag=direct,conv=fdatasync` 计时；随后尝试 `iflag=direct` 顺序读入 `/dev/null` 计时。若 direct I/O 不被文件系统支持则记录跳过，不把 page-cache 命中结果冒充物理盘速度；完成后删除临时文件。
+- 磁盘：先以 `findmnt -T /tmp` 和 `findmnt -T /` 确认 `/tmp` 的挂载类型/来源；仅当 `/tmp` 与根目录是同一、可确认的持久块设备挂载（ext4、xfs 或 btrfs）时继续，tmpfs、overlay、来源不同或无法确认一律跳过物理盘测试并注明。再确认至少有 2 GiB 可用，用 `dd` 以 4 MiB 块从 `/dev/zero` 写入 64 块（256 MiB），用 `oflag=direct,conv=fdatasync` 计时；随后以 `iflag=direct` 顺序读入 `/dev/null` 计时。若 direct I/O 不被文件系统支持则记录跳过，不把 page-cache 命中结果冒充物理盘速度；完成后删除临时文件。
 - 运行中若 SSH 变慢、系统开始 swap、温度工具显示超过 85°C、磁盘空间低于门槛或出现错误，立即停止并清理临时文件。
 - 结果只写入 PR 的脱敏摘要；不保存完整主机输出、账号、地址、证书或个人文件。
 
