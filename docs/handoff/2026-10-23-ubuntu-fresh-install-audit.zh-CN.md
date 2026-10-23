@@ -23,5 +23,5 @@
 ## 验证与后续
 
 - PR 提交前检查仅覆盖本 handoff 和 worklog 的 diff 与边界，不运行 Ubuntu 命令。
-- 创建 PR 并请求 GPT/ChatGPT 审核；收到明确 `APPROVE` 前停止。
-- 审核批准后，只执行本只读审计范围，并在本 handoff 与 worklog 记录命令类别、脱敏摘要及结果。
+- 负责人要求本任务保持独立 PR，并自动提交 GPT 审核；当前 PR #147 由独立 reviewer agent 按当前 GitHub HEAD 审查。
+- 收到明确 `APPROVE` 后，立即执行本只读审计并在本 handoff 与 worklog 记录命令类别、脱敏摘要及结果；非 `APPROVE` 则按审核意见留在同一 PR 修订。

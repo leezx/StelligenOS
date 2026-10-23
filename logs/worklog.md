@@ -7338,4 +7338,5 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 本地检查记录：读取 phase-gate 协议、worklog 尾部与 handoff 文件清单；在隔离 worktree 建立 `task_20261023_ubuntu_system_audit`（基于 `origin/main` `6f91d8be0b6ae1db914e0e7a0d74757537760825`）；`git diff --check` 通过。探测 `origin/master` ref 时发现仓库没有该分支，默认分支已确认为 `main`，未影响任务。
 - 16:15 EDT：提交 `6973b4129d7741196b61d7b0154454392a3175d7` 并推送分支；GitHub MCP 创建 PR 返回 403（integration 无权限），改用已登录的 `gh` CLI 成功创建 [PR #147](https://github.com/leezx/StelligenOS/pull/147)。尚未执行 Ubuntu SSH 检查；等待 GPT/ChatGPT 对该 PR 的明确 `APPROVE`。
 - 16:15 EDT：读取 `ChatGPT-Codex-talk.md` 第 1–2 节及第 8 节，确认最终审核不由执行方完成，PR 需由负责人转交 ChatGPT/指定模型审核；本轮不自行给出 APPROVE，也不连接 Ubuntu。
+- 16:30 EDT：负责人明确要求本任务使用独立 PR（不复用其他 PR），自动提交 GPT 审核，并在明确 `APPROVE` 后执行审计。按授权安排独立 reviewer agent 审核 PR #147 当前 HEAD；审核通过后立即执行只读 SSH 审计。Ubuntu 检查与安装结果仍按审计边界处理，不以自动化绕过仓库批准门禁。
 - 数据边界：只记录必要的系统摘要；不读取个人文件、凭据或业务数据，不把外部主机输出/数据复制进仓库。当前记录不构成安装或配置变更授权。
