@@ -1,0 +1,15 @@
+module_id: MOD-TGT05
+module_version: "2.0.0"
+gate_id: TGT-05
+gate_version: "2.0"
+gateset_id: ADC_TARGET_GATESET
+gateset_version: "2.0"
+status: UNBOUND
+construction_contract: src/contracts/gate_modules/tgt05_normal_tissue_adc_toxicity_v2.yaml
+gate_contract: src/contracts/crc_adc_target_gateset_v2.yaml
+review_record_schema: src/contracts/gate_modules/tgt05_decision_record_v2.schema.json
+entrypoint: gate_modules.tgt05_normal_tissue_adc_toxicity_v2.run
+boundary: >-
+  In-memory evidence producer only. No provider/network implementation,
+  persistence, canonical HUMAN_APPROVED assessment, Candidate Decision, or
+  activation of the v2 Instantiation. B4 must review binding separately.
