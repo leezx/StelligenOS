@@ -73,6 +73,10 @@ _KEYS_ALWAYS: tuple[str, ...] = (
     "affinity_basis",
     "assay_unit",
     "detection_limit_basis",
+    "detection_limit_value",
+    "detection_limit_unit",
+    "assay_analyte",
+    "quantitative_input_source_id",
     "context_key",
     "landscape_as_of",
     "observation_kind",
@@ -177,6 +181,17 @@ def _measurement_result(item: ClassifiedSolubleAntigenObservation) -> str:
     )
 
 
+def _measurement(item: ClassifiedSolubleAntigenObservation) -> dict[str, str]:
+    o = item.observation
+    return {
+        "type": "adc_target_soluble_antigen_sink_liability_observation",
+        "analyte": o.target_identity,
+        "readout": f"{o.observation_kind}/{o.analysis_method or 'search_audit'}",
+        "result": _measurement_result(item),
+        "unit": "",
+    }
+
+
 def _study_context_facts(
     o: NormalizedSolubleAntigenObservation,
 ) -> tuple[str, str, str]:
@@ -248,6 +263,10 @@ def _reused_package_is_compatible(
         )
     if existing.claim != o.claim:
         return "canonical EvidencePackage claim differs from the observation"
+    if existing.provenance.get("retrieved_at") != o.retrieved_at:
+        return "canonical EvidencePackage provenance.retrieved_at differs from the observation"
+    if existing.measurement != _measurement(item):
+        return "canonical EvidencePackage measurement differs from the normalized observation"
     if candidate_id not in tuple(existing.candidate_refs):
         return "canonical EvidencePackage candidate_refs do not include this candidate"
     keys = _parity_keys(o)
@@ -264,6 +283,11 @@ def _reused_package_is_compatible(
                 f"but the current normalized observation has {current[key]!r} "
                 f"(classification-driving drift)"
             )
+    ind, treatment, sample = _study_context_facts(o)
+    if any(existing.study_context.get(k) != v for k, v in (
+        ("indication", ind), ("treatment_state", treatment), ("sample_type", sample)
+    )):
+        return "canonical EvidencePackage factual study_context differs from the observation"
     return ""
 
 
@@ -367,13 +391,7 @@ def build_evidence_packages(
             evidence_id=evidence_id,
             schema_version=1,
             claim=o.claim,
-            measurement={
-                "type": "adc_target_soluble_antigen_sink_liability_observation",
-                "analyte": o.target_identity,
-                "readout": f"{o.observation_kind}/{o.analysis_method or 'search_audit'}",
-                "result": _measurement_result(item),
-                "unit": "",
-            },
+            measurement=_measurement(item),
             candidate_refs=(module_input.candidate_id,),
             study_context=study_context,
             provenance={

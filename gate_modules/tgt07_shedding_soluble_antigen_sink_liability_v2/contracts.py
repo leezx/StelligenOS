@@ -50,6 +50,7 @@ AI审核方案 E16 -- the 7 required implementation tightenings):
 from __future__ import annotations
 
 import re
+import math
 from dataclasses import dataclass, field, fields
 from typing import Final
 
@@ -161,6 +162,9 @@ _MIXED_OR_UNRESOLVED = "MIXED_OR_UNRESOLVED"
 _MATERIAL_SINK_OUTCOMES: Final[tuple[str, ...]] = (
     _MATERIAL_WITH_COMPROMISE,
     _MATERIAL_WITHOUT_COMPROMISE,
+)
+CONCENTRATION_UNIT_VALUES: Final[tuple[str, ...]] = (
+    "ng/mL", "pg/mL", "µg/mL", "mg/L", "nM", "pM", "µM",
 )
 
 #: NEW CLOSED typed circulating-soluble-target status (E15-8 / tightening 2). Lets
@@ -361,6 +365,10 @@ class NormalizedSolubleAntigenObservation:
     affinity_basis: str = ""
     assay_unit: str = ""
     detection_limit_basis: str = ""
+    detection_limit_value: float | None = None
+    detection_limit_unit: str = ""
+    assay_analyte: str = ""
+    quantitative_input_source_id: str = ""
     # --- SEARCH_COMPLETION_AUDIT-specific structured snapshot (E14-5 gene) ----
     #  the snapshot field names ARE the typed completion's field names.
     audit_search_scope: str = ""
@@ -486,10 +494,22 @@ class NormalizedSolubleAntigenObservation:
         for name in (
             "construct_id", "dose_exposure_basis", "soluble_concentration_basis",
             "turnover_basis", "affinity_basis", "assay_unit", "detection_limit_basis",
+            "detection_limit_unit", "assay_analyte", "quantitative_input_source_id",
         ):
             _text(getattr(self, name), name, allow_empty=True)
-        if self.assay_unit and not re.fullmatch(r"[A-Za-z0-9µμ%/._ -]+", self.assay_unit):
-            raise ValueError("assay_unit contains an invalid quantitative unit")
+        if self.assay_unit and self.assay_unit not in CONCENTRATION_UNIT_VALUES:
+            raise ValueError("assay_unit is not a supported concentration unit")
+        if self.detection_limit_unit and self.detection_limit_unit not in CONCENTRATION_UNIT_VALUES:
+            raise ValueError("detection_limit_unit is not a supported concentration unit")
+        if self.detection_limit_value is not None and (
+            isinstance(self.detection_limit_value, bool)
+            or not isinstance(self.detection_limit_value, (int, float))
+            or not math.isfinite(self.detection_limit_value)
+            or self.detection_limit_value <= 0
+        ):
+            raise ValueError("detection_limit_value must be a finite positive number")
+        if self.quantitative_input_source_id:
+            _pattern(self.quantitative_input_source_id, _SRC_ID, "quantitative_input_source_id")
 
         kind = self.observation_kind
 
@@ -707,7 +727,13 @@ class NormalizedSolubleAntigenObservation:
             and all(bool(getattr(self, name).strip()) for name in (
                 "construct_id", "dose_exposure_basis", "soluble_concentration_basis",
                 "turnover_basis", "affinity_basis", "assay_unit",
+                "detection_limit_basis", "assay_analyte",
+                "quantitative_input_source_id",
             ))
+            and self.detection_limit_value is not None
+            and self.detection_limit_unit == self.assay_unit
+            and self.assay_analyte == self.target_identity
+            and self.quantitative_input_source_id == self.source_id
         )
 
     @property
@@ -1077,9 +1103,9 @@ class Tgt07ModuleInput:
             raise ValueError(f"gate_id must be {GATE_ID!r}")
         if self.gate_version != GATE_VERSION:
             raise ValueError(f"gate_version must be {GATE_VERSION!r}")
-        if self.evidence_regime != "PUBLIC_ONLY":
+        if self.evidence_regime != "PUBLIC_PLUS_EXPERIMENTAL":
             raise ValueError(
-                "evidence_regime must be PUBLIC_ONLY for the current TGT-07 instantiation"
+                "evidence_regime must be PUBLIC_PLUS_EXPERIMENTAL for the v2 Instantiation"
             )
         _text(self.run_id, "run_id")
         _text(self.code_commit, "code_commit", allow_empty=True)

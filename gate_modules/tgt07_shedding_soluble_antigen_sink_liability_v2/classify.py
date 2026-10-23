@@ -259,6 +259,10 @@ def classify_observation(
             and observation.circulating_soluble_target_status == "QUANTIFIED_PRESENT"
             and bool(observation.assay_unit.strip())
             and bool(observation.detection_limit_basis.strip())
+            and observation.detection_limit_value is not None
+            and observation.detection_limit_unit == observation.assay_unit
+            and observation.assay_analyte == observation.target_identity
+            and observation.quantitative_input_source_id == observation.source_id
         ):
             return _admit(
                 observation,

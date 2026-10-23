@@ -268,6 +268,14 @@ def completeness_contradiction(completion: SolubleAntigenEvidenceCompletion) -> 
             "healthy_donor_quantitation_subspace_search_complete="
             f"{completion.healthy_donor_quantitation_subspace_search_complete})"
         )
+    if completion.public_soluble_antigen_search_complete and any(
+        item.kind == "KNOWN_PUBLIC_NOT_YET_RESOLVED"
+        for item in completion.unresolved_items
+    ):
+        return (
+            "SolubleAntigenEvidenceCompletion falsely claims a complete public "
+            "landscape while a known public search item remains unfetched"
+        )
     return ""
 
 

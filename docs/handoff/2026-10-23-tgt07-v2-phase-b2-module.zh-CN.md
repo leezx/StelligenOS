@@ -12,3 +12,9 @@
 
 - B2 合成测试 101 项通过；全库 `PYTHONDONTWRITEBYTECODE=1 /tmp/stelligenos-pr143-venv/bin/python -m unittest discover -s tests -q`：2,049 项通过。此前系统 Python 的 pytest 生成 `__pycache__` 导致 4 项仓库卫生测试失败，清理缓存后同一全量套件通过。
 - 本 PR 仍需提交并等待 ChatGPT 对 exact HEAD 明确 `APPROVE`；之后仍需人工 L3 决定合并和进入 B3。B2 本身不授权外部数据运行。webReport 的采集/运行还需其独立 PR 与 Git remote。
+
+## PR #146 首轮审核与定向修订
+
+- 初版 HEAD `6f1679b048abb615c85b1287cfbf0b5216b00ba6`，CI run `39952275926` Python 3.11/3.12 各 2,049 tests SUCCESS。ChatGPT L1/L2/整体 `REQUEST_CHANGES`：4 项 P1、2 项 P2，详情见 `logs/chatgpt-review-2026-10-23-tgt07-phase-b2-round1.md`。
+- 同一 PR 内定向修订：输入 `evidence_regime` 精确匹配冻结 v2 Instantiation；EP reuse 比对 factual measurement、`retrieved_at` 和 study context；已知公共来源未抓取而宣称 COMPLETE 为 hard reject，访问受阻的未解项阻止限定阴性但不抹掉独立 material DIRECT；TMDD 阴性补检测限数值/单位、analyte、同源依据和受控浓度单位。P2 说明弱 EP 仍留在 accepted run，port 异常属于外部运行器基础设施失败。
+- 新合成反例及全量 CI 待确认；未合并、未进入 B3/激活/真实数据运行。

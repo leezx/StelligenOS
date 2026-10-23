@@ -460,7 +460,13 @@ def evaluate(
         s != "WEAK",
         "the proposal carries the WEAK strength -- TGT-07 never proposes WEAK",
     )
-    strength_ok = (not completion.landscape_complete) or (
+    negative_blocked_by_unresolved = (
+        bool(completion.unresolved_items)
+        and d == "INCONCLUSIVE" and s == "UNKNOWN"
+        and any(e.classified.qualifying_direct_no_material_sink for e in admissible)
+        and not any(e.classified.qualifying_direct_material_sink for e in admissible)
+    )
+    strength_ok = (not completion.landscape_complete) or negative_blocked_by_unresolved or (
         ((s == "DIRECT") == outcome.has_direct_rung)
         and (
             (s == "INDIRECT_STRONG")
@@ -517,6 +523,8 @@ def evaluate(
             expect = ("POSITIVE", "DIRECT")
         elif conflicted_ctx:
             expect = ("CONFLICTING", "DIRECT")
+        elif no_material_ctx and completion.unresolved_items:
+            expect = ("INCONCLUSIVE", "UNKNOWN")
         elif no_material_ctx:
             expect = ("NEGATIVE", "DIRECT")
         elif has_mixed:

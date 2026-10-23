@@ -212,6 +212,22 @@ def run(
             )
             hard_integrity_failures.append((o.observation_id, why))
             rejected_records.append((o.observation_id, why))
+        if o.quantitative_input_source_id and o.quantitative_input_source_id != o.source_id:
+            why = (
+                f"observation {o.observation_id} quantitative input source "
+                f"{o.quantitative_input_source_id!r} does not match its canonical "
+                f"integrated-analysis source {o.source_id!r}"
+            )
+            hard_integrity_failures.append((o.observation_id, why))
+            rejected_records.append((o.observation_id, why))
+        if o.assay_analyte and o.assay_analyte != o.target_identity:
+            why = f"observation {o.observation_id} assay analyte disagrees with target"
+            hard_integrity_failures.append((o.observation_id, why))
+            rejected_records.append((o.observation_id, why))
+        if o.assay_unit and o.detection_limit_unit and o.assay_unit != o.detection_limit_unit:
+            why = f"observation {o.observation_id} assay and detection-limit units disagree"
+            hard_integrity_failures.append((o.observation_id, why))
+            rejected_records.append((o.observation_id, why))
         if (
             o.observation_kind == "SOLUBLE_ANTIGEN_TMDD_ANALYSIS"
             and o.exposure_scenario_class == "INTENDED_ADC_EXPOSURE"

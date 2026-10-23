@@ -7,6 +7,7 @@ remain independent. No external data or canonical assessment is involved.
 from __future__ import annotations
 
 import ast
+import dataclasses
 import itertools
 import unittest
 from pathlib import Path
@@ -108,6 +109,10 @@ def _obs(**kw) -> NormalizedSolubleAntigenObservation:
         affinity_basis="",
         assay_unit="",
         detection_limit_basis="",
+        detection_limit_value=None,
+        detection_limit_unit="",
+        assay_analyte="",
+        quantitative_input_source_id="",
         context_key=CONTEXT_KEY,
         landscape_as_of=AS_OF,
         observation_kind="SHEDDASE_SUBSTRATE_STATUS",
@@ -163,6 +168,10 @@ def _quant(status="QUANTIFIED_PRESENT", cohort="CRC_PATIENT_SERUM", **kw):
     kw.setdefault("cohort_class_basis", "cohort described")
     kw.setdefault("assay_unit", "ng/mL")
     kw.setdefault("detection_limit_basis", "source assay LoD and LoQ")
+    kw.setdefault("detection_limit_value", 0.1)
+    kw.setdefault("detection_limit_unit", "ng/mL")
+    kw.setdefault("assay_analyte", TARGET_A)
+    kw.setdefault("quantitative_input_source_id", "SRC-00000001")
     return _obs(**kw)
 
 
@@ -217,6 +226,11 @@ def _tmdd(
     kw.setdefault("turnover_basis", "measured turnover input")
     kw.setdefault("affinity_basis", "measured affinity input")
     kw.setdefault("assay_unit", "ng/mL")
+    kw.setdefault("detection_limit_basis", "source states validated LoD")
+    kw.setdefault("detection_limit_value", 0.1)
+    kw.setdefault("detection_limit_unit", "ng/mL")
+    kw.setdefault("assay_analyte", TARGET_A)
+    kw.setdefault("quantitative_input_source_id", "SRC-00000001")
     kw.setdefault("analysis_method", "TMDD model with soluble-antigen compartment")
     kw.setdefault("sink_materiality_outcome", outcome)
     if outcome != "NOT_ESTABLISHED":
@@ -334,7 +348,7 @@ def _input(**kw) -> Tgt07ModuleInput:
         gateset_version="2.0",
         gate_id="TGT-07",
         gate_version="2.0",
-        evidence_regime="PUBLIC_ONLY",
+        evidence_regime="PUBLIC_PLUS_EXPERIMENTAL",
         run_id="run-e16-1",
         code_commit="deadbeef",
         context_key=CONTEXT_KEY,
@@ -387,6 +401,12 @@ def _std_landscape(*observations, qualifying_ctx=(), unresolved=()):
 # =====================================================================
 
 class BindingAndBoundaryTests(unittest.TestCase):
+    def test_evidence_regime_matches_frozen_v2_instantiation(self):
+        gs = yaml.safe_load(
+            (REPO_ROOT / "src" / "contracts" / "crc_adc_target_gateset_v2.yaml").read_text()
+        )
+        self.assertEqual(_input().evidence_regime,
+                         gs["instantiation"]["evidence_regime"])
     def test_v2_module_is_unbound(self):
         gs = yaml.safe_load(
             (REPO_ROOT / "src" / "contracts" / "crc_adc_target_gateset_v2.yaml").read_text()
@@ -686,6 +706,43 @@ class AggregationTruthTableTests(unittest.TestCase):
 # =====================================================================
 
 class CompletionInvariantTests(unittest.TestCase):
+    def test_claimed_complete_with_known_unfetched_public_item_is_hard(self):
+        item = SolubleAntigenUnresolvedItem(
+            "known public serum dataset not fetched", "KNOWN_PUBLIC_NOT_YET_RESOLVED"
+        )
+        obs, comp = _std_landscape(
+            _tmdd(outcome="NO_MATERIAL_SOLUBLE_SINK"),
+            qualifying_ctx=(SINKCTX_A,), unresolved=(item,),
+        )
+        res, _, _ = _run(obs, comp)
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertIsNone(res.proposal_envelope)
+        self.assertEqual(res.evidence_packages, ())
+
+    def test_access_blocked_source_prevents_negative_but_not_positive_direct(self):
+        item = SolubleAntigenUnresolvedItem(
+            "source annotation inaccessible", "ACCESS_OR_ANNOTATION_BLOCKED"
+        )
+        negative_obs, comp = _std_landscape(
+            _tmdd(outcome="NO_MATERIAL_SOLUBLE_SINK"),
+            qualifying_ctx=(SINKCTX_A,), unresolved=(item,),
+        )
+        neg, _, _ = _run(negative_obs, comp)
+        self.assertTrue(neg.machine_acceptance.accepted, neg.machine_acceptance.reasons)
+        self.assertEqual((neg.proposal_envelope.proposed_direction,
+                          neg.proposal_envelope.proposed_strength),
+                         ("INCONCLUSIVE", "UNKNOWN"))
+        self.assertTrue(neg.proposal_envelope.critical_unknowns)
+
+        positive_obs, comp2 = _std_landscape(
+            _clinical(ctx=SINKCTX_A), qualifying_ctx=(SINKCTX_A,),
+            unresolved=(item,),
+        )
+        pos, _, _ = _run(positive_obs, comp2)
+        self.assertTrue(pos.machine_acceptance.accepted, pos.machine_acceptance.reasons)
+        self.assertEqual((pos.proposal_envelope.proposed_direction,
+                          pos.proposal_envelope.proposed_strength),
+                         ("POSITIVE", "DIRECT"))
     def test_crc_subspace_true_healthy_false_but_quant_axis_true_is_hard(self):
         comp = SolubleAntigenEvidenceCompletion(
             attempted=True, landscape_as_of=AS_OF, search_scope=SCOPE,
@@ -985,6 +1042,7 @@ class EvidenceReuseAndDedupTests(unittest.TestCase):
             _KEYS_ALWAYS,
             _AUDIT_KEYS,
             _study_context_facts,
+            _measurement,
         )
 
         ind, treat, samp = _study_context_facts(o)
@@ -997,7 +1055,7 @@ class EvidenceReuseAndDedupTests(unittest.TestCase):
             evidence_id=evidence_id,
             schema_version=1,
             claim=o.claim,
-            measurement={"type": "t", "analyte": o.target_identity, "readout": "r", "result": "x", "unit": ""},
+            measurement=_measurement(classify_observation(o, canonical_target_identity=TARGET_A)),
             candidate_refs=("CAND-L04-000001",),
             study_context=sc,
             provenance={
@@ -1018,6 +1076,27 @@ class EvidenceReuseAndDedupTests(unittest.TestCase):
         res, alloc, _ = _run(obs, comp, library=Lib({"OBS-REUSE-1": can}))
         self.assertIn("EP-00009001", res.reused_evidence_ids)
         self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+
+    def test_reuse_retrieved_at_drift_hard_rejects(self):
+        o = _sheddase(observation_id="OBS-REUSE-TIME")
+        obs, comp = _std_landscape(o)
+        can = self._canonical(o)
+        bad = dataclasses.replace(can, provenance={**can.provenance,
+                                                  "retrieved_at": "2025-01-01"})
+        res, _, _ = _run(obs, comp, library=Lib({o.observation_id: bad}))
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertIsNone(res.proposal_envelope)
+        self.assertEqual(res.evidence_packages, ())
+
+    def test_reuse_measurement_drift_hard_rejects(self):
+        o = _sheddase(observation_id="OBS-REUSE-MEAS")
+        obs, comp = _std_landscape(o)
+        can = self._canonical(o)
+        bad = dataclasses.replace(can, measurement={**can.measurement,
+                                                   "result": "different fact"})
+        res, _, _ = _run(obs, comp, library=Lib({o.observation_id: bad}))
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertEqual(res.evidence_packages, ())
 
     def test_reuse_with_drifted_sink_materiality_outcome_is_hard(self):
         o = _clinical(observation_id="OBS-REUSE-2", ctx=SINKCTX_A)
@@ -1183,6 +1262,26 @@ class OutputSurfaceTests(unittest.TestCase):
              res.proposal_envelope.proposed_strength),
             ("INCONCLUSIVE", "UNKNOWN"),
         )
+
+    def test_missing_tmdd_detection_limit_cannot_propose_negative(self):
+        o = _tmdd(outcome="NO_MATERIAL_SOLUBLE_SINK", detection_limit_basis="")
+        obs, comp = _std_landscape(o)
+        res, _, _ = _run(obs, comp)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        self.assertEqual((res.proposal_envelope.proposed_direction,
+                          res.proposal_envelope.proposed_strength),
+                         ("INCONCLUSIVE", "UNKNOWN"))
+
+    def test_invalid_quantitative_unit_is_rejected_at_input_boundary(self):
+        with self.assertRaises(ValueError):
+            _tmdd(assay_unit="heartbeats/min")
+
+    def test_contradictory_assay_and_detection_limit_units_hard_rejects(self):
+        o = _tmdd(detection_limit_unit="pM")
+        obs, comp = _std_landscape(o)
+        res, _, _ = _run(obs, comp)
+        self.assertFalse(res.machine_acceptance.accepted)
+        self.assertEqual(res.evidence_packages, ())
 
     def test_unbounded_quantitation_without_assay_limit_is_contextual(self):
         obs, comp = _std_landscape(_quant(detection_limit_basis=""))

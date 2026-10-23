@@ -240,6 +240,22 @@ def aggregate(
 
     # --- step 4: a qualifying intended-ADC no-material-sink TMDD, no material-sink
     if no_material:
+        if completion.unresolved_items:
+            return AggregationOutcome(
+                proposed_direction="INCONCLUSIVE",
+                proposed_strength="UNKNOWN",
+                evidence_refs=(),
+                aggregation_rationale=(
+                    "an intended-ADC no-material-sink TMDD is present, but a "
+                    "declared unresolved public source prevents the bounded "
+                    "negative conclusion; human review must resolve the source"
+                ),
+                critical_unknowns=tuple(unknowns),
+                overall_ceiling="DIRECT",
+                landscape_complete=True,
+                has_direct_rung=True,
+                has_qualifying_indirect=has_indirect,
+            )
         rationale = (
             "the completed audited soluble-antigen-evidence landscape carries at "
             "least one qualifying no-material-sink DIRECT observation -- a "
