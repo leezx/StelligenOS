@@ -28,3 +28,8 @@ chmod u+x ~/ubuntu_wait_online_fix.sh
 ```
 
 脚本会输出保护性备份目录，并要求两次交互确认。只有 Wi-Fi 仍连通且 wait-online service 启动成功后才保留修改；否则恢复旧配置。
+
+## 当前状态
+
+- Branch：`task_20261023_ubuntu_wait_online_fix`，初始脚本提交已推送；PR 独立审核完成前不会上传至 Ubuntu 或更改目标机配置。
+- 目标主机配置、服务和防火墙尚未修改；脚本没有在 Ubuntu 上运行。
