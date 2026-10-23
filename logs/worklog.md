@@ -7330,3 +7330,10 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 同 PR 提交并推送修订 `a364727e6da3edc48ce66bc103e66c5d7791c9a1`；本地全量 1948 tests OK、repository boundary 与 diff 检查通过。GitHub Actions run `39949078070` Python 3.11/3.12 均 SUCCESS；向原 ChatGPT 会话提交只审 6 项 finding 及必要回归的 Round 2 请求。
 - ChatGPT 直接核对 PR delta、冻结科学合同、对抗测试和 CI，给出 L1 `APPROVE`、L2 `PASS / APPROVE`、整体 B1 `APPROVE`，5 P1 + 1 P2 全部 `RESOLVED`，blocker 0。摘要见 `logs/chatgpt-review-2026-10-23-tgt05-phase-b1-round2.md`。批准仅未绑定模块，不含自动合并、B2、激活或真实数据。
 - 新增 round 2 审核记录并更新 handoff/worklog 以符合每步留痕。此 metadata-only 提交改变 exact HEAD 后须再审；未进行合并或依赖阶段工作。
+## 2026-10-23 16:13 EDT — Ubuntu fresh-install audit preparation
+
+- 负责人要求通过 SSH 检查其新安装 Ubuntu 主机，判断基础系统组件是否缺失，并给出必要安装建议。
+- 检查本地仓库状态时发现当前主工作区有多项与本任务无关的未提交文件；未触碰这些文件。按仓库 Phase gate 协议，外部 SSH 检查须先有 PR 留痕并取得明确 `APPROVE`。
+- 当前只准备本审计范围的 handoff/PR。尚未连接 Ubuntu、读取主机信息、安装软件或更改配置。PR 获批后，审计将先以只读命令核对系统版本、内核/架构、磁盘与内存、软件源/更新状态、网络、SSH、防火墙和必要基础工具；依据结果报告缺项与安装建议。
+- 本地检查记录：读取 phase-gate 协议、worklog 尾部与 handoff 文件清单；在隔离 worktree 建立 `task_20261023_ubuntu_system_audit`（基于 `origin/main` `6f91d8be0b6ae1db914e0e7a0d74757537760825`）；`git diff --check` 通过。探测 `origin/master` ref 时发现仓库没有该分支，默认分支已确认为 `main`，未影响任务。
+- 数据边界：只记录必要的系统摘要；不读取个人文件、凭据或业务数据，不把外部主机输出/数据复制进仓库。当前记录不构成安装或配置变更授权。
