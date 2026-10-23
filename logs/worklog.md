@@ -7330,3 +7330,43 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 同 PR 提交并推送修订 `a364727e6da3edc48ce66bc103e66c5d7791c9a1`；本地全量 1948 tests OK、repository boundary 与 diff 检查通过。GitHub Actions run `39949078070` Python 3.11/3.12 均 SUCCESS；向原 ChatGPT 会话提交只审 6 项 finding 及必要回归的 Round 2 请求。
 - ChatGPT 直接核对 PR delta、冻结科学合同、对抗测试和 CI，给出 L1 `APPROVE`、L2 `PASS / APPROVE`、整体 B1 `APPROVE`，5 P1 + 1 P2 全部 `RESOLVED`，blocker 0。摘要见 `logs/chatgpt-review-2026-10-23-tgt05-phase-b1-round2.md`。批准仅未绑定模块，不含自动合并、B2、激活或真实数据。
 - 新增 round 2 审核记录并更新 handoff/worklog 以符合每步留痕。此 metadata-only 提交改变 exact HEAD 后须再审；未进行合并或依赖阶段工作。
+
+## 2026-10-23 17:33 EDT — miniPC 能力报告起草
+
+- 负责人要求把之前的 miniPC 性能报告写进本地 home，以便后续按能力边界安排任务。依据已审核 PR #149 的 handoff/脱敏摘要整理，不重新连接或测试设备；将“本地 home”按上下文解释为 Ubuntu 用户 `/home/stelligen`。
+- 新建报告 handoff `docs/handoff/2026-10-23-minipc-capability-report.zh-CN.md`，区分实测、未测试和由硬件推断的适用建议。摘要仅包含允许的脱敏结果，不复制原始主机输出、账号地址、个人文件或日志。拟在独立 PR 审核通过后复制到 `/home/stelligen/MINIPC_CAPABILITY_REPORT.md`。
+- 报告目前只在本地新工作树中，未写入 Ubuntu home；等待 PR exact-head GPT/ChatGPT `APPROVE` 前不执行远程写入。
+- 17:34 EDT：首次 `git diff --cached --check` 因 Markdown 日期/设备行尾空格失败；已移除空格并重跑检查，通过。没有其他文件暂存。
+
+
+- 17:34 EDT：提交 `098fcf81e83ee963f3b44d9c544c2e73aafe7f05`，首次推送新分支 `task_20261023_minipc_capability_report`，创建独立 PR #151（base `main`，URL https://github.com/leezx/StelligenOS/pull/151），并附加 PR 到当前任务。GitHub CI Python 3.11/3.12 已排队；initial exact HEAD 待审核。未连接或写入 Ubuntu。
+
+
+## 2026-10-23 17:36 EDT — miniPC 能力报告获批并写入 Ubuntu home
+
+- 独立 GPT reviewer 对 PR #151 exact HEAD `22e3b7deb3c843b9f22ff678e5d0172a645ff059` 给出 `APPROVE`；确认结果与已审 PR #149 一致，未测边界清楚，没有原始主机输出或敏感网络信息。审核者未连接或写入 Ubuntu。
+- 在确认 PR exact HEAD 仍为该批准 SHA 后，通过 SCP 将 `docs/handoff/2026-10-23-minipc-capability-report.zh-CN.md` 写入 `/home/stelligen/MINIPC_CAPABILITY_REPORT.md`。本地/远端 SHA256 一致：`821deef35083640a98778c4ddb01c26600850dcab40884a9c5beb9734f13e06d`；远端权限 `-rw-r--r--`，属主 `stelligen:stelligen`，大小 4405 bytes。该操作仅创建报告文件；没有运行性能测试或更改 Ubuntu 系统配置。
+- 更新 handoff 记录审批和上传状态；PR #151 保持 OPEN，待把这条外部写入审计记录提交同一 PR 并对最新 HEAD 复核。
+- 17:36 EDT：同步更新 PR #151 描述，明确已审 SHA、报告 home 路径、SHA256 和未运行/未改配置边界；`gh pr view` 确认描述与 handoff 一致，PR head 仍为已审 `22e3b7deb3c843b9f22ff678e5d0172a645ff059`。后续仅提交上传审计记录并复审。
+- 17:37 EDT：调用 `scripts/git_sync.sh` 时因为上一条命令已显式暂存两文件，脚本按设计拒绝（staging area is not empty）；没有提交/推送。已仅对这两份相关文件执行 unstaged reset，保留工作树内容；随后用 git_sync 完成规范提交。
+
+
+## 2026-10-23 17:37 EDT — PR #151 Round 1 审计记录 REQUEST_CHANGES
+
+- 独立 GPT 对 PR #151 exact HEAD `d4ca45377bf4de5a03a5e6e2dd1d9fa66ba7ea86` 的最终审计提交复核为 `REQUEST_CHANGES`。报告事实摘要及 PR 描述正确；问题是 handoff 的“正在写回 PR”状态已过期、上传 hash 对应已上传版本而非 handoff 更新后的文件，并要求记录明确的完整审计提交 SHA。
+- 处理方式：把纯报告正文拆至 `docs/MINIPC_CAPABILITY_REPORT.zh-CN.md`，移除可变交付状态；handoff 只记来源、审核和远端文件状态，明确旧上传版本仍含旧说明并需新报告重新审批后覆盖。新改动仅 docs/worklog，未连接或写入 Ubuntu。
+- 本次外部 home 内容暂时仍是旧获批草稿（SHA256 `821deef35083640a98778c4ddb01c26600850dcab40884a9c5beb9734f13e06d`）；不会覆盖，直到新报告 exact HEAD 获 GPT/ChatGPT `APPROVE`。
+- 17:38 EDT：本轮正文/交接分离修订提交 `481bf75506bc193fbade5ce2c617f1768b54af7f` 已推送同一 PR #151。更新 PR 描述指向独立报告 `docs/MINIPC_CAPABILITY_REPORT.zh-CN.md`，标明旧 home 版本仍待更换及新 exact-head 复审门禁；`gh pr view` 确认描述与 handoff 一致。此处记录的是修订代码提交 SHA；随后的审计状态提交会形成新的 PR tip。
+
+
+## 2026-10-23 17:38 EDT — 新报告版本获批并替换 Ubuntu home 文件
+
+- 独立 GPT reviewer 对 PR #151 exact HEAD `b5a5f81548bb318a30433b37445c94371906a28f` 给出 `APPROVE`；审核确认报告正文与 PR #149 结果一致，未测边界明确，handoff/worklog/PR body 已解决前轮元数据问题。
+- 核对 PR head 未变后，将独立正文 `docs/MINIPC_CAPABILITY_REPORT.zh-CN.md` 复制覆盖 `/home/stelligen/MINIPC_CAPABILITY_REPORT.md`。SHA256：`2011e4bb3d910cb55a9a74309529662a6dcce2297f7c15146db2a11469a20dfb`，本地与远端完全一致；文件权限 `-rw-r--r--`，属主 `stelligen:stelligen`，大小 3874 bytes。旧 home 版本由此次覆盖取代。
+- 只写入一份报告文件；没有重新运行基准，没有安装/升级软件、改配置/网络/防火墙或重启。上传状态已更新到 handoff；本条审计记录还要推送到同一 PR 并对最终 HEAD 复审。
+
+
+## 2026-10-23 17:39 EDT — PR #151 Round 2 审计元数据 REQUEST_CHANGES 修订
+
+- 独立 GPT 对 PR #151 exact HEAD `6e3040e67134cc9fda729cd3ed472fb6152d4711` 复核为 `REQUEST_CHANGES`。唯一问题是 handoff 当前状态仍保留“等待审核/之后替换 home”的过期句，与后续已批准并完成覆盖矛盾；报告正文和 SHA 未变化。
+- 已在同一 PR 将该等待状态改写为完整历史时间线：22e3 首稿 APPROVE/上传、d4 REQUEST_CHANGES、481 分离报告与交付记录、b5 APPROVE、17:38 覆盖新正文。新增当前状态说明该 audit tip 的过期记录错误，待本轮修正后的 exact HEAD 复审。Ubuntu 文件及其 SHA `2011e4bb3d910cb55a9a74309529662a6dcce2297f7c15146db2a11469a20dfb` 不变；没有新的主机操作。
