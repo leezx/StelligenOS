@@ -7330,3 +7330,10 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 同 PR 提交并推送修订 `a364727e6da3edc48ce66bc103e66c5d7791c9a1`；本地全量 1948 tests OK、repository boundary 与 diff 检查通过。GitHub Actions run `39949078070` Python 3.11/3.12 均 SUCCESS；向原 ChatGPT 会话提交只审 6 项 finding 及必要回归的 Round 2 请求。
 - ChatGPT 直接核对 PR delta、冻结科学合同、对抗测试和 CI，给出 L1 `APPROVE`、L2 `PASS / APPROVE`、整体 B1 `APPROVE`，5 P1 + 1 P2 全部 `RESOLVED`，blocker 0。摘要见 `logs/chatgpt-review-2026-10-23-tgt05-phase-b1-round2.md`。批准仅未绑定模块，不含自动合并、B2、激活或真实数据。
 - 新增 round 2 审核记录并更新 handoff/worklog 以符合每步留痕。此 metadata-only 提交改变 exact HEAD 后须再审；未进行合并或依赖阶段工作。
+
+## 2026-10-23 17:33 EDT — miniPC 能力报告起草
+
+- 负责人要求把之前的 miniPC 性能报告写进本地 home，以便后续按能力边界安排任务。依据已审核 PR #149 的 handoff/脱敏摘要整理，不重新连接或测试设备；将“本地 home”按上下文解释为 Ubuntu 用户 `/home/stelligen`。
+- 新建报告 handoff `docs/handoff/2026-10-23-minipc-capability-report.zh-CN.md`，区分实测、未测试和由硬件推断的适用建议。摘要仅包含允许的脱敏结果，不复制原始主机输出、账号地址、个人文件或日志。拟在独立 PR 审核通过后复制到 `/home/stelligen/MINIPC_CAPABILITY_REPORT.md`。
+- 报告目前只在本地新工作树中，未写入 Ubuntu home；等待 PR exact-head GPT/ChatGPT `APPROVE` 前不执行远程写入。
+- 17:34 EDT：首次 `git diff --cached --check` 因 Markdown 日期/设备行尾空格失败；已移除空格并重跑检查，通过。没有其他文件暂存。
