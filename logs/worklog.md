@@ -7364,3 +7364,9 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 独立 GPT reviewer 对 PR #151 exact HEAD `b5a5f81548bb318a30433b37445c94371906a28f` 给出 `APPROVE`；审核确认报告正文与 PR #149 结果一致，未测边界明确，handoff/worklog/PR body 已解决前轮元数据问题。
 - 核对 PR head 未变后，将独立正文 `docs/MINIPC_CAPABILITY_REPORT.zh-CN.md` 复制覆盖 `/home/stelligen/MINIPC_CAPABILITY_REPORT.md`。SHA256：`2011e4bb3d910cb55a9a74309529662a6dcce2297f7c15146db2a11469a20dfb`，本地与远端完全一致；文件权限 `-rw-r--r--`，属主 `stelligen:stelligen`，大小 3874 bytes。旧 home 版本由此次覆盖取代。
 - 只写入一份报告文件；没有重新运行基准，没有安装/升级软件、改配置/网络/防火墙或重启。上传状态已更新到 handoff；本条审计记录还要推送到同一 PR 并对最终 HEAD 复审。
+
+
+## 2026-10-23 17:39 EDT — PR #151 Round 2 审计元数据 REQUEST_CHANGES 修订
+
+- 独立 GPT 对 PR #151 exact HEAD `6e3040e67134cc9fda729cd3ed472fb6152d4711` 复核为 `REQUEST_CHANGES`。唯一问题是 handoff 当前状态仍保留“等待审核/之后替换 home”的过期句，与后续已批准并完成覆盖矛盾；报告正文和 SHA 未变化。
+- 已在同一 PR 将该等待状态改写为完整历史时间线：22e3 首稿 APPROVE/上传、d4 REQUEST_CHANGES、481 分离报告与交付记录、b5 APPROVE、17:38 覆盖新正文。新增当前状态说明该 audit tip 的过期记录错误，待本轮修正后的 exact HEAD 复审。Ubuntu 文件及其 SHA `2011e4bb3d910cb55a9a74309529662a6dcce2297f7c15146db2a11469a20dfb` 不变；没有新的主机操作。
