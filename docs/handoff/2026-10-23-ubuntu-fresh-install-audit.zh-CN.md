@@ -7,7 +7,7 @@
 ## 当前阶段与边界
 
 - 当前阶段：只读系统审计已完成；本记录汇总脱敏后的系统摘要和建议。
-- 目标主机：负责人在本任务中指定的 Tailscale SSH 主机 `100.102.142.49`，登录名 `stelligen`。
+- 目标主机：负责人在本任务中指定的 Ubuntu 主机，通过 Tailscale SSH 访问。
 - 审计范围：系统版本、内核/架构、磁盘与内存、软件包/更新状态、网络、SSH、防火墙和基础管理工具。
 - 未读取个人文件、凭据或业务数据；未把原始主机输出写入仓库；未安装软件或更改系统配置。
 - PR #147 当前 HEAD 获得独立 GPT reviewer 明确 `APPROVE` 后才执行 SSH；批准仅限只读系统审计，不含安装或配置变更。
@@ -27,7 +27,7 @@
 - 本地主要工作区存在与本任务无关的未提交改动；本任务在隔离 worktree 中准备，未修改或暂存那些改动。
 - 2026-10-23 已完成只读 SSH 检查；未安装软件、刷新 apt 索引或更改配置。
 - Base：`main` at `6f91d8be0b6ae1db914e0e7a0d74757537760825`；任务分支：`task_20261023_ubuntu_system_audit`。
-- PR：[PR #147](https://github.com/leezx/StelligenOS/pull/147)，base `main`；审计前 code commit `6973b4129d7741196b61d7b0154454392a3175d7`；独立 reviewer 对审计前当前 HEAD `be370bfd2aca38c4b5ce6da6c62cc011292743cf` 给出 `APPROVE`，仅放行只读审计；本次 handoff/worklog 更新记录审计后结果。
+- PR：[PR #147](https://github.com/leezx/StelligenOS/pull/147)，base `main`；审计前 code commit `6973b4129d7741196b61d7b0154454392a3175d7`；独立 reviewer 对审计前当前 HEAD `be370bfd2aca38c4b5ce6da6c62cc011292743cf` 给出 `APPROVE`，仅放行只读审计。审计结果轮审提出删除主机定位信息，已在同一 PR 最小修订，当前修订待复审。
 
 ## 验证与后续
 
