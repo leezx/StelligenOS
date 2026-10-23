@@ -7330,3 +7330,18 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 同 PR 提交并推送修订 `a364727e6da3edc48ce66bc103e66c5d7791c9a1`；本地全量 1948 tests OK、repository boundary 与 diff 检查通过。GitHub Actions run `39949078070` Python 3.11/3.12 均 SUCCESS；向原 ChatGPT 会话提交只审 6 项 finding 及必要回归的 Round 2 请求。
 - ChatGPT 直接核对 PR delta、冻结科学合同、对抗测试和 CI，给出 L1 `APPROVE`、L2 `PASS / APPROVE`、整体 B1 `APPROVE`，5 P1 + 1 P2 全部 `RESOLVED`，blocker 0。摘要见 `logs/chatgpt-review-2026-10-23-tgt05-phase-b1-round2.md`。批准仅未绑定模块，不含自动合并、B2、激活或真实数据。
 - 新增 round 2 审核记录并更新 handoff/worklog 以符合每步留痕。此 metadata-only 提交改变 exact HEAD 后须再审；未进行合并或依赖阶段工作。
+## 2026-10-23 16:13 EDT — Ubuntu fresh-install audit preparation
+
+- 负责人要求通过 SSH 检查其新安装 Ubuntu 主机，判断基础系统组件是否缺失，并给出必要安装建议。
+- 检查本地仓库状态时发现当前主工作区有多项与本任务无关的未提交文件；未触碰这些文件。按仓库 Phase gate 协议，外部 SSH 检查须先有 PR 留痕并取得明确 `APPROVE`。
+- 当前只准备本审计范围的 handoff/PR。尚未连接 Ubuntu、读取主机信息、安装软件或更改配置。PR 获批后，审计将先以只读命令核对系统版本、内核/架构、磁盘与内存、软件源/更新状态、网络、SSH、防火墙和必要基础工具；依据结果报告缺项与安装建议。
+- 本地检查记录：读取 phase-gate 协议、worklog 尾部与 handoff 文件清单；在隔离 worktree 建立 `task_20261023_ubuntu_system_audit`（基于 `origin/main` `6f91d8be0b6ae1db914e0e7a0d74757537760825`）；`git diff --check` 通过。探测 `origin/master` ref 时发现仓库没有该分支，默认分支已确认为 `main`，未影响任务。
+- 16:15 EDT：提交 `6973b4129d7741196b61d7b0154454392a3175d7` 并推送分支；GitHub MCP 创建 PR 返回 403（integration 无权限），改用已登录的 `gh` CLI 成功创建 [PR #147](https://github.com/leezx/StelligenOS/pull/147)。尚未执行 Ubuntu SSH 检查；等待 GPT/ChatGPT 对该 PR 的明确 `APPROVE`。
+- 16:15 EDT：读取 `ChatGPT-Codex-talk.md` 第 1–2 节及第 8 节，确认最终审核不由执行方完成，PR 需由负责人转交 ChatGPT/指定模型审核；本轮不自行给出 APPROVE，也不连接 Ubuntu。
+- 16:30 EDT：负责人明确要求本任务使用独立 PR（不复用其他 PR），自动提交 GPT 审核，并在明确 `APPROVE` 后执行审计。按授权安排独立 reviewer agent 审核 PR #147 当前 HEAD；审核通过后立即执行只读 SSH 审计。Ubuntu 检查与安装结果仍按审计边界处理，不以自动化绕过仓库批准门禁。
+- 16:30–16:32 EDT：独立 reviewer 从 GitHub 审查 PR #147 当前 HEAD `be370bfd2aca38c4b5ce6da6c62cc011292743cf`，结论 `APPROVE`，仅放行只读系统审计，不含安装/配置；随后通过负责人指定的 Tailscale SSH 主机执行只读检查（OS/kernel、资源/磁盘、包状态/可升级项、服务/监听器、网络与防火墙状态）。结果：Ubuntu 26.04.1 LTS x86_64；8 CPU、14 GiB RAM、根卷空间充足；`dpkg --audit` 无问题；OpenSSH、CA certificates、sudo、curl、git、Python 3、NetworkManager、UFW、unattended-upgrades 均已安装；SSH、网络管理、UFW、自动更新服务处于 active；约 40 个包在本地 apt 索引中可升级。未安装包、未刷新软件源、未更改系统配置。
+- 审计发现：`python3-venv`、`build-essential`、`iw`、`rfkill` 未安装，但它们不是基础 SSH/网络管理必需项；Python venv 适合后续部署 Python 助手，编译工具和 Wi-Fi 诊断工具按实际用途选择。`systemd-networkd-wait-online` 失败超时；当时两块以太网接口无 carrier、Wi-Fi 已 routable，后者可能导致启动等待超时。NetworkManager 与 systemd-networkd 均 enabled/active，建议后续核对网络栈配置。UFW 服务 active，但读取规则及运行 sudo 需交互认证，故无法确认具体放行规则。约 40 项更新按本地 apt 索引计数，未执行升级。
+- 16:34 EDT：GPT 结果复审对审计摘要给出 `REQUEST_CHANGES`，唯一阻断为本任务 handoff/worklog 留存了不必要的主机地址和登录名。按反馈在同一 PR 删除这两项，保留系统级审计摘要；当前任务记录中已无该主机地址或登录名。等待同一 PR 复审；期间未再次连接 Ubuntu。
+- 16:35 EDT：GPT 复审确认目标标识已清除，但指出 handoff 把审计前获批的 HEAD 误写为当前 HEAD；按反馈改为精确指向 `be370bfd2aca38c4b5ce6da6c62cc011292743cf`。复审工具尝试发布正式 GitHub review 时返回 403；结论由独立 reviewer agent 交付。当前无新的外部主机操作，等待同一 PR 再审。
+- 16:35 EDT：GPT 结果复审确认批准 HEAD 与脱敏记录已修正，但发现 PR 描述仍称审计未执行且当前未批准。按反馈更新 PR #147 描述，明确既有批准只放行只读审计、审计已完成、当前 PR 修订待复审，且未授权安装/配置；不再连接主机。
+- 数据边界：只记录必要的系统摘要；不读取个人文件、凭据或业务数据，不把外部主机输出/数据复制进仓库。当前记录不构成安装或配置变更授权。
