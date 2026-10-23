@@ -1,0 +1,24 @@
+module:
+  module_id: MOD-TGT07
+  module_name: tgt07_shedding_soluble_antigen_sink_liability_v2
+  module_version: "2.0.0"
+  status: BUILT_UNBOUND
+  construction_contract: src/contracts/gate_modules/tgt07_shedding_soluble_antigen_sink_liability_v2.yaml
+  gate_binding:
+    gate_id: TGT-07
+    gate_version: "2.0"
+    gateset_id: ADC_TARGET_GATESET
+    gateset_version: "2.0"
+    instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2
+    candidate_level: L04
+  outputs:
+    - Gate-neutral EvidencePackages
+    - non-canonical assessment proposal
+    - completion and conflict audit
+    - machine-local fatal-review trigger
+  boundaries:
+    performs_network_io: false
+    writes_repository: false
+    constructs_human_approved_assessment: false
+    produces_candidate_decision: false
+    activates_v2_gate_binding: false
