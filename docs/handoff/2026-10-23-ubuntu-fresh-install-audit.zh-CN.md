@@ -18,7 +18,7 @@
 - 本地主要工作区存在与本任务无关的未提交改动；本任务在隔离 worktree 中准备，未修改或暂存那些改动。
 - 当前尚未 SSH 登录目标机，尚无主机检查结果，尚未安装或修改任何东西。
 - Base：`main` at `6f91d8be0b6ae1db914e0e7a0d74757537760825`；任务分支：`task_20261023_ubuntu_system_audit`。
-- PR：待创建；GPT/ChatGPT 审核：待定；阶段放行：未批准。
+- PR：[PR #147](https://github.com/leezx/StelligenOS/pull/147)，base `main`；code commit `6973b4129d7741196b61d7b0154454392a3175d7`；PR tip 为本次记录 PR 创建信息的 metadata-only 提交；GPT/ChatGPT 审核：待定；阶段放行：未批准。
 
 ## 验证与后续
 
