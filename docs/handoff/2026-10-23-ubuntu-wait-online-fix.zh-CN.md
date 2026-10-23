@@ -1,0 +1,38 @@
+# Ubuntu wait-online 超时修复交接
+
+## 目标
+
+修复 Ubuntu 启动时 `systemd-networkd-wait-online.service` 因未插网线的以太网口等待 120 秒后失败的问题，同时保留 Wi-Fi 网络和以太网口可用性。
+
+## 观测依据
+
+- 2026-10-23 17:20 EDT 通过 SSH 只读读取 wait-online/networkd journal、`networkctl`、`nmcli`、接口地址和 resolver 状态；原始输出保存在执行端 `/tmp/ubuntu-network-diagnostics-20261023.txt`（权限 600），未写入仓库。
+- Wi-Fi `wlo1` 显示 `routable/configured`，持有 DHCP 地址。
+- `enp1s0`、`enp3s0` 均显示 `no-carrier/configuring`，生成的 `.network` 配置对两口都设置 `Required For Online: yes`。
+- NetworkManager service 为 active，但其设备显示 unmanaged；systemd-networkd 管理相关网络接口。UFW 为 inactive，与 wait-online 超时无直接关联。
+- systemd wait-online 默认等待所有被 networkd 管理且 required 的接口；Netplan 的 `optional: true` 会让 networkd 不等待对应设备启动，但仍会正常启用设备。参考 [Netplan YAML optional](https://netplan.readthedocs.io/en/latest/netplan-yaml/) 与 [Ubuntu systemd-networkd-wait-online 手册](https://manpages.ubuntu.com/manpages/noble/man8/systemd-networkd-wait-online.service.8.html)。
+
+## 修复范围与安全边界
+
+- 新脚本 `scripts/ubuntu_wait_online_fix.sh` 仅在 Wi-Fi `wlo1` 当前 routable、`enp1s0`/`enp3s0` 当前无 carrier 且 Netplan 中各自恰好有一个对应定义时，才提出将这两个 Ethernet 定义设为 optional。
+- 不打印或保存 Wi-Fi 密码、证书、Netplan 原文；脚本在内存中解析合并后的 Ethernet 配置，仅输出 interface ID 映射。
+- 修改前在 root-only `/root` 下备份 `/etc/netplan`，使用独立 Netplan overlay；先 `netplan generate` 校验，再通过交互式 `netplan try --timeout 120` 应用。若未确认、Wi-Fi 未恢复 routable 或 wait-online 仍失败，脚本移除 overlay 并恢复原配置。
+- 负责人要求修复该故障；但 Codex 的 SSH sudo 非交互检查返回 `interactive authentication is required`。不从聊天收集 sudo 凭据；因此由负责人在机器可见终端运行脚本以便看到并确认 sudo/netplan 提示。
+- PR #150 最新审查 exact HEAD `d77e881221701aafea71917c2995258c7dcb441c` 于 2026-10-23 17:31 EDT 获独立 GPT `APPROVE`，随后已将脚本上传到 `/home/stelligen/ubuntu_wait_online_fix.sh`。SHA256：`b19c21cbe3abb8afbd6b0b34fd20c2050b3aeccf9d22ea73901cf8be6a7a3845`；远端权限 `-rwxr--r-- stelligen:stelligen`。仅上传并校验，没有运行脚本或修改网络配置。
+- 2026-10-23 17:28 EDT：PR #150 首轮独立审查为 `REQUEST_CHANGES`；上述安全检查按反馈收窄。17:29 EDT Round 2 审查对 exact HEAD `e1d9eea23e214fa51bd140f8b4bdebefb6500704` 仍为 `REQUEST_CHANGES`：要求 handoff/worklog 更新当前状态、逻辑 Netplan ID 对应生成文件名按 definition ID 检查、必须确认 netplan try 明确输出 acceptance。
+- 2026-10-23 17:30 EDT：已将生成配置路径改用映射后的 Netplan ID；对 `netplan try` 的输出设 `LC_ALL=C` 并 tee 到 root-only `/run` 临时日志，必须发现精确 `Configuration accepted.` 才继续；已清理临时日志。`bash -n` 与 `git diff --check` 通过。Round 2 修订代码提交为 `3c76eca`；随后将更新 handoff/worklog 作为本轮审计记录，并对该审计提交形成的最新 PR exact HEAD 复审。目标机仍未连接、脚本未上传/运行、网络未改。
+
+## 负责人运行方法
+
+在可见的 Ubuntu 本地终端运行以下命令，终端会显示 sudo 与 Netplan 确认提示，同时把全部输出保存到 home 目录：
+
+```bash
+~/ubuntu_wait_online_fix.sh 2>&1 | tee ~/ubuntu_wait_online_fix.log
+```
+
+脚本会输出保护性备份目录，并要求两次交互确认。只有 Wi-Fi 仍连通且 wait-online service 启动成功后才保留修改；否则恢复旧配置。运行结束后，Codex 可通过 SSH 只读读取 `~/ubuntu_wait_online_fix.log` 排查错误。
+
+## 当前状态
+
+- Branch：`task_20261023_ubuntu_wait_online_fix`；[PR #150](https://github.com/leezx/StelligenOS/pull/150)。最新 code review 对 exact HEAD `d77e881221701aafea71917c2995258c7dcb441c` 为 `APPROVE`；其后只执行了已授权的脚本上传并校验 hash，无主机配置变更。上传后审计记录将推送到同一 PR。
+- 目标主机 Netplan、服务和防火墙尚未修改；脚本已上传但没有在 Ubuntu 上运行。运行并保存完整输出：`~/ubuntu_wait_online_fix.sh 2>&1 | tee ~/ubuntu_wait_online_fix.log`。用户完成后，可由 Codex 通过 SSH 读取该日志来诊断错误。

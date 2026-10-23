@@ -7330,3 +7330,40 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 同 PR 提交并推送修订 `a364727e6da3edc48ce66bc103e66c5d7791c9a1`；本地全量 1948 tests OK、repository boundary 与 diff 检查通过。GitHub Actions run `39949078070` Python 3.11/3.12 均 SUCCESS；向原 ChatGPT 会话提交只审 6 项 finding 及必要回归的 Round 2 请求。
 - ChatGPT 直接核对 PR delta、冻结科学合同、对抗测试和 CI，给出 L1 `APPROVE`、L2 `PASS / APPROVE`、整体 B1 `APPROVE`，5 P1 + 1 P2 全部 `RESOLVED`，blocker 0。摘要见 `logs/chatgpt-review-2026-10-23-tgt05-phase-b1-round2.md`。批准仅未绑定模块，不含自动合并、B2、激活或真实数据。
 - 新增 round 2 审核记录并更新 handoff/worklog 以符合每步留痕。此 metadata-only 提交改变 exact HEAD 后须再审；未进行合并或依赖阶段工作。
+
+## 2026-10-23 17:24 EDT — Ubuntu wait-online 超时诊断与修复脚本 PR
+
+- 负责人提供 wait-online timeout 输出并明确要求保存日志、诊断并修复。复核 PR #148 exact HEAD `1ee6941242d6850439cb131e2986f989be8e057a` 为 OPEN 且已获独立 GPT APPROVE，范围含 wait-online、Netplan、网络服务的只读检查。SSH 只读诊断结果：`wlo1` routable；`enp1s0` 与 `enp3s0` no-carrier，均 Required For Online=yes；NetworkManager active 但其设备 unmanaged；UFW inactive。输出保存于执行端 `/tmp/ubuntu-network-diagnostics-20261023.txt`，权限 600，未提交原始数据。
+- 用户明确要求后续修改 Netplan，但现有 sudo 会话非交互检查 `sudo -n python3` 返回 `interactive authentication is required`；未读取 Netplan 原文、未在目标机更改网络/重启。根据官方 Netplan/systemd 文档，建议将无 carrier 的 Ethernet 定义标为 optional，避免 wait-online 等待不需要的网口。
+- 创建独立分支 `task_20261023_ubuntu_wait_online_fix`，基于当前 origin/main。新增 handoff 和 `scripts/ubuntu_wait_online_fix.sh`：本机可见终端运行、保护性备份、自动映射接口到 Netplan IDs、仅处理当前无 carrier 的两个 Ethernet 设备、`netplan generate` 校验、`netplan try` 交互确认、检查 Wi-Fi/wait-online 并在失败时回滚。脚本尚未上传或运行；当前只做 bash 语法与 diff 检查，待 exact-head GPT review 后再上传。
+- 17:25 EDT：首次调用 `scripts/git_sync.sh` 失败，因为新分支在 origin 尚无远端 ref（`couldn't find remote ref task_20261023_ubuntu_wait_online_fix`）。脚本在暂存或提交前退出，工作区内容保持原状；将按仓库规则只显式暂存本次三个相关文件并创建分支的首次推送。
+- 17:25 EDT：首次 `git diff --cached --check` 发现 handoff 文件尾部多一个空行，阻止提交；随后检查尾部时本机 BSD `cat` 不支持 GNU `-A` 参数。已用 Python 将 handoff 规范为单个结尾换行；未提交。将重新显式暂存相关文件并复查 diff。
+- 17:26 EDT：脚本通过 `bash -n` 与 `git diff --check`，随后仅显式暂存 handoff、worklog 和 `scripts/ubuntu_wait_online_fix.sh`，提交 `d2117bc78dfb2ebac9f4aa8a09f1dfefd302a09e` 并首次推送新分支 `task_20261023_ubuntu_wait_online_fix`。脚本未在 Ubuntu 运行，主机网络配置未修改；PR 尚待创建与独立审查。
+- 17:26 EDT：创建独立 PR #150（base `main`，branch `task_20261023_ubuntu_wait_online_fix`，URL https://github.com/leezx/StelligenOS/pull/150），并附加到 Codex 当前任务。PR initial HEAD `ececabca28b4d1ab83a03e51da56423680e871ca`；由于 handoff/worklog 本次记录会改变 HEAD，提交后对更新后的 exact HEAD 进行 GPT 复审。脚本仍未上传或运行，目标主机未改变。
+
+
+## 2026-10-23 17:28 EDT — PR #150 Round 1 REQUEST_CHANGES 修订
+
+- 独立审核对 PR #150 exact HEAD `bb9710c89dff718f8a72568acc5c73ab2f483587` 给出 `REQUEST_CHANGES` 两项：Netplan ID 可能是逻辑 ID 而非设备名；`netplan try` 在超时/取消回滚后不能仅凭返回码认定已接受。
+- 同一 PR 最小修订脚本：只接受无 `match` 的同名设备定义，或只含精确 `name` 匹配的定义；遇到 MAC/其他匹配规则、set-name 不一致或多重映射即安全停止。`netplan try` 后要求 overlay 仍存在、合并配置中两个 Ethernet 定义仍为 `optional: true`，并检查 networkd 生成文件显示 `RequiredForOnline=no`，随后才检查 Wi-Fi 与 wait-online 服务。官方文档也警告超时/取消后应核实回滚状态：https://netplan.readthedocs.io/en/1.1.2/netplan-try/
+- 在本地运行 `bash -n scripts/ubuntu_wait_online_fix.sh` 与 `git diff --check`，均通过。目标 Ubuntu 未连接；未上传、未运行脚本，网络配置未改。待提交/推送同一 PR 并对新 exact HEAD 复审。
+
+
+## 2026-10-23 17:30 EDT — PR #150 Round 2 REQUEST_CHANGES 修订
+
+- Round 2 独立审核核对远端 exact HEAD `e1d9eea23e214fa51bd140f8b4bdebefb6500704` 并给出 `REQUEST_CHANGES`：handoff/worklog 未及时反映当前 HEAD/审查；logical Netplan ID 与 interface 名可能不同，生成文件名应按 definition ID；必须确认 `netplan try` 明确接受，不能只看最终配置。
+- 同一 PR 最小修订：networkd 生成配置路径改用已安全映射的 Netplan ID；以 `LC_ALL=C` 执行交互式 `netplan try`，通过 `tee` 同时保留终端提示和 root-only `/run` 临时输出，只接受精确行 `Configuration accepted.`，随后仍执行 overlay/merged optional/generated RequiredForOnline/Wi-Fi/wait-online 检查。EXIT trap 删除临时日志并在失败时回滚。修正 handoff 状态与审查结论。
+- 官方 Netplan 文档说明 try 会在未确认时回滚，并特别提示 timeout/cancel 后应核实回滚：https://netplan.readthedocs.io/en/1.1.2/netplan-try/。本地 `bash -n scripts/ubuntu_wait_online_fix.sh` 与 `git diff --check` 均通过。Ubuntu 未连接，未上传、未运行脚本，网络配置未改；待同一 PR 提交并复审。
+
+
+## 2026-10-23 17:31 EDT — 修订提交与审计状态同步
+
+- 同 PR #150 通过 `scripts/git_sync.sh` 显式提交并推送 `3c76eca`（`Require accepted Netplan try and verify mapped devices`）；远端分支同步成功。提交后复查 handoff 仍描述“修订提交后更新”，为避免审核上下文过期，更新其状态，指明修订代码提交 `3c76eca` 及需审核审计记录提交形成的最新 exact HEAD。
+- Ubuntu 仍未连接/改变；脚本未上传或执行。
+
+
+## 2026-10-23 17:31 EDT — PR #150 APPROVE 与脚本上传
+
+- 独立 GPT 对 PR #150 exact HEAD `d77e881221701aafea71917c2995258c7dcb441c` 给出 `APPROVE`。复审确认当前 handoff/worklog、逻辑 Netplan ID 的生成文件路径、`LC_ALL=C` 下明确 `Configuration accepted.` 检查、`pipefail`/EXIT rollback 与完整脚本安全边界；审核者未连接 Ubuntu。PR 状态 OPEN；未合并。
+- 经 SSH/SCP 将已审脚本上传至 `/home/stelligen/ubuntu_wait_online_fix.sh` 并设置 user executable。远端 SHA256 `b19c21cbe3abb8afbd6b0b34fd20c2050b3aeccf9d22ea73901cf8be6a7a3845` 与本地完全一致；权限 `-rwxr--r-- stelligen:stelligen`。这仅是文件上传，没有执行脚本、修改 Netplan、服务、防火墙或其他网络状态。
+- 为保存后续操作错误输出，建议负责人在可见 Ubuntu 终端运行 `~/ubuntu_wait_online_fix.sh 2>&1 | tee ~/ubuntu_wait_online_fix.log`；运行会交互请求 sudo 与 Netplan try 确认。之后 Codex 可通过 SSH 只读读取日志来排障。上传操作待本条 handoff/worklog 与 PR 同步留痕。
