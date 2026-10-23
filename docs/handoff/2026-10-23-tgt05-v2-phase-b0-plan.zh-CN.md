@@ -1,6 +1,6 @@
 # TGT-05 / TGT-07 v2 Phase B0 交接
 
-状态：**PROPOSED；PR #144 首轮 `REQUEST_CHANGES`，局部修订待复审。**
+状态：**PR #144 Phase B0 实质内容已获 ChatGPT `APPROVE`；最终审计元数据提交待 exact-head 核对与人类 L3 放行。**
 
 ## 审核对象
 
@@ -23,3 +23,8 @@
 
 - 首轮 exact HEAD `d007bc7e0ee2b692ca498955b844cb21734c3d38`；CI run `39907971005` Python 3.11/3.12 PASS。ChatGPT 独立审核的 L1/L2 与整体为 `REQUEST_CHANGES`，1 项 P1，详见 `logs/chatgpt-review-2026-10-23-tgt05-phase-b0-round1.md`。
 - 最小修订执行总纲：如实记录的未完成检索、未测量、可信但 TMDD 未取得或不合格，保持 `UNKNOWN + critical_unknowns`；必需 audit 工件缺失/损坏/伪造、虚报完成但校验失败及身份/来源/EP reuse parity 错误才 hard reject。B2 合成验收覆盖两类。新 exact HEAD 与复审结果待追加。
+
+## Round 2 结论
+
+- 新 exact HEAD `cdec290af2c8a4d169a8dbcdabff97a030aaf752`；CI run `39908496110` 两个 Python job 均 SUCCESS，完整各 1,915 tests。ChatGPT 对唯一 P1 判 `RESOLVED`，L1 `APPROVE`、L2 `PASS / APPROVE`、整体 B0 `APPROVE`，blocker 0。审核记录见 `logs/chatgpt-review-2026-10-23-tgt05-phase-b0-round2.md`。
+- 本审计元数据提交不扩大 B0 范围。PR 合并与 B1 阶段开启仍须人类 L3 放行；外部 ADCdb/Open Targets 数据运行仍未批准。
