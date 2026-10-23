@@ -7356,3 +7356,4 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 独立 GPT 对 PR #151 exact HEAD `d4ca45377bf4de5a03a5e6e2dd1d9fa66ba7ea86` 的最终审计提交复核为 `REQUEST_CHANGES`。报告事实摘要及 PR 描述正确；问题是 handoff 的“正在写回 PR”状态已过期、上传 hash 对应已上传版本而非 handoff 更新后的文件，并要求记录明确的完整审计提交 SHA。
 - 处理方式：把纯报告正文拆至 `docs/MINIPC_CAPABILITY_REPORT.zh-CN.md`，移除可变交付状态；handoff 只记来源、审核和远端文件状态，明确旧上传版本仍含旧说明并需新报告重新审批后覆盖。新改动仅 docs/worklog，未连接或写入 Ubuntu。
 - 本次外部 home 内容暂时仍是旧获批草稿（SHA256 `821deef35083640a98778c4ddb01c26600850dcab40884a9c5beb9734f13e06d`）；不会覆盖，直到新报告 exact HEAD 获 GPT/ChatGPT `APPROVE`。
+- 17:38 EDT：本轮正文/交接分离修订提交 `481bf75506bc193fbade5ce2c617f1768b54af7f` 已推送同一 PR #151。更新 PR 描述指向独立报告 `docs/MINIPC_CAPABILITY_REPORT.zh-CN.md`，标明旧 home 版本仍待更换及新 exact-head 复审门禁；`gh pr view` 确认描述与 handoff 一致。此处记录的是修订代码提交 SHA；随后的审计状态提交会形成新的 PR tip。
