@@ -7340,3 +7340,10 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 17:25 EDT：首次 `git diff --cached --check` 发现 handoff 文件尾部多一个空行，阻止提交；随后检查尾部时本机 BSD `cat` 不支持 GNU `-A` 参数。已用 Python 将 handoff 规范为单个结尾换行；未提交。将重新显式暂存相关文件并复查 diff。
 - 17:26 EDT：脚本通过 `bash -n` 与 `git diff --check`，随后仅显式暂存 handoff、worklog 和 `scripts/ubuntu_wait_online_fix.sh`，提交 `d2117bc78dfb2ebac9f4aa8a09f1dfefd302a09e` 并首次推送新分支 `task_20261023_ubuntu_wait_online_fix`。脚本未在 Ubuntu 运行，主机网络配置未修改；PR 尚待创建与独立审查。
 - 17:26 EDT：创建独立 PR #150（base `main`，branch `task_20261023_ubuntu_wait_online_fix`，URL https://github.com/leezx/StelligenOS/pull/150），并附加到 Codex 当前任务。PR initial HEAD `ececabca28b4d1ab83a03e51da56423680e871ca`；由于 handoff/worklog 本次记录会改变 HEAD，提交后对更新后的 exact HEAD 进行 GPT 复审。脚本仍未上传或运行，目标主机未改变。
+
+
+## 2026-10-23 17:28 EDT — PR #150 Round 1 REQUEST_CHANGES 修订
+
+- 独立审核对 PR #150 exact HEAD `bb9710c89dff718f8a72568acc5c73ab2f483587` 给出 `REQUEST_CHANGES` 两项：Netplan ID 可能是逻辑 ID 而非设备名；`netplan try` 在超时/取消回滚后不能仅凭返回码认定已接受。
+- 同一 PR 最小修订脚本：只接受无 `match` 的同名设备定义，或只含精确 `name` 匹配的定义；遇到 MAC/其他匹配规则、set-name 不一致或多重映射即安全停止。`netplan try` 后要求 overlay 仍存在、合并配置中两个 Ethernet 定义仍为 `optional: true`，并检查 networkd 生成文件显示 `RequiredForOnline=no`，随后才检查 Wi-Fi 与 wait-online 服务。官方文档也警告超时/取消后应核实回滚状态：https://netplan.readthedocs.io/en/1.1.2/netplan-try/
+- 在本地运行 `bash -n scripts/ubuntu_wait_online_fix.sh` 与 `git diff --check`，均通过。目标 Ubuntu 未连接；未上传、未运行脚本，网络配置未改。待提交/推送同一 PR 并对新 exact HEAD 复审。

@@ -76,10 +76,20 @@ for device_id, config in tree.items():
     if not isinstance(config, dict):
         continue
     match = config.get('match', {}) or {}
-    names = {str(device_id), str(config.get('set-name', '')),
-             str(match.get('name', '')) if isinstance(match, dict) else ''}
-    for target in targets & names:
-        found[target].append(str(device_id))
+    if not isinstance(match, dict):
+        print(f"Unsupported match stanza for {device_id}; refusing to guess.", file=sys.stderr)
+        sys.exit(1)
+    # A Netplan ID is often a logical key, not an interface name. Only accept
+    # an exact ID without match rules, or a name-only match for the target.
+    for target in targets:
+        exact_id = str(device_id) == target and not match and not config.get('set-name')
+        exact_name_match = match == {'name': target} and config.get('set-name') in (None, target)
+        if str(device_id) == target or match.get('name') == target or config.get('set-name') == target:
+            if exact_id or exact_name_match:
+                found[target].append(str(device_id))
+            else:
+                print(f"Ambiguous Netplan definition for {target}; refusing to change it.", file=sys.stderr)
+                sys.exit(1)
 
 for target in sorted(targets):
     matches = found[target]
@@ -122,6 +132,37 @@ netplan generate
 
 printf '\n%s\n' 'Applying with Netplan rollback protection. Confirm only if the Wi-Fi/SSH connection still works.'
 netplan try --timeout 120
+
+# Netplan documents that a timeout/cancellation can return control after rollback.
+# Do not trust the command's exit status alone: verify the accepted on-disk
+# configuration and the generated networkd requirement for both exact IDs.
+[[ -f "$OVERLAY" ]] || stop 'Netplan try did not retain the overlay; it may have been rejected or rolled back.'
+python3 - "${NETPLAN_ID_BY_IF[enp1s0]}" "${NETPLAN_ID_BY_IF[enp3s0]}" <<'PY' \
+  || stop 'Could not verify the accepted optional settings; the script will restore Netplan.'
+import subprocess
+import sys
+import yaml
+
+try:
+    result = subprocess.run(['netplan', 'get', 'ethernets'], check=True,
+                            capture_output=True, text=True)
+    tree = yaml.safe_load(result.stdout) or {}
+    if 'network' in tree:
+        tree = tree['network']
+    if 'ethernets' in tree:
+        tree = tree['ethernets']
+    for device_id in sys.argv[1:]:
+        if tree[device_id].get('optional') is not True:
+            raise ValueError('optional setting not retained')
+except Exception as exc:
+    print(f"Accepted Netplan settings could not be verified ({type(exc).__name__}).", file=sys.stderr)
+    sys.exit(1)
+PY
+for iface in "${ETHERNET_IFS[@]}"; do
+  generated="/run/systemd/network/10-netplan-${iface}.network"
+  [[ -r "$generated" ]] && grep -Eq '^RequiredForOnline=no([[:space:]]|$)' "$generated" \
+    || stop "Generated networkd config for $iface does not show RequiredForOnline=no."
+done
 
 if ! networkctl status "$WIFI_IF" --no-pager 2>/dev/null | grep -Fq 'State: routable'; then
   stop "$WIFI_IF did not return to routable state. The script will remove its override and restore Netplan."
