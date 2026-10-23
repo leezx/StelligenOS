@@ -7330,3 +7330,11 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 同 PR 提交并推送修订 `a364727e6da3edc48ce66bc103e66c5d7791c9a1`；本地全量 1948 tests OK、repository boundary 与 diff 检查通过。GitHub Actions run `39949078070` Python 3.11/3.12 均 SUCCESS；向原 ChatGPT 会话提交只审 6 项 finding 及必要回归的 Round 2 请求。
 - ChatGPT 直接核对 PR delta、冻结科学合同、对抗测试和 CI，给出 L1 `APPROVE`、L2 `PASS / APPROVE`、整体 B1 `APPROVE`，5 P1 + 1 P2 全部 `RESOLVED`，blocker 0。摘要见 `logs/chatgpt-review-2026-10-23-tgt05-phase-b1-round2.md`。批准仅未绑定模块，不含自动合并、B2、激活或真实数据。
 - 新增 round 2 审核记录并更新 handoff/worklog 以符合每步留痕。此 metadata-only 提交改变 exact HEAD 后须再审；未进行合并或依赖阶段工作。
+
+## 2026-10-23 16:42 EDT — Ubuntu baseline setup PR preparation
+
+- 负责人在只读审计后要求“开始做”；按上下文将其理解为执行已提出的 Ubuntu 基线更新与 Python 助手准备项，并自动完成独立 GPT PR 审核后再运行。
+- 创建独立任务分支 `task_20261023_ubuntu_baseline_setup`，基于 `main` commit `6f91d8be0b6ae1db914e0e7a0d74757537760825`。当前仅准备执行契约与 handoff；尚未 SSH 连接目标机或运行 apt/sudo 命令。
+- 拟议范围：刷新 apt 软件索引；应用普通 `apt-get upgrade` 可安全完成的更新（不使用 full-upgrade、不移除包、不自动重启）；安装 `python3-venv`；只读检查 UFW 实际规则、Netplan 配置及 wait-online 状态。若更新要求移除包、配置/网络变更或重启，则停止并汇报，不自动执行。
+- 验证计划：核对更新/安装完成状态、`dpkg --audit`、UFW/网络服务状态、是否需要重启；不在 StelligenOS 仓库存放主机输出、密码或证书。sudo 认证只可在用户本地交互终端输入，绝不经聊天传递。
+- 审核门禁：本次是独立于 PR #147 的新 PR；取得 GPT/ChatGPT 对本 PR 当前 HEAD 的明确 `APPROVE` 前不连接主机、不执行系统变更。
