@@ -40,7 +40,7 @@ fi
 has_removals "$PLAN_UPGRADE" && stop '升级计划包含软件包移除。'
 printf '\n%s\n' '请检查上方升级计划。若涉及网络/防火墙相关组件、配置变更或不确定的操作，请停止。'
 confirm '确认应用普通升级？'
-sudo apt-get -o Dpkg::Options::=--force-confold upgrade
+sudo apt-get --no-remove -o Dpkg::Options::=--force-confold upgrade
 
 if [[ -e /var/run/reboot-required ]]; then
   printf '%s\n' '系统标记需要重启；脚本不会重启。待重启完成后，再单独运行安装/检查步骤。'
@@ -55,7 +55,7 @@ fi
 has_removals "$PLAN_VENV" && stop 'python3-venv 安装计划包含软件包移除。'
 printf '\n%s\n' '请检查上方安装计划。'
 confirm '确认安装 python3-venv？'
-sudo apt-get install python3-venv
+sudo apt-get --no-remove install python3-venv
 
 printf '\n%s\n' '核验 dpkg 与 Python venv：'
 sudo dpkg --audit
