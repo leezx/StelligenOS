@@ -1,6 +1,6 @@
 # TGT-05 / TGT-07 v2 Phase B0 交接
 
-状态：**PROPOSED；待本 PR CI 和 ChatGPT 审核。**
+状态：**PROPOSED；PR #144 首轮 `REQUEST_CHANGES`，局部修订待复审。**
 
 ## 审核对象
 
@@ -18,3 +18,8 @@
 
 - 本地 YAML parse、17 项编号和 v2 Gate/GateSet/Module 身份与 binding 一致性已核对；`git diff --check`、repository boundary 均通过；仓库外既有 venv 中定向 98 tests 通过。系统 Python 缺 `jsonschema`，因此首次调用产生 ImportError，使用完整依赖环境重跑成功。
 - 推送后补入本 PR URL、exact HEAD、CI 与 ChatGPT verdict。仅在本 PR 明确 `APPROVE` 且人类放行后进入 B1。
+
+## PR #144 首轮与修订
+
+- 首轮 exact HEAD `d007bc7e0ee2b692ca498955b844cb21734c3d38`；CI run `39907971005` Python 3.11/3.12 PASS。ChatGPT 独立审核的 L1/L2 与整体为 `REQUEST_CHANGES`，1 项 P1，详见 `logs/chatgpt-review-2026-10-23-tgt05-phase-b0-round1.md`。
+- 最小修订执行总纲：如实记录的未完成检索、未测量、可信但 TMDD 未取得或不合格，保持 `UNKNOWN + critical_unknowns`；必需 audit 工件缺失/损坏/伪造、虚报完成但校验失败及身份/来源/EP reuse parity 错误才 hard reject。B2 合成验收覆盖两类。新 exact HEAD 与复审结果待追加。

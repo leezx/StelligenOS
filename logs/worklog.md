@@ -7295,3 +7295,9 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 
 - `git diff --check` 与 `bash scripts/verify_repository_boundary.sh` 均通过。首次调用系统 Python 3.12 跑 `tests.test_tgt05_v2_contract_phase_a` 和 `tests.test_tgt07_module_construction_contract` 时因系统环境缺 `jsonschema` 报 ImportError；改用上一个 PR 已在仓库外建立的 `/tmp/stelligenos-pr143-venv` 后 98 tests 全部通过。没有修改仓库依赖。
 - 独立解析 v2 GateSet 与新增 TGT-07 v2 合同，确认 17 项编号完整，Gate/GateSet/Module 身份、版本与 `0.0.0` binding 一致；CRC v2 Instantiation 仍为 `HOLD`。需在 GitHub CI 再验证。
+
+## 2026-10-23 01:55 EDT — PR #144、首轮审核与同 PR 修订
+
+- 显式暂存四个 B0 相关文件并提交 `d007bc7e0ee2b692ca498955b844cb21734c3d38`，推送 `task_20261023_tgt05_v2_phase_b`；创建 [PR #144](https://github.com/leezx/StelligenOS/pull/144)。GitHub Actions run `39907971005` Python 3.11/3.12 均 PASS；PR exact HEAD 与 mergeability 已核对。向已有 Biotech ideas 审核会话提交 exact-head L1/L2 请求。
+- ChatGPT 直接读取 PR、Phase A 基线与 CI，给出 `REQUEST_CHANGES`（L1/L2 均同，1 项 P1）：总纲 §4 错将如实记录的未完成检索当成 hard reject；TGT-07@2.0 要求 `UNKNOWN + critical_unknowns`。详情归档于 `logs/chatgpt-review-2026-10-23-tgt05-phase-b0-round1.md`。未进入 B1、未运行真实数据。
+- 按唯一 blocker 在同一 PR 最小修订：总纲 §3 B2 新增 `UNKNOWN` 与 hard reject 的分离合成验收；§4 区分可信但证据不完整、必需 audit 工件损坏/缺失、虚报完成和身份/provenance/EP reuse parity 失败。未改科学 ladder、TGT-07 施工合同、policy、registry 或运行代码。`git diff --check` 与 repository boundary 再次通过；待推送新 HEAD、CI 与复审。

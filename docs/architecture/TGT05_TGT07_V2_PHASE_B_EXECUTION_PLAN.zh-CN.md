@@ -28,14 +28,14 @@ Phase B 的可交付结果是**代码与合成测试能力**：对规范化、�
 
 1. **B0（本 PR）：范围和接口冻结。** 冻结本实施顺序、TGT-07 v2 施工合同与 resolver 的拒绝条件；不修改 v1、v2 Gate 科学 body、policy body、registry hash 或 Instantiation。B0 通过后才实施 B1。
 2. **B1：`MOD-TGT05@2.0.0`。** 以纯 Python、注入式 port 接受外部规范化观察和来源索引，输出 Gate-neutral EP、机器 proposal、覆盖/冲突/失败审计、非 canonical reviewer record 草案。E1 临床归因或正常细胞功能、E2 细胞型表面蛋白、E3 RNA 定位及 Open Targets supporting 必须分域；仅合格的候选抗体阴性结合或覆盖充分的膜蛋白阴性加完整临床 sweep 可以提出限定 `NEGATIVE`。严格测试临床 AE 归因待定、RNA/IHC 仅有、未测关键细胞、same-event conflict、跨事件非 conflict、严重 DIRECT 不因别处缺口降级、身份/来源/EP 复用漂移整轮拒绝。不得输出 canonical Assessment/Decision。
-3. **B2：`MOD-TGT07@2.0.0`。** 以新 Module 身份对接 `TGT-07@2.0`。可复用 v1 经验证的算法结构，但须在新版本代码和测试中明确其不变量；只有完成审计且合格的 intended-ADC TMDD 无 material sink 才能提出 `NEGATIVE/DIRECT`。不同暴露场景 material sink 阳性不能被阴性抵消，同场景矛盾须保留双侧 EP；缺 PK、未定量 shedding、低于检测限、未完成搜索均不得阴性。v1 模块保持原行为和可执行性。
+3. **B2：`MOD-TGT07@2.0.0`。** 以新 Module 身份对接 `TGT-07@2.0`。可复用 v1 经验证的算法结构，但须在新版本代码和测试中明确其不变量；只有完成审计且合格的 intended-ADC TMDD 无 material sink 才能提出 `NEGATIVE/DIRECT`。不同暴露场景 material sink 阳性不能被阴性抵消，同场景矛盾须保留双侧 EP；缺 PK、未定量 shedding、低于检测限、如实记录的未完成搜索均不得阴性。B2 合成测试必须分别覆盖：未完成搜索/未测量和可信但缺失或不合格 TMDD 保留 `UNKNOWN + critical_unknowns`；必需 audit 工件缺失/损坏/伪造、虚报完成但 audit 校验失败、身份/来源/EP reuse parity 失败则整轮 hard reject。v1 模块保持原行为和可执行性。
 4. **B3：policy/audit resolver 与 Decision evaluator。** 从同一版本化 Instantiation 的八 Gate `HUMAN_APPROVED` assessment 和 pinned EP 形成候选 Decision；依照已批准四个 policy body 的行顺序、fatal/required/unknown 规则、`triggered_by` 和 `NOT_EVALUATED` 字面值，不引入新阈值。策略 registry 任一 ref、路径、owner、版本、hash、审批状态或源 commit 错配均拒绝，无 v1 fallback。审计 resolver 实际读取 reviewer record、assessment、Decision，核对 ID、SHA256、target/program/context、candidate/Instantiation、TGT-05 snapshot pin、推荐/最终值，差异原因必填；失败只拒绝 audit acceptance，不改科学政策结果。人类审核者仍独立创建和批准 Assessment/Decision，不能由 Module 或 resolver 冒签。
 5. **B4：激活审阅。** 在 B1–B3 均明确批准且集成验证后，以单独 PR 将两个 v2 Module binding 从 `0.0.0` 精确提升为 `2.0.0`，审查 Instantiation 是否可从 `HOLD` 改变。必须由人类负责人与 ChatGPT 对该激活 PR 单独放行；未获批准前保持 HOLD。此步骤不运行真实 ADCdb 数据。
 
 ## 4. 跨 PR 验收与停止条件
 
 - **版本/对象：** v1 Gate/GateSet/Module 字节与显式调用回归保持不变；一个 Decision snapshot 精确匹配 v2 八成员，不混用 `TGT-05@1.0` 或 `TGT-07@1.0`。
-- **来源：** EP 保持 Gate-neutral 且可追溯；无来源、目标身份冲突、来源完整性错误、重复/漂移 EP 或缺必需完成审计均拒绝整轮，不能写普通 HOLD。
+- **来源与完成度：** EP 保持 Gate-neutral 且可追溯。如实记录的未完成检索/未测量，以及身份与来源可信但 TMDD 未取得或不合格，保留 `UNKNOWN + critical_unknowns`，不得生成阴性；不把这种科学不确定性伪装成完整性失败。必需 audit 工件缺失、损坏、伪造，声称检索完成却未通过 audit 校验，或来源/目标身份冲突、来源完整性错误、EP reuse parity 漂移，均整轮 hard reject，不能写普通 HOLD。
 - **安全推断：** Open Targets 四类、RNA 与普通 IHC 只承担 supporting/定位或弱证据；无事件、无表达记录、无报告不等于安全。Module 不能产出 Candidate GO/KILL。
 - **人工权责：** 仅人工批准的 Assessment 可以进入 GateSet；`Tgt05DecisionRecord.recommendation` 不参与 policy 输入。Reviewer 建议与 Candidate Decision 差异在外部 audit trace 可见。
 - **合成回归：** 必测八 Gate 全合格 GO、任一重大未解风险阻止 GO、缺必要 Gate/MORE_EVIDENCE、TGT-05 临床 sweep 不完整时不得阴性、未归因 AE 不自动 KILL、合格 program/context-specific fatal route、TGT-07 同/异场景冲突、registry 失配拒绝、非法/不存在审计引用拒绝。
