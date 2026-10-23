@@ -7354,3 +7354,9 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - Round 2 独立审核核对远端 exact HEAD `e1d9eea23e214fa51bd140f8b4bdebefb6500704` 并给出 `REQUEST_CHANGES`：handoff/worklog 未及时反映当前 HEAD/审查；logical Netplan ID 与 interface 名可能不同，生成文件名应按 definition ID；必须确认 `netplan try` 明确接受，不能只看最终配置。
 - 同一 PR 最小修订：networkd 生成配置路径改用已安全映射的 Netplan ID；以 `LC_ALL=C` 执行交互式 `netplan try`，通过 `tee` 同时保留终端提示和 root-only `/run` 临时输出，只接受精确行 `Configuration accepted.`，随后仍执行 overlay/merged optional/generated RequiredForOnline/Wi-Fi/wait-online 检查。EXIT trap 删除临时日志并在失败时回滚。修正 handoff 状态与审查结论。
 - 官方 Netplan 文档说明 try 会在未确认时回滚，并特别提示 timeout/cancel 后应核实回滚：https://netplan.readthedocs.io/en/1.1.2/netplan-try/。本地 `bash -n scripts/ubuntu_wait_online_fix.sh` 与 `git diff --check` 均通过。Ubuntu 未连接，未上传、未运行脚本，网络配置未改；待同一 PR 提交并复审。
+
+
+## 2026-10-23 17:31 EDT — 修订提交与审计状态同步
+
+- 同 PR #150 通过 `scripts/git_sync.sh` 显式提交并推送 `3c76eca`（`Require accepted Netplan try and verify mapped devices`）；远端分支同步成功。提交后复查 handoff 仍描述“修订提交后更新”，为避免审核上下文过期，更新其状态，指明修订代码提交 `3c76eca` 及需审核审计记录提交形成的最新 exact HEAD。
+- Ubuntu 仍未连接/改变；脚本未上传或执行。
