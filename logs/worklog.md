@@ -7340,3 +7340,12 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 
 
 - 17:34 EDT：提交 `098fcf81e83ee963f3b44d9c544c2e73aafe7f05`，首次推送新分支 `task_20261023_minipc_capability_report`，创建独立 PR #151（base `main`，URL https://github.com/leezx/StelligenOS/pull/151），并附加 PR 到当前任务。GitHub CI Python 3.11/3.12 已排队；initial exact HEAD 待审核。未连接或写入 Ubuntu。
+
+
+## 2026-10-23 17:36 EDT — miniPC 能力报告获批并写入 Ubuntu home
+
+- 独立 GPT reviewer 对 PR #151 exact HEAD `22e3b7deb3c843b9f22ff678e5d0172a645ff059` 给出 `APPROVE`；确认结果与已审 PR #149 一致，未测边界清楚，没有原始主机输出或敏感网络信息。审核者未连接或写入 Ubuntu。
+- 在确认 PR exact HEAD 仍为该批准 SHA 后，通过 SCP 将 `docs/handoff/2026-10-23-minipc-capability-report.zh-CN.md` 写入 `/home/stelligen/MINIPC_CAPABILITY_REPORT.md`。本地/远端 SHA256 一致：`821deef35083640a98778c4ddb01c26600850dcab40884a9c5beb9734f13e06d`；远端权限 `-rw-r--r--`，属主 `stelligen:stelligen`，大小 4405 bytes。该操作仅创建报告文件；没有运行性能测试或更改 Ubuntu 系统配置。
+- 更新 handoff 记录审批和上传状态；PR #151 保持 OPEN，待把这条外部写入审计记录提交同一 PR 并对最新 HEAD 复核。
+- 17:36 EDT：同步更新 PR #151 描述，明确已审 SHA、报告 home 路径、SHA256 和未运行/未改配置边界；`gh pr view` 确认描述与 handoff 一致，PR head 仍为已审 `22e3b7deb3c843b9f22ff678e5d0172a645ff059`。后续仅提交上传审计记录并复审。
+- 17:37 EDT：调用 `scripts/git_sync.sh` 时因为上一条命令已显式暂存两文件，脚本按设计拒绝（staging area is not empty）；没有提交/推送。已仅对这两份相关文件执行 unstaged reset，保留工作树内容；随后用 git_sync 完成规范提交。

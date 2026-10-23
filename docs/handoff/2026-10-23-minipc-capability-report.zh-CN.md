@@ -41,4 +41,4 @@
 
 ## 保存位置与交付状态
 
-PR #151（base `main`，branch `task_20261023_minipc_capability_report`）用于审核本报告及其审计记录。当前初始提交 `098fcf81e83ee963f3b44d9c544c2e73aafe7f05`；审核前不写入目标主机。PR exact-head 获得 GPT/ChatGPT `APPROVE` 后，将本报告原样放在 Ubuntu 用户 home：`/home/stelligen/MINIPC_CAPABILITY_REPORT.md`，再将上传路径与校验摘要追加到同一 PR。更新硬件或新增专项测试后再修订报告，并保留日期与测试方法。
+PR #151（base `main`，branch `task_20261023_minipc_capability_report`）审核本报告及其审计记录。独立 GPT 对 exact HEAD `22e3b7deb3c843b9f22ff678e5d0172a645ff059` 给出 `APPROVE` 后，已将本报告原样写入 Ubuntu 用户 home：`/home/stelligen/MINIPC_CAPABILITY_REPORT.md`。本地与远端 SHA256 均为 `821deef35083640a98778c4ddb01c26600850dcab40884a9c5beb9734f13e06d`；文件权限 `-rw-r--r--`，属主 `stelligen:stelligen`。只写入报告文件，没有运行基准或更改系统配置。PR #151 保持 OPEN，上传状态和校验信息正在写回同一 PR。更新硬件或新增专项测试后再修订报告，并保留日期与测试方法。
