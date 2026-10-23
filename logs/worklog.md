@@ -7340,3 +7340,5 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 16:49 EDT：提交前已执行 `git status --short` 与 `git diff --check`。尝试仓库推荐的 `scripts/git_sync.sh`；脚本在 `git fetch origin <new-branch>` 因远端尚无该新分支而失败，未暂存、提交或推送任何内容。改用显式文件暂存与首次分支推送。
 - 16:49 EDT：使用 GitHub connector 创建独立 PR 时收到 `403 Resource not accessible by integration`，PR 未创建；改用已认证的 GitHub CLI 尝试创建同一分支 PR。范围不变，尚未连接主机运行基准。
 - 16:49 EDT：GitHub CLI 成功创建独立 PR #149（base `main`，branch `task_20261023_ubuntu_performance_check`），URL `https://github.com/leezx/StelligenOS/pull/149`；已附加到当前 Codex 任务。PR 暂不允许运行主机基准，等待 exact-head GPT/ChatGPT `APPROVE`。
+- 16:50 EDT：独立 GPT reviewer 审核 PR #149 exact HEAD `382dba92b931cfe8d4de2ccad39b4e21bc58920b`，给出 `REQUEST_CHANGES`：CPU/内存/I/O workload 不够精确、2 GiB 内存上限扰动风险过高、任务级别没有硬件证据边界。尝试提交 GitHub 正式 review 返回 `403 Resource not accessible by integration`，无平台 review event。未连接目标主机或运行命令。
+- 16:51 EDT：按上述三项同 PR 最小修订 handoff：定义 SHA-256 固定块的 1/2/4/8 worker × 2 秒及 30 核秒上限；内存测试改为可用内存 1/16 且最多 256 MiB，补充 swap/OOM 前后检查；I/O 改 direct I/O 并规定不支持时跳过；按已知 CPU/RAM/存储与待核实 GPU/显存限定任务分级，不从合成数据推断模型参数量。`git status --short` 与 `git diff --check` 通过。等待新 HEAD 复审，未连接主机。
