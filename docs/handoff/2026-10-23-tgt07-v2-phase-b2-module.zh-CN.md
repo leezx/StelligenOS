@@ -18,3 +18,9 @@
 - 初版 HEAD `6f1679b048abb615c85b1287cfbf0b5216b00ba6`，CI run `39952275926` Python 3.11/3.12 各 2,049 tests SUCCESS。ChatGPT L1/L2/整体 `REQUEST_CHANGES`：4 项 P1、2 项 P2，详情见 `logs/chatgpt-review-2026-10-23-tgt07-phase-b2-round1.md`。
 - 同一 PR 内定向修订：输入 `evidence_regime` 精确匹配冻结 v2 Instantiation；EP reuse 比对 factual measurement、`retrieved_at` 和 study context；已知公共来源未抓取而宣称 COMPLETE 为 hard reject，访问受阻的未解项阻止限定阴性但不抹掉独立 material DIRECT；TMDD 阴性补检测限数值/单位、analyte、同源依据和受控浓度单位。P2 说明弱 EP 仍留在 accepted run，port 异常属于外部运行器基础设施失败。
 - 新合成反例及全量 CI 待确认；未合并、未进入 B3/激活/真实数据运行。
+
+## PR #146 第二轮审核与定向修订
+
+- 第二轮 exact HEAD `6c960799a386ad237a311b31bb7977cad61cf78d`，CI run `39954000789` 两个 Python job 各 2,057 tests 通过；ChatGPT L1 `APPROVE`、L2/整体 `REQUEST_CHANGES`。唯一 P1 是阴性 LoD 条件误降级正向 material-sink TMDD，详见 `logs/chatgpt-review-2026-10-23-tgt07-phase-b2-round2.md`。
+- 本 PR 已拆分共用 TMDD 输入资格和阴性额外资格，正向 material-sink 不要求数值化 LoD；阴性 intended-ADC 仍要求它。新增无 LoD 正向 DIRECT/fatal 对抗测试，保留缺 LoD 阴性不得 DIRECT 测试。本地 B2 110、全库 2,058 tests、仓库边界及 diff 检查通过。
+- 下一步：显式暂存、提交和推送本次最小修订；等待 CI，并请同一审核会话对新 exact HEAD 复审。未获批准前不合并，不进入 B3/激活/真实数据运行。

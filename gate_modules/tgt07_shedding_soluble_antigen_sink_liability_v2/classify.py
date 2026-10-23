@@ -198,7 +198,10 @@ def _classify_tmdd(
             qualifying_direct_material_sink=True,
         )
     if outcome == _NO_MATERIAL_SINK:
-        if o.exposure_scenario_class == "INTENDED_ADC_EXPOSURE":
+        if (
+            o.exposure_scenario_class == "INTENDED_ADC_EXPOSURE"
+            and o.is_tmdd_negative_qualified
+        ):
             return _admit(
                 o,
                 rung="DIRECT",

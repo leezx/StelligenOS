@@ -919,6 +919,22 @@ class FatalReviewTests(unittest.TestCase):
         self.assertTrue(res.fatal_review.required)
         self.assertEqual(res.fatal_review.source_path, ("TMDD",))
 
+    def test_validated_material_tmdd_without_numeric_lod_remains_direct_and_fatal(self):
+        obs, comp = _std_landscape(
+            _tmdd(ctx=SINKCTX_A, detection_limit_basis="",
+                  detection_limit_value=None, detection_limit_unit=""),
+            qualifying_ctx=(SINKCTX_A,),
+        )
+        res, _, _ = _run(obs, comp)
+        self.assertTrue(res.machine_acceptance.accepted, res.machine_acceptance.reasons)
+        self.assertEqual(
+            (res.proposal_envelope.proposed_direction,
+             res.proposal_envelope.proposed_strength),
+            ("POSITIVE", "DIRECT"),
+        )
+        self.assertTrue(res.fatal_review.required)
+        self.assertEqual(res.fatal_review.source_path, ("TMDD",))
+
     def test_tmdd_material_with_compromise_analogue_is_positive_direct_but_not_fatal(self):
         obs, comp = _std_landscape(
             _tmdd(scenario="SAME_TARGET_THERAPEUTIC_ANALOGUE", ctx=SINKCTX_A),

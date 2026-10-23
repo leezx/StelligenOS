@@ -7342,3 +7342,9 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 显式暂存 15 个 B2 代码/测试/文档/审计文件，提交 `6f1679b048abb615c85b1287cfbf0b5216b00ba6` 并推送；创建并附加 [PR #146](https://github.com/leezx/StelligenOS/pull/146)。GitHub Actions run `39952275926` Python 3.11/3.12 均 2,049 tests SUCCESS，仓库边界与 git-sync 通过。向既有 Biotech ideas ChatGPT 审核会话提交 exact-head L1/L2 请求；审核方读取远端 diff、冻结合同和 CI，给出整体 `REQUEST_CHANGES`、4 P1 + 2 P2。详细见 `logs/chatgpt-review-2026-10-23-tgt07-phase-b2-round1.md`。
 - 按四项 P1 在同一 PR 最小修订：输入 evidence_regime 与 v2 Instantiation `PUBLIC_PLUS_EXPERIMENTAL` 同步并以 YAML parity 测试锁定；EP reuse 核对 factual measurement、study_context 与 provenance.retrieved_at；COMPLETE 声明与已知未抓取公共来源冲突时 hard reject，访问受阻的 unresolved source 阻止 NEGATIVE 但保留独立 POSITIVE/DIRECT；定量阴性新增 source-anchored detection-limit value/basis/unit、target analyte、受控浓度单位及反例测试。P2 在模块说明明确弱证据 EP 在 run 中可追溯、port 异常由外部 runner 作为基础设施失败记录而非科学 UNKNOWN。
 - 本地新增后合成测试 109 项、全库 2,057 项全部通过；`git diff --check`、`scripts/verify_repository_boundary.sh` PASS。尚未推送 Round 2，未获 B2 APPROVE；无 B3、激活或真实数据运行。
+
+## 2026-10-23 12:31 EDT — B2 PR #146 Round 2 REQUEST_CHANGES 与最小回归修复
+
+- 读取同一 ChatGPT 会话对 exact HEAD `6c960799a386ad237a311b31bb7977cad61cf78d` 的完整第二轮意见，L1 `APPROVE`，L2/整体 `REQUEST_CHANGES`。三项原 P1 已解决；唯一剩余 P1 `B2-L2-02-R1` 为新增检测限条件误伤正向 TMDD DIRECT/fatal，详见 `logs/chatgpt-review-2026-10-23-tgt07-phase-b2-round2.md`。审核方独立核对 CI run `39954000789` 双 Python job SUCCESS。
+- 同 PR 仅修复该回归：`contracts.py` 把 TMDD 共用量化输入与阴性 LoD 资格拆分；`classify.py`、`acceptance.py` 和方向映射仅在阴性 DIRECT 使用额外资格；新增无数值 LoD 的合格 material-sink TMDD 保持 `POSITIVE/DIRECT` 且触发 fatal-review 的对抗测试。没有修改冻结合同、v1、binding 或 Instantiation。
+- 使用仓库外 venv 且禁用 bytecode，定向 110 tests、全库 2,058 tests OK；`scripts/verify_repository_boundary.sh` 与 `git diff --check` PASS。检查 PR 仍 OPEN、旧远端 HEAD 未变。读取新安装的 `agent-handoff` skill，决定仅借用其证据状态与自包含交接检查项；本仓库 PR/handoff/审核门禁优先。待显式暂存、提交、推送与新 exact HEAD 复审；未进入 B3 或外部数据运行。

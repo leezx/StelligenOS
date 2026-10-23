@@ -306,7 +306,7 @@ def evaluate(
         and not (
             e.observation.observation_kind == "SOLUBLE_ANTIGEN_TMDD_ANALYSIS"
             and e.observation.exposure_scenario_class == "INTENDED_ADC_EXPOSURE"
-            and e.observation.is_tmdd_input_adequate
+            and e.observation.is_tmdd_negative_qualified
             and e.observation.is_analysis_validation_qualified
             and e.observation.sink_materiality_outcome == _NO_MATERIAL_SINK
         )

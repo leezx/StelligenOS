@@ -727,13 +727,19 @@ class NormalizedSolubleAntigenObservation:
             and all(bool(getattr(self, name).strip()) for name in (
                 "construct_id", "dose_exposure_basis", "soluble_concentration_basis",
                 "turnover_basis", "affinity_basis", "assay_unit",
-                "detection_limit_basis", "assay_analyte",
-                "quantitative_input_source_id",
+                "assay_analyte", "quantitative_input_source_id",
             ))
-            and self.detection_limit_value is not None
-            and self.detection_limit_unit == self.assay_unit
             and self.assay_analyte == self.target_identity
             and self.quantitative_input_source_id == self.source_id
+        )
+
+    @property
+    def is_tmdd_negative_qualified(self) -> bool:
+        return (
+            self.is_tmdd_input_adequate
+            and bool(self.detection_limit_basis.strip())
+            and self.detection_limit_value is not None
+            and self.detection_limit_unit == self.assay_unit
         )
 
     @property
@@ -786,7 +792,7 @@ def sink_materiality_direction(
         if (
             observation.observation_kind == "SOLUBLE_ANTIGEN_TMDD_ANALYSIS"
             and observation.exposure_scenario_class == "INTENDED_ADC_EXPOSURE"
-            and observation.is_tmdd_input_adequate
+            and observation.is_tmdd_negative_qualified
         ):
             return "OPPOSES_SINK_LIABILITY"
         return "CONTEXTUAL"
