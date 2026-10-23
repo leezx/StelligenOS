@@ -1,0 +1,98 @@
+version: "2.0.0"
+name: stelligenos-gate-module-construction-contract-tgt07-v2
+status: CONTRACT_ONLY_INACTIVE
+source:
+gate_contract: src/contracts/crc_adc_target_gateset_v2.yaml
+retained_v1_module_contract: src/contracts/gate_modules/tgt07_shedding_soluble_antigen_sink_liability.yaml
+policy_registry: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/registry.yaml
+boundary: >-
+  B0 freezes the MOD-TGT07@2.0.0 construction contract only. The module,
+  reviewer interface, cross-file audit resolver and Decision evaluator remain
+  unimplemented. Phase B implementation needs separate approved PRs.
+kernel_invariant: >-
+  The Module emits Gate-neutral EvidencePackages and a non-canonical assessment
+  proposal. Only a human-authored HUMAN_APPROVED Assessment enters GateSet policy.
+  The Module never emits Candidate GO, HOLD, KILL or canonical Decision.
+
+acceptance_checklist:
+  "01_gate_identity_and_version":
+    gate_id: TGT-07
+    gate_version: "2.0"
+    gateset_id: ADC_TARGET_GATESET
+    gateset_version: "2.0"
+    instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2
+    candidate_level: L04
+  "02_primary_module_identity_and_version":
+    primary_module_id: MOD-TGT07
+    planned_module_version: "2.0.0"
+    phase_a_binding_version: "0.0.0"
+    phase_b_rule: bind only after separately reviewed implementation and activation
+  "03_gate_question":
+    source: src/contracts/crc_adc_target_gateset_v2.yaml#gate_contracts.TGT-07.gate_question
+    rule: quote exactly; no Module-owned scientific redefinition
+  "04_admissible_evidence_classes":
+    DIRECT_POSITIVE: qualified same-target clinical PK/PD sink attribution or validated exposure-context TMDD showing material sink
+    DIRECT_NEGATIVE: validated intended-ADC exposure-context TMDD showing no material sink after completed audited landscape
+    INDIRECT_STRONG: quantified circulating soluble target or validated sheddase-substrate/secreted isoform without materiality analysis
+    WEAK: predicted cleavage or receptor-family analogy without measurement
+    CONTEXTUAL: below-detection or below-quantitation observation; no Direction
+  "05_evidence_ladder_and_evidence_ceiling":
+    source: src/contracts/crc_adc_target_gateset_v2.yaml#gate_contracts.TGT-07.evidence_ladder
+    rule: DIRECT is context-bounded materiality; concentration alone has no materiality threshold
+  "06_direction_interpretation":
+    source: src/contracts/crc_adc_target_gateset_v2.yaml#gate_contracts.TGT-07.direction_rules
+    rule: >-
+      A clean material-sink DIRECT context is POSITIVE. NEGATIVE/DIRECT requires
+      qualified intended-ADC no-material-sink TMDD, a completed audited landscape
+      and no contrary material-sink DIRECT context. Opposing qualified DIRECT
+      findings in the same sink-exposure context are CONFLICTING. Different
+      contexts remain separately visible; no result generalizes target-wide.
+  "07_allowed_and_forbidden_inference":
+    allowed: exposure-context-bounded material sink or bounded absence of materiality
+    forbidden:
+      - concentration, below-limit assay, no report or absent TMDD to no sink
+      - a no-sink context to absence of sink in another context
+      - clinical effect of a different construct to intended-ADC NEGATIVE/DIRECT
+      - Module proposal to canonical Assessment or Candidate Decision
+  "08_fatal_conditions":
+    source: src/contracts/crc_adc_target_gateset_v2.yaml#gate_contracts.TGT-07.fatal_conditions
+    rule: qualified clinically achievable exposure compromise flags human review; never automatic KILL
+  "09_evidence_source_plan":
+    primary: same-target clinical PK/PD attribution and validated intended-ADC TMDD with dose, affinity, exposure and soluble-antigen kinetics
+    contextual: CRC-patient and healthy-donor soluble-antigen landscape, sheddase and isoform evidence
+    negative_search: typed completion of both populations, assays, sources and sensitivity; no empty-database inference
+    provider_boundary: receive normalized observations through injected port; no network or data store inside Module
+  "10_input_contract":
+    keys: target identity, program, construct, dose, exposure-context identity, observation, assay, quantitative unit and detection limit, source and provenance
+    failure: target/context mismatch, absent source, integrity failure or invalid quantitative unit rejects the round
+  "11_evidencepackage_output_contract":
+    schema: src/contracts/data_layout/evidence_package.schema.json
+    rule: atomic Gate-neutral observation with source/provenance; no rung, Direction or Candidate judgment in EP
+    reuse: canonical EP reuse requires source and classification-driving-field parity
+  "12_assessment_proposal_envelope_contract":
+    output: non-canonical Direction/Strength proposal, qualified EP refs, separate context outcomes, completion audit, conflict refs and critical_unknowns
+    forbidden: HUMAN_APPROVED status, canonical Assessment or Candidate Decision from Module
+  "13_machine_acceptance_criteria":
+    - qualify DIRECT clinical and TMDD sources against same target, construct and exposure context
+    - retain distinct positive material-sink contexts when a negative context exists
+    - retain both EP roles for qualified same-context DIRECT contradiction
+    - require completed audited landscape before any NEGATIVE/DIRECT proposal
+    - below-limit and unquantified shedding never establish absence or materiality
+    - deterministic provenance and identity parity before proposal
+  "14_human_acceptance_and_review_surface":
+    chain: EP -> non-canonical proposal -> human-authored HUMAN_APPROVED Assessment -> GateSet policy -> Decision
+    reviewer_view: source and context for each DIRECT claim, both sides of conflict, landscape coverage and fatal-review trigger
+    rule: human reviewer adjudicates conflict and fatality; Module cannot sign Assessment
+  "15_failure_unknown_and_conflict_behavior":
+    incomplete_search_or_unqualified_tmdd: UNKNOWN with critical_unknowns; never NEGATIVE
+    below_limit_only: CONTEXTUAL; never NEGATIVE
+    identity_or_source_failure: hard reject entire round; not ordinary HOLD
+    same_context_qualified_disagreement: CONFLICTING with both EP refs
+  "16_stop_rule":
+    hard_failure: stop on identity, source integrity, provenance or EP reuse drift
+    positive_direct: preserve material-sink liability despite unrelated missing coverage
+    incomplete_negative_route: do not propose NEGATIVE/DIRECT
+  "17_downstream_consumer_and_handoff":
+    policy_owner: ADC_TARGET_GATESET@2.0
+    policy_registry: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/registry.yaml
+    rule: B2 code and B4 binding/activation require separate approved PRs; v1 module remains frozen
