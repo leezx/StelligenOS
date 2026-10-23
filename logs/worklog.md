@@ -7307,3 +7307,14 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 同 PR 提交并推送最小修订 `cdec290af2c8a4d169a8dbcdabff97a030aaf752`；仓库外 venv 中相关 98 tests、`git diff --check` 与 repository boundary PASS。GitHub Actions run `39908496110` Python 3.11/3.12 均 SUCCESS；PR exact HEAD 已核对。向同一 ChatGPT 会话提交仅覆盖唯一 P1 与必要回归的 round 2 请求。
 - ChatGPT 直接核对 PR delta、冻结科学契约和 CI，给出 L1 `APPROVE`、L2 `PASS / APPROVE`、整体 `APPROVE`，blocker 0；记录在 `logs/chatgpt-review-2026-10-23-tgt05-phase-b0-round2.md`。批准仅 B0，不含自动合并、B1–B4 或真实数据运行。
 - 为满足同 PR 全程留痕，新增 round 2 记录并更新 handoff/worklog。此纯审计元数据需作为新提交推送，再请审核方核对最终 exact HEAD；在此之前不把前一批准视为新 HEAD 批准。
+
+## 2026-10-23 07:35 EDT — Phase B0 人工放行、合并与 B1 模块实施
+
+- 用户在看到 PR #144 最终 exact HEAD `f28239908e1573247f85a8d27a654acd0c862c4a` 的 ChatGPT `APPROVE`、双 Python CI 成功及人类 L3 门禁说明后回复“继续”。将其作为 PR #144 合并及进入 B1 的人类放行；合并前再次核对 HEAD、mergeability、两条 CI，随后执行 GitHub merge。PR #144 于 2026-10-23 11:26:52 UTC 合并，merge commit `7f032d6cbfd55ea29b1d7acaf7b3af6403406bf9`。
+- 保留附着工作树、从更新后的 `origin/main` 创建独立 `task_20261023_tgt05_v2_phase_b1` 分支，初始工作树干净。读取 Phase A v2 Gate/TGT05 17 项合同、reviewer schema、v1 模块与 EP 对象，确认 v2 必须新身份、纯 port、只产生 Gate-neutral EP 和非 canonical proposal，不修改 v1、binding 或 Instantiation。
+- 新增 `gate_modules/tgt05_normal_tissue_adc_toxicity_v2/` 的 typed contracts、注入式 ports、纯 Python 分类/聚合/EP 复用与失败拒绝流程、未绑定 module metadata，以及说明文档和合成场景测试。关键逻辑：E1 严重临床/功能 DIRECT，E2 膜蛋白与候选抗体限定正/负，E3/Supporting 无安全结论，同事件合格归因冲突、跨事件保留阳性、完整性失败整轮拒绝；`reviewer_seed` 仅供人类完成非 canonical record，不冒签 Assessment 或 Decision。所有文件为代码/文档/小型合成测试，无数据下载或真实靶点运行。
+- 第一次定向测试 14 项通过；之后补程序/上下文与 coverage 身份 parity、EP reuse、fatal route 和冲突引用，定向增加至 21 项。首次全量 1936 tests 有 7 项失败，均因旧模块测试的精确 package allowlist 未包含新的 per-Gate v2 包；只在七个旧测试的 allowlist 各增一个包名，没有改 v1 实现。复跑全量 1936 tests OK；repository boundary 与 `git diff --check` PASS。随后又要求临床 DIRECT 的 `validated` qualifier，并加一项负向测试；最终全量待再跑。尚未提交 PR、未获本阶段 ChatGPT 审核。
+
+## 2026-10-23 07:37 EDT — B1 预提交验证与边界修正
+
+- 加入临床 DIRECT 必须 validated 的负向测试后，全量 1937 tests OK；对 `OTHER` 临床记录及 RNA/IHC 非测量状态再次检查，避免“无事件报告”误入 WEAK 或阴性。新增合成测试确认 `OTHER` 临床记录仅为 context；定向 23 tests OK。`bash scripts/verify_repository_boundary.sh` 与 `git diff --check` 再通过；全量最终分类小修订交由 CI 完整验证。v1 模块、GateSet v2 binding、政策与 registry 仍未修改。
