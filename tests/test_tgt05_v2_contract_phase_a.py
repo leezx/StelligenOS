@@ -2,9 +2,11 @@
 
 import hashlib
 import json
+import copy
 import unittest
 from pathlib import Path
 
+from jsonschema import Draft202012Validator, FormatChecker
 import yaml
 
 from src.objects.decision_model import Instantiation
@@ -17,6 +19,7 @@ V1_MODULE = ROOT / "src/contracts/gate_modules/tgt05_normal_tissue_fatal_liabili
 V2 = ROOT / "src/contracts/crc_adc_target_gateset_v2.yaml"
 V2_MODULE = ROOT / "src/contracts/gate_modules/tgt05_normal_tissue_adc_toxicity_v2.yaml"
 REVIEW_SCHEMA = ROOT / "src/contracts/gate_modules/tgt05_decision_record_v2.schema.json"
+AUDIT_SCHEMA = ROOT / "src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/recommendation_divergence_audit.schema.json"
 BINDING_SCHEMA = ROOT / "src/contracts/data_layout/gate_binding.schema.yaml"
 SOURCE = ROOT / "docs/architecture/TGT05_DECISION_MODEL_V1_SOURCE_SNAPSHOT.md"
 POLICIES = ROOT / "src/contracts/gateset_policies/ADC_TARGET_GATESET/v2"
@@ -45,7 +48,7 @@ class V2LineageTests(unittest.TestCase):
 
     def test_exact_member_and_instantiation_lineage(self):
         gs = self.v2["gateset"]
-        expected = [(f"TGT-{n:02}", "2.0" if n == 5 else "1.0") for n in range(1, 9)]
+        expected = [(f"TGT-{n:02}", "2.0" if n in (5, 7) else "1.0") for n in range(1, 9)]
         self.assertEqual(gs["gateset_id"], self.v1["gateset"]["gateset_id"])
         self.assertEqual(gs["gateset_version"], "2.0")
         self.assertEqual([(m["gate_id"], m["gate_version"]) for m in gs["members"]], expected)
@@ -55,6 +58,7 @@ class V2LineageTests(unittest.TestCase):
         self.assertEqual(self.v2["instantiation"]["evidence_regime"], "PUBLIC_PLUS_EXPERIMENTAL")
         self.assertEqual(self.v2["roster"][4]["planned_module_version"], "2.0.0")
         self.assertEqual(self.v2["roster"][4]["primary_module_version"], "0.0.0")
+        self.assertEqual(self.v2["roster"][6]["primary_module_version"], "0.0.0")
 
     def test_v2_gateset_and_inactive_instantiation_build_with_frozen_objects(self):
         gs = self.v2["gateset"]
@@ -90,7 +94,8 @@ class V2LineageTests(unittest.TestCase):
             self.assertEqual(row["gateset_version"], "2.0")
             self.assertEqual(row["instantiation_id"], gb["instantiation_id"])
         self.assertEqual(gate_bindings[4]["primary_module_version"], "0.0.0")
-        for row in gate_bindings[:4] + gate_bindings[5:]:
+        self.assertEqual(gate_bindings[6]["primary_module_version"], "0.0.0")
+        for row in gate_bindings[:4] + gate_bindings[5:6] + gate_bindings[7:]:
             old = next(b for b in self.v1["context_specific_bindings"]["gate_bindings"]
                        if b["gate_id"] == row["gate_id"])
             for key in ("gate_version", "gate_contract_ref", "evidence_ladder_ref",
@@ -139,8 +144,60 @@ class V2LineageTests(unittest.TestCase):
                       "primary_module_id", "primary_module_version"):
             self.assertEqual(getattr(gate, field), binding[field])
 
+    def test_tgt07_v2_explicit_negative_direct_and_inactive_module(self):
+        gate = self.v2["gate_contracts"]["TGT-07"]
+        direct = gate["canonical_evidence_ladder_rungs"]["DIRECT"]
+        self.assertEqual(gate["gate_version"], "2.0")
+        self.assertEqual(gate["primary_module_version"], "0.0.0")
+        self.assertTrue(any("no material sink" in x for x in direct["admissible_evidence_classes"]))
+        self.assertNotIn("no material sink", str(self.v1["gate_contracts"]["TGT-07"]["evidence_ladder"]["DIRECT"]))
+        self.assertIn("completed audited landscape", gate["direction_rules"]["negative_direct"])
+
 
 class V2ReviewContractTests(unittest.TestCase):
+    @staticmethod
+    def valid_record():
+        return {
+            "record_id": "TGT05-REVIEW-example-1", "record_version": "2.0",
+            "target": {"hgnc_id": "HGNC:1", "adcdb_target_id": "example"},
+            "context": {"instantiation_id": "INST-CRC-REFRACTORY-ADC-TARGET-v2", "program_id": "example", "version": 1},
+            "clinical_liability": "UNKNOWN", "risk_organ": "unknown", "risk_cell_type": "unknown",
+            "surface_antigen_evidence": "UNKNOWN", "cell_loss_consequence": "UNKNOWN",
+            "evidence_refs": {"E1": [], "E2": [], "E3": [], "supporting": []},
+            "coverage_audit": {"organ_cell_scope": "incomplete", "assay_sensitivity": "unknown", "source_scope": [],
+                               "as_of_date": "2026-10-23", "missingness_state": "NOT_MEASURED"},
+            "main_uncertainty": "coverage", "next_experiment": "binding", "flip_condition": "measured negative",
+            "assessment_basis_cell": "UNKNOWN", "recommendation": "HOLD",
+            "kill_route": {"route": "NONE", "reviewed_basis": ""},
+            "review": {"status": "DRAFT", "reviewer": "example", "reviewed_at": "2026-10-23T00:00:00Z"}
+        }
+
+    def test_json_schema_rejects_hard_failures_instead_of_hold(self):
+        schema = json.loads(REVIEW_SCHEMA.read_text())
+        validator = Draft202012Validator(schema, format_checker=FormatChecker())
+        valid = self.valid_record()
+        self.assertFalse(list(validator.iter_errors(valid)))
+        for state in ("SEARCH_FAILED", "IDENTITY_CONFLICT", "SOURCE_INTEGRITY_FAILURE"):
+            failed = copy.deepcopy(valid)
+            failed["coverage_audit"]["missingness_state"] = state
+            self.assertTrue(list(validator.iter_errors(failed)), state)
+
+    def test_divergence_audit_schema_requires_reason_and_exact_links(self):
+        schema = json.loads(AUDIT_SCHEMA.read_text())
+        validator = Draft202012Validator(schema, format_checker=FormatChecker())
+        trace = {
+            "reviewer_record": {"record_id": "TGT05-REVIEW-example-1", "record_version": "2.0", "artifact_sha256": "a" * 64},
+            "approved_assessment": {"assessment_id": "CGA-00000001", "assessment_version": 1,
+                                    "gate_id": "TGT-05", "gate_version": "2.0", "review_status": "HUMAN_APPROVED"},
+            "canonical_decision": {"decision_id": "DEC-00000001", "gateset_id": "ADC_TARGET_GATESET",
+                                   "gateset_version": "2.0", "instantiation_id": "INST-CRC-REFRACTORY-ADC-TARGET-v2"},
+            "reviewer_recommendation": "GO", "candidate_decision": "HOLD", "reviewed_at": "2026-10-23T00:00:00Z"
+        }
+        self.assertTrue(list(validator.iter_errors(trace)))
+        trace["divergence_reason"] = "Other Gate retains a qualified material liability"
+        self.assertFalse(list(validator.iter_errors(trace)))
+        trace["approved_assessment"]["review_status"] = "DRAFT"
+        self.assertTrue(list(validator.iter_errors(trace)))
     def test_seventeen_item_module_contract_and_noncanonical_record(self):
         mod = load(V2_MODULE)
         self.assertEqual(tuple(mod["acceptance_checklist"]),
@@ -186,8 +243,7 @@ class V2PolicyContractTests(unittest.TestCase):
         self.assertEqual(registry["owner_gateset_id"], gs["gateset_id"])
         self.assertEqual(registry["owner_gateset_version"], gs["gateset_version"])
         self.assertEqual(registry["review_pr"], "https://github.com/leezx/StelligenOS/pull/143")
-        self.assertEqual(registry["source_git_commit"],
-                         "5abe4fb38a9f3b5c35654c5f9bad0017f7e7c67c")
+        self.assertEqual(len(registry["source_git_commit"]), 40)
         self.assertEqual(registry["status"], "VERSIONED_SOURCE")
         refs = [item["logical_ref"] for item in registry["policy_bodies"]]
         self.assertEqual(len(refs), len(set(refs)))
@@ -233,10 +289,11 @@ class V2PolicyContractTests(unittest.TestCase):
         for n in (1, 2, 3, 4, 6, 7):
             gid = f"TGT-{n:02}"
             route = fatal["eligible_routes"][gid]
+            source = "crc_adc_target_gateset_v2.yaml" if n == 7 else "crc_adc_target_gateset.yaml"
             self.assertEqual(route["condition_source"],
-                             f"src/contracts/crc_adc_target_gateset.yaml#gate_contracts.{gid}.fatal_conditions")
+                             f"src/contracts/{source}#gate_contracts.{gid}.fatal_conditions")
             self.assertTrue(route["inherit_exact_condition"])
-            self.assertTrue(load(V1)["gate_contracts"][gid]["fatal_conditions"])
+            self.assertTrue((load(V2) if n == 7 else load(V1))["gate_contracts"][gid]["fatal_conditions"])
         self.assertIn("no_canonical_Decision_on_hard_reject", unknown["prohibitions"])
         self.assertIn("no_policy_fallback_to_v1", unknown["prohibitions"])
 

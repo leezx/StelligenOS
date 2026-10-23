@@ -18,6 +18,7 @@ input_contract:
   - each_pin_matches_gate_id_gate_version_assessment_id_version_and_cell
   - policy_registry_resolves_all_four_v2_refs_with_exact_content_hash_and_APPROVED_status
   - Tgt05DecisionRecord.recommendation_is_not_a_policy_input
+  - TGT-05_reviewer_record_and_approved_assessment_link_is_retained_for_external_audit_only
 ordered_truth_table:
   - order: 0
     when: hard_reject_or_policy_registry_failure_or_mixed_lineage
@@ -67,6 +68,18 @@ decision_output:
     - GO reason names the eight qualifying approved cells and their residual bounded limitations
     - HOLD_or_MORE_EVIDENCE reason names the controlling risk, missing Gate or experiment that could change the result
   immutability: Decision is immutable and may be superseded only by a new Decision with backward supersedes_decision_id
+reviewer_divergence_audit:
+  schema: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/recommendation_divergence_audit.schema.json
+  location: external audit workspace, outside the canonical CandidateGateAssessment and Decision objects
+  obligation: >-
+    Retain the stable Tgt05DecisionRecord record_id, record_version and exact
+    artifact SHA256; pin the HUMAN_APPROVED TGT-05 assessment ID/version and
+    final canonical Decision ID. The approved assessment pin must match the
+    Decision assessment_snapshot TGT-05 entry. Record both recommendations and
+    a human-reviewed divergence reason whenever they differ, including
+    MORE_EVIDENCE versus reviewer GO/HOLD/KILL. Missing or mismatched audit
+    linkage fails audit acceptance, without changing the scientific policy result.
+  policy_input: false
 no_exceptions:
   - no_candidate_GO_from_TGT-05_reviewer_GO_alone
   - no_candidate_KILL_from_TGT-05_POSITIVE/DIRECT_alone

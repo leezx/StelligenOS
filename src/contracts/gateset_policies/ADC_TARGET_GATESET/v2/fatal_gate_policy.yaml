@@ -6,6 +6,7 @@ status: DECLARATIVE_POLICY_SOURCE
 source:
   rfc_merge_commit: 004fc44c02fbea9511274427904792b255141521
   tgt05_contract: src/contracts/crc_adc_target_gateset_v2.yaml#gate_contracts.TGT-05.potential_fatal_review
+  tgt07_contract: src/contracts/crc_adc_target_gateset_v2.yaml#gate_contracts.TGT-07.fatal_conditions
   retained_other_gate_contracts: src/contracts/crc_adc_target_gateset.yaml#gate_contracts
 scope: >-
   Candidate-level KILL is a human-approved GateSet Decision. A Gate or Module
@@ -54,7 +55,7 @@ eligible_routes:
     inherit_exact_condition: true
     human_review: failure of productive trafficking across independent antibody/epitope configurations for an internalizing-payload ADC
   TGT-07:
-    condition_source: src/contracts/crc_adc_target_gateset.yaml#gate_contracts.TGT-07.fatal_conditions
+    condition_source: src/contracts/crc_adc_target_gateset_v2.yaml#gate_contracts.TGT-07.fatal_conditions
     inherit_exact_condition: true
     human_review: material clinically achievable exposure compromise in the intended ADC context
   TGT-08: NO_SCIENTIFIC_KILL; commercial or IP concern belongs to sponsor review

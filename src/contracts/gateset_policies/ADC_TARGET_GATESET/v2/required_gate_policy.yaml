@@ -53,8 +53,9 @@ required_for_GO:
       allowed_strengths: [DIRECT, INDIRECT_STRONG]
       basis: completed target-specific competitive and composition-IP axes support differentiated opportunity
 source_authority:
-  TGT-01_to_04_and_06_to_08: src/contracts/crc_adc_target_gateset.yaml#gate_contracts
+  TGT-01_to_04_and_06_and_08: src/contracts/crc_adc_target_gateset.yaml#gate_contracts
   TGT-05: src/contracts/crc_adc_target_gateset_v2.yaml#gate_contracts.TGT-05
+  TGT-07: src/contracts/crc_adc_target_gateset_v2.yaml#gate_contracts.TGT-07
 no_override:
   - no_unapproved_assessment_or_module_proposal_can_fill_a_required_cell
   - no_tgt05_reviewer_GO_shortcut

@@ -81,11 +81,12 @@ acceptance_checklist:
     - incomplete coverage never becomes safety or GO
   "14_human_acceptance_and_review_surface":
     record_schema: src/contracts/gate_modules/tgt05_decision_record_v2.schema.json
+    record_identity: record_id is stable for one immutable record_version; external artifact retention pins its SHA256
     chain: EP -> non-canonical Tgt05DecisionRecord -> human-authored HUMAN_APPROVED Assessment -> GateSet policy -> Decision
     rule: GO/HOLD/KILL reviewer recommendation cannot be stored in Assessment or consumed directly by GateSet
   "15_failure_unknown_and_conflict_behavior":
     not_measured: INCONCLUSIVE/UNKNOWN with critical_unknowns
-    search_failed_or_identity_conflict: hard reject, not ordinary HOLD
+    search_failed_or_identity_conflict_or_source_integrity_failure: hard reject before record validation; write a separate run-rejection audit artifact outside the review/assessment/Decision chain, never a HOLD Tgt05DecisionRecord
     unresolved_clinical_attribution: INCONCLUSIVE/WEAK plus explicit HOLD review trigger
     same_event_qualified_disagreement: CONFLICTING with both EP roles
   "16_stop_rule":

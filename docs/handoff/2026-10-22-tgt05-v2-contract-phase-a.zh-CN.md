@@ -4,7 +4,7 @@
 - 分支：`task_20261022_tgt05_v2_contract_phase_a`
 - Base：`main` @ `004fc44c02fbea9511274427904792b255141521`（RFC PR #142 merge commit）
 - 科学来源：`docs/architecture/TGT05_DECISION_MODEL_V1_SOURCE_SNAPSHOT.md`，SHA256 `2e41525f65c6f7e4e9ec909bd8f110623f6ce62f54d5c82448c37aa80224674c`
-- PR：[StelligenOS #143](https://github.com/leezx/StelligenOS/pull/143)，当前 `DRAFT/OPEN`。
+- PR：[StelligenOS #143](https://github.com/leezx/StelligenOS/pull/143)，当前 `OPEN`；round 1 已收到 `REQUEST_CHANGES`，修订中。
 - 稳定 policy body source commit：`5abe4fb38a9f3b5c35654c5f9bad0017f7e7c67c`；registry commit：`e9413c1b714d6468ce1f983a3c7d81d442ff1a0f`。审核结论待补充。
 
 ## 本阶段目标与边界
@@ -40,3 +40,9 @@ body commit `d3f3689e47ee087716d46c0489a550259369815a` 已推送，随后创建 
 ## 送审前最终核对（2026-10-22 19:39 EDT）
 
 registry 和状态修正已在 `e9413c1b714d6468ce1f983a3c7d81d442ff1a0f` 提交并推送。四个 policy body 哈希均从 `5abe4fb38a9f3b5c35654c5f9bad0017f7e7c67c` 的 Git 对象复算并匹配 registry。禁写字节码的全量 1912 项测试通过，`scripts/verify_repository_boundary.sh` 通过。本 PR 仍无 ChatGPT `APPROVE`；Phase B 和外部数据运行禁止启动。
+
+## 新审核会话与 round 1 修订（2026-10-23 01:22 EDT）
+
+用户要求更换已达到长度上限的旧会话；新 [Biotech ideas 审核会话](https://chatgpt.com/g/g-p-68c041b4df6881918a83a55e2dd7ac70-biotech-ideas/c/6adaebc8-4738-83ea-8a87-894771eda8d6) 对 exact HEAD `3103d12e1fa686b83f3c4e3b54944e32c989580d` 给出 L1/L2 `REQUEST_CHANGES`。三项 blocker 详见 `logs/chatgpt-review-2026-10-23-tgt05-phase-a-round1.md`。同一 PR 内修订：显式增加 TGT-07@2.0 阴性 DIRECT 科学授权及对 RFC roster 的后续修正，v2 binding 的 MOD-TGT07 改为未构建的 `0.0.0`；三种 hard failure 不再生成可审议 TGT-05 Decision Record；新增稳定 record ID 和外部推荐差异审计 schema/政策义务，决策输入仍只有人工批准的八 Gate assessments。
+
+修订只限契约、测试及审计。新增 `jsonschema` 作为契约测试依赖，测试对三个失败状态和推荐差异分别做真实 schema 校验。旧 v1 合同与 Module 保持不变。`INST-CRC-REFRACTORY-ADC-TARGET-v2` 仍为 `HOLD`；Phase B 现须另行审核并实现 MOD-TGT05@2.0.0 和 MOD-TGT07@2.0.0，随后方可考虑激活。策略 body 变动需更新 registry 的四项 hash 和源 Git commit。完成提交、CI 和新会话复审前，本修订不获批准，也不产生 Candidate 决策或外部数据运行授权。

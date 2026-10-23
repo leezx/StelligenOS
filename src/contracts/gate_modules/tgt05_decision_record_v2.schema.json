@@ -5,12 +5,13 @@
   "description": "Gate-specific human review material outside this repository. It is not a seventh core object, CandidateGateAssessment, or Candidate-level Decision. Recommendation is never a GateSet policy input.",
   "type": "object",
   "required": [
-    "record_version", "target", "context", "clinical_liability", "risk_organ",
+    "record_id", "record_version", "target", "context", "clinical_liability", "risk_organ",
     "risk_cell_type", "surface_antigen_evidence", "cell_loss_consequence",
     "evidence_refs", "coverage_audit", "main_uncertainty", "next_experiment",
     "flip_condition", "assessment_basis_cell", "recommendation", "kill_route", "review"
   ],
   "properties": {
+    "record_id": { "type": "string", "pattern": "^TGT05-REVIEW-[A-Za-z0-9._-]+$" },
     "record_version": { "const": "2.0" },
     "target": {
       "type": "object", "required": ["hgnc_id", "adcdb_target_id"],
@@ -56,7 +57,7 @@
         "source_scope": { "type": "array", "items": { "type": "string", "minLength": 1 } },
         "as_of_date": { "type": "string", "format": "date" },
         "missingness_state": {
-          "enum": ["MEASURED", "NOT_MEASURED", "SEARCH_FAILED", "IDENTITY_CONFLICT", "SOURCE_INTEGRITY_FAILURE"]
+          "enum": ["MEASURED", "NOT_MEASURED"]
         },
         "limitations": { "type": "string" }
       }, "additionalProperties": false
@@ -129,10 +130,6 @@
           "review": { "properties": { "status": { "const": "HUMAN_REVIEWED" } } }
         }
       }
-    },
-    {
-      "if": { "properties": { "coverage_audit": { "properties": { "missingness_state": { "enum": ["SEARCH_FAILED", "IDENTITY_CONFLICT", "SOURCE_INTEGRITY_FAILURE"] } }, "required": ["missingness_state"] } }, "required": ["coverage_audit"] },
-      "then": { "properties": { "recommendation": { "const": "HOLD" } } }
     }
   ],
   "$defs": {

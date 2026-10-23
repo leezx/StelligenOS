@@ -7,9 +7,10 @@ normative_source:
   source_snapshot_path: docs/architecture/TGT05_DECISION_MODEL_V1_SOURCE_SNAPSHOT.md
   source_snapshot_sha256: 2e41525f65c6f7e4e9ec909bd8f110623f6ce62f54d5c82448c37aa80224674c
   retained_v1_contract: src/contracts/crc_adc_target_gateset.yaml
+  tgt07_roster_amendment: docs/architecture/TGT07_NEGATIVE_DIRECT_V2_AMENDMENT.zh-CN.md
 scope: >-
-  Phase A declares the versioned GateSet, TGT-05 scientific contract and CRC
-  binding. MOD-TGT05@2.0.0 is not built here. No Candidate assessment or
+  Phase A declares the versioned GateSet, TGT-05 and TGT-07 scientific contracts
+  and CRC binding. MOD-TGT05@2.0.0 and MOD-TGT07@2.0.0 are not built here. No Candidate assessment or
   Decision may be produced from this declaration until Phase B approval and
   explicit activation. The v1 lineage remains independently executable.
 
@@ -20,7 +21,7 @@ roster:
   - { gate_id: TGT-04, gate_version: "1.0", primary_module_id: MOD-TGT04, primary_module_version: "1.0.0" }
   - { gate_id: TGT-05, gate_version: "2.0", primary_module_id: MOD-TGT05, primary_module_version: "0.0.0", planned_module_version: "2.0.0" }
   - { gate_id: TGT-06, gate_version: "1.0", primary_module_id: MOD-TGT06, primary_module_version: "1.0.0" }
-  - { gate_id: TGT-07, gate_version: "1.0", primary_module_id: MOD-TGT07, primary_module_version: "1.0.0" }
+  - { gate_id: TGT-07, gate_version: "2.0", primary_module_id: MOD-TGT07, primary_module_version: "0.0.0", planned_module_version: "2.0.0" }
   - { gate_id: TGT-08, gate_version: "1.0", primary_module_id: MOD-TGT08, primary_module_version: "1.0.0" }
 
 gateset:
@@ -34,7 +35,7 @@ gateset:
     - { gate_id: TGT-04, gate_version: "1.0" }
     - { gate_id: TGT-05, gate_version: "2.0" }
     - { gate_id: TGT-06, gate_version: "1.0" }
-    - { gate_id: TGT-07, gate_version: "1.0" }
+    - { gate_id: TGT-07, gate_version: "2.0" }
     - { gate_id: TGT-08, gate_version: "1.0" }
   decision_rule_ref: external:gateset/ADC_TARGET_GATESET/decision_rule@v2
   fatal_gate_policy_ref: external:gateset/ADC_TARGET_GATESET/fatal_gate_policy@v2
@@ -55,10 +56,78 @@ instantiation:
   version: 2
   created_at: "2026-10-22"
   activation_condition: >-
-    Separate Phase B PR approves and binds MOD-TGT05@2.0.0, and the reviewed
+    Separate Phase B PR approves and binds MOD-TGT05@2.0.0 and MOD-TGT07@2.0.0, and the reviewed
     v2 policy registry has APPROVED status. No silent upgrade from v1.
 
 gate_contracts:
+  TGT-07:
+    gate_id: TGT-07
+    gate_version: "2.0"
+    gateset_id: ADC_TARGET_GATESET
+    candidate_level: L04
+    dominant_evidence_regime: PUBLIC_HYBRID
+    gate_question: >-
+      Is there a circulating soluble form of the target that materially alters
+      intended-ADC exposure or biodistribution through an antigen sink?
+    evidence_required:
+      - completed audited soluble-antigen landscape in CRC patients and healthy donors
+      - quantitative concentration, turnover, affinity, intended-ADC dose and exposure context
+      - qualified same-target clinical PK/PD attribution or validated intended-ADC TMDD analysis
+    evidence_ladder_ref: external:crc_adc_target_gateset/TGT-07/evidence_ladder@v2
+    assessment_rule_ref: external:crc_adc_target_gateset/TGT-07/assessment_rule@v2
+    primary_module_id: MOD-TGT07
+    primary_module_version: "0.0.0"
+    evidence_ladder:
+      DIRECT:
+        positive:
+          - qualified soluble-antigen-attributed clinical PK/PD sink effect or validated TMDD demonstrating material exposure compromise
+        negative:
+          - qualified intended-ADC TMDD analysis demonstrates no material soluble sink in the declared exposure context after a completed audited landscape
+        ceiling: context-bounded materiality finding; no target-wide no-sink or therapeutic-window claim
+      INDIRECT_STRONG:
+        positive:
+          - quantified circulating soluble target or validated shedding/secreted isoform without materiality analysis
+        ceiling: soluble-antigen liability signal only; no materiality conclusion
+      WEAK:
+        inconclusive:
+          - predicted cleavage or receptor-family analogy without measurement
+        ceiling: hypothesis only
+    canonical_evidence_ladder_rungs:
+      DIRECT:
+        admissible_evidence_classes:
+          - qualified same-target soluble-antigen-attributed clinical PK/PD sink effect
+          - validated exposure-context-specific TMDD showing material sink
+          - validated intended-ADC exposure-context TMDD showing no material sink after completed audited landscape
+        ceiling_rule: exposure-context-bounded materiality or bounded no-material-sink finding only
+      INDIRECT_STRONG:
+        admissible_evidence_classes:
+          - quantified circulating soluble target without exposure/TMDD analysis
+          - validated sheddase-substrate or secreted isoform evidence
+        ceiling_rule: soluble-antigen liability signal only
+      WEAK:
+        admissible_evidence_classes:
+          - predicted cleavage-site or receptor-family analogy
+        ceiling_rule: hypothesis only
+    evidence_ceiling: context-bounded soluble-sink materiality under qualified same-target PK/PD or validated TMDD
+    direction_rules:
+      positive_direct: qualified material sink in at least one uncontested exposure context
+      negative_direct: qualified intended-ADC no-material-sink TMDD after completed audited landscape and no contrary material-sink DIRECT context
+      conflicting_direct: opposing qualified DIRECT conclusions in the same sink-exposure context require human adjudication
+      unknown: absent or incomplete soluble-antigen search is UNKNOWN, never NEGATIVE
+      below_limit: below-detection or quantitation-limit observations alone are CONTEXTUAL, never NEGATIVE
+    allowed_inference:
+      - program and exposure-context-bounded soluble-antigen sink materiality or bounded absence of materiality
+    forbidden_inference:
+      - no report, below-limit assay or missing TMDD implies no sink
+      - a no-material-sink result in one exposure context excludes another context's material sink
+      - the Gate or Module emits Candidate GO or a canonical Decision
+    unknown_behavior: incomplete audited landscape or unqualified TMDD yields UNKNOWN; identity and provenance failures reject the round
+    fatal_conditions:
+      - circulating soluble antigen demonstrated or quantitatively modelled to materially compromise clinically achievable target-directed antibody exposure, after human adjudication
+    supersedes_science: >-
+      TGT-07@1.0 admits only positive DIRECT sink evidence in its Gate ladder.
+      TGT-07@2.0 explicitly admits qualified intended-ADC NEGATIVE/DIRECT.
+      Existing MOD-TGT07@1.0.0 cannot be rebound to this new Gate version.
   TGT-05:
     gate_id: TGT-05
     gate_version: "2.0"
@@ -197,7 +266,7 @@ context_specific_bindings:
       - { gate_id: TGT-04, gate_version: "1.0" }
       - { gate_id: TGT-05, gate_version: "2.0" }
       - { gate_id: TGT-06, gate_version: "1.0" }
-      - { gate_id: TGT-07, gate_version: "1.0" }
+      - { gate_id: TGT-07, gate_version: "2.0" }
       - { gate_id: TGT-08, gate_version: "1.0" }
     decision_rule_ref: external:gateset/ADC_TARGET_GATESET/decision_rule@v2
     fatal_gate_policy_ref: external:gateset/ADC_TARGET_GATESET/fatal_gate_policy@v2
@@ -209,7 +278,7 @@ context_specific_bindings:
     - { gate_id: TGT-04, gate_version: "1.0", gateset_id: ADC_TARGET_GATESET, gateset_version: "2.0", instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2, candidate_level: L04, dominant_evidence_regime: PUBLIC_HYBRID, gate_contract_ref: "external:crc_adc_target_gateset/TGT-04/gate_contract@v1", evidence_ladder_ref: "external:crc_adc_target_gateset/TGT-04/evidence_ladder@v1", assessment_rule_ref: "external:crc_adc_target_gateset/TGT-04/assessment_rule@v1", primary_module_id: MOD-TGT04, primary_module_version: "1.0.0" }
     - { gate_id: TGT-05, gate_version: "2.0", gateset_id: ADC_TARGET_GATESET, gateset_version: "2.0", instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2, candidate_level: L04, dominant_evidence_regime: PUBLIC_HYBRID, gate_contract_ref: "external:crc_adc_target_gateset/TGT-05/gate_contract@v2", evidence_ladder_ref: "external:crc_adc_target_gateset/TGT-05/evidence_ladder@v2", assessment_rule_ref: "external:crc_adc_target_gateset/TGT-05/assessment_rule@v2", primary_module_id: MOD-TGT05, primary_module_version: "0.0.0" }
     - { gate_id: TGT-06, gate_version: "1.0", gateset_id: ADC_TARGET_GATESET, gateset_version: "2.0", instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2, candidate_level: L04, dominant_evidence_regime: PUBLIC_HYBRID, gate_contract_ref: "external:crc_adc_target_gateset/TGT-06/gate_contract@v1", evidence_ladder_ref: "external:crc_adc_target_gateset/TGT-06/evidence_ladder@v1", assessment_rule_ref: "external:crc_adc_target_gateset/TGT-06/assessment_rule@v1", primary_module_id: MOD-TGT06, primary_module_version: "1.0.0" }
-    - { gate_id: TGT-07, gate_version: "1.0", gateset_id: ADC_TARGET_GATESET, gateset_version: "2.0", instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2, candidate_level: L04, dominant_evidence_regime: PUBLIC_HYBRID, gate_contract_ref: "external:crc_adc_target_gateset/TGT-07/gate_contract@v1", evidence_ladder_ref: "external:crc_adc_target_gateset/TGT-07/evidence_ladder@v1", assessment_rule_ref: "external:crc_adc_target_gateset/TGT-07/assessment_rule@v1", primary_module_id: MOD-TGT07, primary_module_version: "1.0.0" }
+    - { gate_id: TGT-07, gate_version: "2.0", gateset_id: ADC_TARGET_GATESET, gateset_version: "2.0", instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2, candidate_level: L04, dominant_evidence_regime: PUBLIC_HYBRID, gate_contract_ref: "external:crc_adc_target_gateset/TGT-07/gate_contract@v2", evidence_ladder_ref: "external:crc_adc_target_gateset/TGT-07/evidence_ladder@v2", assessment_rule_ref: "external:crc_adc_target_gateset/TGT-07/assessment_rule@v2", primary_module_id: MOD-TGT07, primary_module_version: "0.0.0" }
     - { gate_id: TGT-08, gate_version: "1.0", gateset_id: ADC_TARGET_GATESET, gateset_version: "2.0", instantiation_id: INST-CRC-REFRACTORY-ADC-TARGET-v2, candidate_level: L04, dominant_evidence_regime: PUBLIC_PRIMARY, gate_contract_ref: "external:crc_adc_target_gateset/TGT-08/gate_contract@v1", evidence_ladder_ref: "external:crc_adc_target_gateset/TGT-08/evidence_ladder@v1", assessment_rule_ref: "external:crc_adc_target_gateset/TGT-08/assessment_rule@v1", primary_module_id: MOD-TGT08, primary_module_version: "1.0.0" }
 
 lineage_invariants:
@@ -219,3 +288,5 @@ lineage_invariants:
   - one_decision_snapshot_matches_exactly_one_versioned_instantiation_and_eight_gate_member_versions
   - v2_binding_three_policy_refs_equal_the_same_named_gateset_refs
   - no_tgt05_reviewer_recommendation_is_a_gate_assessment_or_a_gateset_policy_input
+  - tgt07_v2_negative_direct_requires_qualified_intended_adc_tmdd_and_completed_landscape
+  - frozen_mod_tgt07_v1_must_not_bind_to_tgt07_v2
