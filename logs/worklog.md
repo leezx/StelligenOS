@@ -7330,3 +7330,11 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 同 PR 提交并推送修订 `a364727e6da3edc48ce66bc103e66c5d7791c9a1`；本地全量 1948 tests OK、repository boundary 与 diff 检查通过。GitHub Actions run `39949078070` Python 3.11/3.12 均 SUCCESS；向原 ChatGPT 会话提交只审 6 项 finding 及必要回归的 Round 2 请求。
 - ChatGPT 直接核对 PR delta、冻结科学合同、对抗测试和 CI，给出 L1 `APPROVE`、L2 `PASS / APPROVE`、整体 B1 `APPROVE`，5 P1 + 1 P2 全部 `RESOLVED`，blocker 0。摘要见 `logs/chatgpt-review-2026-10-23-tgt05-phase-b1-round2.md`。批准仅未绑定模块，不含自动合并、B2、激活或真实数据。
 - 新增 round 2 审核记录并更新 handoff/worklog 以符合每步留痕。此 metadata-only 提交改变 exact HEAD 后须再审；未进行合并或依赖阶段工作。
+
+## 2026-10-23 17:24 EDT — Ubuntu wait-online 超时诊断与修复脚本 PR
+
+- 负责人提供 wait-online timeout 输出并明确要求保存日志、诊断并修复。复核 PR #148 exact HEAD `1ee6941242d6850439cb131e2986f989be8e057a` 为 OPEN 且已获独立 GPT APPROVE，范围含 wait-online、Netplan、网络服务的只读检查。SSH 只读诊断结果：`wlo1` routable；`enp1s0` 与 `enp3s0` no-carrier，均 Required For Online=yes；NetworkManager active 但其设备 unmanaged；UFW inactive。输出保存于执行端 `/tmp/ubuntu-network-diagnostics-20261023.txt`，权限 600，未提交原始数据。
+- 用户明确要求后续修改 Netplan，但现有 sudo 会话非交互检查 `sudo -n python3` 返回 `interactive authentication is required`；未读取 Netplan 原文、未在目标机更改网络/重启。根据官方 Netplan/systemd 文档，建议将无 carrier 的 Ethernet 定义标为 optional，避免 wait-online 等待不需要的网口。
+- 创建独立分支 `task_20261023_ubuntu_wait_online_fix`，基于当前 origin/main。新增 handoff 和 `scripts/ubuntu_wait_online_fix.sh`：本机可见终端运行、保护性备份、自动映射接口到 Netplan IDs、仅处理当前无 carrier 的两个 Ethernet 设备、`netplan generate` 校验、`netplan try` 交互确认、检查 Wi-Fi/wait-online 并在失败时回滚。脚本尚未上传或运行；当前只做 bash 语法与 diff 检查，待 exact-head GPT review 后再上传。
+- 17:25 EDT：首次调用 `scripts/git_sync.sh` 失败，因为新分支在 origin 尚无远端 ref（`couldn't find remote ref task_20261023_ubuntu_wait_online_fix`）。脚本在暂存或提交前退出，工作区内容保持原状；将按仓库规则只显式暂存本次三个相关文件并创建分支的首次推送。
+- 17:25 EDT：首次 `git diff --cached --check` 发现 handoff 文件尾部多一个空行，阻止提交；随后检查尾部时本机 BSD `cat` 不支持 GNU `-A` 参数。已用 Python 将 handoff 规范为单个结尾换行；未提交。将重新显式暂存相关文件并复查 diff。
