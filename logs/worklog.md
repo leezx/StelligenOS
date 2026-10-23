@@ -7330,3 +7330,9 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 同 PR 提交并推送修订 `a364727e6da3edc48ce66bc103e66c5d7791c9a1`；本地全量 1948 tests OK、repository boundary 与 diff 检查通过。GitHub Actions run `39949078070` Python 3.11/3.12 均 SUCCESS；向原 ChatGPT 会话提交只审 6 项 finding 及必要回归的 Round 2 请求。
 - ChatGPT 直接核对 PR delta、冻结科学合同、对抗测试和 CI，给出 L1 `APPROVE`、L2 `PASS / APPROVE`、整体 B1 `APPROVE`，5 P1 + 1 P2 全部 `RESOLVED`，blocker 0。摘要见 `logs/chatgpt-review-2026-10-23-tgt05-phase-b1-round2.md`。批准仅未绑定模块，不含自动合并、B2、激活或真实数据。
 - 新增 round 2 审核记录并更新 handoff/worklog 以符合每步留痕。此 metadata-only 提交改变 exact HEAD 后须再审；未进行合并或依赖阶段工作。
+
+## 2026-10-23 08:18 EDT — TGT-07 v2 Phase B2 实现与预提交验证
+
+- 用户指示“继续，可以开始评估了吗”。核对 [PR #145](https://github.com/leezx/StelligenOS/pull/145) 最终 exact HEAD `b1f6438d6ba6fd87dca8cce47634c285b7160bf4` 已获 ChatGPT L1/L2 `APPROVE`，CI Python 3.11/3.12 各 1,948 tests SUCCESS；按人类 L3 指示合并 PR #145，merge commit `6f91d8be0b6ae1db914e0e7a0d74757537760825`。读取 review-task、Phase B 执行总纲、TGT-07 v2 施工合同、v1 Module 与测试、v2 Gate 科学定义及 PR 门禁；明确尚不能做 ADCdb 全靶点正式评估，B2/B3/B4 与外部运行 PR 仍是前置条件。
+- 从 `origin/main` 建立 `task_20261023_tgt07_v2_phase_b2`。新增独立 `gate_modules/tgt07_shedding_soluble_antigen_sink_liability_v2/`、模块说明和 101 项合成测试，复用 v1 经验证的科学结构但锁定 `MOD-TGT07@2.0.0` / `TGT-07@2.0` / GateSet v2 / Instantiation v2。补 program/intended construct 身份核对、TMDD 浓度/周转/亲和力/剂量暴露/assay unit 依据、quantitation LoD 依据；不足证据不生成阴性。resolver 精确核对 source_id；不同 observation_id 的同源同 claim 事件各保留 EP；hard reject 无部分 EP；proposal 显式显示逐暴露场景、冲突双方 EP 与 audit ref。v1 实现、v2 binding `0.0.0`、Instantiation `HOLD` 未变；没有外部数据。
+- 定向 `tests/test_tgt07_v2_module.py` 101 项通过。首次系统 Python `pytest` 全量因未安装 `jsonschema` 在 collection 阶段失败；切换仓库外 `/tmp/stelligenos-pr143-venv` 后首次 `unittest` 全量 2,049 项中 4 项仓库卫生测试因先前 pytest 留下的 `__pycache__` 失败。清理临时缓存、设置 `PYTHONDONTWRITEBYTECODE=1` 后重跑 2,049 项全部通过。boundary 首次发现 pytest 的 `.pytest_cache` 与 `.benchmarks`，清理后 `scripts/verify_repository_boundary.sh` PASS。未提交、未 PR、未获得 B2 ChatGPT 审核。
