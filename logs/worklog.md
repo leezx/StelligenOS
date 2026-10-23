@@ -7346,3 +7346,4 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 16:52 EDT：针对 Round 2 两项，在同一 PR 规定 SHA-256 输入字节、`spawn` 进程、barrier 同步、共同 monotonic 2 秒窗口和聚合公式；磁盘测量前先比对 `/tmp` 与 `/` 的 `findmnt` 来源/文件系统，仅对同一持久块设备挂载尝试 direct I/O，其余跳过。`git status --short` 与 `git diff --check` 通过，等待新 exact-head 复审。
 - 16:53 EDT：Round 3 独立 GPT 复审 PR #149 exact HEAD `27b762d03ac399f1d336baeef6d7cc2ecd0d2525` 确认 Round 2 技术意见已解决，但给出 `REQUEST_CHANGES`：PR 描述仍称内存测试上限 2 GiB，handoff 已降至 256 MiB。GitHub 正式 review API 返回 403，无平台 review event；未连接或运行主机。
 - 16:53 EDT：按意见将 handoff 与 PR 描述统一为最多 256 MiB，并记录 Round 3 结论；更新后继续同 PR exact-head 复审，不运行主机。
+- 16:53 EDT：通过 `gh pr edit` 更新 PR #149 描述，将内存上限从旧文案纠正为最多 256 MiB，并核对 `gh pr view` 返回 PR URL 与 head `08de47ee15ccc3708aae8d739130cccc37cb7826`。当前描述与 handoff 一致；后续 worklog 元数据提交仍须 exact-head 复审。
