@@ -7360,3 +7360,10 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 
 - 同 PR #150 通过 `scripts/git_sync.sh` 显式提交并推送 `3c76eca`（`Require accepted Netplan try and verify mapped devices`）；远端分支同步成功。提交后复查 handoff 仍描述“修订提交后更新”，为避免审核上下文过期，更新其状态，指明修订代码提交 `3c76eca` 及需审核审计记录提交形成的最新 exact HEAD。
 - Ubuntu 仍未连接/改变；脚本未上传或执行。
+
+
+## 2026-10-23 17:31 EDT — PR #150 APPROVE 与脚本上传
+
+- 独立 GPT 对 PR #150 exact HEAD `d77e881221701aafea71917c2995258c7dcb441c` 给出 `APPROVE`。复审确认当前 handoff/worklog、逻辑 Netplan ID 的生成文件路径、`LC_ALL=C` 下明确 `Configuration accepted.` 检查、`pipefail`/EXIT rollback 与完整脚本安全边界；审核者未连接 Ubuntu。PR 状态 OPEN；未合并。
+- 经 SSH/SCP 将已审脚本上传至 `/home/stelligen/ubuntu_wait_online_fix.sh` 并设置 user executable。远端 SHA256 `b19c21cbe3abb8afbd6b0b34fd20c2050b3aeccf9d22ea73901cf8be6a7a3845` 与本地完全一致；权限 `-rwxr--r-- stelligen:stelligen`。这仅是文件上传，没有执行脚本、修改 Netplan、服务、防火墙或其他网络状态。
+- 为保存后续操作错误输出，建议负责人在可见 Ubuntu 终端运行 `~/ubuntu_wait_online_fix.sh 2>&1 | tee ~/ubuntu_wait_online_fix.log`；运行会交互请求 sudo 与 Netplan try 确认。之后 Codex 可通过 SSH 只读读取日志来排障。上传操作待本条 handoff/worklog 与 PR 同步留痕。
