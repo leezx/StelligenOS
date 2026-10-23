@@ -7206,3 +7206,81 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 提交前 `git status --short` 只显示本任务 RFC、逐字快照、handoff、review log、worklog；显式 `git add --` 五文件、`git diff --cached --check` 通过，提交 `82d95dc982ff8a4fea5fbb1287de7dfe51c8e5df` 并推送同一 PR #142。`gh pr view` 核对 base `1c8ba227...`、head `82d95dc...`、`OPEN`，无误。
 - 在固定 `Biotech ideas → AI审核方案` ChatGPT 会话提交该 exact HEAD 第二轮复审。审核方逐项关闭六个 blocker 并明确给出 **APPROVE**，CI run `39868630714` 中 Python 3.11/3.12 均 success；`gh pr view` 同步显示 `MERGEABLE/CLEAN`。GitHub formal review 接口为 403，会话 verdict 是有效审核证据。审核方限定通过范围为 RFC Phase，不包括 Phase A policy bodies、runtime 或真实数据。
 - 按全程留痕要求只追加 approval 结果至本 worklog、handoff 与 review log，后续作为 metadata commit 推送，不更动经审核的 RFC 或快照。人类负责人未决定 merge/下一 Phase，故不启动依赖实施或外部运行。
+
+## 2026-10-22 19:32 EDT — RFC 合并与 Phase A 契约起草
+
+- 用户在 PR #142 `APPROVE` 及“合并和启动下一阶段由人类决定”交接后回复“继续”。核对 GitHub exact tip `8b97a04760d6c5156813a17cfecb439675dbd12c`、`OPEN/MERGEABLE/CLEAN`、CI Python 3.11/3.12 成功；固定会话已把 `APPROVE` 延续到该 tip。执行 `gh pr merge 142 --merge --match-head-commit 8b97a047...`，GitHub 确认 `MERGED`、merge commit `004fc44c02fbea9511274427904792b255141521`。fetch `origin/main` 后在干净独立工作树创建 `task_20261022_tgt05_v2_contract_phase_a`。
+- 按 review-task Quick 阶段门和已批准 RFC 核对来源快照、现行 v1 GateSet/Module、`GateSet`/`Instantiation` 对象、binding/assessment/decision schema 和七个其余 Gate 的 frozen Direction/Strength。用户明确选择**保守全门槛 GO**：八 Gate 足够证据且全经人工批准、无重大未解风险。没有把 Open Targets/RNA/IHC 空白当正常组织安全证据。
+- 新增 v2 GateSet/TGT-05 契约声明、inactive v2 Instantiation 与 bindings、17 项 MOD-TGT05@2.0.0 施工合同、non-canonical `Tgt05DecisionRecord` schema、四个 GateSet policy bodies、synthetic acceptance cases 和定向测试；原 v1 两个文件保持字节 SHA256 `558db82f...` / `529b7975...`。四个政策目前是 Phase A PR 待审合同，不是已激活的运行规则。未下载/处理 DATA，未评价真实靶点。
+- 定向测试最初 5、扩展至 10 项通过。第一次 `python3 -m unittest discover -s tests -q` 跑 1910 项出现 4 项缓存卫生失败，原因是测试本身生成 `__pycache__`（26 个目录）；清理后用 `PYTHONDONTWRITEBYTECODE=1` 重跑同一 1910 项，全部通过。`git diff --check` 和仓库边界脚本通过。发现 `requirements.txt` 只有 PyYAML，不引入 jsonschema 运行依赖；schema 结构和关键条件由现有 Python 标准库及定向测试核对。
+- 生成 `docs/handoff/2026-10-22-tgt05-v2-contract-phase-a.zh-CN.md`。下一步先提交 policy body 所在的 code commit，再用该 commit 和 body SHA256 生成 registry，避免 manifest 自引用 Git commit；然后再次验证、建 PR 并提交 ChatGPT 审核。未获得 Phase A `APPROVE` 前不进入 Phase B。
+
+## 2026-10-22 19:34 EDT — Phase A body commit、Draft PR 与 registry
+
+- 提交前 `git status --short` 仅本阶段工件；显式 `git add --` 11 文件，`git diff --cached --check` 通过，提交 `d3f3689e47ee087716d46c0489a550259369815a` 并推送 `task_20261022_tgt05_v2_contract_phase_a`。使用正文文件 `/tmp/tgt05-v2-phase-a-pr-body.md` 建 [Draft PR #143](https://github.com/leezx/StelligenOS/pull/143)，base `004fc44c...`，已附加到本任务。
+- 从 body commit 逐个计算四个 policy YAML 的 SHA256，新增 `registry.yaml` pin exact logical ref、路径、SHA256、body commit、PR #143 和 `PENDING_CHATGPT_REVIEW`；`resolver_contract` 要求后续 `APPROVED` 才可使用，且禁止 hash 漂移、路径逃逸和 v1 fallback。用 `git show d3f3689:<path>` 对四个历史 body 字节独立复核，均与 manifest SHA256 一致。
+- 扩展定向测试到 11 项，检查 registry/ref/hash/review gate；`PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -q` 重新运行全量 **1911 tests OK**。无 `__pycache__`，`git diff --check` 与仓库边界脚本通过。PR 仍为 Draft，尚未请求/取得 ChatGPT Phase A 审核；不激活 v2 或运行数据。
+
+## 2026-10-22 19:35 EDT — 复核发现 v2 Gate 对象字段缺口并修正
+
+- Draft PR 送审前重新检查 `src/objects/gate_model.py` 的 frozen `Gate`/`EvidenceLadder` 构造字段，发现首版 v2 YAML 只有方向科学表，未把 Gate 的 `evidence_required`、external refs、三阶 `admissible_evidence_classes`/`ceiling_rule` 等规范形状完整落地。原静态检查不足以发现此缺口。
+- 在 v2 TGT-05 Gate contract 补齐 canonical Gate 字段、三阶 EvidenceLadder 对应表、evidence ceiling、allowed/forbidden inference、unknown/fatal 条件；定向测试实际构造 frozen `Gate` 和 `EvidenceLadder` 并与 binding 对齐，12 项通过。另将六个其余科学 Gate 的 fatal route 明确指向各自 frozen v1 `fatal_conditions`，要求精确继承及人工审议，不让实施者自行补写条件。
+- 这些是 Phase A PR 内尚未送 ChatGPT 审核前的合同修正；四个 body 中 `fatal_gate_policy.yaml` 的 SHA256 已变化，必须先提交修正，再更新 registry 的 `source_git_commit` 和该 hash。v2 仍未激活或用于 Candidate 判断。
+
+## 2026-10-22 19:36 EDT — 冻结修正后的 policy body 来源
+
+- `git status --short` 只显示上述五个本任务文件；显式暂存、`git diff --cached --check` 后提交 `a940d9eb7f2cab772556c4d6bbeb25b425e590d8`。这个 commit 中四个 policy body 均可用 `git show <commit>:<path>` 读取。
+- 将 registry 的 `source_git_commit` 从初版 `d3f3689` 改为 `a940d9e`，并把变更的 `fatal_gate_policy.yaml` SHA256 改为 `fd1f366de6196a77dc4aff82a0daf5286f9c1a9e56dc91aec19e0d9829c97e20`；其余 body SHA256 未变。同步更新 registry test 和 handoff，待校验后推送同一 Draft PR #143。
+
+## 2026-10-22 19:37 EDT — v2 evidence regime 与 GO 证据要求对齐
+
+- 复核 `Instantiation` schema 的 `PUBLIC_ONLY / PUBLIC_PLUS_EXPERIMENTAL / DEVELOPMENT` 后，发现 v2 沿用 v1 `PUBLIC_ONLY` 与保守全门槛 GO 所需的合格实验及 intended-ADC TMDD 来源不一致。将 v2 Instantiation 改为 `PUBLIC_PLUS_EXPERIMENTAL` 并加定向断言；v1 配置和数据均未动。此改动只改变 Phase A 声明，未采集或运行实验数据。继续在同一 Draft PR #143 交付并审核。
+
+## 2026-10-22 19:38 EDT — 审核状态与 policy body 源状态拆分
+
+- 送审前复核发现四个 policy body 内的 `CONTRACT_ONLY_PENDING_REVIEW` 在 PR 获批后会变成错误的历史状态。将四个 body 的 `status` 固定为 `DECLARATIVE_POLICY_SOURCE`，v2 Gate/Module 声明标为 `CONTRACT_ONLY_INACTIVE`，registry 的 `status` 为 `VERSIONED_SOURCE`，单独的 `approval_status` 仍为 `PENDING_CHATGPT_REVIEW` 且 resolver 要求 `APPROVED`。这只是状态字段职责拆分，未改变科学判定表。
+- 显式暂存六个 body/声明文件，`git diff --cached --check` 后提交 `5abe4fb38a9f3b5c35654c5f9bad0017f7e7c67c`。用其作为四 policy 的共同源 Git commit，重新计算并更新 registry 四个 SHA256，更新校验测试与 handoff；未使用过时 hash。待同 PR 推送和审核。
+
+## 2026-10-22 19:39 EDT — PR #143 送审前验证
+
+- `git status --short` 只显示 registry、测试、handoff、worklog 四个本任务文件；`git diff --check` 通过。显式 `git add --` 四个文件并执行 `git diff --cached --check`，提交 `e9413c1b714d6468ce1f983a3c7d81d442ff1a0f`，推送同一分支及 Draft PR #143。
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -q`：1912 tests，OK；`bash scripts/verify_repository_boundary.sh`：通过。`git diff origin/main --stat` 确认仅 12 个 Phase A 契约、测试和审计文件。随后更新 handoff 的最终验证及提交引用；待补充 PR 送审状态和审核结论。
+
+## 2026-10-23 01:03 EDT — PR #143 送固定会话审核，CI 通过
+
+- PR #143 更新最终描述并从 Draft 标为 ready；送审 exact HEAD `3103d12e1fa686b83f3c4e3b54944e32c989580d`，base 为 RFC PR #142 merge commit `004fc44c02fbea9511274427904792b255141521`。固定 `Biotech ideas → AI审核方案` 会话收到独立 L1/L2 审核请求，曾显示核对 RFC、frozen contracts、v1/v2 兼容及 registry 哈希。
+- exact-head GitHub Actions CI run `39873271117` 中 `verify (3.11)` 与 `verify (3.12)` 均为 `SUCCESS`。随后 macOS 锁屏导致 Chrome debugger 无法连接，尚未读取最终审核结论；已请求用户解锁。registry 仍为 `PENDING_CHATGPT_REVIEW`，PR OPEN、未合并；未进入 Phase B 或外部数据运行。本条为等待期间的本地审计记录，尚未推送，以免改变正在审核的 exact HEAD。
+
+## 2026-10-23 01:08 EDT — 根据用户指示更换超长审核会话
+
+- 解锁后旧 `AI审核方案` 会话可访问，但已显示对话长度上限，昨晚请求无法恢复稳定的最终结论。用户明确要求重新开一个 ChatGPT 对话。已在同一 `Biotech ideas` 项目中新建审核会话 `https://chatgpt.com/g/g-p-68c041b4df6881918a83a55e2dd7ac70-biotech-ideas/c/6adaebc8-4738-83ea-8a87-894771eda8d6`，提交 PR #143 exact HEAD `3103d12e1fa686b83f3c4e3b54944e32c989580d`、RFC 基线、CI run `39873271117`、审查范围和明确 verdict 要求。新会话已显示正在响应；其 verdict 尚未读取。本地审计记录暂不提交，以保持被审核 HEAD 不变。
+
+## 2026-10-23 01:22 EDT — 新会话 REQUEST_CHANGES 与同 PR 最小修订
+
+- 新 `Biotech ideas → PR审核请求修改` 会话对 exact HEAD `3103d12...` 给出 L1/L2 `REQUEST_CHANGES`：B1 TGT-07@1.0 ladder 未授权 GO 所需 NEGATIVE/DIRECT；B2 三种完整性失败被 schema 错误映射为 HOLD；B3 reviewer record 到获批 Assessment/Decision 的差异审计链缺失。保存摘要于 `logs/chatgpt-review-2026-10-23-tgt05-phase-a-round1.md`；没有 ChatGPT `APPROVE`，不进入 Phase B 或外部运行。
+- 读取 frozen TGT-07 ladder、已有 MOD-TGT07@1.0.0 的负向 DIRECT 行为、RFC 和现行政策后，决定在同 PR 显式提议 TGT-07@2.0 科学契约及 RFC roster 后续修正，GateSet v2 第七成员与 binding 改为 v2、Module 留 `0.0.0` 未构建；v1 字节不动。收紧 TGT-05 schema，仅 `MEASURED/NOT_MEASURED` 可成记录，失败状态改为链外 hard reject；新增稳定 record ID/外部 hash 审计 schema 和 divergence policy obligation，不把建议变为决策输入。新增 JSON Schema 真实校验测试，requirements 增 `jsonschema`。使用仓库外 `/tmp/stelligenos-pr143-venv` 安装依赖，第一次定向测试 15 项中仅 registry 旧 hash 失败，待 policy body 提交后更新 registry。`git diff --check` 与 repository boundary 已通过。
+
+## 2026-10-23 01:24 EDT — 策略内容锁定与本地复核
+
+- 显式暂存 13 个相关契约/测试/审计文件，`git diff --cached --check` 通过，提交 `4a485eef4594696344c333c7a1dfe6813f473a43`。该提交是新的 policy body source；registry 更新为该 commit，并重算 decision/fatal/required/unknown 四项 SHA256。独立用 `git show <source-commit>:<path>` 校验四个 Git blob 的 SHA256 与当前文件字节完全一致。
+- 在仓库外 `/tmp/stelligenos-pr143-venv` 中按更新 requirements 安装依赖；`PYTHONDONTWRITEBYTECODE=1 ... unittest discover -s tests -q` 全量 1915 tests 通过。`bash scripts/verify_repository_boundary.sh`、`git diff --check`、新增 JSON Schema 的 JSON 语法检查均通过。registry 仍 `PENDING_CHATGPT_REVIEW`；待提交/推送与 CI 复审。第一次全量测试仅因 registry 尚未更新出现一个预期旧 hash 失败，更新后重跑全通过。
+
+## 2026-10-23 01:26 EDT — PR #143 修订推送、CI 通过并提交新会话复审
+
+- 提交 registry/handoff/worklog 为 `c68aa93cd4379d1a8f4bcfddd6602d43550c8a43`，推送同一 PR #143 分支并用 `git ls-remote`、`gh pr view` 确认远端 exact HEAD。更新 PR 描述，明确三项 blocker 修订、TGT-07@2.0 amendment、新 policy source commit 和测试结果。
+- 新 CI run `39905626377` 的 Python 3.11 与 3.12 均 `SUCCESS`（`gh pr checks --watch`）。在用户要求的新 `Biotech ideas → PR审核请求修改` 对话提交 round 2 L1/L2 独立复审请求，明确新 HEAD、三项 blocker、hash、CI 与 `APPROVE/REQUEST_CHANGES` verdict 要求；会话已显示 `ChatGPT is responding`。registry 保持 `PENDING_CHATGPT_REVIEW`，Instantiation 保持 `HOLD`；未合并或进入下一 Phase。此条本地留痕暂未提交，以免改变正在审核的 exact HEAD。
+
+## 2026-10-23 01:32 EDT — Round 2 REQUEST_CHANGES，仅余 B3-R2
+
+- 新会话对 exact HEAD `c68aa93...` 明确 L2 PASS、L1 `REQUEST_CHANGES`，整体 `REQUEST_CHANGES`。B1/TGT-07@2.0 与 B2/hard reject 均 `RESOLVED`；B3 审计结构 `PARTIALLY RESOLVED`。唯一 blocker：audit schema 接受不符合 frozen canonical 规则的 assessment/Decision ID，正向测试也用了非法 ID；须补跨对象引用/hash/身份一致性校验义务。详细见 `logs/chatgpt-review-2026-10-23-tgt05-phase-a-round2.md`。CI run `39905626377` 两个 Python job 均成功，审核方独立核对。
+- 同 PR 最小修订：audit schema 添加 `^ASMT-[0-9]{6}$`、`^DEC-[0-9]{4}$` 和声明式 resolver 拒绝条件；定向测试使用合法 ID，并对两种非法 ID 做真实负向验证。按非 blocker 建议增加 TGT-07 frozen Gate/EvidenceLadder constructor/parity 测试。未改四个 policy body；已运行定向 15 tests OK、`git diff --check` 与 repository boundary 通过，正在重跑全量。registry 保持待审，未开始 Phase B 或外部数据。
+
+## 2026-10-23 01:34 EDT — Round 3 exact HEAD 送审与 CI
+
+- 全量 1915 tests OK，boundary 与 diff 检查通过；显式暂存审计 schema、测试、round 2 反馈和 handoff/worklog，提交 `e8dfef773df9f1baeb79f3f3816ce7cf52af9de1` 并推送同一 PR #143，远端 SHA 已确认。更新 PR 描述仅说明剩余 B3-R2 的精确修订。
+- 向同一新 ChatGPT 会话提交 round 3 L1/L2 exact-head 复审请求，只审 B3-R2 与必要回归。CI run `39906369685` 的 Python 3.11 和 3.12 都 PASS；请求发出时 CI 尚在运行，现已核实完成。会话正在响应，未获 `APPROVE`；registry/Instantiation 仍待审/HOLD，未合并或运行真实数据。此条本地留痕暂不推送，以保持受审 HEAD 不变。
+
+## 2026-10-23 01:35 EDT — Phase A exact-head APPROVE；记录审批证据
+
+- 新会话对 exact HEAD `e8dfef773df9f1baeb79f3f3816ce7cf52af9de1` 给出 B3-R2 `RESOLVED`、L1 `APPROVE`、L2 `PASS`、整体 Phase A `APPROVE`，剩余 blocker 0。审核方独立确认 CI run `39906369685` 的两条 Python job、1915 tests、仓库边界和卫生检查，四个 policy body 未变化。摘要见 `logs/chatgpt-review-2026-10-23-tgt05-phase-a-round3.md`；本次无 GitHub formal review，不授权自动合并/Phase B/真实数据。
+- 将 registry 审批状态从 `PENDING_CHATGPT_REVIEW` 更新为 `APPROVED`，附会话 URL、被审 HEAD 和仅 Phase A 范围；policy body 的源 commit/hash 未变，v2 Instantiation 仍 `HOLD`。同步更新 handoff。该审批元数据提交后需让同一审核会话核对新 exact tip；人类 merge/阶段放行仍独立。

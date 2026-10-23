@@ -2,8 +2,7 @@
 #
 # This repository holds contracts, ports, prompts, scripts and documentation. It
 # executes no pipeline and stores no data, so this list is deliberately minimal.
-# Verified empirically: the full suite (207 tests) passes in a clean virtual
-# environment with only PyYAML installed.
+# The contract suite validates reviewer and audit artifacts against JSON Schema.
 #
 # Python 3.11 or newer is required. `src/lifecycle/state_machine.py` uses
 # `enum.StrEnum`, added in 3.11. CI runs 3.11 and 3.12 so that floor is enforced
@@ -26,3 +25,4 @@
 # `.github/workflows/ci.yml` rather than assumed present on the runner.
 
 PyYAML>=6.0,<7
+jsonschema>=4.21,<5

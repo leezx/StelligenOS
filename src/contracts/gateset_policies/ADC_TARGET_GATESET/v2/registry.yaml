@@ -1,0 +1,49 @@
+registry_id: ADC_TARGET_GATESET/v2
+registry_version: v2
+owner_gateset_id: ADC_TARGET_GATESET
+owner_gateset_version: "2.0"
+status: VERSIONED_SOURCE
+review_pr: https://github.com/leezx/StelligenOS/pull/143
+approval_status: APPROVED
+approval_evidence:
+  reviewer: Biotech ideas / PR审核请求修改
+  verdict: APPROVE
+  reviewed_head: e8dfef773df9f1baeb79f3f3816ce7cf52af9de1
+  reviewed_at: 2026-10-23 01:35 EDT
+  review_url: https://chatgpt.com/g/g-p-68c041b4df6881918a83a55e2dd7ac70-biotech-ideas/c/6adaebc8-4738-83ea-8a87-894771eda8d6
+  scope: Phase A contract declarations only; human merge and Phase B release remain separate
+source_git_commit: 4a485eef4594696344c333c7a1dfe6813f473a43
+source_git_release: null
+policy_bodies:
+  - logical_ref: external:gateset/ADC_TARGET_GATESET/decision_rule@v2
+    policy_version: v2
+    canonical_relative_path: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/decision_rule.yaml
+    sha256: ab5362046dcffda9a7925ac147ec5609c93dfc068c8c035eee01de66e888f456
+  - logical_ref: external:gateset/ADC_TARGET_GATESET/fatal_gate_policy@v2
+    policy_version: v2
+    canonical_relative_path: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/fatal_gate_policy.yaml
+    sha256: 53627b608edb256255772cc60bf962c5146f9ca51b916d47e9f732d9900fce20
+  - logical_ref: external:gateset/ADC_TARGET_GATESET/required_gate_policy@v2
+    policy_version: v2
+    canonical_relative_path: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/required_gate_policy.yaml
+    sha256: 70d765d586086c1dae626e67e22990e84a28309783378e6c351adbc9927f7c7c
+  - logical_ref: external:gateset/ADC_TARGET_GATESET/unknown_policy@v2
+    policy_version: v2
+    canonical_relative_path: src/contracts/gateset_policies/ADC_TARGET_GATESET/v2/unknown_policy.yaml
+    sha256: ae4cf67224bae4273388e050502c77abe824386ebf44fa6f77acf7312bbc6af2
+resolver_contract:
+  base: repository root of the exact reviewed Git revision
+  lookup: exact logical_ref key only; no dynamic discovery
+  verify: policy_version, owner, path under this registry directory, body SHA256 and approval_status
+  require_approval_status: APPROVED
+  reject_on:
+    - missing_or_duplicate_ref
+    - wrong_GateSet_version_or_policy_version
+    - path_escape_or_missing_body
+    - content_hash_mismatch
+    - approval_missing_or_not_APPROVED
+    - fallback_to_v1_or_other_registry
+  execution_boundary: >-
+    This is a versioned source registry, not a decision engine. No v2 Candidate
+    Decision is permitted while approval_status is PENDING_CHATGPT_REVIEW or
+    the Phase B Module remains unbuilt and the Instantiation is HOLD.

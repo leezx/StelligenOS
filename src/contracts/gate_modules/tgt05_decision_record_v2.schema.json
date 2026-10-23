@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "stelligenos/tgt05_decision_record_v2.schema.json",
+  "title": "Tgt05DecisionRecord v2 (non-canonical reviewer artifact)",
+  "description": "Gate-specific human review material outside this repository. It is not a seventh core object, CandidateGateAssessment, or Candidate-level Decision. Recommendation is never a GateSet policy input.",
+  "type": "object",
+  "required": [
+    "record_id", "record_version", "target", "context", "clinical_liability", "risk_organ",
+    "risk_cell_type", "surface_antigen_evidence", "cell_loss_consequence",
+    "evidence_refs", "coverage_audit", "main_uncertainty", "next_experiment",
+    "flip_condition", "assessment_basis_cell", "recommendation", "kill_route", "review"
+  ],
+  "properties": {
+    "record_id": { "type": "string", "pattern": "^TGT05-REVIEW-[A-Za-z0-9._-]+$" },
+    "record_version": { "const": "2.0" },
+    "target": {
+      "type": "object", "required": ["hgnc_id", "adcdb_target_id"],
+      "properties": {
+        "hgnc_id": { "type": "string", "pattern": "^HGNC:[0-9]+$" },
+        "adcdb_target_id": { "type": "string", "minLength": 1 },
+        "ensembl_gene_id": { "type": "string", "pattern": "^ENSG[0-9]+$" }
+      }, "additionalProperties": false
+    },
+    "context": {
+      "type": "object", "required": ["instantiation_id", "program_id", "version"],
+      "properties": {
+        "instantiation_id": { "const": "INST-CRC-REFRACTORY-ADC-TARGET-v2" },
+        "program_id": { "type": "string", "minLength": 1 },
+        "version": { "type": "integer", "minimum": 1 },
+        "construct_description": { "type": "string" }
+      }, "additionalProperties": false
+    },
+    "clinical_liability": {
+      "enum": ["CONFIRMED", "SUSPECTED", "NONE_DOCUMENTED", "UNKNOWN"]
+    },
+    "risk_organ": { "type": "string", "minLength": 1 },
+    "risk_cell_type": { "type": "string", "minLength": 1 },
+    "surface_antigen_evidence": { "enum": ["DIRECT", "INDIRECT", "UNKNOWN"] },
+    "cell_loss_consequence": {
+      "enum": ["CRITICAL", "POTENTIALLY_SERIOUS", "LIMITED", "UNKNOWN"]
+    },
+    "evidence_refs": {
+      "type": "object", "required": ["E1", "E2", "E3", "supporting"],
+      "properties": {
+        "E1": { "$ref": "#/$defs/ep_ids" },
+        "E2": { "$ref": "#/$defs/ep_ids" },
+        "E3": { "$ref": "#/$defs/ep_ids" },
+        "supporting": { "$ref": "#/$defs/ep_ids" }
+      }, "additionalProperties": false
+    },
+    "coverage_audit": {
+      "type": "object",
+      "required": ["organ_cell_scope", "assay_sensitivity", "source_scope", "as_of_date", "missingness_state"],
+      "properties": {
+        "organ_cell_scope": { "type": "string", "minLength": 1 },
+        "assay_sensitivity": { "type": "string", "minLength": 1 },
+        "source_scope": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "as_of_date": { "type": "string", "format": "date" },
+        "missingness_state": {
+          "enum": ["MEASURED", "NOT_MEASURED"]
+        },
+        "limitations": { "type": "string" }
+      }, "additionalProperties": false
+    },
+    "main_uncertainty": { "type": "string", "minLength": 1 },
+    "next_experiment": { "type": "string", "minLength": 1 },
+    "flip_condition": { "type": "string", "minLength": 1 },
+    "assessment_basis_cell": {
+      "enum": ["POSITIVE/DIRECT", "POSITIVE/INDIRECT_STRONG", "NEGATIVE/DIRECT",
+               "NEGATIVE/INDIRECT_STRONG", "CONFLICTING/DIRECT", "CONFLICTING/INDIRECT_STRONG",
+               "INCONCLUSIVE/WEAK", "UNKNOWN"]
+    },
+    "recommendation": { "enum": ["GO", "HOLD", "KILL"] },
+    "kill_route": {
+      "type": "object", "required": ["route", "reviewed_basis"],
+      "properties": {
+        "route": { "enum": ["NONE", "CLINICAL", "FUNCTIONAL"] },
+        "reviewed_basis": { "type": "string" },
+        "target_attribution": { "type": "string" },
+        "exposure_relevance": { "type": "string" },
+        "normal_cell_consequence": { "type": "string" },
+        "alternative_explanations": { "type": "string" }
+      }, "additionalProperties": false
+    },
+    "review": {
+      "type": "object", "required": ["status", "reviewer", "reviewed_at"],
+      "properties": {
+        "status": { "enum": ["DRAFT", "HUMAN_REVIEWED"] },
+        "reviewer": { "type": "string", "minLength": 1 },
+        "reviewed_at": { "type": "string", "format": "date-time" }
+      }, "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "clinical_liability": { "const": "NONE_DOCUMENTED" } }, "required": ["clinical_liability"] },
+      "then": { "properties": { "coverage_audit": { "properties": { "source_scope": { "minItems": 1 } } } } }
+    },
+    {
+      "if": { "properties": { "recommendation": { "const": "GO" } }, "required": ["recommendation"] },
+      "then": {
+        "properties": {
+          "assessment_basis_cell": { "enum": ["NEGATIVE/DIRECT", "NEGATIVE/INDIRECT_STRONG"] },
+          "clinical_liability": { "const": "NONE_DOCUMENTED" },
+          "coverage_audit": { "properties": { "missingness_state": { "const": "MEASURED" }, "source_scope": { "minItems": 1 } } }
+        },
+        "anyOf": [
+          { "properties": { "evidence_refs": { "properties": { "E1": { "minItems": 1 } } } } },
+          { "properties": { "evidence_refs": { "properties": { "E2": { "minItems": 1 } } } } }
+        ]
+      }
+    },
+    {
+      "if": { "properties": { "recommendation": { "const": "KILL" } }, "required": ["recommendation"] },
+      "then": {
+        "properties": {
+          "assessment_basis_cell": { "const": "POSITIVE/DIRECT" },
+          "evidence_refs": { "properties": { "E1": { "minItems": 1 } } },
+          "kill_route": {
+            "required": ["route", "reviewed_basis", "target_attribution", "exposure_relevance", "normal_cell_consequence", "alternative_explanations"],
+            "properties": {
+              "route": { "enum": ["CLINICAL", "FUNCTIONAL"] },
+              "reviewed_basis": { "minLength": 1 },
+              "target_attribution": { "minLength": 1 },
+              "exposure_relevance": { "minLength": 1 },
+              "normal_cell_consequence": { "minLength": 1 },
+              "alternative_explanations": { "minLength": 1 }
+            }
+          },
+          "review": { "properties": { "status": { "const": "HUMAN_REVIEWED" } } }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "ep_ids": {
+      "type": "array", "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^EP-[0-9]{8}$" }
+    }
+  },
+  "additionalProperties": false
+}

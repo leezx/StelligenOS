@@ -1,0 +1,71 @@
+policy_id: external:gateset/ADC_TARGET_GATESET/fatal_gate_policy@v2
+policy_version: v2
+owner_gateset_id: ADC_TARGET_GATESET
+owner_gateset_version: "2.0"
+status: DECLARATIVE_POLICY_SOURCE
+source:
+  rfc_merge_commit: 004fc44c02fbea9511274427904792b255141521
+  tgt05_contract: src/contracts/crc_adc_target_gateset_v2.yaml#gate_contracts.TGT-05.potential_fatal_review
+  tgt07_contract: src/contracts/crc_adc_target_gateset_v2.yaml#gate_contracts.TGT-07.fatal_conditions
+  retained_other_gate_contracts: src/contracts/crc_adc_target_gateset.yaml#gate_contracts
+scope: >-
+  Candidate-level KILL is a human-approved GateSet Decision. A Gate or Module
+  may flag a potential fatal signal but cannot emit KILL. The reviewer must
+  adjudicate a version-matched approved assessment and its pinned evidence.
+input_requirements:
+  - same_candidate_same_v2_instantiation_and_gateset
+  - triggered_gate_assessment_is_HUMAN_APPROVED_and_pinned_in_eight_member_snapshot
+  - triggered_by_gate_assessment_id_version_and_cell_agree_with_snapshot
+  - reviewer_reads_pinned_EvidencePackages_and_records_route_basis_in_triggered_by_reason
+  - decision_review_is_HUMAN_APPROVED
+eligible_routes:
+  TGT-01:
+    condition_source: src/contracts/crc_adc_target_gateset.yaml#gate_contracts.TGT-01.fatal_conditions
+    inherit_exact_condition: true
+    human_review: target-attributable consistent pattern across at least two independent same-target ADC programs
+  TGT-02:
+    condition_source: src/contracts/crc_adc_target_gateset.yaml#gate_contracts.TGT-02.fatal_conditions
+    inherit_exact_condition: true
+    human_review: reproducible absent or rare highly heterogeneous CRC malignant-cell protein coverage across cohorts
+  TGT-03:
+    condition_source: src/contracts/crc_adc_target_gateset.yaml#gate_contracts.TGT-03.fatal_conditions
+    inherit_exact_condition: true
+    human_review: reproducible material protein-level target loss in the intended treated or metastatic CRC context
+  TGT-04:
+    condition_source: src/contracts/crc_adc_target_gateset.yaml#gate_contracts.TGT-04.fatal_conditions
+    inherit_exact_condition: true
+    human_review: reproducible negligible malignant-cell surface antigen, not a universal density cutoff
+  TGT-05:
+    route: CLINICAL_OR_FUNCTIONAL
+    clinical_required:
+      - same_target_identity
+      - serious_or_clinically_material_normal_organ_toxicity
+      - qualified_target_mediated_attribution
+      - normal_cell_and_organ_attribution
+      - relevant_exposure_and_dose_context
+      - explicit_linker_payload_off_target_and_product_specific_alternative_review
+    functional_required:
+      - human_relevant_normal_cell_surface_accessibility
+      - target_dependent_binding_or_uptake_and_killing
+      - clinically_relevant_exposure_and_program_context
+      - CRITICAL_or_explicitly_unacceptable_cell_loss_consequence
+    scope: program/context-specific only; one construct never means target-intrinsic fatal
+  TGT-06:
+    condition_source: src/contracts/crc_adc_target_gateset.yaml#gate_contracts.TGT-06.fatal_conditions
+    inherit_exact_condition: true
+    human_review: failure of productive trafficking across independent antibody/epitope configurations for an internalizing-payload ADC
+  TGT-07:
+    condition_source: src/contracts/crc_adc_target_gateset_v2.yaml#gate_contracts.TGT-07.fatal_conditions
+    inherit_exact_condition: true
+    human_review: material clinically achievable exposure compromise in the intended ADC context
+  TGT-08: NO_SCIENTIFIC_KILL; commercial or IP concern belongs to sponsor review
+decision_boundary:
+  permitted: KILL only after a route above is explicitly adjudicated by a human and recorded in canonical Decision.triggered_by.reason
+  incomplete_route: HOLD or MORE_EVIDENCE under unknown_policy@v2; never KILL
+  no_route: no KILL
+  no_automatic_fatal: true
+  no_target_intrinsic_claim_from_single_product: true
+  snapshot: >-
+    Contains all eight Gate IDs. The triggering approved assessment is pinned;
+    gates not evaluated may use the canonical NOT_EVALUATED literal. An early
+    qualified fatal route need not wait for unrelated Gate evaluation.
