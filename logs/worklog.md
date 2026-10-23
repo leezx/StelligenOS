@@ -7330,3 +7330,28 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 同 PR 提交并推送修订 `a364727e6da3edc48ce66bc103e66c5d7791c9a1`；本地全量 1948 tests OK、repository boundary 与 diff 检查通过。GitHub Actions run `39949078070` Python 3.11/3.12 均 SUCCESS；向原 ChatGPT 会话提交只审 6 项 finding 及必要回归的 Round 2 请求。
 - ChatGPT 直接核对 PR delta、冻结科学合同、对抗测试和 CI，给出 L1 `APPROVE`、L2 `PASS / APPROVE`、整体 B1 `APPROVE`，5 P1 + 1 P2 全部 `RESOLVED`，blocker 0。摘要见 `logs/chatgpt-review-2026-10-23-tgt05-phase-b1-round2.md`。批准仅未绑定模块，不含自动合并、B2、激活或真实数据。
 - 新增 round 2 审核记录并更新 handoff/worklog 以符合每步留痕。此 metadata-only 提交改变 exact HEAD 后须再审；未进行合并或依赖阶段工作。
+
+## 2026-10-23 16:48 EDT — Ubuntu miniPC 性能评估 PR 准备
+
+- 负责人提出测试 miniPC 性能并判断任务上限。此前基线 PR #148 的 SSH 终端正在等待 sudo 认证；为避免混合两项任务，发送 Ctrl-C 取消 sudo 提示并正常退出 SSH。未收到/读取密码，未在主机执行更新或安装。
+- 读取分阶段 PR 审核协议；创建独立 managed worktree，fetch `origin` 后从 `origin/main` 创建 `task_20261023_ubuntu_performance_check`。本任务不复用基线 setup PR #148。
+- 设计短时、无安装、无配置变更的评估：读取硬件信息；Python 标准库 CPU 单/多 worker 短测；内存上限 2 GiB（可用内存至少 4 GiB 且无明显 swap 压力才执行）；`/tmp` 临时顺序 I/O 上限 256 MiB（可用空间至少 2 GiB）；不做外网测速。记录温度/负载停止条件，测试临时文件后清理。
+- 新增 `docs/handoff/2026-10-23-ubuntu-performance-benchmark.zh-CN.md`；主机基准尚未运行。按全局 PR 门禁，需先创建独立 PR 并取得 GPT/ChatGPT 对 exact HEAD 的 `APPROVE`。
+- 16:49 EDT：提交前已执行 `git status --short` 与 `git diff --check`。尝试仓库推荐的 `scripts/git_sync.sh`；脚本在 `git fetch origin <new-branch>` 因远端尚无该新分支而失败，未暂存、提交或推送任何内容。改用显式文件暂存与首次分支推送。
+- 16:49 EDT：使用 GitHub connector 创建独立 PR 时收到 `403 Resource not accessible by integration`，PR 未创建；改用已认证的 GitHub CLI 尝试创建同一分支 PR。范围不变，尚未连接主机运行基准。
+- 16:49 EDT：GitHub CLI 成功创建独立 PR #149（base `main`，branch `task_20261023_ubuntu_performance_check`），URL `https://github.com/leezx/StelligenOS/pull/149`；已附加到当前 Codex 任务。PR 暂不允许运行主机基准，等待 exact-head GPT/ChatGPT `APPROVE`。
+- 16:50 EDT：独立 GPT reviewer 审核 PR #149 exact HEAD `382dba92b931cfe8d4de2ccad39b4e21bc58920b`，给出 `REQUEST_CHANGES`：CPU/内存/I/O workload 不够精确、2 GiB 内存上限扰动风险过高、任务级别没有硬件证据边界。尝试提交 GitHub 正式 review 返回 `403 Resource not accessible by integration`，无平台 review event。未连接目标主机或运行命令。
+- 16:51 EDT：按上述三项同 PR 最小修订 handoff：定义 SHA-256 固定块的 1/2/4/8 worker × 2 秒及 30 核秒上限；内存测试改为可用内存 1/16 且最多 256 MiB，补充 swap/OOM 前后检查；I/O 改 direct I/O 并规定不支持时跳过；按已知 CPU/RAM/存储与待核实 GPU/显存限定任务分级，不从合成数据推断模型参数量。`git status --short` 与 `git diff --check` 通过。等待新 HEAD 复审，未连接主机。
+- 16:52 EDT：PR #149 Round 2 独立 GPT 复审对 exact HEAD `c0eaea70c61b2b6bdfb16ea6debe6e376338488d` 再次给出 `REQUEST_CHANGES`：CPU 仍缺块构造/进程类型/同步计时和聚合定义；未检查 `/tmp` 是否 tmpfs 或和根盘同一设备。正式 review API 再次 403，没有平台 review event；未连接或运行主机。
+- 16:52 EDT：针对 Round 2 两项，在同一 PR 规定 SHA-256 输入字节、`spawn` 进程、barrier 同步、共同 monotonic 2 秒窗口和聚合公式；磁盘测量前先比对 `/tmp` 与 `/` 的 `findmnt` 来源/文件系统，仅对同一持久块设备挂载尝试 direct I/O，其余跳过。`git status --short` 与 `git diff --check` 通过，等待新 exact-head 复审。
+- 16:53 EDT：Round 3 独立 GPT 复审 PR #149 exact HEAD `27b762d03ac399f1d336baeef6d7cc2ecd0d2525` 确认 Round 2 技术意见已解决，但给出 `REQUEST_CHANGES`：PR 描述仍称内存测试上限 2 GiB，handoff 已降至 256 MiB。GitHub 正式 review API 返回 403，无平台 review event；未连接或运行主机。
+- 16:53 EDT：按意见将 handoff 与 PR 描述统一为最多 256 MiB，并记录 Round 3 结论；更新后继续同 PR exact-head 复审，不运行主机。
+- 16:53 EDT：通过 `gh pr edit` 更新 PR #149 描述，将内存上限从旧文案纠正为最多 256 MiB，并核对 `gh pr view` 返回 PR URL 与 head `08de47ee15ccc3708aae8d739130cccc37cb7826`。当前描述与 handoff 一致；后续 worklog 元数据提交仍须 exact-head 复审。
+- 16:54 EDT：独立 GPT reviewer 对 PR #149 exact HEAD `5827a2a35aebca777f012c3137f65563484e970f` 最终复审给出 `APPROVE`，确认描述/handoff 上限一致且先前意见已解决；批准仅限明列的性能基准与只读盘点，不含安装、配置变更、重启。正式 GitHub review connector 返回 403，未创建平台 review event。更新审核记录后仍需核对最终 exact HEAD；当前尚未连接或运行基准。
+- 16:54–16:56 EDT：最终 exact-head 复审确认 `bed42ca0cdda8371688c39050b481fb345bd838b` 只增加审核留痕且批准范围未变后，SSH 执行硬件盘点和批准的基准脚本。识别 Intel Core i3-N305，8 核/8 线程，14 GiB RAM，NVMe JUMPER 512G（根 ext4 分区 233 GiB），Intel UHD 集成显卡；另有 238.5 GiB USB 磁盘，未测试。
+- CPU SHA-256 1 MiB 固定块聚合速度：1/2/4/8 worker 分别 2,335.5/4,560.5/8,158.5/14,350 MiB/s；8 worker 相对单 worker约 6.1×。内存触碰 256 MiB，377 遍页写/读校验，5.01 秒，约 9.86 百万 4 KiB 页读/写操作/秒；校验通过，swap 无变化，OOM 计数无变化。
+- `/tmp` 经 `findmnt` 确认为 tmpfs，与根 ext4 块设备不同，故跳过物理盘 I/O；这不是磁盘基准失败。已核对临时基准文件清理，内存约 14.8 GB 可用，4 GiB swap 空闲，根分区约 213 GiB 可用。
+- 执行限制记录：SSH 脚本的实时温度扫描未读到 sysfs symlink thermal zones；初始只读温度为 27.8/43/50°C，结束后为 27.8/41/42°C，未见超过 85°C，但测试中的峰值未能确认。基准已结束，不再重复施加负载。主机无软件包、配置、网络变化或重启。
+- PR handoff/worklog 与 PR 描述接下来补充脱敏结果与温度限制，同 PR 复审；当前能力判断仅支持常驻轻量服务、浏览器自动化、脚本/轻量开发和少量并行工作；CPU-only 小型量化模型仅可实验，不承诺速度/并发。大型模型训练、高并发推理和 GPU 计算不适合。未测浏览器/邮件应用性能。
+- 16:57 EDT：通过 `gh pr edit` 将 PR #149 描述从“未运行”更新为脱敏硬件/基准结果、`/tmp` tmpfs 跳过原因、温度采样限制、适用判断和未变更声明；再以 `gh pr view` 核对 PR URL、head SHA `bed42ca0cdda8371688c39050b481fb345bd838b` 与新 body。结果留痕改变 PR 文档状态；推送最终 handoff/worklog 后对新 exact HEAD 再审。
+- 16:57 EDT：独立 GPT reviewer 对 PR #149 exact HEAD `ada92598cfd29b6a48152950840f5c2185600e9f` 的执行结果复审给出 `APPROVE`，确认脱敏充分、符合批准范围、温度监控限制透明、tmpfs 跳过正确且能力结论克制。GitHub 正式 review API 返回 403，无平台 review event。该审批记录会产生新 HEAD，因此仍需复核最终 exact HEAD；主机测试已经结束。
