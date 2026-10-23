@@ -39,6 +39,6 @@
 
 报告中的任务适用判断是根据硬件盘点和短时合成测试给出的规划建议，不是浏览器/邮件/模型等应用的实测承诺。以实际工作流、内存峰值和响应时间为准。
 
-## 保存位置
+## 保存位置与交付状态
 
-PR 审核通过后，将本报告原样放在 Ubuntu 用户 home：`/home/stelligen/MINIPC_CAPABILITY_REPORT.md`。更新硬件或新增专项测试后再修订报告，并保留日期与测试方法。
+PR #151（base `main`，branch `task_20261023_minipc_capability_report`）用于审核本报告及其审计记录。当前初始提交 `098fcf81e83ee963f3b44d9c544c2e73aafe7f05`；审核前不写入目标主机。PR exact-head 获得 GPT/ChatGPT `APPROVE` 后，将本报告原样放在 Ubuntu 用户 home：`/home/stelligen/MINIPC_CAPABILITY_REPORT.md`，再将上传路径与校验摘要追加到同一 PR。更新硬件或新增专项测试后再修订报告，并保留日期与测试方法。
