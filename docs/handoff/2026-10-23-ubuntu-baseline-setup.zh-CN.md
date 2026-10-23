@@ -30,5 +30,5 @@
 
 - Base：`main` at `6f91d8be0b6ae1db914e0e7a0d74757537760825`。
 - Branch：`task_20261023_ubuntu_baseline_setup`。
-- PR：[PR #148](https://github.com/leezx/StelligenOS/pull/148)，base `main`；scope commit `125fc56ce9c941d4d248b7f1ed4573b3cc3b94f3`；GPT/ChatGPT 审核：待定；尚未运行任何主机命令。
-- 下一步：自动提交独立 GPT 审核；批准后按本 handoff 执行并更新本文件与 worklog。
+- PR：[PR #148](https://github.com/leezx/StelligenOS/pull/148)，base `main`；scope commit `125fc56ce9c941d4d248b7f1ed4573b3cc3b94f3`。独立 GPT reviewer 对 HEAD `30de40535052f05f0094b51d145a9729dec0b9ff` 明确 `APPROVE`，范围如上；GitHub 正式 review API 返回 `403 Resource not accessible by integration`，所以平台 review event 未创建。审核结论已写入本 handoff/worklog；此审计记录产生新 HEAD，须再审最终 HEAD 后才可连接主机。尚未运行任何主机命令。
+- 下一步：推送审核记录并自动请求最终 exact-head GPT 复审；批准后按本 handoff 执行并更新本文件与 worklog。

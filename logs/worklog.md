@@ -7339,3 +7339,4 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 验证计划：核对更新/安装完成状态、`dpkg --audit`、UFW/网络服务状态、是否需要重启；不在 StelligenOS 仓库存放主机输出、密码或证书。sudo 认证只可在用户本地交互终端输入，绝不经聊天传递。
 - 审核门禁：本次是独立于 PR #147 的新 PR；取得 GPT/ChatGPT 对本 PR 当前 HEAD 的明确 `APPROVE` 前不连接主机、不执行系统变更。
 - 16:43 EDT：提交并推送 scope/handoff commit `125fc56ce9c941d4d248b7f1ed4573b3cc3b94f3`；创建独立 PR #148（base `main`），并附加到当前任务。PR 仅含 handoff 与 worklog；尚未执行 Ubuntu 操作，等待 GPT 审核。
+- 16:44 EDT：独立 GPT reviewer 核对 PR #148 exact HEAD `30de40535052f05f0094b51d145a9729dec0b9ff` 的完整 diff、PR 描述、handoff 与 worklog，明确 `APPROVE`，批准范围仅限 APT 索引刷新、普通 apt upgrade（不移除包/不自动重启）、安装 `python3-venv` 和只读检查 UFW/Netplan/wait-online；明确不含网络/防火墙配置修改、移除软件包或重启。尝试提交 GitHub 正式 review 时集成返回 `403 Resource not accessible by integration`，故 GitHub review event 尚不存在。此条记录改变 PR HEAD，需再对最终 exact HEAD 独立复审；当前仍未连接 Ubuntu 或执行主机命令。
