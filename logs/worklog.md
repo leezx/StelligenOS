@@ -7357,3 +7357,10 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 处理方式：把纯报告正文拆至 `docs/MINIPC_CAPABILITY_REPORT.zh-CN.md`，移除可变交付状态；handoff 只记来源、审核和远端文件状态，明确旧上传版本仍含旧说明并需新报告重新审批后覆盖。新改动仅 docs/worklog，未连接或写入 Ubuntu。
 - 本次外部 home 内容暂时仍是旧获批草稿（SHA256 `821deef35083640a98778c4ddb01c26600850dcab40884a9c5beb9734f13e06d`）；不会覆盖，直到新报告 exact HEAD 获 GPT/ChatGPT `APPROVE`。
 - 17:38 EDT：本轮正文/交接分离修订提交 `481bf75506bc193fbade5ce2c617f1768b54af7f` 已推送同一 PR #151。更新 PR 描述指向独立报告 `docs/MINIPC_CAPABILITY_REPORT.zh-CN.md`，标明旧 home 版本仍待更换及新 exact-head 复审门禁；`gh pr view` 确认描述与 handoff 一致。此处记录的是修订代码提交 SHA；随后的审计状态提交会形成新的 PR tip。
+
+
+## 2026-10-23 17:38 EDT — 新报告版本获批并替换 Ubuntu home 文件
+
+- 独立 GPT reviewer 对 PR #151 exact HEAD `b5a5f81548bb318a30433b37445c94371906a28f` 给出 `APPROVE`；审核确认报告正文与 PR #149 结果一致，未测边界明确，handoff/worklog/PR body 已解决前轮元数据问题。
+- 核对 PR head 未变后，将独立正文 `docs/MINIPC_CAPABILITY_REPORT.zh-CN.md` 复制覆盖 `/home/stelligen/MINIPC_CAPABILITY_REPORT.md`。SHA256：`2011e4bb3d910cb55a9a74309529662a6dcce2297f7c15146db2a11469a20dfb`，本地与远端完全一致；文件权限 `-rw-r--r--`，属主 `stelligen:stelligen`，大小 3874 bytes。旧 home 版本由此次覆盖取代。
+- 只写入一份报告文件；没有重新运行基准，没有安装/升级软件、改配置/网络/防火墙或重启。上传状态已更新到 handoff；本条审计记录还要推送到同一 PR 并对最终 HEAD 复审。
