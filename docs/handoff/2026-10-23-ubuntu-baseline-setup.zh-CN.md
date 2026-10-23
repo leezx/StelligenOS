@@ -44,4 +44,12 @@ APT 计划仅保存在 Ubuntu 本机的临时目录。Netplan 检查只列文件
 - Base：`main` at `6f91d8be0b6ae1db914e0e7a0d74757537760825`。
 - Branch：`task_20261023_ubuntu_baseline_setup`。
 - PR：[PR #148](https://github.com/leezx/StelligenOS/pull/148)，base `main`；branch `task_20261023_ubuntu_baseline_setup`。对包含本机命令的 HEAD `917b22855209b170151091b01c48062660a02609` 的复审为 `REQUEST_CHANGES`，问题和修复记录见 worklog。脚本 HEAD `41d860a7250b2ac80720bc3cfc1d72851ad1b374` 已获独立 GPT `APPROVE` 后上传。对包含上传留痕的 HEAD `7a75b4be2255d730d0968c94a180838cdd2162f9` 的复审要求修正本状态段中过时的“尚待审核、尚未上传”描述；修正后需对新 exact HEAD 再复审。GitHub 正式 review API 返回 `403 Resource not accessible by integration`，没有平台 review event。未运行任何 apt/安装命令。
-- 当前执行状态：脚本已通过独立 GPT 对 PR #148 exact HEAD `41d860a7250b2ac80720bc3cfc1d72851ad1b374` 的 `APPROVE` 后上传至 `/home/stelligen/ubuntu_baseline_setup.sh`，SHA-256 为 `98fec57d28b265b62895299a902476dcddc11f86045f2f832bdbc0f6ba9420f9`，权限 `-rwxr--r--`。仅复制、设置可执行位并核对哈希；未运行脚本、APT 更新或安装。GitHub 正式 review API 返回 403，未创建平台 review event。负责人可在 Ubuntu 本机可见终端运行 `~/ubuntu_baseline_setup.sh`；运行后回传脱敏摘要，由 Codex 在本 PR 留痕并复审。
+- 脚本上传时的状态：已通过独立 GPT 对 PR #148 exact HEAD `41d860a7250b2ac80720bc3cfc1d72851ad1b374` 的 `APPROVE` 后上传至 `/home/stelligen/ubuntu_baseline_setup.sh`，SHA-256 为 `98fec57d28b265b62895299a902476dcddc11f86045f2f832bdbc0f6ba9420f9`，权限 `-rwxr--r--`。上传时仅复制、设置可执行位并核对哈希；未运行脚本、APT 更新或安装。GitHub 正式 review API 返回 403，未创建平台 review event。后续负责人是否运行脚本，以新的回传结果为准。
+
+## 2026-10-23 网络等待服务诊断
+
+- 负责人回传的 `systemd-networkd-wait-online.service` 状态为 `failed`，日志提示 120 秒等待超时。
+- Codex 通过 SSH 只读采集服务日志、`networkctl`、`nmcli`、接口地址和 resolver 状态；脱敏后输出保存在执行端 `/tmp/ubuntu-network-diagnostics-20261023.txt`（权限 600），原始输出未提交仓库。
+- 诊断摘要：Wi-Fi `wlo1` 为 `routable/configured` 且取得 DHCP 地址；Ethernet `enp1s0` 与 `enp3s0` 均 `no-carrier/configuring`，两者生成的 networkd 配置标记 `Required For Online: yes`。NetworkManager 服务虽 active，但其设备均显示 unmanaged；当前由 systemd-networkd 管理接口。UFW 显示 inactive，与 wait-online 超时无直接关联。
+- 可能修复：若两张 Ethernet 口启动时通常不插网线，在对应 Netplan Ethernet 定义加入 `optional: true`；这会让 networkd 不等待这些接口，但仍会正常尝试启用它们。此处是基于运行态证据的修复建议，尚未改 `/etc/netplan`。
+- `sudo -n` 只读权限检查返回 `interactive authentication is required`；Codex 未获取 sudo 密码、未改动网络配置或重启服务。负责人发来的脚本片段未包含 APT 阶段结果，故 APT 更新/安装是否完成未确认。
