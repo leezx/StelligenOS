@@ -7349,3 +7349,10 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 更新 handoff 记录审批和上传状态；PR #151 保持 OPEN，待把这条外部写入审计记录提交同一 PR 并对最新 HEAD 复核。
 - 17:36 EDT：同步更新 PR #151 描述，明确已审 SHA、报告 home 路径、SHA256 和未运行/未改配置边界；`gh pr view` 确认描述与 handoff 一致，PR head 仍为已审 `22e3b7deb3c843b9f22ff678e5d0172a645ff059`。后续仅提交上传审计记录并复审。
 - 17:37 EDT：调用 `scripts/git_sync.sh` 时因为上一条命令已显式暂存两文件，脚本按设计拒绝（staging area is not empty）；没有提交/推送。已仅对这两份相关文件执行 unstaged reset，保留工作树内容；随后用 git_sync 完成规范提交。
+
+
+## 2026-10-23 17:37 EDT — PR #151 Round 1 审计记录 REQUEST_CHANGES
+
+- 独立 GPT 对 PR #151 exact HEAD `d4ca45377bf4de5a03a5e6e2dd1d9fa66ba7ea86` 的最终审计提交复核为 `REQUEST_CHANGES`。报告事实摘要及 PR 描述正确；问题是 handoff 的“正在写回 PR”状态已过期、上传 hash 对应已上传版本而非 handoff 更新后的文件，并要求记录明确的完整审计提交 SHA。
+- 处理方式：把纯报告正文拆至 `docs/MINIPC_CAPABILITY_REPORT.zh-CN.md`，移除可变交付状态；handoff 只记来源、审核和远端文件状态，明确旧上传版本仍含旧说明并需新报告重新审批后覆盖。新改动仅 docs/worklog，未连接或写入 Ubuntu。
+- 本次外部 home 内容暂时仍是旧获批草稿（SHA256 `821deef35083640a98778c4ddb01c26600850dcab40884a9c5beb9734f13e06d`）；不会覆盖，直到新报告 exact HEAD 获 GPT/ChatGPT `APPROVE`。
