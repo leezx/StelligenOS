@@ -52,3 +52,7 @@ registry 和状态修正已在 `e9413c1b714d6468ce1f983a3c7d81d442ff1a0f` 提交
 ## Round 2 审核与定向修订（2026-10-23 01:32 EDT）
 
 同一 [ChatGPT 审核会话](https://chatgpt.com/g/g-p-68c041b4df6881918a83a55e2dd7ac70-biotech-ideas/c/6adaebc8-4738-83ea-8a87-894771eda8d6) 对 HEAD `c68aa93cd4379d1a8f4bcfddd6602d43550c8a43` 给出 L2 PASS、L1 `REQUEST_CHANGES`：B1/TGT-07 科学版本化、B2/hard reject 均解决，B3 尚有 canonical ID 格式与跨对象关联的一个工程 blocker。记录于 `logs/chatgpt-review-2026-10-23-tgt05-phase-a-round2.md`。已在本 PR 收紧外部 audit schema 的 `ASMT-[0-9]{6}` 与 `DEC-[0-9]{4}`，规定解析时 reviewer record、获批 assessment、Decision snapshot 的身份和 hash 一致，引用失败拒绝 audit acceptance；测试改用合法 ID，并对两个非法 ID 做真实负向校验。按审核方非 blocker 建议，增加 TGT-07@2.0 frozen Gate/EvidenceLadder constructor/parity 测试。四个 GateSet policy body 未变，registry source commit/hash 仍有效；Phase A 继续待审。
+
+## Round 3 Phase A APPROVE 与审计状态（2026-10-23 01:35 EDT）
+
+新会话对 exact HEAD `e8dfef773df9f1baeb79f3f3816ce7cf52af9de1` 给出 L1 `APPROVE`、L2 `PASS`、剩余 blocker 0、Phase A **`APPROVE`**，仅批准本 PR 的契约声明。完整摘要见 `logs/chatgpt-review-2026-10-23-tgt05-phase-a-round3.md`。CI run `39906369685` 的 Python 3.11/3.12 各 1915 tests、boundary 和卫生检查全部通过，审核方独立核实。四个 policy body 仍 pin `4a485eef4594696344c333c7a1dfe6813f473a43`，没有修改。现将 review URL、被审 HEAD 和批准范围写入 registry 的 approval evidence；该 metadata-only 后续提交也需同一 PR exact-head 核对。`Instantiation` 仍 `HOLD`，PR 尚未由人类合并，Phase B、真实 ADCdb 处理、Decision engine 或靶点结论均不在批准范围。

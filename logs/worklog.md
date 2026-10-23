@@ -7274,3 +7274,13 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 
 - 新会话对 exact HEAD `c68aa93...` 明确 L2 PASS、L1 `REQUEST_CHANGES`，整体 `REQUEST_CHANGES`。B1/TGT-07@2.0 与 B2/hard reject 均 `RESOLVED`；B3 审计结构 `PARTIALLY RESOLVED`。唯一 blocker：audit schema 接受不符合 frozen canonical 规则的 assessment/Decision ID，正向测试也用了非法 ID；须补跨对象引用/hash/身份一致性校验义务。详细见 `logs/chatgpt-review-2026-10-23-tgt05-phase-a-round2.md`。CI run `39905626377` 两个 Python job 均成功，审核方独立核对。
 - 同 PR 最小修订：audit schema 添加 `^ASMT-[0-9]{6}$`、`^DEC-[0-9]{4}$` 和声明式 resolver 拒绝条件；定向测试使用合法 ID，并对两种非法 ID 做真实负向验证。按非 blocker 建议增加 TGT-07 frozen Gate/EvidenceLadder constructor/parity 测试。未改四个 policy body；已运行定向 15 tests OK、`git diff --check` 与 repository boundary 通过，正在重跑全量。registry 保持待审，未开始 Phase B 或外部数据。
+
+## 2026-10-23 01:34 EDT — Round 3 exact HEAD 送审与 CI
+
+- 全量 1915 tests OK，boundary 与 diff 检查通过；显式暂存审计 schema、测试、round 2 反馈和 handoff/worklog，提交 `e8dfef773df9f1baeb79f3f3816ce7cf52af9de1` 并推送同一 PR #143，远端 SHA 已确认。更新 PR 描述仅说明剩余 B3-R2 的精确修订。
+- 向同一新 ChatGPT 会话提交 round 3 L1/L2 exact-head 复审请求，只审 B3-R2 与必要回归。CI run `39906369685` 的 Python 3.11 和 3.12 都 PASS；请求发出时 CI 尚在运行，现已核实完成。会话正在响应，未获 `APPROVE`；registry/Instantiation 仍待审/HOLD，未合并或运行真实数据。此条本地留痕暂不推送，以保持受审 HEAD 不变。
+
+## 2026-10-23 01:35 EDT — Phase A exact-head APPROVE；记录审批证据
+
+- 新会话对 exact HEAD `e8dfef773df9f1baeb79f3f3816ce7cf52af9de1` 给出 B3-R2 `RESOLVED`、L1 `APPROVE`、L2 `PASS`、整体 Phase A `APPROVE`，剩余 blocker 0。审核方独立确认 CI run `39906369685` 的两条 Python job、1915 tests、仓库边界和卫生检查，四个 policy body 未变化。摘要见 `logs/chatgpt-review-2026-10-23-tgt05-phase-a-round3.md`；本次无 GitHub formal review，不授权自动合并/Phase B/真实数据。
+- 将 registry 审批状态从 `PENDING_CHATGPT_REVIEW` 更新为 `APPROVED`，附会话 URL、被审 HEAD 和仅 Phase A 范围；policy body 的源 commit/hash 未变，v2 Instantiation 仍 `HOLD`。同步更新 handoff。该审批元数据提交后需让同一审核会话核对新 exact tip；人类 merge/阶段放行仍独立。
