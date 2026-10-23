@@ -26,9 +26,65 @@
 - 完成后检查 `dpkg --audit`、`python3-venv` 安装状态、剩余可升级项、UFW 状态、网络服务状态和 reboot-required 标记。
 - 不将凭据、原始主机输出或个人文件写入仓库；只记录必要的脱敏摘要。
 
+## 负责人本机执行命令
+
+Codex SSH 终端面板未在负责人界面中显示，因此负责人选择在自己的可见终端执行。按顺序运行，每一步先检查结果再继续：
+
+```bash
+sudo apt-get update
+sudo apt-get -s upgrade | tee /tmp/ubuntu-upgrade-plan.txt
+grep -E '^(Remv |The following packages will be REMOVED:)' /tmp/ubuntu-upgrade-plan.txt
+```
+
+若最后一条命令有任何输出，停止，不运行升级。若没有移除项：
+
+```bash
+sudo apt-get upgrade
+```
+
+出现确认提示后输入 `Y`。遇到配置文件替换提示，保留当前本地版本；若提示需要改网络/防火墙配置或重启，停止并汇报，不自动重启。升级结束后先查重启标志：
+
+```bash
+if [ -e /var/run/reboot-required ]; then
+  echo 'STOP: reboot required; do not continue or reboot automatically'
+  cat /var/run/reboot-required.pkgs 2>/dev/null || true
+else
+  echo 'No reboot required'
+fi
+```
+
+只有显示 `No reboot required` 才继续模拟和安装 venv：
+
+```bash
+sudo apt-get -s install python3-venv | tee /tmp/python3-venv-plan.txt
+grep -E '^(Remv |The following packages will be REMOVED:)' /tmp/python3-venv-plan.txt
+```
+
+若有移除项停止；否则运行：
+
+```bash
+sudo apt-get install python3-venv
+```
+
+安装完成后核验并执行只读检查：
+
+```bash
+dpkg --audit
+dpkg-query -W -f='${Status}\n' python3-venv
+python3 -m venv --help >/dev/null && echo 'venv module available'
+apt list --upgradable
+sudo ufw status verbose
+systemctl is-active NetworkManager.service systemd-networkd.service systemd-networkd-wait-online.service || true
+systemctl --no-pager --full status systemd-networkd-wait-online.service || true
+sudo sh -c 'for f in /etc/netplan/*.yaml; do [ -f "$f" ] || continue; echo "--- $f"; sed -E "/(password|psk|passphrase|private-key|client-key|identity):/s/:.*/: [REDACTED]/I" "$f"; done'
+if [ -e /var/run/reboot-required ]; then echo 'Reboot required (do not reboot automatically)'; else echo 'No reboot required'; fi
+```
+
+Netplan YAML 可能包含 Wi-Fi 密码或证书信息；不要把未脱敏配置原文贴到聊天或仓库。认证时只在本机终端输入 sudo 密码。
+
 ## 当前状态
 
 - Base：`main` at `6f91d8be0b6ae1db914e0e7a0d74757537760825`。
 - Branch：`task_20261023_ubuntu_baseline_setup`。
-- PR：[PR #148](https://github.com/leezx/StelligenOS/pull/148)，base `main`；scope commit `125fc56ce9c941d4d248b7f1ed4573b3cc3b94f3`。独立 GPT reviewer 对 HEAD `72c211abe0431578afb7b24467cc4c7a40a32705` 再次明确 `APPROVE`，范围及停止条件如上；GitHub 正式 review API 返回 `403 Resource not accessible by integration`，所以平台 review event 未创建。记录该审核会产生新 HEAD，须再审最终 HEAD 后才可连接主机。尚未运行任何主机命令。
-- 下一步：推送审核结果记录并对最终 exact HEAD 再做独立审核；通过后按本 handoff 执行并更新本文件与 worklog。
+- PR：[PR #148](https://github.com/leezx/StelligenOS/pull/148)，base `main`；branch `task_20261023_ubuntu_baseline_setup`。独立 GPT reviewer 对 exact HEAD `cf8e1b220b0c87839499534a97cd5e0bdf1223ac` 明确 `APPROVE`，范围及停止条件如上；GitHub 正式 review API 返回 `403 Resource not accessible by integration`，所以平台 review event 未创建。PR 在本次更新前仍为该获批 HEAD；本次添加本机执行命令与状态记录会产生新 HEAD，须再次审查文档后再视为当前 PR 放行。尚未运行任何 apt/安装命令。
+- 当前执行状态：未执行 APT 更新/安装。负责人在本机可见终端按上方顺序运行；若遇到停止条件，先停止并汇报。完成后只需回传脱敏摘要（升级包数、`python3-venv` 状态、UFW/网络服务状态、是否需重启），由 Codex 在本 PR 更新留痕并复审。
