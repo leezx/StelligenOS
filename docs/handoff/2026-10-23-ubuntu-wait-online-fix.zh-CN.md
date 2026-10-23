@@ -19,7 +19,8 @@
 - 修改前在 root-only `/root` 下备份 `/etc/netplan`，使用独立 Netplan overlay；先 `netplan generate` 校验，再通过交互式 `netplan try --timeout 120` 应用。若未确认、Wi-Fi 未恢复 routable 或 wait-online 仍失败，脚本移除 overlay 并恢复原配置。
 - 负责人要求修复该故障；但 Codex 的 SSH sudo 非交互检查返回 `interactive authentication is required`。不从聊天收集 sudo 凭据；因此由负责人在机器可见终端运行脚本以便看到并确认 sudo/netplan 提示。
 - PR exact HEAD 独立 GPT `APPROVE` 前不上传脚本；当前没有 Ubuntu 网络配置变更或脚本运行。
-- 2026-10-23 17:28 EDT：PR #150 首轮独立审查为 `REQUEST_CHANGES`。接口映射现仅接受无 match 的同名定义或精确 name-only 匹配；拒绝其他/歧义匹配。`netplan try` 后核验 overlay、两个 optional 设置和 networkd 的 `RequiredForOnline=no`，避免把超时回滚误报为成功。官方文档提示 timeout/cancel 后应确认配置已回滚：https://netplan.readthedocs.io/en/1.1.2/netplan-try/。本地 `bash -n`、`git diff --check` 通过；尚未上传或运行。
+- 2026-10-23 17:28 EDT：PR #150 首轮独立审查为 `REQUEST_CHANGES`；上述安全检查按反馈收窄。17:29 EDT Round 2 审查对 exact HEAD `e1d9eea23e214fa51bd140f8b4bdebefb6500704` 仍为 `REQUEST_CHANGES`：要求 handoff/worklog 更新当前状态、逻辑 Netplan ID 对应生成文件名按 definition ID 检查、必须确认 netplan try 明确输出 acceptance。
+- 2026-10-23 17:30 EDT：已将生成配置路径改用映射后的 Netplan ID；对 `netplan try` 的输出设 `LC_ALL=C` 并 tee 到 root-only `/run` 临时日志，必须发现精确 `Configuration accepted.` 才继续；已清理临时日志。`bash -n` 与 `git diff --check` 通过。此时状态待同一 PR 新 exact HEAD 复审；目标机仍未连接、脚本未上传/运行、网络未改。
 
 ## 负责人运行方法（PR 审核和上传后）
 
@@ -32,5 +33,5 @@ chmod u+x ~/ubuntu_wait_online_fix.sh
 
 ## 当前状态
 
-- Branch：`task_20261023_ubuntu_wait_online_fix`；[PR #150](https://github.com/leezx/StelligenOS/pull/150)，当前审核 HEAD 将在此次修订提交后更新，并需独立 GPT exact-head 复审。审核完成前不会上传至 Ubuntu 或更改目标机配置。
+- Branch：`task_20261023_ubuntu_wait_online_fix`；[PR #150](https://github.com/leezx/StelligenOS/pull/150)。此前审核 HEAD `e1d9eea23e214fa51bd140f8b4bdebefb6500704` 的 Round 2 结论为 `REQUEST_CHANGES`；新修订提交后以 PR 当前远端 HEAD 作为复审对象。审核完成前不会上传至 Ubuntu 或更改目标机配置。
 - 目标主机配置、服务和防火墙尚未修改；脚本没有在 Ubuntu 上运行。

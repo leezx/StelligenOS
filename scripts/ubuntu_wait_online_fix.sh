@@ -10,6 +10,7 @@ readonly OVERLAY="/etc/netplan/${ORIGIN_HINT}.yaml"
 changed=0
 keep_change=0
 backup_dir=""
+try_log=""
 
 stop() {
   printf 'STOP: %s\n' "$*" >&2
@@ -18,6 +19,7 @@ stop() {
 
 rollback() {
   local exit_code=$?
+  [[ -z "$try_log" ]] || rm -f -- "$try_log"
   if (( changed == 1 && keep_change == 0 )); then
     printf '\n%s\n' 'Configuration was not confirmed; restoring the previous Netplan files.' >&2
     rm -f -- "$OVERLAY"
@@ -131,7 +133,15 @@ done
 netplan generate
 
 printf '\n%s\n' 'Applying with Netplan rollback protection. Confirm only if the Wi-Fi/SSH connection still works.'
-netplan try --timeout 120
+try_log="$(mktemp /run/netplan-wait-online-try.XXXXXX)"
+chmod 600 "$try_log"
+if ! LC_ALL=C netplan try --timeout 120 2>&1 | tee "$try_log"; then
+  stop 'netplan try failed; the script will restore the previous Netplan files.'
+fi
+grep -Fxq 'Configuration accepted.' "$try_log" \
+  || stop 'Netplan did not report explicit acceptance; the script will restore the previous Netplan files.'
+rm -f -- "$try_log"
+try_log=""
 
 # Netplan documents that a timeout/cancellation can return control after rollback.
 # Do not trust the command's exit status alone: verify the accepted on-disk
@@ -159,7 +169,7 @@ except Exception as exc:
     sys.exit(1)
 PY
 for iface in "${ETHERNET_IFS[@]}"; do
-  generated="/run/systemd/network/10-netplan-${iface}.network"
+  generated="/run/systemd/network/10-netplan-${NETPLAN_ID_BY_IF[$iface]}.network"
   [[ -r "$generated" ]] && grep -Eq '^RequiredForOnline=no([[:space:]]|$)' "$generated" \
     || stop "Generated networkd config for $iface does not show RequiredForOnline=no."
 done
