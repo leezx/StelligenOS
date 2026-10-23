@@ -152,6 +152,33 @@ class V2LineageTests(unittest.TestCase):
         self.assertTrue(any("no material sink" in x for x in direct["admissible_evidence_classes"]))
         self.assertNotIn("no material sink", str(self.v1["gate_contracts"]["TGT-07"]["evidence_ladder"]["DIRECT"]))
         self.assertIn("completed audited landscape", gate["direction_rules"]["negative_direct"])
+        binding = self.v2["context_specific_bindings"]["gate_bindings"][6]
+        canonical_gate = Gate(
+            gate_id=gate["gate_id"], gate_version=gate["gate_version"],
+            gateset_id=gate["gateset_id"], candidate_level=gate["candidate_level"],
+            gate_question=gate["gate_question"],
+            dominant_evidence_regime=gate["dominant_evidence_regime"],
+            evidence_required=tuple(gate["evidence_required"]),
+            evidence_ladder_ref=gate["evidence_ladder_ref"],
+            assessment_rule_ref=gate["assessment_rule_ref"],
+            primary_module_id=gate["primary_module_id"],
+            primary_module_version=gate["primary_module_version"],
+            fatal_conditions=tuple(gate["fatal_conditions"]),
+        )
+        canonical_ladder = EvidenceLadder(
+            gate_id=gate["gate_id"], gate_version=gate["gate_version"],
+            rungs=tuple(LadderRung(
+                grade,
+                tuple(gate["canonical_evidence_ladder_rungs"][grade]["admissible_evidence_classes"]),
+                gate["canonical_evidence_ladder_rungs"][grade]["ceiling_rule"])
+                for grade in ("DIRECT", "INDIRECT_STRONG", "WEAK")),
+            evidence_ceiling=gate["evidence_ceiling"],
+        )
+        self.assertEqual(canonical_ladder.gate_version, "2.0")
+        for field in ("gate_id", "gate_version", "gateset_id", "candidate_level",
+                      "dominant_evidence_regime", "evidence_ladder_ref", "assessment_rule_ref",
+                      "primary_module_id", "primary_module_version"):
+            self.assertEqual(getattr(canonical_gate, field), binding[field])
 
 
 class V2ReviewContractTests(unittest.TestCase):
@@ -187,17 +214,26 @@ class V2ReviewContractTests(unittest.TestCase):
         validator = Draft202012Validator(schema, format_checker=FormatChecker())
         trace = {
             "reviewer_record": {"record_id": "TGT05-REVIEW-example-1", "record_version": "2.0", "artifact_sha256": "a" * 64},
-            "approved_assessment": {"assessment_id": "CGA-00000001", "assessment_version": 1,
+            "approved_assessment": {"assessment_id": "ASMT-000001", "assessment_version": 1,
                                     "gate_id": "TGT-05", "gate_version": "2.0", "review_status": "HUMAN_APPROVED"},
-            "canonical_decision": {"decision_id": "DEC-00000001", "gateset_id": "ADC_TARGET_GATESET",
+            "canonical_decision": {"decision_id": "DEC-0001", "gateset_id": "ADC_TARGET_GATESET",
                                    "gateset_version": "2.0", "instantiation_id": "INST-CRC-REFRACTORY-ADC-TARGET-v2"},
             "reviewer_recommendation": "GO", "candidate_decision": "HOLD", "reviewed_at": "2026-10-23T00:00:00Z"
         }
         self.assertTrue(list(validator.iter_errors(trace)))
         trace["divergence_reason"] = "Other Gate retains a qualified material liability"
         self.assertFalse(list(validator.iter_errors(trace)))
+        for field, bad_id in (("assessment_id", "CGA-00000001"), ("decision_id", "DEC-00000001")):
+            invalid = copy.deepcopy(trace)
+            item = invalid["approved_assessment"] if field == "assessment_id" else invalid["canonical_decision"]
+            item[field] = bad_id
+            self.assertTrue(list(validator.iter_errors(invalid)), field)
         trace["approved_assessment"]["review_status"] = "DRAFT"
         self.assertTrue(list(validator.iter_errors(trace)))
+        resolution = schema["x-resolution-contract"]
+        self.assertIn("reviewer_record_missing_or_artifact_sha256_mismatch", resolution["reject_on"])
+        self.assertIn("approved_assessment_id_version_or_cell_mismatch_with_decision_assessment_snapshot_TGT-05_pin", resolution["reject_on"])
+        self.assertIn("Schema validity alone never establishes referential integrity", resolution["acceptance_rule"])
     def test_seventeen_item_module_contract_and_noncanonical_record(self):
         mod = load(V2_MODULE)
         self.assertEqual(tuple(mod["acceptance_checklist"]),

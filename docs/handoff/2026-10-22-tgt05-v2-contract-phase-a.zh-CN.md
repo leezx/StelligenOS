@@ -48,3 +48,7 @@ registry 和状态修正已在 `e9413c1b714d6468ce1f983a3c7d81d442ff1a0f` 提交
 修订只限契约、测试及审计。新增 `jsonschema` 作为契约测试依赖，测试对三个失败状态和推荐差异分别做真实 schema 校验。旧 v1 合同与 Module 保持不变。`INST-CRC-REFRACTORY-ADC-TARGET-v2` 仍为 `HOLD`；Phase B 现须另行审核并实现 MOD-TGT05@2.0.0 和 MOD-TGT07@2.0.0，随后方可考虑激活。策略 body 变动需更新 registry 的四项 hash 和源 Git commit。完成提交、CI 和新会话复审前，本修订不获批准，也不产生 Candidate 决策或外部数据运行授权。
 
 修订 policy source commit 为 `4a485eef4594696344c333c7a1dfe6813f473a43`；registry 从该 Git 对象逐个复算四项 SHA256，均与当前工作区 body 字节一致。仓库外 venv 安装 `requirements.txt` 后，全量 `1915` tests 通过；repository boundary、`git diff --check` 和新审计 JSON Schema 语法检查通过。下一步推送同一 PR，等待 CI 并请新会话对新 exact HEAD 复审。
+
+## Round 2 审核与定向修订（2026-10-23 01:32 EDT）
+
+同一 [ChatGPT 审核会话](https://chatgpt.com/g/g-p-68c041b4df6881918a83a55e2dd7ac70-biotech-ideas/c/6adaebc8-4738-83ea-8a87-894771eda8d6) 对 HEAD `c68aa93cd4379d1a8f4bcfddd6602d43550c8a43` 给出 L2 PASS、L1 `REQUEST_CHANGES`：B1/TGT-07 科学版本化、B2/hard reject 均解决，B3 尚有 canonical ID 格式与跨对象关联的一个工程 blocker。记录于 `logs/chatgpt-review-2026-10-23-tgt05-phase-a-round2.md`。已在本 PR 收紧外部 audit schema 的 `ASMT-[0-9]{6}` 与 `DEC-[0-9]{4}`，规定解析时 reviewer record、获批 assessment、Decision snapshot 的身份和 hash 一致，引用失败拒绝 audit acceptance；测试改用合法 ID，并对两个非法 ID 做真实负向校验。按审核方非 blocker 建议，增加 TGT-07@2.0 frozen Gate/EvidenceLadder constructor/parity 测试。四个 GateSet policy body 未变，registry source commit/hash 仍有效；Phase A 继续待审。

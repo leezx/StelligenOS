@@ -7264,3 +7264,13 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 
 - 显式暂存 13 个相关契约/测试/审计文件，`git diff --cached --check` 通过，提交 `4a485eef4594696344c333c7a1dfe6813f473a43`。该提交是新的 policy body source；registry 更新为该 commit，并重算 decision/fatal/required/unknown 四项 SHA256。独立用 `git show <source-commit>:<path>` 校验四个 Git blob 的 SHA256 与当前文件字节完全一致。
 - 在仓库外 `/tmp/stelligenos-pr143-venv` 中按更新 requirements 安装依赖；`PYTHONDONTWRITEBYTECODE=1 ... unittest discover -s tests -q` 全量 1915 tests 通过。`bash scripts/verify_repository_boundary.sh`、`git diff --check`、新增 JSON Schema 的 JSON 语法检查均通过。registry 仍 `PENDING_CHATGPT_REVIEW`；待提交/推送与 CI 复审。第一次全量测试仅因 registry 尚未更新出现一个预期旧 hash 失败，更新后重跑全通过。
+
+## 2026-10-23 01:26 EDT — PR #143 修订推送、CI 通过并提交新会话复审
+
+- 提交 registry/handoff/worklog 为 `c68aa93cd4379d1a8f4bcfddd6602d43550c8a43`，推送同一 PR #143 分支并用 `git ls-remote`、`gh pr view` 确认远端 exact HEAD。更新 PR 描述，明确三项 blocker 修订、TGT-07@2.0 amendment、新 policy source commit 和测试结果。
+- 新 CI run `39905626377` 的 Python 3.11 与 3.12 均 `SUCCESS`（`gh pr checks --watch`）。在用户要求的新 `Biotech ideas → PR审核请求修改` 对话提交 round 2 L1/L2 独立复审请求，明确新 HEAD、三项 blocker、hash、CI 与 `APPROVE/REQUEST_CHANGES` verdict 要求；会话已显示 `ChatGPT is responding`。registry 保持 `PENDING_CHATGPT_REVIEW`，Instantiation 保持 `HOLD`；未合并或进入下一 Phase。此条本地留痕暂未提交，以免改变正在审核的 exact HEAD。
+
+## 2026-10-23 01:32 EDT — Round 2 REQUEST_CHANGES，仅余 B3-R2
+
+- 新会话对 exact HEAD `c68aa93...` 明确 L2 PASS、L1 `REQUEST_CHANGES`，整体 `REQUEST_CHANGES`。B1/TGT-07@2.0 与 B2/hard reject 均 `RESOLVED`；B3 审计结构 `PARTIALLY RESOLVED`。唯一 blocker：audit schema 接受不符合 frozen canonical 规则的 assessment/Decision ID，正向测试也用了非法 ID；须补跨对象引用/hash/身份一致性校验义务。详细见 `logs/chatgpt-review-2026-10-23-tgt05-phase-a-round2.md`。CI run `39905626377` 两个 Python job 均成功，审核方独立核对。
+- 同 PR 最小修订：audit schema 添加 `^ASMT-[0-9]{6}$`、`^DEC-[0-9]{4}$` 和声明式 resolver 拒绝条件；定向测试使用合法 ID，并对两种非法 ID 做真实负向验证。按非 blocker 建议增加 TGT-07 frozen Gate/EvidenceLadder constructor/parity 测试。未改四个 policy body；已运行定向 15 tests OK、`git diff --check` 与 repository boundary 通过，正在重跑全量。registry 保持待审，未开始 Phase B 或外部数据。

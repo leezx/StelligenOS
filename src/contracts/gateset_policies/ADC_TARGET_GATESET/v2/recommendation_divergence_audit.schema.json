@@ -3,6 +3,19 @@
   "$id": "stelligenos/gateset/ADC_TARGET_GATESET/v2/recommendation_divergence_audit.schema.json",
   "title": "TGT-05 reviewer recommendation to Candidate Decision audit link",
   "description": "External non-canonical audit artifact. It is retained beside the reviewed Decision and is never a GateSet policy input.",
+  "x-resolution-contract": {
+    "phase_a_status": "declarative; Phase B must implement resolver before audit acceptance",
+    "reject_on": [
+      "reviewer_record_missing_or_artifact_sha256_mismatch",
+      "approved_assessment_missing_or_not_HUMAN_APPROVED",
+      "canonical_decision_missing_or_wrong_gateset_and_instantiation",
+      "reviewer_target_or_program_or_context_mismatch_with_approved_assessment",
+      "approved_assessment_candidate_or_instantiation_mismatch_with_decision",
+      "approved_assessment_id_version_or_cell_mismatch_with_decision_assessment_snapshot_TGT-05_pin",
+      "reviewer_recommendation_or_candidate_decision_mismatch_with_resolved_artifacts"
+    ],
+    "acceptance_rule": "Schema validity alone never establishes referential integrity; resolve and compare all three immutable artifacts before accepting this audit trace. A failed link rejects audit acceptance, not the scientific policy result."
+  },
   "type": "object",
   "required": ["reviewer_record", "approved_assessment", "canonical_decision", "reviewer_recommendation", "candidate_decision", "reviewed_at"],
   "properties": {
@@ -17,7 +30,7 @@
     "approved_assessment": {
       "type": "object", "required": ["assessment_id", "assessment_version", "gate_id", "gate_version", "review_status"],
       "properties": {
-        "assessment_id": {"type": "string", "minLength": 1},
+        "assessment_id": {"type": "string", "pattern": "^ASMT-[0-9]{6}$"},
         "assessment_version": {"type": "integer", "minimum": 1},
         "gate_id": {"const": "TGT-05"},
         "gate_version": {"const": "2.0"},
@@ -27,7 +40,7 @@
     "canonical_decision": {
       "type": "object", "required": ["decision_id", "gateset_id", "gateset_version", "instantiation_id"],
       "properties": {
-        "decision_id": {"type": "string", "minLength": 1},
+        "decision_id": {"type": "string", "pattern": "^DEC-[0-9]{4}$"},
         "gateset_id": {"const": "ADC_TARGET_GATESET"},
         "gateset_version": {"const": "2.0"},
         "instantiation_id": {"const": "INST-CRC-REFRACTORY-ADC-TARGET-v2"}
