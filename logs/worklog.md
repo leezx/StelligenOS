@@ -7338,3 +7338,4 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 设计短时、无安装、无配置变更的评估：读取硬件信息；Python 标准库 CPU 单/多 worker 短测；内存上限 2 GiB（可用内存至少 4 GiB 且无明显 swap 压力才执行）；`/tmp` 临时顺序 I/O 上限 256 MiB（可用空间至少 2 GiB）；不做外网测速。记录温度/负载停止条件，测试临时文件后清理。
 - 新增 `docs/handoff/2026-10-23-ubuntu-performance-benchmark.zh-CN.md`；主机基准尚未运行。按全局 PR 门禁，需先创建独立 PR 并取得 GPT/ChatGPT 对 exact HEAD 的 `APPROVE`。
 - 16:49 EDT：提交前已执行 `git status --short` 与 `git diff --check`。尝试仓库推荐的 `scripts/git_sync.sh`；脚本在 `git fetch origin <new-branch>` 因远端尚无该新分支而失败，未暂存、提交或推送任何内容。改用显式文件暂存与首次分支推送。
+- 16:49 EDT：使用 GitHub connector 创建独立 PR 时收到 `403 Resource not accessible by integration`，PR 未创建；改用已认证的 GitHub CLI 尝试创建同一分支 PR。范围不变，尚未连接主机运行基准。
