@@ -9,7 +9,7 @@
 - 读取 CPU 型号/拓扑、内存与 swap、根盘和磁盘型号/空间、GPU/加速设备、系统负载与温度（若系统已有传感器工具）。
 - 不安装软件、不升级软件、不改系统/网络/防火墙配置、不重启、不跑外网测速。
 - CPU：Python 标准库构造固定块 `bytes(range(256)) * 4096`（恰好 1 MiB），用 `multiprocessing` 的 `spawn` 进程 worker 反复计算 `hashlib.sha256(block).digest()`。worker 数依次为 1、2、4、8，并过滤掉大于在线逻辑 CPU 数的档位；所有进程通过 barrier 统一开始，按 `time.monotonic()` 的共同 2 秒窗口计数。总吞吐量定义为 `所有 worker 的 hash 次数 × 1 MiB / 2 秒`；进程启动时间单独记为准备时间，不计入分数。目标机 8 CPU 时总 CPU 时间上限为 30 核秒。
-- 内存：先读 `/proc/meminfo` 的 `MemAvailable` 和 swap 使用；仅在 `MemAvailable >= 4 GiB`、swap 未增长且负载正常时执行。申请大小为 `min(256 MiB, MemAvailable/16)`，最低 128 MiB；对 4 KiB 页逐页写入，再顺序读回校验，最多 5 遍或 5 秒即停止。记录有效触碰吞吐量，不将其称为裸 DRAM 带宽；前后比较 swap 与 OOM 计数，变化则停止。
+- 内存：先读 `/proc/meminfo` 的 `MemAvailable` 和 swap 使用；仅在 `MemAvailable >= 4 GiB`、swap 未增长且负载正常时执行。申请大小为 `min(256 MiB, MemAvailable/16)`，最低 128 MiB；对 4 KiB 页逐页写入，再顺序读回校验，最多 5 遍或 5 秒即停止。记录“页读/写操作数/秒”，不将其称为裸 DRAM 带宽；前后比较 swap 与 OOM 计数，变化则停止。
 - 磁盘：先以 `findmnt -T /tmp` 和 `findmnt -T /` 确认 `/tmp` 的挂载类型/来源；仅当 `/tmp` 与根目录是同一、可确认的持久块设备挂载（ext4、xfs 或 btrfs）时继续，tmpfs、overlay、来源不同或无法确认一律跳过物理盘测试并注明。再确认至少有 2 GiB 可用，用 `dd` 以 4 MiB 块从 `/dev/zero` 写入 64 块（256 MiB），用 `oflag=direct,conv=fdatasync` 计时；随后以 `iflag=direct` 顺序读入 `/dev/null` 计时。若 direct I/O 不被文件系统支持则记录跳过，不把 page-cache 命中结果冒充物理盘速度；完成后删除临时文件。
 - 运行中若 SSH 变慢、系统开始 swap、温度工具显示超过 85°C、磁盘空间低于门槛或出现错误，立即停止并清理临时文件。
 - 结果只写入 PR 的脱敏摘要；不保存完整主机输出、账号、地址、证书或个人文件。
@@ -29,6 +29,14 @@
 - 用户提出该性能评估前，之前 SSH 会话停在 sudo 密码提示；已取消提示并正常退出 SSH。未输入或读取密码，未在主机执行升级、安装或基准命令。
 - GitHub connector 创建 PR 时返回 `403 Resource not accessible by integration`；使用已认证 GitHub CLI 创建 PR #149 成功。PR 创建过程已记入 worklog。
 - 统一内存上限：PR 描述与 handoff 均为最多 256 MiB，实际申请仍受 `MemAvailable/16` 限制。
+- 主机测试已完成，结果如下；测试方法、停止条件和限制均与原批准范围一致：
+  - CPU：Intel Core i3-N305，8 核/8 线程。SHA-256 固定 1 MiB 块聚合吞吐：1/2/4/8 worker 分别为 2,335.5/4,560.5/8,158.5/14,350 MiB/s；8 worker 相对单 worker 约 6.1 倍。该值只代表 SHA-256 合成负载。
+  - 内存：触碰 256 MiB，完成 377 遍页写入/读回校验，5.01 秒内约 9.86 百万次 4 KiB 页读/写操作/秒；checksum 通过，swap 变化 0，OOM 计数变化 0。此值不是 DRAM 带宽。
+  - GPU：发现 Intel UHD 集成显卡，DRI 节点可用；未发现独立 NVIDIA GPU/VRAM 证据。
+  - 存储：NVMe 型号报告为 JUMPER 512G，根分区 ext4 233 GiB、运行后可用约 213 GiB。另检测到约 238.5 GiB USB 磁盘，未测试。`/tmp` 是 7.5 GiB tmpfs，与根块设备不同，故按方案跳过物理盘 I/O 测试。
+  - 温度监控限制：初始 `thermal_zone` 读数为 27.8/43/50°C；基准脚本的实时温度扫描因 sysfs 链接未取到数据，CPU 各档仍按短时负载完成。结束后的只读读数为 27.8/41/42°C，未见超过 85°C，但无法确认测试峰值温度。未重复施加负载。
+  - 结束核查：未发现遗留临时基准文件；内存约 14.8 GB 可用、4 GiB swap 全部空闲；根分区仍约 213 GiB 可用。无软件包、配置或网络变更，无重启。
+- 能力判断：适合作为常驻轻量服务/个人助手编排节点、浏览器自动化、脚本和轻量开发机；可以做少量并行 CPU 工作。CPU-only 小型量化模型可做实验，但速度与并发必须针对具体模型实测；不适合作为大型模型训练、高并发模型服务或 GPU 计算主机。benchmark 不测浏览器/邮件软件，也不构成其应用性能承诺。
 - 后续外部运行完成后，将脱敏结果追加到本 handoff 与 worklog，并在同一 PR 复审。
 
 ## 验收标准

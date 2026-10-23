@@ -7348,3 +7348,9 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 16:53 EDT：按意见将 handoff 与 PR 描述统一为最多 256 MiB，并记录 Round 3 结论；更新后继续同 PR exact-head 复审，不运行主机。
 - 16:53 EDT：通过 `gh pr edit` 更新 PR #149 描述，将内存上限从旧文案纠正为最多 256 MiB，并核对 `gh pr view` 返回 PR URL 与 head `08de47ee15ccc3708aae8d739130cccc37cb7826`。当前描述与 handoff 一致；后续 worklog 元数据提交仍须 exact-head 复审。
 - 16:54 EDT：独立 GPT reviewer 对 PR #149 exact HEAD `5827a2a35aebca777f012c3137f65563484e970f` 最终复审给出 `APPROVE`，确认描述/handoff 上限一致且先前意见已解决；批准仅限明列的性能基准与只读盘点，不含安装、配置变更、重启。正式 GitHub review connector 返回 403，未创建平台 review event。更新审核记录后仍需核对最终 exact HEAD；当前尚未连接或运行基准。
+- 16:54–16:56 EDT：最终 exact-head 复审确认 `bed42ca0cdda8371688c39050b481fb345bd838b` 只增加审核留痕且批准范围未变后，SSH 执行硬件盘点和批准的基准脚本。识别 Intel Core i3-N305，8 核/8 线程，14 GiB RAM，NVMe JUMPER 512G（根 ext4 分区 233 GiB），Intel UHD 集成显卡；另有 238.5 GiB USB 磁盘，未测试。
+- CPU SHA-256 1 MiB 固定块聚合速度：1/2/4/8 worker 分别 2,335.5/4,560.5/8,158.5/14,350 MiB/s；8 worker 相对单 worker约 6.1×。内存触碰 256 MiB，377 遍页写/读校验，5.01 秒，约 9.86 百万 4 KiB 页读/写操作/秒；校验通过，swap 无变化，OOM 计数无变化。
+- `/tmp` 经 `findmnt` 确认为 tmpfs，与根 ext4 块设备不同，故跳过物理盘 I/O；这不是磁盘基准失败。已核对临时基准文件清理，内存约 14.8 GB 可用，4 GiB swap 空闲，根分区约 213 GiB 可用。
+- 执行限制记录：SSH 脚本的实时温度扫描未读到 sysfs symlink thermal zones；初始只读温度为 27.8/43/50°C，结束后为 27.8/41/42°C，未见超过 85°C，但测试中的峰值未能确认。基准已结束，不再重复施加负载。主机无软件包、配置、网络变化或重启。
+- PR handoff/worklog 与 PR 描述接下来补充脱敏结果与温度限制，同 PR 复审；当前能力判断仅支持常驻轻量服务、浏览器自动化、脚本/轻量开发和少量并行工作；CPU-only 小型量化模型仅可实验，不承诺速度/并发。大型模型训练、高并发推理和 GPU 计算不适合。未测浏览器/邮件应用性能。
+- 16:57 EDT：通过 `gh pr edit` 将 PR #149 描述从“未运行”更新为脱敏硬件/基准结果、`/tmp` tmpfs 跳过原因、温度采样限制、适用判断和未变更声明；再以 `gh pr view` 核对 PR URL、head SHA `bed42ca0cdda8371688c39050b481fb345bd838b` 与新 body。结果留痕改变 PR 文档状态；推送最终 handoff/worklog 后对新 exact HEAD 再审。
