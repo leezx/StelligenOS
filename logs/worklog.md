@@ -7343,4 +7343,5 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 审计发现：`python3-venv`、`build-essential`、`iw`、`rfkill` 未安装，但它们不是基础 SSH/网络管理必需项；Python venv 适合后续部署 Python 助手，编译工具和 Wi-Fi 诊断工具按实际用途选择。`systemd-networkd-wait-online` 失败超时；当时两块以太网接口无 carrier、Wi-Fi 已 routable，后者可能导致启动等待超时。NetworkManager 与 systemd-networkd 均 enabled/active，建议后续核对网络栈配置。UFW 服务 active，但读取规则及运行 sudo 需交互认证，故无法确认具体放行规则。约 40 项更新按本地 apt 索引计数，未执行升级。
 - 16:34 EDT：GPT 结果复审对审计摘要给出 `REQUEST_CHANGES`，唯一阻断为本任务 handoff/worklog 留存了不必要的主机地址和登录名。按反馈在同一 PR 删除这两项，保留系统级审计摘要；当前任务记录中已无该主机地址或登录名。等待同一 PR 复审；期间未再次连接 Ubuntu。
 - 16:35 EDT：GPT 复审确认目标标识已清除，但指出 handoff 把审计前获批的 HEAD 误写为当前 HEAD；按反馈改为精确指向 `be370bfd2aca38c4b5ce6da6c62cc011292743cf`。复审工具尝试发布正式 GitHub review 时返回 403；结论由独立 reviewer agent 交付。当前无新的外部主机操作，等待同一 PR 再审。
+- 16:35 EDT：GPT 结果复审确认批准 HEAD 与脱敏记录已修正，但发现 PR 描述仍称审计未执行且当前未批准。按反馈更新 PR #147 描述，明确既有批准只放行只读审计、审计已完成、当前 PR 修订待复审，且未授权安装/配置；不再连接主机。
 - 数据边界：只记录必要的系统摘要；不读取个人文件、凭据或业务数据，不把外部主机输出/数据复制进仓库。当前记录不构成安装或配置变更授权。

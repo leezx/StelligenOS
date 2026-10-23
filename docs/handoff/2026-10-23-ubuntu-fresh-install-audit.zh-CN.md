@@ -27,10 +27,10 @@
 - 本地主要工作区存在与本任务无关的未提交改动；本任务在隔离 worktree 中准备，未修改或暂存那些改动。
 - 2026-10-23 已完成只读 SSH 检查；未安装软件、刷新 apt 索引或更改配置。
 - Base：`main` at `6f91d8be0b6ae1db914e0e7a0d74757537760825`；任务分支：`task_20261023_ubuntu_system_audit`。
-- PR：[PR #147](https://github.com/leezx/StelligenOS/pull/147)，base `main`；审计前 code commit `6973b4129d7741196b61d7b0154454392a3175d7`；独立 reviewer 对审计前当前 HEAD `be370bfd2aca38c4b5ce6da6c62cc011292743cf` 给出 `APPROVE`，仅放行只读审计。审计结果轮审提出删除主机定位信息，已在同一 PR 最小修订，当前修订待复审。
+- PR：[PR #147](https://github.com/leezx/StelligenOS/pull/147)，base `main`；审计前 code commit `6973b4129d7741196b61d7b0154454392a3175d7`；独立 reviewer 对审计前 HEAD `be370bfd2aca38c4b5ce6da6c62cc011292743cf` 给出 `APPROVE`，仅放行只读审计。后续复审要求删除主机定位信息、固定批准 HEAD 并同步 PR 描述；前两项已完成，当前轮更新描述后待复审。
 
 ## 验证与后续
 
 - 验证：审计前和本次审计后留痕均通过 `git diff --check`；审计命令只读；未运行软件安装或系统变更命令。
-- 负责人要求本任务保持独立 PR，并自动提交 GPT 审核；独立 reviewer 已批准只读范围，审计已完成。
+- 负责人要求本任务保持独立 PR，并自动提交 GPT 审核；独立 reviewer 已批准只读范围，审计已完成。结果复审提出 PR 描述过时，本轮同步更正。
 - 如要刷新 apt 索引、升级系统、安装建议包或调整 UFW/网络配置，须先明确范围并按仓库门禁另行审核；当前结果仅作为只读检查报告。
