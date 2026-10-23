@@ -167,6 +167,15 @@ class CoverageAudit:
     source_scope: tuple[str, ...]
     organ_cell_scope: tuple[str, ...]
     assay_sensitivity: str
+    clinical_audit_sources: tuple[SourceRecord, ...] = ()
+    cell_audit_sources: tuple[SourceRecord, ...] = ()
+    sensitivity_audit_sources: tuple[SourceRecord, ...] = ()
+    detection_limit_value: float | None = None
+    detection_limit_unit: str = ""
+    assay_positive_control: str = ""
+    assay_negative_control: str = ""
+    sensitivity_assay_methods: tuple[str, ...] = ()
+    candidate_antibody_constructs: tuple[str, ...] = ()
     limitations: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
@@ -181,10 +190,23 @@ class CoverageAudit:
                 raise ValueError(f"invalid {key}")
         if not _DATE.fullmatch(self.as_of_date):
             raise ValueError("invalid as_of_date")
-        if self.clinical_sweep == "COMPLETE" and not self.source_scope:
-            raise ValueError("completed clinical sweep requires source_scope")
-        if self.key_cell_scope == "COMPLETE" and (not self.organ_cell_scope or not self.assay_sensitivity):
-            raise ValueError("completed key-cell scope requires cells and sensitivity")
+        for key in ("clinical_audit_sources", "cell_audit_sources", "sensitivity_audit_sources"):
+            if not isinstance(getattr(self, key), tuple) or not all(isinstance(s, SourceRecord) for s in getattr(self, key)):
+                raise ValueError(f"{key} must be a tuple of canonical source claims")
+        if self.clinical_sweep == "COMPLETE" and (not self.source_scope or not self.clinical_audit_sources):
+            raise ValueError("completed clinical sweep requires scope and audit source claims")
+        if self.key_cell_scope == "COMPLETE":
+            if not self.organ_cell_scope or not self.assay_sensitivity or not self.cell_audit_sources or not self.sensitivity_audit_sources:
+                raise ValueError("completed key-cell scope requires cells, sensitivity and audit sources")
+            if (not isinstance(self.detection_limit_value, (int, float)) or isinstance(self.detection_limit_value, bool)
+                    or self.detection_limit_value <= 0):
+                raise ValueError("completed key-cell scope requires a positive measured detection limit")
+            for key in ("detection_limit_unit", "assay_positive_control", "assay_negative_control"):
+                _required(getattr(self, key), key)
+            if not self.sensitivity_assay_methods or not all(isinstance(x, str) and x.strip() for x in self.sensitivity_assay_methods):
+                raise ValueError("completed key-cell scope requires named sensitivity assay methods")
+            if not isinstance(self.candidate_antibody_constructs, tuple) or not all(isinstance(x, str) and x.strip() for x in self.candidate_antibody_constructs):
+                raise ValueError("candidate_antibody_constructs must be named strings")
 
 
 @dataclass(frozen=True)

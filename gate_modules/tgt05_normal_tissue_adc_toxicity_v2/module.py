@@ -45,6 +45,8 @@ def _classify(o: NormalizedObservation, coverage: CoverageAudit) -> _Classified:
         )
         if qualified:
             return _Classified(o, "E1", "POSITIVE", "DIRECT")
+        if not o.severe:
+            return _Classified(o, "E1", "CONTEXTUAL", "")
         return _Classified(o, "E1", "INCONCLUSIVE", "WEAK")
     if o.kind == "NORMAL_CELL_ADC_FUNCTION":
         if o.finding != "LIABILITY":
@@ -70,6 +72,8 @@ def _classify(o: NormalizedObservation, coverage: CoverageAudit) -> _Classified:
             o.finding == "NOT_DETECTED" and negative_qualified and o.key_cells_covered
             and o.assay_sensitive and clinical_complete and cell_complete
             and f"{o.organ}:{o.cell_type}" in coverage.organ_cell_scope
+            and o.method in coverage.sensitivity_assay_methods
+            and o.construct in coverage.candidate_antibody_constructs
         ):
             return _Classified(o, "E2", "NEGATIVE", "DIRECT")
         return _Classified(o, "E2", "CONTEXTUAL", "")
@@ -81,11 +85,12 @@ def _classify(o: NormalizedObservation, coverage: CoverageAudit) -> _Classified:
             o.finding == "NOT_DETECTED" and qualified and o.key_cells_covered
             and o.assay_sensitive and clinical_complete and cell_complete
             and f"{o.organ}:{o.cell_type}" in coverage.organ_cell_scope
+            and o.method in coverage.sensitivity_assay_methods
         ):
             return _Classified(o, "E2", "NEGATIVE", "INDIRECT_STRONG")
         return _Classified(o, "E2", "CONTEXTUAL", "")
     if o.kind in ("TOTAL_PROTEIN_IHC", "NORMAL_RNA"):
-        if o.finding not in ("DETECTED", "NOT_DETECTED"):
+        if o.finding != "DETECTED":
             return _Classified(o, "E3" if o.kind == "NORMAL_RNA" else "E2", "CONTEXTUAL", "")
         return _Classified(o, "E3" if o.kind == "NORMAL_RNA" else "E2", "INCONCLUSIVE", "WEAK")
     return _Classified(o, "SUPPORTING", "CONTEXTUAL", "")
@@ -166,15 +171,6 @@ def _same_ep(existing: EvidencePackage, body: dict[str, object], candidate_id: s
     )
 
 
-def _dedup_body(body: dict[str, object]) -> dict[str, object]:
-    """An exact repeated source claim may have a second provider observation id."""
-    copy = dict(body)
-    context = dict(copy["study_context"])
-    context.pop("observation_id")
-    copy["study_context"] = context
-    return copy
-
-
 def _rejected(request: ModuleInput, code: str, reason: str, observation_id: str = "") -> RunResult:
     return RunResult(MODULE_ID, MODULE_VERSION, GATE_ID, request.run_id, (), (), None,
                      RunRejection(code, reason, observation_id))
@@ -209,14 +205,21 @@ def _aggregate(classified: Sequence[tuple[_Classified, str]], coverage: Coverage
             refutations.append((c, evidence_id))
 
     conflicting_ids: set[str] = set()
+    conflicted_events: set[str] = set()
     for positive, positive_id in positive_direct:
         for refutation, refutation_id in refutations:
-            if positive.observation.event_id == refutation.observation.event_id:
+            if (positive.observation.kind == "ADC_CLINICAL_EVENT"
+                    and positive.observation.event_id == refutation.observation.event_id):
                 conflicting_ids.update((positive_id, refutation_id))
-    if conflicting_ids:
-        direction, strength, rationale = "CONFLICTING", "DIRECT", "same-event qualified target-attribution disagreement"
-    elif positive_direct:
+                conflicted_events.add(positive.observation.event_id)
+    uncontested_direct = [
+        (c, evidence_id) for c, evidence_id in positive_direct
+        if c.observation.event_id not in conflicted_events
+    ]
+    if uncontested_direct:
         direction, strength, rationale = "POSITIVE", "DIRECT", "qualified clinical or normal-cell functional liability"
+    elif conflicting_ids:
+        direction, strength, rationale = "CONFLICTING", "DIRECT", "same-event qualified target-attribution disagreement"
     elif positive_indirect:
         direction, strength, rationale = "POSITIVE", "INDIRECT_STRONG", "validated surface antigen without demonstrated ADC cell loss"
     elif negative_direct:
@@ -238,6 +241,8 @@ def _aggregate(classified: Sequence[tuple[_Classified, str]], coverage: Coverage
         unknowns.append("positive candidate-antibody binding physiological relevance unresolved")
     if positive_indirect:
         unknowns.append("normal-cell killing and functional consequence not established by surface evidence")
+    if conflicting_ids:
+        unknowns.append("qualified same-event target-attribution conflict requires human adjudication")
     if any(c.observation.kind == "ADC_CLINICAL_EVENT" and c.strength == "WEAK" for c, _ in classified):
         unknowns.append("serious clinical event target attribution unresolved")
     fatal = bool(positive_direct)
@@ -245,12 +250,29 @@ def _aggregate(classified: Sequence[tuple[_Classified, str]], coverage: Coverage
         "CLINICAL" if c.observation.kind == "ADC_CLINICAL_EVENT" else "FUNCTIONAL", evidence_id
     ) for c, evidence_id in positive_direct)
     attribution = bool(conflicting_ids or any(c.observation.kind == "ADC_CLINICAL_EVENT" and c.strength == "WEAK" for c, _ in classified))
-    lead = next((c.observation for c, _ in positive_direct + positive_indirect), None)
+    confirmed_clinical = any(
+        c.observation.kind == "ADC_CLINICAL_EVENT" for c, _ in uncontested_direct
+    )
+    pending_clinical = bool(
+        any(c.observation.kind == "ADC_CLINICAL_EVENT" and c.strength == "WEAK" for c, _ in classified)
+        or any(c.observation.kind == "ADC_CLINICAL_EVENT" and c.observation.event_id in conflicted_events
+               for c, _ in positive_direct)
+    )
+    any_clinical_liability_report = any(
+        c.observation.kind == "ADC_CLINICAL_EVENT" and c.observation.finding == "LIABILITY"
+        for c, _ in classified
+    )
+    clinical_liability = (
+        "CONFIRMED" if confirmed_clinical else
+        "SUSPECTED" if pending_clinical else
+        "NONE_DOCUMENTED" if coverage.clinical_sweep == "COMPLETE" and not any_clinical_liability_report else "UNKNOWN"
+    )
+    lead = next((c.observation for c, _ in uncontested_direct + positive_direct + positive_indirect), None)
     seed = (
         ("assessment_basis_cell", f"{direction}/{strength}" if strength != "UNKNOWN" else "UNKNOWN"),
         ("risk_organ", lead.organ if lead else "not_identified"),
         ("risk_cell_type", lead.cell_type if lead else "not_identified"),
-        ("clinical_liability", "SUSPECTED" if attribution else ("CONFIRMED" if positive_direct else "UNKNOWN")),
+        ("clinical_liability", clinical_liability),
         ("review_status", "DRAFT"),
     )
     return Proposal(direction, strength, tuple(refs),
@@ -284,8 +306,7 @@ def run(
     if coverage.clinical_sweep == "FAILED" or coverage.key_cell_scope == "FAILED":
         return _rejected(request, "AUDIT_FAILED", "required sweep or coverage audit failed")
 
-    seen_ids: set[str] = set()
-    seen_claims: dict[tuple[str, str], dict[str, object]] = {}
+    seen_ids: dict[str, dict[str, object]] = {}
     prepared: list[tuple[NormalizedObservation, object, dict[str, object]]] = []
     for o in observations:
         if not isinstance(o, NormalizedObservation):
@@ -294,23 +315,34 @@ def run(
             return _rejected(request, "TARGET_IDENTITY_MISMATCH", "observation target disagrees with request", o.observation_id)
         if (o.program_id, o.context_id, o.context_version) != (request.program_id, request.context_id, request.context_version):
             return _rejected(request, "PROGRAM_CONTEXT_MISMATCH", "observation program/context disagrees with request", o.observation_id)
-        if o.observation_id in seen_ids:
-            return _rejected(request, "DUPLICATE_OBSERVATION_ID", "observation id repeated in one round", o.observation_id)
-        seen_ids.add(o.observation_id)
         try:
             source = source_resolver.resolve(o.source_id)
         except Exception as exc:
             return _rejected(request, "SOURCE_RESOLUTION_FAILED", str(exc), o.observation_id)
-        if not isinstance(source, SourceRecord) or (source.source_type, source.source_identifier, source.locator) != (o.source_type, o.source_identifier, o.locator):
+        if not isinstance(source, SourceRecord) or (
+            source.source_id, source.source_type, source.source_identifier, source.locator
+        ) != (o.source_id, o.source_type, o.source_identifier, o.locator):
             return _rejected(request, "SOURCE_INTEGRITY_FAILURE", "source absent or metadata disagrees with canonical index", o.observation_id)
         body = _ep_body(o, source)
-        claim_key = (o.source_id, o.claim.strip())
-        if claim_key in seen_claims:
-            if seen_claims[claim_key] != _dedup_body(body):
-                return _rejected(request, "CLAIM_PARITY_DRIFT", "same source and claim have different classification facts", o.observation_id)
-            continue  # exact duplicate fact, no new EP
-        seen_claims[claim_key] = _dedup_body(body)
+        if o.observation_id in seen_ids:
+            if seen_ids[o.observation_id] != body:
+                return _rejected(request, "OBSERVATION_PARITY_DRIFT", "same observation identity has different source or classification facts", o.observation_id)
+            continue  # exact repeated observation, one EP
+        seen_ids[o.observation_id] = body
         prepared.append((o, source, body))
+
+    # Audited negative authority needs resolvable, identity-exact source claims.
+    # These references are factual source-index records, not Gate grades.
+    for expected in (
+        *coverage.clinical_audit_sources, *coverage.cell_audit_sources,
+        *coverage.sensitivity_audit_sources,
+    ):
+        try:
+            actual = source_resolver.resolve(expected.source_id)
+        except Exception as exc:
+            return _rejected(request, "AUDIT_SOURCE_RESOLUTION_FAILED", str(exc))
+        if not isinstance(actual, SourceRecord) or actual != expected:
+            return _rejected(request, "AUDIT_SOURCE_INTEGRITY_FAILURE", "coverage/sensitivity audit source differs from canonical index")
 
     emitted: list[EvidencePackage] = []
     reused: list[str] = []

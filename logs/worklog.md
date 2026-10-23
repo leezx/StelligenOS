@@ -7318,3 +7318,9 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 ## 2026-10-23 07:37 EDT — B1 预提交验证与边界修正
 
 - 加入临床 DIRECT 必须 validated 的负向测试后，全量 1937 tests OK；对 `OTHER` 临床记录及 RNA/IHC 非测量状态再次检查，避免“无事件报告”误入 WEAK 或阴性。新增合成测试确认 `OTHER` 临床记录仅为 context；定向 23 tests OK。`bash scripts/verify_repository_boundary.sh` 与 `git diff --check` 再通过；全量最终分类小修订交由 CI 完整验证。v1 模块、GateSet v2 binding、政策与 registry 仍未修改。
+
+## 2026-10-23 07:50 EDT — B1 首轮 REQUEST_CHANGES 与同 PR 修订
+
+- 显式暂存 16 个 B1 代码/测试/文档/审计文件，提交 `97e202ea8d7683ffa6f94db494f9d6d7cd1624d9` 并推送新分支；创建 [PR #145](https://github.com/leezx/StelligenOS/pull/145)。GitHub Actions run `39947439869` 的 Python 3.11/3.12 各 1938 tests 均 SUCCESS。向现有 Biotech ideas ChatGPT 审核会话提交 exact-head L1/L2 审查。
+- 审核方直接读取 16 文件 diff、冻结合同和 CI，给出 L1/L2/整体 `REQUEST_CHANGES`：5 项 P1（canonical source ID 未核对；同源同文字独立事件误去重；冲突事件覆盖另一独立 DIRECT；阴性缺可追溯的临床/细胞/敏感度审计；功能-only 与混合临床 seed 状态错误）及 1 项 P2（RNA/IHC 未检出不应占 WEAK rung）。详细归档于 `logs/chatgpt-review-2026-10-23-tgt05-phase-b1-round1.md`；没有合并或进入 B2/真实数据。
+- 同 PR 定向修订：resolver 返回的 source_id 必须精确相等；重复仅按 observation_id 完整事实 parity 处理，同源独立事件保留双 EP；先识别每个 event 的合格冲突，再让独立未争议 DIRECT 保持 POSITIVE 并保留冲突 refs；CoverageAudit 新增 canonical 临床/细胞/敏感度来源、记录 LoD/单位、阳/阴性控件、方法与抗体构型并逐项核对身份；clinical_liability 仅由临床 E1 计算；RNA/IHC 未检出改 CONTEXTUAL。补 seed 到最终 Tgt05DecisionRecord 人工补全、schema validation 的接口说明及对应反例测试。定向 33 tests OK，上一轮完整 1947 tests OK；本轮新增方法/构型限定后全量待重跑。Phase A/B0 科学合同及 v1 实现未动。

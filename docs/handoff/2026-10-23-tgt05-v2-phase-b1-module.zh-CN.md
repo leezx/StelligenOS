@@ -1,6 +1,6 @@
 # TGT-05 v2 Phase B1 模块交接
 
-状态：**PROPOSED；待 PR、CI 和 ChatGPT L1/L2 审核。**
+状态：**PR #145 首轮 `REQUEST_CHANGES`，同 PR 定向修订待复审。**
 
 ## 基线与范围
 
@@ -21,3 +21,8 @@
 2. 同事件合格反证如何触发 `CONFLICTING`，跨事件和独立严重阳性是否保留。
 3. 来源/目标/program/context/EP drift 是否 fail closed，且 reviewer seed、fatal flag 不越权。
 4. v1 回归、仓库数据边界与不激活的版本状态。
+
+## Round 1 审核与修订
+
+- 被审 exact HEAD `97e202ea8d7683ffa6f94db494f9d6d7cd1624d9`，CI run `39947439869` Python 3.11/3.12 各 1938 tests PASS。ChatGPT L1/L2/整体 `REQUEST_CHANGES`，5 项 P1、1 项 P2；详见 `logs/chatgpt-review-2026-10-23-tgt05-phase-b1-round1.md`。
+- 同 PR 修复 canonical source_id 比对、独立 observation/event 保留、event 层 DIRECT 聚合、可追溯阴性 audit、临床 seed 映射和 RNA/IHC 未检出 contextual。阴性审计核对 source index 中的来源 ID/元数据与 LoD、控件、方法、构型的记录存在，实际科学充分性仍由人类评定。新反例测试定向 33 项通过；待全量 CI 和 exact-head 复审。
