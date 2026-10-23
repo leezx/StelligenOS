@@ -7339,3 +7339,4 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 新增 `docs/handoff/2026-10-23-ubuntu-performance-benchmark.zh-CN.md`；主机基准尚未运行。按全局 PR 门禁，需先创建独立 PR 并取得 GPT/ChatGPT 对 exact HEAD 的 `APPROVE`。
 - 16:49 EDT：提交前已执行 `git status --short` 与 `git diff --check`。尝试仓库推荐的 `scripts/git_sync.sh`；脚本在 `git fetch origin <new-branch>` 因远端尚无该新分支而失败，未暂存、提交或推送任何内容。改用显式文件暂存与首次分支推送。
 - 16:49 EDT：使用 GitHub connector 创建独立 PR 时收到 `403 Resource not accessible by integration`，PR 未创建；改用已认证的 GitHub CLI 尝试创建同一分支 PR。范围不变，尚未连接主机运行基准。
+- 16:49 EDT：GitHub CLI 成功创建独立 PR #149（base `main`，branch `task_20261023_ubuntu_performance_check`），URL `https://github.com/leezx/StelligenOS/pull/149`；已附加到当前 Codex 任务。PR 暂不允许运行主机基准，等待 exact-head GPT/ChatGPT `APPROVE`。

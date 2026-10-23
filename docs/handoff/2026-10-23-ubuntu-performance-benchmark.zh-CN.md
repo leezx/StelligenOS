@@ -20,10 +20,11 @@
 
 ## 审核与状态
 
-- 独立任务分支：`task_20261023_ubuntu_performance_check`，从 `origin/main` 创建。
-- 仅先提交本 handoff 和 `logs/worklog.md`，创建独立 PR；取得当前 exact HEAD 的 GPT/ChatGPT `APPROVE` 前不在目标主机运行基准。
+- 独立任务分支：`task_20261023_ubuntu_performance_check`，从 `origin/main` 创建。独立 PR：[PR #149](https://github.com/leezx/StelligenOS/pull/149)，base `main`。
+- 当前 PR 仅含本 handoff 和 `logs/worklog.md`；取得当前 exact HEAD 的 GPT/ChatGPT `APPROVE` 前不在目标主机运行基准。
 - 此任务未获批之前不依赖、也不等待先前基线更新 PR #148；不会执行安装或配置变更。
 - 用户提出该性能评估前，之前 SSH 会话停在 sudo 密码提示；已取消提示并正常退出 SSH。未输入或读取密码，未在主机执行升级、安装或基准命令。
+- GitHub connector 创建 PR 时返回 `403 Resource not accessible by integration`；使用已认证 GitHub CLI 创建 PR #149 成功。PR 创建过程已记入 worklog。
 - 后续外部运行完成后，将脱敏结果追加到本 handoff 与 worklog，并在同一 PR 复审。
 
 ## 验收标准
