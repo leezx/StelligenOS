@@ -23,9 +23,11 @@
 - 独立任务分支：`task_20261023_ubuntu_performance_check`，从 `origin/main` 创建。独立 PR：[PR #149](https://github.com/leezx/StelligenOS/pull/149)，base `main`。
 - 当前 PR 仅含本 handoff 和 `logs/worklog.md`；取得当前 exact HEAD 的 GPT/ChatGPT `APPROVE` 前不在目标主机运行基准。
 - 首轮独立 GPT 审核对 HEAD `382dba92b931cfe8d4de2ccad39b4e21bc58920b` 给出 `REQUEST_CHANGES`：要求精确定义 workload、降低内存压力、建立硬件证据到任务分级的边界。当前修订仅回应这三项；正式 GitHub review event 因 connector 403 未创建。
+- Round 2 对 HEAD `c0eaea70c61b2b6bdfb16ea6debe6e376338488d` 给出 `REQUEST_CHANGES`，要求固定 CPU 字节块/进程/计时聚合规则，并确认 `/tmp` 是否根盘持久挂载。Round 3 对 HEAD `27b762d03ac399f1d336baeef6d7cc2ecd0d2525` 确认这两项已解决，但发现 PR 描述仍写 2 GiB，与 handoff 256 MiB 不一致。已按意见修正 PR 描述和留痕，等待最终 exact-head 复审。各轮 GitHub review API 均因 403 未产生平台 review event。
 - 此任务未获批之前不依赖、也不等待先前基线更新 PR #148；不会执行安装或配置变更。
 - 用户提出该性能评估前，之前 SSH 会话停在 sudo 密码提示；已取消提示并正常退出 SSH。未输入或读取密码，未在主机执行升级、安装或基准命令。
 - GitHub connector 创建 PR 时返回 `403 Resource not accessible by integration`；使用已认证 GitHub CLI 创建 PR #149 成功。PR 创建过程已记入 worklog。
+- 统一内存上限：PR 描述与 handoff 均为最多 256 MiB，实际申请仍受 `MemAvailable/16` 限制。
 - 后续外部运行完成后，将脱敏结果追加到本 handoff 与 worklog，并在同一 PR 复审。
 
 ## 验收标准

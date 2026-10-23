@@ -7344,3 +7344,5 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 16:51 EDT：按上述三项同 PR 最小修订 handoff：定义 SHA-256 固定块的 1/2/4/8 worker × 2 秒及 30 核秒上限；内存测试改为可用内存 1/16 且最多 256 MiB，补充 swap/OOM 前后检查；I/O 改 direct I/O 并规定不支持时跳过；按已知 CPU/RAM/存储与待核实 GPU/显存限定任务分级，不从合成数据推断模型参数量。`git status --short` 与 `git diff --check` 通过。等待新 HEAD 复审，未连接主机。
 - 16:52 EDT：PR #149 Round 2 独立 GPT 复审对 exact HEAD `c0eaea70c61b2b6bdfb16ea6debe6e376338488d` 再次给出 `REQUEST_CHANGES`：CPU 仍缺块构造/进程类型/同步计时和聚合定义；未检查 `/tmp` 是否 tmpfs 或和根盘同一设备。正式 review API 再次 403，没有平台 review event；未连接或运行主机。
 - 16:52 EDT：针对 Round 2 两项，在同一 PR 规定 SHA-256 输入字节、`spawn` 进程、barrier 同步、共同 monotonic 2 秒窗口和聚合公式；磁盘测量前先比对 `/tmp` 与 `/` 的 `findmnt` 来源/文件系统，仅对同一持久块设备挂载尝试 direct I/O，其余跳过。`git status --short` 与 `git diff --check` 通过，等待新 exact-head 复审。
+- 16:53 EDT：Round 3 独立 GPT 复审 PR #149 exact HEAD `27b762d03ac399f1d336baeef6d7cc2ecd0d2525` 确认 Round 2 技术意见已解决，但给出 `REQUEST_CHANGES`：PR 描述仍称内存测试上限 2 GiB，handoff 已降至 256 MiB。GitHub 正式 review API 返回 403，无平台 review event；未连接或运行主机。
+- 16:53 EDT：按意见将 handoff 与 PR 描述统一为最多 256 MiB，并记录 Round 3 结论；更新后继续同 PR exact-head 复审，不运行主机。
