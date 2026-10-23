@@ -44,4 +44,4 @@ APT 计划仅保存在 Ubuntu 本机的临时目录。Netplan 检查只列文件
 - Base：`main` at `6f91d8be0b6ae1db914e0e7a0d74757537760825`。
 - Branch：`task_20261023_ubuntu_baseline_setup`。
 - PR：[PR #148](https://github.com/leezx/StelligenOS/pull/148)，base `main`；branch `task_20261023_ubuntu_baseline_setup`。早期 HEAD 曾获 GPT `APPROVE`；对包含本机命令的 HEAD `917b22855209b170151091b01c48062660a02609` 的复审为 `REQUEST_CHANGES`，问题和修复记录见 worklog。新增脚本后的最终 HEAD 尚待独立 GPT 复审；只有明确 `APPROVE` 后才上传到 Ubuntu home。GitHub 正式 review API 曾返回 `403 Resource not accessible by integration`，平台 review event 需在复审时重新尝试。尚未运行任何 apt/安装命令。
-- 当前执行状态：未执行 APT 更新/安装。脚本需先经过本 PR exact HEAD 独立审核，再上传到 Ubuntu home；负责人在本机可见终端自行检查/运行。完成后只需回传脱敏摘要（升级包数、`python3-venv` 状态、UFW/网络服务状态、是否需重启），由 Codex 在本 PR 更新留痕并复审。
+- 当前执行状态：脚本已通过独立 GPT 对 PR #148 exact HEAD `41d860a7250b2ac80720bc3cfc1d72851ad1b374` 的 `APPROVE` 后上传至 `/home/stelligen/ubuntu_baseline_setup.sh`，SHA-256 为 `98fec57d28b265b62895299a902476dcddc11f86045f2f832bdbc0f6ba9420f9`，权限 `-rwxr--r--`。仅复制、设置可执行位并核对哈希；未运行脚本、APT 更新或安装。GitHub 正式 review API 返回 403，未创建平台 review event。负责人可在 Ubuntu 本机可见终端运行 `~/ubuntu_baseline_setup.sh`；运行后回传脱敏摘要，由 Codex 在本 PR 留痕并复审。
