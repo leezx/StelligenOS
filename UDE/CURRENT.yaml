@@ -1,0 +1,24 @@
+project:
+  id: StelligenOS
+  status: active
+  document: PROJECT.md
+understanding:
+  version: unknown
+  status: unbaselined
+  document: understanding/CURRENT.md
+design:
+  version: unknown
+  architecture_label: STELLIGENOS-ARCH-2026.08.27-v5
+  status: existing_approved_architecture_reference
+  document: design/CURRENT.md
+  canonical_document: ../docs/architecture/CURRENT_SYSTEM_AND_MODULE_LOGIC_FOR_EXPERT_REVIEW.zh-CN.md
+  based_on_understanding: unknown
+execution:
+  version: unknown
+  status: unbaselined_in_ude
+  document: execution/CURRENT.md
+  design_baseline: unknown
+  design_commit: unknown
+governance:
+  migration_status: mapping_only
+  next_authorized_action: await_current_pr_review
