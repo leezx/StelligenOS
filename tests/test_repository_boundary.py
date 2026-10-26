@@ -75,6 +75,22 @@ class BoundaryScriptTests(unittest.TestCase):
             lambda root: (root / "requirements.txt").write_text("PyYAML>=6.0,<7\n")
         )
 
+    def test_ude_documents_are_allowed_but_data_is_rejected(self) -> None:
+        def build(root: Path) -> None:
+            for layer in ("understanding", "design", "execution"):
+                folder = root / "UDE" / layer
+                folder.mkdir(parents=True)
+                (folder / "CURRENT.md").write_text("# Current\n")
+            (root / "UDE" / "CURRENT.yaml").write_text("project: StelligenOS\n")
+
+        self.assertAccepted(build)
+
+        def with_data(root: Path) -> None:
+            build(root)
+            (root / "UDE" / "execution" / "results.csv").write_text("a,b\n1,2\n")
+
+        self.assertRejected(with_data, "data-like file matching *.csv")
+
     # --- .claude, which the refactor must not have weakened ---------------
 
     def _claude(self, root: Path, *names: str) -> None:

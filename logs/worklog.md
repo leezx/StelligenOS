@@ -7330,3 +7330,11 @@ Purpose: append a detailed timestamped record of what was done, how it was done,
 - 同 PR 提交并推送修订 `a364727e6da3edc48ce66bc103e66c5d7791c9a1`；本地全量 1948 tests OK、repository boundary 与 diff 检查通过。GitHub Actions run `39949078070` Python 3.11/3.12 均 SUCCESS；向原 ChatGPT 会话提交只审 6 项 finding 及必要回归的 Round 2 请求。
 - ChatGPT 直接核对 PR delta、冻结科学合同、对抗测试和 CI，给出 L1 `APPROVE`、L2 `PASS / APPROVE`、整体 B1 `APPROVE`，5 P1 + 1 P2 全部 `RESOLVED`，blocker 0。摘要见 `logs/chatgpt-review-2026-10-23-tgt05-phase-b1-round2.md`。批准仅未绑定模块，不含自动合并、B2、激活或真实数据。
 - 新增 round 2 审核记录并更新 handoff/worklog 以符合每步留痕。此 metadata-only 提交改变 exact HEAD 后须再审；未进行合并或依赖阶段工作。
+
+## 2026-10-26 15:19 EDT — UDE 首次建档与全局 skill
+
+- 读取外部知识库 `UDE — Understanding, Design & Execution.md`、全局 `skill-creator` 规范、仓库 `AGENTS.md`、Phase gate 协议、README、架构契约、Git 状态和现有目录；决定采用根目录 `UDE/` 与 understanding/design/execution 三个一级层。主工作区已有未提交文件，故从更新后的 `origin/main` 在独立工作树创建 `task_20261026_ude_layout`，未触碰主工作区改动。
+- 在仓库外全局安装 `/Users/zhixinli/.codex/skills/ude-review/SKILL.md`，`quick_validate.py` 返回 `Skill is valid!`。该全局文件不在本 PR 中。
+- 在仓库内新建六个 UDE 核心状态文件，将现有正式架构和执行审计路径作为来源链接；没有把 `docs/architecture/`、`logs/worklog.md` 或 `docs/handoff/` 搬走，因为它们是既有权威与强制审计位置。U/D/X 未核定的版本和依赖均标记 UNKNOWN；没有凭空补批准或科学证据。
+- 预检 `scripts/verify_repository_boundary.sh` 在主工作区因既有未提交/不允许文件失败；独立工作树首次因新增顶层 `UDE` 失败。按本任务最小修改脚本白名单，增加测试确认 UDE 文档通过、UDE 下数据类 CSV 仍被拒绝。修正后 16 项边界测试、仓库边界检查、`git diff --check`、YAML 解析与 UDE 相对链接检查均通过。
+- 新增 `docs/handoff/2026-10-26-ude-layout.zh-CN.md` 记录基线、范围、验证和未决事项；后续须提交 PR 并获得当前 PR 的明确 ChatGPT/GPT `APPROVE`，本次没有授权迁移正式设计或继续下一阶段。

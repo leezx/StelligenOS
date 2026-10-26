@@ -10,6 +10,7 @@ allowed_top_level=(
   "LINKS.md"
   "README.md"
   "architecture.md"
+  "UDE"
   "docs"
   "schemas"
   "src"
